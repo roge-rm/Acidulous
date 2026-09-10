@@ -107,4 +107,20 @@ class SongStoreTest {
         val old = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"Subvert"}}],"scenes":[{"id":"s","name":"S"}]}"""
         assertTrue(SongStore.decode(old).tracks[0].effects.isEmpty())
     }
+
+    @Test
+    fun eventorsRoundTrip() {
+        val song = DemoSong.build()
+        val withEv = song.copy(tracks = song.tracks.mapIndexed { i, t ->
+            if (i == 0) t.withEventor(0, "Scale").withEventorParam(0, "scale", 0.5f).withEventor(1, "Arp").withEventorBypass(1, true) else t
+        })
+        val back = SongStore.decode(SongStore.encode(withEv))
+        assertEquals(withEv, back)
+        assertEquals("Arp", back.tracks[0].eventorAt(1).type)
+        assertTrue(back.tracks[0].eventorAt(1).bypass)
+        assertEquals(0.5f, back.tracks[0].eventorAt(0).params["scale"])
+        assertTrue(back.tracks[0].effects.isEmpty()) // the other kind untouched
+        assertEquals("eventor2", eventorUnit(1))
+        assertEquals(1, eventorSlotOf("eventor2"))
+    }
 }

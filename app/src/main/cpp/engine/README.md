@@ -13,7 +13,8 @@ dsp/        Math · Osc (PolyBLEP saw/pulse) · Filter (TPT SVF) · Envelope (de
 machine/    Machine interface · MachineRegistry · subvert/ (the signature voice)
 effect/     Effect interface (onBlock for tempo, run() with bypass) · EffectRegistry ·
             Effects: Delay Reverb Eq Distortion Compressor Filter Bitcrusher Phaser Flanger
-eventor/    Eventor interface + MidiSink (scale/chord/arp live here - M11)
+eventor/    Eventor interface + MidiSink · EventorRegistry · Scales.h (33 scales, 25 chords) ·
+            Eventors: Scale Chord Arp
 rack/       Rack (clip player -> eventors -> machine -> effects -> channel strip)
             MasterBus (sum, peak; sends + limiter in M5) · Engine (the render loop)
 ../sequencer/  TickClock · Transport · Clip · ClipPlayer · Song · SceneScheduler · RecordQueue

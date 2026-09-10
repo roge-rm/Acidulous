@@ -24,6 +24,7 @@ class Rack {
     bool isActive() const { return machine != nullptr; }
     Machine *currentMachine() const { return machine; }
     Effect *currentEffect(int32_t slot) const { return (slot >= 0 && slot < kEffectSlots) ? effects[slot] : nullptr; }
+    Eventor *currentEventor(int32_t slot) const { return (slot >= 0 && slot < kEventorSlots) ? eventors[slot] : nullptr; }
 
     // Live or sequenced MIDI enters here and runs the eventor chain.
     void handleMidi(uint8_t status, uint8_t d1, uint8_t d2);

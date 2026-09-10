@@ -2,6 +2,7 @@
 #include <android/log.h>
 #include <cstdio>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/eventor/EventorRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <jni.h>
 #include <string>
@@ -61,6 +62,24 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeUnmountMachine(JNIEnv *, jobject
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeMountEffect(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
     return host().mountEffect(rackId, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMountEventor(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
+    return host().mountEventor(rackId, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeEventorTypes(JNIEnv *env, jobject) {
+    const int32_t n = acidulous::EventorRegistry::count();
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
+    for (int32_t i = 0; i < n; ++i) {
+        jstring s = env->NewStringUTF(acidulous::EventorRegistry::name(i));
+        env->SetObjectArrayElement(out, i, s);
+        env->DeleteLocalRef(s);
+    }
+    return out;
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -328,6 +347,13 @@ JNIEXPORT jobjectArray JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamInfo(JNIEnv *env, jobject, jstring type) {
     int32_t n = 0;
     const acidulous::ParamDef *defs = acidulous::MachineRegistry::paramDefs(toStdString(env, type).c_str(), n);
+    return paramInfoArray(env, defs, n);
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeEventorParamInfo(JNIEnv *env, jobject, jstring type) {
+    int32_t n = 0;
+    const acidulous::ParamDef *defs = acidulous::EventorRegistry::paramDefs(toStdString(env, type).c_str(), n);
     return paramInfoArray(env, defs, n);
 }
 

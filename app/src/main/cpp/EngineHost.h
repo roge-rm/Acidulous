@@ -30,6 +30,7 @@ class EngineHost {
     // Insert effects: two slots per rack. An empty type name clears the slot.
     bool mountEffect(int rack, int slot, const std::string &typeName);
     const char *mountedEffect(int rack, int slot) const;
+    bool mountEventor(int rack, int slot, const std::string &typeName);
 
     // Decodes a WAV here and mounts it into the machine's `slot` (a pad). An
     // empty path clears the slot. Returns false if the file cannot be read.
@@ -120,6 +121,7 @@ class EngineHost {
     std::atomic<bool> rendering{false}, renderCancel{false};
     std::atomic<float> renderSeconds{0.0f}, renderPeak{0.0f};
     std::string mountedEffectType[16][2];
+    std::string mountedEventorType[16][2];
     std::unordered_map<int64_t, std::shared_ptr<const seq::Clip>> clipCache;
 };
 

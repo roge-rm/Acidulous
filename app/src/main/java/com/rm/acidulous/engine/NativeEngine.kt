@@ -24,6 +24,8 @@ object NativeEngine {
     fun unmountMachine(rackId: Int) = nativeUnmountMachine(rackId)
     /** Mounts an insert effect on one of a rack's two slots; an empty [typeName] clears it. */
     fun mountEffect(rackId: Int, slot: Int, typeName: String): Boolean = nativeMountEffect(rackId, slot, typeName)
+    /** Mounts an eventor (Scale, Chord, Arp) ahead of the machine; an empty [typeName] clears it. */
+    fun mountEventor(rackId: Int, slot: Int, typeName: String): Boolean = nativeMountEventor(rackId, slot, typeName)
 
     /** Decodes a WAV and mounts it on a pad; empty path clears. Returns an error message, or "" on success. */
     fun loadSample(rackId: Int, slot: Int, absolutePath: String): String = nativeLoadSample(rackId, slot, absolutePath)
@@ -47,6 +49,8 @@ object NativeEngine {
     /** Every insert effect type, from the effect registry. */
     val effectTypes: List<String> get() = nativeEffectTypes().toList()
     fun effectParamInfo(type: String): List<ParamInfo> = nativeEffectParamInfo(type).map { ParamInfo.parse(it) }
+    val eventorTypes: List<String> get() = nativeEventorTypes().toList()
+    fun eventorParamInfo(type: String): List<ParamInfo> = nativeEventorParamInfo(type).map { ParamInfo.parse(it) }
     /** Normalised 0..1 value of a mounted unit's parameter, or -1. */
     fun paramNormalized(rackId: Int, unit: String, name: String): Float = nativeParamNormalized(rackId, unit, name)
 
@@ -135,6 +139,9 @@ object NativeEngine {
     private external fun nativeIsRendering(): Boolean
     private external fun nativeRenderedSeconds(): Float
     private external fun nativeRenderedPeak(): Float
+    private external fun nativeMountEventor(rackId: Int, slot: Int, typeName: String): Boolean
+    private external fun nativeEventorTypes(): Array<String>
+    private external fun nativeEventorParamInfo(type: String): Array<String>
     private external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     private external fun nativeEffectTypes(): Array<String>
     private external fun nativeEffectParamInfo(type: String): Array<String>

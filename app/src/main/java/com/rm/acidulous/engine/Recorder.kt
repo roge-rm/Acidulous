@@ -30,6 +30,7 @@ class Recorder {
     private val buffer = LongArray(128 * 5)
     private val paramNames = HashMap<String, List<String>>()
     private val effectParamNames = HashMap<String, List<String>>()
+    private val eventorParamNames = HashMap<String, List<String>>()
     private val open = HashMap<Int, OpenNote>() // key: rack shl 8 or pitch
     private var dirty = false
     private var lastScene = -1
@@ -140,6 +141,12 @@ class Recorder {
                 if (index == EFFECT_BYPASS_INDEX) "bypass"
                 else if (type.isEmpty()) null
                 else effectParamNames.getOrPut(type) { NativeEngine.effectParamInfo(type).map { it.name } }.getOrNull(index)
+            }
+            "eventor1", "eventor2" -> {
+                val type = track.eventorAt(if (unit == "eventor1") 0 else 1).type
+                if (index == EFFECT_BYPASS_INDEX) "bypass"
+                else if (type.isEmpty()) null
+                else eventorParamNames.getOrPut(type) { NativeEngine.eventorParamInfo(type).map { it.name } }.getOrNull(index)
             }
             else -> null
         } ?: return null

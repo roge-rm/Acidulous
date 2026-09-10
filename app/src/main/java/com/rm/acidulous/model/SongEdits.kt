@@ -138,6 +138,23 @@ fun Track.withEffectBypass(slot: Int, bypass: Boolean): Track = withEffectSlot(s
 fun effectUnit(slot: Int): String = "effect${slot + 1}"
 fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -> 1; else -> null }
 
+// --- Eventors ---------------------------------------------------------------------------
+
+private fun Track.withEventorSlot(slot: Int, f: (UnitSlot) -> UnitSlot): Track {
+    if (slot !in 0 until EVENTOR_SLOTS) return this
+    val list = List(EVENTOR_SLOTS) { eventorAt(it) }.toMutableList()
+    list[slot] = f(list[slot])
+    return copy(eventors = list)
+}
+
+fun Track.withEventor(slot: Int, type: String): Track = withEventorSlot(slot) { UnitSlot(type = type) }
+fun Track.withEventorParam(slot: Int, name: String, v01: Float): Track =
+    withEventorSlot(slot) { it.copy(params = it.params + (name to v01.coerceIn(0f, 1f))) }
+fun Track.withEventorBypass(slot: Int, bypass: Boolean): Track = withEventorSlot(slot) { it.copy(bypass = bypass) }
+
+fun eventorUnit(slot: Int): String = "eventor${slot + 1}"
+fun eventorSlotOf(unit: String): Int? = when (unit) { "eventor1" -> 0; "eventor2" -> 1; else -> null }
+
 /** How long the song plays once through: per-scene tempo honoured, smooth ramps ignored. */
 fun Song.durationSeconds(): Float {
     var total = 0f

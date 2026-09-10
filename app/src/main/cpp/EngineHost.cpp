@@ -9,6 +9,7 @@
 #include <engine/core/WavReader.h>
 #include <engine/core/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/eventor/EventorRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/forage/Forage.h>
 #include <engine/rack/Engine.h>
@@ -68,6 +69,7 @@ void EngineHost::stop() {
     sEngine.stop();
     for (auto &t : mountedType) t.clear();
     for (auto &r : mountedEffectType) for (auto &t : r) t.clear();
+    for (auto &r : mountedEventorType) for (auto &t : r) t.clear();
     LOGI("engine stopped");
 }
 
@@ -129,6 +131,28 @@ bool EngineHost::mountEffect(int rack, int slot, const std::string &typeName) {
     if (!mountWithRetry(m, deleteAs<Effect>)) return false;
     mountedEffectType[rack][slot] = typeName;
     LOGI("queued effect '%s' for rack %d slot %d", typeName.c_str(), rack, slot);
+    return true;
+}
+
+bool EngineHost::mountEventor(int rack, int slot, const std::string &typeName) {
+    if (rack < 0 || rack >= kRackCount || slot < 0 || slot >= kEventorSlots) return false;
+    Eventor *ev = nullptr;
+    if (!typeName.empty()) {
+        ev = EventorRegistry::create(typeName.c_str());
+        if (ev == nullptr) {
+            LOGE("unknown eventor '%s'", typeName.c_str());
+            return false;
+        }
+        ev->reset();
+    }
+    Mount m;
+    m.kind = Mount::Kind::Eventor;
+    m.rack = rack;
+    m.slot = slot;
+    m.object = ev;
+    if (!mountWithRetry(m, deleteAs<Eventor>)) return false;
+    mountedEventorType[rack][slot] = typeName;
+    LOGI("queued eventor '%s' for rack %d slot %d", typeName.c_str(), rack, slot);
     return true;
 }
 
@@ -203,6 +227,13 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
         return -1;
     }
+    if (u == Unit::Eventor1 || u == Unit::Eventor2) {
+        if (name == "bypass") return kEventorBypassIndex;
+        int32_t n = 0;
+        const ParamDef *defs = EventorRegistry::paramDefs(machineType.c_str(), n); // the eventor's type here
+        for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
+        return -1;
+    }
     return -1;
 }
 
@@ -227,6 +258,8 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         index = sEngine.master.params().indexOf(name.c_str());
     } else if (u == Unit::Effect1 || u == Unit::Effect2) {
         index = paramIndex(mountedEffectType[rack][u == Unit::Effect1 ? 0 : 1], unit, name);
+    } else if (u == Unit::Eventor1 || u == Unit::Eventor2) {
+        index = paramIndex(mountedEventorType[rack][u == Unit::Eventor1 ? 0 : 1], unit, name);
     }
     if (index == -1) return false;
     ParamMessage p;
@@ -465,9 +498,15 @@ float EngineHost::paramNormalized(int rack, const std::string &unit, const std::
     if (rack < 0 || rack >= kRackCount) return -1.0f;
     const Unit u = unitFromName(unit);
     const bool isFx = u == Unit::Effect1 || u == Unit::Effect2;
-    const int slot = u == Unit::Effect1 ? 0 : 1;
-    const int index = paramIndex(isFx ? mountedEffectType[rack][slot] : mountedType[rack], unit, name);
+    const bool isEv = u == Unit::Eventor1 || u == Unit::Eventor2;
+    const int slot = (u == Unit::Effect1 || u == Unit::Eventor1) ? 0 : 1;
+    const int index = paramIndex(isFx ? mountedEffectType[rack][slot] : (isEv ? mountedEventorType[rack][slot] : mountedType[rack]), unit, name);
     if (index == -1) return -1.0f;
+    if (isEv) {
+        Eventor *ev = sEngine.racks[rack].currentEventor(slot);
+        if (ev == nullptr) return -1.0f;
+        return index == kEventorBypassIndex ? (ev->bypassed() ? 1.0f : 0.0f) : ev->params().normalized(index);
+    }
     if (isFx) {
         Effect *fx = sEngine.racks[rack].currentEffect(slot);
         if (fx == nullptr) return -1.0f;

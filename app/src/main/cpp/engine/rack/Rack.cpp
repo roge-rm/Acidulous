@@ -27,7 +27,7 @@ void Rack::Sink::send(uint8_t status, uint8_t d1, uint8_t d2) { rack->deliver(st
 // Stage 0 is "before eventor 1"; stage kEventorSlots is "at the machine".
 void Rack::deliver(int32_t fromStage, uint8_t status, uint8_t d1, uint8_t d2) {
     for (int32_t s = fromStage; s < kEventorSlots; ++s) {
-        if (eventors[s] != nullptr) {
+        if (eventors[s] != nullptr && !eventors[s]->bypassed()) {
             eventors[s]->handleMidi(status, d1, d2, sinks[s]);
             return; // the eventor forwards through its sink
         }
@@ -38,12 +38,15 @@ void Rack::deliver(int32_t fromStage, uint8_t status, uint8_t d1, uint8_t d2) {
 void Rack::handleMidi(uint8_t status, uint8_t d1, uint8_t d2) { deliver(0, status, d1, d2); }
 
 void Rack::allNotesOff() {
+    for (int32_t s = 0; s < kEventorSlots; ++s) {
+        if (eventors[s] != nullptr) eventors[s]->allNotesOff(sinks[s]);
+    }
     if (machine != nullptr) machine->allNotesOff();
 }
 
 void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
     for (int32_t s = 0; s < kEventorSlots; ++s) {
-        if (eventors[s] != nullptr) eventors[s]->onBlock(tickStart, tickEnd, sinks[s]);
+        if (eventors[s] != nullptr) eventors[s]->run(tickStart, tickEnd, bpm, sinks[s]);
     }
     for (int32_t s = 0; s < kEffectSlots; ++s) {
         if (effects[s] != nullptr) effects[s]->onBlock(tickStart, tickEnd, bpm);
@@ -108,6 +111,7 @@ Effect *Rack::swapEffect(int32_t slot, Effect *next) {
 Eventor *Rack::swapEventor(int32_t slot, Eventor *next) {
     if (slot < 0 || slot >= kEventorSlots) return next;
     Eventor *old = eventors[slot];
+    if (old != nullptr) old->allNotesOff(sinks[slot]); // its sounding notes end cleanly
     eventors[slot] = next;
     return old;
 }
@@ -123,8 +127,15 @@ void Rack::setParam(Unit unit, int32_t index, float v01) {
         else fx->params().set(index, v01);
         break;
     }
-    case Unit::Eventor1: if (eventors[0]) eventors[0]->params().set(index, v01); break;
-    case Unit::Eventor2: if (eventors[1]) eventors[1]->params().set(index, v01); break;
+    case Unit::Eventor1:
+    case Unit::Eventor2: {
+        const int32_t s = unit == Unit::Eventor1 ? 0 : 1;
+        Eventor *ev = eventors[s];
+        if (ev == nullptr) break;
+        if (index == kEventorBypassIndex) ev->setBypass(v01 >= 0.5f, sinks[s]);
+        else ev->params().set(index, v01);
+        break;
+    }
     case Unit::Channel: channel.set(index, v01); break;
     }
 }

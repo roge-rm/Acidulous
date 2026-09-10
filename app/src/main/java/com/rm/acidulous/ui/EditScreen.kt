@@ -3,6 +3,8 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -77,9 +79,9 @@ fun EditScreen(
     var selectedPad by remember(trackIndex) { mutableStateOf(0) }
     val hasSteps = track.machine.type == "Subvert" || kind == MachineKind.Drums
     var laneKey by remember { mutableStateOf<String?>(null) }
-    val effectTypes = track.effects.map { it.type }
-    val laneKeys = remember(track.machine.type, effectTypes) { automationKeysFor(track) }
-    var showFx by remember { mutableStateOf(false) } // the insert slots take the machine panel's place
+    val slotTypes = track.effects.map { it.type } + track.eventors.map { it.type }
+    val laneKeys = remember(track.machine.type, slotTypes) { automationKeysFor(track) }
+    var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 eventors - in the same space
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var lowestPitch by remember {
         val lowest = clip.notes.minOfOrNull { it.pitch } ?: 36
@@ -202,7 +204,8 @@ fun EditScreen(
 
         // The machine's face: knobs go to the engine as gestures and into the document as undo steps.
         // Or, behind the fx toggle, the track's two insert slots.
-        if (showFx) EffectsPanel(track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
+        if (panel == 1) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
+        else if (panel == 2) SlotsPanel(SlotKind.Eventors, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
         else MachinePanel(
             track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch,
             factoryPatchNames = factoryPatchNames, userPatchNames = userPatchNames, onDeletePatch = onDeletePatch,
@@ -231,20 +234,23 @@ fun EditScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (hasSteps) {
-                OutlinedButton(onClick = { steps = !steps }) { Text(if (steps) "▦ steps" else "▤ roll", fontSize = 12.sp) }
+                OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { steps = !steps }) { Text(if (steps) "▦" else "▤", fontSize = 12.sp) }
             }
-            if (!steps) OutlinedButton(onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {
-                Text(if (mode == EditMode.Draw) "✎ draw" else "⬚ select", fontSize = 12.sp)
+            if (!steps) OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {
+                Text(if (mode == EditMode.Draw) "✎" else "⬚", fontSize = 12.sp)
             }
-            OutlinedButton(onClick = { showFx = !showFx }) {
-                Text("fx", color = if (showFx) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 1) 0 else 1 }) {
+                Text("fx", color = if (panel == 1) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
             }
-            OutlinedButton(onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }
-            OutlinedButton(onClick = { selection = emptySet(); editor.redo(trackIndex) }, enabled = editor.canRedo(trackIndex)) { Text("↷", fontSize = 12.sp) }
-            OutlinedButton(onClick = {
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 2) 0 else 2 }) {
+                Text("ev", color = if (panel == 2) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
+            }
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.redo(trackIndex) }, enabled = editor.canRedo(trackIndex)) { Text("↷", fontSize = 12.sp) }
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = {
                 if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(song.scenes.indexOf(scene))
             }) { Text(if (playing) "■" else "▶", fontSize = 12.sp) }
-            OutlinedButton(onClick = { onArm(!armed) }) {
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { onArm(!armed) }) {
                 Text(if (armed) "●" else "○", color = if (armed) Color(0xFFE74C3C) else Color.Unspecified, fontSize = 12.sp)
             }
             Text(

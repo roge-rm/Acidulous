@@ -138,12 +138,13 @@ data class Machine(
 )
 
 /**
- * One of a track's two insert slots. An empty [type] is an empty slot. Params
- * are normalised 0..1 like a machine's; [bypass] keeps the effect and its
- * state but takes it out of the signal path.
+ * One of a track's slots - an insert effect after the machine, or an eventor
+ * (Scale, Chord, Arp) ahead of it. An empty [type] is an empty slot. Params are
+ * normalised 0..1 like a machine's; [bypass] keeps the unit and its state but
+ * takes it out of the path.
  */
 @Serializable
-data class EffectSlot(
+data class UnitSlot(
     val type: String = "",
     val params: Map<String, Float> = emptyMap(),
     val bypass: Boolean = false,
@@ -151,7 +152,10 @@ data class EffectSlot(
     val isEmpty: Boolean get() = type.isEmpty()
 }
 
+typealias EffectSlot = UnitSlot
+
 const val EFFECT_SLOTS = 2
+const val EVENTOR_SLOTS = 2
 
 /** A track's channel strip. Units are musical (gain 0..1.5, pan -1..1, sends 0..1). */
 @Serializable
@@ -173,9 +177,12 @@ data class Track(
     val clips: Map<String, Clip> = emptyMap(),
     val mixer: Mixer = Mixer(),
     /** Insert effects, in signal order after the machine. Always [EFFECT_SLOTS] long when read through [effectAt]. */
-    val effects: List<EffectSlot> = emptyList(),
+    val effects: List<UnitSlot> = emptyList(),
+    /** Eventors, in order ahead of the machine: notes pass eventor 1 then 2. */
+    val eventors: List<UnitSlot> = emptyList(),
 ) {
-    fun effectAt(slot: Int): EffectSlot = effects.getOrNull(slot) ?: EffectSlot()
+    fun effectAt(slot: Int): UnitSlot = effects.getOrNull(slot) ?: UnitSlot()
+    fun eventorAt(slot: Int): UnitSlot = eventors.getOrNull(slot) ?: UnitSlot()
 }
 
 @Serializable data class ReverbSettings(val on: Boolean = true, val size: Float = 0.5f, val damp: Float = 0.5f, val tone: Float = 0.6f)

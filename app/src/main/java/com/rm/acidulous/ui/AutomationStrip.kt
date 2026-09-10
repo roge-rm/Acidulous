@@ -184,6 +184,12 @@ fun ParamStrip(rack: Int, machineType: String, modifier: Modifier = Modifier) {
 
 fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
     com.rm.acidulous.engine.NativeEngine.machineParamNames(track.machine.type).map { laneKey("machine", it) } +
+        (0 until com.rm.acidulous.model.EVENTOR_SLOTS).flatMap { slot ->
+            val ev = track.eventorAt(slot)
+            if (ev.isEmpty) emptyList()
+            else (com.rm.acidulous.engine.NativeEngine.eventorParamInfo(ev.type).map { it.name } + "bypass")
+                .map { laneKey(com.rm.acidulous.model.eventorUnit(slot), it) }
+        } +
         (0 until com.rm.acidulous.model.EFFECT_SLOTS).flatMap { slot ->
             val fx = track.effectAt(slot)
             if (fx.isEmpty) emptyList()
