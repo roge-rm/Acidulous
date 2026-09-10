@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +37,13 @@ import com.rm.acidulous.model.withPatch
 import kotlinx.coroutines.delay
 
 /**
- * The machine's face in the Edit screen. Knob values live in three places
+ * The machine's face in the Edit screen.
+ *
+ * Every machine is laid out the same way - one scrolling row of titled
+ * [Group] cards, knobs and switches from the shared helpers below, three
+ * colours with fixed meanings, and a [SectionChips] row only when a machine
+ * has more groups than one row can carry. Follow that shape when adding a
+ * machine rather than inventing a layout. Knob values live in three places
  * that must agree: the engine (live, smoothed), the document (persisted, on
  * the track), and the panel. A turn goes to the engine at once as a user
  * gesture (recordable), and into the document as one undo step; between
@@ -174,8 +181,15 @@ private fun PatchBar(
     }
 }
 
+// The panel palette. Teal is the ordinary control; amber marks the knob that
+// gives a group its character; pink marks drive and output. See the style
+// note at the bottom of this file.
+internal val PanelTeal = Color(0xFF7FD1B9)
+internal val PanelAmber = Color(0xFFFFB454)
+internal val PanelPink = Color(0xFFE07A9A)
+
 @Composable
-internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = Color(0xFF7FD1B9)) {
+internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal) {
     Knob(
         label = label, value = b.value(name), display = b.display(name), accent = accent,
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
@@ -200,6 +214,51 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
     }
 }
 
+/**
+ * The panel body every machine uses: one horizontally scrolling row of
+ * [Group]s. Machines with more groups than fit comfortably put a
+ * [SectionChips] row above it and show one section at a time.
+ */
+@Composable
+internal fun GroupRow(content: @Composable () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) { content() }
+}
+
+/** Which group of groups is showing. Only machines too big for one row need it. */
+@Composable
+internal fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()).padding(bottom = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        labels.forEachIndexed { i, l ->
+            val on = i == selected
+            Box(
+                Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Color(0xFF3F7D5E) else Color(0xFF2E2E33))
+                    .clickable { onSelect(i) }.padding(horizontal = 10.dp, vertical = 4.dp),
+            ) { Text(l, color = if (on) Color.White else Color(0xFFBBBBBB), fontSize = 10.sp, fontFamily = FontFamily.Monospace) }
+        }
+    }
+}
+
+/**
+ * A stepped parameter with too many values for [PanelSwitch]: a knob that
+ * names its step instead of showing a number. Four values or fewer belong in
+ * a switch; more belong here.
+ */
+@Composable
+internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, label: String = name, accent: Color = PanelTeal) {
+    val info = b.infoOf(name) ?: return
+    Knob(
+        label = label, value = b.value(name), accent = accent,
+        display = labels.getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
+        onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
+    )
+}
+
 @Composable
 internal fun Group(title: String, content: @Composable () -> Unit) {
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFF26262B)).padding(6.dp)) {
@@ -211,19 +270,19 @@ internal fun Group(title: String, content: @Composable () -> Unit) {
 /** Subvert: the classic layer left to right, the open layer after it. */
 @Composable
 private fun SubvertPanel(b: ParamBinding) {
-    Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    GroupRow {
         Group("osc") { PanelSwitch(b, "wave", listOf("saw", "pulse")); PanelKnob(b, "pw"); PanelKnob(b, "sub"); PanelKnob(b, "tune") }
-        Group("filter") { PanelKnob(b, "cutoff", accent = Color(0xFFFFB454)); PanelKnob(b, "resonance", "reso", Color(0xFFFFB454)); PanelKnob(b, "envmod", accent = Color(0xFFFFB454)); PanelKnob(b, "decay", accent = Color(0xFFFFB454)); PanelSwitch(b, "mode", listOf("lp", "bp")) }
+        Group("filter") { PanelKnob(b, "cutoff", accent = PanelAmber); PanelKnob(b, "resonance", "reso", PanelAmber); PanelKnob(b, "envmod", accent = PanelAmber); PanelKnob(b, "decay", accent = PanelAmber); PanelSwitch(b, "mode", listOf("lp", "bp")) }
         Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "slide") }
-        Group("out") { PanelKnob(b, "drive", accent = Color(0xFFE07A9A)); PanelKnob(b, "volume") }
+        Group("out") { PanelKnob(b, "drive", accent = PanelPink); PanelKnob(b, "volume") }
     }
 }
 
 /** Hexbeat: a group per voice family, in kit order. */
 @Composable
 private fun HexbeatPanel(b: ParamBinding) {
-    val hot = Color(0xFFFFB454)
-    Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    val hot = PanelAmber
+    GroupRow {
         Group("kick") { PanelKnob(b, "kick_tune", "tune", hot); PanelKnob(b, "kick_decay", "decay"); PanelKnob(b, "kick_punch", "punch"); PanelKnob(b, "kick_level", "level") }
         Group("snare") { PanelKnob(b, "snare_tune", "tune", hot); PanelKnob(b, "snare_decay", "decay"); PanelKnob(b, "snare_snappy", "snappy"); PanelKnob(b, "snare_tone", "tone"); PanelKnob(b, "snare_level", "level") }
         Group("toms") { PanelKnob(b, "tom_lo_tune", "lo", hot); PanelKnob(b, "tom_mid_tune", "mid", hot); PanelKnob(b, "tom_hi_tune", "hi", hot); PanelKnob(b, "tom_decay", "decay"); PanelKnob(b, "tom_level", "level") }
@@ -291,152 +350,96 @@ val TRINITY_DESTS = listOf(
     "pw1", "pw2", "pw3", "sync1", "sync2", "sync3", "detune", "noise", "ring12", "ring23", "fm21", "fm32",
     "f1freq", "f2freq", "f1res", "f2res", "balance", "drive", "amp", "pan", "l1rate", "l2rate", "l3rate",
 )
-private val TRINITY_ENVS = listOf("amp" to "a", "filter" to "f", "env 3" to "e3", "env 4" to "e4", "env 5" to "e5", "env 6" to "e6")
+private val TRINITY_ENVS = listOf("amp env" to "a", "filter env" to "f", "env 3" to "e3", "env 4" to "e4", "env 5" to "e5", "env 6" to "e6")
 
 @Composable
 private fun TrinityPanel(b: ParamBinding) {
-    var section by remember { mutableStateOf(0) }
-    var osc by remember { mutableStateOf(0) }
-    var env by remember { mutableStateOf(0) }
-    var lfo by remember { mutableStateOf(0) }
-    var slot by remember { mutableStateOf(0) }
-    val sections = listOf("osc", "mix", "filter", "env", "lfo", "matrix", "voice")
+    // Too many groups for one row, so the sections pick which groups show.
+    // Inside a section it is the same Group-of-knobs row as every machine.
+    var section by rememberSaveable { mutableStateOf(0) }
     Column {
-        Chips(sections, section) { section = it }
-        when (section) {
-            0 -> {
-                Chips(listOf("1", "2", "3"), osc) { osc = it }
-                val o = "o${osc + 1}_"
-                KnobRow {
-                    PanelStepKnob(b, o + "wave", TRINITY_WAVES, "wave")
-                    PanelKnob(b, o + "pos", "pos", accent = ACCENT2)
-                    PanelKnob(b, o + "warp", "warp", accent = ACCENT2)
-                    PanelKnob(b, o + "coarse", "coarse")
-                    PanelKnob(b, o + "fine", "fine")
-                    PanelKnob(b, o + "level", "level")
-                    PanelStepKnob(b, o + "density", (1..8).map { "$it" }, "density", ACCENT2)
-                    PanelKnob(b, o + "detune", "detune", accent = ACCENT2)
-                    PanelKnob(b, o + "sync", "sync", accent = ACCENT2)
-                    PanelKnob(b, o + "hard", "hard")
-                    PanelKnob(b, o + "pw", "pw")
-                    PanelKnob(b, o + "drift", "drift", accent = ACCENT2)
+        SectionChips(listOf("osc", "mix", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> for (o in 1..3) Group("osc $o") {
+                    val p = "o${o}_"
+                    PanelStepKnob(b, p + "wave", TRINITY_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, p + "pos", "pos", PanelAmber)
+                    PanelKnob(b, p + "warp", "warp", PanelAmber)
+                    PanelKnob(b, p + "coarse", "coarse")
+                    PanelKnob(b, p + "fine", "fine")
+                    PanelKnob(b, p + "density", "density")
+                    PanelKnob(b, p + "detune", "detune")
+                    PanelKnob(b, p + "sync", "sync")
+                    PanelKnob(b, p + "hard", "hard")
+                    PanelKnob(b, p + "pw", "pw")
+                    PanelKnob(b, p + "drift", "drift")
+                    PanelKnob(b, p + "level", "level")
                 }
-            }
-            1 -> KnobRow {
-                PanelKnob(b, "ring12", "ring1·2")
-                PanelKnob(b, "ring23", "ring2·3")
-                PanelKnob(b, "fm21", "fm 2→1", accent = ACCENT2)
-                PanelKnob(b, "fm32", "fm 3→2", accent = ACCENT2)
-                PanelKnob(b, "noise", "noise")
-                PanelKnob(b, "noisecol", "colour")
-            }
-            2 -> {
-                KnobRow {
-                    PanelSwitch(b, "route", listOf("serial", "para", "split"), "route")
-                    PanelKnob(b, "balance", "balance")
+                1 -> {
+                    Group("ring") { PanelKnob(b, "ring12", "1·2", PanelAmber); PanelKnob(b, "ring23", "2·3", PanelAmber) }
+                    Group("fm") { PanelKnob(b, "fm21", "2→1", PanelAmber); PanelKnob(b, "fm32", "3→2", PanelAmber) }
+                    Group("noise") { PanelKnob(b, "noise", "level"); PanelKnob(b, "noisecol", "colour") }
                 }
-                for (f in 1..2) {
-                    Text("filter $f", color = Color(0xFF7FD1B9), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                    KnobRow {
-                        PanelStepKnob(b, "f${f}_type", TRINITY_FILTERS, "type")
-                        PanelKnob(b, "f${f}_freq", "freq")
-                        PanelKnob(b, "f${f}_res", "res")
-                        PanelStepKnob(b, "f${f}_drivetype", TRINITY_DRIVES, "drive", ACCENT2)
-                        PanelKnob(b, "f${f}_drive", "amount", accent = ACCENT2)
-                        PanelKnob(b, "f${f}_env", "env")
-                        PanelKnob(b, "f${f}_key", "key")
+                2 -> {
+                    Group("routing") { PanelSwitch(b, "route", listOf("serial", "para", "split")); PanelKnob(b, "balance", "balance") }
+                    for (f in 1..2) Group("filter $f") {
+                        val p = "f${f}_"
+                        PanelStepKnob(b, p + "type", TRINITY_FILTERS, "type", PanelAmber)
+                        PanelKnob(b, p + "freq", "freq", PanelAmber)
+                        PanelKnob(b, p + "res", "reso", PanelAmber)
+                        PanelStepKnob(b, p + "drivetype", TRINITY_DRIVES, "drive", PanelPink)
+                        PanelKnob(b, p + "drive", "amount", PanelPink)
+                        PanelKnob(b, p + "env", "envmod")
+                        PanelKnob(b, p + "key", "key")
                     }
                 }
-            }
-            3 -> {
-                Chips(TRINITY_ENVS.map { it.first }, env) { env = it }
-                val e = TRINITY_ENVS[env].second + "_"
-                KnobRow {
-                    PanelKnob(b, e + "delay", "delay")
-                    PanelKnob(b, e + "attack", "attack")
-                    PanelKnob(b, e + "decay", "decay")
-                    PanelKnob(b, e + "sustain", "sustain")
-                    PanelKnob(b, e + "release", "release")
-                    PanelSwitch(b, e + "repeat", listOf("once", "loop"), "repeat")
+                3 -> for ((title, prefix) in TRINITY_ENVS) Group(title) {
+                    PanelKnob(b, prefix + "_delay", "delay")
+                    PanelKnob(b, prefix + "_attack", "attack", PanelAmber)
+                    PanelKnob(b, prefix + "_decay", "decay", PanelAmber)
+                    PanelKnob(b, prefix + "_sustain", "sustain", PanelAmber)
+                    PanelKnob(b, prefix + "_release", "release", PanelAmber)
+                    PanelSwitch(b, prefix + "_repeat", listOf("once", "loop"), "repeat")
                 }
-            }
-            4 -> {
-                Chips(listOf("1", "2", "3"), lfo) { lfo = it }
-                val l = "l${lfo + 1}_"
-                KnobRow {
-                    PanelStepKnob(b, l + "wave", TRINITY_LFO_WAVES, "wave")
-                    PanelKnob(b, l + "rate", "rate")
-                    PanelStepKnob(b, l + "sync", TRINITY_LFO_SYNC, "sync", ACCENT2)
-                    PanelKnob(b, l + "delay", "delay")
-                    PanelKnob(b, l + "phase", "phase")
-                    PanelKnob(b, l + "slew", "slew", accent = ACCENT2)
-                    PanelSwitch(b, l + "keysync", listOf("free", "key"), "keysync")
-                    PanelSwitch(b, l + "oneshot", listOf("cycle", "once"), "oneshot")
+                4 -> for (l in 1..3) Group("lfo $l") {
+                    val p = "l${l}_"
+                    PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, p + "rate", "rate", PanelAmber)
+                    PanelStepKnob(b, p + "sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
+                    PanelKnob(b, p + "delay", "delay")
+                    PanelKnob(b, p + "phase", "phase")
+                    PanelKnob(b, p + "slew", "slew")
+                    PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
+                    PanelSwitch(b, p + "oneshot", listOf("cycle", "once"), "run")
                 }
-            }
-            5 -> {
-                Chips((1..12).map { "%02d".format(it) }, slot) { slot = it }
-                val m = "m%02d_".format(slot + 1)
-                KnobRow {
-                    PanelStepKnob(b, m + "src", TRINITY_SOURCES, "source")
-                    PanelStepKnob(b, m + "src2", TRINITY_SOURCES, "× source", ACCENT2)
-                    PanelStepKnob(b, m + "dest", TRINITY_DESTS, "to")
-                    PanelKnob(b, m + "depth", "depth")
+                5 -> for (m in 1..12) Group("mod $m") {
+                    val p = "m%02d_".format(m)
+                    PanelStepKnob(b, p + "src", TRINITY_SOURCES, "from", PanelAmber)
+                    PanelStepKnob(b, p + "src2", TRINITY_SOURCES, "× from")
+                    PanelStepKnob(b, p + "dest", TRINITY_DESTS, "to", PanelAmber)
+                    PanelKnob(b, p + "depth", "depth", PanelAmber)
                 }
-            }
-            else -> KnobRow {
-                PanelSwitch(b, "voicemode", listOf("poly", "mono", "legato", "uni"), "mode")
-                PanelStepKnob(b, "unison", (1..8).map { "$it" }, "unison")
-                PanelKnob(b, "unidetune", "detune")
-                PanelKnob(b, "unispread", "spread")
-                PanelKnob(b, "glide", "glide")
-                PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
-                PanelKnob(b, "bend", "bend")
-                PanelKnob(b, "octave", "octave")
-                PanelKnob(b, "transpose", "transpose")
-                PanelKnob(b, "volume", "volume")
-                PanelKnob(b, "pan", "pan")
-                PanelKnob(b, "velamt", "vel")
+                else -> {
+                    Group("voice") {
+                        PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg", "uni"), "mode")
+                        PanelKnob(b, "glide", "glide")
+                        PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
+                        PanelKnob(b, "bend", "bend")
+                    }
+                    Group("unison") {
+                        PanelKnob(b, "unison", "voices", PanelAmber)
+                        PanelKnob(b, "unidetune", "detune", PanelAmber)
+                        PanelKnob(b, "unispread", "spread", PanelAmber)
+                    }
+                    Group("tuning") { PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose") }
+                    Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
+                }
             }
         }
     }
 }
 
-private val ACCENT2 = Color(0xFFFFB454)
 
-@Composable
-private fun KnobRow(content: @Composable () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.Bottom,
-    ) { content() }
-}
 
-/** A row of small selectable chips: which oscillator, which envelope, which slot. */
-@Composable
-private fun Chips(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()).padding(bottom = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        labels.forEachIndexed { i, l ->
-            val on = i == selected
-            Box(
-                Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Color(0xFF3F7D5E) else Color(0xFF2E2E33))
-                    .clickable { onSelect(i) }.padding(horizontal = 8.dp, vertical = 3.dp),
-            ) { Text(l, color = if (on) Color.White else Color(0xFFBBBBBB), fontSize = 10.sp) }
-        }
-    }
-}
 
-/** A stepped parameter as a knob that names its step - for the long lists. */
-@Composable
-private fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, label: String = name, accent: Color = Color(0xFF7FD1B9)) {
-    val info = b.infoOf(name) ?: return
-    Knob(
-        label = label, value = b.value(name), accent = accent,
-        display = labels.getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
-        onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
-    )
-}

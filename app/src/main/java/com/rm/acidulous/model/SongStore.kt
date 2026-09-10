@@ -26,6 +26,23 @@ object SongStore {
 
     fun load(context: Context, name: String): Song = decode(fileFor(context, name).readText())
 
+    /**
+     * The working song, saved continuously and reloaded on the next start.
+     * Separate from the named songs in [directory]: this is "what was open",
+     * not "what was saved", so minimising the app never loses an edit.
+     */
+    fun sessionFile(context: Context): File = File(EngineAssets.userRoot(context), "session.json")
+
+    fun saveSession(context: Context, song: Song) {
+        val f = sessionFile(context)
+        val tmp = File(f.parentFile, "session.json.tmp")
+        tmp.writeText(encode(song))
+        tmp.renameTo(f) // a kill mid-write leaves the previous session intact
+    }
+
+    fun loadSession(context: Context): Song? =
+        sessionFile(context).takeIf { it.isFile }?.let { runCatching { decode(it.readText()) }.getOrNull() }
+
     fun delete(context: Context, name: String): Boolean = fileFor(context, name).delete()
 
     fun exists(context: Context, name: String): Boolean = fileFor(context, name).isFile

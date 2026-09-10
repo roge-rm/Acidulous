@@ -17,8 +17,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.referentialEqualityPolicy
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.rm.acidulous.engine.EngineAssets
@@ -64,6 +72,27 @@ private const val TAG = "Acidulous.UI"
 private sealed class Screen {
     object Main : Screen()
     data class Edit(val track: Int, val sceneId: String) : Screen()
+
+    companion object {
+        /**
+         * The activity keeps itself across a rotation (see the manifest), so
+         * this only runs if Android really did recreate us - process death,
+         * "don't keep activities". Either way the screen comes back.
+         */
+        val Saver: Saver<MutableState<Screen>, Any> = listSaver<MutableState<Screen>, Any>(
+            save = { state ->
+                when (val v = state.value) {
+                    is Edit -> listOf("edit", v.track, v.sceneId)
+                    else -> listOf("main")
+                }
+            },
+            restore = { saved ->
+                mutableStateOf(
+                    if (saved.firstOrNull() == "edit") Edit(saved[1] as Int, saved[2] as String) else Main
+                )
+            },
+        )
+    }
 }
 
 @Composable
@@ -87,7 +116,7 @@ private fun App(modifier: Modifier = Modifier) {
         }
     }
     val recorder = remember { Recorder() }
-    var screen by remember { mutableStateOf<Screen>(Screen.Main) }
+    var screen by rememberSaveable(saver = Screen.Saver) { mutableStateOf<Screen>(Screen.Main) }
 
     // Importing a sample: the system picker, a copy into user/samples/, and the
     // pad's setting pointing at it. The engine loads it on the next sync.
@@ -153,12 +182,15 @@ private fun App(modifier: Modifier = Modifier) {
         // thread now rather than stalling the first mount.
         Thread { NativeEngine.prewarm() }.start()
         if (NativeEngine.start()) {
-            // Start from the demo, round-tripped through the store so the file
-            // format is exercised on every launch.
-            val built = DemoSong.build()
-            SongStore.save(context, built)
-            val loaded = runCatching { SongStore.load(context, built.name) }.getOrElse { built }
+            // Come back to whatever was open. Only a first run falls through
+            // to the demo - reloading it every launch used to overwrite
+            // Demo.json and throw away the session.
+            val restored = runCatching { SongStore.loadSession(context) }.getOrNull()
+            val loaded = restored ?: DemoSong.build().also {
+                if (!SongStore.exists(context, it.name)) SongStore.save(context, it)
+            }
             editor.replace(loaded)
+            Log.i(TAG, if (restored != null) "resumed '${loaded.name}'" else "first run: built the demo")
             status = "${NativeEngine.sampleRate / 1000}k · burst ${NativeEngine.framesPerBurst}"
         } else {
             status = "engine failed to start"
@@ -212,6 +244,25 @@ private fun App(modifier: Modifier = Modifier) {
             if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf))
             delay(80)
         }
+    }
+
+    // Autosave: 1.2 s after the last edit, and again the moment the app goes
+    // to the background, because Android may kill the process from there.
+    LaunchedEffect(song) {
+        delay(1200)
+        runCatching { SongStore.saveSession(context, song) }.onFailure { Log.w(TAG, "session autosave failed", it) }
+    }
+    val currentSong by rememberUpdatedState(song)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                runCatching { SongStore.saveSession(context, currentSong) }
+                    .onFailure { Log.w(TAG, "session save on stop failed", it) }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val diagnostics = "%s · peak %.3f · fade %.2f · load %.0f%% · xruns %d · on %d off %d".format(status, peak, fade, load, xruns, notesOn, notesOff)
