@@ -6,7 +6,9 @@
 #include <chrono>
 #include <drivers/AudioDriver.h>
 #include <engine/core/Constants.h>
+#include <engine/core/WavReader.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/machine/forage/Forage.h>
 #include <engine/rack/Engine.h>
 #include <sequencer/Song.h>
 #include <thread>
@@ -103,6 +105,34 @@ void EngineHost::unmountMachine(int rack) {
     m.rack = rack;
     m.object = nullptr; // swap in nothing; the old machine is retired
     if (mountWithRetry(m, [](void *) {})) mountedType[rack].clear();
+}
+
+bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::string &error) {
+    if (rack < 0 || rack >= kRackCount) { error = "bad rack"; return false; }
+    SampleData *sample = nullptr;
+    if (!path.empty()) {
+        auto decoded = WavReader::read(path, kSampleRate, error);
+        if (!decoded) return false;
+        sample = decoded.release();
+    }
+    Mount m;
+    m.kind = Mount::Kind::Object;
+    m.rack = rack;
+    m.slot = slot;
+    m.object = sample;
+    m.deleter = deleteAs<SampleData>;
+    if (!mountWithRetry(m, deleteAs<SampleData>)) { error = "mount queue full"; return false; }
+    LOGI("queued sample '%s' for rack %d pad %d", path.c_str(), rack, slot);
+    return true;
+}
+
+std::string EngineHost::sampleInfo(int rack, int slot) const {
+    if (rack < 0 || rack >= kRackCount) return "";
+    auto *forage = dynamic_cast<machine::Forage *>(sEngine.racks[rack].currentMachine());
+    if (forage == nullptr) return "";
+    const SampleData *s = forage->sampleAt(slot);
+    if (s == nullptr) return "";
+    return s->name + "|" + std::to_string(s->frames) + "|" + (s->stereo ? "1" : "0");
 }
 
 const char *EngineHost::mountedMachine(int rack) const {

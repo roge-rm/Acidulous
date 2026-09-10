@@ -32,6 +32,11 @@ class Machine {
     ParamSet &params() { return params_; }
     const ParamSet &params() const { return params_; }
 
+    // Audio thread. An object built elsewhere (a decoded sample) for `slot`.
+    // Return what it displaces for the caller to retire; a machine that has no
+    // use for it returns `object` itself, and it is retired unused.
+    virtual void *swapObject(int32_t /*slot*/, void *object) { return object; }
+
     void handleMidi(uint8_t status, uint8_t d1, uint8_t d2) {
         switch (status & 0xf0) {
         case 0x90:

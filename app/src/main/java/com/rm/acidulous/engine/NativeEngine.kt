@@ -23,6 +23,11 @@ object NativeEngine {
     fun mountMachine(rackId: Int, typeName: String): Boolean = nativeMountMachine(rackId, typeName)
     fun unmountMachine(rackId: Int) = nativeUnmountMachine(rackId)
 
+    /** Decodes a WAV and mounts it on a pad; empty path clears. Returns an error message, or "" on success. */
+    fun loadSample(rackId: Int, slot: Int, absolutePath: String): String = nativeLoadSample(rackId, slot, absolutePath)
+    /** "name|frames|stereo" for a loaded pad, or "". */
+    fun sampleInfo(rackId: Int, slot: Int): String = nativeSampleInfo(rackId, slot)
+
     /** Every machine type the engine can build, from its registry. */
     val machineTypes: List<String> get() = nativeMachineTypes().toList()
     fun machineParamNames(type: String): List<String> = nativeMachineParamNames(type).toList()
@@ -110,6 +115,8 @@ object NativeEngine {
     private external fun nativeIsRunning(): Boolean
     private external fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     private external fun nativeUnmountMachine(rackId: Int)
+    private external fun nativeLoadSample(rackId: Int, slot: Int, path: String): String
+    private external fun nativeSampleInfo(rackId: Int, slot: Int): String
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
     private external fun nativeNoteOff(rackId: Int, note: Int)

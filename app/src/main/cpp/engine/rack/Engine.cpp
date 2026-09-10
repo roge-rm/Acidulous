@@ -180,6 +180,14 @@ void Engine::applyMounts() {
             retirer.retire(m.object, deleteAs<Eventor>);
         }
         break;
+    case Mount::Kind::Object: {
+        void *back = m.object;
+        if (m.rack >= 0 && m.rack < kRackCount && racks[m.rack].currentMachine() != nullptr) {
+            back = racks[m.rack].currentMachine()->swapObject(m.slot, m.object);
+        }
+        if (m.deleter != nullptr) retirer.retire(back, m.deleter);
+        break;
+    }
     case Mount::Kind::Song: {
         const seq::SongSnapshot *old = scheduler.swapSnapshot(static_cast<const seq::SongSnapshot *>(m.object));
         retirer.retire(const_cast<seq::SongSnapshot *>(old), deleteAs<seq::SongSnapshot>);

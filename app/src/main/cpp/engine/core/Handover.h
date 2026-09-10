@@ -16,11 +16,13 @@
 namespace acidulous {
 
 struct Mount {
-    enum class Kind : uint8_t { None, Machine, Song, Effect, Eventor };
+    enum class Kind : uint8_t { None, Machine, Song, Effect, Eventor, Object };
     Kind kind = Kind::None;
     int32_t rack = 0;
     int32_t slot = 0;
     void *object = nullptr;
+    // Object mounts: how to retire whatever the machine hands back (or this, if refused).
+    void (*deleter)(void *) = nullptr;
 };
 
 struct Retire {

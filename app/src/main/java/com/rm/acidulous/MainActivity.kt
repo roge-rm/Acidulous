@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -30,6 +32,8 @@ import com.rm.acidulous.model.PatchStore
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.SongStore
+import com.rm.acidulous.model.withSetting
+import java.io.File
 import com.rm.acidulous.ui.EditScreen
 import com.rm.acidulous.ui.MainScreen
 import com.rm.acidulous.ui.theme.AcidulousTheme
@@ -79,9 +83,31 @@ private fun App(modifier: Modifier = Modifier) {
     }
     val recorder = remember { Recorder() }
     var screen by remember { mutableStateOf<Screen>(Screen.Main) }
+
+    // Importing a sample: the system picker, a copy into user/samples/, and the
+    // pad's setting pointing at it. The engine loads it on the next sync.
+    var importTarget by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    val samplePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val (track, pad) = importTarget ?: return@rememberLauncherForActivityResult
+        importTarget = null
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            var display = "sample.wav"
+            context.contentResolver.query(uri, null, null, null, null)?.use { c ->
+                val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+            }
+            val safe = display.replace(Regex("[^A-Za-z0-9 _.-]"), "_").ifEmpty { "sample.wav" }
+            val dir = File(EngineAssets.userRoot(context), "samples").apply { mkdirs() }
+            val dest = File(dir, safe)
+            context.contentResolver.openInputStream(uri)!!.use { input -> dest.outputStream().use { input.copyTo(it) } }
+            editor.edit(track) { t -> t.withSetting("p%02d_sample".format(pad), "samples/$safe") }
+        }.onFailure { Log.w(TAG, "sample import failed", it) }
+    }
     var status by remember { mutableStateOf("starting…") }
 
     DisposableEffect(Unit) {
+        EngineSync.sampleRoot = EngineAssets.userRoot(context)
         if (NativeEngine.start()) {
             // Start from the demo, round-tripped through the store so the file
             // format is exercised on every launch.
@@ -166,6 +192,7 @@ private fun App(modifier: Modifier = Modifier) {
             patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
             onSavePatch = { name -> PatchStore.save(context, Patch(song.tracks[s.track].machine.type, name, song.tracks[s.track].machine.params)) },
             onLoadPatch = { name -> PatchStore.load(context, song.tracks[s.track].machine.type, name)?.params },
+            onImportSample = { track, pad -> importTarget = track to pad; samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*")) },
             modifier = modifier,
         )
     }

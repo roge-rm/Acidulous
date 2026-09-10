@@ -10,16 +10,26 @@ enum class MachineKind { Keyboard, Drums }
 data class DrumVoice(val note: Int, val name: String, val short: String)
 
 object MachineUi {
-    fun kindOf(type: String): MachineKind = if (type == "Hexbeat") MachineKind.Drums else MachineKind.Keyboard
+    fun kindOf(type: String): MachineKind = if (type == "Hexbeat" || type == "Forage") MachineKind.Drums else MachineKind.Keyboard
+    fun acceptsSamples(type: String): Boolean = type == "Forage"
 
-    val hexBeatVoices: List<DrumVoice> = listOf(
+    val hexbeatVoices: List<DrumVoice> = listOf(
         DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Rim", "RS"), DrumVoice(38, "Snare", "SD"), DrumVoice(39, "Clap", "CP"),
         DrumVoice(40, "Low Tom", "LT"), DrumVoice(41, "Mid Tom", "MT"), DrumVoice(42, "Hi Tom", "HT"),
         DrumVoice(43, "Closed Hat", "CH"), DrumVoice(44, "Open Hat", "OH"), DrumVoice(45, "Crash", "CY"),
         DrumVoice(46, "Ride", "RD"), DrumVoice(47, "Cowbell", "CB"), DrumVoice(48, "Clave", "CL"),
     )
 
-    fun voicesOf(type: String): List<DrumVoice> = if (type == "Hexbeat") hexBeatVoices else emptyList()
+    /** Forage pads are named after their samples; unloaded pads by number. */
+    fun voicesOf(type: String, settings: Map<String, String> = emptyMap()): List<DrumVoice> = when (type) {
+        "Hexbeat" -> hexbeatVoices
+        "Forage" -> (0 until 13).map { pad ->
+            val file = settings["p%02d_sample".format(pad)]
+            val name = file?.substringAfterLast('/')?.substringBeforeLast('.') ?: ""
+            DrumVoice(36 + pad, if (name.isEmpty()) "Pad ${pad + 1}" else name, if (name.isEmpty()) "${pad + 1}" else name.take(4))
+        }
+        else -> emptyList()
+    }
 }
 
 object HexbeatPresets {

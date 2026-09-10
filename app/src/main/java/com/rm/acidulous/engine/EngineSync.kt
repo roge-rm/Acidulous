@@ -2,6 +2,8 @@ package com.rm.acidulous.engine
 
 import android.util.Log
 import com.rm.acidulous.model.EngineParams
+import com.rm.acidulous.model.MachineKind
+import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Master
 import com.rm.acidulous.model.Mixer
 import com.rm.acidulous.model.PlayMode
@@ -22,6 +24,30 @@ object EngineSync {
     private const val RACKS = 16
 
     private val mounted = arrayOfNulls<String>(RACKS)
+    private val loadedSamples = HashMap<String, String>() // "rack:slot" -> relative path
+
+    /** Where relative sample paths in the document resolve. Set once at startup. */
+    var sampleRoot: java.io.File? = null
+
+    /**
+     * Pads reference samples by a path relative to [sampleRoot] in
+     * `Machine.settings` ("p03_sample"). Loads what changed, clears what went.
+     */
+    fun ensureSamples(song: Song) {
+        val root = sampleRoot ?: return
+        song.tracks.forEachIndexed { rack, track ->
+            if (rack >= RACKS || !MachineUi.acceptsSamples(track.machine.type)) return@forEachIndexed
+            for (pad in 0 until 13) {
+                val key = "$rack:$pad"
+                val rel = track.machine.settings["p%02d_sample".format(pad)] ?: ""
+                if (loadedSamples[key] == rel) continue
+                if (mounted[rack] != track.machine.type) continue // machine not mounted yet
+                if (rel.isEmpty() && loadedSamples[key] == null) { loadedSamples[key] = ""; continue } // never loaded: nothing to clear
+                val err = NativeEngine.loadSample(rack, pad, if (rel.isEmpty()) "" else java.io.File(root, rel).absolutePath)
+                if (err.isEmpty()) loadedSamples[key] = rel else Log.w(TAG, "sample '$rel' on rack $rack pad $pad: $err")
+            }
+        }
+    }
 
     /**
      * Makes the racks match the tracks: mounts what is missing or changed,
@@ -33,6 +59,7 @@ object EngineSync {
             if (rack < RACKS && mounted[rack] != track.machine.type) {
                 if (NativeEngine.mountMachine(rack, track.machine.type)) {
                     mounted[rack] = track.machine.type
+                    for (pad in 0 until 13) loadedSamples.remove("$rack:$pad") // a new machine starts empty
                 } else {
                     Log.w(TAG, "could not mount ${track.machine.type} on rack $rack")
                 }
@@ -49,6 +76,7 @@ object EngineSync {
     /** Everything the engine needs after any edit: machines, then the snapshot. */
     fun sync(song: Song): Boolean {
         ensureMachines(song)
+        ensureSamples(song)
         return push(song)
     }
 

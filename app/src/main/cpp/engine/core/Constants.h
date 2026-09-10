@@ -10,6 +10,6 @@ constexpr int32_t kRackCount = 16;     // one per MIDI channel; a 4x4 picker
 constexpr int32_t kPPQN = 240;         // ticks per quarter note
 constexpr int32_t kEffectSlots = 2;    // per rack, for now
 constexpr int32_t kEventorSlots = 2;
-constexpr int32_t kMaxParams = 64;     // per unit
+constexpr int32_t kMaxParams = 256;    // per unit (Forage: 14 per pad x 13 pads, plus globals)
 
 } // namespace acidulous

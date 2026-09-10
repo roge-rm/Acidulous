@@ -113,3 +113,6 @@ fun Track.withParam(name: String, v01: Float): Track =
     copy(machine = machine.copy(params = machine.params + (name to v01.coerceIn(0f, 1f))))
 
 fun Track.withPatch(params: Map<String, Float>): Track = copy(machine = machine.copy(params = params))
+
+fun Track.withSetting(name: String, value: String?): Track =
+    copy(machine = machine.copy(settings = if (value == null) machine.settings - name else machine.settings + (name to value)))

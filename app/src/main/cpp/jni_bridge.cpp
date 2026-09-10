@@ -70,6 +70,18 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMachineTypes(JNIEnv *env, jobjec
     return out;
 }
 
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoadSample(JNIEnv *env, jobject, jint rackId, jint slot, jstring path) {
+    std::string error;
+    const bool ok = host().loadSample(rackId, slot, toStdString(env, path), error);
+    return env->NewStringUTF(ok ? "" : error.c_str()); // empty = success
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSampleInfo(JNIEnv *env, jobject, jint rackId, jint slot) {
+    return env->NewStringUTF(host().sampleInfo(rackId, slot).c_str());
+}
+
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOn(JNIEnv *, jobject,
                                                 jint rackId, jint note, jint velocity) {

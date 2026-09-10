@@ -26,6 +26,12 @@ class EngineHost {
     // Builds the machine here, hands it to the audio thread through a Mount.
     bool mountMachine(int rack, const std::string &typeName);
     void unmountMachine(int rack);
+
+    // Decodes a WAV here and mounts it into the machine's `slot` (a pad). An
+    // empty path clears the slot. Returns false if the file cannot be read.
+    bool loadSample(int rack, int slot, const std::string &path, std::string &error);
+    // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
+    std::string sampleInfo(int rack, int slot) const;
     const char *mountedMachine(int rack) const;
     // Resolves a parameter name for a unit; -1 if unknown. UI thread.
     int paramIndex(const std::string &machineType, const std::string &unit, const std::string &name) const;

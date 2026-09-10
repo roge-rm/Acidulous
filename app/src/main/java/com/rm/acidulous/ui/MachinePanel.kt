@@ -49,6 +49,9 @@ fun MachinePanel(
     patchNames: () -> List<String>,
     onSavePatch: (String) -> Unit,
     onLoadPatch: (String) -> Map<String, Float>?,
+    selectedPad: Int = 0,
+    onImportSample: (pad: Int) -> Unit = {},
+    onClearSample: (pad: Int) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val type = track.machine.type
@@ -65,6 +68,7 @@ fun MachinePanel(
         when (type) {
             "Subvert" -> SubvertPanel(binding)
             "Hexbeat" -> HexbeatPanel(binding)
+            "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample)
             else -> GenericPanel(binding)
         }
     }
@@ -197,6 +201,37 @@ private fun HexbeatPanel(b: ParamBinding) {
         Group("perc") { PanelKnob(b, "clap_decay", "clap"); PanelKnob(b, "clap_tone", "tone"); PanelKnob(b, "clap_level", "level"); PanelKnob(b, "rim_tune", "rim", hot); PanelKnob(b, "rim_level", "level") }
         Group("bell / clave") { PanelKnob(b, "bell_tune", "bell", hot); PanelKnob(b, "bell_decay", "decay"); PanelKnob(b, "bell_level", "level"); PanelKnob(b, "clave_tune", "clave", hot); PanelKnob(b, "clave_level", "level") }
         Group("play") { PanelKnob(b, "accent") }
+    }
+}
+
+/** Forage: the selected pad's sample and its controls; tap a pad to select it. */
+@Composable
+private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit, onClear: (Int) -> Unit) {
+    val p = pad.coerceIn(0, 12)
+    fun n(name: String) = "p%02d_%s".format(p, name)
+    val rel = track.machine.settings[n("sample")]
+    var info by remember(p, rel) { mutableStateOf("") }
+    LaunchedEffect(p, rel) {
+        while (true) { info = NativeEngine.sampleInfo(b.trackIndex, p); delay(400) }
+    }
+    val hot = Color(0xFFFFB454)
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("pad ${p + 1}", color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+            Text(
+                if (info.isEmpty()) (rel?.let { "$it (not loaded)" } ?: "no sample") else info.substringBefore('|') + "  " + (info.split('|').getOrNull(1)?.toIntOrNull()?.let { "%.2fs".format(it / 48000f) } ?: "") + (if (info.endsWith("|1")) " st" else " mono"),
+                color = Color(0xFFDDDDDD), fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f), maxLines = 1,
+            )
+            TextButton(onClick = { onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
+            if (rel != null) TextButton(onClick = { onClear(p) }) { Text("clear", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
+        }
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev")) }
+            Group("amp") { PanelKnob(b, n("decay"), "decay"); PanelKnob(b, n("level"), "level"); PanelKnob(b, n("pan"), "pan"); PanelSwitch(b, n("choke"), listOf("-", "1", "2", "3", "4")) }
+            Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp")); PanelKnob(b, n("crush"), "crush", Color(0xFFE07A9A)) }
+            Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
+            Group("play") { PanelKnob(b, "accent") }
+        }
     }
 }
 

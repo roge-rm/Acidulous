@@ -35,6 +35,7 @@ import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.clipLengthTicks
+import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.emptyClipFor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,6 +58,7 @@ fun EditScreen(
     patchNames: () -> List<String>,
     onSavePatch: (String) -> Unit,
     onLoadPatch: (String) -> Map<String, Float>?,
+    onImportSample: (track: Int, pad: Int) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     val track = song.tracks.getOrNull(trackIndex) ?: return
@@ -68,6 +70,8 @@ fun EditScreen(
     var mode by remember { mutableStateOf(EditMode.Draw) }
     var steps by remember { mutableStateOf(false) } // the machine's alternate editor over the same clip
     val kind = MachineUi.kindOf(track.machine.type)
+    val voices = MachineUi.voicesOf(track.machine.type, track.machine.settings)
+    var selectedPad by remember(trackIndex) { mutableStateOf(0) }
     val hasSteps = track.machine.type == "Subvert" || kind == MachineKind.Drums
     var laneKey by remember { mutableStateOf<String?>(null) }
     val laneKeys = remember(track.machine.type) { automationKeysFor(track.machine.type) }
@@ -104,7 +108,7 @@ fun EditScreen(
         if (steps && kind == MachineKind.Drums) DrumGrid(
             clip = clip,
             ticksPerBar = ticksPerBar,
-            voices = MachineUi.voicesOf(track.machine.type),
+            voices = voices,
             playheadTick = playhead,
             onSetHit = { tick, note, hit ->
                 editor.editClip(trackIndex, sceneId) { c ->
@@ -192,11 +196,17 @@ fun EditScreen(
         )
 
         // The machine's face: knobs go to the engine as gestures and into the document as undo steps.
-        MachinePanel(track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch, Modifier.fillMaxWidth().padding(top = 4.dp))
+        MachinePanel(
+            track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch,
+            selectedPad = selectedPad,
+            onImportSample = { pad -> onImportSample(trackIndex, pad) },
+            onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        )
 
         // Played from pads or from a slim keyboard, by machine kind.
         var octave by remember { mutableStateOf(2) }
-        if (kind == MachineKind.Drums) DrumPads(trackIndex, MachineUi.voicesOf(track.machine.type), Modifier.fillMaxWidth().height(72.dp).padding(top = 6.dp))
+        if (kind == MachineKind.Drums) DrumPads(trackIndex, voices, selectedPad, { selectedPad = it }, Modifier.fillMaxWidth().height(72.dp).padding(top = 6.dp))
         else Row(Modifier.fillMaxWidth().height(64.dp).padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             TextButton(onClick = { if (octave > 0) octave-- }) { Text("−", color = Color.White) }
             for (semitone in intArrayOf(0, 2, 4, 5, 7, 9, 11, 12)) {

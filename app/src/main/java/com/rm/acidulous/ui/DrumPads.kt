@@ -28,24 +28,24 @@ import com.rm.acidulous.model.DrumVoice
 
 /** Pads in place of the keyboard for a drum machine: two rows, one per voice. */
 @Composable
-fun DrumPads(rack: Int, voices: List<DrumVoice>, modifier: Modifier = Modifier) {
+fun DrumPads(rack: Int, voices: List<DrumVoice>, selected: Int = -1, onSelect: (Int) -> Unit = {}, modifier: Modifier = Modifier) {
     val perRow = (voices.size + 1) / 2
     Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
         for (row in voices.chunked(perRow)) {
             Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                for (v in row) Pad(rack, v, Modifier.weight(1f).fillMaxSize())
+                for (v in row) Pad(rack, v, v.note - voices.first().note == selected, { onSelect(v.note - voices.first().note) }, Modifier.weight(1f).fillMaxSize())
             }
         }
     }
 }
 
 @Composable
-private fun Pad(rack: Int, voice: DrumVoice, modifier: Modifier = Modifier) {
+private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> Unit, modifier: Modifier = Modifier) {
     var pressed by remember { mutableStateOf(false) }
     Box(
         modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(if (pressed) Color(0xFFFFB454) else Color(0xFF2E2E33))
+            .background(if (pressed) Color(0xFFFFB454) else if (selected) Color(0xFF3F4A55) else Color(0xFF2E2E33))
             .pointerInput(voice.note, rack) {
                 awaitPointerEventScope {
                     while (true) {
@@ -53,7 +53,7 @@ private fun Pad(rack: Int, voice: DrumVoice, modifier: Modifier = Modifier) {
                         val down = currentEvent.changes.any { it.pressed }
                         if (down != pressed) {
                             pressed = down
-                            if (down) NativeEngine.noteOn(rack, voice.note, 110) else NativeEngine.noteOff(rack, voice.note)
+                            if (down) { NativeEngine.noteOn(rack, voice.note, 110); onSelect() } else NativeEngine.noteOff(rack, voice.note)
                         }
                     }
                 }
