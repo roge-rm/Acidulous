@@ -1,7 +1,6 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,7 +55,8 @@ private fun EffectSlotRow(track: Track, trackIndex: Int, slot: Int, types: List<
             TextButton(onClick = { menu = true }) {
                 Text(if (fx.isEmpty) "none ▾" else "${fx.type} ▾", color = Color(0xFFFFB454), fontSize = 12.sp)
             }
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            val menuScroll = rememberScrollState()
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll), scrollState = menuScroll) {
                 DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
                     menu = false
                     editor.edit(trackIndex) { t -> t.withEffect(slot, "") }
@@ -90,7 +90,7 @@ private fun EffectFace(type: String, trackIndex: Int, slot: Int, editor: SongEdi
     val b = rememberParamBinding(trackIndex, type, info, editor, unit) { t, n, v -> t.withEffectParam(slot, n, v) }
     // The panel follows the engine; on first show the engine holds whatever the
     // document pushed, so nothing to seed here.
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
+    Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
         for (p in info) {
             val labels = switchLabels(type, p.name, p.steps)
             val accent = if (p.name in EXTRA[type].orEmpty()) Color(0xFFFFB454) else Color(0xFF7FD1B9)

@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -77,7 +78,8 @@ fun AutomationStrip(
                 Text(current?.let { laneParam(it) } ?: "auto", color = Color(0xFFFFB454), fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
             }
             TextButton(onClick = { menu = true }) { Text("⋯", color = Color.White, fontSize = 10.sp) }
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            val menuScroll = rememberScrollState()
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll), scrollState = menuScroll) {
                 for (k in laneKeys) {
                     DropdownMenuItem(
                         text = { Text((if (k in existing) "● " else "  ") + k, fontSize = 12.sp, fontFamily = FontFamily.Monospace) },

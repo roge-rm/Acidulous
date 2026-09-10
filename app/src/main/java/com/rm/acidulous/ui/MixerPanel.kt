@@ -3,7 +3,6 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,7 +47,7 @@ fun MixerPanel(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier.background(Color(0xFF202024)).horizontalScroll(rememberScrollState()).padding(6.dp),
+        modifier.background(Color(0xFF202024)).horizontalScrollWithBar(rememberScrollState()).padding(6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         song.tracks.forEachIndexed { index, track ->

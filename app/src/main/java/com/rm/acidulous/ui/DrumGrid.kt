@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,7 +55,7 @@ fun DrumGrid(
             Text("bar ${bar + 1}/${clip.bars}", color = Color.White, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
             TextButton(onClick = { if (bar < clip.bars - 1) bar++ }) { Text("▶", color = Color.White) }
         }
-        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             for (voice in voices) {
                 Row(Modifier.fillMaxWidth().height(24.dp), horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(voice.short, color = Color(0xFFBBBBBB), fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.width(24.dp))

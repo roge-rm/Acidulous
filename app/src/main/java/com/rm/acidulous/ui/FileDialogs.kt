@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
@@ -38,7 +37,7 @@ fun SongBrowserDialog(
         onDismissRequest = onDismiss,
         title = { Text("Songs") },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (names.isEmpty()) Text("Nothing saved yet.", fontSize = 12.sp)
                 for (n in names) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OutlinedButton(onClick = { onLoad(n) }, modifier = Modifier.weight(1f)) {
@@ -72,7 +71,7 @@ fun PatchBrowserDialog(
         onDismissRequest = onDismiss,
         title = { Text("$machine patches") },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (factory.isNotEmpty()) Text("factory", color = Color(0xFF7FD1B9), fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 for (n in factory) OutlinedButton(onClick = { onLoad(n) }, modifier = Modifier.fillMaxWidth()) { Text(n, maxLines = 1) }
                 Text("yours", color = Color(0xFFFFB454), fontSize = 10.sp, fontFamily = FontFamily.Monospace)

@@ -3,7 +3,6 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedButton
@@ -120,7 +118,7 @@ fun MainScreen(
         // --- Song section -----------------------------------------------------------------
         val vScroll = rememberScrollState()
         val hScroll = rememberScrollState()
-        Row(Modifier.fillMaxWidth().weight(1f).verticalScroll(vScroll)) {
+        Row(Modifier.fillMaxWidth().weight(1f).verticalScrollWithBar(vScroll)) {
             // Track headers, fixed on the left.
             Column(Modifier.width(TRACK_W)) {
                 Spacer(Modifier.height(SCENE_H))
@@ -140,7 +138,7 @@ fun MainScreen(
                 ) { Text("+ track", fontSize = 11.sp, maxLines = 1) }
             }
             // Scenes, scrolling horizontally.
-            Column(Modifier.horizontalScroll(hScroll)) {
+            Column(Modifier.horizontalScrollWithBar(hScroll)) {
                 Row {
                     song.scenes.forEachIndexed { index, scene ->
                         val isCurrent = playing && position.scene == index

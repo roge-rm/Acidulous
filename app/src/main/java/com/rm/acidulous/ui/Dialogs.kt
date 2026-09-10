@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
@@ -48,7 +47,7 @@ fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () ->
         onDismissRequest = onDismiss,
         title = { Text("Scene") },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true)
 
                 Text("Signature", fontSize = 12.sp)
@@ -129,7 +128,7 @@ fun PickerDialog(title: String, options: List<String>, onDismiss: () -> Unit, on
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (options.isEmpty()) Text("Nothing here yet.", fontSize = 12.sp)
                 for (o in options) OutlinedButton(onClick = { onPick(o) }, modifier = Modifier.fillMaxWidth()) { Text(o) }
             }
