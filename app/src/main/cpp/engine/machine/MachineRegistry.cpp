@@ -1,21 +1,21 @@
 #include "MachineRegistry.h"
-#include "nought/Nought.h"
+#include "subvert/SubVert.h"
 
 namespace acidulous {
 
 namespace {
-const char *const kNames[] = {"Nought"};
+const char *const kNames[] = {"SubVert"};
 constexpr int32_t kCount = sizeof(kNames) / sizeof(kNames[0]);
 } // namespace
 
 Machine *MachineRegistry::create(const char *typeName) {
-    if (std::strcmp(typeName, "Nought") == 0) return new machine::Nought();
+    if (std::strcmp(typeName, "SubVert") == 0) return new machine::SubVert();
     return nullptr;
 }
 
 const ParamDef *MachineRegistry::paramDefs(const char *typeName, int32_t &count) {
-    if (std::strcmp(typeName, "Nought") == 0) {
-        static const machine::Nought probe;
+    if (std::strcmp(typeName, "SubVert") == 0) {
+        static const machine::SubVert probe;
         return probe.paramDefs(count);
     }
     count = 0;

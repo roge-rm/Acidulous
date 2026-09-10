@@ -9,7 +9,7 @@ core/       Constants · RtQueue (SPSC, wait-free) · Handover (Mount / Retire +
             retire worker) · Params (ParamDef tables, 0..1 in, smoothed unit-range
             out) · Messages (MidiMessage, ParamMessage)
 dsp/        Math · Osc (PolyBLEP saw/pulse) · Filter (TPT SVF) · Envelope (decay, ASR)
-machine/    Machine interface · MachineRegistry · nought/ (the signature voice)
+machine/    Machine interface · MachineRegistry · subvert/ (the signature voice)
 effect/     Effect interface (no implementations yet - M9)
 eventor/    Eventor interface + MidiSink (scale/chord/arp live here - M11)
 rack/       Rack (clip player -> eventors -> machine -> effects -> channel strip)

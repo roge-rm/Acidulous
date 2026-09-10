@@ -29,7 +29,7 @@ object PatchStore {
             (directory(context, machine).listFiles { f -> f.extension == "json" }?.map { it.nameWithoutExtension }?.sorted() ?: emptyList())
 
     fun factory(machine: String): List<Patch> = when (machine) {
-        "Nought" -> NoughtPresets.all
+        "SubVert" -> SubVertPresets.all
         else -> emptyList()
     }
 
@@ -37,11 +37,11 @@ object PatchStore {
 }
 
 /**
- * Nought's factory patches. Values are normalised; the names are ours.
+ * SubVert's factory patches. Values are normalised; the names are ours.
  * Voiced on paper - Dan tunes by ear from the debug build.
  */
-object NoughtPresets {
-    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Nought", name, kv.toMap())
+object SubVertPresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("SubVert", name, kv.toMap())
 
     val all: List<Patch> = listOf(
         p("Init"),

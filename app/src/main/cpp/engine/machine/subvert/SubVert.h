@@ -4,7 +4,7 @@
 #include <engine/dsp/Osc.h>
 #include <engine/machine/Machine.h>
 
-// Nought - the signature machine, in its first form. Not a 303: the brief is
+// SubVert - the signature machine, in its first form. Not a 303: the brief is
 // to do to the 303 what the TB-3 did. This is the classic layer only - saw or
 // pulse, a resonant lowpass with envelope-modulated cutoff, decay, accent and
 // slide - voiced by ear, tuned later.
@@ -14,15 +14,15 @@
 // or above the threshold: more envelope, more level.
 namespace acidulous::machine {
 
-class Nought final : public Machine {
+class SubVert final : public Machine {
   public:
     enum P : int32_t { Wave, Tune, Cutoff, Resonance, EnvMod, Decay, Accent, Slide, Drive, Volume,
                        // the open layer
                        PulseWidth, Sub, Mode, Count };
 
-    Nought();
+    SubVert();
 
-    const char *typeName() const override { return "Nought"; }
+    const char *typeName() const override { return "SubVert"; }
     const ParamDef *paramDefs(int32_t &count) const override;
 
     void prepare(int32_t sampleRate) override;

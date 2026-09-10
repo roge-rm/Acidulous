@@ -1,10 +1,10 @@
-#include "Nought.h"
+#include "SubVert.h"
 #include <engine/core/Constants.h>
 
 namespace acidulous::machine {
 
 namespace {
-const ParamDef kDefs[Nought::Count] = {
+const ParamDef kDefs[SubVert::Count] = {
     {"wave", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},          // 0 saw, 1 pulse
     {"tune", -12.0f, 12.0f, 0.0f, Curve::Linear, 0, "st"},
     {"cutoff", 40.0f, 12000.0f, 700.0f, Curve::Exponential, 0, "Hz"},
@@ -21,14 +21,14 @@ const ParamDef kDefs[Nought::Count] = {
 };
 } // namespace
 
-Nought::Nought() { initParams(); }
+SubVert::SubVert() { initParams(); }
 
-const ParamDef *Nought::paramDefs(int32_t &count) const {
+const ParamDef *SubVert::paramDefs(int32_t &count) const {
     count = Count;
     return kDefs;
 }
 
-void Nought::prepare(int32_t sr) {
+void SubVert::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
     osc.setSampleRate(sampleRate);
     sub.setSampleRate(sampleRate);
@@ -43,7 +43,7 @@ void Nought::prepare(int32_t sr) {
     reset();
 }
 
-void Nought::reset() {
+void SubVert::reset() {
     stackSize = 0;
     gliding = false;
     accented = false;
@@ -54,7 +54,7 @@ void Nought::reset() {
     svf2.reset();
 }
 
-void Nought::startNote(uint8_t note, bool legato, bool accent) {
+void SubVert::startNote(uint8_t note, bool legato, bool accent) {
     targetPitch = static_cast<float>(note);
     if (legato) {
         // Slide: glide there, keep the envelopes running.
@@ -72,7 +72,7 @@ void Nought::startNote(uint8_t note, bool legato, bool accent) {
     }
 }
 
-void Nought::noteOn(uint8_t note, uint8_t velocity) {
+void SubVert::noteOn(uint8_t note, uint8_t velocity) {
     const bool legato = stackSize > 0;
     // Push (or move to top) on the held-note stack.
     int32_t found = -1;
@@ -91,7 +91,7 @@ void Nought::noteOn(uint8_t note, uint8_t velocity) {
     startNote(note, legato, velocity >= kAccentVelocity);
 }
 
-void Nought::noteOff(uint8_t note) {
+void SubVert::noteOff(uint8_t note) {
     int32_t found = -1;
     for (int32_t i = 0; i < stackSize; ++i) {
         if (stack[i] == note) { found = i; break; }
@@ -108,12 +108,12 @@ void Nought::noteOff(uint8_t note) {
     }
 }
 
-void Nought::allNotesOff() {
+void SubVert::allNotesOff() {
     stackSize = 0;
     ampEnv.gate(false);
 }
 
-bool Nought::render(float *L, float * /*R*/, int32_t frames) {
+bool SubVert::render(float *L, float * /*R*/, int32_t frames) {
     params_.tick();
     const bool pulse = params_.get(Wave) >= 0.5f;
     const float tune = params_.get(Tune);

@@ -63,7 +63,7 @@ fun MachinePanel(
             }
         }
         when (type) {
-            "Nought" -> NoughtPanel(binding)
+            "SubVert" -> SubVertPanel(binding)
             else -> GenericPanel(binding)
         }
     }
@@ -172,9 +172,9 @@ private fun Group(title: String, content: @Composable () -> Unit) {
     }
 }
 
-/** Nought: the classic layer left to right, the open layer after it. */
+/** SubVert: the classic layer left to right, the open layer after it. */
 @Composable
-private fun NoughtPanel(b: ParamBinding) {
+private fun SubVertPanel(b: ParamBinding) {
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Group("osc") { PanelSwitch(b, "wave", listOf("saw", "pulse")); PanelKnob(b, "pw"); PanelKnob(b, "sub"); PanelKnob(b, "tune") }
         Group("filter") { PanelKnob(b, "cutoff", accent = Color(0xFFFFB454)); PanelKnob(b, "resonance", "reso", Color(0xFFFFB454)); PanelKnob(b, "envmod", accent = Color(0xFFFFB454)); PanelKnob(b, "decay", accent = Color(0xFFFFB454)); PanelSwitch(b, "mode", listOf("lp", "bp")) }

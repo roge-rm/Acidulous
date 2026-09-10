@@ -64,7 +64,7 @@ fun EditScreen(
     val clipLen = song.clipLengthTicks(sceneId, clip)
 
     var mode by remember { mutableStateOf(EditMode.Draw) }
-    var steps by remember { mutableStateOf(false) } // Nought's alternate editor over the same clip
+    var steps by remember { mutableStateOf(false) } // SubVert's alternate editor over the same clip
     var laneKey by remember { mutableStateOf<String?>(null) }
     val laneKeys = remember(track.machine.type) { automationKeysFor(track.machine.type) }
     var selection by remember { mutableStateOf(emptySet<Int>()) }
@@ -195,7 +195,7 @@ fun EditScreen(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (track.machine.type == "Nought") {
+            if (track.machine.type == "SubVert") {
                 OutlinedButton(onClick = { steps = !steps }) { Text(if (steps) "▦ steps" else "▤ roll", fontSize = 12.sp) }
             }
             if (!steps) OutlinedButton(onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {
