@@ -52,6 +52,9 @@ fun EditScreen(
     armed: Boolean,
     onArm: (Boolean) -> Unit,
     onBack: () -> Unit,
+    patchNames: () -> List<String>,
+    onSavePatch: (String) -> Unit,
+    onLoadPatch: (String) -> Map<String, Float>?,
     modifier: Modifier = Modifier,
 ) {
     val track = song.tracks.getOrNull(trackIndex) ?: return
@@ -61,6 +64,7 @@ fun EditScreen(
     val clipLen = song.clipLengthTicks(sceneId, clip)
 
     var mode by remember { mutableStateOf(EditMode.Draw) }
+    var steps by remember { mutableStateOf(false) } // Nought's alternate editor over the same clip
     var laneKey by remember { mutableStateOf<String?>(null) }
     val laneKeys = remember(track.machine.type) { automationKeysFor(track.machine.type) }
     var selection by remember { mutableStateOf(emptySet<Int>()) }
@@ -93,7 +97,23 @@ fun EditScreen(
             TextButton(onClick = { lowestPitch = (lowestPitch - 12).coerceAtLeast(0) }) { Text("▼", color = Color.White) }
         }
 
-        PianoRoll(
+        if (steps) StepEditor(
+            clip = clip,
+            ticksPerBar = ticksPerBar,
+            playheadTick = playhead,
+            onSetStep = { tick, note ->
+                editor.editClip(trackIndex, sceneId) { c ->
+                    val others = c.notes.filter { it.tick != tick }
+                    c.copy(notes = (if (note != null) others + note else others).sortedBy { it.tick })
+                }
+            },
+            onPitchGestureBegin = { editor.beginGesture(trackIndex) },
+            onPitchGesture = { tick, note ->
+                editor.updateGestureClip(sceneId) { base -> base.copy(notes = base.notes.map { if (it.tick == tick) note else it }) }
+            },
+            onPitchGestureEnd = { editor.endGesture() },
+            modifier = Modifier.fillMaxWidth().weight(1f),
+        ) else PianoRoll(
             clip = clip,
             ticksPerBar = ticksPerBar,
             mode = mode,
@@ -155,8 +175,8 @@ fun EditScreen(
             modifier = Modifier.fillMaxWidth().height(88.dp).padding(top = 4.dp),
         )
 
-        // Live parameters of the machine - record from these while armed.
-        ParamStrip(trackIndex, track.machine.type, Modifier.fillMaxWidth().height(56.dp).padding(top = 4.dp))
+        // The machine's face: knobs go to the engine as gestures and into the document as undo steps.
+        MachinePanel(track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch, Modifier.fillMaxWidth().padding(top = 4.dp))
 
         // A slim keyboard: enough to audition and record; the machine panel (M7) replaces it.
         var octave by remember { mutableStateOf(2) }
@@ -175,7 +195,10 @@ fun EditScreen(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            OutlinedButton(onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {
+            if (track.machine.type == "Nought") {
+                OutlinedButton(onClick = { steps = !steps }) { Text(if (steps) "▦ steps" else "▤ roll", fontSize = 12.sp) }
+            }
+            if (!steps) OutlinedButton(onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {
                 Text(if (mode == EditMode.Draw) "✎ draw" else "⬚ select", fontSize = 12.sp)
             }
             OutlinedButton(onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }

@@ -106,3 +106,10 @@ fun Song.changeMachine(index: Int, machineType: String): Song =
     updateTrack(index) { it.copy(machine = Machine(type = machineType)) }
 
 fun Song.renameTrack(index: Int, name: String): Song = updateTrack(index) { it.copy(name = name) }
+
+// --- Machine parameters (document side of a knob) ----------------------------------
+
+fun Track.withParam(name: String, v01: Float): Track =
+    copy(machine = machine.copy(params = machine.params + (name to v01.coerceIn(0f, 1f))))
+
+fun Track.withPatch(params: Map<String, Float>): Track = copy(machine = machine.copy(params = params))

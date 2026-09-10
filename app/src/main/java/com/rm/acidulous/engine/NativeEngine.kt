@@ -26,6 +26,7 @@ object NativeEngine {
     /** Every machine type the engine can build, from its registry. */
     val machineTypes: List<String> get() = nativeMachineTypes().toList()
     fun machineParamNames(type: String): List<String> = nativeMachineParamNames(type).toList()
+    fun machineParamInfo(type: String): List<ParamInfo> = nativeMachineParamInfo(type).map { ParamInfo.parse(it) }
     /** Normalised 0..1 value of a mounted unit's parameter, or -1. */
     fun paramNormalized(rackId: Int, unit: String, name: String): Float = nativeParamNormalized(rackId, unit, name)
 
@@ -148,6 +149,7 @@ object NativeEngine {
     private external fun nativeSnapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean
     private external fun nativeSnapshotCommit(handle: Long): Boolean
     private external fun nativeMachineParamNames(type: String): Array<String>
+    private external fun nativeMachineParamInfo(type: String): Array<String>
     private external fun nativeParamNormalized(rackId: Int, unit: String, name: String): Float
     private external fun nativeSnapshotAbandon(handle: Long)
 }

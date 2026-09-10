@@ -25,6 +25,8 @@ import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
 import com.rm.acidulous.engine.Recorder
 import com.rm.acidulous.model.DemoSong
+import com.rm.acidulous.model.Patch
+import com.rm.acidulous.model.PatchStore
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.SongStore
@@ -161,6 +163,9 @@ private fun App(modifier: Modifier = Modifier) {
             song = song, editor = editor, trackIndex = s.track, sceneId = s.sceneId,
             position = position, playing = playing, armed = armed, onArm = onArm,
             onBack = { screen = Screen.Main },
+            patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
+            onSavePatch = { name -> PatchStore.save(context, Patch(song.tracks[s.track].machine.type, name, song.tracks[s.track].machine.params)) },
+            onLoadPatch = { name -> PatchStore.load(context, song.tracks[s.track].machine.type, name)?.params },
             modifier = modifier,
         )
     }

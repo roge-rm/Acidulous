@@ -15,6 +15,9 @@ const ParamDef kDefs[Nought::Count] = {
     {"slide", 5.0f, 500.0f, 60.0f, Curve::Exponential, 0, "ms"},
     {"drive", 0.0f, 1.0f, 0.1f, Curve::Linear, 0, ""},
     {"volume", 0.0f, 1.0f, 0.8f, Curve::Linear, 0, ""},
+    {"pw", 0.05f, 0.95f, 0.5f, Curve::Linear, 0, ""},          // pulse width, pulse wave only
+    {"sub", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},           // square an octave down
+    {"mode", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},         // 0 lowpass, 1 bandpass
 };
 } // namespace
 
@@ -28,6 +31,7 @@ const ParamDef *Nought::paramDefs(int32_t &count) const {
 void Nought::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
     osc.setSampleRate(sampleRate);
+    sub.setSampleRate(sampleRate);
     svf1.setSampleRate(sampleRate);
     svf2.setSampleRate(sampleRate);
     filterEnv.setSampleRate(sampleRate);
@@ -60,7 +64,8 @@ void Nought::startNote(uint8_t note, bool legato, bool accent) {
         pitch = targetPitch;
         gliding = false;
         accented = accent;
-        filterEnv.setTimes(0.003f, params_.get(Decay) * 0.001f);
+        // An accented note snaps: shorter decay, so the sweep bites and gets out of the way.
+        filterEnv.setTimes(0.003f, params_.get(Decay) * 0.001f * (accent ? 0.6f : 1.0f));
         filterEnv.trigger();
         if (accent) accentEnv.trigger();
         ampEnv.gate(true);
@@ -118,6 +123,9 @@ bool Nought::render(float *L, float * /*R*/, int32_t frames) {
     const float accentAmt = params_.get(Accent);
     const float drive = params_.get(Drive);
     const float volume = params_.get(Volume);
+    const float pw = params_.get(PulseWidth);
+    const float subLevel = params_.get(Sub);
+    const bool bandpass = params_.get(Mode) >= 0.5f;
 
     if (!ampEnv.active()) {
         for (int32_t i = 0; i < frames; ++i) L[i] = 0.0f;
@@ -132,8 +140,11 @@ bool Nought::render(float *L, float * /*R*/, int32_t frames) {
             pitch += (targetPitch - pitch) * glideCoeff;
             if (std::fabs(targetPitch - pitch) < 0.001f) { pitch = targetPitch; gliding = false; }
         }
-        osc.setFrequency(dsp::mtof(pitch + tune));
-        float s = pulse ? osc.pulse(0.5f) : osc.saw();
+        const float hz = dsp::mtof(pitch + tune);
+        osc.setFrequency(hz);
+        sub.setFrequency(hz * 0.5f);
+        float s = pulse ? osc.pulse(pw) : osc.saw();
+        if (subLevel > 0.0f) s += sub.pulse(0.5f) * subLevel;
 
         const float fenv = filterEnv.next();
         const float aenv = accentEnv.next();
@@ -145,7 +156,11 @@ bool Nought::render(float *L, float * /*R*/, int32_t frames) {
             svf2.set(fc, resonance * 0.3f);
             coeffCountdown = 3; // every 4 samples is plenty for a sweep
         }
-        s = svf2.lowpass(svf1.lowpass(s));
+        // Two stages with a touch of saturation between them: the resonance
+        // rounds off instead of ringing clean, which is most of the bite.
+        s = bandpass ? svf1.bandpass(s) : svf1.lowpass(s);
+        s = dsp::fastTanh(s * 1.3f) * 0.77f;
+        s = svf2.lowpass(s);
         s = dsp::fastTanh(s * driveGain) * driveComp;
 
         const float amp = ampEnv.next() * volume * (1.0f + (accented ? accentAmt * aenv * 0.6f : 0.0f));

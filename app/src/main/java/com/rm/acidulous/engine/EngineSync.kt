@@ -110,9 +110,18 @@ object EngineSync {
         NativeEngine.setLoopSong(song.loopSong)
         Log.d(TAG, "push: ${song.scenes.size} scenes, $cached clips cached, $marshalled marshalled")
         val ok = NativeEngine.snapshotCommit(handle) // consumes the handle either way
-        song.tracks.forEachIndexed { rack, track -> if (rack < RACKS) pushChannel(rack, track.mixer) }
+        song.tracks.forEachIndexed { rack, track ->
+            if (rack < RACKS) {
+                pushChannel(rack, track.mixer)
+                pushMachineParams(rack, track.machine.params)
+            }
+        }
         pushMaster(song.master)
         return ok
+    }
+
+    fun pushMachineParams(rack: Int, params: Map<String, Float>) {
+        for ((name, v) in params) NativeEngine.setParam(rack, "machine", name, v, record = false)
     }
 
     // --- Mixer parameters: cheap enough to send whole on every push ------------------

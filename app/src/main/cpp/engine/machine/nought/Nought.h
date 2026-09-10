@@ -16,7 +16,9 @@ namespace acidulous::machine {
 
 class Nought final : public Machine {
   public:
-    enum P : int32_t { Wave, Tune, Cutoff, Resonance, EnvMod, Decay, Accent, Slide, Drive, Volume, Count };
+    enum P : int32_t { Wave, Tune, Cutoff, Resonance, EnvMod, Decay, Accent, Slide, Drive, Volume,
+                       // the open layer
+                       PulseWidth, Sub, Mode, Count };
 
     Nought();
 
@@ -38,6 +40,7 @@ class Nought final : public Machine {
 
     float sampleRate = 48000.0f;
     dsp::Osc osc;
+    dsp::Osc sub;
     dsp::Svf svf1, svf2;
     dsp::DecayEnv filterEnv;
     dsp::DecayEnv accentEnv;

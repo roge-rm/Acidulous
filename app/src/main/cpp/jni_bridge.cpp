@@ -1,5 +1,6 @@
 #include "EngineHost.h"
 #include <android/log.h>
+#include <cstdio>
 #include <engine/machine/MachineRegistry.h>
 #include <jni.h>
 #include <string>
@@ -252,6 +253,24 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamNames(JNIEnv *env, j
     jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
     for (int32_t i = 0; i < n; ++i) {
         jstring s = env->NewStringUTF(defs[i].name);
+        env->SetObjectArrayElement(out, i, s);
+        env->DeleteLocalRef(s);
+    }
+    return out;
+}
+
+// "name|min|max|def|curve|steps|unit" per parameter; curve 0 linear, 1 exponential, 2 stepped.
+JNIEXPORT jobjectArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamInfo(JNIEnv *env, jobject, jstring type) {
+    int32_t n = 0;
+    const acidulous::ParamDef *defs = acidulous::MachineRegistry::paramDefs(toStdString(env, type).c_str(), n);
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
+    char buf[160];
+    for (int32_t i = 0; i < n; ++i) {
+        const auto &d = defs[i];
+        snprintf(buf, sizeof(buf), "%s|%g|%g|%g|%d|%d|%s", d.name, d.min, d.max, d.def, static_cast<int>(d.curve), d.steps, d.unit);
+        jstring s = env->NewStringUTF(buf);
         env->SetObjectArrayElement(out, i, s);
         env->DeleteLocalRef(s);
     }
