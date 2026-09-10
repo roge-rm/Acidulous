@@ -12,7 +12,7 @@ dsp/        Math · Osc (PolyBLEP saw/pulse) · Filter (TPT SVF) · MultiFilter 
             drive) · Envelope (decay, ASR) · Adsr (DADSR + repeat) · LfoGen · Wavetable ·
             Biquad · DelayLine · Lfo (note-value phase) · Reverb · Delay · Limiter · Click
 machine/    Machine interface · MachineRegistry · subvert/ · trinity/ (the 3-osc poly) ·
-            hexbeat/ · forage/
+            ratio/ (6-op FM, morphing algorithms) · hexbeat/ · forage/
 effect/     Effect interface (onBlock for tempo, run() with bypass) · EffectRegistry ·
             Effects: Delay Reverb Eq Distortion Compressor Filter Bitcrusher Phaser Flanger
 eventor/    Eventor interface + MidiSink · EventorRegistry · Scales.h (33 scales, 25 chords) ·

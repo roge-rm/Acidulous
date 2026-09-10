@@ -85,6 +85,7 @@ fun MachinePanel(
             "Subvert" -> SubvertPanel(binding)
             "Hexbeat" -> HexbeatPanel(binding)
             "Trinity" -> TrinityPanel(binding)
+            "Ratio" -> RatioPanel(binding)
             "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample)
             else -> GenericPanel(binding)
         }
@@ -506,5 +507,125 @@ private fun TouchBar(
             color = Color(0xFFDDDDE2), fontSize = 10.sp, fontFamily = FontFamily.Monospace,
             modifier = Modifier.align(Alignment.CenterStart).padding(start = 6.dp),
         )
+    }
+}
+
+
+// --- Ratio -----------------------------------------------------------------------
+//
+// Six operators, two algorithms and a morph between them. Same sectioned
+// Group layout as Trinity; names mirror engine/machine/ratio/Ratio.cpp and
+// the algorithm list mirrors Algorithms.h - keep them in step.
+
+val RATIO_WAVES = listOf(
+    "sine", "sin12", "sin8", "half", "rect", "quart", "tri", "saw",
+    "square", "pulse", "1+2", "1+3", "1+2+3", "odd", "s&h", "noise",
+)
+val RATIO_MODES = listOf("fm", "ring", "filter", "filtFM", "fold", "sync", "phase", "crush")
+val RATIO_SNAP = listOf("free", "harm", "sub", "odd", "semi", "bell")
+val RATIO_ALGOS = listOf(
+    "6-5-4-3-2-1", "6-5-4-3-2 1", "6-5-4-3 2-1", "6-5-4 3-2-1", "6-5 4-3-2-1",
+    "6-5-4 : 3-2-1", "6-5 : 4-3 : 2-1", "6-5-4-3 : 2-1", "6-4 5-4 4-3-2-1", "6-5-3 4-3 3-2-1",
+    "6 - 1,2,3,4,5", "6,5 - 1,2,3,4", "6-5 - 1,2,3,4", "5,6 - 4 : 3 - 1,2",
+    "2,3,4,5,6 - 1", "4,5,6 - 1", "5-4 6-4 4-1", "6-5 5-2 4-3",
+    "6-5 : 4-3 : 2-1 w", "6-5 4-5 : 3-2", "6-4 5-3 : 2-1", "6-3 5-2 4-1",
+    "all six", "5 carriers", "6-1 : 2,3,4,5", "6-5-4 : 3 : 2 : 1",
+    "ring loop", "6-5..2-1 6-1", "fan 3 / 3", "6-2 6-4 5-1 5-3", "6-5-4-2 3-2", "6-5-1 4-3-1",
+)
+val RATIO_SOURCES = listOf(
+    "off", "on", "mod", "prs", "vel", "key", "rand", "eg1", "eg2", "eg3", "fenv", "lfo1", "lfo2", "lfo3",
+)
+val RATIO_DESTS = listOf(
+    "off", "pitch", "morph", "skew",
+    "lvl1", "lvl2", "lvl3", "lvl4", "lvl5", "lvl6",
+    "ratio1", "ratio2", "ratio3", "ratio4", "ratio5", "ratio6",
+    "fb", "f.freq", "f.res", "amp", "pan", "l1rate", "l2rate", "l3rate",
+)
+
+@Composable
+private fun RatioPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    Column {
+        SectionChips(listOf("op", "algo", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> for (o in 1..6) Group("op $o") {
+                    val p = "o${o}_"
+                    PanelStepKnob(b, p + "wave", RATIO_WAVES, "wave", PanelAmber)
+                    PanelStepKnob(b, p + "mode", RATIO_MODES, "mode", PanelAmber)
+                    PanelKnob(b, p + "ratio", "ratio", PanelAmber)
+                    PanelKnob(b, p + "fine", "fine")
+                    PanelSwitch(b, p + "fixed", listOf("ratio", "Hz"), "pitch")
+                    PanelKnob(b, p + "level", "level", PanelAmber)
+                    PanelKnob(b, p + "fb", "fb", PanelPink)
+                    PanelKnob(b, p + "attack", "attack")
+                    PanelKnob(b, p + "decay", "decay")
+                    PanelKnob(b, p + "sustain", "sustain")
+                    PanelKnob(b, p + "release", "release")
+                    PanelKnob(b, p + "vel", "vel")
+                    PanelKnob(b, p + "key", "key")
+                    PanelKnob(b, p + "pan", "pan")
+                }
+                1 -> {
+                    Group("algorithm") {
+                        PanelStepKnob(b, "algoa", RATIO_ALGOS, "A", PanelAmber)
+                        PanelStepKnob(b, "algob", RATIO_ALGOS, "B", PanelAmber)
+                        PanelKnob(b, "morph", "morph", PanelAmber)
+                    }
+                    Group("ratios") {
+                        PanelStepKnob(b, "snap", RATIO_SNAP, "snap", PanelAmber)
+                        PanelKnob(b, "skew", "skew", PanelAmber)
+                    }
+                }
+                2 -> {
+                    Group("filter") {
+                        PanelStepKnob(b, "f_type", TRINITY_FILTERS, "type", PanelAmber)
+                        PanelKnob(b, "f_freq", "freq", PanelAmber)
+                        PanelKnob(b, "f_res", "reso", PanelAmber)
+                        PanelKnob(b, "f_env", "envmod")
+                        PanelKnob(b, "f_key", "key")
+                    }
+                    Group("filter env") {
+                        PanelKnob(b, "f_attack", "attack")
+                        PanelKnob(b, "f_decay", "decay")
+                        PanelKnob(b, "f_sustain", "sustain")
+                        PanelKnob(b, "f_release", "release")
+                    }
+                }
+                3 -> for (e in 1..3) Group("env $e") {
+                    val p = "e${e}_"
+                    PanelKnob(b, p + "attack", "attack", PanelAmber)
+                    PanelKnob(b, p + "decay", "decay", PanelAmber)
+                    PanelKnob(b, p + "sustain", "sustain", PanelAmber)
+                    PanelKnob(b, p + "release", "release", PanelAmber)
+                }
+                4 -> for (l in 1..3) Group("lfo $l") {
+                    val p = "l${l}_"
+                    PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, p + "rate", "rate", PanelAmber)
+                    PanelStepKnob(b, p + "sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
+                    PanelKnob(b, p + "delay", "delay")
+                    PanelKnob(b, p + "phase", "phase")
+                    PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
+                }
+                5 -> for (m in 1..10) Group("mod $m") {
+                    val p = "m%02d_".format(m)
+                    PanelStepKnob(b, p + "src", RATIO_SOURCES, "from", PanelAmber)
+                    PanelStepKnob(b, p + "src2", RATIO_SOURCES, "× from")
+                    PanelStepKnob(b, p + "dest", RATIO_DESTS, "to", PanelAmber)
+                    PanelKnob(b, p + "depth", "depth", PanelAmber)
+                }
+                else -> {
+                    Group("voice") {
+                        PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
+                        PanelKnob(b, "glide", "glide")
+                        PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
+                        PanelKnob(b, "bend", "bend")
+                    }
+                    Group("tuning") { PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose") }
+                    Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
+                }
+            }
+        }
     }
 }

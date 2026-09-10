@@ -18,7 +18,7 @@ object MachineUi {
      * the Edit screen shows the strip. A machine that ignores mod wheel and
      * pressure gets no strip rather than a dead one.
      */
-    fun usesPerformance(type: String): Boolean = type == "Trinity"
+    fun usesPerformance(type: String): Boolean = type == "Trinity" || type == "Ratio"
 
     val hexbeatVoices: List<DrumVoice> = listOf(
         DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Rim", "RS"), DrumVoice(38, "Snare", "SD"), DrumVoice(39, "Clap", "CP"),
