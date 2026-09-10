@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
+import com.rm.acidulous.model.MachineKind
+import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
@@ -64,7 +66,9 @@ fun EditScreen(
     val clipLen = song.clipLengthTicks(sceneId, clip)
 
     var mode by remember { mutableStateOf(EditMode.Draw) }
-    var steps by remember { mutableStateOf(false) } // SubVert's alternate editor over the same clip
+    var steps by remember { mutableStateOf(false) } // the machine's alternate editor over the same clip
+    val kind = MachineUi.kindOf(track.machine.type)
+    val hasSteps = track.machine.type == "Subvert" || kind == MachineKind.Drums
     var laneKey by remember { mutableStateOf<String?>(null) }
     val laneKeys = remember(track.machine.type) { automationKeysFor(track.machine.type) }
     var selection by remember { mutableStateOf(emptySet<Int>()) }
@@ -97,7 +101,19 @@ fun EditScreen(
             TextButton(onClick = { lowestPitch = (lowestPitch - 12).coerceAtLeast(0) }) { Text("▼", color = Color.White) }
         }
 
-        if (steps) StepEditor(
+        if (steps && kind == MachineKind.Drums) DrumGrid(
+            clip = clip,
+            ticksPerBar = ticksPerBar,
+            voices = MachineUi.voicesOf(track.machine.type),
+            playheadTick = playhead,
+            onSetHit = { tick, note, hit ->
+                editor.editClip(trackIndex, sceneId) { c ->
+                    val others = c.notes.filter { !(it.tick == tick && it.pitch == note) }
+                    c.copy(notes = (if (hit != null) others + hit else others).sortedBy { it.tick })
+                }
+            },
+            modifier = Modifier.fillMaxWidth().weight(1f),
+        ) else if (steps) StepEditor(
             clip = clip,
             ticksPerBar = ticksPerBar,
             playheadTick = playhead,
@@ -178,9 +194,10 @@ fun EditScreen(
         // The machine's face: knobs go to the engine as gestures and into the document as undo steps.
         MachinePanel(track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch, Modifier.fillMaxWidth().padding(top = 4.dp))
 
-        // A slim keyboard: enough to audition and record; the machine panel (M7) replaces it.
+        // Played from pads or from a slim keyboard, by machine kind.
         var octave by remember { mutableStateOf(2) }
-        Row(Modifier.fillMaxWidth().height(64.dp).padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        if (kind == MachineKind.Drums) DrumPads(trackIndex, MachineUi.voicesOf(track.machine.type), Modifier.fillMaxWidth().height(72.dp).padding(top = 6.dp))
+        else Row(Modifier.fillMaxWidth().height(64.dp).padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             TextButton(onClick = { if (octave > 0) octave-- }) { Text("−", color = Color.White) }
             for (semitone in intArrayOf(0, 2, 4, 5, 7, 9, 11, 12)) {
                 val note = 12 * (octave + 1) + semitone
@@ -195,7 +212,7 @@ fun EditScreen(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (track.machine.type == "SubVert") {
+            if (hasSteps) {
                 OutlinedButton(onClick = { steps = !steps }) { Text(if (steps) "▦ steps" else "▤ roll", fontSize = 12.sp) }
             }
             if (!steps) OutlinedButton(onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {

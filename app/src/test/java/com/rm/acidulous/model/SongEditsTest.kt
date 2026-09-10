@@ -47,16 +47,18 @@ class SongEditsTest {
 
     @Test
     fun tracksAddDuplicateDeleteChange() {
-        val two = demo.addTrack("SubVert")
-        assertEquals(2, two.tracks.size)
-        assertEquals("SubVert", two.tracks[1].machine.type)
-        assertTrue(two.tracks[1].clips.isEmpty())
+        val n = demo.tracks.size
+        val two = demo.addTrack("Subvert")
+        assertEquals(n + 1, two.tracks.size)
+        assertEquals("Subvert", two.tracks[n].machine.type)
+        assertTrue(two.tracks[n].clips.isEmpty())
 
         val dup = demo.duplicateTrack(0)
+        assertEquals(n + 1, dup.tracks.size)
         assertEquals(demo.tracks[0].clips.keys, dup.tracks[1].clips.keys)
         assertNotEquals(demo.tracks[0].id, dup.tracks[1].id)
 
-        assertEquals(0, demo.deleteTrack(0).tracks.size)
+        assertEquals(n - 1, demo.deleteTrack(0).tracks.size)
         assertEquals("Other", demo.changeMachine(0, "Other").tracks[0].machine.type)
         assertEquals("Lead", demo.renameTrack(0, "Lead").tracks[0].name)
     }

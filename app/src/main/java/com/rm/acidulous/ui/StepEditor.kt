@@ -35,7 +35,7 @@ import com.rm.acidulous.model.Note
 import kotlin.math.roundToInt
 
 /**
- * SubVert's step sequencer: the 303 way of entering a line, as a second editor
+ * Subvert's step sequencer: the 303 way of entering a line, as a second editor
  * over the ordinary clip. A step is the note starting on that grid tick.
  * Accent is velocity at or above 100; slide is a note long enough to overlap
  * the next step, which the voice plays as a legato glide. So the piano roll

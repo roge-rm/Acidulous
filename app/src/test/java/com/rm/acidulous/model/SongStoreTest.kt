@@ -54,7 +54,7 @@ class SongStoreTest {
         assertEquals(0.25f, song.tracks[0].mixer.sendReverb)
         assertEquals(song, SongStore.decode(SongStore.encode(song)))
         // a file from before M5 has no mixer or master: defaults apply
-        val old = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"SubVert"}}],"scenes":[{"id":"s","name":"S"}]}"""
+        val old = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"Subvert"}}],"scenes":[{"id":"s","name":"S"}]}"""
         val decoded = SongStore.decode(old)
         assertEquals(Mixer(), decoded.tracks[0].mixer)
         assertEquals(Master(), decoded.master)

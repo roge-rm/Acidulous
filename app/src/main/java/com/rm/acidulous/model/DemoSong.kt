@@ -39,6 +39,19 @@ object DemoSong {
             },
         )
 
+        // Drums: kick on 1 and 3, snare on 2 and 4, closed hats on the eighths,
+        // an open hat before the bar line. Accented downbeat.
+        fun beat(bars: Int): Clip {
+            val notes = ArrayList<Note>()
+            for (b in 0 until bars) {
+                val o = b * 4 * q
+                notes += Note(o, 30, 36, 110); notes += Note(o + 2 * q, 30, 36, 90)
+                notes += Note(o + q, 30, 38, 100); notes += Note(o + 3 * q, 30, 38, 100)
+                for (i in 0 until 8) notes += Note(o + i * e, 20, if (i == 7) 44 else 43, if (i % 2 == 0) 95 else 70)
+            }
+            return Clip(bars = bars, notes = notes.sortedBy { it.tick })
+        }
+
         return Song(
             name = "Demo",
             tempo = 120f,
@@ -47,9 +60,16 @@ object DemoSong {
                 Track(
                     id = "t-bass",
                     name = "Bass",
-                    machine = Machine(type = "SubVert"),
+                    machine = Machine(type = "Subvert"),
                     clips = mapOf(intro.id to introClip, verse.id to verseClip),
                     mixer = Mixer(sendReverb = 0.25f, sendDelay = 0.2f),
+                ),
+                Track(
+                    id = "t-drums",
+                    name = "Drums",
+                    machine = Machine(type = "Hexbeat"),
+                    clips = mapOf(intro.id to beat(1), verse.id to beat(2)),
+                    mixer = Mixer(sendReverb = 0.12f),
                 ),
             ),
             scenes = listOf(intro, verse),
