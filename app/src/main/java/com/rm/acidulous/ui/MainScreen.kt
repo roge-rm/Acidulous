@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -116,7 +117,8 @@ fun MainScreen(
                 OutlinedButton(
                     onClick = { dialog = Dialog.PickMachine(null) },
                     modifier = Modifier.width(TRACK_W).height(CELL_H).padding(3.dp),
-                ) { Text("+ track", fontSize = 11.sp) }
+                    contentPadding = PaddingValues(4.dp),
+                ) { Text("+ track", fontSize = 11.sp, maxLines = 1) }
             }
             // Scenes, scrolling horizontally.
             Column(Modifier.horizontalScroll(hScroll)) {
@@ -142,7 +144,8 @@ fun MainScreen(
                     OutlinedButton(
                         onClick = { editor.editSong { it.addScene() } },
                         modifier = Modifier.width(CELL_W).height(SCENE_H).padding(3.dp),
-                    ) { Text("+ scene", fontSize = 11.sp) }
+                        contentPadding = PaddingValues(4.dp),
+                    ) { Text("+ scene", fontSize = 11.sp, maxLines = 1) }
                 }
                 song.tracks.forEachIndexed { trackIndex, track ->
                     Row {
@@ -260,11 +263,12 @@ private fun SceneHeader(
             Text("${index + 1} $name", color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
                 buildString {
-                    append("×$repeat · ${bars}b")
-                    if (hasTempo) append(" · ♩")
+                    append("×$repeat ${bars}b")
+                    if (hasTempo) append(" ♩")
                     if (repeatIdx != null) append(" r${repeatIdx + 1}")
                 },
                 color = Color(0xFFCCCCCC), fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
