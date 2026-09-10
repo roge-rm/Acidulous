@@ -73,8 +73,10 @@ fun EditScreen(
     val clipLen = song.clipLengthTicks(sceneId, clip)
 
     var mode by remember { mutableStateOf(EditMode.Draw) }
-    var steps by remember { mutableStateOf(false) } // the machine's alternate editor over the same clip
     val kind = MachineUi.kindOf(track.machine.type)
+    // The machine's alternate editor over the same clip. A drum machine opens on
+    // its grid - that is the editor for it; a keyboard machine opens on the roll.
+    var steps by remember(trackIndex, kind) { mutableStateOf(kind == MachineKind.Drums) }
     val voices = MachineUi.voicesOf(track.machine.type, track.machine.settings)
     var selectedPad by remember(trackIndex) { mutableStateOf(0) }
     val hasSteps = track.machine.type == "Subvert" || kind == MachineKind.Drums
