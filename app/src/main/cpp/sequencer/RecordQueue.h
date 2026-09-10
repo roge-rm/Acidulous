@@ -18,9 +18,11 @@ struct RecordedEvent {
     int64_t sceneId;         // which scene was playing
     int64_t tickInIteration; // offset into that scene's current pass (the clip loops within it)
     int32_t rack;
-    uint8_t cmd;             // 0x80 / 0x90 / 0xb0 with channel bits cleared
-    uint8_t p1;
+    uint8_t cmd;             // 0x80 / 0x90 / 0xb0 with channel bits cleared; 0xf0 = parameter
+    uint8_t p1;              // parameter: the Unit
     uint8_t p2;
+    int32_t paramIndex = 0;  // parameter events only
+    float value = 0.0f;      // parameter events only, normalised
 };
 
 class RecordQueue {

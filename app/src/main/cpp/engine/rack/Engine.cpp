@@ -135,6 +135,20 @@ void Engine::drainParams() {
             master.params().set(p.index, p.value);
         } else if (p.rack >= 0 && p.rack < kRackCount) {
             racks[p.rack].setParam(p.unit, p.index, p.value);
+            if (p.record && transport.isRecording()) {
+                racks[p.rack].touch(p.unit, p.index);
+                seq::RecordedEvent ev;
+                ev.absTick = clock.position();
+                ev.sceneId = scheduler.currentSceneId();
+                ev.tickInIteration = scheduler.currentTickInIteration();
+                ev.rack = p.rack;
+                ev.cmd = 0xf0;
+                ev.p1 = static_cast<uint8_t>(p.unit);
+                ev.p2 = 0;
+                ev.paramIndex = p.index;
+                ev.value = p.value;
+                recordQueue.push(ev);
+            }
         }
     }
 }

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <android/log.h>
+#include <cstring>
 #include <chrono>
 #include <drivers/AudioDriver.h>
 #include <engine/core/Constants.h>
@@ -118,7 +119,28 @@ void EngineHost::noteOff(int rack, uint8_t note) {
     sEngine.pushMidi({static_cast<uint8_t>(0x80 | rack), note, 0});
 }
 
-bool EngineHost::setParam(int rack, const std::string &unit, const std::string &name, float value) {
+int EngineHost::paramIndex(const std::string &machineType, const std::string &unit, const std::string &name) const {
+    const Unit u = unitFromName(unit);
+    if (u == Unit::Machine) {
+        int32_t n = 0;
+        const ParamDef *defs = MachineRegistry::paramDefs(machineType.c_str(), n);
+        for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
+        return -1;
+    }
+    if (u == Unit::Channel) {
+        if (name == "gain") return Rack::Gain;
+        if (name == "pan") return Rack::Pan;
+        if (name == "mute") return Rack::Mute;
+        if (name == "solo") return Rack::Solo;
+        if (name == "sendreverb") return Rack::SendReverb;
+        if (name == "senddelay") return Rack::SendDelay;
+        return -1;
+    }
+    if (u == Unit::Master) return sEngine.master.params().indexOf(name.c_str());
+    return -1;
+}
+
+bool EngineHost::setParam(int rack, const std::string &unit, const std::string &name, float value, bool record) {
     const Unit u = unitFromName(unit);
     if (u != Unit::Master && (rack < 0 || rack >= kRackCount)) return false;
     int32_t index = -1;
@@ -144,6 +166,7 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
     p.unit = u;
     p.index = index;
     p.value = std::clamp(value, 0.0f, 1.0f);
+    p.record = record;
     return sEngine.pushParam(p);
 }
 
@@ -164,11 +187,14 @@ int EngineHost::drainRecorded(int64_t *out, int maxEvents) {
     int n = 0;
     seq::RecordedEvent ev;
     while (n < maxEvents && sEngine.recordQueue.pop(ev)) {
-        out[n * 4 + 0] = ev.absTick;
-        out[n * 4 + 1] = ev.sceneId;
-        out[n * 4 + 2] = ev.tickInIteration;
-        out[n * 4 + 3] = (static_cast<int64_t>(ev.rack) << 24) | (static_cast<int64_t>(ev.cmd) << 16) |
+        out[n * 5 + 0] = ev.absTick;
+        out[n * 5 + 1] = ev.sceneId;
+        out[n * 5 + 2] = ev.tickInIteration;
+        out[n * 5 + 3] = (static_cast<int64_t>(ev.rack) << 24) | (static_cast<int64_t>(ev.cmd) << 16) |
                          (static_cast<int64_t>(ev.p1) << 8) | static_cast<int64_t>(ev.p2);
+        uint32_t bits;
+        std::memcpy(&bits, &ev.value, sizeof(bits));
+        out[n * 5 + 4] = (static_cast<int64_t>(ev.paramIndex) << 32) | static_cast<int64_t>(bits);
         ++n;
     }
     return n;
@@ -233,6 +259,33 @@ bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t re
     return snap->setClip(rack, scene, std::move(clip));
 }
 
+bool EngineHost::snapshotSetLane(int64_t handle, int rack, int scene, const std::string &machineType,
+                                 const std::string &unit, const std::string &name, bool linear,
+                                 const float *points, int pointCount) {
+    using namespace seq;
+    auto *snap = fromHandle(handle);
+    if (snap == nullptr || scene < 0 || scene >= static_cast<int>(snap->scenes.size())) return false;
+    const int index = paramIndex(machineType, unit, name);
+    if (index < 0) return false;
+    const size_t idx = static_cast<size_t>(rack) * snap->scenes.size() + static_cast<size_t>(scene);
+    if (idx >= snap->clips.size() || !snap->clips[idx]) return false;
+    // A lane edit changes the clip's rev, so a clip receiving lanes is always
+    // one freshly built in this snapshot, never a shared cached one.
+    auto *clip = const_cast<Clip *>(snap->clips[idx].get());
+    Lane lane;
+    lane.unit = unitFromName(unit);
+    lane.index = index;
+    lane.linear = linear;
+    lane.points.reserve(static_cast<size_t>(std::max(0, pointCount)));
+    for (int n = 0; n < pointCount; ++n) {
+        lane.points.push_back({static_cast<int32_t>(points[n * 2]), std::clamp(points[n * 2 + 1], 0.0f, 1.0f)});
+    }
+    std::stable_sort(lane.points.begin(), lane.points.end(),
+                     [](const LanePoint &a, const LanePoint &b) { return a.tick < b.tick; });
+    clip->lanes.push_back(std::move(lane));
+    return true;
+}
+
 bool EngineHost::snapshotCommit(int64_t handle) {
     auto *snap = fromHandle(handle);
     if (snap == nullptr) return false;
@@ -271,6 +324,19 @@ float EngineHost::debugParam(int rack, const std::string &name) const {
     if (m == nullptr) return -2.0f;
     const int32_t idx = m->params().indexOf(name.c_str());
     return idx < 0 ? -3.0f : m->params().get(idx);
+}
+
+float EngineHost::paramNormalized(int rack, const std::string &unit, const std::string &name) const {
+    if (rack < 0 || rack >= kRackCount) return -1.0f;
+    const Unit u = unitFromName(unit);
+    const int index = paramIndex(mountedType[rack], unit, name);
+    if (index < 0) return -1.0f;
+    if (u == Unit::Machine) {
+        Machine *m = sEngine.racks[rack].currentMachine();
+        return m ? m->params().normalized(index) : -1.0f;
+    }
+    if (u == Unit::Channel) return sEngine.racks[rack].channelNormalized(index);
+    return -1.0f;
 }
 
 uint32_t EngineHost::notesOff(int rack) const {

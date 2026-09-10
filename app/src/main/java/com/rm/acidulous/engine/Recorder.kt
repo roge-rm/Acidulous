@@ -1,8 +1,11 @@
 package com.rm.acidulous.engine
 
 import android.util.Log
+import com.rm.acidulous.model.Lane
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.Song
+import com.rm.acidulous.model.laneKey
+import com.rm.acidulous.model.updateClip
 import com.rm.acidulous.model.addNote
 import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.emptyClipFor
@@ -24,7 +27,8 @@ class Recorder {
 
     var quantise: Boolean = true
 
-    private val buffer = LongArray(128 * 4)
+    private val buffer = LongArray(128 * 5)
+    private val paramNames = HashMap<String, List<String>>()
     private val open = HashMap<Int, OpenNote>() // key: rack shl 8 or pitch
     private var dirty = false
     private var lastScene = -1
@@ -45,22 +49,29 @@ class Recorder {
         var doc = song
         val n = NativeEngine.drainRecorded(buffer)
         for (i in 0 until n) {
-            val absTick = buffer[i * 4]
-            val sceneId = buffer[i * 4 + 1]
-            val tickInIteration = buffer[i * 4 + 2]
-            val packed = buffer[i * 4 + 3]
+            val absTick = buffer[i * 5]
+            val sceneId = buffer[i * 5 + 1]
+            val tickInIteration = buffer[i * 5 + 2]
+            val packed = buffer[i * 5 + 3]
+            val extra = buffer[i * 5 + 4]
             val rack = ((packed shr 24) and 0xff).toInt()
             val cmd = ((packed shr 16) and 0xff).toInt()
-            val pitch = ((packed shr 8) and 0xff).toInt()
-            val vel = (packed and 0xff).toInt()
-            val key = (rack shl 8) or pitch
+            val p1 = ((packed shr 8) and 0xff).toInt()
+            val p2 = (packed and 0xff).toInt()
 
-            val isOn = cmd == 0x90 && vel > 0
-            val isOff = cmd == 0x80 || (cmd == 0x90 && vel == 0)
+            if (cmd == 0xf0) {
+                val index = (extra shr 32).toInt()
+                val value = java.lang.Float.intBitsToFloat((extra and 0xffffffffL).toInt())
+                doc = commitParam(doc, rack, p1, index, value, sceneId, tickInIteration, sceneIdOf) ?: doc
+                continue
+            }
+            val key = (rack shl 8) or p1
+            val isOn = cmd == 0x90 && p2 > 0
+            val isOff = cmd == 0x80 || (cmd == 0x90 && p2 == 0)
             when {
-                isOn -> open[key] = OpenNote(absTick, sceneId, tickInIteration, vel)
+                isOn -> open[key] = OpenNote(absTick, sceneId, tickInIteration, p2)
                 isOff -> open.remove(key)?.let { on ->
-                    doc = commit(doc, rack, pitch, on, absTick, sceneIdOf) ?: doc
+                    doc = commit(doc, rack, p1, on, absTick, sceneIdOf) ?: doc
                 }
             }
         }
@@ -112,9 +123,39 @@ class Recorder {
         return song.addNote(rack, sceneId, Note(tick = tick, length = length, pitch = pitch, velocity = on.velocity, rawTick = raw))
     }
 
+    /** A knob move becomes a lane point at the quantised tick; same tick replaces. */
+    private fun commitParam(
+        song: Song, rack: Int, unitOrdinal: Int, index: Int, value: Float,
+        sceneIdRaw: Long, tickInIteration: Long, sceneIdOf: (Long) -> String?,
+    ): Song? {
+        val sceneId = sceneIdOf(sceneIdRaw) ?: return null
+        val track = song.tracks.getOrNull(rack) ?: return null
+        val unit = UNITS.getOrNull(unitOrdinal) ?: return null
+        val name = when (unit) {
+            "machine" -> paramNames.getOrPut(track.machine.type) { NativeEngine.machineParamNames(track.machine.type) }.getOrNull(index)
+            "channel" -> CHANNEL_PARAMS.getOrNull(index)
+            else -> null
+        } ?: return null
+        val clip = track.clips[sceneId] ?: song.emptyClipFor(sceneId)
+        val len = song.clipLengthTicks(sceneId, clip)
+        if (len <= 0) return null
+        val raw = (tickInIteration % len).toInt()
+        val g = clip.grid.coerceAtLeast(1)
+        val tick = if (quantise) (((raw + g / 2) / g) * g) % len else raw
+        val key = laneKey(unit, name)
+        dirty = true
+        return song.updateClip(rack, sceneId, { clip }) { c ->
+            val lane = c.automation[key] ?: Lane()
+            c.copy(automation = c.automation + (key to lane.withPoint(tick, value)))
+        }
+    }
+
     data class Result(val song: Song, val push: Boolean)
 
     private companion object {
         const val TAG = "Acidulous.Rec"
+        // Mirrors acidulous::Unit
+        val UNITS = listOf("machine", "effect1", "effect2", "eventor1", "eventor2", "channel", "master")
+        val CHANNEL_PARAMS = listOf("gain", "pan", "mute", "solo", "sendreverb", "senddelay")
     }
 }

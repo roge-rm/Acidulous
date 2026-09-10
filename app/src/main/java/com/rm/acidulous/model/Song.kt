@@ -34,7 +34,42 @@ data class Note(
     val rawTick: Int? = null,
 )
 
-/** One track's material for one scene. Automation lanes arrive in M6. */
+@Serializable
+data class LanePoint(val tick: Int, val value: Float)
+
+/**
+ * One parameter's movement over a clip. Values are the engine's normalised
+ * 0..1 domain. Keyed in [Clip.automation] by [laneKey] ("machine:cutoff",
+ * "channel:sendreverb"), so a lane follows its clip wherever it is copied.
+ */
+@Serializable
+data class Lane(val points: List<LanePoint> = emptyList(), val linear: Boolean = true) {
+    /** Adds or replaces the point at [tick]; keeps the list sorted. */
+    fun withPoint(tick: Int, value: Float): Lane {
+        val kept = points.filter { it.tick != tick }
+        return copy(points = (kept + LanePoint(tick, value.coerceIn(0f, 1f))).sortedBy { it.tick })
+    }
+
+    fun withoutPointsIn(from: Int, to: Int): Lane = copy(points = points.filter { it.tick < from || it.tick > to })
+
+    /** Mirrors seq::Lane::valueAt so the UI draws what the engine plays. */
+    fun valueAt(tick: Int): Float {
+        if (points.isEmpty()) return 0f
+        if (tick <= points.first().tick) return points.first().value
+        if (tick >= points.last().tick) return points.last().value
+        val i = points.indexOfLast { it.tick <= tick }
+        val a = points[i]
+        val b = points[i + 1]
+        if (!linear || b.tick == a.tick) return a.value
+        return a.value + (b.value - a.value) * (tick - a.tick).toFloat() / (b.tick - a.tick)
+    }
+}
+
+fun laneKey(unit: String, name: String): String = "$unit:$name"
+fun laneUnit(key: String): String = key.substringBefore(':')
+fun laneParam(key: String): String = key.substringAfter(':')
+
+/** One track's material for one scene. */
 @Serializable
 data class Clip(
     val bars: Int = 1,
@@ -43,6 +78,8 @@ data class Clip(
     /** Quantise and display grid, in ticks. Default is a sixteenth. */
     val grid: Int = PPQN / 4,
     val notes: List<Note> = emptyList(),
+    /** Parameter movement, keyed by [laneKey]. */
+    val automation: Map<String, Lane> = emptyMap(),
 ) {
     /**
      * Instance identity as a number. Lives outside the constructor on purpose:

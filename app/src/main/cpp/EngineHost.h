@@ -27,13 +27,16 @@ class EngineHost {
     bool mountMachine(int rack, const std::string &typeName);
     void unmountMachine(int rack);
     const char *mountedMachine(int rack) const;
+    // Resolves a parameter name for a unit; -1 if unknown. UI thread.
+    int paramIndex(const std::string &machineType, const std::string &unit, const std::string &name) const;
 
     void noteOn(int rack, uint8_t note, uint8_t velocity);
     void noteOff(int rack, uint8_t note);
 
     // unit: "machine" | "effect1" | "effect2" | "eventor1" | "eventor2" | "channel".
     // value is normalised 0..1. Names are resolved here, on the UI thread.
-    bool setParam(int rack, const std::string &unit, const std::string &name, float value);
+    // `record`: a user gesture (recordable) rather than the document syncing state.
+    bool setParam(int rack, const std::string &unit, const std::string &name, float value, bool record);
 
     // --- Transport -----------------------------------------------------------
     void transportPlay(int sceneIdx);
@@ -47,6 +50,9 @@ class EngineHost {
     float tempo() const;
     int64_t positionPacked() const;
 
+    // Drain stamped live events into `out`, 5 longs per event:
+    //   absTick, sceneId, tickInIteration, (rack << 24 | cmd << 16 | p1 << 8 | p2),
+    //   and for parameter events (cmd 0xf0, p1 = unit): (index << 32 | float bits of value)
     int drainRecorded(int64_t *out, int maxEvents);
     uint32_t recordedDropped() const;
 
@@ -57,6 +63,11 @@ class EngineHost {
     bool snapshotSetClipCached(int64_t handle, int rack, int scene, int64_t rev);
     bool snapshotSetClip(int64_t handle, int rack, int scene, int64_t rev, int bars, int playMode, bool mute,
                          const int32_t *notes, int noteCount);
+    // points: flat [tick, value] × count, any order. unit/name resolve against
+    // `machineType`'s table (for "machine") or the channel table.
+    bool snapshotSetLane(int64_t handle, int rack, int scene, const std::string &machineType,
+                         const std::string &unit, const std::string &name, bool linear,
+                         const float *points, int pointCount);
     bool snapshotCommit(int64_t handle);
     void snapshotAbandon(int64_t handle);
 
@@ -73,6 +84,8 @@ class EngineHost {
     uint32_t notesOff(int rack) const;
     // Debug: the live (smoothed, unit-range) value of a mounted machine's parameter.
     float debugParam(int rack, const std::string &name) const;
+    // The normalised 0..1 value of a rack unit's parameter, or -1. UI thread.
+    float paramNormalized(int rack, const std::string &unit, const std::string &name) const;
 
   private:
     EngineHost() = default;

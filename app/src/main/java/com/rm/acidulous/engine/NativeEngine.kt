@@ -25,6 +25,9 @@ object NativeEngine {
 
     /** Every machine type the engine can build, from its registry. */
     val machineTypes: List<String> get() = nativeMachineTypes().toList()
+    fun machineParamNames(type: String): List<String> = nativeMachineParamNames(type).toList()
+    /** Normalised 0..1 value of a mounted unit's parameter, or -1. */
+    fun paramNormalized(rackId: Int, unit: String, name: String): Float = nativeParamNormalized(rackId, unit, name)
 
     fun noteOn(rackId: Int, note: Int, velocity: Int = 100) = nativeNoteOn(rackId, note, velocity)
 
@@ -34,8 +37,8 @@ object NativeEngine {
      * [unit] is "machine", "effect1", "effect2", "eventor1", "eventor2" or "channel";
      * [value] is normalised 0..1. Returns false if the name is unknown for what is mounted.
      */
-    fun setParam(rackId: Int, unit: String, name: String, value: Float): Boolean =
-        nativeSetParam(rackId, unit, name, value)
+    fun setParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean = true): Boolean =
+        nativeSetParam(rackId, unit, name, value, record)
 
     // --- Transport -----------------------------------------------------------
     /** Play from the top of [sceneIdx]; -1 restarts the current scene. */
@@ -51,9 +54,10 @@ object NativeEngine {
         set(on) = nativeSetRecordArmed(on)
 
     /**
-     * Drains live MIDI stamped by the audio thread while recording. Fills [out]
-     * with 4 longs per event - absTick, sceneId, tickInIteration, packed
-     * (rack shl 24 or cmd shl 16 or p1 shl 8 or p2) - and returns the count.
+     * Drains live events stamped by the audio thread while recording. Fills
+     * [out] with 5 longs per event - absTick, sceneId, tickInIteration, packed
+     * (rack shl 24 or cmd shl 16 or p1 shl 8 or p2), and for parameter events
+     * (cmd 0xf0, p1 = unit ordinal) (index shl 32 or float bits) - returns the count.
      */
     fun drainRecorded(out: LongArray): Int = nativeDrainRecorded(out)
     val recordedDropped: Int get() = nativeGetRecordedDropped()
@@ -82,6 +86,8 @@ object NativeEngine {
     fun snapshotSetClip(
         handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, notes: IntArray,
     ): Boolean = nativeSnapshotSetClip(handle, rack, scene, rev, bars, playMode, mute, notes)
+    fun snapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean =
+        nativeSnapshotSetLane(handle, rack, scene, machineType, unit, name, linear, points)
     fun snapshotCommit(handle: Long): Boolean = nativeSnapshotCommit(handle)
     fun snapshotAbandon(handle: Long) = nativeSnapshotAbandon(handle)
 
@@ -106,7 +112,7 @@ object NativeEngine {
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
     private external fun nativeNoteOff(rackId: Int, note: Int)
-    private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float): Boolean
+    private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
     private external fun nativeGetSampleRate(): Int
     private external fun nativeGetFramesPerBurst(): Int
     private external fun nativeIsLowLatency(): Boolean
@@ -139,6 +145,9 @@ object NativeEngine {
     private external fun nativeSnapshotSetClip(
         handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, notes: IntArray,
     ): Boolean
+    private external fun nativeSnapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean
     private external fun nativeSnapshotCommit(handle: Long): Boolean
+    private external fun nativeMachineParamNames(type: String): Array<String>
+    private external fun nativeParamNormalized(rackId: Int, unit: String, name: String): Float
     private external fun nativeSnapshotAbandon(handle: Long)
 }

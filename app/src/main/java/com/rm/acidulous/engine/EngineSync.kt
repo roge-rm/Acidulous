@@ -6,6 +6,8 @@ import com.rm.acidulous.model.Master
 import com.rm.acidulous.model.Mixer
 import com.rm.acidulous.model.PlayMode
 import com.rm.acidulous.model.Song
+import com.rm.acidulous.model.laneParam
+import com.rm.acidulous.model.laneUnit
 
 /**
  * The one place the document meets the engine.
@@ -96,6 +98,11 @@ object EngineSync {
                     mute = clip.mute,
                     notes = flat,
                 )
+                for ((key, lane) in clip.automation) {
+                    val pts = FloatArray(lane.points.size * 2)
+                    lane.points.forEachIndexed { i, p -> pts[i * 2] = p.tick.toFloat(); pts[i * 2 + 1] = p.value }
+                    NativeEngine.snapshotSetLane(handle, rack, sceneIdx, track.machine.type, laneUnit(key), laneParam(key), lane.linear, pts)
+                }
             }
         }
 
@@ -111,32 +118,32 @@ object EngineSync {
     // --- Mixer parameters: cheap enough to send whole on every push ------------------
 
     fun pushChannel(rack: Int, m: Mixer) {
-        NativeEngine.setParam(rack, "channel", "gain", EngineParams.volume01(m.volume))
-        NativeEngine.setParam(rack, "channel", "pan", EngineParams.pan01(m.pan))
-        NativeEngine.setParam(rack, "channel", "mute", EngineParams.bool01(m.mute))
-        NativeEngine.setParam(rack, "channel", "solo", EngineParams.bool01(m.solo))
-        NativeEngine.setParam(rack, "channel", "sendreverb", EngineParams.unit01(m.sendReverb))
-        NativeEngine.setParam(rack, "channel", "senddelay", EngineParams.unit01(m.sendDelay))
+        NativeEngine.setParam(rack, "channel", "gain", EngineParams.volume01(m.volume), record = false)
+        NativeEngine.setParam(rack, "channel", "pan", EngineParams.pan01(m.pan), record = false)
+        NativeEngine.setParam(rack, "channel", "mute", EngineParams.bool01(m.mute), record = false)
+        NativeEngine.setParam(rack, "channel", "solo", EngineParams.bool01(m.solo), record = false)
+        NativeEngine.setParam(rack, "channel", "sendreverb", EngineParams.unit01(m.sendReverb), record = false)
+        NativeEngine.setParam(rack, "channel", "senddelay", EngineParams.unit01(m.sendDelay), record = false)
     }
 
     fun pushMaster(m: Master) {
-        NativeEngine.setParam(0, "master", "volume", EngineParams.volume01(m.volume))
-        NativeEngine.setParam(0, "master", "reverbon", EngineParams.bool01(m.reverb.on))
-        NativeEngine.setParam(0, "master", "reverbsize", EngineParams.unit01(m.reverb.size))
-        NativeEngine.setParam(0, "master", "reverbdamp", EngineParams.unit01(m.reverb.damp))
-        NativeEngine.setParam(0, "master", "reverbtone", EngineParams.unit01(m.reverb.tone))
-        NativeEngine.setParam(0, "master", "delayon", EngineParams.bool01(m.delay.on))
-        NativeEngine.setParam(0, "master", "delaytime", EngineParams.delayTime01(m.delay.time))
-        NativeEngine.setParam(0, "master", "delayfeedback", EngineParams.unit01(m.delay.feedback))
-        NativeEngine.setParam(0, "master", "delaytone", EngineParams.unit01(m.delay.tone))
-        NativeEngine.setParam(0, "master", "delaypingpong", EngineParams.bool01(m.delay.pingPong))
-        NativeEngine.setParam(0, "master", "limiteron", EngineParams.bool01(m.limiter.on))
-        NativeEngine.setParam(0, "master", "limiterdrive", EngineParams.unit01(m.limiter.drive))
+        NativeEngine.setParam(0, "master", "volume", EngineParams.volume01(m.volume), record = false)
+        NativeEngine.setParam(0, "master", "reverbon", EngineParams.bool01(m.reverb.on), record = false)
+        NativeEngine.setParam(0, "master", "reverbsize", EngineParams.unit01(m.reverb.size), record = false)
+        NativeEngine.setParam(0, "master", "reverbdamp", EngineParams.unit01(m.reverb.damp), record = false)
+        NativeEngine.setParam(0, "master", "reverbtone", EngineParams.unit01(m.reverb.tone), record = false)
+        NativeEngine.setParam(0, "master", "delayon", EngineParams.bool01(m.delay.on), record = false)
+        NativeEngine.setParam(0, "master", "delaytime", EngineParams.delayTime01(m.delay.time), record = false)
+        NativeEngine.setParam(0, "master", "delayfeedback", EngineParams.unit01(m.delay.feedback), record = false)
+        NativeEngine.setParam(0, "master", "delaytone", EngineParams.unit01(m.delay.tone), record = false)
+        NativeEngine.setParam(0, "master", "delaypingpong", EngineParams.bool01(m.delay.pingPong), record = false)
+        NativeEngine.setParam(0, "master", "limiteron", EngineParams.bool01(m.limiter.on), record = false)
+        NativeEngine.setParam(0, "master", "limiterdrive", EngineParams.unit01(m.limiter.drive), record = false)
     }
 
     /** The metronome lives on the transport, not in the song. */
     fun setMetronome(on: Boolean, volume: Float = 0.5f) {
-        NativeEngine.setParam(0, "master", "clickon", EngineParams.bool01(on))
-        NativeEngine.setParam(0, "master", "clickvolume", EngineParams.unit01(volume))
+        NativeEngine.setParam(0, "master", "clickon", EngineParams.bool01(on), record = false)
+        NativeEngine.setParam(0, "master", "clickvolume", EngineParams.unit01(volume), record = false)
     }
 }

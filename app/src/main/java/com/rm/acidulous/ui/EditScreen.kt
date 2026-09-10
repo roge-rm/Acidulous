@@ -61,6 +61,8 @@ fun EditScreen(
     val clipLen = song.clipLengthTicks(sceneId, clip)
 
     var mode by remember { mutableStateOf(EditMode.Draw) }
+    var laneKey by remember { mutableStateOf<String?>(null) }
+    val laneKeys = remember(track.machine.type) { automationKeysFor(track.machine.type) }
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var lowestPitch by remember {
         val lowest = clip.notes.minOfOrNull { it.pitch } ?: 36
@@ -84,7 +86,7 @@ fun EditScreen(
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = onBack) { Text("◀", color = Color.White) }
             Text(
-                "${track.name} · ${scene.name} · ${clip.bars} bar${if (clip.bars > 1) "s" else ""} · ${clip.notes.size} notes",
+                "${track.name} · ${scene.name} · ${clip.bars} bar${if (clip.bars > 1) "s" else ""} · ${clip.notes.size} notes" + (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }} auto"),
                 color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.weight(1f),
             )
             TextButton(onClick = { lowestPitch = (lowestPitch + 12).coerceAtMost(127 - ROWS) }) { Text("▲", color = Color.White) }
@@ -131,6 +133,30 @@ fun EditScreen(
             onGestureEnd = { editor.endGesture() },
             modifier = Modifier.fillMaxWidth().weight(1f),
         )
+
+        // Automation: the reference sequencer's parameter strip under the notes.
+        AutomationStrip(
+            clip = clip,
+            ticksPerBar = ticksPerBar,
+            playheadTick = playhead,
+            laneKeys = laneKeys,
+            selected = laneKey,
+            onSelect = { laneKey = it },
+            onGestureBegin = { editor.beginGesture(trackIndex) },
+            onDraw = { key, points ->
+                editor.updateGestureClip(sceneId) { base ->
+                    var lane = base.automation[key] ?: com.rm.acidulous.model.Lane()
+                    for ((t, v) in points) lane = lane.withPoint(t, v)
+                    base.copy(automation = base.automation + (key to lane))
+                }
+            },
+            onGestureEnd = { editor.endGesture() },
+            onClear = { key -> editor.editClip(trackIndex, sceneId) { c -> c.copy(automation = c.automation - key) } },
+            modifier = Modifier.fillMaxWidth().height(88.dp).padding(top = 4.dp),
+        )
+
+        // Live parameters of the machine - record from these while armed.
+        ParamStrip(trackIndex, track.machine.type, Modifier.fillMaxWidth().height(56.dp).padding(top = 4.dp))
 
         // A slim keyboard: enough to audition and record; the machine panel (M7) replaces it.
         var octave by remember { mutableStateOf(2) }

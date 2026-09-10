@@ -39,6 +39,21 @@ class Rack {
 
     void setParam(Unit unit, int32_t index, float v01);
 
+    // While recording, a parameter the user moves wins over its lane for the
+    // rest of the current pass, so the lane cannot fight the knob it is
+    // about to overwrite. Cleared at each iteration boundary.
+    void touch(Unit unit, int32_t index) {
+        const uint32_t key = (static_cast<uint32_t>(unit) << 16) | static_cast<uint32_t>(index & 0xffff);
+        for (int32_t i = 0; i < touchedCount; ++i) if (touched[i] == key) return;
+        if (touchedCount < kMaxTouched) touched[touchedCount++] = key;
+    }
+    bool isTouched(Unit unit, int32_t index) const {
+        const uint32_t key = (static_cast<uint32_t>(unit) << 16) | static_cast<uint32_t>(index & 0xffff);
+        for (int32_t i = 0; i < touchedCount; ++i) if (touched[i] == key) return true;
+        return false;
+    }
+    void clearTouched() { touchedCount = 0; }
+
     float bufL[kBlockFrames]{};
     float bufR[kBlockFrames]{};
 
@@ -48,6 +63,7 @@ class Rack {
     float sendReverb() const { return channel.get(SendReverb); }
     float sendDelay() const { return channel.get(SendDelay); }
     float readPeak() { return peakHold.exchange(0.0f, std::memory_order_relaxed); }
+    float channelNormalized(int32_t index) const { return channel.normalized(index); }
 
   private:
     struct Sink final : MidiSink {
@@ -65,6 +81,9 @@ class Rack {
     ParamSet channel;
     bool stereo = false;
     std::atomic<float> peakHold{0.0f};
+    static constexpr int32_t kMaxTouched = 16;
+    uint32_t touched[kMaxTouched]{};
+    int32_t touchedCount = 0;
 };
 
 } // namespace acidulous

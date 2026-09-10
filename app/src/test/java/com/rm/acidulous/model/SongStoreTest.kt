@@ -71,6 +71,21 @@ class SongStoreTest {
     }
 
     @Test
+    fun lanesInterpolateAndReplaceByTick() {
+        val lane = Lane().withPoint(0, 0f).withPoint(480, 1f)
+        assertEquals(0.5f, lane.valueAt(240), 1e-6f)
+        assertEquals(1f, lane.valueAt(9999), 1e-6f)
+        assertEquals(0f, lane.copy(linear = false).valueAt(240), 1e-6f)
+        val replaced = lane.withPoint(480, 0.25f)
+        assertEquals(2, replaced.points.size)
+        assertEquals(0.25f, replaced.valueAt(480), 1e-6f)
+        val clip = Clip(automation = mapOf(laneKey("machine", "cutoff") to lane))
+        assertEquals(clip, SongStore.decode(SongStore.encode(DemoSong.build().let { d ->
+            d.copy(tracks = listOf(d.tracks[0].copy(clips = mapOf("s-intro" to clip))))
+        })).tracks[0].clips["s-intro"])
+    }
+
+    @Test
     fun signatureTicks() {
         assertEquals(960, Signature(4, 4).ticksPerBar)
         assertEquals(720, Signature(3, 4).ticksPerBar)

@@ -83,8 +83,8 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOff(JNIEnv *, jobject, jint 
 
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSetParam(JNIEnv *env, jobject, jint rackId,
-                                                  jstring unit, jstring name, jfloat value) {
-    return host().setParam(rackId, toStdString(env, unit), toStdString(env, name), value) ? JNI_TRUE : JNI_FALSE;
+                                                  jstring unit, jstring name, jfloat value, jboolean record) {
+    return host().setParam(rackId, toStdString(env, unit), toStdString(env, name), value, record == JNI_TRUE) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jint JNICALL
@@ -158,7 +158,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeDrainRecorded(JNIEnv *env, jobje
         return 0;
     }
     const jsize len = env->GetArrayLength(out);
-    const int maxEvents = static_cast<int>(len / 4);
+    const int maxEvents = static_cast<int>(len / 5);
     if (maxEvents <= 0) {
         return 0;
     }
@@ -232,6 +232,33 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetClip(JNIEnv *env, job
 }
 
 JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetLane(JNIEnv *env, jobject, jlong handle, jint rack,
+                                                                jint scene, jstring machineType, jstring unit,
+                                                                jstring name, jboolean linear, jfloatArray points) {
+    const jsize len = points != nullptr ? env->GetArrayLength(points) : 0;
+    const int count = static_cast<int>(len / 2);
+    jfloat *data = count > 0 ? env->GetFloatArrayElements(points, nullptr) : nullptr;
+    const bool ok = host().snapshotSetLane(handle, rack, scene, toStdString(env, machineType), toStdString(env, unit),
+                                           toStdString(env, name), linear == JNI_TRUE, data, count);
+    if (data != nullptr) env->ReleaseFloatArrayElements(points, data, JNI_ABORT);
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamNames(JNIEnv *env, jobject, jstring type) {
+    int32_t n = 0;
+    const acidulous::ParamDef *defs = acidulous::MachineRegistry::paramDefs(toStdString(env, type).c_str(), n);
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
+    for (int32_t i = 0; i < n; ++i) {
+        jstring s = env->NewStringUTF(defs[i].name);
+        env->SetObjectArrayElement(out, i, s);
+        env->DeleteLocalRef(s);
+    }
+    return out;
+}
+
+JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotCommit(JNIEnv *, jobject, jlong handle) {
     return host().snapshotCommit(handle) ? JNI_TRUE : JNI_FALSE;
 }
@@ -254,6 +281,11 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeReadRackPeak(JNIEnv *, jobject, 
 JNIEXPORT jfloat JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeGetMasterFade(JNIEnv *, jobject) {
     return host().masterFade();
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeParamNormalized(JNIEnv *env, jobject, jint rackId, jstring unit, jstring name) {
+    return host().paramNormalized(rackId, toStdString(env, unit), toStdString(env, name));
 }
 
 JNIEXPORT jfloat JNICALL

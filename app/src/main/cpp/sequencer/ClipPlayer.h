@@ -22,7 +22,11 @@ class ClipPlayer {
 
     // Audio thread, at a block boundary (ObjectManager does this). Pending
     // note-offs are deliberately kept: they belong to notes already sounding.
-    void setClip(const Clip *newClip) { clip_ = newClip; }
+    void setClip(const Clip *newClip) {
+        clip_ = newClip;
+        for (float &v : lastLane) v = -1.0f;
+        lastOrigin = -1;
+    }
     const Clip *clip() const { return clip_; }
 
     // Fire everything due in absolute tick range [start, end). `origin` is the
@@ -71,6 +75,32 @@ class ClipPlayer {
             }
         }
     }
+
+    // Automation: after the notes, set every lane's value at the block's end
+    // position. Setter signature: void(Unit, int32_t index, float value).
+    // Skips lanes the live UI has touched during this pass while recording.
+    template <class Setter, class Touched>
+    void processLanes(int64_t end, int64_t origin, Setter &&set, Touched &&touched) {
+        if (clip_ == nullptr || clip_->lanes.empty()) return;
+        const int64_t len = clip_->lengthTicks();
+        if (len <= 0 || end < origin) return;
+        if (origin != lastOrigin) {
+            lastOrigin = origin;
+            for (float &v : lastLane) v = -1.0f; // a new pass re-sends from the top
+        }
+        const auto t = static_cast<int32_t>((end - origin) % len);
+        const size_t n = clip_->lanes.size() < kMaxLanes ? clip_->lanes.size() : kMaxLanes;
+        for (size_t i = 0; i < n; ++i) {
+            const Lane &lane = clip_->lanes[i];
+            if (touched(lane.unit, lane.index)) continue;
+            const float v = lane.valueAt(t);
+            if (v != lastLane[i]) {
+                lastLane[i] = v;
+                set(lane.unit, lane.index, v);
+            }
+        }
+    }
+    bool originChanged(int64_t origin) const { return origin != lastOrigin; }
 
     // Stop: release everything that is sounding.
     template <class Sink>
@@ -124,7 +154,10 @@ class ClipPlayer {
         offCount.fetch_add(1, std::memory_order_relaxed);
     }
 
+    static constexpr size_t kMaxLanes = 32;
     const Clip *clip_ = nullptr;
+    float lastLane[kMaxLanes]{};
+    int64_t lastOrigin = -1;
     PendingOff pending[kMaxPending];
     std::atomic<uint32_t> onCount{0};
     std::atomic<uint32_t> offCount{0};
