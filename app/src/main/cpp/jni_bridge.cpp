@@ -64,6 +64,9 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMountEffect(JNIEnv *env, jobject
     return host().mountEffect(rackId, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativePrewarm(JNIEnv *, jobject) { acidulous::EngineHost::prewarm(); }
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeMountEventor(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
     return host().mountEventor(rackId, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;

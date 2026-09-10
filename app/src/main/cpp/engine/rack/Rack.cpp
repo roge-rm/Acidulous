@@ -51,6 +51,7 @@ void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
     for (int32_t s = 0; s < kEffectSlots; ++s) {
         if (effects[s] != nullptr) effects[s]->onBlock(tickStart, tickEnd, bpm);
     }
+    if (machine != nullptr) machine->onBlock(tickStart, tickEnd, bpm);
 }
 
 void Rack::render(int32_t frames) {

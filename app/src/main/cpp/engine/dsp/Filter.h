@@ -22,6 +22,18 @@ class Svf {
 
     void reset() { ic1eq = ic2eq = 0.0f; }
 
+    // All three outputs of one step, for filters that mix them.
+    struct Out { float lp, bp, hp; };
+    Out step(float v0) {
+        const float v3 = v0 - ic2eq;
+        const float v1 = a1 * ic1eq + a2 * v3;
+        const float v2 = ic2eq + a2 * ic1eq + a3 * v3;
+        ic1eq = 2.0f * v1 - ic1eq;
+        ic2eq = 2.0f * v2 - ic2eq;
+        return {v2, v1, v0 - k * v1 - v2};
+    }
+    float resonanceK() const { return k; }
+
     // Band output of the same step; call instead of lowpass(), not as well.
     float bandpass(float v0) {
         const float v3 = v0 - ic2eq;

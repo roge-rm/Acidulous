@@ -24,6 +24,12 @@ object NativeEngine {
     fun unmountMachine(rackId: Int) = nativeUnmountMachine(rackId)
     /** Mounts an insert effect on one of a rack's two slots; an empty [typeName] clears it. */
     fun mountEffect(rackId: Int, slot: Int, typeName: String): Boolean = nativeMountEffect(rackId, slot, typeName)
+    /**
+     * Builds what machines need before they can be mounted (Trinity's
+     * wavetables, ~0.1 s). Call once on a worker at startup; blocks.
+     */
+    fun prewarm() = nativePrewarm()
+
     /** Mounts an eventor (Scale, Chord, Arp) ahead of the machine; an empty [typeName] clears it. */
     fun mountEventor(rackId: Int, slot: Int, typeName: String): Boolean = nativeMountEventor(rackId, slot, typeName)
 
@@ -139,6 +145,7 @@ object NativeEngine {
     private external fun nativeIsRendering(): Boolean
     private external fun nativeRenderedSeconds(): Float
     private external fun nativeRenderedPeak(): Float
+    private external fun nativePrewarm()
     private external fun nativeMountEventor(rackId: Int, slot: Int, typeName: String): Boolean
     private external fun nativeEventorTypes(): Array<String>
     private external fun nativeEventorParamInfo(type: String): Array<String>

@@ -31,6 +31,9 @@ class EngineHost {
     bool mountEffect(int rack, int slot, const std::string &typeName);
     const char *mountedEffect(int rack, int slot) const;
     bool mountEventor(int rack, int slot, const std::string &typeName);
+    // Builds anything a machine needs before it can be mounted (Trinity's
+    // wavetables). Safe to call from a worker at startup; mounting waits on it.
+    static void prewarm();
 
     // Decodes a WAV here and mounts it into the machine's `slot` (a pad). An
     // empty path clears the slot. Returns false if the file cannot be read.

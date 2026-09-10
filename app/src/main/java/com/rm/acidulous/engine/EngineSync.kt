@@ -196,7 +196,9 @@ object EngineSync {
     }
 
     fun pushMachineParams(rack: Int, params: Map<String, Float>) {
-        for ((name, v) in params) NativeEngine.setParam(rack, "machine", name, v, record = false)
+        var rejected = 0
+        for ((name, v) in params) if (!NativeEngine.setParam(rack, "machine", name, v, record = false)) rejected++
+        if (rejected > 0) Log.w(TAG, "rack $rack: $rejected of ${params.size} machine parameters were not accepted")
     }
 
     fun pushSlot(rack: Int, unit: String, slot: com.rm.acidulous.model.UnitSlot) {

@@ -7,6 +7,7 @@
 #include <drivers/AudioDriver.h>
 #include <engine/core/Constants.h>
 #include <engine/core/WavReader.h>
+#include <engine/dsp/Wavetable.h>
 #include <engine/core/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/eventor/EventorRegistry.h>
@@ -154,6 +155,14 @@ bool EngineHost::mountEventor(int rack, int slot, const std::string &typeName) {
     mountedEventorType[rack][slot] = typeName;
     LOGI("queued eventor '%s' for rack %d slot %d", typeName.c_str(), rack, slot);
     return true;
+}
+
+void EngineHost::prewarm() {
+    const auto t0 = std::chrono::steady_clock::now();
+    (void)dsp::WavetableBank::instance();
+    LOGI("prewarm: wavetables ready in %lld ms",
+         static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::steady_clock::now() - t0).count()));
 }
 
 const char *EngineHost::mountedEffect(int rack, int slot) const {

@@ -52,6 +52,15 @@ object DemoSong {
             return Clip(bars = bars, notes = notes.sortedBy { it.tick })
         }
 
+        // A held triad per bar for the pad, an octave above the bass.
+        fun pad(bars: Int, chords: List<List<Int>>): Clip {
+            val notes = ArrayList<Note>()
+            for (b in 0 until bars) {
+                for (pitch in chords[b % chords.size]) notes += Note(b * 4 * q, 4 * q - 10, pitch, 80)
+            }
+            return Clip(bars = bars, notes = notes.sortedBy { it.tick })
+        }
+
         return Song(
             name = "Demo",
             tempo = 120f,
@@ -63,6 +72,16 @@ object DemoSong {
                     machine = Machine(type = "Subvert"),
                     clips = mapOf(intro.id to introClip, verse.id to verseClip),
                     mixer = Mixer(sendReverb = 0.25f, sendDelay = 0.2f),
+                ),
+                Track(
+                    id = "t-pad",
+                    name = "Pad",
+                    machine = Machine(type = "Trinity", params = PatchStore.factory("Trinity").first { it.name == "Glass Pad" }.params),
+                    clips = mapOf(
+                        intro.id to pad(1, listOf(listOf(60, 63, 67))),
+                        verse.id to pad(2, listOf(listOf(60, 63, 67), listOf(58, 62, 65))),
+                    ),
+                    mixer = Mixer(volume = 0.6f, sendReverb = 0.4f),
                 ),
                 Track(
                     id = "t-drums",

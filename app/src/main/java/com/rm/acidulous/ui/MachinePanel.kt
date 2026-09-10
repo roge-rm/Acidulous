@@ -1,6 +1,8 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,6 +73,7 @@ fun MachinePanel(
         when (type) {
             "Subvert" -> SubvertPanel(binding)
             "Hexbeat" -> HexbeatPanel(binding)
+            "Trinity" -> TrinityPanel(binding)
             "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample)
             else -> GenericPanel(binding)
         }
@@ -269,4 +272,171 @@ private fun GenericPanel(b: ParamBinding) {
     Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         for (p in b.info) PanelKnob(b, p.name)
     }
+}
+
+// --- Trinity ---------------------------------------------------------------------
+//
+// 178 parameters will not fit on a phone at once, so the panel is sectioned
+// and the sections that repeat (oscillator, envelope, LFO, matrix slot) carry
+// their own selector. Names mirror engine/machine/trinity/Trinity.cpp.
+
+val TRINITY_WAVES = listOf("saw", "square", "tri", "sine", "Sweep", "Glass", "Vowel", "Bell", "Comb", "Fold", "Grit", "Organ")
+val TRINITY_FILTERS = listOf("LP6", "LP12", "LP18", "LP24", "HP6", "HP12", "HP18", "HP24", "BP6", "BP12", "notch", "peak")
+val TRINITY_DRIVES = listOf("clean", "valve", "diode", "clip", "fold", "crush")
+val TRINITY_LFO_WAVES = listOf("sine", "tri", "saw+", "saw-", "sqr", "s&h", "rand", "step8", "step16")
+val TRINITY_LFO_SYNC = listOf("free", "1/16", "1/8", "1/4", "1/2", "1 bar", "2", "4", "8")
+val TRINITY_SOURCES = listOf("off", "on", "mod", "after", "vel", "key", "rand", "envA", "envF", "env3", "env4", "env5", "env6", "lfo1", "lfo2", "lfo3")
+val TRINITY_DESTS = listOf(
+    "off", "pitch", "pitch1", "pitch2", "pitch3", "pos1", "pos2", "pos3", "lvl1", "lvl2", "lvl3",
+    "pw1", "pw2", "pw3", "sync1", "sync2", "sync3", "detune", "noise", "ring12", "ring23", "fm21", "fm32",
+    "f1freq", "f2freq", "f1res", "f2res", "balance", "drive", "amp", "pan", "l1rate", "l2rate", "l3rate",
+)
+private val TRINITY_ENVS = listOf("amp" to "a", "filter" to "f", "env 3" to "e3", "env 4" to "e4", "env 5" to "e5", "env 6" to "e6")
+
+@Composable
+private fun TrinityPanel(b: ParamBinding) {
+    var section by remember { mutableStateOf(0) }
+    var osc by remember { mutableStateOf(0) }
+    var env by remember { mutableStateOf(0) }
+    var lfo by remember { mutableStateOf(0) }
+    var slot by remember { mutableStateOf(0) }
+    val sections = listOf("osc", "mix", "filter", "env", "lfo", "matrix", "voice")
+    Column {
+        Chips(sections, section) { section = it }
+        when (section) {
+            0 -> {
+                Chips(listOf("1", "2", "3"), osc) { osc = it }
+                val o = "o${osc + 1}_"
+                KnobRow {
+                    PanelStepKnob(b, o + "wave", TRINITY_WAVES, "wave")
+                    PanelKnob(b, o + "pos", "pos", accent = ACCENT2)
+                    PanelKnob(b, o + "warp", "warp", accent = ACCENT2)
+                    PanelKnob(b, o + "coarse", "coarse")
+                    PanelKnob(b, o + "fine", "fine")
+                    PanelKnob(b, o + "level", "level")
+                    PanelStepKnob(b, o + "density", (1..8).map { "$it" }, "density", ACCENT2)
+                    PanelKnob(b, o + "detune", "detune", accent = ACCENT2)
+                    PanelKnob(b, o + "sync", "sync", accent = ACCENT2)
+                    PanelKnob(b, o + "hard", "hard")
+                    PanelKnob(b, o + "pw", "pw")
+                    PanelKnob(b, o + "drift", "drift", accent = ACCENT2)
+                }
+            }
+            1 -> KnobRow {
+                PanelKnob(b, "ring12", "ring1·2")
+                PanelKnob(b, "ring23", "ring2·3")
+                PanelKnob(b, "fm21", "fm 2→1", accent = ACCENT2)
+                PanelKnob(b, "fm32", "fm 3→2", accent = ACCENT2)
+                PanelKnob(b, "noise", "noise")
+                PanelKnob(b, "noisecol", "colour")
+            }
+            2 -> {
+                KnobRow {
+                    PanelSwitch(b, "route", listOf("serial", "para", "split"), "route")
+                    PanelKnob(b, "balance", "balance")
+                }
+                for (f in 1..2) {
+                    Text("filter $f", color = Color(0xFF7FD1B9), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                    KnobRow {
+                        PanelStepKnob(b, "f${f}_type", TRINITY_FILTERS, "type")
+                        PanelKnob(b, "f${f}_freq", "freq")
+                        PanelKnob(b, "f${f}_res", "res")
+                        PanelStepKnob(b, "f${f}_drivetype", TRINITY_DRIVES, "drive", ACCENT2)
+                        PanelKnob(b, "f${f}_drive", "amount", accent = ACCENT2)
+                        PanelKnob(b, "f${f}_env", "env")
+                        PanelKnob(b, "f${f}_key", "key")
+                    }
+                }
+            }
+            3 -> {
+                Chips(TRINITY_ENVS.map { it.first }, env) { env = it }
+                val e = TRINITY_ENVS[env].second + "_"
+                KnobRow {
+                    PanelKnob(b, e + "delay", "delay")
+                    PanelKnob(b, e + "attack", "attack")
+                    PanelKnob(b, e + "decay", "decay")
+                    PanelKnob(b, e + "sustain", "sustain")
+                    PanelKnob(b, e + "release", "release")
+                    PanelSwitch(b, e + "repeat", listOf("once", "loop"), "repeat")
+                }
+            }
+            4 -> {
+                Chips(listOf("1", "2", "3"), lfo) { lfo = it }
+                val l = "l${lfo + 1}_"
+                KnobRow {
+                    PanelStepKnob(b, l + "wave", TRINITY_LFO_WAVES, "wave")
+                    PanelKnob(b, l + "rate", "rate")
+                    PanelStepKnob(b, l + "sync", TRINITY_LFO_SYNC, "sync", ACCENT2)
+                    PanelKnob(b, l + "delay", "delay")
+                    PanelKnob(b, l + "phase", "phase")
+                    PanelKnob(b, l + "slew", "slew", accent = ACCENT2)
+                    PanelSwitch(b, l + "keysync", listOf("free", "key"), "keysync")
+                    PanelSwitch(b, l + "oneshot", listOf("cycle", "once"), "oneshot")
+                }
+            }
+            5 -> {
+                Chips((1..12).map { "%02d".format(it) }, slot) { slot = it }
+                val m = "m%02d_".format(slot + 1)
+                KnobRow {
+                    PanelStepKnob(b, m + "src", TRINITY_SOURCES, "source")
+                    PanelStepKnob(b, m + "src2", TRINITY_SOURCES, "× source", ACCENT2)
+                    PanelStepKnob(b, m + "dest", TRINITY_DESTS, "to")
+                    PanelKnob(b, m + "depth", "depth")
+                }
+            }
+            else -> KnobRow {
+                PanelSwitch(b, "voicemode", listOf("poly", "mono", "legato", "uni"), "mode")
+                PanelStepKnob(b, "unison", (1..8).map { "$it" }, "unison")
+                PanelKnob(b, "unidetune", "detune")
+                PanelKnob(b, "unispread", "spread")
+                PanelKnob(b, "glide", "glide")
+                PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
+                PanelKnob(b, "bend", "bend")
+                PanelKnob(b, "octave", "octave")
+                PanelKnob(b, "transpose", "transpose")
+                PanelKnob(b, "volume", "volume")
+                PanelKnob(b, "pan", "pan")
+                PanelKnob(b, "velamt", "vel")
+            }
+        }
+    }
+}
+
+private val ACCENT2 = Color(0xFFFFB454)
+
+@Composable
+private fun KnobRow(content: @Composable () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.Bottom,
+    ) { content() }
+}
+
+/** A row of small selectable chips: which oscillator, which envelope, which slot. */
+@Composable
+private fun Chips(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()).padding(bottom = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        labels.forEachIndexed { i, l ->
+            val on = i == selected
+            Box(
+                Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Color(0xFF3F7D5E) else Color(0xFF2E2E33))
+                    .clickable { onSelect(i) }.padding(horizontal = 8.dp, vertical = 3.dp),
+            ) { Text(l, color = if (on) Color.White else Color(0xFFBBBBBB), fontSize = 10.sp) }
+        }
+    }
+}
+
+/** A stepped parameter as a knob that names its step - for the long lists. */
+@Composable
+private fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, label: String = name, accent: Color = Color(0xFF7FD1B9)) {
+    val info = b.infoOf(name) ?: return
+    Knob(
+        label = label, value = b.value(name), accent = accent,
+        display = labels.getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
+        onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
+    )
 }

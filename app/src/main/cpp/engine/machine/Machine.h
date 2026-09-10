@@ -18,6 +18,9 @@ class Machine {
     virtual void prepare(int32_t sampleRate) = 0;
 
     // --- Audio thread ---------------------------------------------------------
+    // Once per block, before render(): the block's tick range and the tempo,
+    // for anything a machine syncs to the transport (Trinity's LFOs).
+    virtual void onBlock(int64_t /*tickStart*/, int64_t /*tickEnd*/, float /*bpm*/) {}
     virtual void reset() = 0; // silence, forget held notes
     virtual void noteOn(uint8_t note, uint8_t velocity) = 0;
     virtual void noteOff(uint8_t note) = 0;

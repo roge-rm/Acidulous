@@ -149,6 +149,9 @@ private fun App(modifier: Modifier = Modifier) {
 
     DisposableEffect(Unit) {
         EngineSync.sampleRoot = EngineAssets.userRoot(context)
+        // Trinity's wavetables take a moment to build; do it off the main
+        // thread now rather than stalling the first mount.
+        Thread { NativeEngine.prewarm() }.start()
         if (NativeEngine.start()) {
             // Start from the demo, round-tripped through the store so the file
             // format is exercised on every launch.
