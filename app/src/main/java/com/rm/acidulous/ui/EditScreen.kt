@@ -217,6 +217,11 @@ fun EditScreen(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         )
 
+        // Mod wheel and pressure, for machines that answer them.
+        if (MachineUi.usesPerformance(track.machine.type)) {
+            PerformanceStrip(trackIndex, Modifier.fillMaxWidth().padding(top = 6.dp))
+        }
+
         // Played from pads or from a slim keyboard, by machine kind.
         var octave by remember { mutableStateOf(2) }
         if (kind == MachineKind.Drums) DrumPads(trackIndex, voices, selectedPad, { selectedPad = it }, Modifier.fillMaxWidth().height(72.dp).padding(top = 6.dp))

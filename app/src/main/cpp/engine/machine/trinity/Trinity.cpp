@@ -278,8 +278,9 @@ void Trinity::allNotesOff() {
 
 void Trinity::controlChange(uint8_t cc, uint8_t value) {
     if (cc == 1) modWheel = static_cast<float>(value) / 127.0f;
-    else if (cc == 74) aftertouch = static_cast<float>(value) / 127.0f;
 }
+
+void Trinity::channelPressure(uint8_t value) { aftertouch = static_cast<float>(value) / 127.0f; }
 
 void Trinity::pitchBend(int16_t value14) { bend = static_cast<float>(value14) / 8192.0f; }
 

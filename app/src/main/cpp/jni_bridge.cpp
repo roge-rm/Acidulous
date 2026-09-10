@@ -65,6 +65,16 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMountEffect(JNIEnv *env, jobject
 }
 
 JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeControlChange(JNIEnv *, jobject, jint rackId, jint cc, jint value) {
+    host().controlChange(rackId, static_cast<uint8_t>(cc), static_cast<uint8_t>(value));
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeChannelPressure(JNIEnv *, jobject, jint rackId, jint value) {
+    host().channelPressure(rackId, static_cast<uint8_t>(value));
+}
+
+JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativePrewarm(JNIEnv *, jobject) { acidulous::EngineHost::prewarm(); }
 
 JNIEXPORT jboolean JNICALL

@@ -26,6 +26,7 @@ class Machine {
     virtual void noteOff(uint8_t note) = 0;
     virtual void allNotesOff() = 0;
     virtual void controlChange(uint8_t /*cc*/, uint8_t /*value*/) {}
+    virtual void channelPressure(uint8_t /*value*/) {}
     virtual void pitchBend(int16_t /*value14*/) {}
 
     // Render `frames` samples. Return true if R was written (stereo), false if
@@ -47,6 +48,7 @@ class Machine {
             break;
         case 0x80: noteOff(d1); break;
         case 0xb0: controlChange(d1, d2); break;
+        case 0xd0: channelPressure(d1); break;
         case 0xe0: pitchBend(static_cast<int16_t>((d2 << 7) | d1) - 8192); break;
         default: break;
         }

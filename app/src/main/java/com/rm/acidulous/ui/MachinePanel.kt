@@ -1,6 +1,10 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -440,6 +444,67 @@ private fun TrinityPanel(b: ParamBinding) {
     }
 }
 
+// --- Performance strip ------------------------------------------------------------
+//
+// The two controllers a player reaches for while holding a chord. One slim
+// row above the keyboard: short enough not to take space from the roll, wide
+// enough to hit with a thumb. They behave like the hardware they are named
+// after - the wheel stays where you leave it, pressure falls back to nothing
+// when you let go - which is also what makes them tell each other apart.
 
+@Composable
+fun PerformanceStrip(rack: Int, modifier: Modifier = Modifier) {
+    var mod by rememberSaveable(rack) { mutableStateOf(0f) }
+    var pressure by remember(rack) { mutableStateOf(0f) }
+    // Re-entering the screen puts the wheel back where it was left.
+    LaunchedEffect(rack) { NativeEngine.controlChange(rack, 1, (mod * 127f).toInt()) }
+    Row(modifier.height(26.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        TouchBar(
+            label = "mod", value = mod, accent = PanelAmber, modifier = Modifier.weight(1f),
+            onChange = { v -> mod = v; NativeEngine.controlChange(rack, 1, (v * 127f).toInt()) },
+            onRelease = null, // a wheel stays put
+        )
+        TouchBar(
+            label = "prs", value = pressure, accent = PanelPink, modifier = Modifier.weight(1f),
+            onChange = { v -> pressure = v; NativeEngine.channelPressure(rack, (v * 127f).toInt()) },
+            onRelease = { pressure = 0f; NativeEngine.channelPressure(rack, 0) },
+        )
+    }
+}
 
-
+/** A horizontal touch bar: drag anywhere along it, the fill is the value. */
+@Composable
+private fun TouchBar(
+    label: String, value: Float, accent: Color, modifier: Modifier,
+    onChange: (Float) -> Unit, onRelease: (() -> Unit)?,
+) {
+    val change by rememberUpdatedState(onChange)
+    val release by rememberUpdatedState(onRelease)
+    Box(
+        modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFF26262B))
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        // Always take the down before deciding anything: a
+                        // gesture block that returns without suspending spins
+                        // the main thread.
+                        val down = awaitPointerEvent()
+                        val touch = down.changes.firstOrNull() ?: continue
+                        if (touch.pressed) {
+                            change((touch.position.x / size.width).coerceIn(0f, 1f))
+                            touch.consume()
+                        } else {
+                            release?.invoke()
+                        }
+                    }
+                }
+            },
+    ) {
+        Box(Modifier.fillMaxHeight().fillMaxWidth(value.coerceIn(0f, 1f)).background(accent.copy(alpha = 0.55f)))
+        Text(
+            "$label  ${"%.2f".format(value)}",
+            color = Color(0xFFDDDDE2), fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 6.dp),
+        )
+    }
+}

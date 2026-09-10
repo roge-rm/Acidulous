@@ -13,6 +13,13 @@ object MachineUi {
     fun kindOf(type: String): MachineKind = if (type == "Hexbeat" || type == "Forage") MachineKind.Drums else MachineKind.Keyboard
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
+    /**
+     * Whether the machine answers the performance controllers, and so whether
+     * the Edit screen shows the strip. A machine that ignores mod wheel and
+     * pressure gets no strip rather than a dead one.
+     */
+    fun usesPerformance(type: String): Boolean = type == "Trinity"
+
     val hexbeatVoices: List<DrumVoice> = listOf(
         DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Rim", "RS"), DrumVoice(38, "Snare", "SD"), DrumVoice(39, "Clap", "CP"),
         DrumVoice(40, "Low Tom", "LT"), DrumVoice(41, "Mid Tom", "MT"), DrumVoice(42, "Hi Tom", "HT"),

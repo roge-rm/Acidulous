@@ -84,6 +84,7 @@ class Trinity final : public Machine {
     void allNotesOff() override;
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
     void controlChange(uint8_t cc, uint8_t value) override;
+    void channelPressure(uint8_t value) override;
     void pitchBend(int16_t value14) override;
     bool render(float *L, float *R, int32_t frames) override;
 

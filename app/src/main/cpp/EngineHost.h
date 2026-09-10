@@ -56,6 +56,10 @@ class EngineHost {
 
     void noteOn(int rack, uint8_t note, uint8_t velocity);
     void noteOff(int rack, uint8_t note);
+    // Performance controllers. They travel as MIDI so the eventor chain and,
+    // later, a USB controller share one path into the machine.
+    void controlChange(int rack, uint8_t cc, uint8_t value);
+    void channelPressure(int rack, uint8_t value);
 
     // unit: "machine" | "effect1" | "effect2" | "eventor1" | "eventor2" | "channel".
     // value is normalised 0..1. Names are resolved here, on the UI thread.

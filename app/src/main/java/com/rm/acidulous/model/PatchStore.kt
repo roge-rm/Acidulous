@@ -94,8 +94,9 @@ object TrinityPresets {
     // Matrix source and destination indices, mirroring Trinity.h.
     private const val SRC_LFO1 = 13; private const val SRC_LFO2 = 14
     private const val SRC_VEL = 4; private const val SRC_ENV3 = 9; private const val SRC_MOD = 2
+    private const val SRC_PRESSURE = 3
     private const val DST_POS1 = 5; private const val DST_F1FREQ = 23; private const val DST_PITCH = 1
-    private const val DST_FM21 = 21; private const val DST_SYNC1 = 14
+    private const val DST_FM21 = 21; private const val DST_SYNC1 = 14; private const val DST_DETUNE = 17
 
     private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Trinity", name, kv.toMap())
 
@@ -107,7 +108,9 @@ object TrinityPresets {
             "o3_wave" to wave(0), "o3_level" to 0.4f, "o3_coarse" to coarse(-12), "o3_density" to density(2),
             "f1_type" to ftype(3), "f1_freq" to freq(6000f), "f1_res" to 0.1f, "f1_env" to depth(0.25f),
             "a_attack" to attack(0.02f), "a_decay" to decay(1.2f), "a_sustain" to 0.8f, "a_release" to release(0.5f),
-            "o1_drift" to 0.3f, "o2_drift" to 0.3f, "o3_drift" to 0.2f),
+            "o1_drift" to 0.3f, "o2_drift" to 0.3f, "o3_drift" to 0.2f,
+            "m01_src" to src(SRC_MOD), "m01_dest" to dest(DST_F1FREQ), "m01_depth" to depth(0.4f),
+            "m02_src" to src(SRC_PRESSURE), "m02_dest" to dest(DST_DETUNE), "m02_depth" to depth(0.4f)),
         p("Glass Pad",
             "o1_wave" to wave(5), "o1_level" to 0.75f, "o1_pos" to 0.2f,
             "o2_wave" to wave(4), "o2_level" to 0.5f, "o2_pos" to 0.6f, "o2_fine" to fine(6f),
@@ -117,7 +120,10 @@ object TrinityPresets {
             "l1_rate" to rate(0.15f), "l1_wave" to step(0, 9),
             "m01_src" to src(SRC_LFO1), "m01_dest" to dest(DST_POS1), "m01_depth" to depth(0.4f),
             "m02_src" to src(SRC_LFO2), "m02_dest" to dest(DST_F1FREQ), "m02_depth" to depth(0.15f),
-            "l2_rate" to rate(0.07f)),
+            "l2_rate" to rate(0.07f),
+            // The performance strip: the wheel opens it up, pressure leans on the filter.
+            "m03_src" to src(SRC_MOD), "m03_dest" to dest(DST_POS1), "m03_depth" to depth(0.5f),
+            "m04_src" to src(SRC_PRESSURE), "m04_dest" to dest(DST_F1FREQ), "m04_depth" to depth(0.45f)),
         p("Bell Keys",
             "o1_wave" to wave(7), "o1_level" to 0.8f, "o1_pos" to 0.7f,
             "o2_wave" to wave(3), "o2_level" to 0.35f, "o2_coarse" to coarse(12),

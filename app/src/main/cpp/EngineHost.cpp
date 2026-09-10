@@ -211,6 +211,16 @@ void EngineHost::noteOff(int rack, uint8_t note) {
     sEngine.pushMidi({static_cast<uint8_t>(0x80 | rack), note, 0});
 }
 
+void EngineHost::controlChange(int rack, uint8_t cc, uint8_t value) {
+    if (rack < 0 || rack >= kRackCount) return;
+    sEngine.pushMidi({static_cast<uint8_t>(0xb0 | rack), cc, value});
+}
+
+void EngineHost::channelPressure(int rack, uint8_t value) {
+    if (rack < 0 || rack >= kRackCount) return;
+    sEngine.pushMidi({static_cast<uint8_t>(0xd0 | rack), value, 0});
+}
+
 int EngineHost::paramIndex(const std::string &machineType, const std::string &unit, const std::string &name) const {
     const Unit u = unitFromName(unit);
     if (u == Unit::Machine) {

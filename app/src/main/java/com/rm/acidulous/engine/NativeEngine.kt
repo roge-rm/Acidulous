@@ -64,6 +64,10 @@ object NativeEngine {
 
     fun noteOff(rackId: Int, note: Int) = nativeNoteOff(rackId, note)
 
+    /** Mod wheel is CC 1; pressure is channel aftertouch. Both 0..127. */
+    fun controlChange(rackId: Int, cc: Int, value: Int) = nativeControlChange(rackId, cc, value)
+    fun channelPressure(rackId: Int, value: Int) = nativeChannelPressure(rackId, value)
+
     /**
      * [unit] is "machine", "effect1", "effect2", "eventor1", "eventor2" or "channel";
      * [value] is normalised 0..1. Returns false if the name is unknown for what is mounted.
@@ -157,6 +161,8 @@ object NativeEngine {
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
     private external fun nativeNoteOff(rackId: Int, note: Int)
+    private external fun nativeControlChange(rackId: Int, cc: Int, value: Int)
+    private external fun nativeChannelPressure(rackId: Int, value: Int)
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
     private external fun nativeGetSampleRate(): Int
     private external fun nativeGetFramesPerBurst(): Int
