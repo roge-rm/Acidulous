@@ -92,4 +92,19 @@ class SongStoreTest {
         assertEquals(720, Signature(6, 8).ticksPerBar)
         assertEquals(840, Signature(7, 8).ticksPerBar)
     }
+
+    @Test
+    fun effectsRoundTripAndOldFilesHaveNone() {
+        val song = DemoSong.build()
+        val withFx = song.copy(tracks = song.tracks.mapIndexed { i, t ->
+            if (i == 0) t.withEffect(0, "Filter").withEffectParam(0, "cutoff", 0.4f).withEffect(1, "Delay").withEffectBypass(1, true) else t
+        })
+        val back = SongStore.decode(SongStore.encode(withFx))
+        assertEquals(withFx, back)
+        assertEquals("Filter", back.tracks[0].effectAt(0).type)
+        assertEquals(0.4f, back.tracks[0].effectAt(0).params["cutoff"])
+        assertTrue(back.tracks[0].effectAt(1).bypass)
+        val old = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"Subvert"}}],"scenes":[{"id":"s","name":"S"}]}"""
+        assertTrue(SongStore.decode(old).tracks[0].effects.isEmpty())
+    }
 }

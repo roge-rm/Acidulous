@@ -116,3 +116,24 @@ fun Track.withPatch(params: Map<String, Float>): Track = copy(machine = machine.
 
 fun Track.withSetting(name: String, value: String?): Track =
     copy(machine = machine.copy(settings = if (value == null) machine.settings - name else machine.settings + (name to value)))
+
+// --- Insert effects --------------------------------------------------------------------
+
+private fun Track.withEffectSlot(slot: Int, f: (EffectSlot) -> EffectSlot): Track {
+    if (slot !in 0 until EFFECT_SLOTS) return this
+    val list = List(EFFECT_SLOTS) { effectAt(it) }.toMutableList()
+    list[slot] = f(list[slot])
+    return copy(effects = list)
+}
+
+/** Puts a fresh effect of [type] in [slot]; empty clears it. Parameters start at the effect's defaults. */
+fun Track.withEffect(slot: Int, type: String): Track = withEffectSlot(slot) { EffectSlot(type = type) }
+
+fun Track.withEffectParam(slot: Int, name: String, v01: Float): Track =
+    withEffectSlot(slot) { it.copy(params = it.params + (name to v01.coerceIn(0f, 1f))) }
+
+fun Track.withEffectBypass(slot: Int, bypass: Boolean): Track = withEffectSlot(slot) { it.copy(bypass = bypass) }
+
+/** The unit name the engine addresses a slot by: "effect1", "effect2". */
+fun effectUnit(slot: Int): String = "effect${slot + 1}"
+fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -> 1; else -> null }

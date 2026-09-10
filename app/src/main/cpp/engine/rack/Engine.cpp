@@ -35,6 +35,9 @@ void Engine::renderBlock(float *out) {
     }
 
     clock.advance(kBlockFrames);
+    // Mounts before parameters: the UI queues a unit and then its values, so
+    // draining in that order lands the values on the new unit, not the old one.
+    applyMounts();
     drainMidi();
     drainParams();
 
@@ -90,14 +93,13 @@ void Engine::renderBlock(float *out) {
 
     for (int32_t r = 0; r < kRackCount; ++r) {
         if (racks[r].isActive()) {
-            racks[r].onBlock(clock.blockStart(), clock.blockEnd());
+            racks[r].onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
             racks[r].render(kBlockFrames);
         }
     }
     master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade);
 
     transport.publishPosition(scheduler.packedPosition());
-    applyMounts();
 
     // Block budget at 48 kHz / 64 frames is 1333 us.
     const auto us = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - t0).count();
@@ -156,8 +158,17 @@ void Engine::drainParams() {
 // One mount per block keeps the worst case bounded; the UI's builder retries
 // when the queue is momentarily full.
 void Engine::applyMounts() {
-    Mount m;
-    if (!mounts.pop(m)) return;
+    // Every mount queued so far, bounded: a swap is a pointer exchange and a
+    // retire push, so a burst (a loaded song mounting its machines and
+    // effects) lands whole in one block, ahead of the parameters behind it.
+    for (int32_t n = 0; n < kMaxMountsPerBlock; ++n) {
+        Mount m;
+        if (!mounts.pop(m)) return;
+        applyMount(m);
+    }
+}
+
+void Engine::applyMount(const Mount &m) {
     switch (m.kind) {
     case Mount::Kind::Machine:
         if (m.rack >= 0 && m.rack < kRackCount) {

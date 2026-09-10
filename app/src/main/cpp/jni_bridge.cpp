@@ -1,6 +1,7 @@
 #include "EngineHost.h"
 #include <android/log.h>
 #include <cstdio>
+#include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <jni.h>
 #include <string>
@@ -55,6 +56,24 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMountMachine(JNIEnv *env, jobjec
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeUnmountMachine(JNIEnv *, jobject, jint rackId) {
     host().unmountMachine(rackId);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMountEffect(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
+    return host().mountEffect(rackId, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeEffectTypes(JNIEnv *env, jobject) {
+    const int32_t n = acidulous::EffectRegistry::count();
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
+    for (int32_t i = 0; i < n; ++i) {
+        jstring s = env->NewStringUTF(acidulous::EffectRegistry::name(i));
+        env->SetObjectArrayElement(out, i, s);
+        env->DeleteLocalRef(s);
+    }
+    return out;
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -272,10 +291,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamNames(JNIEnv *env, j
 }
 
 // "name|min|max|def|curve|steps|unit" per parameter; curve 0 linear, 1 exponential, 2 stepped.
-JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamInfo(JNIEnv *env, jobject, jstring type) {
-    int32_t n = 0;
-    const acidulous::ParamDef *defs = acidulous::MachineRegistry::paramDefs(toStdString(env, type).c_str(), n);
+static jobjectArray paramInfoArray(JNIEnv *env, const acidulous::ParamDef *defs, int32_t n) {
     jclass stringClass = env->FindClass("java/lang/String");
     jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
     char buf[160];
@@ -287,6 +303,20 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamInfo(JNIEnv *env, jo
         env->DeleteLocalRef(s);
     }
     return out;
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamInfo(JNIEnv *env, jobject, jstring type) {
+    int32_t n = 0;
+    const acidulous::ParamDef *defs = acidulous::MachineRegistry::paramDefs(toStdString(env, type).c_str(), n);
+    return paramInfoArray(env, defs, n);
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeEffectParamInfo(JNIEnv *env, jobject, jstring type) {
+    int32_t n = 0;
+    const acidulous::ParamDef *defs = acidulous::EffectRegistry::paramDefs(toStdString(env, type).c_str(), n);
+    return paramInfoArray(env, defs, n);
 }
 
 JNIEXPORT jboolean JNICALL

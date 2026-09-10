@@ -7,6 +7,7 @@
 #include <drivers/AudioDriver.h>
 #include <engine/core/Constants.h>
 #include <engine/core/WavReader.h>
+#include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/forage/Forage.h>
 #include <engine/rack/Engine.h>
@@ -65,11 +66,12 @@ void EngineHost::stop() {
     sAudio.stop(); // once the callback is gone nothing else touches the racks
     sEngine.stop();
     for (auto &t : mountedType) t.clear();
+    for (auto &r : mountedEffectType) for (auto &t : r) t.clear();
     LOGI("engine stopped");
 }
 
 bool EngineHost::mountWithRetry(Mount &m, void (*deleter)(void *)) {
-    // The audio thread applies one mount per block (1.33 ms); a full queue is a
+    // The audio thread applies a bounded burst of mounts per block (1.33 ms); a full queue is a
     // burst, not a fault.
     for (int attempt = 0; attempt < 50; ++attempt) {
         if (sEngine.mount(m)) return true;
@@ -105,6 +107,32 @@ void EngineHost::unmountMachine(int rack) {
     m.rack = rack;
     m.object = nullptr; // swap in nothing; the old machine is retired
     if (mountWithRetry(m, [](void *) {})) mountedType[rack].clear();
+}
+
+bool EngineHost::mountEffect(int rack, int slot, const std::string &typeName) {
+    if (rack < 0 || rack >= kRackCount || slot < 0 || slot >= kEffectSlots) return false;
+    Effect *fx = nullptr;
+    if (!typeName.empty()) {
+        fx = EffectRegistry::create(typeName.c_str());
+        if (fx == nullptr) {
+            LOGE("unknown effect '%s'", typeName.c_str());
+            return false;
+        }
+        fx->prepare(kSampleRate);
+    }
+    Mount m;
+    m.kind = Mount::Kind::Effect;
+    m.rack = rack;
+    m.slot = slot;
+    m.object = fx;
+    if (!mountWithRetry(m, deleteAs<Effect>)) return false;
+    mountedEffectType[rack][slot] = typeName;
+    LOGI("queued effect '%s' for rack %d slot %d", typeName.c_str(), rack, slot);
+    return true;
+}
+
+const char *EngineHost::mountedEffect(int rack, int slot) const {
+    return (rack >= 0 && rack < kRackCount && slot >= 0 && slot < kEffectSlots) ? mountedEffectType[rack][slot].c_str() : "";
 }
 
 bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::string &error) {
@@ -167,6 +195,13 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         return -1;
     }
     if (u == Unit::Master) return sEngine.master.params().indexOf(name.c_str());
+    if (u == Unit::Effect1 || u == Unit::Effect2) {
+        if (name == "bypass") return kEffectBypassIndex;
+        int32_t n = 0;
+        const ParamDef *defs = EffectRegistry::paramDefs(machineType.c_str(), n); // the effect's type here
+        for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
+        return -1;
+    }
     return -1;
 }
 
@@ -189,8 +224,10 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         else if (name == "senddelay") index = Rack::SendDelay;
     } else if (u == Unit::Master) {
         index = sEngine.master.params().indexOf(name.c_str());
+    } else if (u == Unit::Effect1 || u == Unit::Effect2) {
+        index = paramIndex(mountedEffectType[rack][u == Unit::Effect1 ? 0 : 1], unit, name);
     }
-    if (index < 0) return false;
+    if (index == -1) return false;
     ParamMessage p;
     p.rack = rack;
     p.unit = u;
@@ -359,8 +396,15 @@ float EngineHost::debugParam(int rack, const std::string &name) const {
 float EngineHost::paramNormalized(int rack, const std::string &unit, const std::string &name) const {
     if (rack < 0 || rack >= kRackCount) return -1.0f;
     const Unit u = unitFromName(unit);
-    const int index = paramIndex(mountedType[rack], unit, name);
-    if (index < 0) return -1.0f;
+    const bool isFx = u == Unit::Effect1 || u == Unit::Effect2;
+    const int slot = u == Unit::Effect1 ? 0 : 1;
+    const int index = paramIndex(isFx ? mountedEffectType[rack][slot] : mountedType[rack], unit, name);
+    if (index == -1) return -1.0f;
+    if (isFx) {
+        Effect *fx = sEngine.racks[rack].currentEffect(slot);
+        if (fx == nullptr) return -1.0f;
+        return index == kEffectBypassIndex ? (fx->bypassed() ? 1.0f : 0.0f) : fx->params().normalized(index);
+    }
     if (u == Unit::Machine) {
         Machine *m = sEngine.racks[rack].currentMachine();
         return m ? m->params().normalized(index) : -1.0f;

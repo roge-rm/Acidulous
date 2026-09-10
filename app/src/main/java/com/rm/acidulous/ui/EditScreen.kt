@@ -74,7 +74,9 @@ fun EditScreen(
     var selectedPad by remember(trackIndex) { mutableStateOf(0) }
     val hasSteps = track.machine.type == "Subvert" || kind == MachineKind.Drums
     var laneKey by remember { mutableStateOf<String?>(null) }
-    val laneKeys = remember(track.machine.type) { automationKeysFor(track.machine.type) }
+    val effectTypes = track.effects.map { it.type }
+    val laneKeys = remember(track.machine.type, effectTypes) { automationKeysFor(track) }
+    var showFx by remember { mutableStateOf(false) } // the insert slots take the machine panel's place
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var lowestPitch by remember {
         val lowest = clip.notes.minOfOrNull { it.pitch } ?: 36
@@ -196,7 +198,9 @@ fun EditScreen(
         )
 
         // The machine's face: knobs go to the engine as gestures and into the document as undo steps.
-        MachinePanel(
+        // Or, behind the fx toggle, the track's two insert slots.
+        if (showFx) EffectsPanel(track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
+        else MachinePanel(
             track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch,
             selectedPad = selectedPad,
             onImportSample = { pad -> onImportSample(trackIndex, pad) },
@@ -227,6 +231,9 @@ fun EditScreen(
             }
             if (!steps) OutlinedButton(onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {
                 Text(if (mode == EditMode.Draw) "✎ draw" else "⬚ select", fontSize = 12.sp)
+            }
+            OutlinedButton(onClick = { showFx = !showFx }) {
+                Text("fx", color = if (showFx) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
             }
             OutlinedButton(onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }
             OutlinedButton(onClick = { selection = emptySet(); editor.redo(trackIndex) }, enabled = editor.canRedo(trackIndex)) { Text("↷", fontSize = 12.sp) }

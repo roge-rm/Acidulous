@@ -43,6 +43,8 @@ class Engine {
 
   private:
     void applyMounts();
+    void applyMount(const Mount &m);
+    static constexpr int32_t kMaxMountsPerBlock = 8;
     void drainMidi();
     void drainParams();
 

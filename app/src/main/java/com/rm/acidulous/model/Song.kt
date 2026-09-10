@@ -137,6 +137,22 @@ data class Machine(
     val settings: Map<String, String> = emptyMap(),
 )
 
+/**
+ * One of a track's two insert slots. An empty [type] is an empty slot. Params
+ * are normalised 0..1 like a machine's; [bypass] keeps the effect and its
+ * state but takes it out of the signal path.
+ */
+@Serializable
+data class EffectSlot(
+    val type: String = "",
+    val params: Map<String, Float> = emptyMap(),
+    val bypass: Boolean = false,
+) {
+    val isEmpty: Boolean get() = type.isEmpty()
+}
+
+const val EFFECT_SLOTS = 2
+
 /** A track's channel strip. Units are musical (gain 0..1.5, pan -1..1, sends 0..1). */
 @Serializable
 data class Mixer(
@@ -156,7 +172,11 @@ data class Track(
     /** Keyed by [Scene.id]. A missing entry is silence in that scene. */
     val clips: Map<String, Clip> = emptyMap(),
     val mixer: Mixer = Mixer(),
-)
+    /** Insert effects, in signal order after the machine. Always [EFFECT_SLOTS] long when read through [effectAt]. */
+    val effects: List<EffectSlot> = emptyList(),
+) {
+    fun effectAt(slot: Int): EffectSlot = effects.getOrNull(slot) ?: EffectSlot()
+}
 
 @Serializable data class ReverbSettings(val on: Boolean = true, val size: Float = 0.5f, val damp: Float = 0.5f, val tone: Float = 0.6f)
 

@@ -29,6 +29,7 @@ class Recorder {
 
     private val buffer = LongArray(128 * 5)
     private val paramNames = HashMap<String, List<String>>()
+    private val effectParamNames = HashMap<String, List<String>>()
     private val open = HashMap<Int, OpenNote>() // key: rack shl 8 or pitch
     private var dirty = false
     private var lastScene = -1
@@ -134,6 +135,12 @@ class Recorder {
         val name = when (unit) {
             "machine" -> paramNames.getOrPut(track.machine.type) { NativeEngine.machineParamNames(track.machine.type) }.getOrNull(index)
             "channel" -> CHANNEL_PARAMS.getOrNull(index)
+            "effect1", "effect2" -> {
+                val type = track.effectAt(if (unit == "effect1") 0 else 1).type
+                if (index == EFFECT_BYPASS_INDEX) "bypass"
+                else if (type.isEmpty()) null
+                else effectParamNames.getOrPut(type) { NativeEngine.effectParamInfo(type).map { it.name } }.getOrNull(index)
+            }
             else -> null
         } ?: return null
         val clip = track.clips[sceneId] ?: song.emptyClipFor(sceneId)
@@ -157,5 +164,6 @@ class Recorder {
         // Mirrors acidulous::Unit
         val UNITS = listOf("machine", "effect1", "effect2", "eventor1", "eventor2", "channel", "master")
         val CHANNEL_PARAMS = listOf("gain", "pan", "mute", "solo", "sendreverb", "senddelay")
+        const val EFFECT_BYPASS_INDEX = -2 // mirrors kEffectBypassIndex
     }
 }

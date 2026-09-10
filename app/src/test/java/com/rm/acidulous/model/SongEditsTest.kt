@@ -82,4 +82,29 @@ class SongEditsTest {
         editor.undo(0)
         assertFalse(editor.song.tracks[0].clips["s-verse"]!!.mute)
     }
+
+    @Test
+    fun effectSlotsFillChangeAndClear() {
+        val t = demo.tracks[0]
+        assertTrue(t.effects.isEmpty())
+        assertEquals(EffectSlot(), t.effectAt(1)) // an absent slot reads as empty
+
+        val withDelay = t.withEffect(1, "Delay")
+        assertEquals(EFFECT_SLOTS, withDelay.effects.size)
+        assertEquals("Delay", withDelay.effectAt(1).type)
+        assertTrue(withDelay.effectAt(0).isEmpty)
+
+        val tweaked = withDelay.withEffectParam(1, "duck", 0.7f).withEffectBypass(1, true)
+        assertEquals(0.7f, tweaked.effectAt(1).params["duck"])
+        assertTrue(tweaked.effectAt(1).bypass)
+
+        // a new type starts clean; clearing empties the slot; out-of-range is a no-op
+        assertTrue(tweaked.withEffect(1, "Reverb").effectAt(1).params.isEmpty())
+        assertTrue(tweaked.withEffect(1, "").effectAt(1).isEmpty)
+        assertSame(tweaked, tweaked.withEffect(5, "Delay"))
+
+        assertEquals("effect2", effectUnit(1))
+        assertEquals(0, effectSlotOf("effect1"))
+        assertEquals(null, effectSlotOf("channel"))
+    }
 }

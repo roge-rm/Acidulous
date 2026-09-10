@@ -81,6 +81,10 @@ class ParamBinding(
     private val editor: SongEditor,
     private val values: androidx.compose.runtime.MutableState<Map<String, Float>>,
     private val dragging: androidx.compose.runtime.MutableState<String?>,
+    /** Which unit on the rack the names address: "machine", "effect1", "effect2". */
+    val unit: String = "machine",
+    /** How a value lands in the document. */
+    private val apply: (Track, String, Float) -> Track = { t, n, v -> t.withParam(n, v) },
 ) {
     fun value(name: String): Float = values.value[name] ?: info.firstOrNull { it.name == name }?.defaultNormalized ?: 0f
     fun display(name: String): String = info.firstOrNull { it.name == name }?.format(value(name)) ?: ""
@@ -89,38 +93,42 @@ class ParamBinding(
     fun start(name: String) { dragging.value = name; editor.beginGesture(trackIndex) }
     fun change(name: String, v: Float) {
         values.value = values.value + (name to v)
-        NativeEngine.setParam(trackIndex, "machine", name, v, record = true)
-        editor.updateGesture { t -> t.withParam(name, v) }
+        NativeEngine.setParam(trackIndex, unit, name, v, record = true)
+        editor.updateGesture { t -> apply(t, name, v) }
     }
     fun end() { dragging.value = null; editor.endGesture() }
 
     /** A tap on a stepped control: one undo step, no gesture. */
     fun set(name: String, v: Float) {
         values.value = values.value + (name to v)
-        NativeEngine.setParam(trackIndex, "machine", name, v, record = true)
-        editor.edit(trackIndex) { t -> t.withParam(name, v) }
+        NativeEngine.setParam(trackIndex, unit, name, v, record = true)
+        editor.edit(trackIndex) { t -> apply(t, name, v) }
     }
 
     fun applyAll(params: Map<String, Float>) {
         val full = info.associate { it.name to (params[it.name] ?: it.defaultNormalized) }
         values.value = full
-        for ((n, v) in full) NativeEngine.setParam(trackIndex, "machine", n, v, record = false)
+        for ((n, v) in full) NativeEngine.setParam(trackIndex, unit, n, v, record = false)
     }
 
     val draggingName: String? get() = dragging.value
 }
 
 @Composable
-fun rememberParamBinding(trackIndex: Int, type: String, info: List<ParamInfo>, editor: SongEditor): ParamBinding {
-    val values = remember(trackIndex, type) { mutableStateOf(info.associate { it.name to it.defaultNormalized }) }
+fun rememberParamBinding(
+    trackIndex: Int, type: String, info: List<ParamInfo>, editor: SongEditor,
+    unit: String = "machine",
+    apply: (Track, String, Float) -> Track = { t, n, v -> t.withParam(n, v) },
+): ParamBinding {
+    val values = remember(trackIndex, type, unit) { mutableStateOf(info.associate { it.name to it.defaultNormalized }) }
     val dragging = remember { mutableStateOf<String?>(null) }
-    val binding = remember(trackIndex, type) { ParamBinding(trackIndex, info, editor, values, dragging) }
-    LaunchedEffect(trackIndex, type) {
+    val binding = remember(trackIndex, type, unit) { ParamBinding(trackIndex, info, editor, values, dragging, unit, apply) }
+    LaunchedEffect(trackIndex, type, unit) {
         while (true) {
             val d = dragging.value
             values.value = info.associate { p ->
                 p.name to (if (p.name == d) values.value[p.name] ?: p.defaultNormalized
-                else NativeEngine.paramNormalized(trackIndex, "machine", p.name).takeIf { it >= 0f } ?: values.value[p.name] ?: p.defaultNormalized)
+                else NativeEngine.paramNormalized(trackIndex, unit, p.name).takeIf { it >= 0f } ?: values.value[p.name] ?: p.defaultNormalized)
             }
             delay(100)
         }
@@ -144,7 +152,7 @@ private fun PatchBar(type: String, patchNames: () -> List<String>, onSave: (Stri
 }
 
 @Composable
-private fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = Color(0xFF7FD1B9)) {
+internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = Color(0xFF7FD1B9)) {
     Knob(
         label = label, value = b.value(name), display = b.display(name), accent = accent,
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
@@ -152,7 +160,7 @@ private fun PanelKnob(b: ParamBinding, name: String, label: String = name, accen
 }
 
 @Composable
-private fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
+internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
     val info = b.infoOf(name) ?: return
     val idx = info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -170,7 +178,7 @@ private fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, lab
 }
 
 @Composable
-private fun Group(title: String, content: @Composable () -> Unit) {
+internal fun Group(title: String, content: @Composable () -> Unit) {
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFF26262B)).padding(6.dp)) {
         Text(title, color = Color(0xFF7FD1B9), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) { content() }

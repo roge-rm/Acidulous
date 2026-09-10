@@ -22,6 +22,8 @@ object NativeEngine {
     /** Queues a machine of [typeName] to be mounted on [rackId]. Applied at a block boundary. */
     fun mountMachine(rackId: Int, typeName: String): Boolean = nativeMountMachine(rackId, typeName)
     fun unmountMachine(rackId: Int) = nativeUnmountMachine(rackId)
+    /** Mounts an insert effect on one of a rack's two slots; an empty [typeName] clears it. */
+    fun mountEffect(rackId: Int, slot: Int, typeName: String): Boolean = nativeMountEffect(rackId, slot, typeName)
 
     /** Decodes a WAV and mounts it on a pad; empty path clears. Returns an error message, or "" on success. */
     fun loadSample(rackId: Int, slot: Int, absolutePath: String): String = nativeLoadSample(rackId, slot, absolutePath)
@@ -32,6 +34,9 @@ object NativeEngine {
     val machineTypes: List<String> get() = nativeMachineTypes().toList()
     fun machineParamNames(type: String): List<String> = nativeMachineParamNames(type).toList()
     fun machineParamInfo(type: String): List<ParamInfo> = nativeMachineParamInfo(type).map { ParamInfo.parse(it) }
+    /** Every insert effect type, from the effect registry. */
+    val effectTypes: List<String> get() = nativeEffectTypes().toList()
+    fun effectParamInfo(type: String): List<ParamInfo> = nativeEffectParamInfo(type).map { ParamInfo.parse(it) }
     /** Normalised 0..1 value of a mounted unit's parameter, or -1. */
     fun paramNormalized(rackId: Int, unit: String, name: String): Float = nativeParamNormalized(rackId, unit, name)
 
@@ -115,6 +120,9 @@ object NativeEngine {
     private external fun nativeIsRunning(): Boolean
     private external fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     private external fun nativeUnmountMachine(rackId: Int)
+    private external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
+    private external fun nativeEffectTypes(): Array<String>
+    private external fun nativeEffectParamInfo(type: String): Array<String>
     private external fun nativeLoadSample(rackId: Int, slot: Int, path: String): String
     private external fun nativeSampleInfo(rackId: Int, slot: Int): String
     private external fun nativeMachineTypes(): Array<String>

@@ -8,9 +8,11 @@ dependency is Oboe.
 core/       Constants · RtQueue (SPSC, wait-free) · Handover (Mount / Retire + the
             retire worker) · Params (ParamDef tables, 0..1 in, smoothed unit-range
             out) · Messages (MidiMessage, ParamMessage)
-dsp/        Math · Osc (PolyBLEP saw/pulse) · Filter (TPT SVF) · Envelope (decay, ASR)
+dsp/        Math · Osc (PolyBLEP saw/pulse) · Filter (TPT SVF) · Envelope (decay, ASR) ·
+            Biquad · DelayLine · Lfo (note-value phase) · Reverb · Delay · Limiter · Click
 machine/    Machine interface · MachineRegistry · subvert/ (the signature voice)
-effect/     Effect interface (no implementations yet - M9)
+effect/     Effect interface (onBlock for tempo, run() with bypass) · EffectRegistry ·
+            Effects: Delay Reverb Eq Distortion Compressor Filter Bitcrusher Phaser Flanger
 eventor/    Eventor interface + MidiSink (scale/chord/arp live here - M11)
 rack/       Rack (clip player -> eventors -> machine -> effects -> channel strip)
             MasterBus (sum, peak; sends + limiter in M5) · Engine (the render loop)

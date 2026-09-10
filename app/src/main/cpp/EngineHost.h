@@ -26,6 +26,9 @@ class EngineHost {
     // Builds the machine here, hands it to the audio thread through a Mount.
     bool mountMachine(int rack, const std::string &typeName);
     void unmountMachine(int rack);
+    // Insert effects: two slots per rack. An empty type name clears the slot.
+    bool mountEffect(int rack, int slot, const std::string &typeName);
+    const char *mountedEffect(int rack, int slot) const;
 
     // Decodes a WAV here and mounts it into the machine's `slot` (a pad). An
     // empty path clears the slot. Returns false if the file cannot be read.
@@ -103,6 +106,7 @@ class EngineHost {
 
     bool running = false;
     std::string mountedType[16];
+    std::string mountedEffectType[16][2];
     std::unordered_map<int64_t, std::shared_ptr<const seq::Clip>> clipCache;
 };
 

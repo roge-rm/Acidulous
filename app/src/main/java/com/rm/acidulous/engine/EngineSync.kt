@@ -1,7 +1,10 @@
 package com.rm.acidulous.engine
 
 import android.util.Log
+import com.rm.acidulous.model.EFFECT_SLOTS
 import com.rm.acidulous.model.EngineParams
+import com.rm.acidulous.model.effectSlotOf
+import com.rm.acidulous.model.effectUnit
 import com.rm.acidulous.model.MachineKind
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Master
@@ -24,6 +27,7 @@ object EngineSync {
     private const val RACKS = 16
 
     private val mounted = arrayOfNulls<String>(RACKS)
+    private val mountedEffects = Array(RACKS) { arrayOfNulls<String>(EFFECT_SLOTS) }
     private val loadedSamples = HashMap<String, String>() // "rack:slot" -> relative path
 
     /** Where relative sample paths in the document resolve. Set once at startup. */
@@ -73,10 +77,28 @@ object EngineSync {
         }
     }
 
-    /** Everything the engine needs after any edit: machines, then the snapshot. */
+    /**
+     * Same for the insert slots: a slot whose type changed gets a fresh effect
+     * (or nothing), so its state starts clean; a slot whose type is unchanged
+     * keeps its effect and only has its parameters pushed.
+     */
+    fun ensureEffects(song: Song) {
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            for (slot in 0 until EFFECT_SLOTS) {
+                val want = track?.effectAt(slot)?.type?.ifEmpty { null }
+                if (mountedEffects[rack][slot] == want) continue
+                if (NativeEngine.mountEffect(rack, slot, want ?: "")) mountedEffects[rack][slot] = want
+                else Log.w(TAG, "could not mount effect ${want ?: "(none)"} on rack $rack slot $slot")
+            }
+        }
+    }
+
+    /** Everything the engine needs after any edit: machines, effects, then the snapshot. */
     fun sync(song: Song): Boolean {
         ensureMachines(song)
         ensureSamples(song)
+        ensureEffects(song)
         return push(song)
     }
 
@@ -129,7 +151,10 @@ object EngineSync {
                 for ((key, lane) in clip.automation) {
                     val pts = FloatArray(lane.points.size * 2)
                     lane.points.forEachIndexed { i, p -> pts[i * 2] = p.tick.toFloat(); pts[i * 2 + 1] = p.value }
-                    NativeEngine.snapshotSetLane(handle, rack, sceneIdx, track.machine.type, laneUnit(key), laneParam(key), lane.linear, pts)
+                    // The type the lane's parameter belongs to: the machine's, or the effect's in that slot.
+                    val unit = laneUnit(key)
+                    val ownerType = effectSlotOf(unit)?.let { track.effectAt(it).type } ?: track.machine.type
+                    NativeEngine.snapshotSetLane(handle, rack, sceneIdx, ownerType, unit, laneParam(key), lane.linear, pts)
                 }
             }
         }
@@ -142,6 +167,7 @@ object EngineSync {
             if (rack < RACKS) {
                 pushChannel(rack, track.mixer)
                 pushMachineParams(rack, track.machine.params)
+                for (slot in 0 until EFFECT_SLOTS) pushEffect(rack, slot, track.effectAt(slot))
             }
         }
         pushMaster(song.master)
@@ -150,6 +176,13 @@ object EngineSync {
 
     fun pushMachineParams(rack: Int, params: Map<String, Float>) {
         for ((name, v) in params) NativeEngine.setParam(rack, "machine", name, v, record = false)
+    }
+
+    fun pushEffect(rack: Int, slot: Int, fx: com.rm.acidulous.model.EffectSlot) {
+        if (fx.isEmpty) return
+        val unit = effectUnit(slot)
+        for ((name, v) in fx.params) NativeEngine.setParam(rack, unit, name, v, record = false)
+        NativeEngine.setParam(rack, unit, "bypass", EngineParams.bool01(fx.bypass), record = false)
     }
 
     // --- Mixer parameters: cheap enough to send whole on every push ------------------

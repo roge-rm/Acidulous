@@ -41,9 +41,12 @@ void Rack::allNotesOff() {
     if (machine != nullptr) machine->allNotesOff();
 }
 
-void Rack::onBlock(int64_t tickStart, int64_t tickEnd) {
+void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
     for (int32_t s = 0; s < kEventorSlots; ++s) {
         if (eventors[s] != nullptr) eventors[s]->onBlock(tickStart, tickEnd, sinks[s]);
+    }
+    for (int32_t s = 0; s < kEffectSlots; ++s) {
+        if (effects[s] != nullptr) effects[s]->onBlock(tickStart, tickEnd, bpm);
     }
 }
 
@@ -55,7 +58,7 @@ void Rack::render(int32_t frames) {
     }
     stereo = machine->render(bufL, bufR, frames);
     for (int32_t s = 0; s < kEffectSlots; ++s) {
-        if (effects[s] != nullptr) stereo = effects[s]->process(bufL, bufR, frames, stereo);
+        if (effects[s] != nullptr) stereo = effects[s]->run(bufL, bufR, frames, stereo);
     }
     // Channel strip: gain and equal-power pan, smoothed; a mono source pans
     // from L and becomes stereo here.
@@ -112,8 +115,14 @@ Eventor *Rack::swapEventor(int32_t slot, Eventor *next) {
 void Rack::setParam(Unit unit, int32_t index, float v01) {
     switch (unit) {
     case Unit::Machine: if (machine) machine->params().set(index, v01); break;
-    case Unit::Effect1: if (effects[0]) effects[0]->params().set(index, v01); break;
-    case Unit::Effect2: if (effects[1]) effects[1]->params().set(index, v01); break;
+    case Unit::Effect1:
+    case Unit::Effect2: {
+        Effect *fx = effects[unit == Unit::Effect1 ? 0 : 1];
+        if (fx == nullptr) break;
+        if (index == kEffectBypassIndex) fx->setBypass(v01 >= 0.5f);
+        else fx->params().set(index, v01);
+        break;
+    }
     case Unit::Eventor1: if (eventors[0]) eventors[0]->params().set(index, v01); break;
     case Unit::Eventor2: if (eventors[1]) eventors[1]->params().set(index, v01); break;
     case Unit::Channel: channel.set(index, v01); break;
