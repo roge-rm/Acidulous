@@ -107,4 +107,14 @@ class SongEditsTest {
         assertEquals(0, effectSlotOf("effect1"))
         assertEquals(null, effectSlotOf("channel"))
     }
+
+    @Test
+    fun durationFollowsScenesRepeatsAndTempo() {
+        // demo: Intro 1 bar x2 at 120 (4 s) + Verse 2 bars x1 at 140 (8 beats = 3.43 s)
+        assertEquals(4f + 8f * 60f / 140f, demo.durationSeconds(), 1e-3f)
+        val blank = SongStore.blank("New")
+        assertEquals(2f, blank.durationSeconds(), 1e-3f) // one empty bar at 120
+        assertEquals(1, blank.tracks.size)
+        assertEquals("Subvert", blank.tracks[0].machine.type)
+    }
 }

@@ -58,6 +58,9 @@ fun EditScreen(
     patchNames: () -> List<String>,
     onSavePatch: (String) -> Unit,
     onLoadPatch: (String) -> Map<String, Float>?,
+    factoryPatchNames: () -> List<String> = { emptyList() },
+    userPatchNames: () -> List<String> = { emptyList() },
+    onDeletePatch: (String) -> Unit = {},
     onImportSample: (track: Int, pad: Int) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
@@ -202,6 +205,7 @@ fun EditScreen(
         if (showFx) EffectsPanel(track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
         else MachinePanel(
             track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch,
+            factoryPatchNames = factoryPatchNames, userPatchNames = userPatchNames, onDeletePatch = onDeletePatch,
             selectedPad = selectedPad,
             onImportSample = { pad -> onImportSample(trackIndex, pad) },
             onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },

@@ -49,6 +49,9 @@ fun MachinePanel(
     patchNames: () -> List<String>,
     onSavePatch: (String) -> Unit,
     onLoadPatch: (String) -> Map<String, Float>?,
+    factoryPatchNames: () -> List<String> = { emptyList() },
+    userPatchNames: () -> List<String> = { emptyList() },
+    onDeletePatch: (String) -> Unit = {},
     selectedPad: Int = 0,
     onImportSample: (pad: Int) -> Unit = {},
     onClearSample: (pad: Int) -> Unit = {},
@@ -59,12 +62,13 @@ fun MachinePanel(
     val binding = rememberParamBinding(trackIndex, type, info, editor)
 
     Column(modifier.background(Color(0xFF1F1F23)).padding(6.dp)) {
-        PatchBar(type, patchNames, onSavePatch) { name ->
+        val loadPatch: (String) -> Unit = { name ->
             onLoadPatch(name)?.let { params ->
                 editor.edit(trackIndex) { t -> t.withPatch(params) }
                 binding.applyAll(params)
             }
         }
+        PatchBar(type, patchNames, onSavePatch, loadPatch, factoryPatchNames, userPatchNames, onDeletePatch)
         when (type) {
             "Subvert" -> SubvertPanel(binding)
             "Hexbeat" -> HexbeatPanel(binding)
@@ -137,18 +141,34 @@ fun rememberParamBinding(
 }
 
 @Composable
-private fun PatchBar(type: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit) {
+private fun PatchBar(
+    type: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit,
+    factoryNames: () -> List<String>, userNames: () -> List<String>, onDelete: (String) -> Unit,
+) {
     var menu by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
+    var browsing by remember { mutableStateOf(false) }
+    var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(type, color = Color.White, fontSize = 13.sp)
         TextButton(onClick = { menu = true }) { Text("patch ▾", color = Color(0xFFFFB454), fontSize = 11.sp) }
         TextButton(onClick = { saving = true }) { Text("save as…", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
+        TextButton(onClick = { browsing = true }) { Text("browse…", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
         }
     }
     if (saving) TextInputDialog("Patch name", "", onDismiss = { saving = false }) { name -> onSave(name); saving = false }
+    if (browsing) {
+        val factory = remember(type) { factoryNames() }
+        val user = remember(type, listRev) { userNames() }
+        PatchBrowserDialog(
+            machine = type, factory = factory, user = user,
+            onLoad = { n -> onLoad(n); browsing = false },
+            onDelete = { n -> onDelete(n); listRev++ },
+            onDismiss = { browsing = false },
+        )
+    }
 }
 
 @Composable

@@ -156,6 +156,25 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeTransportPlay(JNIEnv *, jobject,
     host().transportPlay(sceneIdx);
 }
 
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeRenderSong(JNIEnv *env, jobject, jstring path, jfloat tailSeconds) {
+    std::string error;
+    const bool ok = host().renderSong(toStdString(env, path), tailSeconds, error);
+    return env->NewStringUTF(ok ? "" : error.c_str());
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCancelRender(JNIEnv *, jobject) { host().cancelRender(); }
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeIsRendering(JNIEnv *, jobject) { return host().isRendering() ? JNI_TRUE : JNI_FALSE; }
+
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeRenderedSeconds(JNIEnv *, jobject) { return host().renderedSeconds(); }
+
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeRenderedPeak(JNIEnv *, jobject) { return host().renderedPeak(); }
+
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeTransportStop(JNIEnv *, jobject) { host().transportStop(); }
 

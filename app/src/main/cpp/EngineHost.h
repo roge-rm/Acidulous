@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <sequencer/Clip.h>
@@ -38,6 +39,16 @@ class EngineHost {
     const char *mountedMachine(int rack) const;
     // Resolves a parameter name for a unit; -1 if unknown. UI thread.
     int paramIndex(const std::string &machineType, const std::string &unit, const std::string &name) const;
+
+    // --- Offline render ---------------------------------------------------------
+    // Blocks: renders the whole song from the top (song loop off, metronome
+    // off) plus `tailSeconds` of silence-driven tail into a 24-bit WAV, then
+    // hands the stream back to the device. Call from a worker thread.
+    bool renderSong(const std::string &path, float tailSeconds, std::string &error);
+    void cancelRender() { renderCancel.store(true, std::memory_order_relaxed); }
+    bool isRendering() const { return rendering.load(std::memory_order_relaxed); }
+    float renderedSeconds() const { return renderSeconds.load(std::memory_order_relaxed); }
+    float renderedPeak() const { return renderPeak.load(std::memory_order_relaxed); }
 
     void noteOn(int rack, uint8_t note, uint8_t velocity);
     void noteOff(int rack, uint8_t note);
@@ -106,6 +117,8 @@ class EngineHost {
 
     bool running = false;
     std::string mountedType[16];
+    std::atomic<bool> rendering{false}, renderCancel{false};
+    std::atomic<float> renderSeconds{0.0f}, renderPeak{0.0f};
     std::string mountedEffectType[16][2];
     std::unordered_map<int64_t, std::shared_ptr<const seq::Clip>> clipCache;
 };

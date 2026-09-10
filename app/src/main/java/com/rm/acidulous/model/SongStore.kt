@@ -26,6 +26,17 @@ object SongStore {
 
     fun load(context: Context, name: String): Song = decode(fileFor(context, name).readText())
 
+    fun delete(context: Context, name: String): Boolean = fileFor(context, name).delete()
+
+    fun exists(context: Context, name: String): Boolean = fileFor(context, name).isFile
+
+    /** A new song: one scene, one Subvert track, nothing in it. */
+    fun blank(name: String): Song = Song(
+        name = name,
+        tracks = listOf(Track(id = newId("t"), name = "Bass", machine = Machine("Subvert"))),
+        scenes = listOf(Scene(id = newId("s"), name = "Scene 1")),
+    )
+
     fun list(context: Context): List<String> =
         directory(context).listFiles { f -> f.extension == "json" }
             ?.map { it.nameWithoutExtension }

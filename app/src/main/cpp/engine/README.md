@@ -5,7 +5,7 @@ to M3 was removed in favour of this. Everything under `cpp/` is ours; the only
 dependency is Oboe.
 
 ```
-core/       Constants · RtQueue (SPSC, wait-free) · Handover (Mount / Retire + the
+core/       WavReader / WavWriter (ours) · Constants · RtQueue (SPSC, wait-free) · Handover (Mount / Retire + the
             retire worker) · Params (ParamDef tables, 0..1 in, smoothed unit-range
             out) · Messages (MidiMessage, ParamMessage)
 dsp/        Math · Osc (PolyBLEP saw/pulse) · Filter (TPT SVF) · Envelope (decay, ASR) ·

@@ -30,6 +30,16 @@ object NativeEngine {
     /** "name|frames|stereo" for a loaded pad, or "". */
     fun sampleInfo(rackId: Int, slot: Int): String = nativeSampleInfo(rackId, slot)
 
+    /**
+     * Renders the whole song to a 24-bit WAV at [path], blocking the calling
+     * thread (use a worker). Returns "" on success or an error; "cancelled" after [cancelRender].
+     */
+    fun renderSong(path: String, tailSeconds: Float = 2f): String = nativeRenderSong(path, tailSeconds)
+    fun cancelRender() = nativeCancelRender()
+    val isRendering: Boolean get() = nativeIsRendering()
+    val renderedSeconds: Float get() = nativeRenderedSeconds()
+    val renderedPeak: Float get() = nativeRenderedPeak()
+
     /** Every machine type the engine can build, from its registry. */
     val machineTypes: List<String> get() = nativeMachineTypes().toList()
     fun machineParamNames(type: String): List<String> = nativeMachineParamNames(type).toList()
@@ -120,6 +130,11 @@ object NativeEngine {
     private external fun nativeIsRunning(): Boolean
     private external fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     private external fun nativeUnmountMachine(rackId: Int)
+    private external fun nativeRenderSong(path: String, tailSeconds: Float): String
+    private external fun nativeCancelRender()
+    private external fun nativeIsRendering(): Boolean
+    private external fun nativeRenderedSeconds(): Float
+    private external fun nativeRenderedPeak(): Float
     private external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     private external fun nativeEffectTypes(): Array<String>
     private external fun nativeEffectParamInfo(type: String): Array<String>

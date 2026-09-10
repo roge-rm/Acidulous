@@ -137,3 +137,14 @@ fun Track.withEffectBypass(slot: Int, bypass: Boolean): Track = withEffectSlot(s
 /** The unit name the engine addresses a slot by: "effect1", "effect2". */
 fun effectUnit(slot: Int): String = "effect${slot + 1}"
 fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -> 1; else -> null }
+
+/** How long the song plays once through: per-scene tempo honoured, smooth ramps ignored. */
+fun Song.durationSeconds(): Float {
+    var total = 0f
+    for (scene in scenes) {
+        val bpm = scene.tempo?.bpm ?: tempo
+        val beats = signatureOf(scene).ticksPerBar.toFloat() / PPQN
+        total += barsOf(scene) * scene.repeat * beats * 60f / bpm
+    }
+    return total
+}

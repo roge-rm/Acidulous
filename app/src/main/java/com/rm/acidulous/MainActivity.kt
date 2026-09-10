@@ -32,12 +32,17 @@ import com.rm.acidulous.model.PatchStore
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.SongStore
+import com.rm.acidulous.model.durationSeconds
 import com.rm.acidulous.model.withSetting
 import java.io.File
 import com.rm.acidulous.ui.EditScreen
 import com.rm.acidulous.ui.MainScreen
 import com.rm.acidulous.ui.theme.AcidulousTheme
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,6 +110,42 @@ private fun App(modifier: Modifier = Modifier) {
         }.onFailure { Log.w(TAG, "sample import failed", it) }
     }
     var status by remember { mutableStateOf("starting…") }
+
+    // Exporting: the system save picker gives a target; the engine renders the
+    // song offline into the cache, and the file is copied into the target.
+    val scope = rememberCoroutineScope()
+    var exportState by remember { mutableStateOf<com.rm.acidulous.ui.ExportState?>(null) }
+    val wavPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/wav")) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val expected = song.durationSeconds() + 2f
+        exportState = com.rm.acidulous.ui.ExportState.Running(0f, expected)
+        val temp = File(context.cacheDir, "export.wav")
+        scope.launch {
+            val progress = launch {
+                while (true) { delay(100); exportState = com.rm.acidulous.ui.ExportState.Running(NativeEngine.renderedSeconds, expected) }
+            }
+            val error = withContext(Dispatchers.IO) {
+                val e = NativeEngine.renderSong(temp.absolutePath, tailSeconds = 2f)
+                if (e.isNotEmpty()) e else runCatching {
+                    context.contentResolver.openOutputStream(uri, "wt")!!.use { out -> temp.inputStream().use { it.copyTo(out) } }
+                    ""
+                }.getOrElse { it.message ?: "copy failed" }
+            }
+            progress.cancel()
+            val name = runCatching {
+                var display = uri.lastPathSegment ?: "export.wav"
+                context.contentResolver.query(uri, null, null, null, null)?.use { c ->
+                    val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+                }
+                display
+            }.getOrDefault("export.wav")
+            exportState = if (error.isEmpty()) com.rm.acidulous.ui.ExportState.Done(NativeEngine.renderedSeconds, NativeEngine.renderedPeak, name)
+            else com.rm.acidulous.ui.ExportState.Failed(error)
+            Log.i(TAG, "export ${if (error.isEmpty()) "ok" else "failed: $error"}: %.2f s, peak %.3f".format(NativeEngine.renderedSeconds, NativeEngine.renderedPeak))
+            temp.delete()
+        }
+    }
 
     DisposableEffect(Unit) {
         EngineSync.sampleRoot = EngineAssets.userRoot(context)
@@ -181,8 +222,15 @@ private fun App(modifier: Modifier = Modifier) {
             onArm = onArm, onLoopScene = onLoopScene,
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },
             onSave = { SongStore.save(context, song); Log.i(TAG, "saved ${song.name}") },
+            onSaveAs = { name -> val renamed = song.copy(name = name); editor.replace(renamed); SongStore.save(context, renamed); Log.i(TAG, "saved as $name") },
+            onNew = { name -> val fresh = SongStore.blank(name); editor.replace(fresh); SongStore.save(context, fresh) },
             onLoad = { name -> runCatching { SongStore.load(context, name) }.onSuccess { editor.replace(it) }.onFailure { Log.w(TAG, "load failed", it) } },
+            onDelete = { name -> SongStore.delete(context, name); Log.i(TAG, "deleted $name") },
             songNames = { SongStore.list(context) },
+            onExport = { if (!playing) wavPicker.launch(song.name.replace(Regex("[^A-Za-z0-9 _-]"), "_") + ".wav") },
+            exportState = exportState,
+            onExportCancel = { NativeEngine.cancelRender() },
+            onExportDismiss = { exportState = null },
             modifier = modifier,
         )
         is Screen.Edit -> EditScreen(
@@ -192,8 +240,12 @@ private fun App(modifier: Modifier = Modifier) {
             patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
             onSavePatch = { name -> PatchStore.save(context, Patch(song.tracks[s.track].machine.type, name, song.tracks[s.track].machine.params)) },
             onLoadPatch = { name -> PatchStore.load(context, song.tracks[s.track].machine.type, name)?.params },
+            factoryPatchNames = { PatchStore.factoryNames(song.tracks[s.track].machine.type) },
+            userPatchNames = { PatchStore.userList(context, song.tracks[s.track].machine.type) },
+            onDeletePatch = { name -> PatchStore.delete(context, song.tracks[s.track].machine.type, name) },
             onImportSample = { track, pad -> importTarget = track to pad; samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*")) },
             modifier = modifier,
         )
     }
 }
+

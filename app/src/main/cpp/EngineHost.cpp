@@ -7,6 +7,7 @@
 #include <drivers/AudioDriver.h>
 #include <engine/core/Constants.h>
 #include <engine/core/WavReader.h>
+#include <engine/core/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/forage/Forage.h>
@@ -235,6 +236,73 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
     p.value = std::clamp(value, 0.0f, 1.0f);
     p.record = record;
     return sEngine.pushParam(p);
+}
+
+// --- Offline render -------------------------------------------------------------
+
+bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::string &error) {
+    if (!running) { error = "engine not running"; return false; }
+    if (rendering.exchange(true)) { error = "already rendering"; return false; }
+    renderCancel.store(false, std::memory_order_relaxed);
+    renderSeconds.store(0.0f, std::memory_order_relaxed);
+    renderPeak.store(0.0f, std::memory_order_relaxed);
+
+    WavWriter wav;
+    if (!wav.open(path, kSampleRate, error)) { rendering.store(false); return false; }
+
+    // Take the engine off the device: from here every block is ours to pull.
+    sAudio.stop();
+    const bool loopSongBefore = sEngine.transport.loopSong();
+    const bool loopSceneBefore = sEngine.transport.loopScene();
+    const float clickBefore = sEngine.master.params().normalized(sEngine.master.params().indexOf("clickon"));
+    sEngine.transport.setLoopSong(false);
+    sEngine.transport.setLoopScene(false);
+    sEngine.transport.requestStop();
+    float silent[kBlockFrames * 2];
+    sEngine.renderBlock(silent); // apply the stop, settle
+    ParamMessage click;
+    click.rack = 0; click.unit = Unit::Master; click.index = sEngine.master.params().indexOf("clickon"); click.value = 0.0f; click.record = false;
+    sEngine.pushParam(click);
+    sEngine.transport.requestPlay(0);
+
+    float block[kBlockFrames * 2];
+    const int64_t maxBlocks = static_cast<int64_t>(kSampleRate) * 60 * 60 / kBlockFrames; // an hour, as a guard
+    int64_t tailBlocks = static_cast<int64_t>(tailSeconds * kSampleRate / kBlockFrames);
+    int64_t blocks = 0;
+    float peak = 0.0f;
+    bool ended = false, cancelled = false;
+    for (;;) {
+        if (renderCancel.load(std::memory_order_relaxed)) { cancelled = true; break; }
+        sEngine.renderBlock(block);
+        wav.write(block, kBlockFrames);
+        for (float v : block) { const float a = v < 0 ? -v : v; if (a > peak) peak = a; }
+        ++blocks;
+        if (!ended && !sEngine.transport.isPlaying()) ended = true; // the song ran out
+        if (ended && --tailBlocks < 0) break;
+        if (blocks >= maxBlocks) { ended = true; break; }
+        if ((blocks & 63) == 0) {
+            renderSeconds.store(static_cast<float>(blocks) * kBlockFrames / kSampleRate, std::memory_order_relaxed);
+            renderPeak.store(peak, std::memory_order_relaxed);
+        }
+    }
+    renderSeconds.store(static_cast<float>(blocks) * kBlockFrames / kSampleRate, std::memory_order_relaxed);
+    renderPeak.store(peak, std::memory_order_relaxed);
+    sEngine.transport.requestStop();
+    sEngine.renderBlock(silent);
+    const bool closed = wav.close();
+
+    // Hand the device back exactly as it was.
+    sEngine.transport.setLoopSong(loopSongBefore);
+    sEngine.transport.setLoopScene(loopSceneBefore);
+    click.value = clickBefore;
+    sEngine.pushParam(click);
+    if (!sAudio.start()) LOGE("audio failed to restart after render");
+    rendering.store(false);
+    LOGI("rendered %s: %lld blocks (%.2f s), peak %.3f%s", path.c_str(), static_cast<long long>(blocks),
+         static_cast<float>(blocks) * kBlockFrames / kSampleRate, peak, cancelled ? ", cancelled" : "");
+    if (cancelled) { error = "cancelled"; std::remove(path.c_str()); return false; }
+    if (!closed) { error = "could not finish the file"; return false; }
+    return true;
 }
 
 // --- Transport ---------------------------------------------------------------

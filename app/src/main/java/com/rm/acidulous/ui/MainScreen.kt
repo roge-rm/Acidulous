@@ -82,11 +82,19 @@ fun MainScreen(
     onLoopScene: (Boolean) -> Unit,
     onOpenClip: (track: Int, sceneId: String) -> Unit,
     onSave: () -> Unit,
+    onSaveAs: (String) -> Unit,
+    onNew: (String) -> Unit,
     onLoad: (String) -> Unit,
+    onDelete: (String) -> Unit,
     songNames: () -> List<String>,
+    onExport: () -> Unit,
+    exportState: ExportState?,
+    onExportCancel: () -> Unit,
+    onExportDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var dialog by remember { mutableStateOf<Dialog?>(null) }
+    var fileMenu by remember { mutableStateOf(false) }
     var showMixer by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxSize().background(Color(0xFF1B1B1E))) {
@@ -100,7 +108,13 @@ fun MainScreen(
             TextButton(onClick = { editor.undoSong() }, enabled = editor.canUndoSong()) { Text("↶") }
             TextButton(onClick = { editor.redoSong() }, enabled = editor.canRedoSong()) { Text("↷") }
             TextButton(onClick = onSave) { Text("save", fontSize = 12.sp) }
-            TextButton(onClick = { dialog = Dialog.Load }) { Text("load", fontSize = 12.sp) }
+            TextButton(onClick = { fileMenu = true }) { Text("file ▾", fontSize = 12.sp) }
+            DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
+                DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
+                DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
+                DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
+                DropdownMenuItem(text = { Text("Export WAV…") }, onClick = { fileMenu = false; onExport() })
+            }
         }
 
         // --- Song section -----------------------------------------------------------------
@@ -238,11 +252,22 @@ fun MainScreen(
             editor.editSong { it.copy(tempo = t) }
             dialog = null
         }
-        Dialog.Load -> PickerDialog("Load song", songNames(), onDismiss = { dialog = null }) { name ->
-            onLoad(name)
+        Dialog.Songs -> SongBrowserDialog(
+            names = songNames(), current = song.name,
+            onLoad = { name -> onLoad(name); dialog = null },
+            onDelete = onDelete,
+            onDismiss = { dialog = null },
+        )
+        Dialog.SaveAs -> TextInputDialog("Save as", song.name, onDismiss = { dialog = null }) { name ->
+            onSaveAs(name)
+            dialog = null
+        }
+        Dialog.NewSong -> TextInputDialog("New song", "Untitled", onDismiss = { dialog = null }) { name ->
+            onNew(name)
             dialog = null
         }
     }
+    exportState?.let { ExportDialog(it, onCancel = onExportCancel, onDismiss = onExportDismiss) }
 }
 
 private sealed class Dialog {
@@ -251,7 +276,9 @@ private sealed class Dialog {
     data class PickMachine(val track: Int?) : Dialog() // null = new track
     data class RenameTrack(val index: Int) : Dialog()
     object Tempo : Dialog()
-    object Load : Dialog()
+    object Songs : Dialog()
+    object SaveAs : Dialog()
+    object NewSong : Dialog()
 }
 
 @Composable

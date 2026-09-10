@@ -24,9 +24,16 @@ object PatchStore {
         factory(machine).firstOrNull { it.name == name }
             ?: File(directory(context, machine), "${safe(name)}.json").takeIf { it.isFile }?.let { json.decodeFromString(Patch.serializer(), it.readText()) }
 
-    fun list(context: Context, machine: String): List<String> =
-        factory(machine).map { it.name } +
-            (directory(context, machine).listFiles { f -> f.extension == "json" }?.map { it.nameWithoutExtension }?.sorted() ?: emptyList())
+    fun list(context: Context, machine: String): List<String> = factoryNames(machine) + userList(context, machine)
+
+    fun factoryNames(machine: String): List<String> = factory(machine).map { it.name }
+
+    fun userList(context: Context, machine: String): List<String> =
+        directory(context, machine).listFiles { f -> f.extension == "json" }?.map { it.nameWithoutExtension }?.sorted() ?: emptyList()
+
+    /** User patches only; factory ones are code. */
+    fun delete(context: Context, machine: String, name: String): Boolean =
+        File(directory(context, machine), "${safe(name)}.json").delete()
 
     fun factory(machine: String): List<Patch> = when (machine) {
         "Subvert" -> SubvertPresets.all
