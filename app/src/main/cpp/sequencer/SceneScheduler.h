@@ -164,6 +164,10 @@ class SceneScheduler {
         return (snap != nullptr && sceneIdx < static_cast<int32_t>(snap->scenes.size())) ? snap->scenes[sceneIdx].id : 0;
     }
     int64_t currentTickInIteration() const { return lastTickInIteration; }
+    const SceneInfo *currentSceneInfo() const {
+        return (snap != nullptr && sceneIdx < static_cast<int32_t>(snap->scenes.size())) ? &snap->scenes[sceneIdx] : nullptr;
+    }
+    int32_t currentRepeat() const { return repeatIdx; }
     int32_t currentScene() const { return sceneIdx; }
 
   private:

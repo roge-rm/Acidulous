@@ -94,6 +94,9 @@ object NativeEngine {
 
     /** Peak absolute sample since the last call, then reset. 0.0 means silence. */
     fun readPeakLevel(): Float = nativeReadPeakLevel()
+    fun readRackPeak(rackId: Int): Float = nativeReadRackPeak(rackId)
+    /** The scene fade multiplier the master is applying right now (1 = none). */
+    val masterFade: Float get() = nativeGetMasterFade()
 
     private external fun nativeStart(): Boolean
     private external fun nativeStop()
@@ -110,6 +113,8 @@ object NativeEngine {
     private external fun nativeGetXRunCount(): Long
     private external fun nativeGetLoadAvg(): Float
     private external fun nativeReadPeakLevel(): Float
+    private external fun nativeReadRackPeak(rackId: Int): Float
+    private external fun nativeGetMasterFade(): Float
     private external fun nativeTransportPlay(sceneIdx: Int)
     private external fun nativeTransportStop()
     private external fun nativeIsPlaying(): Boolean

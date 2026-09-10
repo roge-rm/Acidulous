@@ -247,6 +247,16 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeGetNotesOn(JNIEnv *, jobject, ji
 }
 
 JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeReadRackPeak(JNIEnv *, jobject, jint rackId) {
+    return host().rackPeak(rackId);
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeGetMasterFade(JNIEnv *, jobject) {
+    return host().masterFade();
+}
+
+JNIEXPORT jfloat JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeDebugParam(JNIEnv *env, jobject, jint rackId, jstring name) {
     return host().debugParam(rackId, toStdString(env, name));
 }

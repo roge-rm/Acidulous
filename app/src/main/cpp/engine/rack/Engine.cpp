@@ -10,7 +10,10 @@ Engine::Engine() {
 
 Engine::~Engine() { stop(); }
 
-void Engine::start() { retirer.start(); }
+void Engine::start() {
+    master.prepare(kSampleRate);
+    retirer.start();
+}
 void Engine::stop() { retirer.stop(); }
 
 void Engine::renderBlock(float *out) {
@@ -35,6 +38,11 @@ void Engine::renderBlock(float *out) {
     drainMidi();
     drainParams();
 
+    // Where in the scene this block starts, before the scheduler moves on.
+    const int64_t tickStart = scheduler.currentTickInIteration();
+    const seq::SceneInfo *sceneBefore = scheduler.currentSceneInfo();
+    const int32_t repeatBefore = scheduler.currentRepeat();
+
     if (playing) {
         if (!scheduler.process(clock.blockStart(), clock.blockEnd())) {
             scheduler.allNotesOff();
@@ -45,13 +53,48 @@ void Engine::renderBlock(float *out) {
         scheduler.applyIdleTempo();
     }
 
+    // Metronome: every beat boundary this block crossed, at its sample offset.
+    if (playing && master.clickEnabled() && sceneBefore != nullptr) {
+        const int64_t tickEnd = scheduler.currentTickInIteration();
+        const int64_t ticksPerBar = sceneBefore->ticksPerBar;
+        const int64_t iterLen = sceneBefore->iterationTicks() > 0 ? sceneBefore->iterationTicks() : ticksPerBar;
+        const float samplesPerTick = static_cast<float>(kSampleRate) * 60.0f / (clock.bpm() * static_cast<float>(kPPQN));
+        auto beatsIn = [&](int64_t from, int64_t to, int64_t baseOffsetTicks) {
+            int64_t t = (from / kPPQN) * kPPQN;
+            if (t < from) t += kPPQN;
+            for (; t < to; t += kPPQN) {
+                const int32_t offset = static_cast<int32_t>(static_cast<float>(baseOffsetTicks + t - from) * samplesPerTick);
+                master.clickAt(t % ticksPerBar == 0, offset < kBlockFrames ? offset : kBlockFrames - 1);
+            }
+        };
+        if (tickEnd >= tickStart) {
+            beatsIn(tickStart, tickEnd, 0);
+        } else { // wrapped an iteration inside this block
+            beatsIn(tickStart, iterLen, 0);
+            beatsIn(0, tickEnd, iterLen - tickStart);
+        }
+    }
+
+    // Scene fades: in over the first bar of the first pass, out over the last
+    // bar of the last pass. Stateless - derived from the position each block.
+    float fade = 1.0f;
+    if (playing && sceneBefore != nullptr) {
+        const int64_t tpb = sceneBefore->ticksPerBar;
+        const int64_t iterLen = sceneBefore->iterationTicks();
+        if (sceneBefore->fadeIn && repeatBefore == 0 && tickStart < tpb) {
+            fade = static_cast<float>(tickStart) / static_cast<float>(tpb);
+        } else if (sceneBefore->fadeOut && repeatBefore == sceneBefore->repeat - 1 && tickStart >= iterLen - tpb) {
+            fade = static_cast<float>(iterLen - tickStart) / static_cast<float>(tpb);
+        }
+    }
+
     for (int32_t r = 0; r < kRackCount; ++r) {
         if (racks[r].isActive()) {
             racks[r].onBlock(clock.blockStart(), clock.blockEnd());
             racks[r].render(kBlockFrames);
         }
     }
-    master.mix(racks, kRackCount, out, kBlockFrames);
+    master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade);
 
     transport.publishPosition(scheduler.packedPosition());
     applyMounts();
@@ -88,7 +131,11 @@ void Engine::drainMidi() {
 void Engine::drainParams() {
     ParamMessage p;
     while (paramsIn.pop(p)) {
-        if (p.rack >= 0 && p.rack < kRackCount) racks[p.rack].setParam(p.unit, p.index, p.value);
+        if (p.unit == Unit::Master) {
+            master.params().set(p.index, p.value);
+        } else if (p.rack >= 0 && p.rack < kRackCount) {
+            racks[p.rack].setParam(p.unit, p.index, p.value);
+        }
     }
 }
 

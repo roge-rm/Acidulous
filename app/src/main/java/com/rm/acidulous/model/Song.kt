@@ -100,6 +100,17 @@ data class Machine(
     val settings: Map<String, String> = emptyMap(),
 )
 
+/** A track's channel strip. Units are musical (gain 0..1.5, pan -1..1, sends 0..1). */
+@Serializable
+data class Mixer(
+    val volume: Float = 1f,
+    val pan: Float = 0f,
+    val sendReverb: Float = 0f,
+    val sendDelay: Float = 0f,
+    val mute: Boolean = false,
+    val solo: Boolean = false,
+)
+
 @Serializable
 data class Track(
     val id: String,
@@ -107,6 +118,23 @@ data class Track(
     val machine: Machine,
     /** Keyed by [Scene.id]. A missing entry is silence in that scene. */
     val clips: Map<String, Clip> = emptyMap(),
+    val mixer: Mixer = Mixer(),
+)
+
+@Serializable data class ReverbSettings(val on: Boolean = true, val size: Float = 0.5f, val damp: Float = 0.5f, val tone: Float = 0.6f)
+
+/** [time] indexes [EngineParams.DELAY_TIME_NAMES]. */
+@Serializable data class DelaySettings(val on: Boolean = true, val time: Int = 3, val feedback: Float = 0.4f, val tone: Float = 0.5f, val pingPong: Boolean = true)
+
+@Serializable data class LimiterSettings(val on: Boolean = true, val drive: Float = 0.2f)
+
+/** The master section: fader, send returns, limiter. The metronome is a transport setting, not part of the song. */
+@Serializable
+data class Master(
+    val volume: Float = 0.8f,
+    val reverb: ReverbSettings = ReverbSettings(),
+    val delay: DelaySettings = DelaySettings(),
+    val limiter: LimiterSettings = LimiterSettings(),
 )
 
 @Serializable
@@ -121,6 +149,7 @@ data class Song(
     val tracks: List<Track> = emptyList(),
     /** Order is the arrangement. */
     val scenes: List<Scene> = emptyList(),
+    val master: Master = Master(),
 ) {
     fun signatureOf(scene: Scene): Signature = scene.signature ?: signature
 

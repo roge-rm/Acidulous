@@ -67,6 +67,8 @@ class EngineHost {
     int64_t xRunCount() const;
     float loadPercent() const;
     float peakLevel() const;
+    float rackPeak(int rack) const;
+    float masterFade() const;
     uint32_t notesOn(int rack) const;
     uint32_t notesOff(int rack) const;
     // Debug: the live (smoothed, unit-range) value of a mounted machine's parameter.

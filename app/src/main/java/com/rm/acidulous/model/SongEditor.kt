@@ -130,6 +130,28 @@ class SongEditor(
         onChange(song, true)
     }
 
+    // A continuous song-level edit (a master fader drag): one undo step at the end.
+    private var songGesture: Song? = null
+
+    fun beginSongGesture() { songGesture = song }
+
+    /** [f] is applied to the gesture's base song; describe the total change so far. */
+    fun updateSongGesture(f: (Song) -> Song) {
+        val base = songGesture ?: return
+        song = f(base)
+        onChange(song, false)
+    }
+
+    fun endSongGesture() {
+        val base = songGesture ?: return
+        songGesture = null
+        if (song === base) return
+        songUndo.addLast(base)
+        if (songUndo.size > MAX_HISTORY) songUndo.removeFirst()
+        songRedo.clear()
+        onChange(song, true)
+    }
+
     fun canUndoSong(): Boolean = songUndo.isNotEmpty()
     fun canRedoSong(): Boolean = songRedo.isNotEmpty()
 

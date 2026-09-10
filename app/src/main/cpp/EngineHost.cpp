@@ -26,6 +26,7 @@ Unit unitFromName(const std::string &u) {
     if (u == "eventor1") return Unit::Eventor1;
     if (u == "eventor2") return Unit::Eventor2;
     if (u == "channel") return Unit::Channel;
+    if (u == "master") return Unit::Master;
     return Unit::Machine;
 }
 
@@ -118,8 +119,8 @@ void EngineHost::noteOff(int rack, uint8_t note) {
 }
 
 bool EngineHost::setParam(int rack, const std::string &unit, const std::string &name, float value) {
-    if (rack < 0 || rack >= kRackCount) return false;
     const Unit u = unitFromName(unit);
+    if (u != Unit::Master && (rack < 0 || rack >= kRackCount)) return false;
     int32_t index = -1;
     if (u == Unit::Machine) {
         int32_t n = 0;
@@ -131,6 +132,11 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         if (name == "gain") index = Rack::Gain;
         else if (name == "pan") index = Rack::Pan;
         else if (name == "mute") index = Rack::Mute;
+        else if (name == "solo") index = Rack::Solo;
+        else if (name == "sendreverb") index = Rack::SendReverb;
+        else if (name == "senddelay") index = Rack::SendDelay;
+    } else if (u == Unit::Master) {
+        index = sEngine.master.params().indexOf(name.c_str());
     }
     if (index < 0) return false;
     ParamMessage p;
@@ -252,6 +258,10 @@ bool EngineHost::lowLatency() const { return sAudio.isLowLatency(); }
 int64_t EngineHost::xRunCount() const { return sAudio.getXRunCount(); }
 float EngineHost::loadPercent() const { return sEngine.loadPercent(); }
 float EngineHost::peakLevel() const { return sEngine.master.readPeak(); }
+float EngineHost::rackPeak(int rack) const {
+    return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].readPeak() : 0.0f;
+}
+float EngineHost::masterFade() const { return sEngine.master.currentFade(); }
 uint32_t EngineHost::notesOn(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].clipPlayer.notesOn() : 0;
 }

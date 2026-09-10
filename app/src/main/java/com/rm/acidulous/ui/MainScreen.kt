@@ -74,6 +74,10 @@ fun MainScreen(
     loopScene: Boolean,
     bpm: Float,
     diagnostics: String,
+    rackPeaks: FloatArray,
+    masterPeak: Float,
+    clickOn: Boolean,
+    onClick: (Boolean) -> Unit,
     onArm: (Boolean) -> Unit,
     onLoopScene: (Boolean) -> Unit,
     onOpenClip: (track: Int, sceneId: String) -> Unit,
@@ -83,6 +87,7 @@ fun MainScreen(
     modifier: Modifier = Modifier,
 ) {
     var dialog by remember { mutableStateOf<Dialog?>(null) }
+    var showMixer by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxSize().background(Color(0xFF1B1B1E))) {
         // --- Header: song, structure undo, file ----------------------------------------
@@ -165,6 +170,10 @@ fun MainScreen(
             }
         }
 
+        if (showMixer) {
+            MixerPanel(song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth())
+        }
+
         // --- Transport ------------------------------------------------------------------------
         val scene = song.scenes.getOrNull(position.scene)
         val ticksPerBar = scene?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
@@ -173,17 +182,21 @@ fun MainScreen(
         val tick = position.tickInIteration % PPQN
         Column(Modifier.fillMaxWidth().background(Color(0xFF232326)).padding(horizontal = 8.dp, vertical = 6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutlinedButton(onClick = { if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(position.scene) }) {
+                val pad = PaddingValues(horizontal = 12.dp)
+                OutlinedButton(onClick = { if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(position.scene) }, contentPadding = pad) {
                     Text(if (playing) "■" else "▶")
                 }
-                OutlinedButton(onClick = { onLoopScene(!loopScene) }) {
-                    Text(if (loopScene) "⟳ scene" else "⟳ song", fontSize = 12.sp)
+                OutlinedButton(onClick = { onLoopScene(!loopScene) }, contentPadding = pad) {
+                    Text(if (loopScene) "⟳ scene" else "⟳ song", fontSize = 12.sp, maxLines = 1)
                 }
-                OutlinedButton(onClick = { onArm(!armed) }) {
-                    Text(if (armed) "● REC" else "○ rec", color = if (armed) Color(0xFFE74C3C) else Color.Unspecified, fontSize = 12.sp)
+                OutlinedButton(onClick = { onArm(!armed) }, contentPadding = pad) {
+                    Text(if (armed) "● REC" else "○ rec", color = if (armed) Color(0xFFE74C3C) else Color.Unspecified, fontSize = 12.sp, maxLines = 1)
                 }
-                TextButton(onClick = { dialog = Dialog.Tempo }) {
+                TextButton(onClick = { dialog = Dialog.Tempo }, contentPadding = PaddingValues(horizontal = 6.dp)) {
                     Text("%.1f bpm".format(bpm), color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                }
+                TextButton(onClick = { showMixer = !showMixer }, contentPadding = PaddingValues(horizontal = 6.dp)) {
+                    Text(if (showMixer) "▾ mix" else "▴ mix", color = Color.White, fontSize = 12.sp, maxLines = 1)
                 }
             }
             Text(
@@ -338,13 +351,6 @@ private fun ClipCell(
         }
     }
 }
-
-private fun trackColour(index: Int): Color = PALETTE[index % PALETTE.size]
-
-private val PALETTE = listOf(
-    Color(0xFF7FD1B9), Color(0xFFFFB454), Color(0xFFE07A9A), Color(0xFF8AB4F8),
-    Color(0xFFC3E88D), Color(0xFFFF8A65), Color(0xFFB39DDB), Color(0xFF80DEEA),
-)
 
 private val TRACK_W = 96.dp
 private val CELL_W = 84.dp

@@ -8,6 +8,9 @@ const ParamDef kChannelDefs[Rack::ChannelCount] = {
     {"gain", 0.0f, 1.5f, 1.0f, Curve::Linear, 0, ""},
     {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     {"mute", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"solo", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"sendreverb", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+    {"senddelay", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
 };
 } // namespace
 
@@ -62,19 +65,27 @@ void Rack::render(int32_t frames) {
     const float angle = (pan + 1.0f) * 0.25f * 3.14159265f; // -1..1 -> 0..pi/2
     const float gl = gain * std::cos(angle);
     const float gr = gain * std::sin(angle);
+    float peak = 0.0f;
     if (stereo) {
         for (int32_t i = 0; i < frames; ++i) {
             bufL[i] *= gl * 1.4142f;
             bufR[i] *= gr * 1.4142f;
+            const float a = std::fabs(bufL[i]), b = std::fabs(bufR[i]);
+            if (a > peak) peak = a;
+            if (b > peak) peak = b;
         }
     } else {
         for (int32_t i = 0; i < frames; ++i) {
             const float m = bufL[i];
             bufL[i] = m * gl * 1.4142f;
             bufR[i] = m * gr * 1.4142f;
+            const float a = std::fabs(bufL[i]), b = std::fabs(bufR[i]);
+            if (a > peak) peak = a;
+            if (b > peak) peak = b;
         }
         stereo = true;
     }
+    if (peak > peakHold.load(std::memory_order_relaxed)) peakHold.store(peak, std::memory_order_relaxed);
 }
 
 Machine *Rack::swapMachine(Machine *next) {

@@ -49,6 +49,7 @@ object DemoSong {
                     name = "Bass",
                     machine = Machine(type = "Nought"),
                     clips = mapOf(intro.id to introClip, verse.id to verseClip),
+                    mixer = Mixer(sendReverb = 0.25f, sendDelay = 0.2f),
                 ),
             ),
             scenes = listOf(intro, verse),

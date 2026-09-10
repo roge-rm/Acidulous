@@ -10,7 +10,7 @@ struct MidiMessage {
     uint8_t data2 = 0;
 };
 
-enum class Unit : uint8_t { Machine, Effect1, Effect2, Eventor1, Eventor2, Channel };
+enum class Unit : uint8_t { Machine, Effect1, Effect2, Eventor1, Eventor2, Channel, Master };
 
 struct ParamMessage {
     int32_t rack = 0;

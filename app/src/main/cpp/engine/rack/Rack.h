@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <engine/core/Constants.h>
 #include <engine/core/Messages.h>
 #include <engine/core/Params.h>
@@ -14,7 +15,7 @@ namespace acidulous {
 
 class Rack {
   public:
-    enum ChannelParam : int32_t { Gain, Pan, Mute, ChannelCount };
+    enum ChannelParam : int32_t { Gain, Pan, Mute, Solo, SendReverb, SendDelay, ChannelCount };
 
     Rack();
 
@@ -41,6 +42,13 @@ class Rack {
     float bufL[kBlockFrames]{};
     float bufR[kBlockFrames]{};
 
+    // Read by the master after render(); post-fader.
+    bool soloed() const { return channel.get(Solo) >= 0.5f; }
+    bool muted() const { return channel.get(Mute) >= 0.5f; }
+    float sendReverb() const { return channel.get(SendReverb); }
+    float sendDelay() const { return channel.get(SendDelay); }
+    float readPeak() { return peakHold.exchange(0.0f, std::memory_order_relaxed); }
+
   private:
     struct Sink final : MidiSink {
         Rack *rack = nullptr;
@@ -56,6 +64,7 @@ class Rack {
     Sink sinks[kEventorSlots + 1];
     ParamSet channel;
     bool stereo = false;
+    std::atomic<float> peakHold{0.0f};
 };
 
 } // namespace acidulous

@@ -104,6 +104,9 @@ private fun App(modifier: Modifier = Modifier) {
     var notesOff by remember { mutableStateOf(0) }
     var load by remember { mutableStateOf(0f) }
     var xruns by remember { mutableStateOf(0L) }
+    var fade by remember { mutableStateOf(1f) }
+    var rackPeaks by remember { mutableStateOf(FloatArray(16)) }
+    var clickOn by remember { mutableStateOf(false) }
 
     val sceneIdOf: (Long) -> String? = { id -> song.scenes.firstOrNull { it.engineId == id }?.id }
     fun applyRecorded(result: Recorder.Result) {
@@ -132,17 +135,21 @@ private fun App(modifier: Modifier = Modifier) {
             notesOff = NativeEngine.notesOff(0)
             load = NativeEngine.loadAvg
             xruns = NativeEngine.xRunCount
+            fade = NativeEngine.masterFade
+            rackPeaks = FloatArray(16) { i -> if (i < song.tracks.size) NativeEngine.readRackPeak(i) else 0f }
             if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf))
             delay(80)
         }
     }
 
-    val diagnostics = "%s · peak %.3f · load %.0f%% · xruns %d · on %d off %d".format(status, peak, load, xruns, notesOn, notesOff)
+    val diagnostics = "%s · peak %.3f · fade %.2f · load %.0f%% · xruns %d · on %d off %d".format(status, peak, fade, load, xruns, notesOn, notesOff)
 
     when (val s = screen) {
         Screen.Main -> MainScreen(
             song = song, editor = editor, position = position, playing = playing, armed = armed,
             loopScene = loopScene, bpm = bpm, diagnostics = diagnostics,
+            rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn,
+            onClick = { on -> clickOn = on; EngineSync.setMetronome(on) },
             onArm = onArm, onLoopScene = onLoopScene,
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },
             onSave = { SongStore.save(context, song); Log.i(TAG, "saved ${song.name}") },
