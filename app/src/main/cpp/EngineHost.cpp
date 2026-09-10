@@ -94,6 +94,15 @@ bool EngineHost::mountMachine(int rack, const std::string &typeName) {
     return true;
 }
 
+void EngineHost::unmountMachine(int rack) {
+    if (rack < 0 || rack >= kRackCount) return;
+    Mount m;
+    m.kind = Mount::Kind::Machine;
+    m.rack = rack;
+    m.object = nullptr; // swap in nothing; the old machine is retired
+    if (mountWithRetry(m, [](void *) {})) mountedType[rack].clear();
+}
+
 const char *EngineHost::mountedMachine(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? mountedType[rack].c_str() : "";
 }

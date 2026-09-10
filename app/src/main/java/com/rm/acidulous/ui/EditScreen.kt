@@ -6,7 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -127,6 +132,17 @@ fun EditScreen(
             modifier = Modifier.fillMaxWidth().weight(1f),
         )
 
+        // A slim keyboard: enough to audition and record; the machine panel (M7) replaces it.
+        var octave by remember { mutableStateOf(2) }
+        Row(Modifier.fillMaxWidth().height(64.dp).padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            TextButton(onClick = { if (octave > 0) octave-- }) { Text("−", color = Color.White) }
+            for (semitone in intArrayOf(0, 2, 4, 5, 7, 9, 11, 12)) {
+                val note = 12 * (octave + 1) + semitone
+                KeyboardKey(note, trackIndex, Modifier.weight(1f).fillMaxSize())
+            }
+            TextButton(onClick = { if (octave < 8) octave++ }) { Text("+", color = Color.White) }
+        }
+
         // Footer: mode · undo/redo · transport · rec
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
@@ -154,3 +170,28 @@ fun EditScreen(
 }
 
 private const val ROWS = 24
+
+@Composable
+private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
+    var pressed by remember { mutableStateOf(false) }
+    Box(
+        modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(if (pressed) Color(0xFF7FD1B9) else Color(0xFFE8E8E4))
+            .pointerInput(note, rack) {
+                awaitPointerEventScope {
+                    while (true) {
+                        awaitPointerEvent()
+                        val down = currentEvent.changes.any { it.pressed }
+                        if (down != pressed) {
+                            pressed = down
+                            if (down) NativeEngine.noteOn(rack, note, 100) else NativeEngine.noteOff(rack, note)
+                        }
+                    }
+                }
+            },
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Text(note.toString(), color = Color(0xFF333333), fontSize = 9.sp, modifier = Modifier.padding(bottom = 4.dp))
+    }
+}

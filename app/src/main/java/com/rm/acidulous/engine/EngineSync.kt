@@ -18,7 +18,11 @@ object EngineSync {
 
     private val mounted = arrayOfNulls<String>(RACKS)
 
-    /** Mounts each track's machine on its rack if it is not already there. */
+    /**
+     * Makes the racks match the tracks: mounts what is missing or changed,
+     * unmounts racks whose track is gone. Index is rack id, so deleting a track
+     * shifts the ones after it - their machines remount on their new racks.
+     */
     fun ensureMachines(song: Song) {
         song.tracks.forEachIndexed { rack, track ->
             if (rack < RACKS && mounted[rack] != track.machine.type) {
@@ -29,6 +33,18 @@ object EngineSync {
                 }
             }
         }
+        for (rack in song.tracks.size until RACKS) {
+            if (mounted[rack] != null) {
+                NativeEngine.unmountMachine(rack)
+                mounted[rack] = null
+            }
+        }
+    }
+
+    /** Everything the engine needs after any edit: machines, then the snapshot. */
+    fun sync(song: Song): Boolean {
+        ensureMachines(song)
+        return push(song)
     }
 
     fun push(song: Song): Boolean {

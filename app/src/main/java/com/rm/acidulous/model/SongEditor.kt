@@ -3,10 +3,11 @@ package com.rm.acidulous.model
 /**
  * The editing surface over the document: every change goes through here.
  *
- * The reference sequencer's undo is per track, so that is the unit here: each track has its own
- * undo/redo history of *whole Track values* (they are immutable, so a history
- * entry is just a reference). Song-level structure edits (scenes, tempo) are
- * applied directly and do not yet participate in undo - M4 adds that.
+ * The reference sequencer's undo is per track, so that is the unit for note edits: each track
+ * has its own undo/redo history of *whole Track values* (they are immutable, so
+ * a history entry is just a reference). Structure edits - scenes, tracks, song
+ * settings - have a separate song-level history, which is what the main
+ * screen's undo drives.
  *
  * Gestures - a note being dragged - are coalesced: [beginGesture] captures the
  * track once, [updateGesture] re-derives from that base so drags are absolute
@@ -27,6 +28,8 @@ class SongEditor(
     }
 
     private val histories = HashMap<String, History>()
+    private val songUndo = ArrayDeque<Song>()
+    private val songRedo = ArrayDeque<Song>()
     private var gesture: Gesture? = null
 
     private class Gesture(val trackIndex: Int, val base: Track)
@@ -35,6 +38,8 @@ class SongEditor(
     fun replace(newSong: Song, push: Boolean = true) {
         song = newSong
         histories.clear()
+        songUndo.clear()
+        songRedo.clear()
         gesture = null
         onChange(song, push)
     }
@@ -113,11 +118,31 @@ class SongEditor(
         commit(g.trackIndex, g.base, pushNow = true)
     }
 
-    // --- Song-scoped edits (not yet undoable) ---------------------------------------
+    // --- Song-scoped edits (structure), with their own history -------------------------
 
     fun editSong(f: (Song) -> Song) {
         val next = f(song)
         if (next === song) return
+        songUndo.addLast(song)
+        if (songUndo.size > MAX_HISTORY) songUndo.removeFirst()
+        songRedo.clear()
+        song = next
+        onChange(song, true)
+    }
+
+    fun canUndoSong(): Boolean = songUndo.isNotEmpty()
+    fun canRedoSong(): Boolean = songRedo.isNotEmpty()
+
+    fun undoSong() {
+        val previous = songUndo.removeLastOrNull() ?: return
+        songRedo.addLast(song)
+        song = previous
+        onChange(song, true)
+    }
+
+    fun redoSong() {
+        val next = songRedo.removeLastOrNull() ?: return
+        songUndo.addLast(song)
         song = next
         onChange(song, true)
     }

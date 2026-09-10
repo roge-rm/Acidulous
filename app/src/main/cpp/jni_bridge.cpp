@@ -1,5 +1,6 @@
 #include "EngineHost.h"
 #include <android/log.h>
+#include <engine/machine/MachineRegistry.h>
 #include <jni.h>
 #include <string>
 
@@ -48,6 +49,24 @@ JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeMountMachine(JNIEnv *env, jobject,
                                                       jint rackId, jstring typeName) {
     return host().mountMachine(rackId, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeUnmountMachine(JNIEnv *, jobject, jint rackId) {
+    host().unmountMachine(rackId);
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMachineTypes(JNIEnv *env, jobject) {
+    const int32_t n = acidulous::MachineRegistry::count();
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
+    for (int32_t i = 0; i < n; ++i) {
+        jstring s = env->NewStringUTF(acidulous::MachineRegistry::name(i));
+        env->SetObjectArrayElement(out, i, s);
+        env->DeleteLocalRef(s);
+    }
+    return out;
 }
 
 JNIEXPORT void JNICALL

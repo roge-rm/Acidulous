@@ -21,6 +21,10 @@ object NativeEngine {
 
     /** Queues a machine of [typeName] to be mounted on [rackId]. Applied at a block boundary. */
     fun mountMachine(rackId: Int, typeName: String): Boolean = nativeMountMachine(rackId, typeName)
+    fun unmountMachine(rackId: Int) = nativeUnmountMachine(rackId)
+
+    /** Every machine type the engine can build, from its registry. */
+    val machineTypes: List<String> get() = nativeMachineTypes().toList()
 
     fun noteOn(rackId: Int, note: Int, velocity: Int = 100) = nativeNoteOn(rackId, note, velocity)
 
@@ -95,6 +99,8 @@ object NativeEngine {
     private external fun nativeStop()
     private external fun nativeIsRunning(): Boolean
     private external fun nativeMountMachine(rackId: Int, typeName: String): Boolean
+    private external fun nativeUnmountMachine(rackId: Int)
+    private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
     private external fun nativeNoteOff(rackId: Int, note: Int)
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float): Boolean

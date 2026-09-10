@@ -25,6 +25,7 @@ class EngineHost {
 
     // Builds the machine here, hands it to the audio thread through a Mount.
     bool mountMachine(int rack, const std::string &typeName);
+    void unmountMachine(int rack);
     const char *mountedMachine(int rack) const;
 
     void noteOn(int rack, uint8_t note, uint8_t velocity);
