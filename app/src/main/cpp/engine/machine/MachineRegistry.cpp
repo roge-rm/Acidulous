@@ -8,11 +8,12 @@
 #include "manual/Manual.h"
 #include "cipher/Cipher.h"
 #include "filament/Filament.h"
+#include "nexus/Nexus.h"
 
 namespace acidulous {
 
 namespace {
-const char *const kNames[] = {"Subvert", "Trinity", "Ratio", "Manual", "Cipher", "Filament", "Hexbeat", "Forage", "Mosaic"};
+const char *const kNames[] = {"Subvert", "Trinity", "Ratio", "Manual", "Cipher", "Filament", "Nexus", "Hexbeat", "Forage", "Mosaic"};
 constexpr int32_t kCount = sizeof(kNames) / sizeof(kNames[0]);
 } // namespace
 
@@ -23,6 +24,7 @@ Machine *MachineRegistry::create(const char *typeName) {
     if (std::strcmp(typeName, "Manual") == 0) return new machine::Manual();
     if (std::strcmp(typeName, "Cipher") == 0) return new machine::Cipher();
     if (std::strcmp(typeName, "Filament") == 0) return new machine::Filament();
+    if (std::strcmp(typeName, "Nexus") == 0) return new machine::Nexus();
     if (std::strcmp(typeName, "Hexbeat") == 0) return new machine::Hexbeat();
     if (std::strcmp(typeName, "Forage") == 0) return new machine::Forage();
     if (std::strcmp(typeName, "Mosaic") == 0) return new machine::Mosaic();
@@ -52,6 +54,10 @@ const ParamDef *MachineRegistry::paramDefs(const char *typeName, int32_t &count)
     }
     if (std::strcmp(typeName, "Filament") == 0) {
         static const machine::Filament probe;
+        return probe.paramDefs(count);
+    }
+    if (std::strcmp(typeName, "Nexus") == 0) {
+        static const machine::Nexus probe;
         return probe.paramDefs(count);
     }
     if (std::strcmp(typeName, "Hexbeat") == 0) {

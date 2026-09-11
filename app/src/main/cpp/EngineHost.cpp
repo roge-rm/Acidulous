@@ -1,4 +1,5 @@
 #include "EngineHost.h"
+#include <engine/machine/nexus/Nexus.h>
 
 #include <algorithm>
 #include <android/log.h>
@@ -277,6 +278,73 @@ bool mountMap(EngineHost &host, Engine &, int rack, SampleMap *built, std::strin
     return true;
 }
 } // namespace
+
+std::string EngineHost::loadNexusPatch(int rack, const std::string &spec) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    Machine *m = sEngine.racks[rack].currentMachine();
+    if (m == nullptr || std::strcmp(m->typeName(), "Nexus") != 0) return "that rack is not a Nexus";
+    std::string error;
+    // Parsed and allocated here, on whatever worker called us, and handed
+    // over as one object - the audio thread never builds a graph.
+    machine::nexus::Graph *graph = machine::nexus::Graph::parse(spec, static_cast<float>(kSampleRate), error);
+    if (graph == nullptr) return error.empty() ? "the patch could not be read" : error;
+    const std::string warn = graph->warning();
+    Mount mount;
+    mount.kind = Mount::Kind::Object;
+    mount.rack = rack;
+    mount.slot = 0;
+    mount.object = graph;
+    mount.deleter = deleteAs<machine::nexus::Graph>;
+    if (!mountObjectWithRetry(mount)) {
+        delete graph;
+        return "mount queue full";
+    }
+    return warn;
+}
+
+std::string EngineHost::nexusPalette() const {
+    // "name|cap|knob,knob,...|default,default,...|in,in,...|out,out,..." per line.
+    std::string out;
+    for (int32_t t = 0; t < machine::nexus::TypeCount; ++t) {
+        const auto &info = machine::nexus::infoFor(t);
+        out += info.name;
+        out += "|";
+        out += std::to_string(static_cast<int>(info.cap));
+        out += "|";
+        for (int k = 0; k < machine::nexus::kKnobs; ++k) {
+            if (k > 0) out += ",";
+            out += info.knob[k] != nullptr ? info.knob[k] : "";
+        }
+        out += "|";
+        for (int k = 0; k < machine::nexus::kKnobs; ++k) {
+            if (k > 0) out += ",";
+            char buf[16];
+            std::snprintf(buf, sizeof(buf), "%.4f", info.def[k]);
+            out += buf;
+        }
+        out += "|";
+        for (int p = 0; p < machine::nexus::kPorts; ++p) {
+            if (info.in[p] == nullptr) break;
+            if (p > 0) out += ",";
+            out += info.in[p];
+        }
+        out += "|";
+        for (int p = 0; p < machine::nexus::kPorts; ++p) {
+            if (info.out[p] == nullptr) break;
+            if (p > 0) out += ",";
+            out += info.out[p];
+        }
+        out += "\n";
+    }
+    return out;
+}
+
+int32_t EngineHost::nexusScope(int rack, float *dest, int32_t max) const {
+    if (rack < 0 || rack >= kRackCount || dest == nullptr) return 0;
+    Machine *m = sEngine.racks[rack].currentMachine();
+    if (m == nullptr || std::strcmp(m->typeName(), "Nexus") != 0) return 0;
+    return static_cast<machine::Nexus *>(m)->readScope(dest, max);
+}
 
 std::string EngineHost::sampleMapInfo(int rack) const {
     if (rack < 0 || rack >= kRackCount) return "";

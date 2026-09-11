@@ -45,6 +45,9 @@ object EngineSync {
 
     /** Where relative sample paths in the document resolve. Set once at startup. */
     var sampleRoot: java.io.File? = null
+    private val loadedPatches = arrayOfNulls<String>(RACKS)
+    var patchStatus: String = ""
+        private set
 
     /**
      * Pads reference samples by a path relative to [sampleRoot] in
@@ -167,6 +170,7 @@ object EngineSync {
         ensureEffects(song)
         ensureEventors(song)
         ensureSampleMaps(song)
+        ensureNexusPatches(song)
         return push(song)
     }
 
@@ -287,5 +291,37 @@ object EngineSync {
     fun setMetronome(on: Boolean, volume: Float = 0.5f) {
         NativeEngine.setParam(0, "master", "clickon", EngineParams.bool01(on), record = false)
         NativeEngine.setParam(0, "master", "clickvolume", EngineParams.unit01(volume), record = false)
+    }
+
+    /**
+     * Nexus patches. Gated on the *topology* only - dragging a node around
+     * the canvas changes the saved patch several times a second, and
+     * rebuilding the graph for that would cut every delay tail in it.
+     */
+    fun ensureNexusPatches(song: Song) {
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            val wanted = when {
+                track == null || track.machine.type != "Nexus" -> null
+                mounted[rack] != "Nexus" -> null // wait for the machine
+                else -> {
+                    // An empty rack is not an error: a Nexus with nothing in
+                    // it has nothing to build, and asking the engine to parse
+                    // that only produces a warning nobody can act on.
+                    val p = com.rm.acidulous.model.NexusPatch.decode(track.machine.settings["nexus"])
+                    if (p.modules.isEmpty()) null else p.topology()
+                }
+            }
+            if (loadedPatches[rack] == wanted) continue
+            loadedPatches[rack] = wanted
+            if (wanted == null) continue
+            val spec = com.rm.acidulous.model.NexusPatch
+                .decode(track!!.machine.settings["nexus"]).encode()
+            mapLoader.execute {
+                val error = NativeEngine.loadNexusPatch(rack, spec)
+                patchStatus = error
+                if (error.isNotEmpty()) Log.w(TAG, "rack $rack patch: $error")
+            }
+        }
     }
 }

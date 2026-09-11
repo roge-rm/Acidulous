@@ -174,6 +174,21 @@ object NativeEngine {
     /** The scene fade multiplier the master is applying right now (1 = none). */
     val masterFade: Float get() = nativeGetMasterFade()
 
+    // --- Nexus -----------------------------------------------------------
+
+    /** Build a patch on this thread and hand it to the rack. "" or an error. */
+    fun loadNexusPatch(rack: Int, spec: String): String = nativeLoadNexusPatch(rack, spec)
+
+    /** The module palette, straight from the engine: one line per type. */
+    fun nexusPalette(): String = nativeNexusPalette()
+
+    /** Fills [out] with the scope trace and returns how many points landed. */
+    fun nexusScope(rack: Int, out: FloatArray): Int = nativeNexusScope(rack, out)
+
+    private external fun nativeLoadNexusPatch(rack: Int, spec: String): String
+    private external fun nativeNexusPalette(): String
+    private external fun nativeNexusScope(rack: Int, out: FloatArray): Int
+
     // --- Audio in --------------------------------------------------------
 
     /** Opens the microphone or line in. Needs RECORD_AUDIO to have been granted. */

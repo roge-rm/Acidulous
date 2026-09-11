@@ -173,6 +173,29 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOff(JNIEnv *, jobject, jint 
     host().noteOff(rackId, static_cast<uint8_t>(note & 0x7f));
 }
 
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoadNexusPatch(JNIEnv *env, jobject, jint rack, jstring spec) {
+    const char *chars = env->GetStringUTFChars(spec, nullptr);
+    const std::string result = host().loadNexusPatch(rack, chars ? chars : "");
+    if (chars) env->ReleaseStringUTFChars(spec, chars);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeNexusPalette(JNIEnv *env, jobject) {
+    return env->NewStringUTF(host().nexusPalette().c_str());
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeNexusScope(JNIEnv *env, jobject, jint rack, jfloatArray out) {
+    const jsize max = env->GetArrayLength(out);
+    if (max <= 0) return 0;
+    jfloat *data = env->GetFloatArrayElements(out, nullptr);
+    const int32_t n = host().nexusScope(rack, data, static_cast<int32_t>(max));
+    env->ReleaseFloatArrayElements(out, data, 0);
+    return n;
+}
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeStartInput(JNIEnv *, jobject) {
     return host().startInput() ? JNI_TRUE : JNI_FALSE;

@@ -48,6 +48,13 @@ class EngineHost {
     bool loadZoneMap(int rack, const std::string &spec, const std::string &name, std::string &error);
     /** "name|zones|samples|seconds" for the mounted map, or "". */
     std::string sampleMapInfo(int rack) const;
+
+    /** Build a Nexus patch from its text and hand it to the rack. "" or an error. */
+    std::string loadNexusPatch(int rack, const std::string &spec);
+    /** The palette, so the editor never keeps a second copy of it. */
+    std::string nexusPalette() const;
+    /** The scope trace from a rack's Nexus, into a caller-owned array. */
+    int32_t nexusScope(int rack, float *dest, int32_t max) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
     std::string sampleInfo(int rack, int slot) const;
     const char *mountedMachine(int rack) const;

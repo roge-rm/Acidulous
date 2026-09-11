@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
+import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.Zone
 import com.rm.acidulous.model.Zones
@@ -67,7 +68,7 @@ fun MachinePanel(
     editor: SongEditor,
     patchNames: () -> List<String>,
     onSavePatch: (String) -> Unit,
-    onLoadPatch: (String) -> Map<String, Float>?,
+    onLoadPatch: (String) -> Patch?,
     factoryPatchNames: () -> List<String> = { emptyList() },
     userPatchNames: () -> List<String> = { emptyList() },
     onDeletePatch: (String) -> Unit = {},
@@ -79,6 +80,8 @@ fun MachinePanel(
     onClearSample: (pad: Int) -> Unit = {},
     /** A sample already in the app's own folder, chosen rather than imported. */
     onAssignSample: (pad: Int, relative: String) -> Unit = { _, _ -> },
+    /** Nexus keeps its graph on a screen of its own. */
+    onOpenPatch: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val type = track.machine.type
@@ -89,8 +92,13 @@ fun MachinePanel(
 
     Column(modifier.background(Color(0xFF1F1F23)).padding(6.dp)) {
         val loadPatch: (String) -> Unit = { name ->
-            onLoadPatch(name)?.let { params ->
-                editor.edit(trackIndex) { t -> t.withPatch(params) }
+            onLoadPatch(name)?.let { patch ->
+                val params = patch.params
+                editor.edit(trackIndex) { t ->
+                    var next = t.withPatch(params)
+                    for ((k, v) in patch.settings) next = next.withSetting(k, v)
+                    next
+                }
                 binding.applyAll(params)
             }
         }
@@ -106,6 +114,7 @@ fun MachinePanel(
             "Manual" -> ManualPanel(binding)
             "Cipher" -> CipherPanel(binding)
             "Filament" -> FilamentPanel(binding)
+            "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample, onAssignSample)
             else -> GenericPanel(binding)
@@ -1234,6 +1243,56 @@ private fun FilamentPanel(b: ParamBinding) {
                         PanelKnob(b, "volume", "volume")
                         PanelKnob(b, "pan", "pan")
                     }
+                }
+            }
+        }
+    }
+}
+
+// --- Nexus ------------------------------------------------------------------
+//
+// The strip stays a strip. A graph needs a screen, so this holds the things
+// you reach for while playing - the macros, the morph, the output - and a
+// way through to the canvas.
+
+@Composable
+private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    val patch = remember(track.machine.settings["nexus"]) {
+        com.rm.acidulous.model.NexusPatch.decode(track.machine.settings["nexus"])
+    }
+    Column {
+        SectionChips(listOf("patch", "macros", "voice", "out"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("patch") {
+                        Column(horizontalAlignment = Alignment.Start) {
+                            Text("${patch.modules.size} modules · ${patch.cables.size} cables",
+                                color = Color.White, fontSize = 11.sp, maxLines = 1)
+                            Text(patch.modules.take(6).joinToString(" ") { it.type },
+                                color = Color(0xFF9A9AA2), fontSize = 9.sp,
+                                fontFamily = FontFamily.Monospace, maxLines = 1)
+                            TextButton(onClick = onOpenPatch) {
+                                Text("patch…", color = PanelAmber, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                    Group("morph") { PanelKnob(b, "morph", "A→B", PanelAmber) }
+                }
+                1 -> Group("macros") { for (i in 1..8) PanelKnob(b, "macro$i", "$i", PanelAmber) }
+                2 -> Group("voice") {
+                    PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
+                    PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "bend", "bend")
+                    PanelKnob(b, "octave", "octave")
+                    PanelKnob(b, "transpose", "transpose")
+                    PanelKnob(b, "fine", "fine")
+                }
+                else -> Group("out") {
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
+                    PanelKnob(b, "drive", "drive", PanelPink)
                 }
             }
         }

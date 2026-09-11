@@ -117,6 +117,9 @@ private const val TAG = "Acidulous.UI"
 private sealed class Screen {
     object Main : Screen()
     data class Edit(val track: Int, val sceneId: String) : Screen()
+    // Nexus's graph needs a screen; a node canvas cannot live in the strip
+    // under the piano roll.
+    data class Patch(val track: Int, val sceneId: String) : Screen()
 
     companion object {
         /**
@@ -128,12 +131,17 @@ private sealed class Screen {
             save = { state ->
                 when (val v = state.value) {
                     is Edit -> listOf("edit", v.track, v.sceneId)
+                    is Patch -> listOf("patch", v.track, v.sceneId)
                     else -> listOf("main")
                 }
             },
             restore = { saved ->
                 mutableStateOf(
-                    if (saved.firstOrNull() == "edit") Edit(saved[1] as Int, saved[2] as String) else Main
+                    when (saved.firstOrNull()) {
+                        "edit" -> Edit(saved[1] as Int, saved[2] as String)
+                        "patch" -> Patch(saved[1] as Int, saved[2] as String)
+                        else -> Main
+                    }
                 )
             },
         )
@@ -407,9 +415,10 @@ private fun App(modifier: Modifier = Modifier) {
             song = song, editor = editor, trackIndex = s.track, sceneId = s.sceneId,
             position = position, playing = playing, armed = armed, onArm = onArm,
             onBack = { screen = Screen.Main },
+            onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
             patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
             onSavePatch = { name -> PatchStore.save(context, Patch(song.tracks[s.track].machine.type, name, song.tracks[s.track].machine.params)) },
-            onLoadPatch = { name -> PatchStore.load(context, song.tracks[s.track].machine.type, name)?.params },
+            onLoadPatch = { name -> PatchStore.load(context, song.tracks[s.track].machine.type, name) },
             factoryPatchNames = { PatchStore.factoryNames(song.tracks[s.track].machine.type) },
             userPatchNames = { PatchStore.userList(context, song.tracks[s.track].machine.type) },
             onDeletePatch = { name -> PatchStore.delete(context, song.tracks[s.track].machine.type, name) },
@@ -428,6 +437,13 @@ private fun App(modifier: Modifier = Modifier) {
                 }
             },
             onImportZoneSamples = { track -> mapTarget = track; zoneSamplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*")) },
+            modifier = modifier,
+        )
+        is Screen.Patch -> com.rm.acidulous.ui.PatchScreen(
+            track = song.tracks[s.track],
+            trackIndex = s.track,
+            editor = editor,
+            onBack = { screen = Screen.Edit(s.track, s.sceneId) },
             modifier = modifier,
         )
     }

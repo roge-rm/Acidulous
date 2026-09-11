@@ -71,9 +71,10 @@ fun EditScreen(
     armed: Boolean,
     onArm: (Boolean) -> Unit,
     onBack: () -> Unit,
+    onOpenPatch: () -> Unit = {},
     patchNames: () -> List<String>,
     onSavePatch: (String) -> Unit,
-    onLoadPatch: (String) -> Map<String, Float>?,
+    onLoadPatch: (String) -> com.rm.acidulous.model.Patch?,
     factoryPatchNames: () -> List<String> = { emptyList() },
     userPatchNames: () -> List<String> = { emptyList() },
     onDeletePatch: (String) -> Unit = {},
@@ -348,6 +349,7 @@ fun EditScreen(
             onAssignSample = { pad, rel ->
                 editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), rel) }
             },
+            onOpenPatch = onOpenPatch,
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         )
         }
