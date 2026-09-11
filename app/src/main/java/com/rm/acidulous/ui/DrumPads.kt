@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.model.DrumVoice
+import com.rm.acidulous.ui.theme.Acid
 
 /** Pads in place of the keyboard for a drum machine: two rows, one per voice. */
 @Composable
@@ -45,7 +46,7 @@ private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> 
     Box(
         modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(if (pressed) Color(0xFFFFB454) else if (selected) Color(0xFF3F4A55) else Color(0xFF2E2E33))
+            .background(if (pressed) Acid.colors.accent else if (selected) Acid.colors.padSelected else Acid.colors.control)
             .pointerInput(voice.note, rack) {
                 // The loop keeps its own idea of what is down. Comparing
                 // against the drawn state instead lets a fast tap be missed,
@@ -76,6 +77,6 @@ private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> 
             },
         contentAlignment = Alignment.Center,
     ) {
-        Text(voice.short, color = if (pressed) Color(0xFF1B1B1E) else Color.White, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+        Text(voice.short, color = if (pressed) Acid.colors.onAccent else Acid.colors.text, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
     }
 }

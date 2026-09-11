@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import kotlinx.coroutines.delay
 import java.io.File
+import com.rm.acidulous.ui.theme.Acid
 
 /**
  * Recording into the instrument.
@@ -120,26 +121,26 @@ fun SamplerDialog(onDismiss: () -> Unit, onRecorded: (String) -> Unit = {}) {
                 }
                 if (fromInput && !havePermission) {
                     Text("Recording needs permission to use the microphone.",
-                        color = Color(0xFFE74C3C), fontSize = 11.sp)
+                        color = Acid.colors.red, fontSize = 11.sp)
                     TextButton(onClick = { ask.launch(Manifest.permission.RECORD_AUDIO) }) {
-                        Text("allow", color = Color(0xFFFFB454), fontSize = 12.sp)
+                        Text("allow", color = Acid.colors.accent, fontSize = 12.sp)
                     }
                 }
 
-                Text("level", color = Color(0xFF7FD1B9), fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Text("level", color = Acid.colors.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 Meter(level, Modifier.fillMaxWidth().height(10.dp), vertical = false)
                 if (fromInput) {
-                    Text("gain %.2f".format(gain), color = Color(0xFFDDDDE2), fontSize = 11.sp,
+                    Text("gain %.2f".format(gain), color = Acid.colors.textHi, fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace)
                     Slider(value = gain, onValueChange = { gain = it }, valueRange = 0f..4f,
                         modifier = Modifier.fillMaxWidth().height(28.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         SourceChip(if (monitor) "monitor on" else "monitor off", monitor) { monitor = !monitor }
-                        Text("  headphones only", color = Color(0xFF9A9AA2), fontSize = 10.sp)
+                        Text("  headphones only", color = Acid.colors.textDim, fontSize = 10.sp)
                     }
                 }
 
-                Text("name", color = Color(0xFF7FD1B9), fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Text("name", color = Acid.colors.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 androidx.compose.material3.OutlinedTextField(
                     value = name, onValueChange = { name = it }, singleLine = true,
                     modifier = Modifier.fillMaxWidth(), enabled = !recording,
@@ -147,13 +148,13 @@ fun SamplerDialog(onDismiss: () -> Unit, onRecorded: (String) -> Unit = {}) {
 
                 if (recording) {
                     Text("recording  %.1f s  peak %.2f".format(seconds, peak),
-                        color = Color(0xFFE74C3C), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        color = Acid.colors.red, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                     if (NativeEngine.captureOverflowed) {
                         Text("the writer fell behind; this take has a gap in it",
-                            color = Color(0xFFFFB454), fontSize = 10.sp)
+                            color = Acid.colors.accent, fontSize = 10.sp)
                     }
                 } else if (message.isNotEmpty()) {
-                    Text(message, color = Color(0xFF9A9AA2), fontSize = 11.sp)
+                    Text(message, color = Acid.colors.textDim, fontSize = 11.sp)
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -210,7 +211,7 @@ fun SampleBrowserDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
             ) {
                 if (files.isEmpty()) {
                     Text("Nothing here yet. Record one, or import a WAV.", fontSize = 12.sp,
-                        color = Color(0xFF9A9AA2))
+                        color = Acid.colors.textDim)
                 }
                 files.forEach { file ->
                     OutlinedButton(
@@ -220,7 +221,7 @@ fun SampleBrowserDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
                         Column(Modifier.fillMaxWidth()) {
                             Text(file.name, maxLines = 1, fontSize = 12.sp)
                             Text("%.1f kB".format(file.length() / 1024f), fontSize = 9.sp,
-                                color = Color(0xFF9A9AA2), fontFamily = FontFamily.Monospace)
+                                color = Acid.colors.textDim, fontFamily = FontFamily.Monospace)
                         }
                     }
                 }
@@ -235,10 +236,10 @@ fun SampleBrowserDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
 private fun SourceChip(label: String, on: Boolean, onClick: () -> Unit) {
     Text(
         label,
-        color = if (on) Color(0xFF191B1E) else Color(0xFFDDDDE2),
+        color = if (on) Acid.colors.onAccent else Acid.colors.textHi,
         fontSize = 11.sp,
         modifier = Modifier.clip(RoundedCornerShape(4.dp))
-            .background(if (on) Color(0xFF7FD1B9) else Color(0x22FFFFFF))
+            .background(if (on) Acid.colors.teal else Acid.colors.overlay)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 6.dp),
     )

@@ -31,6 +31,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Zone
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.AcidColors
 
 /**
  * The map itself: key across, velocity up, one rectangle per zone. Tapping a
@@ -45,12 +47,13 @@ fun ZoneMapView(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val c = Acid.colors
     val pick by rememberUpdatedState(onSelect)
     val list by rememberUpdatedState(zones)
     Canvas(
         modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF1A1A1E))
+            .background(c.bg)
             .pointerInput(Unit) {
                 detectTapGestures { at ->
                     val key = (at.x / size.width * 128f).toInt().coerceIn(0, 127)
@@ -64,8 +67,8 @@ fun ZoneMapView(
         val w = size.width / 128f
         val h = size.height / 127f
         // Octave lines, so the keyboard is readable at a glance.
-        for (c in 0..127 step 12) {
-            drawRect(Color(0xFF2A2A30), Offset(c * w, 0f), Size(1f, size.height))
+        for (key in 0..127 step 12) {
+            drawRect(c.controlAlt, Offset(key * w, 0f), Size(1f, size.height))
         }
         list.forEachIndexed { i, z ->
             val x = z.lowKey * w
@@ -73,12 +76,12 @@ fun ZoneMapView(
             val rw = ((z.highKey - z.lowKey + 1) * w).coerceAtLeast(2f)
             val rh = ((z.highVel - z.lowVel + 1) * h).coerceAtLeast(2f)
             val on = i == selected
-            drawRect(if (on) Color(0x883F7D5E) else Color(0x552E6E8E), Offset(x, y), Size(rw, rh))
-            drawRect(if (on) Color(0xFF7FD1B9) else Color(0xFF4A7A8C), Offset(x, y), Size(rw, rh),
+            drawRect(if (on) c.zoneOn else c.zoneOff, Offset(x, y), Size(rw, rh))
+            drawRect(if (on) c.teal else c.zoneOffEdge, Offset(x, y), Size(rw, rh),
                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = if (on) 2f else 1f))
         }
         // Middle C, the reference everyone reads a map against.
-        drawRect(Color(0xFFFFB454), Offset(60 * w, size.height - 3f), Size(w, 3f))
+        drawRect(c.accent, Offset(60 * w, size.height - 3f), Size(w, 3f))
     }
 }
 
@@ -100,7 +103,7 @@ fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onD
                 FloatField("gain", z.gain, 0f, 2f, "%.2f") { z = z.copy(gain = it) }
                 FloatField("pan", z.pan, -1f, 1f, "%+.2f") { z = z.copy(pan = it) }
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text("loop", color = Color(0xFF9A9AA2), fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                    Text("loop", color = Acid.colors.textDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                         modifier = Modifier.padding(end = 8.dp))
                     TextButton(onClick = { z = z.copy(loop = !z.loop) }) { Text(if (z.loop) "on" else "off") }
                 }
@@ -109,7 +112,7 @@ fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onD
         confirmButton = { Button(onClick = { onConfirm(z) }) { Text("OK") } },
         dismissButton = {
             Row {
-                TextButton(onClick = onDelete) { Text("Delete", color = Color(0xFFE74C3C)) }
+                TextButton(onClick = onDelete) { Text("Delete", color = Acid.colors.red) }
                 TextButton(onClick = onDismiss) { Text("Cancel") }
             }
         },
@@ -119,7 +122,7 @@ fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onD
 @Composable
 private fun Field(label: String, value: Int, min: Int, max: Int, onChange: (Int) -> Unit) {
     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Text("%-9s %3d".format(label, value), color = Color(0xFFDDDDE2), fontSize = 11.sp,
+        Text("%-9s %3d".format(label, value), color = Acid.colors.textHi, fontSize = 11.sp,
             fontFamily = FontFamily.Monospace, modifier = Modifier.padding(end = 6.dp))
         Slider(
             value = value.toFloat(), onValueChange = { onChange(it.toInt().coerceIn(min, max)) },
@@ -131,7 +134,7 @@ private fun Field(label: String, value: Int, min: Int, max: Int, onChange: (Int)
 @Composable
 private fun FloatField(label: String, value: Float, min: Float, max: Float, fmt: String, onChange: (Float) -> Unit) {
     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Text("%-9s %s".format(label, fmt.format(value)), color = Color(0xFFDDDDE2), fontSize = 11.sp,
+        Text("%-9s %s".format(label, fmt.format(value)), color = Acid.colors.textHi, fontSize = 11.sp,
             fontFamily = FontFamily.Monospace, modifier = Modifier.padding(end = 6.dp))
         Slider(value = value.coerceIn(min, max), onValueChange = onChange, valueRange = min..max,
             modifier = Modifier.fillMaxWidth().height(28.dp))

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rm.acidulous.ui.theme.Acid
 
 /**
  * The song browser: every saved song, load on tap, delete behind a confirm.
@@ -43,7 +44,7 @@ fun SongBrowserDialog(
                     OutlinedButton(onClick = { onLoad(n) }, modifier = Modifier.weight(1f)) {
                         Text(if (n == current) "● $n" else n, maxLines = 1)
                     }
-                    TextButton(onClick = { confirm = n }) { Text("✕", color = Color(0xFFE74C3C)) }
+                    TextButton(onClick = { confirm = n }) { Text("✕", color = Acid.colors.red) }
                 }
             }
         },
@@ -72,13 +73,13 @@ fun PatchBrowserDialog(
         title = { Text("$machine patches") },
         text = {
             Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (factory.isNotEmpty()) Text("factory", color = Color(0xFF7FD1B9), fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                if (factory.isNotEmpty()) Text("factory", color = Acid.colors.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 for (n in factory) OutlinedButton(onClick = { onLoad(n) }, modifier = Modifier.fillMaxWidth()) { Text(n, maxLines = 1) }
-                Text("yours", color = Color(0xFFFFB454), fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Text("yours", color = Acid.colors.accent, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 if (user.isEmpty()) Text("None saved yet - \"save as…\" on the panel.", fontSize = 12.sp)
                 for (n in user) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OutlinedButton(onClick = { onLoad(n) }, modifier = Modifier.weight(1f)) { Text(n, maxLines = 1) }
-                    TextButton(onClick = { onDelete(n) }) { Text("✕", color = Color(0xFFE74C3C)) }
+                    TextButton(onClick = { onDelete(n) }) { Text("✕", color = Acid.colors.red) }
                 }
             }
         },
@@ -111,7 +112,7 @@ fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit
                         "%s\n%.1f s · 48 kHz · 24-bit stereo · peak %.3f".format(state.fileName, state.seconds, state.peak),
                         fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                     )
-                    is ExportState.Failed -> Text("Export failed: ${state.error}", fontSize = 12.sp, color = Color(0xFFE74C3C))
+                    is ExportState.Failed -> Text("Export failed: ${state.error}", fontSize = 12.sp, color = Acid.colors.red)
                 }
             }
         },

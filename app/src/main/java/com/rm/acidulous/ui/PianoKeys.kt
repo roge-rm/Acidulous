@@ -39,6 +39,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.AcidColors
 
 /**
  * The keyboard, in two shapes.
@@ -62,6 +64,7 @@ fun PianoKeys(
     octave: Int,
     modifier: Modifier = Modifier,
 ) {
+    val c = Acid.colors
     val measurer = rememberTextMeasurer()
     var held by remember { mutableStateOf(mapOf<Long, Int>()) }
     val base = 12 * (octave + 1)
@@ -119,7 +122,7 @@ fun PianoKeys(
         ) {
             val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale)
             val down = held.values.toSet()
-            val nameStyle = TextStyle(color = Color(0xFF6A6A72), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+            val nameStyle = TextStyle(color = c.keyLabel, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
 
             if (layout.scaleKeys != null) {
                 // Scale mode: one key per usable note, packed together.
@@ -129,22 +132,22 @@ fun PianoKeys(
                     val x = i * layout.keyW
                     val black = isBlackKey(note)
                     val colour = when {
-                        down.contains(note) -> if (black) Color(0xFF3F7D5E) else Color(0xFF7FD1B9)
+                        down.contains(note) -> if (black) c.green else c.teal
                         // Light enough to read as a key rather than a gap: on
                         // this background a true black note disappears.
-                        black -> Color(0xFF43434C)
-                        else -> Color(0xFFECECE6)
+                        black -> c.keyBlack
+                        else -> c.keyWhite
                     }
                     drawRect(colour, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
                     if (black) {
-                        drawRect(Color(0xFF6A6A76), Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height),
+                        drawRect(c.keyEdge, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height),
                             style = Stroke(1f))
                     }
                     // The tonic gets its name, so the scale has a landmark.
                     if (root != null && ((note % 12) + 12) % 12 == root) {
                         val laid = measurer.measure(
                             AnnotatedString(noteName(note)),
-                            nameStyle.copy(color = if (black) Color(0xFF9A9AA2) else Color(0xFF6A6A72)),
+                            nameStyle.copy(color = if (black) c.keyLabelBlack else c.keyLabel),
                         )
                         if (laid.size.width < layout.keyW - 2f) {
                             drawText(laid, topLeft = Offset(x + (layout.keyW - laid.size.width) / 2f,
@@ -156,7 +159,7 @@ fun PianoKeys(
                 for (i in 0 until layout.whiteCount) {
                     val note = layout.whiteNote(i)
                     val x = i * layout.keyW
-                    val colour = if (down.contains(note)) Color(0xFF7FD1B9) else Color(0xFFECECE6)
+                    val colour = if (down.contains(note)) c.teal else c.keyWhite
                     drawRect(colour, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
                     if (note % 12 == 0) {
                         val laid = measurer.measure(AnnotatedString(noteName(note)), nameStyle)
@@ -167,9 +170,9 @@ fun PianoKeys(
                     }
                 }
                 for ((x, note) in layout.blacks()) {
-                    val colour = if (down.contains(note)) Color(0xFF3F7D5E) else Color(0xFF141416)
+                    val colour = if (down.contains(note)) c.green else c.blackKey
                     drawRect(colour, Offset(x, 0f), Size(layout.blackW, layout.blackH))
-                    drawRect(Color(0xFF0B0B0C), Offset(x, 0f), Size(layout.blackW, layout.blackH), style = Stroke(1f))
+                    drawRect(c.blackKeyEdge, Offset(x, 0f), Size(layout.blackW, layout.blackH), style = Stroke(1f))
                 }
             }
         }
@@ -180,11 +183,12 @@ fun PianoKeys(
 
 @Composable
 private fun OctaveKey(label: String, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val c = Acid.colors
     Box(
-        modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Color(0xFF2A2A30))
+        modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(c.controlAlt)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = if (enabled) Color.White else Color(0xFF4A4A52), fontSize = 10.sp) }
+    ) { Text(label, color = if (enabled) c.text else c.textFaint, fontSize = 10.sp) }
 }
 
 /**
@@ -201,15 +205,16 @@ fun ScaleChip(
     /** Turned on its side when it stands beside the keys; flat in a strip. */
     vertical: Boolean = true,
 ) {
+    val c = Acid.colors
     val on = label != null
     Box(
-        modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Color(0xFF3A3226) else Color(0xFF26262B))
+        modifier.clip(RoundedCornerShape(4.dp)).background(if (on) c.accentDim else c.card)
             .pointerInput(on) { detectTapGestures(onLongPress = { onOpen() }, onTap = { onToggle() }) },
         contentAlignment = Alignment.Center,
     ) {
         Text(
             label ?: "scale off",
-            color = if (on) Color(0xFFFFB454) else Color(0xFF8A8A92),
+            color = if (on) c.accent else c.textDim,
             fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
             // Laid out long and then turned: rotation does not change a
             // layout's size, so the width has to be demanded before it spins.
@@ -300,6 +305,7 @@ private val ScaleGroups = listOf(
 
 @Composable
 fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSetting) -> Unit) {
+    val c = Acid.colors
     var s by remember(current) { mutableStateOf(current) }
     val pitches = remember(s.key, s.scale) {
         (com.rm.acidulous.model.Scales.intervals.getOrNull(s.scale) ?: emptyList())
@@ -334,15 +340,15 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                         Box(
                             Modifier.width(18.dp).height(14.dp).clip(RoundedCornerShape(2.dp)).background(
                                 when {
-                                    pc == s.key -> Color(0xFFFFB454)
-                                    pc in pitches -> Color(0xFF3F7D5E)
-                                    else -> Color(0xFF2A2A30)
+                                    pc == s.key -> c.accent
+                                    pc in pitches -> c.green
+                                    else -> c.controlAlt
                                 },
                             ),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(com.rm.acidulous.model.Scales.keyNames[pc].take(2),
-                                color = if (pc in pitches) Color.White else Color(0xFF66666E), fontSize = 7.sp)
+                                color = if (pc in pitches) Color.White else c.textFaint, fontSize = 7.sp)
                         }
                     }
                 }
@@ -351,18 +357,18 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                     verticalArrangement = Arrangement.spacedBy(1.dp),
                 ) {
                     for ((title, range) in ScaleGroups) {
-                        Text(title, color = Color(0xFF7FD1B9), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                        Text(title, color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                             modifier = Modifier.padding(top = 4.dp))
                         for (i in range) {
                             val on = i == s.scale
                             Box(
                                 Modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp))
-                                    .background(if (on) Color(0xFF3F7D5E) else Color(0xFF232327))
+                                    .background(if (on) c.green else c.control)
                                     .clickable { s = s.copy(scale = i, on = true) }
                                     .padding(horizontal = 8.dp, vertical = 5.dp),
                             ) {
                                 Text(com.rm.acidulous.model.Scales.names[i],
-                                    color = if (on) Color.White else Color(0xFFCCCCD2), fontSize = 12.sp)
+                                    color = if (on) Color.White else c.textHi, fontSize = 12.sp)
                             }
                         }
                     }
@@ -376,8 +382,9 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
 
 @Composable
 private fun Pill(label: String, on: Boolean, onClick: () -> Unit) {
+    val c = Acid.colors
     Box(
-        Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Color(0xFF3F7D5E) else Color(0xFF2A2A30))
+        Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) c.green else c.controlAlt)
             .clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 4.dp),
-    ) { Text(label, color = if (on) Color.White else Color(0xFFBBBBBB), fontSize = 11.sp) }
+    ) { Text(label, color = if (on) Color.White else c.textMid, fontSize = 11.sp) }
 }

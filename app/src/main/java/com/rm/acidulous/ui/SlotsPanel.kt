@@ -41,6 +41,7 @@ import com.rm.acidulous.model.effectUnit
 import com.rm.acidulous.model.withEffect
 import com.rm.acidulous.model.withEffectBypass
 import com.rm.acidulous.model.withEffectParam
+import com.rm.acidulous.ui.theme.Acid
 
 /** What a slot panel edits: the track's insert effects or its eventors. */
 enum class SlotKind(
@@ -63,7 +64,7 @@ enum class SlotKind(
 @Composable
 fun SlotsPanel(kind: SlotKind, track: Track, trackIndex: Int, editor: SongEditor, modifier: Modifier = Modifier) {
     val types = remember(kind) { kind.types() }
-    Column(modifier.background(Color(0xFF1F1F23)).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(modifier.background(Acid.colors.panel).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         for (slot in 0 until kind.slots) SlotRow(kind, track, trackIndex, slot, types, editor)
     }
 }
@@ -76,14 +77,14 @@ fun EffectsPanel(track: Track, trackIndex: Int, editor: SongEditor, modifier: Mo
 private fun SlotRow(kind: SlotKind, track: Track, trackIndex: Int, slot: Int, types: List<String>, editor: SongEditor) {
     val fx = kind.at(track, slot)
     var menu by remember { mutableStateOf(false) }
-    Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFF26262B)).padding(4.dp)) {
+    Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("${kind.label}${slot + 1}", color = Color(0xFF7FD1B9), fontSize = 10.sp)
+            Text("${kind.label}${slot + 1}", color = Acid.colors.teal, fontSize = 10.sp)
             TextButton(onClick = { menu = true }) {
-                Text(if (fx.isEmpty) "none ▾" else "${fx.type} ▾", color = Color(0xFFFFB454), fontSize = 12.sp)
+                Text(if (fx.isEmpty) "none ▾" else "${fx.type} ▾", color = Acid.colors.accent, fontSize = 12.sp)
             }
             val menuScroll = rememberScrollState()
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll), scrollState = menuScroll) {
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
                 DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
                     menu = false
                     editor.edit(trackIndex) { t -> kind.withType(t, slot, "") }
@@ -102,8 +103,8 @@ private fun SlotRow(kind: SlotKind, track: Track, trackIndex: Int, slot: Int, ty
                         editor.edit(trackIndex) { t -> kind.withBypass(t, slot, bypass) }
                         NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (bypass) 1f else 0f, record = true)
                     },
-                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Color(0xFF3F7D5E) else Color(0xFF2E2E33)),
-                ) { Text(if (on) "on" else "bypass", color = if (on) Color.White else Color(0xFFBBBBBB), fontSize = 10.sp) }
+                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
+                ) { Text(if (on) "on" else "bypass", color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
             }
         }
         if (!fx.isEmpty) SlotFace(kind, fx.type, trackIndex, slot, editor)
@@ -122,7 +123,7 @@ private fun SlotFace(kind: SlotKind, type: String, trackIndex: Int, slot: Int, e
             for (p in info) {
                 if (type == "Arp" && p.name.length == 3 && p.name[0] == 's' && p.name[1].isDigit()) continue // the step row below
                 val labels = switchLabels(type, p.name, p.steps)
-                val accent = if (p.name in EXTRA[type].orEmpty()) Color(0xFFFFB454) else Color(0xFF7FD1B9)
+                val accent = if (p.name in EXTRA[type].orEmpty()) Acid.colors.accent else Acid.colors.teal
                 when {
                     // a few choices: buttons; many (note values): a stepped knob that names its step
                     p.curve == 2 && labels != null && labels.size <= 4 -> PanelSwitch(b, p.name, labels)
@@ -144,17 +145,17 @@ private fun SlotFace(kind: SlotKind, type: String, trackIndex: Int, slot: Int, e
 private fun ArpSteps(b: ParamBinding) {
     val length = b.infoOf("length")?.map(b.value("length"))?.toInt() ?: 16
     Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("steps", color = Color(0xFF9A9AA2), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text("steps", color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         for (i in 1..16) {
             val name = "s%02d".format(i)
             val on = b.value(name) >= 0.5f
             val inRange = i <= length
             Box(
                 Modifier.weight(1f).height(22.dp).clip(RoundedCornerShape(3.dp))
-                    .background(if (on && inRange) Color(0xFF3F7D5E) else if (on) Color(0xFF2E4A3E) else Color(0xFF2E2E33))
+                    .background(if (on && inRange) Acid.colors.green else if (on) Acid.colors.greenDim else Acid.colors.control)
                     .clickable { b.set(name, if (on) 0f else 1f) },
                 contentAlignment = Alignment.Center,
-            ) { Text("$i", color = if (inRange) Color.White else Color(0xFF777777), fontSize = 8.sp) }
+            ) { Text("$i", color = if (!inRange) Acid.colors.textFaint else if (on) Color.White else Acid.colors.text, fontSize = 8.sp) }
         }
     }
 }

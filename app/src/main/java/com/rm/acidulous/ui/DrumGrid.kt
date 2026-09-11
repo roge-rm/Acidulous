@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.DrumVoice
 import com.rm.acidulous.model.Note
+import com.rm.acidulous.ui.theme.Acid
 
 /**
  * A drum machine's step grid: a row per voice, a column per grid step, one
@@ -49,14 +50,14 @@ fun DrumGrid(
     val stepsPerBar = (ticksPerBar / grid).coerceAtLeast(1)
     val bar = barIndex.coerceIn(0, (clip.bars - 1).coerceAtLeast(0))
 
-    Column(modifier.background(Color(0xFF1B1B1E)).padding(4.dp)) {
+    Column(modifier.background(Acid.colors.bg).padding(4.dp)) {
         Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             for (voice in voices) {
                 Row(Modifier.fillMaxWidth().height(24.dp), horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
                     // Same width and size as the roll's pitch gutter: the
                     // two editors show the same clip and are read as one.
                     Text(
-                        voice.short, color = Color(0xFFBBBBBB),
+                        voice.short, color = Acid.colors.textMid,
                         fontSize = NameTextSize, fontFamily = FontFamily.Monospace,
                         maxLines = 1, softWrap = false,
                         modifier = Modifier.width(GutterWidth),
@@ -71,11 +72,11 @@ fun DrumGrid(
                             Modifier.weight(1f).height(24.dp).clip(RoundedCornerShape(3.dp))
                                 .background(
                                     when {
-                                        accent -> Color(0xFFFFB454)
-                                        hit != null -> Color(0xFF3F7D5E)
-                                        active -> Color(0xFF33333A)
-                                        beat -> Color(0xFF2A2A2F)
-                                        else -> Color(0xFF232326)
+                                        accent -> Acid.colors.accent
+                                        hit != null -> Acid.colors.green
+                                        active -> Acid.colors.cardHi
+                                        beat -> Acid.colors.cardAlt
+                                        else -> Acid.colors.bar
                                     },
                                 )
                                 .combinedClickable(

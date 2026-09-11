@@ -56,6 +56,8 @@ import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.emptyClipFor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.AcidColors
 
 /**
  * The reference sequencer's Edit screen, phone-sized: header, piano roll, footer. The machine
@@ -180,7 +182,7 @@ fun EditScreen(
 
     // `modifier` carries the Scaffold's system-bar padding; without it the
     // footer sits under the navigation bar and its taps become Back.
-    Column(modifier.fillMaxSize().background(Color(0xFF1B1B1E))) {
+    Column(modifier.fillMaxSize().background(Acid.colors.bg)) {
         // Header: back · track · scene · octave. It lays itself out around
         // the camera hole rather than below it, so on a phone with a cutout
         // this row costs no height at all - see ui/Cutout.kt.
@@ -193,7 +195,7 @@ fun EditScreen(
             Text(
                 "${track.name} · ${scene.name} · ${clip.bars}b · ${clip.notes.size}n" +
                     (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a"),
-                color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                 modifier = Modifier.flexible().padding(horizontal = 4.dp), maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
@@ -203,7 +205,7 @@ fun EditScreen(
             if (pages > 1) {
                 HeaderButton("◀") { page = (page - 1 + pages) % pages }
                 Text(
-                    "${page + 1}/$pages", color = Color(0xFFFFB454), fontSize = 12.sp,
+                    "${page + 1}/$pages", color = Acid.colors.accent, fontSize = 12.sp,
                     fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
                 )
                 HeaderButton("▶") { page = (page + 1) % pages }
@@ -377,7 +379,7 @@ fun EditScreen(
                 // takes only what its text needs.
                 if (touchable) {
                     TouchWheel(
-                        value = pressure, accent = Color(0xFFE07A9A), vertical = false,
+                        value = pressure, accent = Acid.colors.pink, vertical = false,
                         springBackTo = 0f, label = "prs",
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     ) { v -> pressure = v; NativeEngine.channelPressure(trackIndex, (v * 127f).toInt()) }
@@ -400,7 +402,7 @@ fun EditScreen(
                 horizontalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 TouchWheel(
-                    value = mod, accent = Color(0xFFFFB454), vertical = true, label = null,
+                    value = mod, accent = Acid.colors.accent, vertical = true, label = null,
                     modifier = Modifier.width(26.dp).fillMaxHeight(),
                 ) { v -> mod = v; NativeEngine.controlChange(trackIndex, 1, (v * 127f).toInt()) }
                 PianoKeys(trackIndex, Scales.activeFor(track), Scales.rootFor(track), octave,
@@ -408,7 +410,7 @@ fun EditScreen(
                 // Bend springs back, so it is the one wheel you can let go of
                 // in a hurry and know where it landed.
                 TouchWheel(
-                    value = bend, accent = Color(0xFF7FD1B9), vertical = true,
+                    value = bend, accent = Acid.colors.teal, vertical = true,
                     springBackTo = 0.5f, centreMark = true, label = null,
                     modifier = Modifier.width(26.dp).fillMaxHeight(),
                 ) { v ->
@@ -433,10 +435,10 @@ fun EditScreen(
                 Text(if (mode == EditMode.Draw) "✎" else "⬚", fontSize = 12.sp)
             }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 1) 0 else 1 }) {
-                Text("fx", color = if (panel == 1) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
+                Text("fx", color = if (panel == 1) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
             }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 2) 0 else 2 }) {
-                Text("ev", color = if (panel == 2) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
+                Text("ev", color = if (panel == 2) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
             }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.redo(trackIndex) }, enabled = editor.canRedo(trackIndex)) { Text("↷", fontSize = 12.sp) }
@@ -444,11 +446,11 @@ fun EditScreen(
                 if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(song.scenes.indexOf(scene))
             }) { Text(if (playing) "■" else "▶", fontSize = 12.sp) }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { onArm(!armed) }) {
-                Text(if (armed) "●" else "○", color = if (armed) Color(0xFFE74C3C) else Color.Unspecified, fontSize = 12.sp)
+                Text(if (armed) "●" else "○", color = if (armed) Acid.colors.red else Color.Unspecified, fontSize = 12.sp)
             }
             Text(
                 if (selection.isEmpty()) "" else "${selection.size} sel",
-                color = Color(0xFFBBBBBB), fontFamily = FontFamily.Monospace, fontSize = 11.sp,
+                color = Acid.colors.textMid, fontFamily = FontFamily.Monospace, fontSize = 11.sp,
                 softWrap = false, maxLines = 1,
             )
         }
@@ -517,7 +519,7 @@ private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
     Box(
         modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(if (pressed) Color(0xFF7FD1B9) else Color(0xFFE8E8E4))
+            .background(if (pressed) Acid.colors.teal else Acid.colors.knobPointer)
             .pointerInput(note, rack) {
                 var down = false
                 try {
@@ -540,6 +542,6 @@ private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
             },
         contentAlignment = Alignment.BottomCenter,
     ) {
-        Text(note.toString(), color = Color(0xFF333333), fontSize = 9.sp, modifier = Modifier.padding(bottom = 4.dp))
+        Text(note.toString(), color = Acid.colors.onAccent, fontSize = 9.sp, modifier = Modifier.padding(bottom = 4.dp))
     }
 }

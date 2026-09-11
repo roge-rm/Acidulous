@@ -75,10 +75,20 @@ class MainActivity : ComponentActivity() {
         )
         goFullScreen()
         setContent {
-            AcidulousTheme {
+            AcidulousTheme(com.rm.acidulous.ui.UiPrefs.theme) {
+                // The bars are hidden, but a swipe brings them back, so their
+                // icons still have to be readable against whichever theme is
+                // running.
+                val light = !com.rm.acidulous.ui.theme.Acid.colors.dark
+                androidx.compose.runtime.LaunchedEffect(light) {
+                    WindowCompat.getInsetsController(window, window.decorView).run {
+                        isAppearanceLightStatusBars = light
+                        isAppearanceLightNavigationBars = light
+                    }
+                }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = Color(0xFF1B1B1E),
+                    containerColor = com.rm.acidulous.ui.theme.Acid.colors.bg,
                     // The bars are hidden, so their insets are not space this
                     // app has to give up. A camera cutout is - but only the
                     // sides and the bottom are taken here, because the top

@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.cos
 import kotlin.math.sin
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.AcidColors
 
 /**
  * A knob: 270° arc, vertical drag (200 px for the full range), label above,
@@ -36,15 +38,18 @@ fun Knob(
     display: String,
     modifier: Modifier = Modifier,
     size: Dp = 52.dp,
-    accent: Color = Color(0xFF7FD1B9),
+    accent: Color = Acid.colors.teal,
     onStart: () -> Unit = {},
     onChange: (Float) -> Unit,
     onEnd: () -> Unit = {},
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val current by rememberUpdatedState(value)
+    // `c` is the centre point inside the Canvas below, so the palette takes
+    // the other name here.
+    val col = Acid.colors
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, color = Color(0xFF9A9AA2), fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+        Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
         Canvas(
             Modifier.size(size).pointerInput(Unit) {
                 awaitEachGesture {
@@ -66,16 +71,16 @@ fun Knob(
             val stroke = r * 0.22f
             val start = 135f
             val sweep = 270f
-            drawArc(Color(0xFF3A3A40), start, sweep, false, Offset(c.x - r + stroke, c.y - r + stroke),
+            drawArc(col.raised, start, sweep, false, Offset(c.x - r + stroke, c.y - r + stroke),
                 Size((r - stroke) * 2f, (r - stroke) * 2f), style = Stroke(stroke))
             drawArc(accent, start, sweep * value.coerceIn(0f, 1f), false, Offset(c.x - r + stroke, c.y - r + stroke),
                 Size((r - stroke) * 2f, (r - stroke) * 2f), style = Stroke(stroke))
             val a = Math.toRadians((start + sweep * value.coerceIn(0f, 1f)).toDouble())
             val inner = r * 0.35f
             val outer = r - stroke * 1.6f
-            drawLine(Color(0xFFE8E8E4), Offset(c.x + inner * cos(a).toFloat(), c.y + inner * sin(a).toFloat()),
+            drawLine(col.knobPointer, Offset(c.x + inner * cos(a).toFloat(), c.y + inner * sin(a).toFloat()),
                 Offset(c.x + outer * cos(a).toFloat(), c.y + outer * sin(a).toFloat()), 3f)
         }
-        Text(display, color = Color(0xFFFFB454), fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+        Text(display, color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
     }
 }

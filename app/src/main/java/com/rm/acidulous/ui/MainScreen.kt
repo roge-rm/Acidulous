@@ -59,6 +59,7 @@ import com.rm.acidulous.model.emptyClipFor
 import com.rm.acidulous.model.moveScene
 import com.rm.acidulous.model.renameTrack
 import com.rm.acidulous.model.updateScene
+import com.rm.acidulous.ui.theme.Acid
 
 /**
  * The reference sequencer's main screen, phone-sized: the song section (scene columns x track
@@ -104,14 +105,14 @@ fun MainScreen(
     var fileMenu by remember { mutableStateOf(false) }
     var showMixer by remember { mutableStateOf(false) }
 
-    Column(modifier.fillMaxSize().background(Color(0xFF1B1B1E))) {
+    Column(modifier.fillMaxSize().background(Acid.colors.bg)) {
         // --- Header: song, structure undo, file ----------------------------------------
         CutoutRow(
             Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
             spacing = 4.dp,
         ) {
-            Text(song.name, color = Color.White, fontSize = 16.sp, modifier = Modifier.flexible(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(song.name, color = Acid.colors.text, fontSize = 16.sp, modifier = Modifier.flexible(), maxLines = 1, overflow = TextOverflow.Ellipsis)
             HeaderButton("↶", enabled = editor.canUndoSong()) { editor.undoSong() }
             HeaderButton("↷", enabled = editor.canRedoSong()) { editor.redoSong() }
             HeaderTextButton("save", onClick = onSave)
@@ -121,7 +122,7 @@ fun MainScreen(
             // nowhere near the button that was pressed. Boxed, the anchor is
             // the button, and the menu drops under it against the right edge.
             Box {
-                HeaderTextButton("file ▾", color = Color(0xFFFFB454)) { fileMenu = true }
+                HeaderTextButton("file ▾", color = Acid.colors.accent) { fileMenu = true }
                 DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
                     DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
                     DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
@@ -129,6 +130,7 @@ fun MainScreen(
                     DropdownMenuItem(text = { Text("Export WAV…") }, onClick = { fileMenu = false; onExport() })
                     DropdownMenuItem(text = { Text("MIDI in…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
                     DropdownMenuItem(text = { Text("Record sample…") }, onClick = { fileMenu = false; dialog = Dialog.Sampler })
+                    DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
                 }
             }
         }
@@ -235,7 +237,7 @@ fun MainScreen(
         val bar = position.tickInIteration / ticksPerBar + 1
         val beat = (position.tickInIteration % ticksPerBar) / PPQN + 1
         val tick = position.tickInIteration % PPQN
-        Column(Modifier.fillMaxWidth().background(Color(0xFF232326)).padding(horizontal = 8.dp, vertical = 6.dp)) {
+        Column(Modifier.fillMaxWidth().background(Acid.colors.bar).padding(horizontal = 8.dp, vertical = 6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 val pad = PaddingValues(horizontal = 12.dp)
                 OutlinedButton(onClick = { if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(position.scene) }, contentPadding = pad) {
@@ -247,19 +249,19 @@ fun MainScreen(
                 OutlinedButton(
                     onClick = { NativeEngine.panic() },
                     contentPadding = PaddingValues(horizontal = 10.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE74C3C)),
-                ) { Text("panic", color = Color(0xFFE74C3C), fontSize = 12.sp, maxLines = 1) }
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Acid.colors.red),
+                ) { Text("panic", color = Acid.colors.red, fontSize = 12.sp, maxLines = 1) }
                 OutlinedButton(onClick = { onLoopScene(!loopScene) }, contentPadding = pad) {
                     Text(if (loopScene) "loop: scene" else "loop: song", fontSize = 12.sp, maxLines = 1)
                 }
                 OutlinedButton(onClick = { onArm(!armed) }, contentPadding = pad) {
-                    Text(if (armed) "● REC" else "○ rec", color = if (armed) Color(0xFFE74C3C) else Color.Unspecified, fontSize = 12.sp, maxLines = 1)
+                    Text(if (armed) "● REC" else "○ rec", color = if (armed) Acid.colors.red else Color.Unspecified, fontSize = 12.sp, maxLines = 1)
                 }
                 TextButton(onClick = { dialog = Dialog.Tempo }, contentPadding = PaddingValues(horizontal = 6.dp)) {
-                    Text("%.1f bpm".format(bpm), color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                    Text("%.1f bpm".format(bpm), color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
                 }
                 TextButton(onClick = { showMixer = !showMixer }, contentPadding = PaddingValues(horizontal = 6.dp)) {
-                    Text(if (showMixer) "▾ mix" else "▴ mix", color = Color.White, fontSize = 12.sp, maxLines = 1)
+                    Text(if (showMixer) "▾ mix" else "▴ mix", color = Acid.colors.text, fontSize = 12.sp, maxLines = 1)
                 }
             }
             Text(
@@ -267,9 +269,9 @@ fun MainScreen(
                     position.scene + 1, song.scenes.size, scene?.name ?: "-",
                     position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
                 ),
-                color = Color(0xFFDDDDDD), fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                color = Acid.colors.textHi, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
             )
-            Text(diagnostics, color = Color(0xFF888888), fontFamily = FontFamily.Monospace, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(diagnostics, color = Acid.colors.textFaint, fontFamily = FontFamily.Monospace, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 
@@ -309,6 +311,7 @@ fun MainScreen(
         )
         Dialog.Midi -> MidiDialog(onDismiss = { dialog = null })
         Dialog.Sampler -> SamplerDialog(onDismiss = { dialog = null })
+        Dialog.Settings -> SettingsDialog(onDismiss = { dialog = null })
         Dialog.SaveAs -> TextInputDialog("Save as", song.name, onDismiss = { dialog = null }) { name ->
             onSaveAs(name)
             dialog = null
@@ -332,6 +335,7 @@ private sealed class Dialog {
     object NewSong : Dialog()
     object Midi : Dialog()
     object Sampler : Dialog()
+    object Settings : Dialog()
 }
 
 @Composable
@@ -355,16 +359,16 @@ private fun SceneHeader(
                 when {
                     // Both pending states pulse, so a scene about to end and
                     // one about to start are never mistaken for settled ones.
-                    finishing -> Color(0xFF3F7D5E).copy(alpha = pulse)
-                    queued -> Color(0xFF7A5A24).copy(alpha = pulse)
-                    progress != null -> Color(0xFF3F7D5E)
-                    else -> Color(0xFF2E2E33)
+                    finishing -> Acid.colors.green.copy(alpha = pulse)
+                    queued -> Acid.colors.sceneQueued.copy(alpha = pulse)
+                    progress != null -> Acid.colors.green
+                    else -> Acid.colors.control
                 },
             )
             .combinedClickable(onClick = onAudition, onLongClick = { menu = true }),
     ) {
         if (progress != null) {
-            Box(Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)).background(Color(0xFF55A583)))
+            Box(Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)).background(Acid.colors.sceneProgress))
         }
         Column(Modifier.padding(horizontal = 6.dp, vertical = 2.dp)) {
             Text(
@@ -376,7 +380,7 @@ private fun SceneHeader(
                     holding -> "${index + 1} $name ⟳"
                     else -> "${index + 1} $name"
                 },
-                color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                color = Acid.colors.text, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             Text(
                 buildString {
@@ -384,7 +388,7 @@ private fun SceneHeader(
                     if (hasTempo) append(" ♩")
                     if (repeatIdx != null) append(" r${repeatIdx + 1}")
                 },
-                color = Color(0xFFCCCCCC), fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                color = Acid.colors.textMid, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
@@ -411,13 +415,13 @@ private fun TrackHeader(
         Modifier
             .width(TRACK_W).height(CELL_H).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF2E2E33))
+            .background(Acid.colors.control)
             .combinedClickable(onClick = { menu = true }),
     ) {
         Box(Modifier.width(4.dp).fillMaxHeight().background(colour))
         Column(Modifier.padding(start = 10.dp, top = 4.dp, end = 4.dp)) {
-            Text(name, color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(machine, color = Color(0xFFAAAAAA), fontSize = 10.sp, maxLines = 1)
+            Text(name, color = Acid.colors.text, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(machine, color = Acid.colors.textMid, fontSize = 10.sp, maxLines = 1)
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             DropdownMenuItem(text = { Text("Change machine…") }, onClick = { menu = false; onChangeMachine() })
@@ -439,12 +443,12 @@ private fun ClipCell(
         Modifier
             .width(CELL_W).height(CELL_H).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF26262B))
-            .border(1.dp, if (playing) colour else Color(0xFF3A3A40), RoundedCornerShape(6.dp))
+            .background(Acid.colors.card)
+            .border(1.dp, if (playing) colour else Acid.colors.raised, RoundedCornerShape(6.dp))
             .combinedClickable(onClick = onOpen, onLongClick = onSettings),
     ) {
         if (clip == null) {
-            Text("+", color = Color(0xFF666666), fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))
+            Text("+", color = Acid.colors.textFaint, fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))
         } else {
             ClipThumbnail(clip, ticksPerBar, colour, Modifier.fillMaxSize())
             // A clip shorter than its scene comes round more than once, so
@@ -452,12 +456,12 @@ private fun ClipCell(
             if (progress != null) {
                 Box(
                     Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f))
-                        .background(Color(0x22FFFFFF)),
+                        .background(Acid.colors.overlay),
                 )
                 Box(
                     Modifier.fillMaxHeight().width(2.dp).align(Alignment.CenterStart)
                         .offset(x = (CELL_W - 6.dp) * progress.coerceIn(0f, 1f))
-                        .background(Color(0xFFFFB454)),
+                        .background(Acid.colors.accent),
                 )
             }
             Text(
@@ -466,7 +470,7 @@ private fun ClipCell(
                     if (clip.playMode == com.rm.acidulous.model.PlayMode.OneShot) append(" 1")
                     if (clip.mute) append(" M")
                 },
-                color = Color(0xFFDDDDDD), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                color = Acid.colors.textHi, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                 modifier = Modifier.align(Alignment.TopEnd).padding(3.dp),
             )
         }

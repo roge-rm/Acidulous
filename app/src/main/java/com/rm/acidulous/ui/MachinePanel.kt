@@ -47,6 +47,10 @@ import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withPatch
 import com.rm.acidulous.model.withSetting
 import kotlinx.coroutines.delay
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.DrawbarBlack
+import com.rm.acidulous.ui.theme.DrawbarBrown
+import com.rm.acidulous.ui.theme.DrawbarWhite
 
 /**
  * The machine's face in the Edit screen.
@@ -90,7 +94,7 @@ fun MachinePanel(
     val info = remember(type) { NativeEngine.machineParamInfo(type) }
     val binding = rememberParamBinding(trackIndex, type, info, editor)
 
-    Column(modifier.background(Color(0xFF1F1F23)).padding(6.dp)) {
+    Column(modifier.background(Acid.colors.panel).padding(6.dp)) {
         val loadPatch: (String) -> Unit = { name ->
             onLoadPatch(name)?.let { patch ->
                 val params = patch.params
@@ -195,17 +199,17 @@ private fun PatchBar(
     var browsing by remember { mutableStateOf(false) }
     var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(type, color = Color.White, fontSize = 13.sp)
-        TextButton(onClick = { menu = true }) { Text("patch ▾", color = Color(0xFFFFB454), fontSize = 11.sp) }
-        TextButton(onClick = { saving = true }) { Text("save as…", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
-        TextButton(onClick = { browsing = true }) { Text("browse…", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
+        Text(type, color = Acid.colors.text, fontSize = 13.sp)
+        TextButton(onClick = { menu = true }) { Text("patch ▾", color = Acid.colors.accent, fontSize = 11.sp) }
+        TextButton(onClick = { saving = true }) { Text("save as…", color = Acid.colors.textMid, fontSize = 11.sp) }
+        TextButton(onClick = { browsing = true }) { Text("browse…", color = Acid.colors.textMid, fontSize = 11.sp) }
         // Pushed to the far edge: the title row stays, everything under it goes.
         Spacer(Modifier.weight(1f))
         TextButton(onClick = onToggleMinimized, contentPadding = PaddingValues(horizontal = 8.dp)) {
-            Text(if (minimized) "▴" else "▾", color = Color(0xFFBBBBBB), fontSize = 13.sp)
+            Text(if (minimized) "▴" else "▾", color = Acid.colors.textMid, fontSize = 13.sp)
         }
         val menuScroll = rememberScrollState()
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll), scrollState = menuScroll) {
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
             for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
         }
     }
@@ -225,9 +229,9 @@ private fun PatchBar(
 // The panel palette. Teal is the ordinary control; amber marks the knob that
 // gives a group its character; pink marks drive and output. See the style
 // note at the bottom of this file.
-internal val PanelTeal = Color(0xFF7FD1B9)
-internal val PanelAmber = Color(0xFFFFB454)
-internal val PanelPink = Color(0xFFE07A9A)
+internal val PanelTeal: Color @Composable get() = Acid.colors.teal
+internal val PanelAmber: Color @Composable get() = Acid.colors.accent
+internal val PanelPink: Color @Composable get() = Acid.colors.pink
 
 @Composable
 internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal) {
@@ -242,14 +246,14 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
     val info = b.infoOf(name) ?: return
     val idx = info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, color = Color(0xFF9A9AA2), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             labels.forEachIndexed { i, l ->
                 val on = i == idx
                 TextButton(
                     onClick = { b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) },
-                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Color(0xFF3F7D5E) else Color(0xFF2E2E33)),
-                ) { Text(l, color = if (on) Color.White else Color(0xFFBBBBBB), fontSize = 10.sp) }
+                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
+                ) { Text(l, color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
             }
         }
     }
@@ -281,12 +285,12 @@ internal fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) -
                 // Equal shares of the full width: these are the machine's
                 // tabs, and a row of tabs that stops half way reads as broken.
                 Modifier.weight(1f).clip(RoundedCornerShape(4.dp))
-                    .background(if (on) Color(0xFF3F7D5E) else Color(0xFF2E2E33))
+                    .background(if (on) Acid.colors.green else Acid.colors.control)
                     .clickable { onSelect(i) }.padding(vertical = 5.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    l, color = if (on) Color.White else Color(0xFFBBBBBB), fontSize = 10.sp,
+                    l, color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace, maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Clip, softWrap = false,
                 )
@@ -312,8 +316,8 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
 
 @Composable
 internal fun Group(title: String, content: @Composable () -> Unit) {
-    Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFF26262B)).padding(6.dp)) {
-        Text(title, color = Color(0xFF7FD1B9), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+    Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(6.dp)) {
+        Text(title, color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) { content() }
     }
 }
@@ -356,7 +360,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
     LaunchedEffect(p, rel) {
         while (true) { info = NativeEngine.sampleInfo(b.trackIndex, p); delay(400) }
     }
-    val hot = Color(0xFFFFB454)
+    val hot = Acid.colors.accent
     var picking by remember { mutableStateOf(false) }
     if (picking) SampleBrowserDialog(
         onPick = { rel -> picking = false; onAssign(p, rel) },
@@ -367,16 +371,16 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             Text("pad ${p + 1}", color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
             Text(
                 if (info.isEmpty()) (rel?.let { "$it (not loaded)" } ?: "no sample") else info.substringBefore('|') + "  " + (info.split('|').getOrNull(1)?.toIntOrNull()?.let { "%.2fs".format(it / 48000f) } ?: "") + (if (info.endsWith("|1")) " st" else " mono"),
-                color = Color(0xFFDDDDDD), fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f), maxLines = 1,
+                color = Acid.colors.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f), maxLines = 1,
             )
             TextButton(onClick = { onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
             TextButton(onClick = { picking = true }) { Text("recorded…", color = hot, fontSize = 11.sp) }
-            if (rel != null) TextButton(onClick = { onClear(p) }) { Text("clear", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
+            if (rel != null) TextButton(onClick = { onClear(p) }) { Text("clear", color = Acid.colors.textMid, fontSize = 11.sp) }
         }
         Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev"), "reverse") }
             Group("amp") { PanelKnob(b, n("decay"), "decay"); PanelKnob(b, n("level"), "level"); PanelKnob(b, n("pan"), "pan"); PanelSwitch(b, n("choke"), listOf("-", "1", "2", "3", "4"), "choke") }
-            Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp"), "mode"); PanelKnob(b, n("crush"), "crush", Color(0xFFE07A9A)) }
+            Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp"), "mode"); PanelKnob(b, n("crush"), "crush", Acid.colors.pink) }
             Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
             Group("play") { PanelKnob(b, "accent") }
         }
@@ -651,8 +655,8 @@ private val MANUAL_BARS = listOf("16", "5⅓", "8", "4", "2⅔", "2", "1⅗", "1
 // The colours a Hammond's drawbars are actually made in: the fundamentals
 // white, the harmonics black, the two quints brown.
 private val BAR_COLOURS = listOf(
-    Color(0xFF8A6A4A), Color(0xFF8A6A4A), Color(0xFFE8E4DA), Color(0xFFE8E4DA),
-    Color(0xFF8A6A4A), Color(0xFFE8E4DA), Color(0xFF6E6E76), Color(0xFF6E6E76), Color(0xFFE8E4DA),
+    DrawbarBrown, DrawbarBrown, DrawbarWhite, DrawbarWhite,
+    DrawbarBrown, DrawbarWhite, DrawbarBlack, DrawbarBlack, DrawbarWhite,
 )
 
 @Composable
@@ -662,7 +666,7 @@ private fun Drawbars(b: ParamBinding, prefix: String, names: List<String>, colou
             val name = prefix + label.replace("5⅓", "513").replace("2⅔", "223")
                 .replace("1⅗", "135").replace("1⅓", "113")
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(label, color = Color(0xFF9A9AA2), fontSize = 8.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+                Text(label, color = Acid.colors.textDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
                 VerticalFader(
                     value = b.value(name),
                     modifier = Modifier.width(18.dp).height(64.dp),
@@ -696,8 +700,8 @@ private fun ManualPanel(b: ParamBinding) {
                     Group("lower A") { Drawbars(b, "la_", MANUAL_BARS, BAR_COLOURS) }
                     Group("lower B") { Drawbars(b, "lb_", MANUAL_BARS, BAR_COLOURS) }
                     Group("pedal") {
-                        Drawbars(b, "pa_", listOf("1", "2"), listOf(Color(0xFFE8E4DA)))
-                        Drawbars(b, "pb_", listOf("1", "2"), listOf(Color(0xFF8A6A4A)))
+                        Drawbars(b, "pa_", listOf("1", "2"), listOf(DrawbarWhite))
+                        Drawbars(b, "pb_", listOf("1", "2"), listOf(DrawbarBrown))
                     }
                     Group("spray") {
                         PanelKnob(b, "spray", "spray", PanelPink)
@@ -915,7 +919,7 @@ private fun InputListen() {
         }
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("input", color = Color(0xFF7FD1B9), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text("input", color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         TextButton(onClick = {
             if (running) {
                 NativeEngine.stopInput()
@@ -1214,9 +1218,9 @@ private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
                     Group("patch") {
                         Column(horizontalAlignment = Alignment.Start) {
                             Text("${patch.modules.size} modules · ${patch.cables.size} cables",
-                                color = Color.White, fontSize = 11.sp, maxLines = 1)
+                                color = Acid.colors.text, fontSize = 11.sp, maxLines = 1)
                             Text(patch.modules.take(6).joinToString(" ") { it.type },
-                                color = Color(0xFF9A9AA2), fontSize = 9.sp,
+                                color = Acid.colors.textDim, fontSize = 9.sp,
                                 fontFamily = FontFamily.Monospace, maxLines = 1)
                             TextButton(onClick = onOpenPatch) {
                                 Text("patch…", color = PanelAmber, fontSize = 11.sp)
@@ -1300,7 +1304,7 @@ private fun MosaicPanel(
                 // it is shown rather than edited.
                 Text(
                     "SoundFont: ${sf2.substringAfterLast('/')}   ${info.ifEmpty { "loading…" }}",
-                    color = Color(0xFF9A9AA2), fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                    color = Acid.colors.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(bottom = 4.dp), maxLines = 1,
                 )
             }
@@ -1311,25 +1315,25 @@ private fun MosaicPanel(
                     Group("instrument") {
                         Column(horizontalAlignment = Alignment.Start) {
                             Text(info.split('|').firstOrNull().orEmpty().ifEmpty { "nothing loaded" },
-                                color = Color.White, fontSize = 11.sp, maxLines = 1)
+                                color = Acid.colors.text, fontSize = 11.sp, maxLines = 1)
                             Text(
                                 info.split('|').let { f ->
                                     if (f.size >= 4) "${f[1]} zones · ${f[2]} samples · %.1fs".format(f[3].toFloatOrNull() ?: 0f)
                                     else " "
                                 },
-                                color = Color(0xFF9A9AA2), fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                                color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                             )
                             Row {
                                 TextButton(onClick = onImportSoundFont) { Text("soundfont…", color = PanelAmber, fontSize = 10.sp) }
                                 if (sf2.isNotEmpty()) TextButton(onClick = onPickPreset) { Text("preset…", color = PanelAmber, fontSize = 10.sp) }
-                                TextButton(onClick = onImportZoneSamples) { Text("samples…", color = Color(0xFFBBBBBB), fontSize = 10.sp) }
-                                TextButton(onClick = { pickingZone = true }) { Text("recorded…", color = Color(0xFFBBBBBB), fontSize = 10.sp) }
+                                TextButton(onClick = onImportZoneSamples) { Text("samples…", color = Acid.colors.textMid, fontSize = 10.sp) }
+                                TextButton(onClick = { pickingZone = true }) { Text("recorded…", color = Acid.colors.textMid, fontSize = 10.sp) }
                             }
                         }
                     }
                     if (sf2.isEmpty()) Group("zones") {
                         Column {
-                            Text("${zones.size} zone${if (zones.size == 1) "" else "s"}", color = Color.White, fontSize = 11.sp)
+                            Text("${zones.size} zone${if (zones.size == 1) "" else "s"}", color = Acid.colors.text, fontSize = 11.sp)
                             Row {
                                 TextButton(
                                     onClick = {
@@ -1346,7 +1350,7 @@ private fun MosaicPanel(
                                     enabled = zones.size > 1,
                                 ) { Text("spread", color = PanelAmber, fontSize = 10.sp) }
                                 TextButton(onClick = { putZones(emptyList()) }, enabled = zones.isNotEmpty()) {
-                                    Text("clear", color = Color(0xFFE74C3C), fontSize = 10.sp)
+                                    Text("clear", color = Acid.colors.red, fontSize = 10.sp)
                                 }
                             }
                         }

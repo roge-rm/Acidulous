@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Note
 import kotlin.math.roundToInt
+import com.rm.acidulous.ui.theme.Acid
 
 /**
  * Subvert's step sequencer: the 303 way of entering a line, as a second editor
@@ -59,7 +60,7 @@ fun StepEditor(
     val bar = barIndex.coerceIn(0, (clip.bars - 1).coerceAtLeast(0))
     val lastPitch = clip.notes.lastOrNull()?.pitch ?: 36
 
-    Column(modifier.background(Color(0xFF1B1B1E)).padding(4.dp)) {
+    Column(modifier.background(Acid.colors.bg).padding(4.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             for (s in 0 until stepsPerBar) {
                 val tick = bar * ticksPerBar + s * grid
@@ -95,11 +96,11 @@ private fun StepColumn(
     val pitchState by rememberUpdatedState(pitch)
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("${index + 1}", color = if (active) Color(0xFFFFB454) else Color(0xFF666666), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+        Text("${index + 1}", color = if (active) Acid.colors.accent else Acid.colors.textFaint, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
         // Pitch: drag up/down a semitone per 14 px.
         Box(
             Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(3.dp))
-                .background(if (gate) Color(0xFF3F7D5E) else Color(0xFF26262B))
+                .background(if (gate) Acid.colors.green else Acid.colors.card)
                 .pointerInput(gate) {
                     awaitEachGesture {
                         val down = awaitFirstDown()
@@ -115,11 +116,11 @@ private fun StepColumn(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            Text(if (gate) noteName(pitch) else "·", color = if (gate) Color.White else Color(0xFF555555), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text(if (gate) noteName(pitch) else "·", color = if (gate) Color.White else Acid.colors.textFaint, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         }
-        Toggle("on", gate, Color(0xFF7FD1B9), onGate)
-        Toggle("acc", accent, Color(0xFFFFB454), onAccent, enabled = gate)
-        Toggle("sld", slide, Color(0xFFE07A9A), onSlide, enabled = gate)
+        Toggle("on", gate, Acid.colors.teal, onGate)
+        Toggle("acc", accent, Acid.colors.accent, onAccent, enabled = gate)
+        Toggle("sld", slide, Acid.colors.pink, onSlide, enabled = gate)
     }
 }
 
@@ -127,10 +128,10 @@ private fun StepColumn(
 private fun Toggle(label: String, on: Boolean, colour: Color, onClick: () -> Unit, enabled: Boolean = true) {
     Box(
         Modifier.fillMaxWidth().height(22.dp).clip(RoundedCornerShape(3.dp))
-            .background(if (on) colour.copy(alpha = 0.35f) else Color(0xFF26262B))
+            .background(if (on) colour.copy(alpha = 0.35f) else Acid.colors.card)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = if (on) colour else Color(0xFF666666), fontSize = 8.sp, fontFamily = FontFamily.Monospace) }
+    ) { Text(label, color = if (on) colour else Acid.colors.textFaint, fontSize = 8.sp, fontFamily = FontFamily.Monospace) }
 }
 
 private val NAMES = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")

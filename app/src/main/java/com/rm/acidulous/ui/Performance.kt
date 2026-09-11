@@ -29,6 +29,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.AcidColors
 
 /**
  * The performance controls, shaped like the things they are.
@@ -56,10 +58,11 @@ fun TouchWheel(
     label: String? = null,
     onChange: (Float) -> Unit,
 ) {
+    val c = Acid.colors
     val change by rememberUpdatedState(onChange)
     val spring by rememberUpdatedState(springBackTo)
     Box(
-        modifier.clip(RoundedCornerShape(5.dp)).background(Color(0xFF1E1E23))
+        modifier.clip(RoundedCornerShape(5.dp)).background(c.wheelBg)
             .pointerInput(vertical) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
@@ -77,7 +80,7 @@ fun TouchWheel(
         Canvas(Modifier.fillMaxSize()) {
             val v = value.coerceIn(0f, 1f)
             // Ridges, so it reads as something that turns rather than a bar.
-            val ridge = Color(0xFF2A2A31)
+            val ridge = c.wheelRidge
             if (vertical) {
                 var y = 4f
                 while (y < size.height - 4f) {
@@ -93,10 +96,10 @@ fun TouchWheel(
             }
             if (centreMark) {
                 if (vertical) {
-                    drawLine(Color(0xFF45454F), Offset(2f, size.height * 0.5f),
+                    drawLine(c.wheelCentre, Offset(2f, size.height * 0.5f),
                         Offset(size.width - 2f, size.height * 0.5f), 1.5f)
                 } else {
-                    drawLine(Color(0xFF45454F), Offset(size.width * 0.5f, 2f),
+                    drawLine(c.wheelCentre, Offset(size.width * 0.5f, 2f),
                         Offset(size.width * 0.5f, size.height - 2f), 1.5f)
                 }
             }
@@ -106,17 +109,17 @@ fun TouchWheel(
                 val y = (1f - v) * (size.height - thickness)
                 drawRoundRect(accent.copy(alpha = 0.85f), Offset(2f, y), Size(size.width - 4f, thickness),
                     CornerRadius(3f, 3f))
-                drawLine(Color(0x66FFFFFF), Offset(3f, y + 2f), Offset(size.width - 3f, y + 2f), 1f)
+                drawLine(c.wheelTab, Offset(3f, y + 2f), Offset(size.width - 3f, y + 2f), 1f)
             } else {
                 val x = v * (size.width - thickness)
                 drawRoundRect(accent.copy(alpha = 0.85f), Offset(x, 2f), Size(thickness, size.height - 4f),
                     CornerRadius(3f, 3f))
-                drawLine(Color(0x66FFFFFF), Offset(x + 2f, 3f), Offset(x + 2f, size.height - 3f), 1f)
+                drawLine(c.wheelTab, Offset(x + 2f, 3f), Offset(x + 2f, size.height - 3f), 1f)
             }
         }
         if (label != null) {
             Text(
-                label, color = Color(0xFF8A8A92), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                 maxLines = 1, softWrap = false,
                 modifier = Modifier.align(if (vertical) Alignment.BottomCenter else Alignment.CenterStart)
                     .padding(start = 6.dp, bottom = 2.dp),
@@ -128,14 +131,15 @@ fun TouchWheel(
 /** Octave up and down, side by side, with the octave between them. */
 @Composable
 fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Modifier) {
+    val c = Acid.colors
     Row(
-        modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFF26262B)),
+        modifier.clip(RoundedCornerShape(4.dp)).background(c.card),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         StepArrow("◀", octave > 0) { onOctave(octave - 1) }
         Text(
-            "C${octave + 1}", color = Color(0xFFFFB454), fontSize = 10.sp,
+            "C${octave + 1}", color = Acid.colors.accent, fontSize = 10.sp,
             fontFamily = FontFamily.Monospace, maxLines = 1,
         )
         StepArrow("▶", octave < 8) { onOctave(octave + 1) }
@@ -144,10 +148,11 @@ fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Mod
 
 @Composable
 private fun StepArrow(glyph: String, enabled: Boolean, onClick: () -> Unit) {
+    val c = Acid.colors
     Box(
         Modifier.width(32.dp).fillMaxHeight().clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(glyph, color = if (enabled) Color.White else Color(0xFF4A4A52), fontSize = 12.sp)
+        Text(glyph, color = if (enabled) c.text else c.textFaint, fontSize = 12.sp)
     }
 }

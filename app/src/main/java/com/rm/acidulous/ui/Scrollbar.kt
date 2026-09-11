@@ -3,6 +3,7 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
@@ -10,6 +11,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.rm.acidulous.ui.theme.Acid
 
 /**
  * A thin position indicator along the far edge of a scrolling container.
@@ -18,7 +20,7 @@ import androidx.compose.ui.unit.dp
  * frame, so it must sit *before* the scroll modifier in the chain - use the
  * two helpers below rather than composing it by hand.
  */
-fun Modifier.scrollbar(state: ScrollState, vertical: Boolean = true, color: Color = Color(0xB08E8E98)): Modifier =
+fun Modifier.scrollbar(state: ScrollState, vertical: Boolean = true, color: Color): Modifier =
     drawWithContent {
         drawContent()
         val max = state.maxValue
@@ -37,5 +39,12 @@ fun Modifier.scrollbar(state: ScrollState, vertical: Boolean = true, color: Colo
         else drawRoundRect(color, Offset(pos, size.height - thickness - inset), Size(thumb, thickness), radius)
     }
 
-fun Modifier.verticalScrollWithBar(state: ScrollState): Modifier = scrollbar(state, vertical = true).verticalScroll(state)
-fun Modifier.horizontalScrollWithBar(state: ScrollState): Modifier = scrollbar(state, vertical = false).horizontalScroll(state)
+// Composable so the bar can read the theme: a Modifier factory cannot, and
+// a bar that stayed pale grey would be the one thing invisible on paper.
+@Composable
+fun Modifier.verticalScrollWithBar(state: ScrollState): Modifier =
+    scrollbar(state, vertical = true, color = Acid.colors.scrollbar).verticalScroll(state)
+
+@Composable
+fun Modifier.horizontalScrollWithBar(state: ScrollState): Modifier =
+    scrollbar(state, vertical = false, color = Acid.colors.scrollbar).horizontalScroll(state)

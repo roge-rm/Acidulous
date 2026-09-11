@@ -33,6 +33,8 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.AcidColors
 
 enum class EditMode { Draw, Select }
 
@@ -114,6 +116,10 @@ fun PianoRoll(
         }
     }
     val rowsState2 by rememberUpdatedState(rowPitches)
+
+    // Read here and captured by the Canvas below: drawing is not
+    // composition, so the lambda cannot reach the theme on its own.
+    val c = Acid.colors
 
     var rubberBand by remember { mutableStateOf<Rect?>(null) }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
@@ -224,16 +230,16 @@ fun PianoRoll(
             val inScale = scale?.contains(((pitch % 12) + 12) % 12) ?: true
             drawRect(
                 color = when {
-                    !inScale -> Color(0xFF202023)
-                    isBlackKey(pitch) -> Color(0xFF232326)
-                    else -> Color(0xFF2C2C30)
+                    !inScale -> c.rowOut
+                    isBlackKey(pitch) -> c.rowBlack
+                    else -> c.rowWhite
                 },
                 topLeft = Offset(geo.originX, geo.originY + r * geo.rowH),
                 size = Size(geo.fieldW, geo.rowH),
             )
             if (pitch % 12 == 0) {
                 val y = geo.originY + (r + 1) * geo.rowH
-                drawLine(Color(0xFF3E3E44), Offset(geo.originX, y), Offset(size.width, y), 2f)
+                drawLine(c.line, Offset(geo.originX, y), Offset(size.width, y), 2f)
             }
         }
 
@@ -242,9 +248,9 @@ fun PianoRoll(
         while (t <= geo.lastTick) {
             val x = geo.xOf(t)
             val (color, width) = when {
-                t % ticksPerBar == 0 -> Color(0xFF8A8A92) to 2.5f
-                t % PPQN == 0 -> Color(0xFF55555C) to 1.5f
-                else -> Color(0xFF3A3A40) to 1f
+                t % ticksPerBar == 0 -> c.gridBar to 2.5f
+                t % PPQN == 0 -> c.gridBeat to 1.5f
+                else -> c.gridStep to 1f
             }
             drawLine(color, Offset(x, geo.originY), Offset(x, size.height), width)
             t += clip.grid.coerceAtLeast(1)
@@ -257,32 +263,32 @@ fun PianoRoll(
             val rect = geo.noteRect(note)
             if (rect.bottom < 0f || rect.top > size.height) return@forEachIndexed
             val selected = i in selection
-            drawRect(if (selected) Color(0xFFF2F2F0) else Color(0xFF4E8F73), rect.topLeft, rect.size)
+            drawRect(if (selected) c.noteSel else c.note, rect.topLeft, rect.size)
             val velH = (rect.height - 4f) * (note.velocity.coerceIn(1, 127) / 127f)
             drawRect(
-                if (selected) Color(0xFFB7E3CF) else Color(0xFF7FD1B9),
+                if (selected) c.noteSelEdge else c.teal,
                 Offset(rect.left + 2f, rect.bottom - 2f - velH),
                 Size(max(0f, rect.width - 4f), velH),
             )
-            drawRect(Color(0xFF1B1B1E), rect.topLeft, rect.size, style = Stroke(1.5f))
+            drawRect(c.bg, rect.topLeft, rect.size, style = Stroke(1.5f))
         }
 
         rubberBand?.let { band ->
-            drawRect(Color(0x33FFFFFF), band.topLeft, band.size)
-            drawRect(Color(0xCCFFFFFF), band.topLeft, band.size, style = Stroke(1.5f))
+            drawRect(c.selectBand, band.topLeft, band.size)
+            drawRect(c.selectEdge, band.topLeft, band.size, style = Stroke(1.5f))
         }
 
         playheadTick?.let { tick ->
             val t = (tick % max(1, geo.totalTicks)).toInt()
             if (t >= geo.firstTick && t < geo.lastTick) {
                 val x = geo.xOf(t)
-                drawLine(Color(0xFFFFB454), Offset(x, geo.originY), Offset(x, size.height), 3f)
+                drawLine(c.accent, Offset(x, geo.originY), Offset(x, size.height), 3f)
             }
         }
 
-        drawNameGutter(geo, textMeasurer, scale)
-        drawBarRuler(geo, size, textMeasurer, playheadTick)
-        drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView)
+        drawNameGutter(geo, textMeasurer, scale, c)
+        drawBarRuler(geo, size, textMeasurer, playheadTick, c)
+        drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView, c)
     }
 }
 
@@ -295,8 +301,8 @@ fun PianoRoll(
  *
  * When rows are too short for a label, only the C rows keep one.
  */
-private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scale: Set<Int>?) {
-    drawRect(Color(0xFF1B1B1E), Offset.Zero, Size(geo.originX, size.height))
+private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scale: Set<Int>?, c: AcidColors) {
+    drawRect(c.bg, Offset.Zero, Size(geo.originX, size.height))
     // A 10sp line is about 12dp tall, so below this the names would collide
     // and only the Cs keep one. The measured guard below is the real stop.
     val labelEveryRow = geo.rowH >= 13.dp.toPx()
@@ -309,9 +315,9 @@ private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scal
         val inScale = scale?.contains(((pitch % 12) + 12) % 12) ?: true
         drawRect(
             color = when {
-                !inScale -> Color(0xFF151517)
-                black -> Color(0xFF191A1D)
-                else -> Color(0xFF303036)
+                !inScale -> c.gutterOut
+                black -> c.gutterBlack
+                else -> c.gutterWhite
             },
             topLeft = Offset(0f, top + 0.5f),
             size = Size(geo.originX - 2f, max(1f, geo.rowH - 1f)),
@@ -319,10 +325,10 @@ private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scal
         if (!labelEveryRow && !isC) continue
         val style = TextStyle(
             color = when {
-                !inScale -> Color(0xFF55555C)
-                isC -> Color(0xFFFFB454)
-                black -> Color(0xFF8A8A92)
-                else -> Color(0xFFDDDDE2)
+                !inScale -> c.textFaint
+                isC -> c.accent
+                black -> c.textDim
+                else -> c.textHi
             },
             fontSize = NameTextSize,
             fontFamily = FontFamily.Monospace,
@@ -332,7 +338,7 @@ private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scal
             drawText(laid, topLeft = Offset(3f, top + (geo.rowH - laid.size.height) / 2f))
         }
     }
-    drawLine(Color(0xFF44444C), Offset(geo.originX, geo.originY), Offset(geo.originX, size.height), 1.5f)
+    drawLine(c.lineStrong, Offset(geo.originX, geo.originY), Offset(geo.originX, size.height), 1.5f)
 }
 
 /**
@@ -341,26 +347,26 @@ private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scal
  * under it, and the playhead shows as a wedge rather than a full-height line
  * so it never hides a number.
  */
-private fun DrawScope.drawBarRuler(geo: Geometry, size: Size, measurer: TextMeasurer, playheadTick: Long?) {
-    drawRect(Color(0xFF17171A), Offset.Zero, Size(size.width, geo.originY))
+private fun DrawScope.drawBarRuler(geo: Geometry, size: Size, measurer: TextMeasurer, playheadTick: Long?, c: AcidColors) {
+    drawRect(c.sunken, Offset.Zero, Size(size.width, geo.originY))
     val beats = max(1, geo.ticksPerBar / PPQN)
     val barW = geo.pxPerTick * geo.ticksPerBar
     // Number the beats too when a bar is wide enough to read them; otherwise
     // they stay as ticks and only the bars are named.
     val nameBeats = barW / beats > 56.dp.toPx()
-    val barStyle = TextStyle(color = Color(0xFFDDDDE2), fontSize = RulerTextSize, fontFamily = FontFamily.Monospace)
-    val beatStyle = TextStyle(color = Color(0xFF75757E), fontSize = TickTextSize, fontFamily = FontFamily.Monospace)
+    val barStyle = TextStyle(color = c.textHi, fontSize = RulerTextSize, fontFamily = FontFamily.Monospace)
+    val beatStyle = TextStyle(color = c.textDim, fontSize = TickTextSize, fontFamily = FontFamily.Monospace)
     val firstBar = geo.firstTick / geo.ticksPerBar
     val lastBar = (geo.lastTick + geo.ticksPerBar - 1) / geo.ticksPerBar
     for (bar in firstBar until max(firstBar + 1, lastBar)) {
         val barTick = bar * geo.ticksPerBar
         val x = geo.xOf(barTick)
-        drawLine(Color(0xFF9A9AA2), Offset(x, 2f), Offset(x, geo.originY), 2f)
+        drawLine(c.gridBar, Offset(x, 2f), Offset(x, geo.originY), 2f)
         val laid = measurer.measure(AnnotatedString("${bar + 1}"), barStyle)
         drawText(laid, topLeft = Offset(x + 3f, (geo.originY - laid.size.height) / 2f))
         for (beat in 1 until beats) {
             val bx = geo.xOf(barTick + beat * PPQN)
-            drawLine(Color(0xFF55555C), Offset(bx, geo.originY * 0.45f), Offset(bx, geo.originY), 1.5f)
+            drawLine(c.gridBeat, Offset(bx, geo.originY * 0.45f), Offset(bx, geo.originY), 1.5f)
             if (nameBeats) {
                 // Beats read ".2" against the bar's plain "2", the same way
                 // the transport writes 1.1.000, so the two never look alike.
@@ -369,7 +375,7 @@ private fun DrawScope.drawBarRuler(geo: Geometry, size: Size, measurer: TextMeas
             }
         }
     }
-    drawLine(Color(0xFF44444C), Offset(0f, geo.originY), Offset(size.width, geo.originY), 1.5f)
+    drawLine(c.lineStrong, Offset(0f, geo.originY), Offset(size.width, geo.originY), 1.5f)
     playheadTick?.let { tick ->
         val t = (tick % max(1, geo.totalTicks)).toInt()
         if (t < geo.firstTick || t >= geo.lastTick) return@let
@@ -379,7 +385,7 @@ private fun DrawScope.drawBarRuler(geo: Geometry, size: Size, measurer: TextMeas
             androidx.compose.ui.graphics.Path().apply {
                 moveTo(x - w, 1f); lineTo(x + w, 1f); lineTo(x, geo.originY - 1f); close()
             },
-            Color(0xFFFFB454),
+            c.accent,
         )
     }
 }
@@ -404,18 +410,18 @@ private class Hit(val index: Int, val onEdge: Boolean)
  * the roll treats the scale. It greys out and stops responding when no scale
  * is running, because there would be nothing to cycle through.
  */
-private fun DrawScope.drawScaleCorner(geo: Geometry, measurer: TextMeasurer, hasScale: Boolean, view: ScaleView) {
-    drawRect(Color(0xFF1B1B1E), Offset.Zero, Size(geo.originX, geo.originY))
+private fun DrawScope.drawScaleCorner(geo: Geometry, measurer: TextMeasurer, hasScale: Boolean, view: ScaleView, c: AcidColors) {
+    drawRect(c.bg, Offset.Zero, Size(geo.originX, geo.originY))
     // Drawn as a key, not as a label: the corner of a table reads as blank
     // unless something in it says otherwise, and this one is a button.
     val pad = 2f
     drawRoundRect(
-        Color(0xFF2A2A31), Offset(pad, pad),
+        c.controlAlt, Offset(pad, pad),
         Size(geo.originX - pad * 2f, geo.originY - pad * 2f),
         androidx.compose.ui.geometry.CornerRadius(3f, 3f),
     )
     drawRoundRect(
-        if (hasScale && view != ScaleView.Chromatic) Color(0xFFFFB454) else Color(0xFF55555C),
+        if (hasScale && view != ScaleView.Chromatic) c.accent else c.textFaint,
         Offset(pad, pad), Size(geo.originX - pad * 2f, geo.originY - pad * 2f),
         androidx.compose.ui.geometry.CornerRadius(3f, 3f),
         style = Stroke(width = 1f),
@@ -426,9 +432,9 @@ private fun DrawScope.drawScaleCorner(geo: Geometry, measurer: TextMeasurer, has
         ScaleView.Fold -> "fit"
     }
     val colour = when {
-        !hasScale -> Color(0xFF8A8A92)
-        view == ScaleView.Chromatic -> Color(0xFFBBBBC2)
-        else -> Color(0xFFFFB454)
+        !hasScale -> c.textDim
+        view == ScaleView.Chromatic -> c.textHi
+        else -> c.accent
     }
     val laid = measurer.measure(
         AnnotatedString(label),

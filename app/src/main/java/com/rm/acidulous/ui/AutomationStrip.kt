@@ -45,6 +45,8 @@ import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.laneKey
 import com.rm.acidulous.model.laneParam
 import kotlin.math.roundToInt
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.AcidColors
 
 /**
  * The reference sequencer's parameter strip under the piano roll: one lane at a time, drawn as
@@ -87,8 +89,9 @@ fun AutomationStrip(
     val keyState by rememberUpdatedState(current)
     val foldedState by rememberUpdatedState(collapsed)
     val expand by rememberUpdatedState(onToggleCollapse)
+    val c = Acid.colors
 
-    Row(modifier.background(Color(0xFF17171A))) {
+    Row(modifier.background(c.sunken)) {
         // As narrow as the roll's name gutter, so a tick is at the same x in
         // both and the two playheads line up. The upper part names the lane
         // being drawn and cycles through the ones that exist; a long press
@@ -113,7 +116,7 @@ fun AutomationStrip(
                 ) {
                     Text(
                         current?.let { shortOf(it) } ?: "∿ auto",
-                        color = Color(0xFFFFB454), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                        color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                         maxLines = 1, softWrap = false,
                         // Turned on its side for the same reason the scale chip is:
                         // the width belongs to the graph.
@@ -127,9 +130,9 @@ fun AutomationStrip(
                     .then(if (collapsed) Modifier.fillMaxHeight() else Modifier.height(18.dp))
                     .clickable { onToggleCollapse() },
                 contentAlignment = Alignment.Center,
-            ) { Text(if (collapsed) "▴" else "▾", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
+            ) { Text(if (collapsed) "▴" else "▾", color = Acid.colors.textMid, fontSize = 11.sp) }
             val menuScroll = rememberScrollState()
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll), scrollState = menuScroll) {
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
                 for (k in laneKeys) {
                     DropdownMenuItem(
                         text = { Text((if (k in existing) "● " else "  ") + nameOf(k), fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
@@ -137,7 +140,7 @@ fun AutomationStrip(
                         // that exists can be got rid of without selecting it first.
                         trailingIcon = if (k !in existing) null else ({
                             Text(
-                                "✕", color = Color(0xFFE74C3C), fontSize = 13.sp,
+                                "✕", color = Acid.colors.red, fontSize = 13.sp,
                                 modifier = Modifier.clickable { menu = false; onClear(k) }.padding(horizontal = 6.dp, vertical = 2.dp),
                             )
                         }),
@@ -189,7 +192,7 @@ fun AutomationStrip(
             var t = from
             while (t <= last) {
                 val x = xOf(t)
-                drawLine(if (t % ticksPerBar == 0) Color(0xFF55555C) else Color(0xFF2E2E33), Offset(x, 0f), Offset(size.width, 0f).copy(x = x, y = size.height), 1f)
+                drawLine(if (t % ticksPerBar == 0) c.gridBeat else c.gridStep, Offset(x, 0f), Offset(size.width, 0f).copy(x = x, y = size.height), 1f)
                 t += PPQN
             }
             if (lane != null && lane.points.isNotEmpty()) {
@@ -200,20 +203,20 @@ fun AutomationStrip(
                 while (tick <= last) {
                     val v = lane.valueAt(tick)
                     val p = Offset(xOf(tick), (1f - v) * (size.height - 4f) + 2f)
-                    prev?.let { drawLine(Color(0xFFFFB454), it, p, 2f) }
+                    prev?.let { drawLine(c.accent, it, p, 2f) }
                     prev = p
                     tick += step
                 }
                 for (pt in lane.points) {
                     if (pt.tick < from || pt.tick > last) continue
                     val p = Offset(xOf(pt.tick), (1f - pt.value) * (size.height - 4f) + 2f)
-                    drawRect(Color(0xFFFFE0A0), Offset(p.x - 3f, p.y - 3f), Size(6f, 6f))
+                    drawRect(c.accentSoft, Offset(p.x - 3f, p.y - 3f), Size(6f, 6f))
                 }
             }
             playheadTick?.let { pt ->
                 val t = (pt % total).toInt()
                 if (t in from until last) {
-                    drawLine(Color(0xFFFFB454), Offset(xOf(t), 0f), Offset(xOf(t), size.height), 2f)
+                    drawLine(c.accent, Offset(xOf(t), 0f), Offset(xOf(t), size.height), 2f)
                 }
             }
         }
@@ -222,11 +225,11 @@ fun AutomationStrip(
             // of its own or it reads as part of the curve.
             Text(
                 current?.let { shortOf(it) } ?: "∿ auto",
-                color = Color(0xFFFFB454), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                 maxLines = 1, softWrap = false,
                 modifier = Modifier.align(Alignment.CenterStart)
                     .padding(start = 3.dp)
-                    .background(Color(0xEE17171A), RoundedCornerShape(3.dp))
+                    .background(c.tip, RoundedCornerShape(3.dp))
                     .padding(horizontal = 4.dp, vertical = 1.dp),
             )
         }
@@ -241,6 +244,7 @@ fun AutomationStrip(
  */
 @Composable
 fun ParamStrip(rack: Int, machineType: String, modifier: Modifier = Modifier) {
+    val c = Acid.colors
     val names = remember(machineType) { com.rm.acidulous.engine.NativeEngine.machineParamNames(machineType) }
     var values by remember(machineType, rack) { mutableStateOf(FloatArray(names.size) { 0.5f }) }
     var dragging by remember { mutableStateOf(-1) }
@@ -254,17 +258,17 @@ fun ParamStrip(rack: Int, machineType: String, modifier: Modifier = Modifier) {
             kotlinx.coroutines.delay(100)
         }
     }
-    Row(modifier.background(Color(0xFF1F1F23)), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+    Row(modifier.background(c.panel), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
         names.forEachIndexed { i, name ->
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(name, color = Color(0xFF9A9AA2), fontSize = 8.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+                Text(name, color = Acid.colors.textDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
                 MiniSlider(
                     value = values[i], modifier = Modifier.width(56.dp).height(20.dp),
                     onStart = { dragging = i },
                     onChange = { v -> values = values.copyOf().also { it[i] = v }; com.rm.acidulous.engine.NativeEngine.setParam(rack, "machine", name, v) },
                     onEnd = { dragging = -1 },
                 )
-                Text("%.2f".format(values[i]), color = Color(0xFFFFB454), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                Text("%.2f".format(values[i]), color = Acid.colors.accent, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
             }
         }
     }

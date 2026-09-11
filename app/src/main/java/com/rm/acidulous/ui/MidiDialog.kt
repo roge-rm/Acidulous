@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import com.rm.acidulous.midi.MidiHub
+import com.rm.acidulous.ui.theme.Acid
 
 /**
  * Where a keyboard gets plugged in.
@@ -59,34 +60,34 @@ fun MidiDialog(onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 if (!MidiHub.supported) {
-                    Text("This device has no MIDI support.", color = Color(0xFFE74C3C), fontSize = 12.sp)
+                    Text("This device has no MIDI support.", color = Acid.colors.red, fontSize = 12.sp)
                 }
-                Text("devices", color = Color(0xFF7FD1B9), fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Text("devices", color = Acid.colors.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 if (ports.isEmpty()) {
-                    Text("nothing connected", color = Color(0xFF9A9AA2), fontSize = 12.sp)
+                    Text("nothing connected", color = Acid.colors.textDim, fontSize = 12.sp)
                 }
                 ports.forEach { port ->
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp))
-                            .background(if (port.open) Color(0x333F7D5E) else Color(0x22FFFFFF))
+                            .background(if (port.open) Acid.colors.green.copy(alpha = 0.2f) else Acid.colors.overlay)
                             .clickable { MidiHub.toggle(port.id) }
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(if (port.bluetooth) "ᛒ" else "⎓", color = Color(0xFFFFB454), fontSize = 13.sp,
+                        Text(if (port.bluetooth) "ᛒ" else "⎓", color = Acid.colors.accent, fontSize = 13.sp,
                             modifier = Modifier.padding(end = 8.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(port.name, color = Color.White, fontSize = 12.sp, maxLines = 1)
+                            Text(port.name, color = Acid.colors.text, fontSize = 12.sp, maxLines = 1)
                             if (port.maker.isNotEmpty()) {
-                                Text(port.maker, color = Color(0xFF9A9AA2), fontSize = 9.sp, maxLines = 1)
+                                Text(port.maker, color = Acid.colors.textDim, fontSize = 9.sp, maxLines = 1)
                             }
                         }
                         Text(if (port.open) "listening" else "tap to open",
-                            color = if (port.open) Color(0xFF7FD1B9) else Color(0xFF9A9AA2), fontSize = 10.sp)
+                            color = if (port.open) Acid.colors.teal else Acid.colors.textDim, fontSize = 10.sp)
                     }
                 }
 
-                Text("bluetooth", color = Color(0xFF7FD1B9), fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                Text("bluetooth", color = Acid.colors.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(top = 6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = {
@@ -94,32 +95,32 @@ fun MidiDialog(onDismiss: () -> Unit) {
                             context.checkSelfPermission(it) != android.content.pm.PackageManager.PERMISSION_GRANTED
                         }
                         if (missing.isEmpty()) MidiHub.scanBluetooth(context) else permission.launch(missing.toTypedArray())
-                    }) { Text(if (MidiHub.scanning) "scanning…" else "scan", color = Color(0xFFFFB454), fontSize = 12.sp) }
+                    }) { Text(if (MidiHub.scanning) "scanning…" else "scan", color = Acid.colors.accent, fontSize = 12.sp) }
                     if (MidiHub.scanning) {
                         TextButton(onClick = { MidiHub.stopScan() }) { Text("stop", fontSize = 12.sp) }
                     }
                     if (!MidiHub.bluetoothReady(context)) {
-                        Text("Bluetooth is off", color = Color(0xFFE74C3C), fontSize = 11.sp)
+                        Text("Bluetooth is off", color = Acid.colors.red, fontSize = 11.sp)
                     }
                 }
                 found.forEach { device ->
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp))
-                            .background(Color(0x22FFFFFF))
+                            .background(Acid.colors.overlay)
                             .clickable { MidiHub.connectBluetooth(context, device.address) }
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text(device.name, color = Color.White, fontSize = 12.sp, maxLines = 1)
-                            Text(device.address, color = Color(0xFF9A9AA2), fontSize = 9.sp,
+                            Text(device.name, color = Acid.colors.text, fontSize = 12.sp, maxLines = 1)
+                            Text(device.address, color = Acid.colors.textDim, fontSize = 9.sp,
                                 fontFamily = FontFamily.Monospace)
                         }
-                        Text("connect", color = Color(0xFFFFB454), fontSize = 10.sp)
+                        Text("connect", color = Acid.colors.accent, fontSize = 10.sp)
                     }
                 }
 
-                Text("routing", color = Color(0xFF7FD1B9), fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                Text("routing", color = Acid.colors.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(top = 6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     RoutingChip("selected track", MidiHub.routing == MidiHub.Routing.SelectedTrack) {
@@ -131,12 +132,12 @@ fun MidiDialog(onDismiss: () -> Unit) {
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = { MidiHub.testNote() }) {
-                        Text("test note", color = Color(0xFFFFB454), fontSize = 12.sp)
+                        Text("test note", color = Acid.colors.accent, fontSize = 12.sp)
                     }
                     Text(
                         if (MidiHub.received == 0) "nothing received yet"
                         else "${MidiHub.received} messages · ${MidiHub.lastMessage}",
-                        color = Color(0xFF9A9AA2), fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                        color = Acid.colors.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                     )
                 }
             }
@@ -149,10 +150,10 @@ fun MidiDialog(onDismiss: () -> Unit) {
 private fun RoutingChip(label: String, on: Boolean, onClick: () -> Unit) {
     Text(
         label,
-        color = if (on) Color(0xFF191B1E) else Color(0xFFDDDDE2),
+        color = if (on) Acid.colors.onAccent else Acid.colors.textHi,
         fontSize = 11.sp,
         modifier = Modifier.clip(RoundedCornerShape(4.dp))
-            .background(if (on) Color(0xFF7FD1B9) else Color(0x22FFFFFF))
+            .background(if (on) Acid.colors.teal else Acid.colors.overlay)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 6.dp),
     )

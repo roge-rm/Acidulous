@@ -1,58 +1,78 @@
 package com.rm.acidulous.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.CompositionLocalProvider
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+/** What the person chose, which is not the same as what is on screen. */
+enum class ThemeMode { Auto, Light, Dark }
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
-
-@Composable
-fun AcidulousTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
-    content: @Composable () -> Unit
-) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+/**
+ * Material's scheme, built from ours.
+ *
+ * Nearly everything in this app draws its own colours, but the parts that
+ * come out of Material - dialogs, dropdown menus, text fields, the buttons
+ * inside them - read the scheme, and while that scheme was the template's
+ * purple (with dynamic colour on top, so it took its cue from the phone's
+ * wallpaper) those parts never matched the app. A file menu that opened
+ * white over a black arranger was the visible half of that.
+ */
+private fun scheme(c: AcidColors) = if (c.dark) {
+    darkColorScheme(
+        primary = c.accent, onPrimary = c.onAccent,
+        secondary = c.teal, onSecondary = c.onAccent,
+        tertiary = c.pink, onTertiary = c.onAccent,
+        background = c.bg, onBackground = c.textHi,
+        surface = c.card, onSurface = c.textHi,
+        surfaceVariant = c.control, onSurfaceVariant = c.textDim,
+        // M3 gives a dialog, a menu and a sheet their own surface roles, and
+        // left unset they are tinted from the primary palette - which is how
+        // a lilac dialog turned up over a grey one.
+        surfaceContainerLowest = c.bgDeep, surfaceContainerLow = c.panel,
+        surfaceContainer = c.card, surfaceContainerHigh = c.card,
+        surfaceContainerHighest = c.cardHi,
+        surfaceBright = c.cardHi, surfaceDim = c.bgDeep,
+        inverseSurface = c.textHi, inverseOnSurface = c.bg,
+        outline = c.raised, outlineVariant = c.line,
+        error = c.red, onError = c.onAccent,
+        scrim = c.bgDeep,
     )
+} else {
+    lightColorScheme(
+        primary = c.accent, onPrimary = c.card,
+        secondary = c.teal, onSecondary = c.card,
+        tertiary = c.pink, onTertiary = c.card,
+        background = c.bg, onBackground = c.textHi,
+        surface = c.card, onSurface = c.textHi,
+        surfaceVariant = c.control, onSurfaceVariant = c.textDim,
+        surfaceContainerLowest = c.card, surfaceContainerLow = c.cardAlt,
+        surfaceContainer = c.card, surfaceContainerHigh = c.card,
+        surfaceContainerHighest = c.cardHi,
+        surfaceBright = c.card, surfaceDim = c.sunken,
+        inverseSurface = c.textHi, inverseOnSurface = c.card,
+        outline = c.raised, outlineVariant = c.line,
+        error = c.red, onError = c.card,
+        scrim = c.textFaint,
+    )
+}
+
+/**
+ * [mode] is the setting; Auto asks the OS. Dynamic colour is deliberately
+ * not used: this app has a look of its own, and a wallpaper has no opinion
+ * worth taking about the colour of a piano roll.
+ */
+@Composable
+fun AcidulousTheme(mode: ThemeMode = ThemeMode.Dark, content: @Composable () -> Unit) {
+    val dark = when (mode) {
+        ThemeMode.Auto -> isSystemInDarkTheme()
+        ThemeMode.Light -> false
+        ThemeMode.Dark -> true
+    }
+    val colors = if (dark) DarkColors else LightColors
+    CompositionLocalProvider(LocalAcidColors provides colors) {
+        MaterialTheme(colorScheme = scheme(colors), typography = Typography, content = content)
+    }
 }

@@ -61,6 +61,8 @@ import com.rm.acidulous.model.nexusKnob
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.hypot
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.AcidColors
 
 // The patch editor.
 //
@@ -102,6 +104,7 @@ fun PatchScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val c = Acid.colors
     val patch = remember(track.machine.settings["nexus"]) {
         NexusPatch.decode(track.machine.settings["nexus"])
     }
@@ -130,7 +133,7 @@ fun PatchScreen(
         }
     }
 
-    Column(modifier.fillMaxSize().background(Color(0xFF15151A))) {
+    Column(modifier.fillMaxSize().background(c.bgDeep)) {
         // --- header -----------------------------------------------------------
         CutoutRow(
             Modifier.fillMaxWidth(),
@@ -142,7 +145,7 @@ fun PatchScreen(
             HeaderButton("◀") { onBack() }
             Text(
                 "${track.name} · ${patch.modules.size} modules · ${patch.cables.size} cables",
-                color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                 modifier = Modifier.flexible().padding(horizontal = 4.dp), maxLines = 1,
             )
             HeaderTextButton("add") { adding = true }
@@ -274,7 +277,7 @@ fun PatchScreen(
                     }
                 },
             ) {
-                drawPatch(patch, pan, zoom, selection, pulling, scope, measurer)
+                drawPatch(patch, pan, zoom, selection, pulling, scope, measurer, c)
             }
         }
 
@@ -356,6 +359,7 @@ private fun DrawScope.drawPatch(
     pulling: Pair<Jack, Offset>?,
     scope: FloatArray,
     measurer: TextMeasurer,
+    col: AcidColors,
 ) {
     fun screen(w: Offset) = Offset((w.x - pan.x) * zoom, (w.y - pan.y) * zoom)
 
@@ -363,9 +367,9 @@ private fun DrawScope.drawPatch(
     val step = 50f * zoom
     if (step > 8f) {
         var x = -((pan.x * zoom) % step)
-        while (x < size.width) { drawLine(Color(0xFF1E1E24), Offset(x, 0f), Offset(x, size.height), 1f); x += step }
+        while (x < size.width) { drawLine(col.canvasGrid, Offset(x, 0f), Offset(x, size.height), 1f); x += step }
         var y = -((pan.y * zoom) % step)
-        while (y < size.height) { drawLine(Color(0xFF1E1E24), Offset(0f, y), Offset(size.width, y), 1f); y += step }
+        while (y < size.height) { drawLine(col.canvasGrid, Offset(0f, y), Offset(size.width, y), 1f); y += step }
     }
 
     // Cables behind the boxes, as they are in life.
@@ -380,8 +384,8 @@ private fun DrawScope.drawPatch(
             val bend = (abs(b.x - a.x) * 0.4f + 24f * zoom)
             cubicTo(a.x + bend, a.y, b.x - bend, b.y, b.x, b.y)
         }
-        drawPath(path, if (selected) Color(0xFFFFB454) else Color(0x9959C2A8), style = Stroke(if (selected) 3.5f else 2.2f))
-        if (selected) drawCircle(Color(0xFFFFB454), 5f, (a + b) * 0.5f)
+        drawPath(path, if (selected) col.accent else col.cable, style = Stroke(if (selected) 3.5f else 2.2f))
+        if (selected) drawCircle(col.accent, 5f, (a + b) * 0.5f)
     }
     pulling?.let { (jack, at) ->
         val m = patch.moduleAt(jack.slot)
@@ -390,7 +394,7 @@ private fun DrawScope.drawPatch(
             val ports = if (jack.output) meta?.outputs?.size ?: 1 else meta?.inputs?.size ?: 1
             val a = screen(jackPosition(m, jack.port, jack.output, ports))
             val b = screen(at)
-            drawLine(Color(0xFFFFB454), a, b, 2.5f)
+            drawLine(col.accent, a, b, 2.5f)
         }
     }
 
@@ -401,23 +405,23 @@ private fun DrawScope.drawPatch(
         val h = NODE_H * zoom
         if (at.x > size.width || at.y > size.height || at.x + w < 0f || at.y + h < 0f) continue
         val selected = (selection as? Selection.Module)?.slot == m.slot
-        drawRoundRect(Color(0xFF26262E), at, Size(w, h), androidx.compose.ui.geometry.CornerRadius(6f, 6f))
+        drawRoundRect(col.nodeBg, at, Size(w, h), androidx.compose.ui.geometry.CornerRadius(6f, 6f))
         drawRoundRect(
-            if (selected) Color(0xFFFFB454) else Color(0xFF3A3A45), at, Size(w, h),
+            if (selected) col.accent else col.nodeEdge, at, Size(w, h),
             androidx.compose.ui.geometry.CornerRadius(6f, 6f), style = Stroke(if (selected) 2.5f else 1.2f),
         )
         if (zoom > 0.55f) {
             val title = measurer.measure(
                 AnnotatedString("${m.slot} ${m.type}${if (m.poly) "" else " ·mono"}"),
-                TextStyle(color = Color(0xFFDDDDE2), fontSize = (9f * zoom).sp, fontFamily = FontFamily.Monospace),
+                TextStyle(color = col.textHi, fontSize = (9f * zoom).sp, fontFamily = FontFamily.Monospace),
             )
             drawText(title, topLeft = at + Offset(6f * zoom, 4f * zoom))
         }
         meta?.inputs?.forEachIndexed { i, _ ->
-            drawCircle(Color(0xFF7FD1B9), JACK_R * zoom, screen(jackPosition(m, i, false, meta.inputs.size)))
+            drawCircle(col.teal, JACK_R * zoom, screen(jackPosition(m, i, false, meta.inputs.size)))
         }
         meta?.outputs?.forEachIndexed { i, _ ->
-            drawCircle(Color(0xFFFFB454), JACK_R * zoom, screen(jackPosition(m, i, true, meta.outputs.size)))
+            drawCircle(col.accent, JACK_R * zoom, screen(jackPosition(m, i, true, meta.outputs.size)))
         }
         // A scope draws its own trace: it is the one module that is a picture.
         if (m.type == "scope" && scope.isNotEmpty() && zoom > 0.5f) {
@@ -427,7 +431,7 @@ private fun DrawScope.drawPatch(
                 val y = at.y + h * 0.62f - v.coerceIn(-1f, 1f) * h * 0.28f
                 if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
-            drawPath(path, Color(0xFF7FD1B9), style = Stroke(1.6f))
+            drawPath(path, col.teal, style = Stroke(1.6f))
         }
     }
 }
@@ -441,13 +445,14 @@ private fun Inspector(
     onDelete: () -> Unit,
     onTogglePoly: () -> Unit,
 ) {
-    Box(Modifier.fillMaxWidth().heightIn(min = 96.dp).background(Color(0xFF1F1F23)).padding(6.dp)) {
+    val c = Acid.colors
+    Box(Modifier.fillMaxWidth().heightIn(min = 96.dp).background(c.panel).padding(6.dp)) {
         when (selection) {
             is Selection.Module -> {
                 val m = patch.moduleAt(selection.slot)
                 val meta = m?.let { NexusPalette.of(it.type) }
                 if (m == null || meta == null) {
-                    Text("gone", color = Color(0xFF9A9AA2), fontSize = 11.sp)
+                    Text("gone", color = Acid.colors.textDim, fontSize = 11.sp)
                 } else {
                     GroupRow {
                         Group("${m.slot} ${m.type}") {
@@ -464,7 +469,7 @@ private fun Inspector(
                                     Text(if (m.poly) "poly" else "mono", color = PanelAmber, fontSize = 11.sp)
                                 }
                                 TextButton(onClick = onDelete) {
-                                    Text("remove", color = Color(0xFFE74C3C), fontSize = 11.sp)
+                                    Text("remove", color = Acid.colors.red, fontSize = 11.sp)
                                 }
                             }
                         }
@@ -479,17 +484,17 @@ private fun Inspector(
                             PanelKnob(binding, nexusCableA(selection.index), "depth A", PanelAmber)
                             PanelKnob(binding, nexusCableB(selection.index), "depth B", PanelAmber)
                         } else {
-                            Text("beyond the automatable two dozen", color = Color(0xFF9A9AA2), fontSize = 10.sp)
+                            Text("beyond the automatable two dozen", color = Acid.colors.textDim, fontSize = 10.sp)
                         }
                     }
                     Group("wire") {
                         Column {
                             Text(
                                 if (c == null) "" else "%02d.%d → %02d.%d".format(c.fromSlot, c.fromPort, c.toSlot, c.toPort),
-                                color = Color(0xFFDDDDE2), fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                                color = Acid.colors.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                             )
                             TextButton(onClick = onDelete) {
-                                Text("cut", color = Color(0xFFE74C3C), fontSize = 11.sp)
+                                Text("cut", color = Acid.colors.red, fontSize = 11.sp)
                             }
                         }
                     }
@@ -516,6 +521,7 @@ private fun AddModuleDialog(
     onDismiss: () -> Unit,
     onPick: (String) -> Unit,
 ) {
+    val c = Acid.colors
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add a module", fontSize = 15.sp) },
@@ -529,9 +535,9 @@ private fun AddModuleDialog(
                         row.forEach { info ->
                             Text(
                                 info.name,
-                                color = Color(0xFFDDDDE2), fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+                                color = Acid.colors.textHi, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
                                 modifier = Modifier.weight(1f).clip(RoundedCornerShape(4.dp))
-                                    .background(Color(0x22FFFFFF))
+                                    .background(c.overlay)
                                     .clickable { onPick(info.name) }
                                     .padding(vertical = 8.dp, horizontal = 6.dp),
                             )

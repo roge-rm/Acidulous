@@ -30,6 +30,8 @@ import com.rm.acidulous.model.Mixer
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.Track
+import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.ui.theme.AcidColors
 
 /**
  * The reference sequencer's mixer section as a slide-up panel: a strip per track, then the
@@ -46,8 +48,9 @@ fun MixerPanel(
     onClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val c = Acid.colors
     Row(
-        modifier.background(Color(0xFF202024)).horizontalScrollWithBar(rememberScrollState()).padding(6.dp),
+        modifier.background(c.panelAlt).horizontalScrollWithBar(rememberScrollState()).padding(6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         song.tracks.forEachIndexed { index, track ->
@@ -59,6 +62,7 @@ fun MixerPanel(
 
 @Composable
 private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEditor, colour: Color) {
+    val c = Acid.colors
     val m = track.mixer
     fun live(name: String, v01: Float) = com.rm.acidulous.engine.NativeEngine.setParam(index, "channel", name, v01)
     fun gesture(name: String, v01: Float, update: (Mixer) -> Mixer) {
@@ -68,11 +72,11 @@ private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEdit
     fun tap(update: (Mixer) -> Mixer) = editor.edit(index) { t -> t.copy(mixer = update(t.mixer)) }
 
     Column(
-        Modifier.width(STRIP_W).clip(RoundedCornerShape(6.dp)).background(Color(0xFF2A2A2F)).padding(4.dp),
+        Modifier.width(STRIP_W).clip(RoundedCornerShape(6.dp)).background(c.cardAlt).padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(track.name, color = Color.White, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(track.name, color = c.text, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Row(Modifier.height(FADER_H), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Meter(peak, Modifier.width(8.dp).height(FADER_H))
             VerticalFader(
@@ -109,14 +113,15 @@ private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEdit
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            ToggleChip("M", m.mute, Color(0xFFE74C3C)) { tap { it.copy(mute = !it.mute) } }
-            ToggleChip("S", m.solo, Color(0xFFFFB454)) { tap { it.copy(solo = !it.solo) } }
+            ToggleChip("M", m.mute, c.red) { tap { it.copy(mute = !it.mute) } }
+            ToggleChip("S", m.solo, c.accent) { tap { it.copy(solo = !it.solo) } }
         }
     }
 }
 
 @Composable
 private fun MasterStrip(song: Song, editor: SongEditor, peak: Float, clickOn: Boolean, onClick: (Boolean) -> Unit) {
+    val c = Acid.colors
     val master = song.master
     fun live(name: String, v01: Float) = com.rm.acidulous.engine.NativeEngine.setParam(0, "master", name, v01)
     fun gesture(name: String, v01: Float, update: (Song) -> Song) {
@@ -125,31 +130,31 @@ private fun MasterStrip(song: Song, editor: SongEditor, peak: Float, clickOn: Bo
     }
 
     Column(
-        Modifier.width(MASTER_W).clip(RoundedCornerShape(6.dp)).background(Color(0xFF33333A)).padding(4.dp),
+        Modifier.width(MASTER_W).clip(RoundedCornerShape(6.dp)).background(c.cardHi).padding(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text("master", color = Color.White, fontSize = 11.sp)
+        Text("master", color = c.text, fontSize = 11.sp)
         Row(Modifier.height(FADER_H), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Meter(peak, Modifier.width(8.dp).height(FADER_H))
             VerticalFader(
                 value = EngineParams.volume01(master.volume),
                 modifier = Modifier.width(36.dp).height(FADER_H),
-                accent = Color(0xFFE8E8E4),
+                accent = Acid.colors.knobPointer,
                 onStart = { editor.beginSongGesture() },
                 onChange = { v -> gesture("volume", v) { s -> s.copy(master = s.master.copy(volume = EngineParams.volumeFrom01(v))) } },
                 onEnd = { editor.endSongGesture() },
             )
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                ToggleChip("reverb", master.reverb.on, Color(0xFF7FD1B9)) {
+                ToggleChip("reverb", master.reverb.on, c.teal) {
                     editor.editSong { s -> s.copy(master = s.master.copy(reverb = s.master.reverb.copy(on = !s.master.reverb.on))) }
                 }
-                ToggleChip("delay", master.delay.on, Color(0xFF7FD1B9)) {
+                ToggleChip("delay", master.delay.on, c.teal) {
                     editor.editSong { s -> s.copy(master = s.master.copy(delay = s.master.delay.copy(on = !s.master.delay.on))) }
                 }
-                ToggleChip("limiter", master.limiter.on, Color(0xFF7FD1B9)) {
+                ToggleChip("limiter", master.limiter.on, c.teal) {
                     editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
                 }
-                ToggleChip("♩ click", clickOn, Color(0xFFFFB454)) { onClick(!clickOn) }
+                ToggleChip("♩ click", clickOn, c.accent) { onClick(!clickOn) }
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -199,7 +204,7 @@ private fun MasterStrip(song: Song, editor: SongEditor, peak: Float, clickOn: Bo
 @Composable
 private fun Labeled(label: String, content: @Composable () -> Unit) {
     Column {
-        Text(label, color = Color(0xFF9A9AA2), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         content()
     }
 }
@@ -208,22 +213,26 @@ private fun Labeled(label: String, content: @Composable () -> Unit) {
 // beside a fader, so they are plain boxes.
 @Composable
 private fun ToggleChip(label: String, on: Boolean, colour: Color, onClick: () -> Unit) {
+    val c = Acid.colors
     Box(
         Modifier
             .height(22.dp)
             .clip(RoundedCornerShape(4.dp))
-            .background(if (on) colour.copy(alpha = 0.25f) else Color(0xFF3A3A40))
+            .background(if (on) colour.copy(alpha = 0.25f) else c.raised)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = if (on) colour else Color(0xFFBBBBBB), fontSize = 11.sp, maxLines = 1) }
+    ) { Text(label, color = if (on) colour else c.textMid, fontSize = 11.sp, maxLines = 1) }
 }
 
 internal fun trackColour(index: Int): Color = PALETTE[index % PALETTE.size]
 
+// A track's stripe is how that track is recognised at a glance, so it is
+// the same colour in both themes - it belongs to the track, not to the
+// interface. Mid-saturation hues that hold up on white and on black.
 private val PALETTE = listOf(
-    Color(0xFF7FD1B9), Color(0xFFFFB454), Color(0xFFE07A9A), Color(0xFF8AB4F8),
-    Color(0xFFC3E88D), Color(0xFFFF8A65), Color(0xFFB39DDB), Color(0xFF80DEEA),
+    Color(0xFF3FA98D), Color(0xFFE09A3C), Color(0xFFD4688A), Color(0xFF5B8FE0),
+    Color(0xFF8CC04E), Color(0xFFE0714A), Color(0xFF9B7BD4), Color(0xFF3FAFC0),
 )
 
 private val STRIP_W = 76.dp
