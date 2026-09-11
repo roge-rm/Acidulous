@@ -130,6 +130,7 @@ fun MachinePanel(
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding)
             "Brazen" -> BrazenPanel(binding)
+            "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
@@ -2082,6 +2083,110 @@ private fun BrazenPanel(b: ParamBinding) {
                     }
                 }
                 3 -> {
+                    Group("envelope") {
+                        PanelKnob(b, "attack", "attack"); PanelKnob(b, "decay", "decay")
+                        PanelKnob(b, "sustain", "sustain"); PanelKnob(b, "release", "release")
+                    }
+                    Group("vibrato") {
+                        PanelKnob(b, "vibrato", "depth", PanelAmber)
+                        PanelKnob(b, "vibratorate", "rate")
+                        PanelKnob(b, "vibratodelay", "delay")
+                    }
+                    Group("tuning") {
+                        PanelSwitch(b, "mono", listOf("poly", "mono"), "mode")
+                        PanelKnob(b, "glide", "glide")
+                        PanelKnob(b, "bendrange", "bend")
+                        PanelKnob(b, "octave", "octave")
+                        PanelKnob(b, "transpose", "transpose")
+                        PanelKnob(b, "fine", "fine")
+                    }
+                }
+                else -> {
+                    Group("out") {
+                        PanelKnob(b, "velocity", "velocity", PanelAmber)
+                        PanelKnob(b, "drive", "drive", PanelPink)
+                        PanelKnob(b, "volume", "volume")
+                        PanelKnob(b, "pan", "pan")
+                    }
+                }
+            }
+        }
+    }
+}
+
+// --- Timber -----------------------------------------------------------------
+//
+// The pipe first, because on this machine the pipe is the instrument: what
+// starts the air and what shape it is moving in are two chips that between
+// them are the whole woodwind family. Then the mouth, then the holes - which
+// is the page that has no equivalent anywhere else, because it is about the
+// part of the instrument below the note.
+
+private val TIMBER_FAMILY = listOf("reed", "double", "air")
+private val TIMBER_BORE = listOf("cylinder", "cone")
+private val TIMBER_REGISTER = listOf("natural", "register", "altissimo")
+
+@Composable
+private fun TimberPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    Column {
+        SectionChips(listOf("pipe", "mouth", "holes", "tongue", "shape", "out"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("pipe") {
+                        PanelStepKnob(b, "family", TIMBER_FAMILY, "started by", PanelAmber)
+                        PanelStepKnob(b, "bore", TIMBER_BORE, "shape", PanelAmber)
+                        PanelKnob(b, "body", "lowest", PanelAmber)
+                    }
+                    Group("end") {
+                        PanelKnob(b, "bell", "bell")
+                        PanelKnob(b, "loss", "loss")
+                    }
+                    Group("filter") {
+                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                        PanelKnob(b, "resonance", "reso", PanelAmber)
+                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                    }
+                }
+                1 -> {
+                    Group("reed") {
+                        PanelKnob(b, "reed", "stiffness", PanelAmber)
+                        PanelKnob(b, "embouchure", "embouchure", PanelAmber)
+                    }
+                    Group("air") {
+                        PanelKnob(b, "pressure", "pressure", PanelAmber)
+                        PanelKnob(b, "breath", "breath")
+                    }
+                    Group("jet") {
+                        PanelKnob(b, "jet", "crossing", PanelPink)
+                        PanelKnob(b, "aim", "aim", PanelPink)
+                    }
+                }
+                2 -> {
+                    Group("lattice") {
+                        PanelKnob(b, "lattice", "cutoff", PanelAmber)
+                        PanelKnob(b, "holes", "holes")
+                        PanelStepKnob(b, "register", TIMBER_REGISTER, "vent", PanelAmber)
+                    }
+                    Group("below") {
+                        PanelKnob(b, "fingering", "forked", PanelPink)
+                        PanelKnob(b, "below", "length", PanelPink)
+                        PanelKnob(b, "answer", "answers", PanelPink)
+                    }
+                }
+                3 -> {
+                    Group("tongue") {
+                        PanelKnob(b, "tongue", "depth", PanelAmber)
+                        PanelKnob(b, "tonguetime", "time")
+                    }
+                    Group("flutter") {
+                        PanelKnob(b, "flutter", "amount", PanelPink)
+                        PanelKnob(b, "flutterrate", "rate")
+                    }
+                    Group("keys") { PanelKnob(b, "keys", "key noise") }
+                }
+                4 -> {
                     Group("envelope") {
                         PanelKnob(b, "attack", "attack"); PanelKnob(b, "decay", "decay")
                         PanelKnob(b, "sustain", "sustain"); PanelKnob(b, "release", "release")

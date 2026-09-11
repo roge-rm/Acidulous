@@ -61,6 +61,7 @@ object PatchStore {
         "Cipher" -> CipherPresets.all
         "Filament" -> FilamentPresets.all
         "Brazen" -> BrazenPresets.all
+        "Timber" -> TimberPresets.all
         "Nexus" -> NexusPresets.all
         else -> emptyList()
     }
@@ -513,6 +514,71 @@ object BrazenPresets {
         p("Growl", "size" to 0.85f, "bell" to bell(0.7f), "lipdamp" to damp(0.7f), "brass" to 0.8f,
             "tension" to tense(1.05f), "pressure" to 0.9f, "bite" to 0.6f, "growl" to 0.7f,
             "growlrate" to 0.6f, "drive" to 0.25f, "attack" to 0.3f, "volume" to 0.45f),
+    )
+}
+
+/**
+ * Timber's factory patches. The first seven are the family - the same model
+ * with a different way of starting the air and a different shape to start it
+ * in. The last two are what the machine can do that no woodwind does: a
+ * stopped pipe with a lattice far too low for it, and a forked fingering
+ * held open until the note underneath comes through.
+ */
+object TimberPresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Timber", name, kv.toMap())
+    private fun st(index: Int, steps: Int) = index.toFloat() / (steps - 1).toFloat()
+
+    // The ranges written out, so the numbers below say what they mean.
+    private fun body(hz: Float) = (Math.log((hz / 30f).toDouble()) / Math.log((500f / 30f).toDouble())).toFloat()
+    private fun lat(hz: Float) = (Math.log((hz / 300f).toDouble()) / Math.log(20.0)).toFloat()
+    private fun emb(v: Float) = (v - 0.25f) / 0.65f
+    private fun press(v: Float) = v / 1.3f
+    private fun aim(v: Float) = (v + 0.8f) / 1.6f
+    private fun atk(sec: Float) = (Math.log((sec / 0.002f).toDouble()) / Math.log(1000.0)).toFloat()
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        // A cylinder with a reed: hollow, odd-partialled, and it breaks to a
+        // twelfth rather than an octave. There is only one instrument like it.
+        p("Clarinet", "family" to st(0, 3), "bore" to st(0, 2), "body" to body(146.8f),
+            "lattice" to lat(1500f), "embouchure" to emb(0.55f), "pressure" to press(0.85f),
+            "breath" to 0.1f, "tongue" to 0.7f, "keys" to 0.2f, "attack" to atk(0.02f)),
+        p("Bass Clarinet", "family" to st(0, 3), "bore" to st(0, 2), "body" to body(73.4f),
+            "lattice" to lat(1000f), "embouchure" to emb(0.5f), "pressure" to press(0.9f),
+            "breath" to 0.16f, "tongue" to 0.6f, "keys" to 0.35f, "attack" to atk(0.03f)),
+        p("Alto Sax", "family" to st(0, 3), "bore" to st(1, 2), "body" to body(138.6f),
+            "lattice" to lat(900f), "embouchure" to emb(0.5f), "pressure" to press(0.95f),
+            "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to atk(0.015f),
+            "vibrato" to 0.15f),
+        p("Oboe", "family" to st(1, 3), "bore" to st(1, 2), "body" to body(233.1f),
+            "lattice" to lat(1600f), "embouchure" to emb(0.7f), "pressure" to press(0.95f),
+            "breath" to 0.08f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to atk(0.012f),
+            "vibrato" to 0.2f),
+        p("Bassoon", "family" to st(1, 3), "bore" to st(1, 2), "body" to body(58.3f),
+            "lattice" to lat(700f), "embouchure" to emb(0.6f), "pressure" to press(0.9f),
+            "breath" to 0.12f, "tongue" to 0.7f, "keys" to 0.4f, "attack" to atk(0.025f)),
+        p("Flute", "family" to st(2, 3), "bore" to st(1, 2), "body" to body(261.6f),
+            "lattice" to lat(1400f), "aim" to aim(0.3f), "jet" to 0.3f, "pressure" to press(0.8f),
+            "breath" to 0.45f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to atk(0.04f),
+            "vibrato" to 0.18f),
+        // No reed and a stopped tube: a pan pipe, which keeps the clarinet's
+        // odd partials and has none of its edge.
+        p("Pan Pipe", "family" to st(2, 3), "bore" to st(0, 2), "body" to body(196f),
+            "lattice" to lat(2200f), "aim" to aim(0.1f), "jet" to 0.35f, "pressure" to press(0.7f),
+            "breath" to 0.6f, "tongue" to 0.2f, "attack" to atk(0.06f)),
+        // A lattice far below where any instrument would put one: the holes
+        // stop reflecting almost at the note, so the horn is mostly hole.
+        p("Stopped Wood", "family" to st(0, 3), "bore" to st(0, 2), "body" to body(110f),
+            "lattice" to lat(420f), "holes" to 0.9f, "embouchure" to emb(0.45f),
+            "pressure" to press(1.0f), "breath" to 0.3f, "answer" to 0.7f,
+            "tongue" to 0.5f, "attack" to atk(0.05f), "drive" to 0.2f),
+        // The forked fingering held open, with the bore below answering
+        // loudly and out of step: the note is veiled and something else is
+        // underneath it.
+        p("Forked", "family" to st(1, 3), "bore" to st(1, 2), "body" to body(146.8f),
+            "lattice" to lat(1200f), "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.85f,
+            "embouchure" to emb(0.5f), "pressure" to press(1.0f), "breath" to 0.25f,
+            "flutter" to 0.35f, "tongue" to 0.6f, "attack" to atk(0.04f)),
     )
 }
 

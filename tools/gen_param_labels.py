@@ -21,7 +21,7 @@ PANELS = {
     "ManualPanel": "Manual", "CipherPanel": "Cipher", "FilamentPanel": "Filament",
     "NexusPanel": "Nexus", "CumulusPanel": "Cumulus", "FormulatePanel": "Formulate",
     "PollenPanel": "Pollen", "ResonancePanel": "Resonance", "DicePanel": "Dice", "GenesisPanel": "Genesis",
-    "BrazenPanel": "Brazen",
+    "BrazenPanel": "Brazen", "TimberPanel": "Timber",
 }
 # Some panels name every control for the *selected* pad, so one panel
 # describes a whole machine's worth of parameters.
