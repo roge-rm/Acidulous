@@ -115,14 +115,21 @@ fun MainScreen(
             HeaderButton("↶", enabled = editor.canUndoSong()) { editor.undoSong() }
             HeaderButton("↷", enabled = editor.canRedoSong()) { editor.redoSong() }
             HeaderTextButton("save", onClick = onSave)
-            HeaderTextButton("file ▾", color = Color(0xFFFFB454)) { fileMenu = true }
-            DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
-                DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
-                DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
-                DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
-                DropdownMenuItem(text = { Text("Export WAV…") }, onClick = { fileMenu = false; onExport() })
-                DropdownMenuItem(text = { Text("MIDI in…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
-                DropdownMenuItem(text = { Text("Record sample…") }, onClick = { fileMenu = false; dialog = Dialog.Sampler })
+            // Button and menu in one box on purpose: a Popup anchors to its
+            // parent layout node, and left loose in the row that parent is
+            // the whole header - which opened the menu at the far left,
+            // nowhere near the button that was pressed. Boxed, the anchor is
+            // the button, and the menu drops under it against the right edge.
+            Box {
+                HeaderTextButton("file ▾", color = Color(0xFFFFB454)) { fileMenu = true }
+                DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
+                    DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
+                    DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
+                    DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
+                    DropdownMenuItem(text = { Text("Export WAV…") }, onClick = { fileMenu = false; onExport() })
+                    DropdownMenuItem(text = { Text("MIDI in…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
+                    DropdownMenuItem(text = { Text("Record sample…") }, onClick = { fileMenu = false; dialog = Dialog.Sampler })
+                }
             }
         }
 
