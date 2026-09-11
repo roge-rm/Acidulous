@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -67,6 +68,27 @@ fun SlotsPanel(kind: SlotKind, track: Track, trackIndex: Int, editor: SongEditor
     Column(modifier.background(Acid.colors.panel).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         for (slot in 0 until kind.slots) SlotRow(kind, track, trackIndex, slot, types, editor)
     }
+}
+
+/**
+ * One slot on its own, for the chip that opens it. The row is the same one
+ * the pane used to show two of - choose the type, switch it on, and its
+ * parameters underneath - so the pane can retire without taking anything
+ * with it.
+ */
+@Composable
+fun SlotDialog(kind: SlotKind, track: Track, trackIndex: Int, slot: Int, editor: SongEditor, onDismiss: () -> Unit) {
+    val types = remember(kind) { kind.types() }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("${kind.label}${slot + 1}", fontSize = 15.sp) },
+        text = {
+            Column(Modifier.heightIn(max = 420.dp).verticalScrollWithBar(rememberScrollState())) {
+                SlotRow(kind, track, trackIndex, slot, types, editor)
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
+    )
 }
 
 @Composable

@@ -314,7 +314,10 @@ fun MainScreen(
         val tick = position.tickInIteration % PPQN
         Column(Modifier.fillMaxWidth().background(Acid.colors.bar).padding(horizontal = 8.dp, vertical = 6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                val pad = PaddingValues(horizontal = 12.dp)
+                // Tight, because panic now has to fit at the far end of the same
+                // row and a transport bar that scrolls is a transport bar you
+                // cannot hit in a hurry.
+                val pad = PaddingValues(horizontal = 8.dp)
                 // In clip mode stop is a two-stage thing: once to let every
                 // clip finish the cycle it is in, again to cut. A launcher
                 // that only ever cut would be useless for ending a piece.
@@ -332,14 +335,11 @@ fun MainScreen(
                 ) {
                     Text(if (playing) "■" else "▶", color = if (anyStopping) Acid.colors.red else Color.Unspecified)
                 }
-                // Panic. A modular makes a runaway easy to build and a pair
-                // of headphones does not forgive one, so this is one tap,
-                // never behind a menu, and it is red for a reason.
-                OutlinedButton(
-                    onClick = { NativeEngine.panic() },
-                    contentPadding = PaddingValues(horizontal = 10.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Acid.colors.red),
-                ) { Text("panic", color = Acid.colors.red, fontSize = 12.sp, maxLines = 1) }
+                OutlinedButton(onClick = { showMixer = !showMixer }, contentPadding = pad) {
+                    Text(if (showMixer) "▾ mix" else "▴ mix",
+                        color = if (showMixer) Acid.colors.accent else Color.Unspecified,
+                        fontSize = 12.sp, maxLines = 1)
+                }
                 if (clipMode) {
                     // What a tap waits for. "clip end" is the musical default:
                     // the clip you are replacing finishes what it was doing.
@@ -351,18 +351,26 @@ fun MainScreen(
                     }
                 } else {
                     OutlinedButton(onClick = { onLoopScene(!loopScene) }, contentPadding = pad) {
-                        Text(if (loopScene) "loop: scene" else "loop: song", fontSize = 12.sp, maxLines = 1)
+                        Text(if (loopScene) "\u27F3 scene" else "\u27F3 song", fontSize = 12.sp, maxLines = 1)
                     }
                 }
                 OutlinedButton(onClick = { onArm(!armed) }, contentPadding = pad) {
                     Text(if (armed) "● REC" else "○ rec", color = if (armed) Acid.colors.red else Color.Unspecified, fontSize = 12.sp, maxLines = 1)
                 }
                 TextButton(onClick = { dialog = Dialog.Tempo }, contentPadding = PaddingValues(horizontal = 6.dp)) {
-                    Text("%.1f bpm".format(bpm), color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                    Text("%.1f".format(bpm), color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
                 }
-                TextButton(onClick = { showMixer = !showMixer }, contentPadding = PaddingValues(horizontal = 6.dp)) {
-                    Text(if (showMixer) "▾ mix" else "▴ mix", color = Acid.colors.text, fontSize = 12.sp, maxLines = 1)
-                }
+                // Panic, over on its own at the end of the row. A modular
+                // makes a runaway easy to build and a pair of headphones does
+                // not forgive one, so it is one tap and never behind a menu -
+                // but it is also the one button here you must not hit by
+                // accident, so it keeps its distance and its red.
+                Spacer(Modifier.weight(1f))
+                OutlinedButton(
+                    onClick = { NativeEngine.panic() },
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Acid.colors.red),
+                ) { Text("panic", color = Acid.colors.red, fontSize = 12.sp, maxLines = 1) }
             }
             Text(
                 if (clipMode) {

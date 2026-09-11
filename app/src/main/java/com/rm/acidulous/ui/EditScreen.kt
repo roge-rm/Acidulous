@@ -50,6 +50,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.Song
+import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.withSetting
@@ -87,6 +88,12 @@ fun EditScreen(
     onImportSoundFont: (track: Int) -> Unit = {},
     onPickPreset: (track: Int) -> Unit = {},
     onImportZoneSamples: (track: Int) -> Unit = {},
+    /** For the mixer, which now opens over the editor: the mix is worth
+     *  reaching without leaving the machine you are voicing. */
+    rackPeaks: FloatArray = FloatArray(16),
+    masterPeak: Float = 0f,
+    clickOn: Boolean = false,
+    onClick: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val track = song.tracks.getOrNull(trackIndex) ?: return
@@ -106,7 +113,9 @@ fun EditScreen(
     var laneKey by remember { mutableStateOf<String?>(null) }
     val slotTypes = track.effects.map { it.type } + track.eventors.map { it.type }
     val laneKeys = remember(track.machine.type, slotTypes) { automationKeysFor(track) }
-    var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 eventors - in the same space
+    var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 the mixer - in the same space
+    // Which eventor the chips have opened, if any.
+    var eventorSlot by remember { mutableStateOf(-1) }
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var scaleDialog by remember { mutableStateOf(false) }
     // Folding the strip is a preference, not a property of this clip, so it
@@ -356,7 +365,7 @@ fun EditScreen(
         // The machine's face: knobs go to the engine as gestures and into the document as undo steps.
         // Or, behind the fx toggle, the track's two insert slots.
         if (panel == 1) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
-        else if (panel == 2) SlotsPanel(SlotKind.Eventors, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
+        else if (panel == 2) MixerPanel(song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth().padding(top = 4.dp))
         else MachinePanel(
             track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch,
             factoryPatchNames = factoryPatchNames, userPatchNames = userPatchNames, onDeletePatch = onDeletePatch,
@@ -404,13 +413,21 @@ fun EditScreen(
                 } else {
                     Box(Modifier.weight(1f))
                 }
+                // The eventors sit either side of the scale chip because
+                // they do the same job: they are what happens to a note
+                // between playing it and hearing it. A tap says whether one
+                // is running; holding opens it. They used to be a button at
+                // the foot of the screen that swapped the whole lower pane,
+                // which is a long way to go to find out if the arp is on.
+                EventorChip(0, track, trackIndex, editor) { eventorSlot = 0 }
                 ScaleChip(
                     label = Scales.labelFor(track),
                     onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
                     onOpen = { scaleDialog = true },
                     vertical = false,
-                    modifier = Modifier.widthIn(min = 120.dp).fillMaxHeight(),
+                    modifier = Modifier.widthIn(min = 96.dp).fillMaxHeight(),
                 )
+                EventorChip(1, track, trackIndex, editor) { eventorSlot = 1 }
                 Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.CenterEnd) {
                     OctaveStepper(octave, { octave = it }, Modifier.fillMaxHeight())
                 }
@@ -456,7 +473,7 @@ fun EditScreen(
                 Text("fx", color = if (panel == 1) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
             }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 2) 0 else 2 }) {
-                Text("ev", color = if (panel == 2) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
+                Text("mix", color = if (panel == 2) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
             }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.redo(trackIndex) }, enabled = editor.canRedo(trackIndex)) { Text("↷", fontSize = 12.sp) }
@@ -502,6 +519,10 @@ fun EditScreen(
                 footerSlot()
             }
         }
+    }
+
+    if (eventorSlot >= 0) {
+        SlotDialog(SlotKind.Eventors, track, trackIndex, eventorSlot, editor) { eventorSlot = -1 }
     }
 
     if (scaleDialog) {
@@ -562,4 +583,36 @@ private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
     ) {
         Text(note.toString(), color = Acid.colors.onAccent, fontSize = 9.sp, modifier = Modifier.padding(bottom = 4.dp))
     }
+}
+
+/**
+ * One eventor, as a chip. Shows what it is and whether it is running; a tap
+ * switches it, a long press opens it.
+ *
+ * Switching is a *parameter* - bypass is a pseudo-parameter on the eventor
+ * unit - so a tap saves, undoes and automates like anything else, and the
+ * flag goes straight to the running eventor as well as into the document.
+ * Note the inversion: the field is `bypass`, so lit means `bypass == false`.
+ * An empty slot has nothing to switch, so a tap opens it instead.
+ */
+@Composable
+private fun EventorChip(slot: Int, track: Track, trackIndex: Int, editor: SongEditor, onOpen: () -> Unit) {
+    val ev = track.eventorAt(slot)
+    val unit = if (slot == 0) "eventor1" else "eventor2"
+    SlotChip(
+        text = if (ev.isEmpty) "ev${slot + 1}" else ev.type.lowercase().take(5),
+        on = !ev.isEmpty && !ev.bypass,
+        onToggle = {
+            if (ev.isEmpty) {
+                onOpen()
+            } else {
+                val bypass = !ev.bypass
+                editor.edit(trackIndex) { t -> t.withEventorBypass(slot, bypass) }
+                NativeEngine.setParam(trackIndex, unit, "bypass", if (bypass) 1f else 0f, record = true)
+            }
+        },
+        onOpen = onOpen,
+        vertical = false,
+        modifier = Modifier.widthIn(min = 40.dp).fillMaxHeight(),
+    )
 }

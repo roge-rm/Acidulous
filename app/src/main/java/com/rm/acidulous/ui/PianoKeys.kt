@@ -204,16 +204,34 @@ fun ScaleChip(
     modifier: Modifier = Modifier,
     /** Turned on its side when it stands beside the keys; flat in a strip. */
     vertical: Boolean = true,
+) = SlotChip(label ?: "scale off", label != null, onToggle, onOpen, modifier, vertical)
+
+/**
+ * The chip grammar the keyboard strip uses for everything that sits between
+ * what you play and what sounds: **a tap turns it on or off, a long press
+ * opens it**. The common question - is this running? - costs one tap and is
+ * answerable at a glance; choosing and configuring is rare and lives a level
+ * down. The scale chip established it; the eventor chips either side of it
+ * follow it exactly, because two controls doing the same job should not want
+ * two different gestures.
+ */
+@Composable
+fun SlotChip(
+    text: String,
+    on: Boolean,
+    onToggle: () -> Unit,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+    vertical: Boolean = true,
 ) {
     val c = Acid.colors
-    val on = label != null
     Box(
         modifier.clip(RoundedCornerShape(4.dp)).background(if (on) c.accentDim else c.card)
             .pointerInput(on) { detectTapGestures(onLongPress = { onOpen() }, onTap = { onToggle() }) },
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            label ?: "scale off",
+            text,
             color = if (on) c.accent else c.textDim,
             fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
             // Laid out long and then turned: rotation does not change a
