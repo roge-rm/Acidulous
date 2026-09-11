@@ -13,12 +13,13 @@
 #include "nexus/Nexus.h"
 #include "pollen/Pollen.h"
 #include "dice/Dice.h"
+#include "genesis/Genesis.h"
 #include "resonance/Resonance.h"
 
 namespace acidulous {
 
 namespace {
-const char *const kNames[] = {"Subvert", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Cipher", "Filament", "Nexus", "Hexbeat", "Resonance", "Forage", "Dice", "Mosaic"};
+const char *const kNames[] = {"Subvert", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic"};
 constexpr int32_t kCount = sizeof(kNames) / sizeof(kNames[0]);
 } // namespace
 
@@ -35,6 +36,7 @@ Machine *MachineRegistry::create(const char *typeName) {
     if (std::strcmp(typeName, "Filament") == 0) return new machine::Filament();
     if (std::strcmp(typeName, "Nexus") == 0) return new machine::Nexus();
     if (std::strcmp(typeName, "Hexbeat") == 0) return new machine::Hexbeat();
+    if (std::strcmp(typeName, "Genesis") == 0) return new machine::Genesis();
     if (std::strcmp(typeName, "Resonance") == 0) return new machine::Resonance();
     if (std::strcmp(typeName, "Forage") == 0) return new machine::Forage();
     if (std::strcmp(typeName, "Dice") == 0) return new machine::Dice();
@@ -85,6 +87,10 @@ const ParamDef *MachineRegistry::paramDefs(const char *typeName, int32_t &count)
     }
     if (std::strcmp(typeName, "Hexbeat") == 0) {
         static const machine::Hexbeat probe;
+        return probe.paramDefs(count);
+    }
+    if (std::strcmp(typeName, "Genesis") == 0) {
+        static const machine::Genesis probe;
         return probe.paramDefs(count);
     }
     if (std::strcmp(typeName, "Resonance") == 0) {

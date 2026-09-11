@@ -119,6 +119,7 @@ fun MachinePanel(
         if (!minimized) when (type) {
             "Subvert" -> SubvertPanel(binding)
             "Hexbeat" -> HexbeatPanel(binding)
+            "Genesis" -> GenesisPanel(binding)
             "Resonance" -> ResonancePanel(binding, selectedPad)
             "Dice" -> DicePanel(binding, track, trackIndex, editor, selectedPad, onImportOneSample)
             "Trinity" -> TrinityPanel(binding)
@@ -1438,6 +1439,109 @@ private fun FormulaDialog(
 }
 
 
+
+
+// --- Genesis ---------------------------------------------------------------------
+
+/**
+ * Genesis's panel. Every voice has its own group, the way the machine it is
+ * named after had its own strip of knobs - and the bus at the end, because
+ * the compressor and the duck are as much the sound as the kick is.
+ */
+@Composable
+private fun GenesisPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    Column {
+        SectionChips(listOf("kick", "snare", "toms", "metal", "bus"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("kick") {
+                        PanelKnob(b, "kicktune", "tune", PanelAmber)
+                        PanelKnob(b, "kickdecay", "decay", PanelAmber)
+                        PanelKnob(b, "kickpunch", "punch", PanelAmber)
+                        PanelKnob(b, "kicksweep", "sweep")
+                        PanelKnob(b, "kickclick", "click")
+                        PanelKnob(b, "kickdrive", "drive", PanelPink)
+                        PanelKnob(b, "kicklevel", "level")
+                    }
+                }
+                1 -> {
+                    Group("snare") {
+                        PanelKnob(b, "snaretune", "tune", PanelAmber)
+                        PanelKnob(b, "snaredecay", "decay", PanelAmber)
+                        PanelKnob(b, "snaresnap", "snap", PanelAmber)
+                        PanelKnob(b, "snaretone", "tone")
+                        PanelKnob(b, "snarelevel", "level")
+                    }
+                    Group("clap") {
+                        PanelKnob(b, "clapspread", "hands", PanelAmber)
+                        PanelKnob(b, "clapdecay", "room")
+                        PanelKnob(b, "claptone", "tone")
+                        PanelKnob(b, "claplevel", "level")
+                    }
+                    Group("rim") {
+                        PanelKnob(b, "rimtune", "tune")
+                        PanelKnob(b, "rimdecay", "decay")
+                        PanelKnob(b, "rimlevel", "level")
+                    }
+                }
+                2 -> {
+                    Group("toms") {
+                        PanelKnob(b, "tomlotune", "low", PanelAmber)
+                        PanelKnob(b, "tommidtune", "mid", PanelAmber)
+                        PanelKnob(b, "tomhitune", "high", PanelAmber)
+                        PanelKnob(b, "tomdecay", "decay")
+                        PanelKnob(b, "tombend", "bend")
+                        PanelKnob(b, "tomlevel", "level")
+                    }
+                    Group("cowbell") {
+                        PanelKnob(b, "belltune", "tune")
+                        PanelKnob(b, "belldecay", "decay")
+                        PanelKnob(b, "belllevel", "level")
+                    }
+                }
+                3 -> {
+                    Group("hats") {
+                        PanelKnob(b, "hattune", "tune", PanelAmber)
+                        PanelKnob(b, "hatclosed", "closed", PanelAmber)
+                        PanelKnob(b, "hatopen", "open", PanelAmber)
+                        PanelKnob(b, "hattone", "tone")
+                        PanelKnob(b, "hatlevel", "level")
+                    }
+                    Group("crash") {
+                        PanelKnob(b, "crashdecay", "decay")
+                        PanelKnob(b, "crashtone", "tone")
+                        PanelKnob(b, "crashlevel", "level")
+                    }
+                    Group("ride") {
+                        PanelKnob(b, "ridedecay", "decay")
+                        PanelKnob(b, "ridetone", "tone")
+                        PanelKnob(b, "ridebell", "bell")
+                        PanelKnob(b, "ridelevel", "level")
+                    }
+                }
+                else -> {
+                    Group("the room") {
+                        PanelKnob(b, "comp", "compress", PanelAmber)
+                        PanelKnob(b, "compattack", "attack")
+                        PanelKnob(b, "comprelease", "release")
+                        PanelKnob(b, "duck", "kick ducks", PanelAmber)
+                    }
+                    Group("circuit") {
+                        PanelKnob(b, "drift", "drift", PanelAmber)
+                        PanelKnob(b, "accent", "accent")
+                    }
+                    Group("out") {
+                        PanelKnob(b, "drive", "drive", PanelPink)
+                        PanelKnob(b, "volume", "volume")
+                        PanelKnob(b, "pan", "pan")
+                    }
+                }
+            }
+        }
+    }
+}
 
 // --- Resonance -------------------------------------------------------------------
 

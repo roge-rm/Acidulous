@@ -51,6 +51,7 @@ object PatchStore {
         "Ratio" -> RatioPresets.all
         "Mosaic" -> MosaicPresets.all
         "Hexbeat" -> HexbeatPresets.all
+        "Genesis" -> GenesisPresets.all
         "Resonance" -> ResonancePresets.all
         "Dice" -> DicePresets.all
         "Manual" -> ManualPresets.all
@@ -886,5 +887,45 @@ object DicePresets {
         p("Dust", "cut" to 1.0000f, "slices" to 1.0000f, "gate" to 0.2500f, "drop" to 0.3000f,
             "swap" to 0.3500f, "cutoff" to 0.6559f, "resonance" to 0.1500f, "reverse" to 0.2000f,
             "volume" to 0.5333f),
+    )
+}
+
+/**
+ * Genesis's factory kits: the long one, the one that came after, a deep one
+ * where the kick is the bassline, one slammed through its own bus, and one
+ * with the drift up so no two bars are the same.
+ */
+object GenesisPresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Genesis", name, kv.toMap())
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        // The long one: a kick that outlasts the bar, and a room that moves with it.
+        p("Eighty Eight", "kicktune" to 0.3691f, "kickdecay" to 0.8465f, "kickpunch" to 0.4500f,
+            "kicksweep" to 0.6736f, "kickclick" to 0.2500f, "kickdrive" to 0.1500f, "snaretune" to 0.3368f,
+            "snaredecay" to 0.5064f, "snaresnap" to 0.5500f, "hattune" to 0.5543f, "hatclosed" to 0.4363f,
+            "hatopen" to 0.6736f, "comp" to 0.4000f, "duck" to 0.4500f, "drift" to 0.1500f, "drive" to 0.1500f,
+            "volume" to 0.6000f),
+        // Shorter, harder, noisier: the one that came after.
+        p("Nine O Nine", "kicktune" to 0.6001f, "kickdecay" to 0.5366f, "kickpunch" to 0.7000f,
+            "kicksweep" to 0.3758f, "kickclick" to 0.7000f, "kickdrive" to 0.3500f, "snaretune" to 0.5404f,
+            "snaredecay" to 0.3660f, "snaresnap" to 0.8500f, "snaretone" to 0.7000f, "hattune" to 0.6830f,
+            "hatclosed" to 0.3396f, "hatopen" to 0.4670f, "hattone" to 0.8394f, "comp" to 0.5000f,
+            "duck" to 0.3000f, "drift" to 0.2000f, "drive" to 0.2500f, "volume" to 0.6000f),
+        // Tuned down and left to ring: the kick is the bassline.
+        p("Deep", "kicktune" to 0.0868f, "kickdecay" to 0.9455f, "kickpunch" to 0.3000f, "kicksweep" to 0.7835f,
+            "kickclick" to 0.1000f, "kickdrive" to 0.1000f, "snaretune" to 0.1853f, "snaredecay" to 0.5638f,
+            "snaresnap" to 0.4000f, "tomlotune" to 0.0665f, "tomdecay" to 0.7835f, "comp" to 0.5500f,
+            "duck" to 0.7000f, "drift" to 0.1000f, "volume" to 0.5667f),
+        // Everything through the bus at once, and the kick shoving it aside.
+        p("Slammed", "kicktune" to 0.5007f, "kickdecay" to 0.6446f, "kickpunch" to 0.8000f,
+            "kickclick" to 0.6000f, "kickdrive" to 0.6000f, "snaredecay" to 0.4362f, "snaresnap" to 0.9000f,
+            "claplevel" to 0.6667f, "clapdecay" to 0.6770f, "comp" to 0.9000f, "compattack" to 0.2616f,
+            "comprelease" to 0.4580f, "duck" to 0.9000f, "drift" to 0.3500f, "drive" to 0.5000f,
+            "volume" to 0.5333f),
+        // Drift up: no two bars the same, the way the boxes actually were.
+        p("Loose", "kicktune" to 0.4278f, "kickdecay" to 0.7317f, "kickpunch" to 0.5000f, "drift" to 0.8500f,
+            "comp" to 0.3000f, "duck" to 0.3500f, "snaredecay" to 0.4936f, "hatclosed" to 0.4857f,
+            "hatopen" to 0.6500f, "volume" to 0.6000f),
     )
 }

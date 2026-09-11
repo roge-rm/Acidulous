@@ -11,7 +11,8 @@ data class DrumVoice(val note: Int, val name: String, val short: String)
 
 object MachineUi {
     fun kindOf(type: String): MachineKind =
-        if (type == "Hexbeat" || type == "Forage" || type == "Resonance" || type == "Dice") MachineKind.Drums
+        if (type == "Hexbeat" || type == "Forage" || type == "Resonance" || type == "Dice" ||
+            type == "Genesis") MachineKind.Drums
         else MachineKind.Keyboard
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
@@ -33,7 +34,7 @@ object MachineUi {
 
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
-        MachineGroup("drums", listOf("Hexbeat", "Resonance", "Forage", "Dice")),
+        MachineGroup("drums", listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
         MachineGroup("realish", listOf("Manual", "Filament", "Mosaic", "Pollen")),
         MachineGroup("beyond", listOf("Cipher", "Nexus")),
     )
@@ -46,6 +47,7 @@ object MachineUi {
         "Cumulus" -> "pads by spectrum - bands of partials, morphed"
         "Formulate" -> "the chip, and an equation you can type into it"
         "Hexbeat" -> "drums by synthesis, in the 606's vocabulary"
+        "Genesis" -> "the big box: a kick you feel, and a bus the kick ducks"
         "Resonance" -> "eight struck objects that ring, and hear each other"
         "Dice" -> "a loop cut into slices, and rolled: swap, stutter, drop"
         "Forage" -> "sampled drums, with a filter and envelope per pad"
@@ -70,6 +72,14 @@ object MachineUi {
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
             type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen"
 
+    /** Genesis's kit, mirroring engine/machine/genesis/Genesis.h's Voice order. */
+    val genesisVoices: List<DrumVoice> = listOf(
+        DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Snare", "SD"), DrumVoice(38, "Clap", "CP"),
+        DrumVoice(39, "Rim", "RS"), DrumVoice(40, "Low Tom", "LT"), DrumVoice(41, "Mid Tom", "MT"),
+        DrumVoice(42, "Hi Tom", "HT"), DrumVoice(43, "Closed Hat", "CH"), DrumVoice(44, "Open Hat", "OH"),
+        DrumVoice(45, "Crash", "CY"), DrumVoice(46, "Ride", "RD"), DrumVoice(47, "Cowbell", "CB"),
+    )
+
     val hexbeatVoices: List<DrumVoice> = listOf(
         DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Rim", "RS"), DrumVoice(38, "Snare", "SD"), DrumVoice(39, "Clap", "CP"),
         DrumVoice(40, "Low Tom", "LT"), DrumVoice(41, "Mid Tom", "MT"), DrumVoice(42, "Hi Tom", "HT"),
@@ -80,6 +90,7 @@ object MachineUi {
     /** Forage pads are named after their samples; unloaded pads by number. */
     fun voicesOf(type: String, settings: Map<String, String> = emptyMap()): List<DrumVoice> = when (type) {
         "Hexbeat" -> hexbeatVoices
+        "Genesis" -> genesisVoices
         // Eight objects, and what each one is is a parameter rather than a
         // name - so they are numbered here and named on the panel.
         "Resonance" -> (0 until 8).map { DrumVoice(36 + it, "Object ${it + 1}", "${it + 1}") }
