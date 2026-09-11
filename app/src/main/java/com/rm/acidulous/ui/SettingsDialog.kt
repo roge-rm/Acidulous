@@ -10,15 +10,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,10 +29,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.midi.MidiHub
 import com.rm.acidulous.model.Scales
-import com.rm.acidulous.model.Signature
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.ThemeMode
 
@@ -38,127 +42,159 @@ import com.rm.acidulous.ui.theme.ThemeMode
  * song: how it looks, how hard it is allowed to work, and what a new song
  * starts as.
  *
- * One dialog of titled sections in the machine panels' vocabulary - a
- * heading, a row of choices, and a line underneath saying what the choice
- * means in plain words. A new setting is a new [Section], not a new dialog.
+ * Five tabs rather than one long scroll, because settings only ever
+ * accumulate and a list of everything is a list nobody reads. They use the
+ * same chips a machine panel uses for its sections, so the app has one idea
+ * of what a tab looks like.
+ *
+ * It is also its own Dialog rather than an AlertDialog: Material caps a
+ * dialog at 560dp and pads it off both edges, which on a phone left every
+ * explanatory line wrapping three times over for no reason. This one takes
+ * the screen's width, minus a margin, up to a tablet-sized limit.
  */
 @Composable
 fun SettingsDialog(trackNames: List<String>, onDismiss: () -> Unit) {
     val c = Acid.colors
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Settings") },
-        text = {
-            Column(
-                Modifier.verticalScrollWithBar(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Section(
-                    "appearance",
-                    when (UiPrefs.theme) {
-                        ThemeMode.Auto -> "Follows the phone's own light and dark setting."
-                        ThemeMode.Light -> "Always light, whatever the phone is set to."
-                        ThemeMode.Dark -> "Always dark, whatever the phone is set to."
-                    },
-                ) {
-                    Choice("auto", UiPrefs.theme == ThemeMode.Auto) { UiPrefs.chooseTheme(ThemeMode.Auto) }
-                    Choice("light", UiPrefs.theme == ThemeMode.Light) { UiPrefs.chooseTheme(ThemeMode.Light) }
-                    Choice("dark", UiPrefs.theme == ThemeMode.Dark) { UiPrefs.chooseTheme(ThemeMode.Dark) }
+    var tab by rememberSaveable { mutableStateOf(0) }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = c.card,
+        ) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                Text("Settings", color = c.text, fontSize = 20.sp)
+                Box(Modifier.padding(top = 12.dp, bottom = 10.dp)) {
+                    SectionChips(TABS, tab) { tab = it }
                 }
-
-                // The numbers are the point here: a buffer is a promise about
-                // how late the engine may be, and only this phone knows
-                // whether it can keep it.
-                val burst = NativeEngine.framesPerBurst.coerceAtLeast(1)
-                val frames = NativeEngine.bufferFrames
-                val ms = frames * 1000f / NativeEngine.sampleRate.coerceAtLeast(1)
-                Section(
-                    "audio buffer",
-                    "%d frames, about %.0f ms · burst %d · %d dropouts so far. Tighter is more responsive; safer survives a phone that is busy elsewhere."
-                        .format(frames, ms, burst, NativeEngine.xRunCount),
+                Column(
+                    // Shrinks to its content when a tab is short, scrolls
+                    // when it is not - a half-empty tall dialog reads as
+                    // something failing to load.
+                    Modifier.weight(1f, fill = false)
+                        .heightIn(max = 560.dp)
+                        .verticalScrollWithBar(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    for (b in UiPrefs.Buffer.entries) {
-                        Choice(b.label, UiPrefs.buffer == b) { UiPrefs.chooseBuffer(b) }
+                    when (tab) {
+                        0 -> DisplayTab()
+                        1 -> AudioTab()
+                        2 -> RecordTab()
+                        3 -> NewSongSection()
+                        else -> MidiSection(trackNames)
                     }
                 }
-
-                Section(
-                    "voices",
-                    if (UiPrefs.voiceLimit == 0) "Every machine plays as many notes as it was built for."
-                    else "At most ${UiPrefs.voiceLimit} notes held per track; the oldest is released to make room. " +
-                        "A machine with fewer voices of its own than that is unaffected.",
-                ) {
-                    for (n in listOf(4, 8, 16, 32, 48, 64)) {
-                        Choice("$n", UiPrefs.voiceLimit == n) { UiPrefs.chooseVoiceLimit(n) }
-                    }
-                    Choice("all", UiPrefs.voiceLimit == 0) { UiPrefs.chooseVoiceLimit(0) }
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Done") }
                 }
-
-                Section(
-                    "effect quality",
-                    if (UiPrefs.fullQuality) "Full: the master reverb runs eight combs a side, and distortion oversamples."
-                    else "Lean: half the reverb, no oversampling. Cheaper, and a little plainer.",
-                ) {
-                    Choice("full", UiPrefs.fullQuality) { UiPrefs.chooseQuality(true) }
-                    Choice("lean", !UiPrefs.fullQuality) { UiPrefs.chooseQuality(false) }
-                }
-
-                Section(
-                    "recording",
-                    if (UiPrefs.recordBits == 24) "Recorded samples and exported songs are 24-bit, 48 kHz."
-                    else "16-bit, 48 kHz: half the file, and quiet detail a little coarser.",
-                ) {
-                    Choice("24-bit", UiPrefs.recordBits == 24) { UiPrefs.chooseRecordBits(24) }
-                    Choice("16-bit", UiPrefs.recordBits == 16) { UiPrefs.chooseRecordBits(16) }
-                }
-
-                Section(
-                    "screen",
-                    if (UiPrefs.keepAwake) "The screen stays on while the transport is running."
-                    else "The screen sleeps on its own, playing or not.",
-                ) {
-                    Choice("stay awake", UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(true) }
-                    Choice("let it sleep", !UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(false) }
-                }
-
-                NewSongSection()
-
-                MidiSection(trackNames)
             }
+        }
+    }
+}
+
+private val TABS = listOf("display", "audio", "record", "songs", "midi")
+
+@Composable
+private fun DisplayTab() {
+    Section(
+        "appearance",
+        when (UiPrefs.theme) {
+            ThemeMode.Auto -> "Follows the phone's own light and dark setting."
+            ThemeMode.Light -> "Always light, whatever the phone is set to."
+            ThemeMode.Dark -> "Always dark, whatever the phone is set to."
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
-    )
+    ) {
+        Choice("auto", UiPrefs.theme == ThemeMode.Auto) { UiPrefs.chooseTheme(ThemeMode.Auto) }
+        Choice("light", UiPrefs.theme == ThemeMode.Light) { UiPrefs.chooseTheme(ThemeMode.Light) }
+        Choice("dark", UiPrefs.theme == ThemeMode.Dark) { UiPrefs.chooseTheme(ThemeMode.Dark) }
+    }
+    Section(
+        "screen",
+        if (UiPrefs.keepAwake) "The screen stays on while the transport is running."
+        else "The screen sleeps on its own, playing or not.",
+    ) {
+        Choice("stay awake", UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(true) }
+        Choice("let it sleep", !UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(false) }
+    }
+}
+
+@Composable
+private fun AudioTab() {
+    // The numbers are the point here: a buffer is a promise about how late
+    // the engine may be, and only this phone knows whether it can keep it.
+    val burst = NativeEngine.framesPerBurst.coerceAtLeast(1)
+    val frames = NativeEngine.bufferFrames
+    val ms = frames * 1000f / NativeEngine.sampleRate.coerceAtLeast(1)
+    val drops = NativeEngine.xRunCount
+    Section(
+        "buffer",
+        "%d frames, about %.0f ms · burst %d · %d dropout%s so far. Tighter is more responsive; safer survives a phone that is busy elsewhere."
+            .format(frames, ms, burst, drops, if (drops == 1L) "" else "s"),
+    ) {
+        for (b in UiPrefs.Buffer.entries) {
+            Choice(b.label, UiPrefs.buffer == b) { UiPrefs.chooseBuffer(b) }
+        }
+    }
+
+    Section(
+        "voices",
+        if (UiPrefs.voiceLimit == 0) "Every machine plays as many notes as it was built for."
+        else "At most ${UiPrefs.voiceLimit} notes held per track; the oldest is released to make room. " +
+            "A machine with fewer voices of its own than that is unaffected.",
+    ) {
+        for (n in listOf(4, 8, 16, 32, 48, 64)) {
+            Choice("$n", UiPrefs.voiceLimit == n) { UiPrefs.chooseVoiceLimit(n) }
+        }
+        Choice("all", UiPrefs.voiceLimit == 0) { UiPrefs.chooseVoiceLimit(0) }
+    }
+
+    Section(
+        "effect quality",
+        if (UiPrefs.fullQuality) "Full: the master reverb runs eight combs a side, and distortion oversamples."
+        else "Lean: half the reverb, no oversampling. Cheaper, and a little plainer.",
+    ) {
+        Choice("full", UiPrefs.fullQuality) { UiPrefs.chooseQuality(true) }
+        Choice("lean", !UiPrefs.fullQuality) { UiPrefs.chooseQuality(false) }
+    }
+}
+
+@Composable
+private fun RecordTab() {
+    Section(
+        "format",
+        if (UiPrefs.recordBits == 24) "Recorded samples and exported songs are 24-bit, 48 kHz."
+        else "16-bit, 48 kHz: half the file, and quiet detail a little coarser.",
+    ) {
+        Choice("24-bit", UiPrefs.recordBits == 24) { UiPrefs.chooseRecordBits(24) }
+        Choice("16-bit", UiPrefs.recordBits == 16) { UiPrefs.chooseRecordBits(16) }
+    }
 }
 
 @Composable
 private fun NewSongSection() {
     val sig = UiPrefs.newSignature
-    Section(
-        "new songs",
-        "%.0f bpm, %d/%d%s.".format(
-            UiPrefs.newTempo, sig.beats, sig.unit,
-            if (UiPrefs.newScaleOn) {
-                ", in ${Scales.keyNames[UiPrefs.newScaleKey]} ${Scales.names[UiPrefs.newScaleIndex]}"
-            } else {
-                ", no scale"
-            },
-        ),
-    ) {
+    Section("tempo", "A new song starts at %.0f bpm.".format(UiPrefs.newTempo)) {
         Choice("−", false) { UiPrefs.chooseNewTempo(UiPrefs.newTempo - 1f) }
         Choice("%.0f".format(UiPrefs.newTempo), true) { UiPrefs.chooseNewTempo(120f) }
         Choice("+", false) { UiPrefs.chooseNewTempo(UiPrefs.newTempo + 1f) }
     }
-    Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (s in SIGNATURES.take(5)) {
-                Choice("${s.beats}/${s.unit}", UiPrefs.newSignature == s) { UiPrefs.chooseNewSignature(s) }
-            }
+    Section("signature", "Bars of ${sig.beats}/${sig.unit}, which a scene can still override.") {
+        for (s in SIGNATURES.take(5)) {
+            Choice("${s.beats}/${s.unit}", UiPrefs.newSignature == s) { UiPrefs.chooseNewSignature(s) }
         }
     }
     // The scale a new track starts in: a Scale eventor is fitted to it, so
     // the keyboard and the roll agree with the song from the first note.
     var picking by remember { mutableStateOf(false) }
-    Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Section(
+        "scale",
+        if (UiPrefs.newScaleOn) {
+            "Each new track is fitted with a Scale eventor in " +
+                "${Scales.keyNames[UiPrefs.newScaleKey]} ${Scales.names[UiPrefs.newScaleIndex]}, so the keys and the roll agree from the first note."
+        } else {
+            "New tracks start chromatic, with no Scale eventor fitted."
+        },
+    ) {
         Choice("no scale", !UiPrefs.newScaleOn) { UiPrefs.chooseNewScale(false) }
         Choice(
             if (UiPrefs.newScaleOn) {
@@ -184,7 +220,7 @@ private fun NewSongSection() {
 @Composable
 private fun MidiSection(trackNames: List<String>) {
     Section(
-        "midi in",
+        "routing",
         when (MidiHub.routing) {
             MidiHub.Routing.SelectedTrack -> "Notes play whichever track is open - what you want while writing."
             MidiHub.Routing.FixedTrack ->
@@ -203,11 +239,7 @@ private fun MidiSection(trackNames: List<String>) {
         }
     }
     if (MidiHub.routing == MidiHub.Routing.FixedTrack && trackNames.isNotEmpty()) {
-        FlowRow(
-            Modifier.fillMaxWidth().padding(top = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
+        Section("pinned to", "Devices play this track even while another is open.") {
             trackNames.forEachIndexed { i, name ->
                 Choice(name, MidiHub.fixedRack == i) {
                     UiPrefs.chooseMidiRouting(MidiHub.Routing.FixedTrack, i)
