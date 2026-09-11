@@ -138,11 +138,70 @@ private fun App(modifier: Modifier = Modifier) {
             editor.edit(track) { t -> t.withSetting("p%02d_sample".format(pad), "samples/$safe") }
         }.onFailure { Log.w(TAG, "sample import failed", it) }
     }
+    val scope = rememberCoroutineScope()
+
+    // Mosaic's instrument: a SoundFont preset, or WAVs turned into zones.
+    var mapTarget by remember { mutableStateOf<Int?>(null) }
+    var presetChoice by remember { mutableStateOf<Pair<Int, List<String>>?>(null) }
+    var mapBusy by remember { mutableStateOf(false) }
+
+    fun copyIn(uri: android.net.Uri, folder: String, fallback: String): java.io.File {
+        var display = fallback
+        context.contentResolver.query(uri, null, null, null, null)?.use { c ->
+            val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+        }
+        val safe = display.replace(Regex("[^A-Za-z0-9 _.-]"), "_").ifEmpty { fallback }
+        val dir = File(EngineAssets.userRoot(context), folder).apply { mkdirs() }
+        val dest = File(dir, safe)
+        context.contentResolver.openInputStream(uri)!!.use { input -> dest.outputStream().use { input.copyTo(it) } }
+        return dest
+    }
+
     var status by remember { mutableStateOf("starting…") }
+
+    val soundFontPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val track = mapTarget ?: return@rememberLauncherForActivityResult
+        mapTarget = null
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            val dest = copyIn(uri, "soundfonts", "instrument.sf2")
+            val rel = "soundfonts/${dest.name}"
+            editor.edit(track) { t -> t.withSetting("zones", null).withSetting("sf2", rel).withSetting("sf2preset", "0") }
+            // Listing presets reads the file, so it waits for a worker.
+            mapBusy = true
+            scope.launch {
+                val presets = withContext(Dispatchers.IO) { NativeEngine.soundFontPresets(dest.absolutePath) }
+                mapBusy = false
+                if (presets.isEmpty()) {
+                    val why = withContext(Dispatchers.IO) { NativeEngine.soundFontError(dest.absolutePath) }
+                    Log.w(TAG, "soundfont ${dest.name}: ${why.ifEmpty { "no presets" }}")
+                } else if (presets.size > 1) {
+                    presetChoice = track to presets
+                }
+            }
+        }.onFailure { Log.w(TAG, "soundfont import failed", it) }
+    }
+
+    val zoneSamplePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        val track = mapTarget ?: return@rememberLauncherForActivityResult
+        mapTarget = null
+        if (uris.isNullOrEmpty()) return@rememberLauncherForActivityResult
+        runCatching {
+            val existing = com.rm.acidulous.model.Zones.decode(song.tracks[track].machine.settings["zones"])
+            val added = uris.map { uri ->
+                val dest = copyIn(uri, "samples", "sample.wav")
+                com.rm.acidulous.model.Zone(path = "samples/${dest.name}")
+            }
+            editor.edit(track) { t ->
+                t.withSetting("sf2", null).withSetting("sf2preset", null)
+                    .withSetting("zones", com.rm.acidulous.model.Zones.encode(existing + added))
+            }
+        }.onFailure { Log.w(TAG, "zone import failed", it) }
+    }
 
     // Exporting: the system save picker gives a target; the engine renders the
     // song offline into the cache, and the file is copied into the target.
-    val scope = rememberCoroutineScope()
     var exportState by remember { mutableStateOf<com.rm.acidulous.ui.ExportState?>(null) }
     val wavPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/wav")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
@@ -298,8 +357,41 @@ private fun App(modifier: Modifier = Modifier) {
             userPatchNames = { PatchStore.userList(context, song.tracks[s.track].machine.type) },
             onDeletePatch = { name -> PatchStore.delete(context, song.tracks[s.track].machine.type, name) },
             onImportSample = { track, pad -> importTarget = track to pad; samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*")) },
+            onImportSoundFont = { track -> mapTarget = track; soundFontPicker.launch(arrayOf("*/*")) },
+            onPickPreset = { track ->
+                val rel = song.tracks[track].machine.settings["sf2"]
+                if (rel != null) {
+                    mapBusy = true
+                    scope.launch {
+                        val path = File(EngineAssets.userRoot(context), rel).absolutePath
+                        val presets = withContext(Dispatchers.IO) { NativeEngine.soundFontPresets(path) }
+                        mapBusy = false
+                        if (presets.isNotEmpty()) presetChoice = track to presets
+                    }
+                }
+            },
+            onImportZoneSamples = { track -> mapTarget = track; zoneSamplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*")) },
             modifier = modifier,
         )
+    }
+
+    // Choosing which preset of a SoundFont to play. Shown over either screen,
+    // because the import that raises it starts from the Edit screen but the
+    // listing finishes on a worker.
+    presetChoice?.let { (track, presets) ->
+        fun label(line: String): String {
+            val f = line.split('|')
+            return if (f.size >= 3) "%03d:%03d  %s".format(f[0].toIntOrNull() ?: 0, f[1].toIntOrNull() ?: 0, f[2]) else line
+        }
+        com.rm.acidulous.ui.PickerDialog(
+            title = "SoundFont preset",
+            options = presets.map { label(it) },
+            onDismiss = { presetChoice = null },
+        ) { chosen ->
+            val index = presets.indexOfFirst { label(it) == chosen }
+            if (index >= 0) editor.edit(track) { t -> t.withSetting("sf2preset", index.toString()) }
+            presetChoice = null
+        }
     }
 }
 

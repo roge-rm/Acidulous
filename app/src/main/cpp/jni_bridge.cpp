@@ -122,6 +122,34 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMachineTypes(JNIEnv *env, jobjec
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSoundFontPresets(JNIEnv *env, jobject, jstring path) {
+    std::string error;
+    const std::string list = acidulous::EngineHost::soundFontPresets(toStdString(env, path), error);
+    return env->NewStringUTF(error.empty() ? list.c_str() : ("!" + error).c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoadSoundFont(JNIEnv *env, jobject, jint rackId, jstring path,
+                                                              jint presetIndex) {
+    std::string error;
+    host().loadSoundFont(rackId, toStdString(env, path), presetIndex, error);
+    return env->NewStringUTF(error.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoadZoneMap(JNIEnv *env, jobject, jint rackId, jstring spec,
+                                                            jstring name) {
+    std::string error;
+    host().loadZoneMap(rackId, toStdString(env, spec), toStdString(env, name), error);
+    return env->NewStringUTF(error.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSampleMapInfo(JNIEnv *env, jobject, jint rackId) {
+    return env->NewStringUTF(host().sampleMapInfo(rackId).c_str());
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeLoadSample(JNIEnv *env, jobject, jint rackId, jint slot, jstring path) {
     std::string error;
     const bool ok = host().loadSample(rackId, slot, toStdString(env, path), error);

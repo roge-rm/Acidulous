@@ -86,10 +86,23 @@ std::unique_ptr<SampleData> WavReader::read(const std::string &path, int32_t tar
         }
     }
 
-    // Resample to the engine rate by linear interpolation. Good enough for
-    // drums; a better interpolator can replace this without touching callers.
     auto out = std::make_unique<SampleData>();
     out->stereo = channels == 2;
+    if (targetRate <= 0) {
+        // Keep the file's own rate. A multisample player takes the ratio into
+        // account when it pitches, so resampling would only cost quality.
+        out->rate = static_cast<int32_t>(rate);
+        out->frames = static_cast<int32_t>(frames);
+        out->left.assign(src[0].begin(), src[0].begin() + frames);
+        if (out->stereo) out->right.assign(src[1].begin(), src[1].begin() + frames);
+        const size_t cut = path.find_last_of('/');
+        out->name = cut == std::string::npos ? path : path.substr(cut + 1);
+        return out;
+    }
+
+    // Resample to the engine rate by linear interpolation. Good enough for
+    // drums; a better interpolator can replace this without touching callers.
+    out->rate = targetRate;
     const double ratio = static_cast<double>(rate) / static_cast<double>(targetRate);
     const auto outFrames = static_cast<int32_t>(static_cast<double>(frames) / ratio);
     out->frames = outFrames;

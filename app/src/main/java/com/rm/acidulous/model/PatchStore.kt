@@ -39,6 +39,7 @@ object PatchStore {
         "Subvert" -> SubvertPresets.all
         "Trinity" -> TrinityPresets.all
         "Ratio" -> RatioPresets.all
+        "Mosaic" -> MosaicPresets.all
         "Hexbeat" -> HexbeatPresets.all
         else -> emptyList()
     }
@@ -252,5 +253,57 @@ object RatioPresets {
             "o3_level" to 0.4f, "o3_ratio" to ratio(7f),
             "o1_decay" to decay(3f), "o1_sustain" to 0.3f, "o1_release" to decay(2f),
             "m01_src" to src(SRC_MOD), "m01_dest" to dest(DST_SKEW), "m01_depth" to depth(0.5f)),
+    )
+}
+
+/**
+ * Mosaic's factory patches. They set how the instrument is *played* - the
+ * envelope, the filter, the blend, the grain cloud - and never which
+ * instrument is loaded, because the map lives in the track's settings rather
+ * than in its parameters. So any patch works with any SoundFont or zone set.
+ */
+object MosaicPresets {
+    private fun lin(v: Float, min: Float, max: Float) = ((v - min) / (max - min)).coerceIn(0f, 1f)
+    private fun exp(v: Float, min: Float, max: Float) =
+        (kotlin.math.ln(v / min) / kotlin.math.ln(max / min)).toFloat().coerceIn(0f, 1f)
+    private fun step(i: Int, count: Int) = (i.toFloat() / (count - 1)).coerceIn(0f, 1f)
+    private fun attack(sec: Float) = exp(sec, 0.001f, 10f)
+    private fun decay(sec: Float) = exp(sec, 0.002f, 15f)
+    private fun freq(hz: Float) = exp(hz, 20f, 20000f)
+    private fun size(ms: Float) = exp(ms, 5f, 500f)
+    private fun density(n: Float) = exp(n, 1f, 120f)
+    private fun rate(v: Float) = lin(v, -2f, 2f)
+    private fun src(i: Int) = step(i, 13)
+    private fun dest(i: Int) = step(i, 16)
+    private fun depth(v: Float) = lin(v, -1f, 1f)
+
+    private const val SRC_MOD = 2; private const val SRC_LFO1 = 11; private const val SRC_PRESSURE = 3
+    private const val DST_SCAN = 2; private const val DST_GPOS = 4; private const val DST_GPITCH = 9
+
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Mosaic", name, kv.toMap())
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        p("Soft Pad",
+            "a_attack" to attack(0.6f), "a_decay" to decay(3f), "a_sustain" to 0.9f, "a_release" to decay(1.8f),
+            "f_type" to step(3, 12), "f_freq" to freq(3500f), "f_env" to depth(0.2f),
+            "keyfade" to lin(6f, 0f, 24f), "velfade" to lin(20f, 0f, 64f), "loop" to step(2, 3)),
+        p("Cloud",
+            "grain" to 1f, "gsize" to size(180f), "gdensity" to density(18f), "grate" to rate(0.15f),
+            "gspray" to 0.25f, "gpitch" to lin(0.2f, 0f, 24f),
+            "a_attack" to attack(0.35f), "a_sustain" to 1f, "a_release" to decay(2.5f),
+            "m01_src" to src(SRC_MOD), "m01_dest" to dest(DST_GPOS), "m01_depth" to depth(0.6f)),
+        p("Shimmer",
+            "grain" to 1f, "gsize" to size(35f), "gdensity" to density(70f), "grate" to rate(0.05f),
+            "gspray" to 0.5f, "gpitch" to lin(12f, 0f, 24f),
+            "a_attack" to attack(0.2f), "a_sustain" to 1f, "a_release" to decay(3f),
+            "l1_rate" to exp(0.2f, 0.01f, 40f),
+            "m01_src" to src(SRC_LFO1), "m01_dest" to dest(DST_GPOS), "m01_depth" to depth(0.25f),
+            "m02_src" to src(SRC_PRESSURE), "m02_dest" to dest(DST_GPITCH), "m02_depth" to depth(0.5f)),
+        p("Scan Layers",
+            "scanamt" to 1f, "scan" to 0.2f, "velfade" to lin(30f, 0f, 64f),
+            "a_sustain" to 1f, "a_release" to decay(0.5f),
+            "m01_src" to src(SRC_MOD), "m01_dest" to dest(DST_SCAN), "m01_depth" to depth(0.8f)),
+        p("Backwards", "reverse" to 1f, "start" to 0.99f, "a_attack" to attack(0.15f), "a_sustain" to 1f),
     )
 }

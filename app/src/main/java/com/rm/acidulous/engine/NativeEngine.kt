@@ -35,6 +35,22 @@ object NativeEngine {
 
     /** Decodes a WAV and mounts it on a pad; empty path clears. Returns an error message, or "" on success. */
     fun loadSample(rackId: Int, slot: Int, absolutePath: String): String = nativeLoadSample(rackId, slot, absolutePath)
+    /**
+     * Multisample maps for Mosaic. All three block while the instrument is
+     * built and decoded, so call them from a worker.
+     */
+    fun soundFontPresets(path: String): List<String> {
+        val raw = nativeSoundFontPresets(path)
+        if (raw.startsWith("!")) return emptyList()
+        return raw.trim().lines().filter { it.isNotBlank() }
+    }
+    fun soundFontError(path: String): String = nativeSoundFontPresets(path).let { if (it.startsWith("!")) it.drop(1) else "" }
+    fun loadSoundFont(rackId: Int, path: String, presetIndex: Int): String = nativeLoadSoundFont(rackId, path, presetIndex)
+    /** One zone per line: path|lowKey|highKey|rootKey|lowVel|highVel|cents|gain|pan|loop */
+    fun loadZoneMap(rackId: Int, spec: String, name: String): String = nativeLoadZoneMap(rackId, spec, name)
+    /** "name|zones|samples|seconds" for the mounted map, or "". */
+    fun sampleMapInfo(rackId: Int): String = nativeSampleMapInfo(rackId)
+
     /** "name|frames|stereo" for a loaded pad, or "". */
     fun sampleInfo(rackId: Int, slot: Int): String = nativeSampleInfo(rackId, slot)
 
@@ -157,6 +173,10 @@ object NativeEngine {
     private external fun nativeEffectTypes(): Array<String>
     private external fun nativeEffectParamInfo(type: String): Array<String>
     private external fun nativeLoadSample(rackId: Int, slot: Int, path: String): String
+    private external fun nativeSoundFontPresets(path: String): String
+    private external fun nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String
+    private external fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String
+    private external fun nativeSampleMapInfo(rackId: Int): String
     private external fun nativeSampleInfo(rackId: Int, slot: Int): String
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)

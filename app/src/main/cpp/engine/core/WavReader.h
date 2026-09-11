@@ -9,7 +9,8 @@ namespace acidulous {
 
 class WavReader {
   public:
-    // Returns nullptr on any failure; `error` says why.
+    // Returns nullptr on any failure; `error` says why. A targetRate of 0 or
+    // less keeps the file's own rate, which is what a multisample wants.
     static std::unique_ptr<SampleData> read(const std::string &path, int32_t targetRate, std::string &error);
     static constexpr int32_t kMaxSeconds = 30;
 };

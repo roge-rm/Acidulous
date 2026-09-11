@@ -33,6 +33,15 @@ object EngineSync {
     private val mountedEffects = Array(RACKS) { arrayOfNulls<String>(EFFECT_SLOTS) }
     private val mountedEventors = Array(RACKS) { arrayOfNulls<String>(EVENTOR_SLOTS) }
     private val loadedSamples = HashMap<String, String>() // "rack:slot" -> relative path
+    private val loadedMaps = arrayOfNulls<String>(RACKS)   // the source string a rack's map was built from
+    // Building a multisample means parsing and decoding, sometimes tens of
+    // megabytes, so it never runs on the caller's thread.
+    private val mapLoader = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
+        Thread(r, "Acidulous.MapLoader").apply { isDaemon = true }
+    }
+    /** Set while a map is being built, so the panel can say so. */
+    @Volatile var mapStatus: String = ""
+        private set
 
     /** Where relative sample paths in the document resolve. Set once at startup. */
     var sampleRoot: java.io.File? = null
@@ -68,6 +77,7 @@ object EngineSync {
                 if (NativeEngine.mountMachine(rack, track.machine.type)) {
                     mounted[rack] = track.machine.type
                     for (pad in 0 until 13) loadedSamples.remove("$rack:$pad") // a new machine starts empty
+                    loadedMaps[rack] = null
                 } else {
                     Log.w(TAG, "could not mount ${track.machine.type} on rack $rack")
                 }
@@ -98,6 +108,45 @@ object EngineSync {
         }
     }
 
+    /**
+     * Mosaic's instrument: a SoundFont preset or a list of WAV zones. The
+     * source string is the identity, so nothing reloads unless it changed.
+     */
+    fun ensureSampleMaps(song: Song) {
+        val root = sampleRoot ?: return
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            val wanted = when {
+                track == null || !MachineUi.acceptsSampleMap(track.machine.type) -> null
+                mounted[rack] != track.machine.type -> null // wait for the machine
+                else -> {
+                    val sf2 = track.machine.settings["sf2"].orEmpty()
+                    if (sf2.isNotEmpty()) "sf2:${track.machine.settings["sf2preset"] ?: "0"}:$sf2"
+                    else track.machine.settings["zones"].orEmpty().ifEmpty { null }?.let { "zones:$it" }
+                }
+            }
+            if (loadedMaps[rack] == wanted) continue
+            loadedMaps[rack] = wanted
+            if (wanted == null) continue
+            val settings = track!!.machine.settings
+            mapLoader.execute {
+                mapStatus = "loading…"
+                val error = if (wanted.startsWith("sf2:")) {
+                    val preset = settings["sf2preset"]?.toIntOrNull() ?: 0
+                    NativeEngine.loadSoundFont(rack, java.io.File(root, settings["sf2"]!!).absolutePath, preset)
+                } else {
+                    val zones = com.rm.acidulous.model.Zones.decode(settings["zones"])
+                    NativeEngine.loadZoneMap(rack, com.rm.acidulous.model.Zones.spec(zones, root), track.name)
+                }
+                mapStatus = if (error.isEmpty()) "" else error
+                if (error.isNotEmpty()) {
+                    Log.w(TAG, "rack $rack map: $error")
+                    loadedMaps[rack] = null // let a retry happen
+                }
+            }
+        }
+    }
+
     /** Eventors follow the same rule as effects: remount on type change only. */
     fun ensureEventors(song: Song) {
         for (rack in 0 until RACKS) {
@@ -117,6 +166,7 @@ object EngineSync {
         ensureSamples(song)
         ensureEffects(song)
         ensureEventors(song)
+        ensureSampleMaps(song)
         return push(song)
     }
 

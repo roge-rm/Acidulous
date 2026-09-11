@@ -35,9 +35,12 @@ import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
 import com.rm.acidulous.model.SongEditor
+import com.rm.acidulous.model.Zone
+import com.rm.acidulous.model.Zones
 import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withPatch
+import com.rm.acidulous.model.withSetting
 import kotlinx.coroutines.delay
 
 /**
@@ -64,6 +67,9 @@ fun MachinePanel(
     factoryPatchNames: () -> List<String> = { emptyList() },
     userPatchNames: () -> List<String> = { emptyList() },
     onDeletePatch: (String) -> Unit = {},
+    onImportSoundFont: () -> Unit = {},
+    onPickPreset: () -> Unit = {},
+    onImportZoneSamples: () -> Unit = {},
     selectedPad: Int = 0,
     onImportSample: (pad: Int) -> Unit = {},
     onClearSample: (pad: Int) -> Unit = {},
@@ -86,6 +92,7 @@ fun MachinePanel(
             "Hexbeat" -> HexbeatPanel(binding)
             "Trinity" -> TrinityPanel(binding)
             "Ratio" -> RatioPanel(binding)
+            "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample)
             else -> GenericPanel(binding)
         }
@@ -627,5 +634,196 @@ private fun RatioPanel(b: ParamBinding) {
                 }
             }
         }
+    }
+}
+
+// --- Mosaic ----------------------------------------------------------------------
+//
+// The map section is the one place a machine puts a picture above its group
+// row: a sampler without a visible key-by-velocity map is guesswork. The
+// other sections are ordinary Groups.
+
+val MOSAIC_LOOP = listOf("file", "off", "forward")
+val MOSAIC_ENVFROM = listOf("panel", "file")
+val MOSAIC_SOURCES = listOf("off", "on", "mod", "prs", "vel", "key", "rand", "aeg", "feg", "eg1", "eg2", "lfo1", "lfo2")
+val MOSAIC_DESTS = listOf(
+    "off", "pitch", "scan", "start", "g.pos", "g.rate", "g.size", "g.dens", "g.spray", "g.pitch",
+    "f.freq", "f.res", "amp", "pan", "l1rate", "l2rate",
+)
+
+@Composable
+private fun MosaicPanel(
+    b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor,
+    onImportSoundFont: () -> Unit, onPickPreset: () -> Unit, onImportZoneSamples: () -> Unit,
+) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    var selectedZone by rememberSaveable(trackIndex) { mutableStateOf(0) }
+    var editing by remember { mutableStateOf(false) }
+    val zones = remember(track.machine.settings["zones"]) { Zones.decode(track.machine.settings["zones"]) }
+    val sf2 = track.machine.settings["sf2"].orEmpty()
+    var info by remember(trackIndex) { mutableStateOf("") }
+    LaunchedEffect(trackIndex, sf2, zones.size) {
+        while (true) { info = NativeEngine.sampleMapInfo(trackIndex); delay(500) }
+    }
+
+    fun putZones(list: List<Zone>) =
+        editor.edit(trackIndex) { t -> t.withSetting("zones", if (list.isEmpty()) null else Zones.encode(list)) }
+
+    Column {
+        SectionChips(listOf("map", "sample", "grain", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
+        if (section == 0) {
+            if (sf2.isEmpty()) {
+                ZoneMapView(zones, selectedZone, { i -> selectedZone = i; editing = true },
+                    Modifier.fillMaxWidth().height(96.dp).padding(bottom = 4.dp))
+            } else {
+                // A SoundFont preset carries its own map; the file owns it, so
+                // it is shown rather than edited.
+                Text(
+                    "SoundFont: ${sf2.substringAfterLast('/')}   ${info.ifEmpty { "loading…" }}",
+                    color = Color(0xFF9A9AA2), fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.padding(bottom = 4.dp), maxLines = 1,
+                )
+            }
+        }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("instrument") {
+                        Column(horizontalAlignment = Alignment.Start) {
+                            Text(info.split('|').firstOrNull().orEmpty().ifEmpty { "nothing loaded" },
+                                color = Color.White, fontSize = 11.sp, maxLines = 1)
+                            Text(
+                                info.split('|').let { f ->
+                                    if (f.size >= 4) "${f[1]} zones · ${f[2]} samples · %.1fs".format(f[3].toFloatOrNull() ?: 0f)
+                                    else " "
+                                },
+                                color = Color(0xFF9A9AA2), fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                            )
+                            Row {
+                                TextButton(onClick = onImportSoundFont) { Text("soundfont…", color = PanelAmber, fontSize = 10.sp) }
+                                if (sf2.isNotEmpty()) TextButton(onClick = onPickPreset) { Text("preset…", color = PanelAmber, fontSize = 10.sp) }
+                                TextButton(onClick = onImportZoneSamples) { Text("samples…", color = Color(0xFFBBBBBB), fontSize = 10.sp) }
+                            }
+                        }
+                    }
+                    if (sf2.isEmpty()) Group("zones") {
+                        Column {
+                            Text("${zones.size} zone${if (zones.size == 1) "" else "s"}", color = Color.White, fontSize = 11.sp)
+                            Row {
+                                TextButton(
+                                    onClick = {
+                                        // Spread them evenly and set each root to the middle of its span.
+                                        if (zones.isNotEmpty()) {
+                                            val step = 128f / zones.size
+                                            putZones(zones.mapIndexed { i, z ->
+                                                val lo = (i * step).toInt()
+                                                val hi = if (i == zones.lastIndex) 127 else ((i + 1) * step).toInt() - 1
+                                                z.copy(lowKey = lo, highKey = hi, rootKey = (lo + hi) / 2)
+                                            })
+                                        }
+                                    },
+                                    enabled = zones.size > 1,
+                                ) { Text("spread", color = PanelAmber, fontSize = 10.sp) }
+                                TextButton(onClick = { putZones(emptyList()) }, enabled = zones.isNotEmpty()) {
+                                    Text("clear", color = Color(0xFFE74C3C), fontSize = 10.sp)
+                                }
+                            }
+                        }
+                    }
+                    Group("blend") {
+                        PanelKnob(b, "keyfade", "key xf", PanelAmber)
+                        PanelKnob(b, "velfade", "vel xf", PanelAmber)
+                        PanelKnob(b, "scan", "scan", PanelAmber)
+                        PanelKnob(b, "scanamt", "amount", PanelAmber)
+                    }
+                }
+                1 -> {
+                    Group("playback") {
+                        PanelKnob(b, "start", "start", PanelAmber)
+                        PanelSwitch(b, "loop", MOSAIC_LOOP, "loop")
+                        PanelSwitch(b, "reverse", listOf("fwd", "rev"), "dir")
+                        PanelSwitch(b, "envfrom", MOSAIC_ENVFROM, "env from")
+                    }
+                    Group("tuning") {
+                        PanelKnob(b, "coarse", "coarse")
+                        PanelKnob(b, "fine", "fine")
+                        PanelKnob(b, "octave", "octave")
+                        PanelKnob(b, "transpose", "transpose")
+                    }
+                }
+                2 -> Group("grains") {
+                    PanelSwitch(b, "grain", listOf("off", "on"), "cloud")
+                    PanelKnob(b, "gpos", "position", PanelAmber)
+                    PanelKnob(b, "grate", "rate", PanelAmber)
+                    PanelKnob(b, "gsize", "size", PanelAmber)
+                    PanelKnob(b, "gdensity", "density", PanelAmber)
+                    PanelKnob(b, "gspray", "spray", PanelAmber)
+                    PanelKnob(b, "gpitch", "pitch", PanelAmber)
+                }
+                3 -> {
+                    Group("filter") {
+                        PanelStepKnob(b, "f_type", TRINITY_FILTERS, "type", PanelAmber)
+                        PanelKnob(b, "f_freq", "freq", PanelAmber)
+                        PanelKnob(b, "f_res", "reso", PanelAmber)
+                        PanelKnob(b, "f_env", "envmod")
+                        PanelKnob(b, "f_key", "key")
+                        PanelKnob(b, "veltofilter", "vel")
+                    }
+                    Group("filter env") {
+                        PanelKnob(b, "f_attack", "attack")
+                        PanelKnob(b, "f_decay", "decay")
+                        PanelKnob(b, "f_sustain", "sustain")
+                        PanelKnob(b, "f_release", "release")
+                    }
+                }
+                4 -> {
+                    Group("amp env") {
+                        PanelKnob(b, "a_attack", "attack", PanelAmber)
+                        PanelKnob(b, "a_decay", "decay", PanelAmber)
+                        PanelKnob(b, "a_sustain", "sustain", PanelAmber)
+                        PanelKnob(b, "a_release", "release", PanelAmber)
+                    }
+                    for (e in 1..2) Group("env $e") {
+                        PanelKnob(b, "e${e}_attack", "attack")
+                        PanelKnob(b, "e${e}_decay", "decay")
+                        PanelKnob(b, "e${e}_sustain", "sustain")
+                        PanelKnob(b, "e${e}_release", "release")
+                    }
+                }
+                5 -> for (l in 1..2) Group("lfo $l") {
+                    val p = "l${l}_"
+                    PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, p + "rate", "rate", PanelAmber)
+                    PanelStepKnob(b, p + "sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
+                    PanelKnob(b, p + "delay", "delay")
+                    PanelKnob(b, p + "phase", "phase")
+                    PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
+                }
+                6 -> for (m in 1..8) Group("mod $m") {
+                    val p = "m%02d_".format(m)
+                    PanelStepKnob(b, p + "src", MOSAIC_SOURCES, "from", PanelAmber)
+                    PanelStepKnob(b, p + "src2", MOSAIC_SOURCES, "× from")
+                    PanelStepKnob(b, p + "dest", MOSAIC_DESTS, "to", PanelAmber)
+                    PanelKnob(b, p + "depth", "depth", PanelAmber)
+                }
+                else -> {
+                    Group("voice") {
+                        PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
+                        PanelKnob(b, "glide", "glide")
+                        PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
+                        PanelKnob(b, "bend", "bend")
+                    }
+                    Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
+                }
+            }
+        }
+    }
+    if (editing && selectedZone in zones.indices) {
+        ZoneDialog(
+            zone = zones[selectedZone],
+            onDismiss = { editing = false },
+            onConfirm = { z -> putZones(zones.toMutableList().also { it[selectedZone] = z }); editing = false },
+            onDelete = { putZones(zones.filterIndexed { i, _ -> i != selectedZone }); editing = false },
+        )
     }
 }

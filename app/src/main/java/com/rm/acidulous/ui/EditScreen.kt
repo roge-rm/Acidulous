@@ -64,6 +64,9 @@ fun EditScreen(
     userPatchNames: () -> List<String> = { emptyList() },
     onDeletePatch: (String) -> Unit = {},
     onImportSample: (track: Int, pad: Int) -> Unit = { _, _ -> },
+    onImportSoundFont: (track: Int) -> Unit = {},
+    onPickPreset: (track: Int) -> Unit = {},
+    onImportZoneSamples: (track: Int) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val track = song.tracks.getOrNull(trackIndex) ?: return
@@ -211,6 +214,9 @@ fun EditScreen(
         else MachinePanel(
             track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch,
             factoryPatchNames = factoryPatchNames, userPatchNames = userPatchNames, onDeletePatch = onDeletePatch,
+            onImportSoundFont = { onImportSoundFont(trackIndex) },
+            onPickPreset = { onPickPreset(trackIndex) },
+            onImportZoneSamples = { onImportZoneSamples(trackIndex) },
             selectedPad = selectedPad,
             onImportSample = { pad -> onImportSample(trackIndex, pad) },
             onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },

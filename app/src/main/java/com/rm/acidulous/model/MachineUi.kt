@@ -13,12 +13,15 @@ object MachineUi {
     fun kindOf(type: String): MachineKind = if (type == "Hexbeat" || type == "Forage") MachineKind.Drums else MachineKind.Keyboard
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
+    /** Machines that play a whole multisample map rather than one-shot pads. */
+    fun acceptsSampleMap(type: String): Boolean = type == "Mosaic"
+
     /**
      * Whether the machine answers the performance controllers, and so whether
      * the Edit screen shows the strip. A machine that ignores mod wheel and
      * pressure gets no strip rather than a dead one.
      */
-    fun usesPerformance(type: String): Boolean = type == "Trinity" || type == "Ratio"
+    fun usesPerformance(type: String): Boolean = type == "Trinity" || type == "Ratio" || type == "Mosaic"
 
     val hexbeatVoices: List<DrumVoice> = listOf(
         DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Rim", "RS"), DrumVoice(38, "Snare", "SD"), DrumVoice(39, "Clap", "CP"),
@@ -50,4 +53,42 @@ object HexbeatPresets {
         p("Trashy", "snare_tone" to 0.8f, "snare_snappy" to 0.9f, "hat_tune" to 0.8f, "hat_tone" to 0.3f,
             "cym_tone" to 0.3f, "clap_tone" to 0.7f, "accent" to 0.9f),
     )
+}
+
+/**
+ * One entry of a Mosaic map, as the document stores it. Zones live in
+ * `Machine.settings["zones"]`, one per line, because they are a variable
+ * length list rather than parameters - the same reason samples do.
+ */
+data class Zone(
+    val path: String = "",
+    val lowKey: Int = 0, val highKey: Int = 127, val rootKey: Int = 60,
+    val lowVel: Int = 1, val highVel: Int = 127,
+    val tuneCents: Float = 0f, val gain: Float = 1f, val pan: Float = 0f,
+    val loop: Boolean = false,
+) {
+    fun encode(root: java.io.File?): String {
+        val abs = if (root != null && !path.startsWith("/")) java.io.File(root, path).absolutePath else path
+        return listOf(abs, lowKey, highKey, rootKey, lowVel, highVel, tuneCents, gain, pan, if (loop) 1 else 0)
+            .joinToString("|")
+    }
+    val name: String get() = path.substringAfterLast('/').substringBeforeLast('.')
+}
+
+object Zones {
+    fun decode(text: String?): List<Zone> = (text ?: "").lineSequence().mapNotNull { line ->
+        val f = line.split('|')
+        if (f.size < 10) null else runCatching {
+            Zone(f[0], f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5].toInt(),
+                f[6].toFloat(), f[7].toFloat(), f[8].toFloat(), f[9] != "0")
+        }.getOrNull()
+    }.toList()
+
+    fun encode(zones: List<Zone>): String = zones.joinToString("\n") {
+        listOf(it.path, it.lowKey, it.highKey, it.rootKey, it.lowVel, it.highVel, it.tuneCents, it.gain, it.pan,
+            if (it.loop) 1 else 0).joinToString("|")
+    }
+
+    /** What the engine is asked to build: absolute paths, one zone per line. */
+    fun spec(zones: List<Zone>, root: java.io.File?): String = zones.joinToString("\n") { it.encode(root) }
 }

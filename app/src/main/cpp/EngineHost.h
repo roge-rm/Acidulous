@@ -38,6 +38,16 @@ class EngineHost {
     // Decodes a WAV here and mounts it into the machine's `slot` (a pad). An
     // empty path clears the slot. Returns false if the file cannot be read.
     bool loadSample(int rack, int slot, const std::string &path, std::string &error);
+
+    // --- Multisample maps (Mosaic) ------------------------------------------
+    // Both build the whole instrument on the calling thread and hand it over
+    // as one object mount, so call them from a worker.
+    static std::string soundFontPresets(const std::string &path, std::string &error);
+    bool loadSoundFont(int rack, const std::string &path, int presetIndex, std::string &error);
+    /** One zone per line: path|lowKey|highKey|rootKey|lowVel|highVel|cents|gain|pan|loop */
+    bool loadZoneMap(int rack, const std::string &spec, const std::string &name, std::string &error);
+    /** "name|zones|samples|seconds" for the mounted map, or "". */
+    std::string sampleMapInfo(int rack) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
     std::string sampleInfo(int rack, int slot) const;
     const char *mountedMachine(int rack) const;
@@ -122,6 +132,11 @@ class EngineHost {
     EngineHost &operator=(const EngineHost &) = delete;
 
     bool mountWithRetry(struct Mount &m, void (*deleter)(void *));
+
+  public:
+    bool mountObjectWithRetry(struct Mount &m);
+
+  private:
 
     bool running = false;
     std::string mountedType[16];

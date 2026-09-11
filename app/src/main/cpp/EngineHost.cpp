@@ -12,7 +12,11 @@
 #include <engine/effect/EffectRegistry.h>
 #include <engine/eventor/EventorRegistry.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/core/Sf2Reader.h>
 #include <engine/machine/forage/Forage.h>
+#include <engine/machine/mosaic/Mosaic.h>
+#include <map>
+#include <sstream>
 #include <engine/rack/Engine.h>
 #include <sequencer/Song.h>
 #include <thread>
@@ -73,6 +77,8 @@ void EngineHost::stop() {
     for (auto &r : mountedEventorType) for (auto &t : r) t.clear();
     LOGI("engine stopped");
 }
+
+bool EngineHost::mountObjectWithRetry(Mount &m) { return mountWithRetry(m, m.deleter); }
 
 bool EngineHost::mountWithRetry(Mount &m, void (*deleter)(void *)) {
     // The audio thread applies a bounded burst of mounts per block (1.33 ms); a full queue is a
@@ -186,6 +192,102 @@ bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::st
     if (!mountWithRetry(m, deleteAs<SampleData>)) { error = "mount queue full"; return false; }
     LOGI("queued sample '%s' for rack %d pad %d", path.c_str(), rack, slot);
     return true;
+}
+
+std::string EngineHost::soundFontPresets(const std::string &path, std::string &error) {
+    std::vector<Sf2Reader::PresetInfo> presets;
+    if (!Sf2Reader::listPresets(path, presets, error)) return "";
+    std::string out;
+    for (const auto &p : presets) {
+        out += std::to_string(p.bank) + "|" + std::to_string(p.preset) + "|" + p.name + "\n";
+    }
+    return out;
+}
+
+namespace {
+bool mountMap(EngineHost &host, Engine &engine, int rack, SampleMap *built, std::string &error);
+}
+
+bool EngineHost::loadSoundFont(int rack, const std::string &path, int presetIndex, std::string &error) {
+    if (rack < 0 || rack >= kRackCount) { error = "bad rack"; return false; }
+    auto built = Sf2Reader::load(path, presetIndex, error);
+    if (!built) return false;
+    LOGI("soundfont '%s' preset %d: %zu zones, %zu samples", built->name.c_str(), presetIndex,
+         built->zones.size(), built->samples.size());
+    return mountMap(*this, sEngine, rack, built.release(), error);
+}
+
+bool EngineHost::loadZoneMap(int rack, const std::string &spec, const std::string &name, std::string &error) {
+    if (rack < 0 || rack >= kRackCount) { error = "bad rack"; return false; }
+    auto built = std::make_unique<SampleMap>();
+    built->name = name;
+    std::istringstream lines(spec);
+    std::string line;
+    std::map<std::string, int32_t> loaded;
+    while (std::getline(lines, line)) {
+        if (line.empty()) continue;
+        std::vector<std::string> f;
+        size_t start = 0;
+        while (true) {
+            const size_t bar = line.find('|', start);
+            f.push_back(line.substr(start, bar == std::string::npos ? std::string::npos : bar - start));
+            if (bar == std::string::npos) break;
+            start = bar + 1;
+        }
+        if (f.size() < 10) { error = "malformed zone line"; return false; }
+        auto known = loaded.find(f[0]);
+        if (known == loaded.end()) {
+            std::string readError;
+            auto data = WavReader::read(f[0], 0, readError); // 0: keep the file's own rate
+            if (!data) { error = f[0] + ": " + readError; return false; }
+            built->samples.push_back(std::move(*data));
+            known = loaded.emplace(f[0], static_cast<int32_t>(built->samples.size()) - 1).first;
+        }
+        MapZone z;
+        z.sample = known->second;
+        z.lowKey = static_cast<uint8_t>(std::clamp(std::stoi(f[1]), 0, 127));
+        z.highKey = static_cast<uint8_t>(std::clamp(std::stoi(f[2]), 0, 127));
+        z.rootKey = static_cast<uint8_t>(std::clamp(std::stoi(f[3]), 0, 127));
+        z.lowVel = static_cast<uint8_t>(std::clamp(std::stoi(f[4]), 0, 127));
+        z.highVel = static_cast<uint8_t>(std::clamp(std::stoi(f[5]), 0, 127));
+        z.tuneCents = std::stof(f[6]);
+        z.gain = std::stof(f[7]);
+        z.pan = std::stof(f[8]);
+        if (std::stoi(f[9]) != 0) {
+            const SampleData &s = built->samples[static_cast<size_t>(z.sample)];
+            z.loopStart = s.loopStart >= 0 ? s.loopStart : 0;
+            z.loopEnd = s.loopEnd > 0 ? s.loopEnd : s.frames - 1;
+        }
+        built->zones.push_back(z);
+    }
+    if (built->zones.empty()) { error = "no zones"; return false; }
+    LOGI("zone map '%s': %zu zones, %zu samples", name.c_str(), built->zones.size(), built->samples.size());
+    return mountMap(*this, sEngine, rack, built.release(), error);
+}
+
+namespace {
+bool mountMap(EngineHost &host, Engine &, int rack, SampleMap *built, std::string &error) {
+    Mount m;
+    m.kind = Mount::Kind::Object;
+    m.rack = rack;
+    m.slot = 0;
+    m.object = built;
+    m.deleter = deleteAs<SampleMap>;
+    if (!host.mountObjectWithRetry(m)) { error = "mount queue full"; return false; }
+    return true;
+}
+} // namespace
+
+std::string EngineHost::sampleMapInfo(int rack) const {
+    if (rack < 0 || rack >= kRackCount) return "";
+    auto *mosaic = dynamic_cast<machine::Mosaic *>(sEngine.racks[rack].currentMachine());
+    if (mosaic == nullptr) return "";
+    const SampleMap *m = mosaic->currentMap();
+    if (m == nullptr) return "";
+    int64_t frames = 0;
+    for (const auto &s : m->samples) frames += s.frames;
+    return m->name + "|" + std::to_string(m->zones.size()) + "|" + std::to_string(m->samples.size()) + "|" +
+           std::to_string(static_cast<double>(frames) / 48000.0);
 }
 
 std::string EngineHost::sampleInfo(int rack, int slot) const {
