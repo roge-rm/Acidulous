@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -148,7 +151,14 @@ fun EditScreen(
 
     // Two bars at a time in the roll, one in the step views: any more and the
     // notes are too narrow to grab. The count of pages follows from that.
-    val pageBars = if (steps) 1 else PAGE_BARS
+    // Sideways: the same test ui/Cutout.kt uses, which stays right in
+    // multi-window and on a fold where the orientation constant does not.
+    val windowSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+    val landscape = windowSize.width > windowSize.height
+    // Fewer rows sideways, because a row shorter than about 11dp loses its
+    // name and a nameless roll is worth less than a shorter one.
+    val rows = if (landscape) ROWS_LAND else ROWS
+    val pageBars = if (steps) 1 else if (landscape) PAGE_BARS_LAND else PAGE_BARS
     val pages = ((clip.bars + pageBars - 1) / pageBars).coerceAtLeast(1)
     page = page.coerceIn(0, pages - 1)
     val pageTicks = pageBars * ticksPerBar
@@ -198,194 +208,228 @@ fun EditScreen(
             }
             // Only the roll scrolls by octave; the step views have fixed rows.
             if (!steps) {
-                HeaderButton("▲") { lowestPitch = (lowestPitch + 12).coerceAtMost(127 - ROWS) }
+                HeaderButton("▲") { lowestPitch = (lowestPitch + 12).coerceAtMost(127 - rows) }
                 HeaderButton("▼") { lowestPitch = (lowestPitch - 12).coerceAtLeast(0) }
             }
         }
-
-        // Everything below the header keeps the old margin; the header
-        // cannot have one, because it works in window coordinates.
-        Column(Modifier.fillMaxWidth().weight(1f).padding(start = 8.dp, end = 8.dp, bottom = 8.dp)) {
-
-            if (steps && kind == MachineKind.Drums) DrumGrid(
-                clip = clip,
-                ticksPerBar = ticksPerBar,
-                voices = voices,
-                playheadTick = playhead,
-                barIndex = page,
-                onSetHit = { tick, note, hit ->
-                    editor.editClip(trackIndex, sceneId) { c ->
-                        val others = c.notes.filter { !(it.tick == tick && it.pitch == note) }
-                        c.copy(notes = (if (hit != null) others + hit else others).sortedBy { it.tick })
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().weight(1f),
-            ) else if (steps) StepEditor(
-                clip = clip,
-                ticksPerBar = ticksPerBar,
-                playheadTick = playhead,
-                barIndex = page,
-                onSetStep = { tick, note ->
-                    editor.editClip(trackIndex, sceneId) { c ->
-                        val others = c.notes.filter { it.tick != tick }
-                        c.copy(notes = (if (note != null) others + note else others).sortedBy { it.tick })
-                    }
-                },
-                onPitchGestureBegin = { editor.beginGesture(trackIndex) },
-                onPitchGesture = { tick, note ->
-                    editor.updateGestureClip(sceneId) { base -> base.copy(notes = base.notes.map { if (it.tick == tick) note else it }) }
-                },
-                onPitchGestureEnd = { editor.endGesture() },
-                modifier = Modifier.fillMaxWidth().weight(1f),
-            ) else PianoRoll(
-                clip = clip,
-                ticksPerBar = ticksPerBar,
-                mode = mode,
-                selection = selection,
-                playheadTick = playhead,
-                lowestPitch = lowestPitch,
-                rows = ROWS,
-                scalePitchClasses = Scales.activeFor(track),
-                scaleView = scaleView,
-                firstTick = firstTick,
-                visibleTicks = pageTicks,
-                onCycleScaleView = {
-                    // Dim and fit need a scale to dim or fit to, so before one is
-                    // set the corner does the only useful thing: asks for one.
-                    if (Scales.activeFor(track) == null) scaleDialog = true
-                    else scaleView = when (scaleView) {
-                        ScaleView.Chromatic -> ScaleView.Dim
-                        ScaleView.Dim -> ScaleView.Fold
-                        ScaleView.Fold -> ScaleView.Chromatic
-                    }
-                },
-                onTapEmpty = { tick, pitch ->
-                    selection = emptySet()
-                    editor.editClip(trackIndex, sceneId) { c -> c.copy(notes = c.notes + Note(tick, c.grid, pitch, 100)) }
-                    preview(pitch)
-                },
-                onTapNote = { index ->
-                    selection = emptySet()
-                    editor.editClip(trackIndex, sceneId) { c -> c.copy(notes = c.notes.filterIndexed { i, _ -> i != index }) }
-                },
-                onSelectionChange = { selection = it },
-                onAudition = { pitch -> preview(pitch) },
-                onGestureBegin = { editor.beginGesture(trackIndex) },
-                onMove = { indices, dTick, dPitch ->
-                    editor.updateGestureClip(sceneId) { base ->
-                        base.copy(notes = base.notes.mapIndexed { i, n ->
-                            if (i in indices) n.copy(
-                                tick = (n.tick + dTick).coerceIn(0, clipLen - 1),
-                                pitch = (n.pitch + dPitch).coerceIn(0, 127),
-                            ) else n
-                        })
-                    }
-                },
-                onResize = { index, newLength ->
-                    editor.updateGestureClip(sceneId) { base ->
-                        base.copy(notes = base.notes.mapIndexed { i, n -> if (i == index) n.copy(length = newLength) else n })
-                    }
-                },
-                onDraw = { tick, pitch, length ->
-                    editor.updateGestureClip(sceneId) { base -> base.copy(notes = base.notes + Note(tick, length, pitch, 100)) }
-                },
-                onGestureEnd = { editor.endGesture() },
-                modifier = Modifier.fillMaxWidth().weight(1f),
+        // The editor is one stack in portrait and two panes in landscape. The
+        // pieces are the same either way; only the arrangement differs, so
+        // each is written once here and placed below.
+        var octave by rememberSaveable(trackIndex) { mutableStateOf(3) }
+        val gridSlot: @Composable ColumnScope.() -> Unit = {
+        if (steps && kind == MachineKind.Drums) DrumGrid(
+            clip = clip,
+            ticksPerBar = ticksPerBar,
+            voices = voices,
+            playheadTick = playhead,
+            barIndex = page,
+            onSetHit = { tick, note, hit ->
+                editor.editClip(trackIndex, sceneId) { c ->
+                    val others = c.notes.filter { !(it.tick == tick && it.pitch == note) }
+                    c.copy(notes = (if (hit != null) others + hit else others).sortedBy { it.tick })
+                }
+            },
+            modifier = Modifier.fillMaxWidth().weight(1f),
+        ) else if (steps) StepEditor(
+            clip = clip,
+            ticksPerBar = ticksPerBar,
+            playheadTick = playhead,
+            barIndex = page,
+            onSetStep = { tick, note ->
+                editor.editClip(trackIndex, sceneId) { c ->
+                    val others = c.notes.filter { it.tick != tick }
+                    c.copy(notes = (if (note != null) others + note else others).sortedBy { it.tick })
+                }
+            },
+            onPitchGestureBegin = { editor.beginGesture(trackIndex) },
+            onPitchGesture = { tick, note ->
+                editor.updateGestureClip(sceneId) { base -> base.copy(notes = base.notes.map { if (it.tick == tick) note else it }) }
+            },
+            onPitchGestureEnd = { editor.endGesture() },
+            modifier = Modifier.fillMaxWidth().weight(1f),
+        ) else PianoRoll(
+            clip = clip,
+            ticksPerBar = ticksPerBar,
+            mode = mode,
+            selection = selection,
+            playheadTick = playhead,
+            lowestPitch = lowestPitch,
+            rows = rows,
+            scalePitchClasses = Scales.activeFor(track),
+            scaleView = scaleView,
+            firstTick = firstTick,
+            visibleTicks = pageTicks,
+            onCycleScaleView = {
+                // Dim and fit need a scale to dim or fit to, so before one is
+                // set the corner does the only useful thing: asks for one.
+                if (Scales.activeFor(track) == null) scaleDialog = true
+                else scaleView = when (scaleView) {
+                    ScaleView.Chromatic -> ScaleView.Dim
+                    ScaleView.Dim -> ScaleView.Fold
+                    ScaleView.Fold -> ScaleView.Chromatic
+                }
+            },
+            onTapEmpty = { tick, pitch ->
+                selection = emptySet()
+                editor.editClip(trackIndex, sceneId) { c -> c.copy(notes = c.notes + Note(tick, c.grid, pitch, 100)) }
+                preview(pitch)
+            },
+            onTapNote = { index ->
+                selection = emptySet()
+                editor.editClip(trackIndex, sceneId) { c -> c.copy(notes = c.notes.filterIndexed { i, _ -> i != index }) }
+            },
+            onSelectionChange = { selection = it },
+            onAudition = { pitch -> preview(pitch) },
+            onGestureBegin = { editor.beginGesture(trackIndex) },
+            onMove = { indices, dTick, dPitch ->
+                editor.updateGestureClip(sceneId) { base ->
+                    base.copy(notes = base.notes.mapIndexed { i, n ->
+                        if (i in indices) n.copy(
+                            tick = (n.tick + dTick).coerceIn(0, clipLen - 1),
+                            pitch = (n.pitch + dPitch).coerceIn(0, 127),
+                        ) else n
+                    })
+                }
+            },
+            onResize = { index, newLength ->
+                editor.updateGestureClip(sceneId) { base ->
+                    base.copy(notes = base.notes.mapIndexed { i, n -> if (i == index) n.copy(length = newLength) else n })
+                }
+            },
+            onDraw = { tick, pitch, length ->
+                editor.updateGestureClip(sceneId) { base -> base.copy(notes = base.notes + Note(tick, length, pitch, 100)) }
+            },
+            onGestureEnd = { editor.endGesture() },
+            modifier = Modifier.fillMaxWidth().weight(1f),
+        )
+        }
+        val automationSlot: @Composable () -> Unit = {
+        // Automation: the reference sequencer's parameter strip under the notes.
+        AutomationStrip(
+            clip = clip,
+            ticksPerBar = ticksPerBar,
+            playheadTick = playhead,
+            firstTick = firstTick,
+            visibleTicks = pageTicks,
+            laneKeys = laneKeys,
+            nameOf = { com.rm.acidulous.model.laneLabel(track, it) },
+            shortOf = { com.rm.acidulous.model.laneShortLabel(track, it) },
+            selected = laneKey,
+            onSelect = { laneKey = it },
+            onGestureBegin = { editor.beginGesture(trackIndex) },
+            onDraw = { key, points ->
+                editor.updateGestureClip(sceneId) { base ->
+                    var lane = base.automation[key] ?: com.rm.acidulous.model.Lane()
+                    for ((t, v) in points) lane = lane.withPoint(t, v)
+                    base.copy(automation = base.automation + (key to lane))
+                }
+            },
+            onGestureEnd = { editor.endGesture() },
+            onClear = { key -> editor.editClip(trackIndex, sceneId) { c -> c.copy(automation = c.automation - key) } },
+            collapsed = autoFolded,
+            onToggleCollapse = { UiPrefs.foldAutomation(!autoFolded) },
+            modifier = Modifier.fillMaxWidth().height(if (autoFolded) 24.dp else 88.dp).padding(top = 4.dp),
+        )
+        }
+        val panelSlot: @Composable () -> Unit = {
+        // The machine's face: knobs go to the engine as gestures and into the document as undo steps.
+        // Or, behind the fx toggle, the track's two insert slots.
+        if (panel == 1) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
+        else if (panel == 2) SlotsPanel(SlotKind.Eventors, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
+        else MachinePanel(
+            track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch,
+            factoryPatchNames = factoryPatchNames, userPatchNames = userPatchNames, onDeletePatch = onDeletePatch,
+            onImportSoundFont = { onImportSoundFont(trackIndex) },
+            onPickPreset = { onPickPreset(trackIndex) },
+            onImportZoneSamples = { onImportZoneSamples(trackIndex) },
+            selectedPad = selectedPad,
+            onImportSample = { pad -> onImportSample(trackIndex, pad) },
+            onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        )
+        }
+        val performanceSlot: @Composable () -> Unit = {
+        // Mod wheel and pressure, for machines that answer them.
+        if (MachineUi.usesPerformance(track.machine.type)) {
+            PerformanceStrip(trackIndex, Modifier.fillMaxWidth().padding(top = 6.dp))
+        }
+        }
+        val keysSlot: @Composable (Dp) -> Unit = { height ->
+        if (kind == MachineKind.Drums) DrumPads(trackIndex, voices, selectedPad, { selectedPad = it }, Modifier.fillMaxWidth().height(height - 6.dp).padding(top = 6.dp))
+        else Row(Modifier.fillMaxWidth().height(height).padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            ScaleChip(
+                label = Scales.labelFor(track),
+                onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
+                onOpen = { scaleDialog = true },
+                modifier = Modifier.width(22.dp).fillMaxHeight(),
             )
-
-            // Automation: the reference sequencer's parameter strip under the notes.
-            AutomationStrip(
-                clip = clip,
-                ticksPerBar = ticksPerBar,
-                playheadTick = playhead,
-                firstTick = firstTick,
-                visibleTicks = pageTicks,
-                laneKeys = laneKeys,
-                nameOf = { com.rm.acidulous.model.laneLabel(track, it) },
-                shortOf = { com.rm.acidulous.model.laneShortLabel(track, it) },
-                selected = laneKey,
-                onSelect = { laneKey = it },
-                onGestureBegin = { editor.beginGesture(trackIndex) },
-                onDraw = { key, points ->
-                    editor.updateGestureClip(sceneId) { base ->
-                        var lane = base.automation[key] ?: com.rm.acidulous.model.Lane()
-                        for ((t, v) in points) lane = lane.withPoint(t, v)
-                        base.copy(automation = base.automation + (key to lane))
-                    }
-                },
-                onGestureEnd = { editor.endGesture() },
-                onClear = { key -> editor.editClip(trackIndex, sceneId) { c -> c.copy(automation = c.automation - key) } },
-                collapsed = autoFolded,
-                onToggleCollapse = { UiPrefs.foldAutomation(!autoFolded) },
-                modifier = Modifier.fillMaxWidth().height(if (autoFolded) 24.dp else 88.dp).padding(top = 4.dp),
-            )
-
-            // The machine's face: knobs go to the engine as gestures and into the document as undo steps.
-            // Or, behind the fx toggle, the track's two insert slots.
-            if (panel == 1) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
-            else if (panel == 2) SlotsPanel(SlotKind.Eventors, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
-            else MachinePanel(
-                track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch,
-                factoryPatchNames = factoryPatchNames, userPatchNames = userPatchNames, onDeletePatch = onDeletePatch,
-                onImportSoundFont = { onImportSoundFont(trackIndex) },
-                onPickPreset = { onPickPreset(trackIndex) },
-                onImportZoneSamples = { onImportZoneSamples(trackIndex) },
-                selectedPad = selectedPad,
-                onImportSample = { pad -> onImportSample(trackIndex, pad) },
-                onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-            )
-
-            // Mod wheel and pressure, for machines that answer them.
-            if (MachineUi.usesPerformance(track.machine.type)) {
-                PerformanceStrip(trackIndex, Modifier.fillMaxWidth().padding(top = 6.dp))
+            PianoKeys(trackIndex, octave, { octave = it }, Scales.activeFor(track), Scales.rootFor(track),
+                Modifier.weight(1f).fillMaxHeight())
+        }
+        }
+        val footerSlot: @Composable () -> Unit = {
+        // Footer: mode · undo/redo · transport · rec
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (hasSteps) {
+                OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { steps = !steps }) { Text(if (steps) "▦" else "▤", fontSize = 12.sp) }
             }
-
-            // Played from pads or from a real keyboard, by machine kind.
-            var octave by rememberSaveable(trackIndex) { mutableStateOf(3) }
-            if (kind == MachineKind.Drums) DrumPads(trackIndex, voices, selectedPad, { selectedPad = it }, Modifier.fillMaxWidth().height(72.dp).padding(top = 6.dp))
-            else Row(Modifier.fillMaxWidth().height(78.dp).padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                ScaleChip(
-                    label = Scales.labelFor(track),
-                    onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
-                    onOpen = { scaleDialog = true },
-                    modifier = Modifier.width(22.dp).fillMaxHeight(),
-                )
-                PianoKeys(trackIndex, octave, { octave = it }, Scales.activeFor(track), Scales.rootFor(track),
-                    Modifier.weight(1f).fillMaxHeight())
+            if (!steps) OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {
+                Text(if (mode == EditMode.Draw) "✎" else "⬚", fontSize = 12.sp)
             }
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 1) 0 else 1 }) {
+                Text("fx", color = if (panel == 1) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
+            }
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 2) 0 else 2 }) {
+                Text("ev", color = if (panel == 2) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
+            }
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.redo(trackIndex) }, enabled = editor.canRedo(trackIndex)) { Text("↷", fontSize = 12.sp) }
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = {
+                if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(song.scenes.indexOf(scene))
+            }) { Text(if (playing) "■" else "▶", fontSize = 12.sp) }
+            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { onArm(!armed) }) {
+                Text(if (armed) "●" else "○", color = if (armed) Color(0xFFE74C3C) else Color.Unspecified, fontSize = 12.sp)
+            }
+            Text(
+                if (selection.isEmpty()) "" else "${selection.size} sel",
+                color = Color(0xFFBBBBBB), fontFamily = FontFamily.Monospace, fontSize = 11.sp,
+                softWrap = false, maxLines = 1,
+            )
+        }
+        }
 
-            // Footer: mode · undo/redo · transport · rec
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (hasSteps) {
-                    OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { steps = !steps }) { Text(if (steps) "▦" else "▤", fontSize = 12.sp) }
+        val pad = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+        if (landscape) {
+            // Sideways the grid is the point: it takes the whole left side and
+            // the full height, and everything that was competing with it for
+            // that height stands in a column of its own.
+            Row(Modifier.fillMaxWidth().weight(1f).then(pad), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f).fillMaxHeight()) {
+                    gridSlot()
+                    automationSlot()
+                    keysSlot(if (kind == MachineKind.Drums) PADS_H_LAND else KEYS_H_LAND)
                 }
-                if (!steps) OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {
-                    Text(if (mode == EditMode.Draw) "✎" else "⬚", fontSize = 12.sp)
+                Column(Modifier.width(CONTROL_W).fillMaxHeight()) {
+                    // The panel is the tall one, so it is what scrolls; the
+                    // performance bars and the transport stay put, because
+                    // stop should never be somewhere you have to scroll to.
+                    Column(Modifier.weight(1f).verticalScrollWithBar(rememberScrollState())) { panelSlot() }
+                    performanceSlot()
+                    footerSlot()
                 }
-                OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 1) 0 else 1 }) {
-                    Text("fx", color = if (panel == 1) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
-                }
-                OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 2) 0 else 2 }) {
-                    Text("ev", color = if (panel == 2) Color(0xFFFFB454) else Color.Unspecified, fontSize = 12.sp)
-                }
-                OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }
-                OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.redo(trackIndex) }, enabled = editor.canRedo(trackIndex)) { Text("↷", fontSize = 12.sp) }
-                OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = {
-                    if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(song.scenes.indexOf(scene))
-                }) { Text(if (playing) "■" else "▶", fontSize = 12.sp) }
-                OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { onArm(!armed) }) {
-                    Text(if (armed) "●" else "○", color = if (armed) Color(0xFFE74C3C) else Color.Unspecified, fontSize = 12.sp)
-                }
-                Text(
-                    if (selection.isEmpty()) "" else "${selection.size} sel",
-                    color = Color(0xFFBBBBBB), fontFamily = FontFamily.Monospace, fontSize = 11.sp,
-                    softWrap = false, maxLines = 1,
-                )
+            }
+        } else {
+            Column(Modifier.fillMaxWidth().weight(1f).then(pad)) {
+                gridSlot()
+                automationSlot()
+                panelSlot()
+                performanceSlot()
+                keysSlot(if (kind == MachineKind.Drums) PADS_H else KEYS_H)
+                footerSlot()
             }
         }
     }
@@ -403,7 +447,19 @@ fun EditScreen(
 // carry its name and be hit with a finger, which matters more on a phone
 // than seeing the whole range at once. The arrows move the window.
 private const val ROWS = 16
+private const val ROWS_LAND = 12
 private const val PAGE_BARS = 2
+
+// Sideways the roll is about twice as wide, so it shows twice as much clip,
+// and the pieces that share the screen with it move into a column of their
+// own. The keyboard loses a little height there: it takes whatever the row
+// gives it and scales, so the roll gets the difference.
+private const val PAGE_BARS_LAND = 4
+private val CONTROL_W = 300.dp
+private val KEYS_H = 78.dp
+private val PADS_H = 72.dp
+private val KEYS_H_LAND = 64.dp
+private val PADS_H_LAND = 60.dp
 
 @Composable
 private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
