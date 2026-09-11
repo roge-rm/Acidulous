@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.rm.acidulous.engine.EngineAssets
 import com.rm.acidulous.engine.EngineSync
+import com.rm.acidulous.engine.LaunchState
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
 import com.rm.acidulous.engine.Recorder
@@ -341,6 +342,10 @@ private fun App(modifier: Modifier = Modifier) {
     var loopScene by remember { mutableStateOf(false) }
     var stopAtEnd by remember { mutableStateOf(false) }
     var queuedScene by remember { mutableStateOf(-1) }
+    // One per rack, read back each poll while clip mode is on. The engine is
+    // the source of truth for what is playing, exactly as it is for queuedScene.
+    val launchPacked = remember { LongArray(16) }
+    var launchStates by remember { mutableStateOf(List(16) { LaunchState.idle }) }
     var notesOn by remember { mutableStateOf(0) }
     var notesOff by remember { mutableStateOf(0) }
     var load by remember { mutableStateOf(0f) }
@@ -424,6 +429,10 @@ private fun App(modifier: Modifier = Modifier) {
             fade = NativeEngine.masterFade
             stopAtEnd = NativeEngine.stopAtEnd
             queuedScene = NativeEngine.queuedScene
+            if (com.rm.acidulous.ui.UiPrefs.clipMode) {
+                NativeEngine.launchStates(launchPacked)
+                launchStates = launchPacked.map { LaunchState.unpack(it) }
+            }
             rackPeaks = FloatArray(16) { i -> if (i < song.tracks.size) NativeEngine.readRackPeak(i) else 0f }
             if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf))
             delay(80)
@@ -454,6 +463,17 @@ private fun App(modifier: Modifier = Modifier) {
     when (val s = screen) {
         Screen.Main -> MainScreen(
             song = song, editor = editor, position = position, playing = playing, armed = armed,
+            clipMode = com.rm.acidulous.ui.UiPrefs.clipMode,
+            launchStates = launchStates,
+            onClipMode = { on ->
+                // Switching how the grid plays stops it playing. Half a song
+                // in one mode and half in the other is a class of bug nobody
+                // needs, and a performer expects a mode switch to be a reset.
+                NativeEngine.transportStop()
+                com.rm.acidulous.ui.UiPrefs.chooseClipMode(on)
+                NativeEngine.setLaunchQuantise(com.rm.acidulous.ui.UiPrefs.launchQuantise * song.signature.ticksPerBar)
+                launchStates = List(16) { LaunchState.idle }
+            },
             loopScene = loopScene, stopAtEnd = stopAtEnd, queuedScene = queuedScene,
             bpm = bpm, diagnostics = diagnostics,
             rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn,

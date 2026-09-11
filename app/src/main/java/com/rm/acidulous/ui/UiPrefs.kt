@@ -37,6 +37,23 @@ object UiPrefs {
     var automationFolded by mutableStateOf(false)
         private set
 
+    /**
+     * The song grid as a launcher rather than an arranger. A way of working
+     * rather than anything about the song, so it follows the person and not
+     * the file - open somebody else's song and it is still however you left
+     * it.
+     */
+    var clipMode by mutableStateOf(false)
+        private set
+
+    /**
+     * When a tapped clip actually starts, in bars. 0 waits for the playing
+     * clip to finish the cycle it is in, which is the musical default;
+     * anything else is a plain grid.
+     */
+    var launchQuantise by mutableStateOf(0)
+        private set
+
     // --- Appearance ------------------------------------------------------
     /** Auto follows the phone; the other two ignore it. */
     var theme by mutableStateOf(ThemeMode.Dark)
@@ -89,6 +106,8 @@ object UiPrefs {
         val p = context.getSharedPreferences("ui", Context.MODE_PRIVATE)
         store = p
         automationFolded = p.getBoolean(KEY_AUTO_FOLDED, false)
+        clipMode = p.getBoolean(KEY_CLIP_MODE, false)
+        launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
             .getOrDefault(ThemeMode.Dark)
         buffer = runCatching { Buffer.valueOf(p.getString(KEY_BUFFER, null) ?: "Balanced") }
@@ -118,11 +137,28 @@ object UiPrefs {
         NativeEngine.setVoiceLimit(voiceLimit)
         NativeEngine.setQuality(if (fullQuality) 1 else 0)
         NativeEngine.setRecordBits(recordBits)
+        NativeEngine.setLauncher(clipMode)
+        // The quantise is in bars here and in ticks there; the song's own
+        // signature converts it, and MainScreen re-sends it when that changes.
+        NativeEngine.setLaunchQuantise(launchQuantise * 4 * 240)
     }
 
     fun foldAutomation(folded: Boolean) {
         automationFolded = folded
         store?.edit()?.putBoolean(KEY_AUTO_FOLDED, folded)?.apply()
+    }
+
+    // Not setClipMode: the property's own generated setter already owns
+    // that JVM signature. Same reason chooseTheme is not setTheme.
+    fun chooseClipMode(on: Boolean) {
+        clipMode = on
+        store?.edit()?.putBoolean(KEY_CLIP_MODE, on)?.apply()
+        NativeEngine.setLauncher(on)
+    }
+
+    fun chooseQuantise(bars: Int) {
+        launchQuantise = bars
+        store?.edit()?.putInt(KEY_LAUNCH_Q, bars)?.apply()
     }
 
     fun chooseTheme(mode: ThemeMode) {
@@ -184,6 +220,8 @@ object UiPrefs {
     }
 
     private const val KEY_AUTO_FOLDED = "automation_folded"
+    private const val KEY_CLIP_MODE = "clip_mode"
+    private const val KEY_LAUNCH_Q = "launch_quantise"
     private const val KEY_THEME = "theme"
     private const val KEY_BUFFER = "buffer"
     private const val KEY_VOICES = "voice_limit"

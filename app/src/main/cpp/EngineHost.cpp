@@ -488,6 +488,10 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     sAudio.stop();
     const bool loopSongBefore = sEngine.transport.loopSong();
     const bool loopSceneBefore = sEngine.transport.loopScene();
+    // These paths drive the scheduler by hand through one scene. Clip mode
+    // would have every rack somewhere else, so it sits out and comes back.
+    const bool launcherBefore = sEngine.transport.launcherMode();
+    sEngine.transport.setLauncher(false);
     const float clickBefore = sEngine.master.params().normalized(sEngine.master.params().indexOf("clickon"));
     sEngine.transport.setLoopSong(false);
     sEngine.transport.setLoopScene(false);
@@ -528,6 +532,7 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     // Hand the device back exactly as it was.
     sEngine.transport.setLoopSong(loopSongBefore);
     sEngine.transport.setLoopScene(loopSceneBefore);
+    sEngine.transport.setLauncher(launcherBefore);
     click.value = clickBefore;
     sEngine.pushParam(click);
     if (!sAudio.start()) LOGE("audio failed to restart after render");
@@ -555,6 +560,16 @@ bool EngineHost::isRecordArmed() const { return sEngine.transport.isRecordArmed(
 void EngineHost::setTempo(float bpm) { sEngine.clock.requestSongTempo(bpm); }
 float EngineHost::tempo() const { return sEngine.clock.bpm(); }
 int64_t EngineHost::positionPacked() const { return sEngine.transport.position(); }
+
+void EngineHost::setLauncher(bool on) { sEngine.transport.setLauncher(on); }
+void EngineHost::setLaunchQuantise(int32_t ticks) { sEngine.transport.setLaunchQuantise(ticks); }
+void EngineHost::launchClip(int32_t rack, int64_t sceneId) { sEngine.transport.launchClip(rack, sceneId); }
+void EngineHost::stopAllClips() { sEngine.transport.requestStopAll(); }
+void EngineHost::launchStates(int64_t *out, int32_t count) const {
+    for (int32_t r = 0; r < count && r < kRackCount; ++r) {
+        out[r] = sEngine.transport.launchState(r);
+    }
+}
 
 int EngineHost::drainRecorded(int64_t *out, int maxEvents) {
     int n = 0;
@@ -815,6 +830,10 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     sAudio.stop();
     const bool loopSongBefore = sEngine.transport.loopSong();
     const bool loopSceneBefore = sEngine.transport.loopScene();
+    // These paths drive the scheduler by hand through one scene. Clip mode
+    // would have every rack somewhere else, so it sits out and comes back.
+    const bool launcherBefore = sEngine.transport.launcherMode();
+    sEngine.transport.setLauncher(false);
     sEngine.transport.setLoopSong(false);
     sEngine.transport.setLoopScene(true); // stay in this scene for the whole render
     sEngine.transport.requestStop();
@@ -850,6 +869,7 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     sEngine.renderBlock(nullptr, scratch);
     sEngine.transport.setLoopSong(loopSongBefore);
     sEngine.transport.setLoopScene(loopSceneBefore);
+    sEngine.transport.setLauncher(launcherBefore);
     if (!sAudio.start()) LOGE("audio failed to restart after a freeze");
 
     // The tail belongs at the start: a clip loops, so what is still ringing

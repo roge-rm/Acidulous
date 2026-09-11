@@ -7,6 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rm.acidulous.engine.LaunchState
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
 import com.rm.acidulous.model.PPQN
@@ -82,6 +84,10 @@ fun MainScreen(
     loopScene: Boolean,
     stopAtEnd: Boolean,
     queuedScene: Int,
+    /** Clip mode: the grid as a launcher. One state per track. */
+    clipMode: Boolean,
+    launchStates: List<LaunchState>,
+    onClipMode: (Boolean) -> Unit,
     bpm: Float,
     diagnostics: String,
     rackPeaks: FloatArray,
@@ -159,7 +165,7 @@ fun MainScreen(
         Row(Modifier.fillMaxWidth().weight(1f).verticalScrollWithBar(vScroll)) {
             // Track headers, fixed on the left.
             Column(Modifier.width(TRACK_W)) {
-                Spacer(Modifier.height(SCENE_H))
+                ModeToggle(clipMode, onClipMode)
                 song.tracks.forEachIndexed { index, track ->
                     val row = remember(song, index) { Freeze.track(song, index) }
                     val rowFrozen = remember(song, index) {
@@ -196,11 +202,25 @@ fun MainScreen(
                             repeatIdx = if (isCurrent) position.repeat else null,
                             holding = isCurrent && loopScene && playing,
                             finishing = isCurrent && playing && stopAtEnd,
-                            queued = playing && !isCurrent && queuedScene == index,
+                            queued = if (clipMode) {
+                                launchStates.indices.any { t -> launchStates[t].pending == index }
+                            } else {
+                                playing && !isCurrent && queuedScene == index
+                            },
                             // A tap has always held the scene it starts; now it
                             // says so, and the menu offers the other choice.
                             onAudition = {
                                 when {
+                                    // Clip mode: a scene chip is a column
+                                    // launch. Every track holding a clip in
+                                    // this scene is queued at once, which is
+                                    // how you move a whole arrangement.
+                                    clipMode -> {
+                                        song.tracks.forEachIndexed { t, tr ->
+                                            if (tr.clips[scene.id] != null) NativeEngine.launchClip(t, scene.engineId)
+                                        }
+                                        if (!playing) NativeEngine.transportPlay(0)
+                                    }
                                     // Already running: a tap says "finish the
                                     // repeats you owe and stop", and another
                                     // tap takes it back.
@@ -236,14 +256,19 @@ fun MainScreen(
                     Row {
                         song.scenes.forEachIndexed { sceneIndex, scene ->
                             val clip = track.clips[scene.id]
+                            val launch = launchStates.getOrElse(trackIndex) { LaunchState.idle }
+                            val live = if (clipMode) launch.scene == sceneIndex else position.scene == sceneIndex
                             ClipCell(
                                 clip = clip,
                                 ticksPerBar = song.signatureOf(scene).ticksPerBar,
                                 colour = trackColour(trackIndex),
-                                playing = playing && position.scene == sceneIndex,
-                                progress = if (playing && position.scene == sceneIndex && clip != null && !clip.mute) {
+                                playing = playing && live,
+                                progress = if (playing && live && clip != null && !clip.mute) {
                                     val len = song.clipLengthTicks(scene.id, clip)
-                                    if (len > 0) (position.tickInIteration % len).toFloat() / len else null
+                                    // In clip mode the tick is the track's own,
+                                    // because every track is somewhere else.
+                                    val at = if (clipMode) launch.tickInCycle else position.tickInIteration
+                                    if (len > 0) (at % len).toFloat() / len else null
                                 } else {
                                     null
                                 },
@@ -251,6 +276,20 @@ fun MainScreen(
                                 onSettings = { dialog = Dialog.ClipSettings(trackIndex, scene.id) },
                                 frozen = clip?.frozen != null,
                                 stale = clip != null && Freeze.stale(song, scene.id, clip),
+                                clipMode = clipMode,
+                                queued = clipMode && launch.pending == sceneIndex,
+                                stopping = clipMode && launch.stopping && launch.scene == sceneIndex,
+                                onLaunch = {
+                                    if (clip != null) {
+                                        NativeEngine.launchClip(trackIndex, scene.engineId)
+                                        // The clip first, then the transport:
+                                        // start() resets the launcher, and a
+                                        // tap already waiting is taken on the
+                                        // first block, so the first clip you
+                                        // touch sounds immediately.
+                                        if (!playing) NativeEngine.transportPlay(0)
+                                    }
+                                },
                             )
                         }
                     }
@@ -271,8 +310,22 @@ fun MainScreen(
         Column(Modifier.fillMaxWidth().background(Acid.colors.bar).padding(horizontal = 8.dp, vertical = 6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 val pad = PaddingValues(horizontal = 12.dp)
-                OutlinedButton(onClick = { if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(position.scene) }, contentPadding = pad) {
-                    Text(if (playing) "■" else "▶")
+                // In clip mode stop is a two-stage thing: once to let every
+                // clip finish the cycle it is in, again to cut. A launcher
+                // that only ever cut would be useless for ending a piece.
+                val anyLaunched = clipMode && launchStates.any { it.playing }
+                val anyStopping = clipMode && launchStates.any { it.stopping }
+                OutlinedButton(
+                    onClick = {
+                        when {
+                            !playing -> NativeEngine.transportPlay(if (clipMode) 0 else position.scene)
+                            clipMode && anyLaunched && !anyStopping -> NativeEngine.stopAllClips()
+                            else -> NativeEngine.transportStop()
+                        }
+                    },
+                    contentPadding = pad,
+                ) {
+                    Text(if (playing) "■" else "▶", color = if (anyStopping) Acid.colors.red else Color.Unspecified)
                 }
                 // Panic. A modular makes a runaway easy to build and a pair
                 // of headphones does not forgive one, so this is one tap,
@@ -282,8 +335,19 @@ fun MainScreen(
                     contentPadding = PaddingValues(horizontal = 10.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Acid.colors.red),
                 ) { Text("panic", color = Acid.colors.red, fontSize = 12.sp, maxLines = 1) }
-                OutlinedButton(onClick = { onLoopScene(!loopScene) }, contentPadding = pad) {
-                    Text(if (loopScene) "loop: scene" else "loop: song", fontSize = 12.sp, maxLines = 1)
+                if (clipMode) {
+                    // What a tap waits for. "clip end" is the musical default:
+                    // the clip you are replacing finishes what it was doing.
+                    OutlinedButton(onClick = { dialog = Dialog.Quantise }, contentPadding = pad) {
+                        Text(
+                            "q: " + quantiseLabel(UiPrefs.launchQuantise),
+                            fontSize = 12.sp, maxLines = 1,
+                        )
+                    }
+                } else {
+                    OutlinedButton(onClick = { onLoopScene(!loopScene) }, contentPadding = pad) {
+                        Text(if (loopScene) "loop: scene" else "loop: song", fontSize = 12.sp, maxLines = 1)
+                    }
                 }
                 OutlinedButton(onClick = { onArm(!armed) }, contentPadding = pad) {
                     Text(if (armed) "● REC" else "○ rec", color = if (armed) Acid.colors.red else Color.Unspecified, fontSize = 12.sp, maxLines = 1)
@@ -296,11 +360,34 @@ fun MainScreen(
                 }
             }
             Text(
-                "S%d/%d %-8s r%d/%d  %d.%d.%03d".format(
-                    position.scene + 1, song.scenes.size, scene?.name ?: "-",
-                    position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
-                ),
+                if (clipMode) {
+                    // One entry per sounding track: which scene it took its
+                    // clip from and how far through its own cycle it is. Every
+                    // track keeps its own count, which is the whole point, and
+                    // is the only place you can read that as a number.
+                    val live = song.tracks.indices.mapNotNull { t ->
+                        val st = launchStates.getOrElse(t) { LaunchState.idle }
+                        if (!st.playing) {
+                            null
+                        } else {
+                            val tpb = song.scenes.getOrNull(st.scene)
+                                ?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
+                            val sc = song.scenes.getOrNull(st.scene)
+                            val cyc = (song.tracks[t].clips[sc?.id]?.bars ?: 1) * (sc?.repeat ?: 1)
+                            "%d>%d %d.%d/%d".format(t + 1, st.scene + 1,
+                                st.tickInCycle / tpb + 1, (st.tickInCycle % tpb) / PPQN + 1, cyc)
+                        }
+                    }
+                    if (live.isEmpty()) "clip  -  q:" + quantiseLabel(UiPrefs.launchQuantise)
+                    else "clip  " + live.joinToString("  ") + "  q:" + quantiseLabel(UiPrefs.launchQuantise)
+                } else {
+                    "S%d/%d %-8s r%d/%d  %d.%d.%03d".format(
+                        position.scene + 1, song.scenes.size, scene?.name ?: "-",
+                        position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
+                    )
+                },
                 color = Acid.colors.textHi, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             Text(diagnostics, color = Acid.colors.textFaint, fontFamily = FontFamily.Monospace, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -355,6 +442,14 @@ fun MainScreen(
         Dialog.Midi -> MidiDialog(onDismiss = { dialog = null })
         Dialog.Sampler -> SamplerDialog(onDismiss = { dialog = null })
         Dialog.Settings -> SettingsDialog(song.tracks.map { it.name }, onDismiss = { dialog = null })
+        Dialog.Quantise -> QuantiseDialog(
+            current = UiPrefs.launchQuantise,
+            onPick = { bars ->
+                UiPrefs.chooseQuantise(bars)
+                NativeEngine.setLaunchQuantise(bars * song.signature.ticksPerBar)
+            },
+            onDismiss = { dialog = null },
+        )
         Dialog.SaveAs -> TextInputDialog("Save as", song.name, onDismiss = { dialog = null }) { name ->
             onSaveAs(name)
             dialog = null
@@ -379,6 +474,7 @@ private sealed class Dialog {
     object Midi : Dialog()
     object Sampler : Dialog()
     object Settings : Dialog()
+    object Quantise : Dialog()
 }
 
 @Composable
@@ -500,14 +596,39 @@ private fun ClipCell(
     frozen: Boolean = false,
     /** Frozen, but at another tempo, so the machine is playing after all. */
     stale: Boolean = false,
+    clipMode: Boolean = false,
+    /** Waiting its turn, and playing-but-asking-to-be-let-go. */
+    queued: Boolean = false,
+    stopping: Boolean = false,
+    onLaunch: () -> Unit = {},
 ) {
+    val pulse by rememberInfiniteTransition(label = "queuedclip").animateFloat(
+        initialValue = 1f, targetValue = 0.3f,
+        animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse), label = "queuedclip",
+    )
+    val edge = when {
+        queued -> Acid.colors.sceneQueued.copy(alpha = pulse)
+        stopping -> Acid.colors.red.copy(alpha = pulse)
+        playing -> colour
+        else -> Acid.colors.raised
+    }
     Box(
         Modifier
             .width(CELL_W).height(CELL_H).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(Acid.colors.card)
-            .border(1.dp, if (playing) colour else Acid.colors.raised, RoundedCornerShape(6.dp))
-            .combinedClickable(onClick = onOpen, onLongClick = onSettings),
+            .border(if (queued || stopping) 2.dp else 1.dp, edge, RoundedCornerShape(6.dp))
+            // A tap launches and a double tap edits, which is the other way
+            // round from the arranger - so the arranger keeps its instant
+            // single tap and only clip mode pays the double-tap wait. That
+            // wait is inaudible: the launch lands on a boundary either way.
+            .then(
+                if (clipMode) {
+                    Modifier.combinedClickable(onClick = onLaunch, onLongClick = onSettings, onDoubleClick = onOpen)
+                } else {
+                    Modifier.combinedClickable(onClick = onOpen, onLongClick = onSettings)
+                },
+            ),
     ) {
         if (clip == null) {
             Text("+", color = Acid.colors.textFaint, fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))
@@ -547,7 +668,77 @@ private fun ClipCell(
                     modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = 3.dp),
                 )
             }
+            if (clipMode) {
+                val mark = when {
+                    stopping -> "\u25A0"
+                    queued -> "\u2192"
+                    playing -> "\u25B6"
+                    else -> ""
+                }
+                if (mark.isNotEmpty()) {
+                    Text(
+                        mark,
+                        color = if (playing && !stopping) Acid.colors.green else Acid.colors.sceneQueued,
+                        fontSize = 11.sp,
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 3.dp),
+                    )
+                }
+            }
         }
+    }
+}
+
+/** "clip end", or a number of bars. */
+internal fun quantiseLabel(bars: Int): String = if (bars <= 0) "clip end" else "$bars bar"
+
+/**
+ * How long a tapped clip waits. Zero is the musical answer - the clip being
+ * replaced finishes the cycle it is in - and the rest are a plain grid for
+ * when you want to cut across it.
+ */
+@Composable
+private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Launch quantise") },
+        text = {
+            Column {
+                for (bars in listOf(0, 1, 2, 4, 8)) {
+                    TextButton(onClick = { onPick(bars); onDismiss() }) {
+                        Text(
+                            (if (bars == current) "\u2022 " else "   ") + quantiseLabel(bars),
+                            color = if (bars == current) Acid.colors.accent else Acid.colors.text,
+                            fontSize = 14.sp,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+    )
+}
+
+/**
+ * The corner where the scene row meets the track column, which has always
+ * been a hole. It is the one place a mode switch belongs: it is part of the
+ * grid, it is not part of either axis, and it is nowhere near anything that
+ * makes a sound.
+ */
+@Composable
+private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
+    Box(
+        Modifier
+            .width(TRACK_W).height(SCENE_H).padding(3.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(if (clipMode) Acid.colors.accentDim else Acid.colors.control)
+            .clickable { onClipMode(!clipMode) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            if (clipMode) "\u25B6 clip" else "\u2630 song",
+            color = if (clipMode) Acid.colors.onAccent else Acid.colors.textMid,
+            fontSize = 11.sp, maxLines = 1,
+        )
     }
 }
 

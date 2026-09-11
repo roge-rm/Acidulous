@@ -54,6 +54,8 @@ void Engine::renderBlock(const float *in, float *out) {
             startPending = true;
         } else {
             scheduler.allNotesOff();
+            scheduler.stopLauncher();
+            transport.clearLaunchRequests();
         }
         playing = transport.isPlaying();
     }
@@ -72,8 +74,10 @@ void Engine::renderBlock(const float *in, float *out) {
     // Does any rack play audio it made earlier? Decided before the scheduler
     // fires, because a frozen rack is sent no notes.
     {
-        const int64_t sceneNow = scheduler.currentSceneId();
-        for (int32_t r = 0; r < kRackCount; ++r) racks[r].updateFrozen(sceneNow, clock.bpm(), playing);
+        // Per rack, because in clip mode every rack may be on a different
+        // scene and frozen audio is stored per (track, scene).
+        for (int32_t r = 0; r < kRackCount; ++r)
+            racks[r].updateFrozen(scheduler.rackSceneId(r), clock.bpm(), playing);
     }
 
     // Where in the scene this block starts, before the scheduler moves on.
@@ -92,7 +96,19 @@ void Engine::renderBlock(const float *in, float *out) {
     }
 
     // Metronome: every beat boundary this block crossed, at its sample offset.
-    if (playing && master.clickEnabled() && sceneBefore != nullptr) {
+    if (playing && master.clickEnabled() && scheduler.launcherActive()) {
+        // No scene owns the bar line here, so the song's signature counts
+        // from the transport's own zero.
+        const int64_t ticksPerBar = scheduler.songTicksPerBar();
+        const float samplesPerTick = static_cast<float>(kSampleRate) * 60.0f / (clock.bpm() * static_cast<float>(kPPQN));
+        const int64_t from = clock.blockStart(), to = clock.blockEnd();
+        int64_t t = (from / kPPQN) * kPPQN;
+        if (t < from) t += kPPQN;
+        for (; t < to; t += kPPQN) {
+            const int32_t offset = static_cast<int32_t>(static_cast<float>(t - from) * samplesPerTick);
+            master.clickAt(t % ticksPerBar == 0, offset < kBlockFrames ? offset : kBlockFrames - 1);
+        }
+    } else if (playing && master.clickEnabled() && sceneBefore != nullptr) {
         const int64_t tickEnd = scheduler.currentTickInIteration();
         const int64_t ticksPerBar = sceneBefore->ticksPerBar;
         const int64_t iterLen = sceneBefore->iterationTicks() > 0 ? sceneBefore->iterationTicks() : ticksPerBar;
@@ -116,7 +132,7 @@ void Engine::renderBlock(const float *in, float *out) {
     // Scene fades: in over the first bar of the first pass, out over the last
     // bar of the last pass. Stateless - derived from the position each block.
     float fade = 1.0f;
-    if (playing && sceneBefore != nullptr) {
+    if (playing && sceneBefore != nullptr && !scheduler.launcherActive()) {
         const int64_t tpb = sceneBefore->ticksPerBar;
         const int64_t iterLen = sceneBefore->iterationTicks();
         if (sceneBefore->fadeIn && repeatBefore == 0 && tickStart < tpb) {
@@ -129,7 +145,7 @@ void Engine::renderBlock(const float *in, float *out) {
     for (int32_t r = 0; r < kRackCount; ++r) {
         if (racks[r].isActive()) {
             if (racks[r].frozenActive()) {
-                racks[r].syncFrozen(scheduler.currentTickInIteration(), clock.bpm());
+                racks[r].syncFrozen(scheduler.rackTick(r), clock.bpm());
             } else {
                 racks[r].onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
             }
@@ -171,8 +187,10 @@ void Engine::drainMidi() {
         if (transport.isRecording()) {
             seq::RecordedEvent ev;
             ev.absTick = clock.position();
-            ev.sceneId = scheduler.currentSceneId();
-            ev.tickInIteration = scheduler.currentTickInIteration();
+            // The rack's own clip, not the scheduler's: in clip mode a take
+            // recorded onto a launched clip must land in *that* cell.
+            ev.sceneId = scheduler.rackSceneId(rack);
+            ev.tickInIteration = scheduler.rackTick(rack);
             ev.rack = rack;
             ev.cmd = status;
             ev.p1 = m.data1;
@@ -193,8 +211,8 @@ void Engine::drainParams() {
                 racks[p.rack].touch(p.unit, p.index);
                 seq::RecordedEvent ev;
                 ev.absTick = clock.position();
-                ev.sceneId = scheduler.currentSceneId();
-                ev.tickInIteration = scheduler.currentTickInIteration();
+                ev.sceneId = scheduler.rackSceneId(p.rack);
+                ev.tickInIteration = scheduler.rackTick(p.rack);
                 ev.rack = p.rack;
                 ev.cmd = 0xf0;
                 ev.p1 = static_cast<uint8_t>(p.unit);

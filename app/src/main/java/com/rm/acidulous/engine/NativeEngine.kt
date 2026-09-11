@@ -140,6 +140,24 @@ object NativeEngine {
     /** Packed scene | repeat | tick-in-iteration; decode with [Position.unpack]. */
     val positionPacked: Long get() = nativeGetPositionPacked()
 
+    // --- Clip mode -----------------------------------------------------------
+    /** The grid becomes a launcher: every rack plays whichever clip it was given. */
+    fun setLauncher(on: Boolean) = nativeSetLauncher(on)
+
+    /** 0 swaps at the end of the playing clip's cycle; otherwise a tick grid. */
+    fun setLaunchQuantise(ticks: Int) = nativeSetLaunchQuantise(ticks)
+
+    /**
+     * A cell was tapped. What it means - start, cancel or stop - is decided on
+     * the audio thread against what is actually playing, so a tap is never
+     * read against a state that is already eighty milliseconds old.
+     */
+    fun launchClip(rack: Int, sceneId: Long) = nativeLaunchClip(rack, sceneId)
+    fun stopAllClips() = nativeStopAllClips()
+
+    /** Fills [out] (one per rack) with packed scene | pending | tick-in-cycle. */
+    fun launchStates(out: LongArray) = nativeLaunchStates(out)
+
     fun notesOn(rackId: Int): Int = nativeGetNotesOn(rackId)
     fun debugParam(rackId: Int, name: String): Float = nativeDebugParam(rackId, name)
     fun notesOff(rackId: Int): Int = nativeGetNotesOff(rackId)
@@ -335,6 +353,11 @@ object NativeEngine {
     private external fun nativeIsStopAtEndArmed(): Boolean
     private external fun nativeQueueScene(idx: Int)
     private external fun nativeQueuedScene(): Int
+    private external fun nativeSetLauncher(on: Boolean)
+    private external fun nativeSetLaunchQuantise(ticks: Int)
+    private external fun nativeLaunchClip(rack: Int, sceneId: Long)
+    private external fun nativeStopAllClips()
+    private external fun nativeLaunchStates(out: LongArray)
     private external fun nativeIsPlaying(): Boolean
     private external fun nativeSetLoopScene(on: Boolean)
     private external fun nativeSetLoopSong(on: Boolean)

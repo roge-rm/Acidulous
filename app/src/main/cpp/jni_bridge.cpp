@@ -441,6 +441,35 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeQueueScene(JNIEnv *, jobject, ji
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeQueuedScene(JNIEnv *, jobject) { return host().queuedScene(); }
 
+// --- Clip mode ---------------------------------------------------------------
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetLauncher(JNIEnv *, jobject, jboolean on) {
+    host().setLauncher(on == JNI_TRUE);
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetLaunchQuantise(JNIEnv *, jobject, jint ticks) {
+    host().setLaunchQuantise(ticks);
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLaunchClip(JNIEnv *, jobject, jint rack, jlong sceneId) {
+    host().launchClip(rack, sceneId);
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeStopAllClips(JNIEnv *, jobject) { host().stopAllClips(); }
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLaunchStates(JNIEnv *env, jobject, jlongArray out) {
+    const jsize n = env->GetArrayLength(out);
+    int64_t packed[acidulous::kRackCount] = {};
+    host().launchStates(packed, static_cast<int32_t>(n));
+    env->SetLongArrayRegion(out, 0, n < acidulous::kRackCount ? n : acidulous::kRackCount,
+                            reinterpret_cast<const jlong *>(packed));
+}
+
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeTransportStop(JNIEnv *, jobject) { host().transportStop(); }
 
