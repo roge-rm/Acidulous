@@ -173,6 +173,13 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOff(JNIEnv *, jobject, jint 
     host().noteOff(rackId, static_cast<uint8_t>(note & 0x7f));
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMidiEvent(JNIEnv *, jobject, jint rackId, jint status,
+                                                   jint d1, jint d2) {
+    host().midiEvent(rackId, static_cast<uint8_t>(status), static_cast<uint8_t>(d1 & 0x7f),
+                     static_cast<uint8_t>(d2 & 0x7f));
+}
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSetParam(JNIEnv *env, jobject, jint rackId,
                                                   jstring unit, jstring name, jfloat value, jboolean record) {

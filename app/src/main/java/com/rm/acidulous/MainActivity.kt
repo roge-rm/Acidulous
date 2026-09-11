@@ -67,6 +67,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.rm.acidulous.ui.UiPrefs.init(this)
+        com.rm.acidulous.midi.MidiHub.start(this)
         EngineAssets.install(this)
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
@@ -161,6 +162,13 @@ private fun App(modifier: Modifier = Modifier) {
     }
     val recorder = remember { Recorder() }
     var screen by rememberSaveable(saver = Screen.Saver) { mutableStateOf<Screen>(Screen.Main) }
+    // Hardware notes go where the last opened clip was, which is the track
+    // the player is working on whether or not its editor is still in front.
+    var midiTrack by rememberSaveable { mutableStateOf(0) }
+    LaunchedEffect(screen) {
+        (screen as? Screen.Edit)?.let { midiTrack = it.track }
+        com.rm.acidulous.midi.MidiHub.target = { midiTrack }
+    }
 
     // Importing a sample: the system picker, a copy into user/samples/, and the
     // pad's setting pointing at it. The engine loads it on the next sync.

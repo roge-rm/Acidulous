@@ -323,6 +323,11 @@ void EngineHost::channelPressure(int rack, uint8_t value) {
     sEngine.pushMidi({static_cast<uint8_t>(0xd0 | rack), value, 0});
 }
 
+void EngineHost::midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2) {
+    if (rack < 0 || rack >= kRackCount) return;
+    sEngine.pushMidi({static_cast<uint8_t>((status & 0xf0) | rack), d1, d2});
+}
+
 int EngineHost::paramIndex(const std::string &machineType, const std::string &unit, const std::string &name) const {
     const Unit u = unitFromName(unit);
     if (u == Unit::Machine) {

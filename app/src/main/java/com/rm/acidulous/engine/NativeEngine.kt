@@ -80,6 +80,15 @@ object NativeEngine {
 
     fun noteOff(rackId: Int, note: Int) = nativeNoteOff(rackId, note)
 
+    /**
+     * A channel message from a MIDI port, addressed to a rack. Everything a
+     * keyboard sends arrives this way - notes, wheel, pressure, bend - so
+     * playing from hardware takes the same path as playing on the screen,
+     * recording included.
+     */
+    fun midiEvent(rackId: Int, status: Int, data1: Int, data2: Int) =
+        nativeMidiEvent(rackId, status, data1, data2)
+
     /** Mod wheel is CC 1; pressure is channel aftertouch. Both 0..127. */
     fun controlChange(rackId: Int, cc: Int, value: Int) = nativeControlChange(rackId, cc, value)
     fun channelPressure(rackId: Int, value: Int) = nativeChannelPressure(rackId, value)
@@ -165,6 +174,7 @@ object NativeEngine {
     /** The scene fade multiplier the master is applying right now (1 = none). */
     val masterFade: Float get() = nativeGetMasterFade()
 
+    private external fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int)
     private external fun nativeStart(): Boolean
     private external fun nativeStop()
     private external fun nativeIsRunning(): Boolean

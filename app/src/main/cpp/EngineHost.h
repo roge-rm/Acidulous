@@ -70,6 +70,9 @@ class EngineHost {
     // later, a USB controller share one path into the machine.
     void controlChange(int rack, uint8_t cc, uint8_t value);
     void channelPressure(int rack, uint8_t value);
+    // A channel message straight from a MIDI port. The rack is the channel:
+    // whatever the message was addressed to on the wire is re-addressed here.
+    void midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2);
 
     // unit: "machine" | "effect1" | "effect2" | "eventor1" | "eventor2" | "channel".
     // value is normalised 0..1. Names are resolved here, on the UI thread.

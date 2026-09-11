@@ -121,6 +121,7 @@ fun MainScreen(
                 DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
                 DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
                 DropdownMenuItem(text = { Text("Export WAV…") }, onClick = { fileMenu = false; onExport() })
+                DropdownMenuItem(text = { Text("MIDI in…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
             }
         }
 
@@ -290,6 +291,7 @@ fun MainScreen(
             onDelete = onDelete,
             onDismiss = { dialog = null },
         )
+        Dialog.Midi -> MidiDialog(onDismiss = { dialog = null })
         Dialog.SaveAs -> TextInputDialog("Save as", song.name, onDismiss = { dialog = null }) { name ->
             onSaveAs(name)
             dialog = null
@@ -311,6 +313,7 @@ private sealed class Dialog {
     object Songs : Dialog()
     object SaveAs : Dialog()
     object NewSong : Dialog()
+    object Midi : Dialog()
 }
 
 @Composable
