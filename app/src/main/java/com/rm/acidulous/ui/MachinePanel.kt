@@ -105,6 +105,7 @@ fun MachinePanel(
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
             "Cipher" -> CipherPanel(binding)
+            "Filament" -> FilamentPanel(binding)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample, onAssignSample)
             else -> GenericPanel(binding)
@@ -1092,6 +1093,139 @@ private fun CipherPanel(b: ParamBinding) {
                 else -> {
                     Group("out") {
                         PanelKnob(b, "drive", "drive", PanelPink)
+                        PanelKnob(b, "volume", "volume")
+                        PanelKnob(b, "pan", "pan")
+                    }
+                }
+            }
+        }
+    }
+}
+
+// --- Filament ---------------------------------------------------------------
+//
+// The exciter first, because on this machine that is the instrument choice -
+// the same string plucked, struck, bowed or blown at is four instruments -
+// then the string itself, then what is around it.
+
+private val FILAMENT_EXCITERS = listOf("pluck", "pick", "hammer", "bow", "breath", "input")
+private val FILAMENT_SYM = listOf("octaves", "fifths", "major", "minor", "harmonic", "course")
+private val FILAMENT_SOURCES = listOf(
+    "off", "on", "mod", "prs", "vel", "key", "rand", "eg1", "eg2", "lfo1", "lfo2", "ring",
+)
+private val FILAMENT_DESTS = listOf(
+    "off", "pitch", "sustain", "tone", "bright", "position", "pressure", "damper at", "damper",
+    "rattle", "stiffness", "tension", "sympathy", "detune", "body", "drive", "volume", "pan",
+)
+private val FILAMENT_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
+
+@Composable
+private fun FilamentPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    Column {
+        SectionChips(listOf("exciter", "string", "prepare", "around", "mod", "out"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("exciter") {
+                        PanelStepKnob(b, "exciter", FILAMENT_EXCITERS, "kind", PanelAmber)
+                        PanelKnob(b, "position", "where", PanelAmber)
+                        PanelKnob(b, "hardness", "hardness")
+                        PanelKnob(b, "length", "length")
+                        PanelKnob(b, "grit", "grit", PanelPink)
+                    }
+                    Group("sustained") {
+                        PanelKnob(b, "pressure", "pressure", PanelAmber)
+                        PanelKnob(b, "speed", "speed", PanelAmber)
+                        PanelKnob(b, "in gain", "in gain")
+                    }
+                    Group("touch") {
+                        PanelKnob(b, "velocity", "velocity", PanelAmber)
+                        PanelSwitch(b, "on release", listOf("ring", "damp"), "let go")
+                        PanelKnob(b, "damp time", "damp time")
+                    }
+                }
+                1 -> {
+                    Group("string") {
+                        PanelKnob(b, "sustain", "sustain", PanelAmber)
+                        PanelKnob(b, "sustainkey", "· by key")
+                        PanelKnob(b, "tone", "tone", PanelAmber)
+                        PanelKnob(b, "tonekey", "· by key")
+                    }
+                    Group("stiffness") {
+                        PanelKnob(b, "stiffness", "amount", PanelAmber)
+                        PanelKnob(b, "stages", "stages")
+                        PanelKnob(b, "tension", "tension", PanelPink)
+                    }
+                    Group("course") {
+                        PanelKnob(b, "detune", "detune", PanelAmber)
+                        PanelKnob(b, "couple", "couple")
+                        PanelKnob(b, "spread", "spread")
+                    }
+                }
+                2 -> {
+                    Group("damper") {
+                        PanelKnob(b, "damper at", "where", PanelAmber)
+                        PanelKnob(b, "damper", "pressure", PanelAmber)
+                    }
+                    Group("rattle") {
+                        PanelKnob(b, "rattle", "amount", PanelPink)
+                        PanelKnob(b, "rattle at", "above")
+                    }
+                    Group("sympathy") {
+                        PanelSwitch(b, "sympathy", listOf("off", "on"), "strings")
+                        PanelStepKnob(b, "symtune", FILAMENT_SYM, "tuned", PanelAmber)
+                        PanelKnob(b, "symlevel", "level", PanelAmber)
+                        PanelKnob(b, "symsustain", "sustain")
+                        PanelKnob(b, "symwide", "spread")
+                    }
+                }
+                3 -> {
+                    Group("body") {
+                        PanelSwitch(b, "body", listOf("off", "on"), "body")
+                        PanelKnob(b, "size", "size", PanelAmber)
+                        PanelKnob(b, "bodymix", "mix", PanelAmber)
+                        PanelKnob(b, "bodydamp", "damp")
+                    }
+                    Group("tuning") {
+                        PanelKnob(b, "glide", "glide")
+                        PanelKnob(b, "bend", "bend")
+                        PanelKnob(b, "octave", "octave")
+                        PanelKnob(b, "transpose", "transpose")
+                        PanelKnob(b, "fine", "fine")
+                    }
+                }
+                4 -> {
+                    Group("lfo 1") {
+                        PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                        PanelKnob(b, "lfo1rate", "rate", PanelAmber)
+                        PanelStepKnob(b, "lfo1sync", FILAMENT_SYNC, "sync")
+                        PanelKnob(b, "lfo1depth", "depth")
+                    }
+                    Group("lfo 2") {
+                        PanelStepKnob(b, "lfo2wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                        PanelKnob(b, "lfo2rate", "rate", PanelAmber)
+                        PanelStepKnob(b, "lfo2sync", FILAMENT_SYNC, "sync")
+                        PanelKnob(b, "lfo2depth", "depth")
+                    }
+                    Group("eg 1") {
+                        PanelKnob(b, "eg1atk", "attack"); PanelKnob(b, "eg1dec", "decay")
+                        PanelKnob(b, "eg1sus", "sustain"); PanelKnob(b, "eg1rel", "release")
+                    }
+                    Group("eg 2") {
+                        PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
+                        PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
+                    }
+                    for (m in 1..8) Group("mod $m") {
+                        PanelStepKnob(b, "m${m}_src", FILAMENT_SOURCES, "from", PanelAmber)
+                        PanelStepKnob(b, "m${m}_dst", FILAMENT_DESTS, "to", PanelAmber)
+                        PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
+                    }
+                }
+                else -> {
+                    Group("out") {
+                        PanelKnob(b, "drive", "drive", PanelPink)
+                        PanelKnob(b, "exciter out", "exciter")
                         PanelKnob(b, "volume", "volume")
                         PanelKnob(b, "pan", "pan")
                     }

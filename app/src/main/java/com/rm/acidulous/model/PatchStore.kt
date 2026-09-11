@@ -43,6 +43,7 @@ object PatchStore {
         "Hexbeat" -> HexbeatPresets.all
         "Manual" -> ManualPresets.all
         "Cipher" -> CipherPresets.all
+        "Filament" -> FilamentPresets.all
         else -> emptyList()
     }
 
@@ -400,5 +401,50 @@ object CipherPresets {
             "wave a" to st(1, 5), "mix" to 0f, "wet" to 1f),
         p("Runaway", "feedback" to 0.62f, "fbtone" to 0.35f, "bands" to st(12, 37), "smear" to -0.5f,
             "gate" to 0.15f, "drive" to 0.35f),
+    )
+}
+
+/**
+ * Filament's factory patches. Each is a different way of disturbing the
+ * same string, which is the whole argument for modelling one rather than
+ * recording six.
+ */
+object FilamentPresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Filament", name, kv.toMap())
+    private fun st(index: Int, steps: Int) = index.toFloat() / (steps - 1).toFloat()
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        p("Nylon", "exciter" to st(0, 6), "position" to 0.35f, "sustain" to 0.78f, "tone" to 0.4f,
+            "grit" to 0.6f, "length" to 0.12f, "body" to 1f, "size" to 0.55f, "bodymix" to 0.45f,
+            "detune" to 0.1f, "couple" to 0.3f),
+        p("Steel", "exciter" to st(1, 6), "position" to 0.12f, "sustain" to 0.88f, "tone" to 0.62f,
+            "stiffness" to 0.18f, "stages" to st(2, 5), "detune" to 0.12f, "couple" to 0.4f,
+            "body" to 1f, "size" to 0.4f, "bodymix" to 0.4f, "drive" to 0.12f),
+        // Stiffness is the difference between a guitar and a piano, so this
+        // is the same string with more of it.
+        p("Hammered", "exciter" to st(2, 6), "hardness" to 0.55f, "length" to 0.05f, "sustain" to 0.93f,
+            "tone" to 0.5f, "stiffness" to 0.55f, "stages" to st(4, 5), "tension" to 0.3f,
+            "detune" to 0.06f, "couple" to 0.5f, "sympathy" to 1f, "symtune" to st(5, 6),
+            "symlevel" to 0.25f, "body" to 1f, "size" to 0.3f, "bodymix" to 0.3f),
+        p("Bowed", "exciter" to st(3, 6), "pressure" to 0.55f, "speed" to 0.45f, "grit" to 0.35f,
+            "sustain" to 0.9f, "tone" to 0.4f, "position" to 0.18f, "body" to 1f, "bodymix" to 0.4f,
+            "velocity" to 0.4f),
+        p("Blown", "exciter" to st(4, 6), "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.86f,
+            "tone" to 0.3f, "stiffness" to 0.1f, "body" to 1f, "size" to 0.7f, "bodymix" to 0.5f),
+        // Sympathetic strings and a pedal that never lifts.
+        p("Sympathy", "exciter" to st(0, 6), "sustain" to 0.8f, "on release" to 0f, "sympathy" to 1f,
+            "symtune" to st(4, 6), "symlevel" to 0.7f, "symsustain" to 0.97f, "symwide" to 0.8f,
+            "tone" to 0.5f, "body" to 1f, "bodymix" to 0.35f),
+        p("Prepared", "exciter" to st(2, 6), "damper at" to 0.33f, "damper" to 0.4f, "rattle" to 0.55f,
+            "rattle at" to 0.2f, "sustain" to 0.9f, "stiffness" to 0.3f, "stages" to st(3, 5),
+            "tone" to 0.6f, "drive" to 0.2f),
+        // The string is played by whatever is plugged in, which is the one
+        // thing a sampled string cannot be.
+        p("Spoken To", "exciter" to st(5, 6), "in gain" to 0.5f, "sustain" to 0.92f, "tone" to 0.55f,
+            "sympathy" to 1f, "symtune" to st(2, 6), "symlevel" to 0.4f, "body" to 1f, "bodymix" to 0.3f),
+        p("Wire", "exciter" to st(1, 6), "position" to 0.05f, "sustain" to 0.99f, "tone" to 0.85f,
+            "stiffness" to 0.85f, "stages" to st(4, 5), "tension" to 0.8f, "detune" to 0.6f,
+            "couple" to 0.8f, "rattle" to 0.3f, "drive" to 0.3f),
     )
 }
