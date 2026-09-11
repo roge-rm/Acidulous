@@ -103,6 +103,13 @@ fun MidiDialog(onDismiss: () -> Unit) {
                         Text("Bluetooth is off", color = Acid.colors.red, fontSize = 11.sp)
                     }
                 }
+                // Why the list looks the way it does. A scan that finds
+                // nothing and says nothing is indistinguishable from a scan
+                // that is broken, which is exactly how a wrong service UUID
+                // went unnoticed.
+                if (MidiHub.scanStatus.isNotEmpty()) {
+                    Text(MidiHub.scanStatus, color = Acid.colors.textDim, fontSize = 10.sp)
+                }
                 found.forEach { device ->
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp))
@@ -111,10 +118,17 @@ fun MidiDialog(onDismiss: () -> Unit) {
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        // A device that actually advertised the MIDI service
+                        // is worth saying so about, because in a widened scan
+                        // everything else is a guess.
+                        Text(if (device.midi) "ᛒ" else "·", color = Acid.colors.accent, fontSize = 13.sp,
+                            modifier = Modifier.padding(end = 8.dp))
                         Column(Modifier.weight(1f)) {
                             Text(device.name, color = Acid.colors.text, fontSize = 12.sp, maxLines = 1)
-                            Text(device.address, color = Acid.colors.textDim, fontSize = 9.sp,
-                                fontFamily = FontFamily.Monospace)
+                            Text(
+                                if (device.midi) device.address else device.address + "  (no MIDI service)",
+                                color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                            )
                         }
                         Text("connect", color = Acid.colors.accent, fontSize = 10.sp)
                     }

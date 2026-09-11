@@ -40,12 +40,21 @@ import com.rm.acidulous.engine.NativeEngine
  * the machine's own handling all behave identically whichever you play.
  */
 object MidiHub {
-    /** MIDI over Bluetooth Low Energy: the GATT service every such device advertises. */
-    private val BLE_MIDI_SERVICE = ParcelUuid.fromString("03B80E5A-EDE8-4B33-A751-6CE34EC8C700")
+    /**
+     * MIDI over Bluetooth Low Energy: the GATT service every such device
+     * advertises, from the BLE-MIDI specification.
+     *
+     * This is the scan filter, so one wrong digit in it is not a bug that
+     * degrades anything - it is a scan that can never match, on any device,
+     * for ever, and reports "nothing found" perfectly calmly. It had an 8
+     * where the spec has a 4 and cost a BLE controller an evening.
+     */
+    private val BLE_MIDI_SERVICE = ParcelUuid.fromString("03B80E5A-EDE8-4B33-A751-6CE34EC4C700")
     private const val TAG = "Acidulous.MIDI"
 
     data class Port(val id: Int, val name: String, val maker: String, val bluetooth: Boolean, val open: Boolean)
-    data class Found(val address: String, val name: String)
+    /** [midi] is true when the advertisement actually named the MIDI service. */
+    data class Found(val address: String, val name: String, val midi: Boolean)
 
     /**
      * Where incoming notes go. Following the selected track is what you want
@@ -65,6 +74,10 @@ object MidiHub {
     val ports = mutableStateListOf<Port>()
     val discovered = mutableStateListOf<Found>()
     var scanning by mutableStateOf(false)
+        private set
+
+    /** Why the list looks the way it does. Empty when there is nothing to say. */
+    var scanStatus by mutableStateOf("")
         private set
     var routing by mutableStateOf(Routing.SelectedTrack)
     var lastMessage by mutableStateOf("")
@@ -194,37 +207,105 @@ object MidiHub {
         }
 
     private var scanner: android.bluetooth.le.BluetoothLeScanner? = null
+    private var wide = false
+    private var widenTask: Runnable? = null
+    private var endTask: Runnable? = null
+
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val name = result.device.name ?: result.scanRecord?.deviceName ?: "unnamed"
-            if (discovered.none { it.address == result.device.address }) {
-                discovered += Found(result.device.address, name)
+            // Reading a device's name needs BLUETOOTH_CONNECT on Android 12
+            // and up, and throws rather than returning null without it - in
+            // a system callback, where it takes the scan down with it.
+            val name = try {
+                result.device.name ?: result.scanRecord?.deviceName
+            } catch (e: SecurityException) {
+                null
+            } ?: "unnamed"
+            val isMidi = result.scanRecord?.serviceUuids?.contains(BLE_MIDI_SERVICE) == true
+            if (wide && !isMidi && name == "unnamed") return // nothing to show and nothing to pick
+            val at = discovered.indexOfFirst { it.address == result.device.address }
+            val found = Found(result.device.address, name, isMidi)
+            if (at < 0) {
+                discovered += found
+            } else if (isMidi && !discovered[at].midi) {
+                discovered[at] = found // the service turned up in the scan response
             }
         }
+
         override fun onScanFailed(errorCode: Int) {
             Log.w(TAG, "BLE scan failed: $errorCode")
+            scanStatus = when (errorCode) {
+                SCAN_FAILED_ALREADY_STARTED -> "a scan is already running"
+                SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> "Android refused the scan; turn Bluetooth off and on"
+                SCAN_FAILED_FEATURE_UNSUPPORTED -> "this phone cannot scan for Bluetooth LE"
+                else -> "the scan failed (code $errorCode)"
+            }
             scanning = false
         }
     }
 
+    private fun beginScan(filtered: Boolean) {
+        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+        val filters = if (filtered) listOf(ScanFilter.Builder().setServiceUuid(BLE_MIDI_SERVICE).build()) else null
+        try {
+            scanner?.startScan(filters, settings, scanCallback)
+            scanning = true
+        } catch (e: SecurityException) {
+            Log.w(TAG, "scan refused: ${e.message}")
+            scanStatus = "Android refused the scan: allow Nearby devices"
+            scanning = false
+        }
+    }
+
+    /**
+     * Look for the MIDI service first, and if nothing has answered after a
+     * few seconds, widen to everything with a name.
+     *
+     * Not every peripheral puts its 128-bit service UUID in the advertising
+     * packet - there is only room for one, and some put it in the scan
+     * response instead, where Android's offloaded filter can miss it. A
+     * filtered scan that finds nothing is therefore not proof of absence,
+     * and a list you can pick from beats a list that is empty and sure of
+     * itself.
+     */
     fun scanBluetooth(context: Context) {
         if (scanning) return
         val adapter: BluetoothAdapter =
             (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter ?: return
         discovered.clear()
+        scanStatus = ""
+        wide = false
         scanner = adapter.bluetoothLeScanner ?: return
-        val filter = ScanFilter.Builder().setServiceUuid(BLE_MIDI_SERVICE).build()
-        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-        try {
-            scanner?.startScan(listOf(filter), settings, scanCallback)
-            scanning = true
-            handler?.postDelayed({ stopScan() }, 12_000)
-        } catch (e: SecurityException) {
-            Log.w(TAG, "scan refused: ${e.message}")
-        }
+        beginScan(filtered = true)
+        if (!scanning) return
+
+        widenTask = Runnable {
+            if (!scanning || discovered.isNotEmpty()) return@Runnable
+            try {
+                scanner?.stopScan(scanCallback)
+            } catch (e: SecurityException) {
+                Log.w(TAG, "stop refused: ${e.message}")
+            }
+            wide = true
+            scanStatus = "Nothing is advertising MIDI. Showing everything nearby - a device that keeps " +
+                "its service in the scan response will still open."
+            beginScan(filtered = false)
+        }.also { handler?.postDelayed(it, 6_000) }
+        endTask = Runnable {
+            val none = discovered.isEmpty()
+            stopScan()
+            if (none) {
+                scanStatus = "Nothing found. Check the device is switched on and not already paired " +
+                    "in Android's own Bluetooth settings - a paired BLE MIDI device stops advertising."
+            }
+        }.also { handler?.postDelayed(it, 16_000) }
     }
 
     fun stopScan() {
+        widenTask?.let { handler?.removeCallbacks(it) }
+        endTask?.let { handler?.removeCallbacks(it) }
+        widenTask = null
+        endTask = null
         if (!scanning) return
         try {
             scanner?.stopScan(scanCallback)
@@ -242,10 +323,24 @@ object MidiHub {
             Log.w(TAG, "bad address $address"); return
         }
         stopScan()
+        scanStatus = "opening…"
         try {
-            manager?.openBluetoothDevice(device, { opened -> opened?.let { attach(it.info.id, it) } }, handler)
+            manager?.openBluetoothDevice(device, { opened ->
+                if (opened == null) {
+                    // Android hands back nothing and says nothing. Usually it
+                    // is not a MIDI device at all, or it is already paired in
+                    // the system's Bluetooth settings and so is not listening.
+                    Log.w(TAG, "openBluetoothDevice gave nothing for $address")
+                    scanStatus = "Could not open that device. If it is paired in Android's Bluetooth " +
+                        "settings, forget it there and scan again."
+                } else {
+                    scanStatus = ""
+                    attach(opened.info.id, opened)
+                }
+            }, handler)
         } catch (e: SecurityException) {
             Log.w(TAG, "connect refused: ${e.message}")
+            scanStatus = "Android refused the connection: allow Nearby devices"
         }
     }
 
