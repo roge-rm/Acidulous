@@ -46,6 +46,7 @@ import com.rm.acidulous.model.withEventorBypass
 import com.rm.acidulous.model.withEventorParam
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.Song
@@ -370,6 +371,10 @@ fun EditScreen(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                // Equal weights either side so the scale sits on the row's
+                // centre line, wherever the stepper's own width lands. The
+                // chip is measured first, as the one unweighted child, so it
+                // takes only what its text needs.
                 if (touchable) {
                     TouchWheel(
                         value = pressure, accent = Color(0xFFE07A9A), vertical = false,
@@ -384,9 +389,11 @@ fun EditScreen(
                     onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
                     onOpen = { scaleDialog = true },
                     vertical = false,
-                    modifier = Modifier.weight(1.4f).fillMaxHeight(),
+                    modifier = Modifier.widthIn(min = 120.dp).fillMaxHeight(),
                 )
-                OctaveStepper(octave, { octave = it }, Modifier.fillMaxHeight())
+                Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.CenterEnd) {
+                    OctaveStepper(octave, { octave = it }, Modifier.fillMaxHeight())
+                }
             }
             Row(
                 Modifier.fillMaxWidth().height(height - 30.dp).padding(top = 4.dp),
