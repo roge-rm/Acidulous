@@ -32,16 +32,16 @@ object MachineUi {
 
     /** One line per machine: what it is, not what it has. */
     fun describe(type: String): String = when (type) {
-        "Subvert" -> "acid bass - one oscillator, one filter that screams, and slide"
+        "Subvert" -> "acid bass - one oscillator, one filter that screams"
         "Trinity" -> "three oscillators, wavetables, dual filters, a mod matrix"
         "Ratio" -> "six-operator FM, with the algorithm itself on a knob"
-        "Cumulus" -> "pads by spectrum: partials smeared into bands, four of them morphed"
+        "Cumulus" -> "pads by spectrum - bands of partials, morphed"
         "Formulate" -> "the chip, and an equation you can type into it"
         "Hexbeat" -> "drums by synthesis, in the 606's vocabulary"
-        "Forage" -> "sampled drums, with a filter, crush and pitch envelope per pad"
-        "Manual" -> "tonewheel organ: two manuals, pedals, and a cabinet that spins"
+        "Forage" -> "sampled drums, with a filter and envelope per pad"
+        "Manual" -> "tonewheel organ, two manuals and a spinning cabinet"
         "Filament" -> "strings by modelling - pluck, bow or breathe at them"
-        "Mosaic" -> "multisamples: key and velocity zones, SoundFonts, grain clouds"
+        "Mosaic" -> "multisamples: zones, SoundFonts, grain clouds"
         "Cipher" -> "a vocoder whose band map is the instrument"
         "Nexus" -> "a modular whose blocks are the other machines"
         else -> ""

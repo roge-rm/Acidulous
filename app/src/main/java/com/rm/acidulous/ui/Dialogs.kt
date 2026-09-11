@@ -3,6 +3,7 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -157,6 +158,9 @@ fun ClipSettingsDialog(
     )
 }
 
+/** A name and its line, at a height every row shares. */
+private val MACHINE_ROW_H = 68.dp
+
 /**
  * A group's name, with the hedge set in italic: "realish" is doing a
  * qualifier's job, and it should look like one.
@@ -199,27 +203,38 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
                 Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) {
                     SectionChipsStyled(groups.map { chipLabel(it.label) }, tab) { tab = it }
                 }
+                // Anything the engine offers that no group claims still has
+                // to be reachable, so it lands in the last group.
+                val listed = groups.flatMap { it.machines }.toSet()
+                val contents = groups.mapIndexed { i, g ->
+                    g.machines.filter { it in known } +
+                        (if (i == groups.lastIndex) known.filter { it !in listed } else emptyList())
+                }
+                // Every row is the same height and the list is as tall as the
+                // longest group, so the dialog keeps its size and its place
+                // when you change tabs. A window that jumps under your thumb
+                // is a window you have to find again.
+                val rows = contents.maxOf { it.size }
                 Column(
-                    Modifier.weight(1f, fill = false).heightIn(max = 460.dp)
+                    Modifier.height(MACHINE_ROW_H * rows + 6.dp * (rows - 1))
                         .verticalScrollWithBar(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    // Anything the engine offers that no group claims still
-                    // has to be reachable, so it lands in the last one.
-                    val listed = groups.flatMap { it.machines }.toSet()
-                    val extras = if (tab == groups.lastIndex) known.filter { it !in listed } else emptyList()
-                    for (type in groups[tab].machines.filter { it in known } + extras) {
+                    for (type in contents[tab]) {
                         val on = type == current
                         Column(
-                            Modifier.fillMaxWidth().padding(vertical = 3.dp)
+                            Modifier.fillMaxWidth().height(MACHINE_ROW_H)
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(if (on) c.accentDim else c.control)
                                 .clickable { onPick(type) }
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.Center,
                         ) {
                             Text(type, color = if (on) c.accent else c.text, fontSize = 14.sp)
                             Text(
                                 com.rm.acidulous.model.MachineUi.describe(type),
-                                color = c.textDim, fontSize = 11.sp,
+                                color = c.textDim, fontSize = 11.sp, maxLines = 2,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
                         }
                     }
