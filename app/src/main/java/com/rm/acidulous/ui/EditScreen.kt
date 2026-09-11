@@ -353,23 +353,63 @@ fun EditScreen(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         )
         }
-        val performanceSlot: @Composable () -> Unit = {
-        // Mod wheel and pressure, for machines that answer them.
-        if (MachineUi.usesPerformance(track.machine.type)) {
-            PerformanceStrip(trackIndex, Modifier.fillMaxWidth().padding(top = 6.dp))
-        }
-        }
+        // The performance controls live with the keys now: a mod wheel where
+        // a mod wheel goes, a bend wheel on the other side, and pressure,
+        // the scale and the octave on one strip above them.
+        var mod by rememberSaveable(trackIndex) { mutableStateOf(0f) }
+        var pressure by remember(trackIndex) { mutableStateOf(0f) }
+        var bend by remember(trackIndex) { mutableStateOf(0.5f) }
+        val touchable = MachineUi.usesPerformance(track.machine.type)
+        LaunchedEffect(trackIndex) { NativeEngine.controlChange(trackIndex, 1, (mod * 127f).toInt()) }
+
         val keysSlot: @Composable (Dp) -> Unit = { height ->
         if (kind == MachineKind.Drums) DrumPads(trackIndex, voices, selectedPad, { selectedPad = it }, Modifier.fillMaxWidth().height(height - 6.dp).padding(top = 6.dp))
-        else Row(Modifier.fillMaxWidth().height(height).padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            ScaleChip(
-                label = Scales.labelFor(track),
-                onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
-                onOpen = { scaleDialog = true },
-                modifier = Modifier.width(22.dp).fillMaxHeight(),
-            )
-            PianoKeys(trackIndex, octave, { octave = it }, Scales.activeFor(track), Scales.rootFor(track),
-                Modifier.weight(1f).fillMaxHeight())
+        else Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+            Row(
+                Modifier.fillMaxWidth().height(26.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (touchable) {
+                    TouchWheel(
+                        value = pressure, accent = Color(0xFFE07A9A), vertical = false,
+                        springBackTo = 0f, label = "prs",
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    ) { v -> pressure = v; NativeEngine.channelPressure(trackIndex, (v * 127f).toInt()) }
+                } else {
+                    Box(Modifier.weight(1f))
+                }
+                ScaleChip(
+                    label = Scales.labelFor(track),
+                    onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
+                    onOpen = { scaleDialog = true },
+                    vertical = false,
+                    modifier = Modifier.weight(1.4f).fillMaxHeight(),
+                )
+                OctaveStepper(octave, { octave = it }, Modifier.fillMaxHeight())
+            }
+            Row(
+                Modifier.fillMaxWidth().height(height - 30.dp).padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                TouchWheel(
+                    value = mod, accent = Color(0xFFFFB454), vertical = true, label = null,
+                    modifier = Modifier.width(26.dp).fillMaxHeight(),
+                ) { v -> mod = v; NativeEngine.controlChange(trackIndex, 1, (v * 127f).toInt()) }
+                PianoKeys(trackIndex, Scales.activeFor(track), Scales.rootFor(track), octave,
+                    Modifier.weight(1f).fillMaxHeight())
+                // Bend springs back, so it is the one wheel you can let go of
+                // in a hurry and know where it landed.
+                TouchWheel(
+                    value = bend, accent = Color(0xFF7FD1B9), vertical = true,
+                    springBackTo = 0.5f, centreMark = true, label = null,
+                    modifier = Modifier.width(26.dp).fillMaxHeight(),
+                ) { v ->
+                    bend = v
+                    val value14 = ((v * 2f - 1f) * 8192f + 8192f).toInt().coerceIn(0, 16383)
+                    NativeEngine.midiEvent(trackIndex, 0xE0, value14 and 0x7f, (value14 shr 7) and 0x7f)
+                }
+            }
         }
         }
         val footerSlot: @Composable () -> Unit = {
@@ -420,10 +460,9 @@ fun EditScreen(
                 }
                 Column(Modifier.width(CONTROL_W).fillMaxHeight()) {
                     // The panel is the tall one, so it is what scrolls; the
-                    // performance bars and the transport stay put, because
-                    // stop should never be somewhere you have to scroll to.
+                    // transport stays put, because stop should never be
+                    // somewhere you have to scroll to.
                     Column(Modifier.weight(1f).verticalScrollWithBar(rememberScrollState())) { panelSlot() }
-                    performanceSlot()
                     footerSlot()
                 }
             }
@@ -432,7 +471,6 @@ fun EditScreen(
                 gridSlot()
                 automationSlot()
                 panelSlot()
-                performanceSlot()
                 keysSlot(if (kind == MachineKind.Drums) PADS_H else KEYS_H)
                 footerSlot()
             }
@@ -461,9 +499,9 @@ private const val PAGE_BARS = 2
 // gives it and scales, so the roll gets the difference.
 private const val PAGE_BARS_LAND = 4
 private val CONTROL_W = 300.dp
-private val KEYS_H = 78.dp
+private val KEYS_H = 104.dp
 private val PADS_H = 72.dp
-private val KEYS_H_LAND = 64.dp
+private val KEYS_H_LAND = 92.dp
 private val PADS_H_LAND = 60.dp
 
 @Composable

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -56,10 +57,9 @@ import com.rm.acidulous.engine.NativeEngine
 @Composable
 fun PianoKeys(
     rack: Int,
-    octave: Int,
-    onOctave: (Int) -> Unit,
     scalePitchClasses: Set<Int>?,
     scaleRoot: Int?,
+    octave: Int,
     modifier: Modifier = Modifier,
 ) {
     val measurer = rememberTextMeasurer()
@@ -67,9 +67,9 @@ fun PianoKeys(
     val base = 12 * (octave + 1)
     val scale = scalePitchClasses?.takeIf { it.isNotEmpty() }?.sorted()
 
-    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+    Box(modifier) {
         Canvas(
-            Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(3.dp)).pointerInput(base, scale) {
+            Modifier.fillMaxSize().clip(RoundedCornerShape(3.dp)).pointerInput(base, scale) {
                 // What is down is owned by this loop, not by composition.
                 // Rebuilding it from the drawn state each event was the bug:
                 // touches arrive faster than recomposition, so a finger that
@@ -175,10 +175,6 @@ fun PianoKeys(
         }
         // Octave up and down, stacked so they cost one narrow column rather
         // than two, which is width the keys would rather have.
-        Column(Modifier.width(24.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            OctaveKey("▲", octave < 8, Modifier.weight(1f)) { onOctave(octave + 1) }
-            OctaveKey("▼", octave > 0, Modifier.weight(1f)) { onOctave(octave - 1) }
-        }
     }
 }
 
@@ -197,7 +193,14 @@ private fun OctaveKey(label: String, enabled: Boolean, modifier: Modifier, onCli
  * off and on, a long press opens the selector.
  */
 @Composable
-fun ScaleChip(label: String?, onToggle: () -> Unit, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+fun ScaleChip(
+    label: String?,
+    onToggle: () -> Unit,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** Turned on its side when it stands beside the keys; flat in a strip. */
+    vertical: Boolean = true,
+) {
     val on = label != null
     Box(
         modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Color(0xFF3A3226) else Color(0xFF26262B))
@@ -210,7 +213,7 @@ fun ScaleChip(label: String?, onToggle: () -> Unit, onOpen: () -> Unit, modifier
             fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
             // Laid out long and then turned: rotation does not change a
             // layout's size, so the width has to be demanded before it spins.
-            modifier = Modifier.requiredWidth(96.dp).rotate(-90f),
+            modifier = if (vertical) Modifier.requiredWidth(96.dp).rotate(-90f) else Modifier,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
     }
