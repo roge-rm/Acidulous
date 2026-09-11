@@ -125,6 +125,13 @@ class EngineHost {
     bool snapshotCommit(int64_t handle);
     void snapshotAbandon(int64_t handle);
 
+    /**
+     * Build Cumulus's tables for a rack from its current spectrum
+     * parameters, and mount them. Tens of milliseconds and a few megabytes,
+     * so: worker thread only.
+     */
+    std::string buildCloud(int rack, const float *spectrum01, int32_t count);
+
     // --- Freeze ---------------------------------------------------------
     /**
      * Render one clip to a WAV, off the device: the rack's own output after

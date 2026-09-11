@@ -273,6 +273,18 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeGetSampleRate(JNIEnv *, jobject)
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeBuildCloud(JNIEnv *env, jobject, jint rack, jfloatArray spectrum) {
+    std::vector<jfloat> v;
+    if (spectrum != nullptr) {
+        const jsize n = env->GetArrayLength(spectrum);
+        v.resize(static_cast<size_t>(n));
+        if (n > 0) env->GetFloatArrayRegion(spectrum, 0, n, v.data());
+    }
+    return env->NewStringUTF(host().buildCloud(rack, v.empty() ? nullptr : v.data(),
+                                               static_cast<int32_t>(v.size())).c_str());
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeFreezeClip(JNIEnv *env, jobject, jint rack, jlong sceneId,
                                                            jstring path, jfloat tailSeconds) {
     const char *p = env->GetStringUTFChars(path, nullptr);

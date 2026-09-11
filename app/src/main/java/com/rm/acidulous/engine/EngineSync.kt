@@ -35,6 +35,7 @@ object EngineSync {
     private val loadedSamples = HashMap<String, String>() // "rack:slot" -> relative path
     private val loadedMaps = arrayOfNulls<String>(RACKS)   // the source string a rack's map was built from
     private val loadedFreezes = arrayOfNulls<String>(RACKS) // which frozen clips a rack has, as one identity string
+    private val builtClouds = arrayOfNulls<String>(RACKS)   // the spectrum a rack's Cumulus tables were built from
     // Building a multisample means parsing and decoding, sometimes tens of
     // megabytes, so it never runs on the caller's thread.
     private val mapLoader = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
@@ -203,6 +204,38 @@ object EngineSync {
         }
     }
 
+    /**
+     * Cumulus's tables. Its spectrum parameters are not knobs in the usual
+     * sense - each one means an inverse transform of a quarter of a million
+     * points - so they are watched here and rebuilt off-thread when they
+     * settle, rather than being smoothed on the audio thread like everything
+     * else. Everything from `morph` on is live and goes through the ordinary
+     * parameter path.
+     */
+    fun ensureClouds(song: Song) {
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            val wanted = if (track?.machine?.type != "Cumulus" || mounted[rack] != "Cumulus") {
+                null
+            } else {
+                CLOUD_PARAMS.joinToString(",") { "%s=%.5f".format(it, track.machine.params[it] ?: -1f) }
+            }
+            if (builtClouds[rack] == wanted) continue
+            builtClouds[rack] = wanted
+            if (wanted == null) continue
+            mapLoader.execute {
+                val values = FloatArray(CLOUD_PARAMS.size) { i ->
+                    track!!.machine.params[CLOUD_PARAMS[i]] ?: Float.NaN
+                }
+                val error = NativeEngine.buildCloud(rack, values)
+                if (error.isNotEmpty()) {
+                    Log.w(TAG, "cumulus rack $rack: $error")
+                    builtClouds[rack] = null // let a retry happen
+                }
+            }
+        }
+    }
+
     fun sync(song: Song): Boolean {
         ensureMachines(song)
         ensureSamples(song)
@@ -210,6 +243,7 @@ object EngineSync {
         ensureEventors(song)
         ensureSampleMaps(song)
         ensureNexusPatches(song)
+        ensureClouds(song)
         ensureFrozen(song)
         return push(song)
     }
@@ -364,4 +398,14 @@ object EngineSync {
             }
         }
     }
+
+    /**
+     * The parameters that decide what is in the tables. Mirrors the block at
+     * the top of Cumulus::P - if one moves there, it moves here.
+     */
+    private val CLOUD_PARAMS = listOf(
+        "partials", "tilt", "odd", "comb", "combperiod", "vowel", "vowelamount",
+        "bandwidth", "bwscale", "stretch", "seed",
+        "btilt", "bbandwidth", "bstretch", "bcomb", "bvowel", "bodd",
+    )
 }

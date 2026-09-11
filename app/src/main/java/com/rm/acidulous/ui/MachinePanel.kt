@@ -117,6 +117,7 @@ fun MachinePanel(
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
             "Cipher" -> CipherPanel(binding)
+            "Cumulus" -> CumulusPanel(binding)
             "Filament" -> FilamentPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
@@ -1055,6 +1056,143 @@ private fun CipherPanel(b: ParamBinding) {
                         PanelKnob(b, "drive", "drive", PanelPink)
                         PanelKnob(b, "volume", "volume")
                         PanelKnob(b, "pan", "pan")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// --- Cumulus ---------------------------------------------------------------------
+
+// The vowels the profile's formants interpolate through, and what shimmer
+// can be tuned to. Names mirror engine/machine/cumulus/Cloud.cpp.
+private val CUMULUS_SHIMMER = listOf("5th", "8ve", "8ve+5", "2 8ve")
+private val CUMULUS_FILTERS = listOf("LP6", "LP12", "LP18", "LP24", "HP6", "HP12", "HP18", "HP24", "BP6", "BP12", "notch", "peak")
+private val CUMULUS_LFO = listOf("sine", "tri", "saw↑", "saw↓", "square", "s&h", "smooth", "8 step", "16 step")
+
+/**
+ * Cumulus's panel, in two halves. The "cloud" and "morph to" sections build
+ * the tables - each knob there is an inverse transform of a quarter of a
+ * million points, done off the audio thread when it settles - and everything
+ * else is live. They are kept in separate sections for that reason, and the
+ * build ones are marked in amber.
+ */
+@Composable
+private fun CumulusPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    Column {
+        SectionChips(listOf("cloud", "morph to", "play", "shape", "env", "mod", "out"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("partials") {
+                        PanelKnob(b, "partials", "count", PanelAmber)
+                        PanelKnob(b, "tilt", "tilt", PanelAmber)
+                        PanelKnob(b, "odd", "odd/even", PanelAmber)
+                        PanelKnob(b, "stretch", "stretch", PanelAmber)
+                    }
+                    Group("band") {
+                        PanelKnob(b, "bandwidth", "width", PanelAmber)
+                        PanelKnob(b, "bwscale", "· up the series", PanelAmber)
+                        PanelKnob(b, "seed", "seed", PanelAmber)
+                    }
+                    Group("scallop") {
+                        PanelKnob(b, "comb", "depth", PanelAmber)
+                        PanelKnob(b, "combperiod", "every", PanelAmber)
+                    }
+                    Group("vowel") {
+                        PanelKnob(b, "vowel", "a e i o u", PanelAmber)
+                        PanelKnob(b, "vowelamount", "amount", PanelAmber)
+                    }
+                }
+                1 -> {
+                    Group("the far end") {
+                        PanelKnob(b, "btilt", "tilt", PanelAmber)
+                        PanelKnob(b, "bbandwidth", "width", PanelAmber)
+                        PanelKnob(b, "bstretch", "stretch", PanelAmber)
+                        PanelKnob(b, "bodd", "odd/even", PanelAmber)
+                        PanelKnob(b, "bcomb", "scallop", PanelAmber)
+                        PanelKnob(b, "bvowel", "vowel", PanelAmber)
+                    }
+                    Group("morph") {
+                        PanelKnob(b, "morph", "position", PanelPink)
+                        PanelKnob(b, "morphkey", "· by key")
+                    }
+                }
+                2 -> {
+                    Group("copies") {
+                        PanelStepKnob(b, "spread", listOf("1", "2", "3"), "how many", PanelAmber)
+                        PanelKnob(b, "detune", "detune", PanelAmber)
+                        PanelKnob(b, "spreadwidth", "apart")
+                    }
+                    Group("cloud") {
+                        PanelKnob(b, "scatter", "scatter", PanelAmber)
+                        PanelKnob(b, "drift", "drift", PanelAmber)
+                        PanelKnob(b, "driftrate", "· rate")
+                        PanelKnob(b, "width", "width")
+                    }
+                    Group("shimmer") {
+                        PanelKnob(b, "shimmer", "amount", PanelAmber)
+                        PanelStepKnob(b, "shimmerint", CUMULUS_SHIMMER, "up a")
+                    }
+                }
+                3 -> {
+                    Group("filter") {
+                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                        PanelKnob(b, "resonance", "reso", PanelAmber)
+                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                        PanelKnob(b, "filterenv", "env", PanelAmber)
+                        PanelKnob(b, "filterkey", "key")
+                        PanelKnob(b, "filterdrive", "drive", PanelPink)
+                    }
+                }
+                4 -> {
+                    Group("amp") {
+                        PanelKnob(b, "ampattack", "A")
+                        PanelKnob(b, "ampdecay", "D")
+                        PanelKnob(b, "ampsustain", "S")
+                        PanelKnob(b, "amprelease", "R")
+                    }
+                    Group("filter env") {
+                        PanelKnob(b, "filtattack", "A")
+                        PanelKnob(b, "filtdecay", "D")
+                        PanelKnob(b, "filtsustain", "S")
+                        PanelKnob(b, "filtrelease", "R")
+                    }
+                }
+                5 -> {
+                    Group("lfo 1") {
+                        PanelStepKnob(b, "lfo1wave", CUMULUS_LFO, "wave")
+                        PanelKnob(b, "lfo1rate", "rate", PanelAmber)
+                        PanelSwitch(b, "lfo1sync", listOf("free", "sync"), "clock")
+                        PanelKnob(b, "lfo1morph", "→ morph", PanelAmber)
+                        PanelKnob(b, "lfo1pitch", "→ pitch")
+                    }
+                    Group("lfo 2") {
+                        PanelStepKnob(b, "lfo2wave", CUMULUS_LFO, "wave")
+                        PanelKnob(b, "lfo2rate", "rate", PanelAmber)
+                        PanelSwitch(b, "lfo2sync", listOf("free", "sync"), "clock")
+                        PanelKnob(b, "lfo2cutoff", "→ cutoff")
+                        PanelKnob(b, "lfo2pan", "→ pan")
+                    }
+                }
+                else -> {
+                    Group("out") {
+                        PanelKnob(b, "drive", "drive", PanelPink)
+                        PanelKnob(b, "volume", "volume")
+                        PanelKnob(b, "pan", "pan")
+                    }
+                    Group("voice") {
+                        PanelKnob(b, "glide", "glide")
+                        PanelKnob(b, "velocity", "velocity")
+                        PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                    }
+                    Group("tune") {
+                        PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
+                        PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
+                        PanelKnob(b, "fine", "fine")
                     }
                 }
             }

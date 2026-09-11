@@ -23,7 +23,7 @@ object MachineUi {
      */
     fun usesPerformance(type: String): Boolean =
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
-            type == "Cipher" || type == "Filament"
+            type == "Cipher" || type == "Filament" || type == "Cumulus"
 
     val hexbeatVoices: List<DrumVoice> = listOf(
         DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Rim", "RS"), DrumVoice(38, "Snare", "SD"), DrumVoice(39, "Clap", "CP"),

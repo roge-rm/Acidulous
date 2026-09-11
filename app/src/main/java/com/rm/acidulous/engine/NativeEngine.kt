@@ -161,6 +161,14 @@ object NativeEngine {
     fun snapshotCommit(handle: Long): Boolean = nativeSnapshotCommit(handle)
     fun snapshotAbandon(handle: Long) = nativeSnapshotAbandon(handle)
 
+    /**
+     * Build and mount Cumulus's tables for a rack. Slow; worker only.
+     * [spectrum01] is the spectrum parameters in table order, NaN for any
+     * the song has never set - passed rather than read from the engine,
+     * which may not have been given them yet.
+     */
+    fun buildCloud(rack: Int, spectrum01: FloatArray): String = nativeBuildCloud(rack, spectrum01)
+
     // --- Freeze --------------------------------------------------------------
     /** What a freeze produced, or why it did not happen. */
     sealed class FreezeResult {
@@ -296,6 +304,7 @@ object NativeEngine {
     private external fun nativeControlChange(rackId: Int, cc: Int, value: Int)
     private external fun nativeChannelPressure(rackId: Int, value: Int)
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
+    private external fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     private external fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
     private external fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray): String
     private external fun nativeSetBufferBursts(bursts: Int)

@@ -52,6 +52,7 @@ object PatchStore {
         "Mosaic" -> MosaicPresets.all
         "Hexbeat" -> HexbeatPresets.all
         "Manual" -> ManualPresets.all
+        "Cumulus" -> CumulusPresets.all
         "Cipher" -> CipherPresets.all
         "Filament" -> FilamentPresets.all
         "Nexus" -> NexusPresets.all
@@ -559,4 +560,67 @@ object NexusPresets {
             ),
         )
     }
+}
+
+/**
+ * Cumulus's factory clouds: one per corner of the idea - plain, vowelled,
+ * stretched into a bell, spread into a wash, shimmering, and hollowed out.
+ *
+ * Each one spells out the whole spectrum, defaults included, because a patch
+ * here is a recipe for a table rather than a set of knob positions: leaving
+ * one out would inherit it from whatever was loaded before, and the cloud
+ * would be neither patch.
+ */
+object CumulusPresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Cumulus", name, kv.toMap())
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        // The plain cloud: what the algorithm sounds like before anyone leans on it.
+        p("Cirrus", "partials" to 0.4331f, "tilt" to 0.4667f, "odd" to 0.5000f, "comb" to 0.0000f,
+            "combperiod" to 0.1818f, "vowel" to 0.0000f, "vowelamount" to 0.0000f, "bandwidth" to 0.5018f,
+            "bwscale" to 0.2400f, "stretch" to 0.2500f, "seed" to 0.0667f, "btilt" to 0.6667f,
+            "bbandwidth" to 0.4833f, "bstretch" to 0.5000f, "bcomb" to 0.5000f, "bvowel" to 0.5000f,
+            "bodd" to 0.5000f, "drift" to 0.1200f, "spread" to 0.5000f, "detune" to 0.1400f, "width" to 0.7000f,
+            "ampattack" to 0.7438f, "amprelease" to 0.7820f, "cutoff" to 0.9230f),
+        // Three formants and a slow wander: a pad that says a vowel.
+        p("Choir", "partials" to 0.3386f, "tilt" to 0.5333f, "odd" to 0.5000f, "comb" to 0.0000f,
+            "combperiod" to 0.1818f, "vowel" to 0.2500f, "vowelamount" to 0.8500f, "bandwidth" to 0.4204f,
+            "bwscale" to 0.2000f, "stretch" to 0.2500f, "seed" to 0.0667f, "btilt" to 0.6667f,
+            "bbandwidth" to 0.4000f, "bstretch" to 0.5000f, "bcomb" to 0.5000f, "bvowel" to 0.7750f,
+            "bodd" to 0.5000f, "drift" to 0.1800f, "driftrate" to 0.3843f, "spread" to 1.0000f,
+            "detune" to 0.1800f, "width" to 0.8000f, "ampattack" to 0.6915f, "amprelease" to 0.7698f,
+            "cutoff" to 0.8732f, "morphkey" to 0.6500f),
+        // Stretch is what makes a bell a bell: partial n sits at n to the 1.03.
+        p("Bell Cloud", "partials" to 0.2126f, "tilt" to 0.6000f, "odd" to 0.5000f, "comb" to 0.3500f,
+            "combperiod" to 0.2727f, "vowel" to 0.0000f, "vowelamount" to 0.0000f, "bandwidth" to 0.2822f,
+            "bwscale" to 0.2000f, "stretch" to 0.6500f, "seed" to 0.0667f, "btilt" to 0.6667f,
+            "bbandwidth" to 0.5333f, "bstretch" to 0.7500f, "bcomb" to 0.5000f, "bvowel" to 0.5000f,
+            "bodd" to 0.5000f, "spread" to 0.0000f, "ampattack" to 0.1543f, "ampdecay" to 0.9060f,
+            "ampsustain" to 0.2500f, "amprelease" to 0.8875f, "filterenv" to 0.6500f, "cutoff" to 0.9607f,
+            "shimmer" to 0.2000f),
+        // Bandwidth past a semitone: the partials stop being partials.
+        p("Deep Wash", "partials" to 0.4961f, "tilt" to 0.2667f, "odd" to 0.5000f, "comb" to 0.0000f,
+            "combperiod" to 0.1818f, "vowel" to 0.0000f, "vowelamount" to 0.0000f, "bandwidth" to 0.7889f,
+            "bwscale" to 0.3600f, "stretch" to 0.2500f, "seed" to 0.0667f, "btilt" to 0.3333f,
+            "bbandwidth" to 0.1333f, "bstretch" to 0.5000f, "bcomb" to 0.5000f, "bvowel" to 0.5000f,
+            "bodd" to 0.5000f, "spread" to 1.0000f, "detune" to 0.2800f, "width" to 1.0000f,
+            "scatter" to 1.0000f, "drift" to 0.2800f, "driftrate" to 0.3248f, "ampattack" to 0.8706f,
+            "amprelease" to 0.8875f, "cutoff" to 0.8283f),
+        // Shimmer two octaves up, and an LFO walking the morph.
+        p("Glass Rain", "partials" to 0.3701f, "tilt" to 0.4000f, "odd" to 0.7500f, "comb" to 0.0000f,
+            "combperiod" to 0.1818f, "vowel" to 0.0000f, "vowelamount" to 0.0000f, "bandwidth" to 0.4627f,
+            "bwscale" to 0.2000f, "stretch" to 0.2500f, "seed" to 0.0667f, "btilt" to 0.7222f,
+            "bbandwidth" to 0.5833f, "bstretch" to 0.5000f, "bcomb" to 0.5000f, "bvowel" to 0.5000f,
+            "bodd" to 0.2500f, "shimmer" to 0.5500f, "shimmerint" to 1.0000f, "lfo1rate" to 0.2736f,
+            "lfo1morph" to 0.8000f, "spread" to 0.5000f, "detune" to 0.1200f, "width" to 0.9000f,
+            "ampattack" to 0.6347f, "amprelease" to 0.8219f, "cutoff" to 0.9816f),
+        // Odd partials and a scallop across them: a clarinet the size of a room.
+        p("Hollow", "partials" to 0.3071f, "tilt" to 0.4333f, "odd" to 1.0000f, "comb" to 0.5500f,
+            "combperiod" to 0.1818f, "vowel" to 0.0000f, "vowelamount" to 0.0000f, "bandwidth" to 0.4748f,
+            "bwscale" to 0.2000f, "stretch" to 0.2500f, "seed" to 0.0667f, "btilt" to 0.6667f,
+            "bbandwidth" to 0.4500f, "bstretch" to 0.5000f, "bcomb" to 0.2500f, "bvowel" to 0.5000f,
+            "bodd" to 0.2000f, "spread" to 0.5000f, "detune" to 0.1000f, "ampattack" to 0.7569f,
+            "amprelease" to 0.7932f, "cutoff" to 0.8524f),
+    )
 }

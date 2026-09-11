@@ -17,6 +17,7 @@
 #include <engine/machine/MachineRegistry.h>
 #include <engine/core/Sf2Reader.h>
 #include <engine/machine/forage/Forage.h>
+#include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/mosaic/Mosaic.h>
 #include <map>
 #include <sstream>
@@ -675,6 +676,29 @@ void EngineHost::snapshotAbandon(int64_t handle) { delete fromHandle(handle); }
 // --- Diagnostics -----------------------------------------------------------------
 
 int32_t EngineHost::sampleRate() const { return sAudio.getSampleRate(); }
+
+std::string EngineHost::buildCloud(int rack, const float *spectrum01, int32_t count) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    Machine *m = sEngine.racks[rack].currentMachine();
+    if (m == nullptr || std::strcmp(m->typeName(), "Cumulus") != 0) return "that rack is not a Cumulus";
+    auto *cum = static_cast<machine::Cumulus *>(m);
+    const machine::cumulus::CloudSpec built = cum->spec(spectrum01, count);
+    LOGI("cumulus rack %d asked for: %d partials, tilt %.1f, bw %.0f, stretch %.3f, comb %.2f, vowel %.2f/%.2f (%d values given)",
+         rack, built.partials, built.tilt, built.bandwidth, built.stretch, built.comb, built.formant,
+         built.formantAmount, count);
+    auto set = machine::cumulus::buildCloud(built, kSampleRate);
+    LOGI("cumulus rack %d: %d partials at the bottom, %d in the middle, %d at the top, built in %.0f ms",
+         rack, set->partialsUsed[0], set->partialsUsed[1], set->partialsUsed[2], set->buildMs);
+    Mount mount;
+    mount.kind = Mount::Kind::Object;
+    mount.rack = rack;
+    mount.slot = 0;
+    mount.object = set.get();
+    mount.deleter = deleteAs<machine::cumulus::CloudSet>;
+    if (!mountObjectWithRetry(mount)) return "mount queue full";
+    set.release();
+    return "";
+}
 
 // --- Freeze -----------------------------------------------------------------------
 
