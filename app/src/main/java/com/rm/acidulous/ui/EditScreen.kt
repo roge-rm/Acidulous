@@ -207,7 +207,9 @@ fun EditScreen(
         // this row costs no height at all - see ui/Cutout.kt.
         CutoutRow(
             Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 2.dp),
+            // Thin, because the buttons now fill the band: 2 + 44 + 2 is the
+            // 6 + 40 + 2 it was, so a bigger target costs the roll nothing.
+            contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
             spacing = 2.dp,
         ) {
             HeaderButton("◀") { onBack() }

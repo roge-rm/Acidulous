@@ -136,7 +136,7 @@ fun MainScreen(
         // --- Header: song, structure undo, file ----------------------------------------
         CutoutRow(
             Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
             spacing = 4.dp,
         ) {
             Text(song.name, color = Acid.colors.text, fontSize = 16.sp, modifier = Modifier.flexible(), maxLines = 1, overflow = TextOverflow.Ellipsis)

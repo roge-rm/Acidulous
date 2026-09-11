@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Clip
@@ -189,38 +190,23 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
         mutableStateOf(groups.indexOfFirst { current in it.machines }.coerceAtLeast(0))
     }
     val c = com.rm.acidulous.ui.theme.Acid.colors
-    androidx.compose.ui.window.Dialog(
-        onDismissRequest = onDismiss,
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        androidx.compose.material3.Surface(
-            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = c.card,
-        ) {
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                Text("Machine", color = c.text, fontSize = 20.sp)
-                Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) {
-                    SectionChipsStyled(groups.map { chipLabel(it.label) }, tab) { tab = it }
-                }
-                // Anything the engine offers that no group claims still has
-                // to be reachable, so it lands in the last group.
-                val listed = groups.flatMap { it.machines }.toSet()
-                val contents = groups.mapIndexed { i, g ->
-                    g.machines.filter { it in known } +
-                        (if (i == groups.lastIndex) known.filter { it !in listed } else emptyList())
-                }
-                // Every row is the same height and the list is as tall as the
-                // longest group, so the dialog keeps its size and its place
-                // when you change tabs. A window that jumps under your thumb
-                // is a window you have to find again.
-                val rows = contents.maxOf { it.size }
-                Column(
-                    Modifier.height(MACHINE_ROW_H * rows + 6.dp * (rows - 1))
-                        .verticalScrollWithBar(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    for (type in contents[tab]) {
+    // Anything the engine offers that no group claims still has to be
+    // reachable, so it lands in the last group.
+    val listed = groups.flatMap { it.machines }.toSet()
+    val contents = groups.mapIndexed { i, g ->
+        g.machines.filter { it in known } +
+            (if (i == groups.lastIndex) known.filter { it !in listed } else emptyList())
+    }
+    TabbedDialog(
+        title = "Machine",
+        selected = tab,
+        dismissLabel = "Cancel",
+        onDismiss = onDismiss,
+        chips = { SectionChipsStyled(groups.map { chipLabel(it.label) }, tab) { tab = it } },
+        pages = contents.map { types ->
+            {
+                run {
+                    for (type in types) {
                         val on = type == current
                         Column(
                             Modifier.fillMaxWidth().height(MACHINE_ROW_H)
@@ -239,12 +225,9 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
                         }
                     }
                 }
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                }
             }
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -324,3 +307,77 @@ internal val SIGNATURES = listOf(
 )
 
 private val GRIDS = listOf("1/4" to PPQN, "1/8" to PPQN / 2, "1/16" to PPQN / 4, "1/32" to PPQN / 8, "1/8T" to PPQN / 3, "1/16T" to PPQN / 6)
+
+/**
+ * The shape every window with tabs takes, so that none of them can drift
+ * from the others: a card the width of the screen, a title, a row of chips,
+ * a body, and one button on the right.
+ *
+ * **The body is as tall as the tallest page, not as tall as the page you are
+ * looking at.** Every page is composed and measured; only the chosen one is
+ * placed. A window that resizes when you change tab moves its own button out
+ * from under your thumb, and you have to find it again - and a settings
+ * window is exactly where that is most annoying, because you are usually
+ * changing one thing and leaving.
+ */
+@Composable
+fun TabbedDialog(
+    title: String,
+    selected: Int,
+    pages: List<@Composable () -> Unit>,
+    onDismiss: () -> Unit,
+    dismissLabel: String = "Done",
+    maxBodyHeight: Dp = 560.dp,
+    /** Between whatever a page puts in itself. */
+    spacing: Dp = 6.dp,
+    chips: @Composable () -> Unit,
+) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        androidx.compose.material3.Surface(
+            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = c.card,
+        ) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                Text(title, color = c.text, fontSize = 20.sp)
+                Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) { chips() }
+                Box(
+                    Modifier.heightIn(max = maxBodyHeight)
+                        .verticalScrollWithBar(rememberScrollState()),
+                ) {
+                    TallestOf(selected, pages, spacing)
+                }
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text(dismissLabel) }
+                }
+            }
+        }
+    }
+}
+
+/** Measures every page, shows one, and takes the height of the biggest. */
+@Composable
+private fun TallestOf(selected: Int, pages: List<@Composable () -> Unit>, spacing: Dp) {
+    androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
+        val loose = constraints.copy(minHeight = 0)
+        // Each page is wrapped in a column *here* rather than being trusted
+        // to be one box. A page that emits three sections as siblings would
+        // otherwise be measured as three children and placed at the same
+        // spot, one on top of another - which is exactly what happened the
+        // first time this was written.
+        val measured = pages.indices.map { i ->
+            subcompose(i) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(spacing)) {
+                    pages[i]()
+                }
+            }.map { it.measure(loose) }
+        }
+        val height = measured.maxOfOrNull { page -> page.maxOfOrNull { it.height } ?: 0 } ?: 0
+        val shown = measured.getOrNull(selected).orEmpty()
+        layout(constraints.maxWidth, height) { shown.forEach { it.place(0, 0) } }
+    }
+}

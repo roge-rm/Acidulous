@@ -136,13 +136,20 @@ fun Meter(peak: Float, modifier: Modifier = Modifier, vertical: Boolean = true) 
  * A header control sized to its glyph. Material's TextButton reserves a 48dp
  * touch target in both directions, and a row of those leaves the title no
  * room - which matters twice over now that a header has to fit beside a
- * camera hole. These take the height of the row and only the width they need.
+ * camera hole. So these take only the width they need, and for height they
+ * fill the header's band: a row beside a cutout is already as tall as the
+ * hole, so on such a phone the target grows for nothing at all.
+ *
+ * The width is the part people actually miss - a 30dp glyph button at the
+ * very edge of the screen, which the back button is - so it is no longer
+ * quite as mean as it was. What it costs comes out of the title, which
+ * ellipsises, and not out of the roll.
  */
 @Composable
 fun HeaderButton(glyph: String, enabled: Boolean = true, onClick: () -> Unit) {
     val c = Acid.colors
     Box(
-        Modifier.size(width = 30.dp, height = 40.dp)
+        Modifier.size(width = 42.dp, height = LocalHeaderBand.current)
             .clip(RoundedCornerShape(4.dp))
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -159,10 +166,10 @@ fun HeaderTextButton(
 ) {
     val c = Acid.colors
     Box(
-        Modifier.height(40.dp)
+        Modifier.height(LocalHeaderBand.current)
             .clip(RoundedCornerShape(4.dp))
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 10.dp),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = if (enabled) color else c.textFaint, fontSize = 13.sp, maxLines = 1) }
 }

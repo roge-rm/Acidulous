@@ -157,6 +157,23 @@ private data class RowPlan(val segment: Int, val spill: Int, val flexWidth: Int,
  * left in its run. If that falls below [minFlexible] the row gives up the
  * strip and lays out below the hole instead.
  */
+/**
+ * How tall a header control may be without costing the screen anything.
+ *
+ * A row standing beside the camera hole is already as tall as the hole -
+ * that is the rule in `rowH` below, because whatever follows would
+ * otherwise run underneath it. Anything shorter than that leaves dead space
+ * under the buttons, which is exactly the gap you can see on a phone with a
+ * tall cutout. So the row publishes the height of its own band and the
+ * header controls fill it: on a cutout phone they get bigger for nothing,
+ * and everywhere else they take the floor below.
+ */
+val LocalHeaderBand = androidx.compose.runtime.compositionLocalOf { 44.dp }
+
+/** No smaller than this, cutout or not; Material asks for 48 and a glyph
+ *  button that is only 30 wide is the one people miss. */
+private val MIN_BAND = 44.dp
+
 @Composable
 fun CutoutRow(
     modifier: Modifier = Modifier,
@@ -170,7 +187,20 @@ fun CutoutRow(
     val density = LocalDensity.current
     val originX = AppContentInsets.getLeft(density, direction)
 
-    Layout(content = { CutoutRowScopeImpl.content() }, modifier = modifier) { measurables, constraints ->
+    val band = with(density) {
+        val pads = contentPadding.calculateTopPadding() + contentPadding.calculateBottomPadding()
+        val beside = ((cutout?.height ?: 0).toDp() + CLEARANCE) - pads
+        if (beside > MIN_BAND) beside else MIN_BAND
+    }
+
+    Layout(
+        content = {
+            androidx.compose.runtime.CompositionLocalProvider(LocalHeaderBand provides band) {
+                CutoutRowScopeImpl.content()
+            }
+        },
+        modifier = modifier,
+    ) { measurables, constraints ->
         val padStart = contentPadding.calculateStartPadding(direction).roundToPx()
         val padEnd = contentPadding.calculateEndPadding(direction).roundToPx()
         val padTop = contentPadding.calculateTopPadding().roundToPx()

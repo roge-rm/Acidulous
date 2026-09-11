@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,42 +56,24 @@ import com.rm.acidulous.ui.theme.ThemeMode
  */
 @Composable
 fun SettingsDialog(trackNames: List<String>, onDismiss: () -> Unit) {
-    val c = Acid.colors
     var tab by rememberSaveable { mutableStateOf(0) }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(
-            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = c.card,
-        ) {
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                Text("Settings", color = c.text, fontSize = 20.sp)
-                Box(Modifier.padding(top = 12.dp, bottom = 10.dp)) {
-                    SectionChips(TABS, tab) { tab = it }
-                }
-                Column(
-                    // Shrinks to its content when a tab is short, scrolls
-                    // when it is not - a half-empty tall dialog reads as
-                    // something failing to load.
-                    Modifier.weight(1f, fill = false)
-                        .heightIn(max = 560.dp)
-                        .verticalScrollWithBar(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    when (tab) {
-                        0 -> DisplayTab()
-                        1 -> AudioTab()
-                        2 -> RecordTab()
-                        3 -> NewSongSection()
-                        else -> MidiSection(trackNames)
-                    }
-                }
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Done") }
-                }
-            }
-        }
-    }
+    // The same shell as the machine picker, and for the same reason: the
+    // body is as tall as the tallest tab, so the window does not resize and
+    // the Done button does not move when you change tab.
+    TabbedDialog(
+        title = "Settings",
+        selected = tab,
+        pages = listOf(
+            { DisplayTab() },
+            { AudioTab() },
+            { RecordTab() },
+            { NewSongSection() },
+            { MidiSection(trackNames) },
+        ),
+        onDismiss = onDismiss,
+        spacing = 16.dp,
+        chips = { SectionChips(TABS, tab) { tab = it } },
+    )
 }
 
 private val TABS = listOf("display", "audio", "record", "songs", "midi")
