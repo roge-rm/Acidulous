@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -157,6 +158,21 @@ fun ClipSettingsDialog(
 }
 
 /**
+ * A group's name, with the hedge set in italic: "realish" is doing a
+ * qualifier's job, and it should look like one.
+ */
+private fun chipLabel(label: String): androidx.compose.ui.text.AnnotatedString =
+    androidx.compose.ui.text.buildAnnotatedString {
+        val cut = if (label.endsWith("ish") && label.length > 3) label.length - 3 else label.length
+        append(label.substring(0, cut))
+        if (cut < label.length) {
+            withStyle(androidx.compose.ui.text.SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)) {
+                append(label.substring(cut))
+            }
+        }
+    }
+
+/**
  * The machine picker: four groups behind chips, each machine with a line
  * saying what it is. A flat list of twelve names told you nothing unless you
  * already knew, which defeats the point of having twelve.
@@ -181,7 +197,7 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
             Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
                 Text("Machine", color = c.text, fontSize = 20.sp)
                 Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) {
-                    SectionChips(groups.map { it.label }, tab) { tab = it }
+                    SectionChipsStyled(groups.map { chipLabel(it.label) }, tab) { tab = it }
                 }
                 Column(
                     Modifier.weight(1f, fill = false).heightIn(max = 460.dp)

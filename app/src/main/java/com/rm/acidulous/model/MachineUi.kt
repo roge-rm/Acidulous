@@ -26,8 +26,8 @@ object MachineUi {
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup("drums", listOf("Hexbeat", "Forage")),
-        MachineGroup("real", listOf("Manual", "Filament", "Mosaic")),
-        MachineGroup("other", listOf("Cipher", "Nexus")),
+        MachineGroup("realish", listOf("Manual", "Filament", "Mosaic")),
+        MachineGroup("beyond", listOf("Cipher", "Nexus")),
     )
 
     /** One line per machine: what it is, not what it has. */

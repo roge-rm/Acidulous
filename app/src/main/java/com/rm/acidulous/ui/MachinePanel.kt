@@ -278,7 +278,19 @@ internal fun GroupRow(content: @Composable () -> Unit) {
 
 /** Which group of groups is showing. Only machines too big for one row need it. */
 @Composable
-internal fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+internal fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) =
+    SectionChipsStyled(labels.map { androidx.compose.ui.text.AnnotatedString(it) }, selected, onSelect)
+
+/**
+ * The same, for a label with a word set differently inside it. A separate
+ * name rather than an overload: both erase to List on the JVM.
+ */
+@Composable
+internal fun SectionChipsStyled(
+    labels: List<androidx.compose.ui.text.AnnotatedString>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+) {
     Row(
         Modifier.fillMaxWidth().padding(bottom = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
