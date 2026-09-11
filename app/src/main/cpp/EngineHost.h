@@ -132,6 +132,14 @@ class EngineHost {
      */
     std::string buildCloud(int rack, const float *spectrum01, int32_t count);
 
+    /**
+     * Compile Formulate's expression and its three step tables, and mount
+     * them. Returns "" or the reason it would not read - which the panel
+     * shows, because a typed formula that fails silently is a trap.
+     */
+    std::string loadFormula(int rack, const std::string &formula, const std::string &arp,
+                            const std::string &duty, const std::string &vol);
+
     // --- Freeze ---------------------------------------------------------
     /**
      * Render one clip to a WAV, off the device: the rack's own output after

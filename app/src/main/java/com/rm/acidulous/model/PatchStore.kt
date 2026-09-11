@@ -53,6 +53,7 @@ object PatchStore {
         "Hexbeat" -> HexbeatPresets.all
         "Manual" -> ManualPresets.all
         "Cumulus" -> CumulusPresets.all
+        "Formulate" -> FormulatePresets.all
         "Cipher" -> CipherPresets.all
         "Filament" -> FilamentPresets.all
         "Nexus" -> NexusPresets.all
@@ -622,5 +623,56 @@ object CumulusPresets {
             "bbandwidth" to 0.4500f, "bstretch" to 0.5000f, "bcomb" to 0.2500f, "bvowel" to 0.5000f,
             "bodd" to 0.2000f, "spread" to 0.5000f, "detune" to 0.1000f, "ampattack" to 0.7569f,
             "amprelease" to 0.7932f, "cutoff" to 0.8524f),
+    )
+}
+
+/**
+ * Formulate's factory chips: four that are only hardware, three where the
+ * expression does the work. The formula and the step tables travel in the
+ * patch's settings, because they are text rather than knob positions.
+ */
+object FormulatePresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>, settings: Map<String, String> = emptyMap()) =
+        Patch("Formulate", name, kv.toMap(), settings)
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        // A quarter-duty pulse and a major arpeggio at 50 Hz: 1987, in one line.
+        p("Pulse Lead", "wave" to 0.0000f, "duty" to 0.2500f, "ampattack" to 0.0771f, "ampdecay" to 0.5940f,
+            "ampsustain" to 0.7000f, "amprelease" to 0.3758f, "framerate" to 0.8171f, "mono" to 1.0000f,
+            "volume" to 0.4667f,
+            settings = mapOf("arp" to "0 4 7", "duty" to "", "vol" to "", "formula" to "")),
+        // Pulse, sub octave, and the octave jump every tracker bass had.
+        p("Arcade Bass", "wave" to 0.0000f, "duty" to 0.5000f, "sub" to 0.6000f, "ampattack" to 0.0771f,
+            "ampdecay" to 0.5302f, "ampsustain" to 0.5000f, "amprelease" to 0.3368f, "framerate" to 0.7705f,
+            "mono" to 1.0000f, "bits" to 1.0000f, "volume" to 0.6000f,
+            settings = mapOf("arp" to "0 0 0 12", "vol" to "255 200 | 160", "duty" to "", "formula" to "")),
+        // The shift register, short tap, with a volume table for a tail.
+        p("Noise Hit", "wave" to 0.7500f, "noiseshort" to 1.0000f, "ampattack" to 0.0000f,
+            "ampdecay" to 0.5550f, "ampsustain" to 0.0000f, "amprelease" to 0.3121f, "framerate" to 0.8552f,
+            "volume" to 0.5333f,
+            settings = mapOf("vol" to "255 190 120 70 40 20 8 0 |", "arp" to "", "duty" to "", "formula" to "")),
+        // Three bits and a slow clock: the hardware's own limits, on purpose.
+        p("Buzzsaw", "wave" to 0.5000f, "bits" to 0.2857f, "crush" to 0.4308f, "cutoff" to 0.8785f,
+            "ampattack" to 0.1543f, "ampdecay" to 0.7181f, "ampsustain" to 0.8000f, "amprelease" to 0.5000f,
+            "volume" to 0.4667f,
+            settings = mapOf("formula" to "", "arp" to "", "duty" to "", "vol" to "")),
+        // The equation is the oscillator now, and knob a is in it.
+        p("Formula Buzz", "wave" to 1.0000f, "formula" to 1.0000f, "formulamode" to 0.2500f,
+            "timekeyed" to 1.0000f, "timescale" to 0.5000f, "a" to 0.6275f, "ampattack" to 0.1543f,
+            "ampdecay" to 0.6489f, "ampsustain" to 0.8000f, "amprelease" to 0.4610f, "cutoff" to 0.9289f,
+            "volume" to 0.4000f,
+            settings = mapOf("formula" to "t * (t >> 5 & a >> 4)", "arp" to "", "duty" to "", "vol" to "")),
+        // A pulse, ring-modulated by a sine the formula draws.
+        p("Ring Chip", "wave" to 0.0000f, "duty" to 0.5000f, "formula" to 1.0000f, "formulamode" to 0.5000f,
+            "timekeyed" to 1.0000f, "timescale" to 0.6667f, "framerate" to 0.6638f, "ampattack" to 0.1543f,
+            "ampdecay" to 0.6879f, "ampsustain" to 0.6000f, "amprelease" to 0.5000f, "volume" to 0.4667f,
+            settings = mapOf("formula" to "x * sin(t) >> 7", "arp" to "0 7", "duty" to "", "vol" to "")),
+        // The formula decides when the chip is heard, sixteen times a bar.
+        p("Gated Grit", "wave" to 0.0000f, "duty" to 0.1250f, "formula" to 1.0000f, "formulamode" to 0.7500f,
+            "timekeyed" to 1.0000f, "timescale" to 0.5000f, "framerate" to 0.9534f, "bits" to 0.7143f,
+            "ampattack" to 0.0771f, "ampdecay" to 0.6242f, "ampsustain" to 0.7000f, "amprelease" to 0.4060f,
+            "volume" to 0.4667f,
+            settings = mapOf("formula" to "t >> 9 & 1 ? 255 : 0", "arp" to "0 0 12 7", "duty" to "", "vol" to "")),
     )
 }

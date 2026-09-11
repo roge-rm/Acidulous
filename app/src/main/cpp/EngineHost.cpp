@@ -18,6 +18,7 @@
 #include <engine/core/Sf2Reader.h>
 #include <engine/machine/forage/Forage.h>
 #include <engine/machine/cumulus/Cumulus.h>
+#include <engine/machine/formulate/Formulate.h>
 #include <engine/machine/mosaic/Mosaic.h>
 #include <map>
 #include <sstream>
@@ -677,10 +678,27 @@ void EngineHost::snapshotAbandon(int64_t handle) { delete fromHandle(handle); }
 
 int32_t EngineHost::sampleRate() const { return sAudio.getSampleRate(); }
 
+namespace {
+/**
+ * A machine is mounted through a queue the audio thread drains, so a worker
+ * that asks for it in the same breath as the UI mounted it can arrive
+ * first. Wait a few blocks for it rather than failing a load that is only
+ * early - 100 ms is thousands of blocks, and the UI is not waiting on us.
+ */
+Machine *awaitMachine(Engine &engine, int rack, const char *type) {
+    for (int attempt = 0; attempt < 20; ++attempt) {
+        Machine *m = engine.racks[rack].currentMachine();
+        if (m != nullptr && std::strcmp(m->typeName(), type) == 0) return m;
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    return nullptr;
+}
+} // namespace
+
 std::string EngineHost::buildCloud(int rack, const float *spectrum01, int32_t count) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
-    Machine *m = sEngine.racks[rack].currentMachine();
-    if (m == nullptr || std::strcmp(m->typeName(), "Cumulus") != 0) return "that rack is not a Cumulus";
+    Machine *m = awaitMachine(sEngine, rack, "Cumulus");
+    if (m == nullptr) return "that rack is not a Cumulus";
     auto *cum = static_cast<machine::Cumulus *>(m);
     const machine::cumulus::CloudSpec built = cum->spec(spectrum01, count);
     LOGI("cumulus rack %d asked for: %d partials, tilt %.1f, bw %.0f, stretch %.3f, comb %.2f, vowel %.2f/%.2f (%d values given)",
@@ -697,6 +715,24 @@ std::string EngineHost::buildCloud(int rack, const float *spectrum01, int32_t co
     mount.deleter = deleteAs<machine::cumulus::CloudSet>;
     if (!mountObjectWithRetry(mount)) return "mount queue full";
     set.release();
+    return "";
+}
+
+std::string EngineHost::loadFormula(int rack, const std::string &formula, const std::string &arp,
+                                    const std::string &duty, const std::string &vol) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (awaitMachine(sEngine, rack, "Formulate") == nullptr) return "that rack is not a Formulate";
+    std::string error;
+    auto program = machine::formulate::compile(formula, arp, duty, vol, error);
+    if (!program) return error.empty() ? "the formula could not be read" : error;
+    Mount mount;
+    mount.kind = Mount::Kind::Object;
+    mount.rack = rack;
+    mount.slot = 0;
+    mount.object = program.get();
+    mount.deleter = deleteAs<machine::formulate::Program>;
+    if (!mountObjectWithRetry(mount)) return "mount queue full";
+    program.release();
     return "";
 }
 

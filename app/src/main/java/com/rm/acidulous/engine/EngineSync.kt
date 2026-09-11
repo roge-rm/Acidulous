@@ -36,6 +36,14 @@ object EngineSync {
     private val loadedMaps = arrayOfNulls<String>(RACKS)   // the source string a rack's map was built from
     private val loadedFreezes = arrayOfNulls<String>(RACKS) // which frozen clips a rack has, as one identity string
     private val builtClouds = arrayOfNulls<String>(RACKS)   // the spectrum a rack's Cumulus tables were built from
+    private val loadedFormulas = arrayOfNulls<String>(RACKS) // the text a rack's Formulate was compiled from
+
+    /**
+     * What the last compile said, by rack: empty when it read, the reason
+     * when it did not. The panel shows it - a typed formula that fails
+     * quietly is a trap.
+     */
+    val formulaErrors = androidx.compose.runtime.mutableStateMapOf<Int, String>()
     // Building a multisample means parsing and decoding, sometimes tens of
     // megabytes, so it never runs on the caller's thread.
     private val mapLoader = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
@@ -236,6 +244,31 @@ object EngineSync {
         }
     }
 
+    /**
+     * Formulate's expression and step tables. Text, like Nexus's patch and
+     * Mosaic's zones: parsed on a worker, handed over as one object.
+     */
+    fun ensureFormulas(song: Song) {
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            val settings = track?.machine?.settings
+            val wanted = if (track?.machine?.type != "Formulate" || mounted[rack] != "Formulate") {
+                null
+            } else {
+                listOf("formula", "arp", "duty", "vol").joinToString("\u0001") { settings?.get(it).orEmpty() }
+            }
+            if (loadedFormulas[rack] == wanted) continue
+            loadedFormulas[rack] = wanted
+            if (wanted == null) { formulaErrors.remove(rack); continue }
+            val parts = wanted.split("\u0001")
+            mapLoader.execute {
+                val error = NativeEngine.loadFormula(rack, parts[0], parts[1], parts[2], parts[3])
+                formulaErrors[rack] = error
+                if (error.isNotEmpty()) Log.w(TAG, "formulate rack $rack: $error")
+            }
+        }
+    }
+
     fun sync(song: Song): Boolean {
         ensureMachines(song)
         ensureSamples(song)
@@ -244,6 +277,7 @@ object EngineSync {
         ensureSampleMaps(song)
         ensureNexusPatches(song)
         ensureClouds(song)
+        ensureFormulas(song)
         ensureFrozen(song)
         return push(song)
     }

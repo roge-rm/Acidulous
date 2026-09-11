@@ -161,6 +161,10 @@ object NativeEngine {
     fun snapshotCommit(handle: Long): Boolean = nativeSnapshotCommit(handle)
     fun snapshotAbandon(handle: Long) = nativeSnapshotAbandon(handle)
 
+    /** Compile and mount Formulate's expression and tables. "" or the reason. */
+    fun loadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String =
+        nativeLoadFormula(rack, formula, arp, duty, vol)
+
     /**
      * Build and mount Cumulus's tables for a rack. Slow; worker only.
      * [spectrum01] is the spectrum parameters in table order, NaN for any
@@ -304,6 +308,7 @@ object NativeEngine {
     private external fun nativeControlChange(rackId: Int, cc: Int, value: Int)
     private external fun nativeChannelPressure(rackId: Int, value: Int)
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
+    private external fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
     private external fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     private external fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
     private external fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray): String

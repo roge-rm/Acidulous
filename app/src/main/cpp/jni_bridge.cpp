@@ -273,6 +273,19 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeGetSampleRate(JNIEnv *, jobject)
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoadFormula(JNIEnv *env, jobject, jint rack, jstring formula,
+                                                            jstring arp, jstring duty, jstring vol) {
+    auto str = [&](jstring s) {
+        if (s == nullptr) return std::string();
+        const char *p = env->GetStringUTFChars(s, nullptr);
+        std::string out(p);
+        env->ReleaseStringUTFChars(s, p);
+        return out;
+    };
+    return env->NewStringUTF(host().loadFormula(rack, str(formula), str(arp), str(duty), str(vol)).c_str());
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeBuildCloud(JNIEnv *env, jobject, jint rack, jfloatArray spectrum) {
     std::vector<jfloat> v;
     if (spectrum != nullptr) {

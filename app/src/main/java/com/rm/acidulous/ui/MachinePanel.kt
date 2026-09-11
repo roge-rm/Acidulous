@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
@@ -118,6 +120,7 @@ fun MachinePanel(
             "Manual" -> ManualPanel(binding)
             "Cipher" -> CipherPanel(binding)
             "Cumulus" -> CumulusPanel(binding)
+            "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
@@ -1194,6 +1197,221 @@ private fun CumulusPanel(b: ParamBinding) {
                         PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
                         PanelKnob(b, "fine", "fine")
                     }
+                }
+            }
+        }
+    }
+}
+
+
+// --- Formulate -------------------------------------------------------------------
+
+private val FORMULATE_WAVES = listOf("pulse", "tri", "saw", "noise", "off")
+private val FORMULATE_MODES = listOf("off", "replace", "ring", "gate", "xor")
+
+/** Expressions to start from, none of them anybody else's one-liner. */
+private val FORMULA_EXAMPLES = listOf(
+    "x" to "the chip, untouched",
+    "x & (255 << (a >> 5))" to "crush it with knob a",
+    "x * sin(t) >> 7" to "ring it against a sine",
+    "t * (t >> 5 & a >> 4)" to "buzz - the classic shape",
+    "(t >> 3) * (t >> 5 & 7)" to "stairs",
+    "t & t >> b >> 4 | t >> a >> 4" to "two shifts arguing",
+    "r & (t >> 6 & 15 ? 255 : 0)" to "noise, gated by the clock",
+    "sin(t + sin(t >> 2) ) + 128" to "a sine bent by itself",
+)
+
+@Composable
+private fun FormulatePanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    var editing by remember { mutableStateOf(false) }
+    val error = com.rm.acidulous.engine.EngineSync.formulaErrors[trackIndex].orEmpty()
+    Column {
+        SectionChips(listOf("chip", "formula", "tables", "shape", "env", "out"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("oscillator") {
+                        PanelStepKnob(b, "wave", FORMULATE_WAVES, "wave", PanelAmber)
+                        PanelKnob(b, "duty", "duty", PanelAmber)
+                        PanelKnob(b, "pwmdepth", "pwm")
+                        PanelKnob(b, "pwmrate", "· rate")
+                        PanelKnob(b, "sub", "sub 8ve")
+                        PanelSwitch(b, "noiseshort", listOf("long", "short"), "noise")
+                    }
+                    Group("hardware") {
+                        PanelStepKnob(b, "bits", (1..8).map { "$it" }, "bits", PanelPink)
+                        PanelKnob(b, "crush", "sample rate", PanelPink)
+                        PanelKnob(b, "smooth", "smooth")
+                    }
+                }
+                1 -> {
+                    Group("expression") {
+                        FormulaButton(track, error) { editing = true }
+                    }
+                    Group("how much") {
+                        PanelKnob(b, "formula", "amount", PanelAmber)
+                        PanelStepKnob(b, "formulamode", FORMULATE_MODES, "against x")
+                    }
+                    Group("its clock") {
+                        PanelSwitch(b, "timekeyed", listOf("free", "keyed"), "t follows")
+                        PanelKnob(b, "timescale", "rate", PanelAmber)
+                    }
+                    Group("macros") {
+                        PanelKnob(b, "a", "a", PanelAmber)
+                        PanelKnob(b, "b", "b", PanelAmber)
+                        PanelKnob(b, "c", "c", PanelAmber)
+                    }
+                }
+                2 -> {
+                    Group("steps") {
+                        FormulaButton(track, error) { editing = true }
+                    }
+                    Group("clock") {
+                        PanelKnob(b, "framerate", "rate", PanelAmber)
+                        PanelSwitch(b, "framesync", listOf("free", "16ths"), "sync")
+                        PanelSwitch(b, "tableretrig", listOf("keep", "restart"), "per note")
+                    }
+                }
+                3 -> {
+                    Group("filter") {
+                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                        PanelKnob(b, "resonance", "reso", PanelAmber)
+                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                    }
+                }
+                4 -> {
+                    Group("amp") {
+                        PanelKnob(b, "ampattack", "A")
+                        PanelKnob(b, "ampdecay", "D")
+                        PanelKnob(b, "ampsustain", "S")
+                        PanelKnob(b, "amprelease", "R")
+                    }
+                }
+                else -> {
+                    Group("out") {
+                        PanelKnob(b, "drive", "drive", PanelPink)
+                        PanelKnob(b, "volume", "volume")
+                        PanelKnob(b, "pan", "pan")
+                    }
+                    Group("voice") {
+                        PanelSwitch(b, "mono", listOf("poly", "mono"), "voices")
+                        PanelKnob(b, "glide", "glide")
+                        PanelKnob(b, "velocity", "velocity")
+                        PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                    }
+                    Group("tune") {
+                        PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
+                        PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
+                        PanelKnob(b, "fine", "fine")
+                    }
+                }
+            }
+        }
+    }
+    if (editing) {
+        FormulaDialog(track, error, onDismiss = { editing = false }) { formula, arp, duty, vol ->
+            editor.edit(trackIndex) { t ->
+                t.withSetting("formula", formula).withSetting("arp", arp)
+                    .withSetting("duty", duty).withSetting("vol", vol)
+            }
+            editing = false
+        }
+    }
+}
+
+/** The formula itself, shown as what it is: text, and whether it reads. */
+@Composable
+private fun FormulaButton(track: Track, error: String, onEdit: () -> Unit) {
+    val c = Acid.colors
+    val text = track.machine.settings["formula"].orEmpty()
+    Column(Modifier.widthIn(min = 150.dp, max = 300.dp)) {
+        Text(
+            text.ifEmpty { "no formula" },
+            color = if (text.isEmpty()) c.textDim else c.textHi,
+            fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        )
+        if (error.isNotEmpty()) {
+            Text(error, color = c.red, fontSize = 10.sp, maxLines = 2)
+        }
+        TextButton(onClick = onEdit) { Text("edit…", color = Acid.colors.accent, fontSize = 12.sp) }
+    }
+}
+
+/**
+ * Where the machine is actually programmed: one expression and three step
+ * tables. Applied on OK, because a half-typed formula should not be
+ * compiled on every keystroke.
+ */
+@Composable
+private fun FormulaDialog(
+    track: Track,
+    error: String,
+    onDismiss: () -> Unit,
+    onApply: (formula: String, arp: String, duty: String, vol: String) -> Unit,
+) {
+    val c = Acid.colors
+    var formula by remember { mutableStateOf(track.machine.settings["formula"].orEmpty()) }
+    var arp by remember { mutableStateOf(track.machine.settings["arp"].orEmpty()) }
+    var duty by remember { mutableStateOf(track.machine.settings["duty"].orEmpty()) }
+    var vol by remember { mutableStateOf(track.machine.settings["vol"].orEmpty()) }
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        androidx.compose.material3.Surface(
+            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = c.card,
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Formula", color = c.text, fontSize = 20.sp)
+                androidx.compose.material3.OutlinedTextField(
+                    value = formula, onValueChange = { formula = it },
+                    label = { Text("expression in t, f, n, v, x, a, b, c, s, r") },
+                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (error.isNotEmpty()) Text(error, color = c.red, fontSize = 12.sp)
+                Text("examples", color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Column(
+                    Modifier.heightIn(max = 180.dp).verticalScrollWithBar(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    for ((example, what) in FORMULA_EXAMPLES) {
+                        Row(
+                            Modifier.fillMaxWidth().clickable { formula = example }.padding(vertical = 3.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(example, color = c.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.weight(1f), maxLines = 1)
+                            Text(what, color = c.textDim, fontSize = 10.sp, maxLines = 1)
+                        }
+                    }
+                }
+                Text("step tables - values, and | where it loops back", color = c.teal, fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace)
+                androidx.compose.material3.OutlinedTextField(
+                    value = arp, onValueChange = { arp = it }, label = { Text("arp, semitones") },
+                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.OutlinedTextField(
+                        value = duty, onValueChange = { duty = it }, label = { Text("duty 0-255") },
+                        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                        singleLine = true, modifier = Modifier.weight(1f),
+                    )
+                    androidx.compose.material3.OutlinedTextField(
+                        value = vol, onValueChange = { vol = it }, label = { Text("volume 0-255") },
+                        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                        singleLine = true, modifier = Modifier.weight(1f),
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    TextButton(onClick = { onApply(formula, arp, duty, vol) }) { Text("OK") }
                 }
             }
         }
