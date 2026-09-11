@@ -14,10 +14,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,6 +101,9 @@ fun EditScreen(
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var scaleDialog by remember { mutableStateOf(false) }
     var scaleView by rememberSaveable { mutableStateOf(ScaleView.Dim) }
+    // Long clips are paged two bars at a time, as the drum grid is paged one.
+    // More than two bars across a phone leaves notes too narrow to grab.
+    var page by rememberSaveable(trackIndex, sceneId) { mutableStateOf(0) }
 
     // The scale lives in a Scale eventor; the chip and its dialog are only a
     // shortcut to the one eventor worth reaching while playing.
@@ -137,6 +143,21 @@ fun EditScreen(
         position.tickInIteration % clipLen
     } else null
 
+    // Two bars at a time in the roll, one in the step views: any more and the
+    // notes are too narrow to grab. The count of pages follows from that.
+    val pageBars = if (steps) 1 else PAGE_BARS
+    val pages = ((clip.bars + pageBars - 1) / pageBars).coerceAtLeast(1)
+    page = page.coerceIn(0, pages - 1)
+    val pageTicks = pageBars * ticksPerBar
+    val firstTick = page * pageTicks
+    // While playing, follow the playhead onto its own page rather than
+    // leaving the editor staring at a bar that is not sounding.
+    val playheadPage = if (playhead != null && clipLen > 0) ((playhead % clipLen) / pageTicks).toInt() else -1
+    LaunchedEffect(playheadPage, playing) {
+        if (playing && playheadPage in 0 until pages) page = playheadPage
+    }
+
+
     fun preview(pitch: Int) {
         NativeEngine.noteOn(trackIndex, pitch, 100)
         scope.launch { delay(120); NativeEngine.noteOff(trackIndex, pitch) }
@@ -146,14 +167,31 @@ fun EditScreen(
     // footer sits under the navigation bar and its taps become Back.
     Column(modifier.fillMaxSize().background(Color(0xFF1B1B1E)).padding(8.dp)) {
         // Header: back · track · scene · octave
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick = onBack) { Text("◀", color = Color.White) }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            HeaderButton("◀", onBack)
             Text(
-                "${track.name} · ${scene.name} · ${clip.bars} bar${if (clip.bars > 1) "s" else ""} · ${clip.notes.size} notes" + (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }} auto"),
-                color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.weight(1f),
+                "${track.name} · ${scene.name} · ${clip.bars}b · ${clip.notes.size}n" +
+                    (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a"),
+                color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                modifier = Modifier.weight(1f).padding(horizontal = 4.dp), maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
-            TextButton(onClick = { lowestPitch = (lowestPitch + 12).coerceAtMost(127 - ROWS) }) { Text("▲", color = Color.White) }
-            TextButton(onClick = { lowestPitch = (lowestPitch - 12).coerceAtLeast(0) }) { Text("▼", color = Color.White) }
+            // Paging lives here rather than in a row of its own: a whole row of
+            // chrome to show one number costs more height than a phone has to
+            // spare, and the header already has the two buttons it belongs with.
+            if (pages > 1) {
+                HeaderButton("◀") { page = (page - 1 + pages) % pages }
+                Text(
+                    "${page + 1}/$pages", color = Color(0xFFFFB454), fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
+                )
+                HeaderButton("▶") { page = (page + 1) % pages }
+            }
+            // Only the roll scrolls by octave; the step views have fixed rows.
+            if (!steps) {
+                HeaderButton("▲") { lowestPitch = (lowestPitch + 12).coerceAtMost(127 - ROWS) }
+                HeaderButton("▼") { lowestPitch = (lowestPitch - 12).coerceAtLeast(0) }
+            }
         }
 
         if (steps && kind == MachineKind.Drums) DrumGrid(
@@ -161,6 +199,7 @@ fun EditScreen(
             ticksPerBar = ticksPerBar,
             voices = voices,
             playheadTick = playhead,
+            barIndex = page,
             onSetHit = { tick, note, hit ->
                 editor.editClip(trackIndex, sceneId) { c ->
                     val others = c.notes.filter { !(it.tick == tick && it.pitch == note) }
@@ -172,6 +211,7 @@ fun EditScreen(
             clip = clip,
             ticksPerBar = ticksPerBar,
             playheadTick = playhead,
+            barIndex = page,
             onSetStep = { tick, note ->
                 editor.editClip(trackIndex, sceneId) { c ->
                     val others = c.notes.filter { it.tick != tick }
@@ -194,6 +234,8 @@ fun EditScreen(
             rows = ROWS,
             scalePitchClasses = Scales.activeFor(track),
             scaleView = scaleView,
+            firstTick = firstTick,
+            visibleTicks = pageTicks,
             onCycleScaleView = {
                 scaleView = when (scaleView) {
                     ScaleView.Chromatic -> ScaleView.Dim
@@ -240,6 +282,8 @@ fun EditScreen(
             clip = clip,
             ticksPerBar = ticksPerBar,
             playheadTick = playhead,
+            firstTick = firstTick,
+            visibleTicks = pageTicks,
             laneKeys = laneKeys,
             selected = laneKey,
             onSelect = { laneKey = it },
@@ -338,6 +382,7 @@ fun EditScreen(
 // carry its name and be hit with a finger, which matters more on a phone
 // than seeing the whole range at once. The arrows move the window.
 private const val ROWS = 16
+private const val PAGE_BARS = 2
 
 @Composable
 private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
@@ -362,4 +407,19 @@ private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
     ) {
         Text(note.toString(), color = Color(0xFF333333), fontSize = 9.sp, modifier = Modifier.padding(bottom = 4.dp))
     }
+}
+
+/**
+ * A header control sized to its glyph. Material's TextButton reserves a 48dp
+ * touch target in both directions, and five of those leave the title no room,
+ * so these take the height of the row and only the width they need.
+ */
+@Composable
+private fun HeaderButton(glyph: String, onClick: () -> Unit) {
+    Box(
+        Modifier.size(width = 30.dp, height = 40.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(glyph, color = Color.White, fontSize = 14.sp) }
 }

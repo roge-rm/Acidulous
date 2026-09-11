@@ -78,6 +78,9 @@ fun PianoRoll(
     scalePitchClasses: Set<Int>?,
     scaleView: ScaleView,
     onCycleScaleView: () -> Unit,
+    /** The window this page shows, in ticks from the start of the clip. */
+    firstTick: Int,
+    visibleTicks: Int,
     onTapEmpty: (tick: Int, pitch: Int) -> Unit,
     onTapNote: (index: Int) -> Unit,
     onSelectionChange: (Set<Int>) -> Unit,
@@ -130,7 +133,7 @@ fun PianoRoll(
                 val down = awaitFirstDown()
                 val geo = Geometry(
                     canvasSize, clipState, ticksPerBar, rowsState,
-                    GutterWidth.toPx(), RulerHeight.toPx(), rowsState2,
+                    GutterWidth.toPx(), RulerHeight.toPx(), rowsState2, firstTick, visibleTicks,
                 )
                 val press = down.position
                 // The gutter plays the row it names; the ruler is a legend and
@@ -220,7 +223,8 @@ fun PianoRoll(
         },
     ) {
         canvasSize = size
-        val geo = Geometry(size, clip, ticksPerBar, rows, GutterWidth.toPx(), RulerHeight.toPx(), rowPitches)
+        val geo = Geometry(size, clip, ticksPerBar, rows, GutterWidth.toPx(), RulerHeight.toPx(), rowPitches,
+            firstTick, visibleTicks)
 
         // Rows: black keys darker, C rows marked, and rows the scale would
         // move pushed further back when Dim is on.
@@ -243,8 +247,8 @@ fun PianoRoll(
         }
 
         // Grid: subdivision, beat, bar.
-        var t = 0
-        while (t <= geo.totalTicks) {
+        var t = geo.firstTick
+        while (t <= geo.lastTick) {
             val x = geo.xOf(t)
             val (color, width) = when {
                 t % ticksPerBar == 0 -> Color(0xFF8A8A92) to 2.5f
@@ -257,6 +261,8 @@ fun PianoRoll(
 
         // Notes, with velocity as the bright inner region.
         clip.notes.forEachIndexed { i, note ->
+            // Off this page entirely: nothing to draw.
+            if (note.tick + max(1, note.length) <= geo.firstTick || note.tick >= geo.lastTick) return@forEachIndexed
             val rect = geo.noteRect(note)
             if (rect.bottom < 0f || rect.top > size.height) return@forEachIndexed
             val selected = i in selection
@@ -276,8 +282,11 @@ fun PianoRoll(
         }
 
         playheadTick?.let { tick ->
-            val x = geo.xOf((tick % max(1, geo.totalTicks)).toInt())
-            drawLine(Color(0xFFFFB454), Offset(x, geo.originY), Offset(x, size.height), 3f)
+            val t = (tick % max(1, geo.totalTicks)).toInt()
+            if (t >= geo.firstTick && t < geo.lastTick) {
+                val x = geo.xOf(t)
+                drawLine(Color(0xFFFFB454), Offset(x, geo.originY), Offset(x, size.height), 3f)
+            }
         }
 
         drawNameGutter(geo, textMeasurer, scale)
@@ -348,7 +357,9 @@ private fun DrawScope.drawBarRuler(geo: Geometry, size: Size, measurer: TextMeas
     val nameBeats = barW / beats > 56.dp.toPx()
     val barStyle = TextStyle(color = Color(0xFFDDDDE2), fontSize = 10.sp, fontFamily = FontFamily.Monospace)
     val beatStyle = TextStyle(color = Color(0xFF75757E), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-    for (bar in 0 until max(1, geo.clip.bars)) {
+    val firstBar = geo.firstTick / geo.ticksPerBar
+    val lastBar = (geo.lastTick + geo.ticksPerBar - 1) / geo.ticksPerBar
+    for (bar in firstBar until max(firstBar + 1, lastBar)) {
         val barTick = bar * geo.ticksPerBar
         val x = geo.xOf(barTick)
         drawLine(Color(0xFF9A9AA2), Offset(x, 2f), Offset(x, geo.originY), 2f)
@@ -367,7 +378,9 @@ private fun DrawScope.drawBarRuler(geo: Geometry, size: Size, measurer: TextMeas
     }
     drawLine(Color(0xFF44444C), Offset(0f, geo.originY), Offset(size.width, geo.originY), 1.5f)
     playheadTick?.let { tick ->
-        val x = geo.xOf((tick % max(1, geo.totalTicks)).toInt())
+        val t = (tick % max(1, geo.totalTicks)).toInt()
+        if (t < geo.firstTick || t >= geo.lastTick) return@let
+        val x = geo.xOf(t)
         val w = 5f
         drawPath(
             androidx.compose.ui.graphics.Path().apply {
@@ -432,11 +445,16 @@ private class Geometry(
     val originX: Float = 0f, val originY: Float = 0f,
     /** The pitch each row carries, top first. Not always chromatic. */
     private val rowPitches: IntArray = IntArray(0),
+    val firstTick: Int = 0,
+    windowTicks: Int = 0,
 ) {
     val totalTicks = clip.bars * ticksPerBar
+    /** One past the last tick this page shows. */
+    val lastTick = if (windowTicks > 0) min(totalTicks, firstTick + windowTicks) else totalTicks
+    private val span = max(1, lastTick - firstTick)
     val fieldW = max(1f, size.width - originX)
     val fieldH = max(1f, size.height - originY)
-    val pxPerTick = if (totalTicks > 0) fieldW / totalTicks else 1f
+    val pxPerTick = fieldW / span
     val rowH = if (rows > 0) fieldH / rows else 1f
     val topPitch = rowPitches.firstOrNull() ?: 0
     private val grid = clip.grid.coerceAtLeast(1)
@@ -462,11 +480,11 @@ private class Geometry(
 
     fun isExact(pitch: Int): Boolean = rowPitches.isEmpty() || rowPitches.any { it == pitch }
 
-    fun xOf(tick: Int): Float = originX + tick * pxPerTick
+    fun xOf(tick: Int): Float = originX + (tick - firstTick) * pxPerTick
     fun yOf(pitch: Int): Float = originY + rowOfPitch(pitch) * rowH
 
     fun tickAt(x: Float, snap: Boolean): Int {
-        val raw = ((x - originX) / pxPerTick).roundToInt().coerceIn(0, max(0, totalTicks - 1))
+        val raw = (firstTick + ((x - originX) / pxPerTick).roundToInt()).coerceIn(0, max(0, totalTicks - 1))
         return if (snap) ((raw + grid / 2) / grid * grid).coerceIn(0, max(0, totalTicks - grid)) else raw
     }
 
@@ -479,7 +497,7 @@ private class Geometry(
 
     fun noteRect(note: Note): Rect {
         val left = xOf(note.tick)
-        val right = xOf(min(totalTicks, note.tick + max(1, note.length)))
+        val right = xOf(min(lastTick, note.tick + max(1, note.length)))
         val top = yOf(note.pitch)
         return Rect(left, top, max(right, left + 3f), top + rowH)
     }

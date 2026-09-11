@@ -41,20 +41,16 @@ fun DrumGrid(
     ticksPerBar: Int,
     voices: List<DrumVoice>,
     playheadTick: Long?,
+    /** Which bar to show; the Edit screen's header owns the paging. */
+    barIndex: Int,
     onSetHit: (tick: Int, note: Int, hit: Note?) -> Unit, // null clears
     modifier: Modifier = Modifier,
 ) {
     val grid = clip.grid.coerceAtLeast(1)
     val stepsPerBar = (ticksPerBar / grid).coerceAtLeast(1)
-    var bar by remember { mutableStateOf(0) }
-    bar = bar.coerceIn(0, clip.bars - 1)
+    val bar = barIndex.coerceIn(0, (clip.bars - 1).coerceAtLeast(0))
 
     Column(modifier.background(Color(0xFF1B1B1E)).padding(4.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { if (bar > 0) bar-- }) { Text("◀", color = Color.White) }
-            Text("bar ${bar + 1}/${clip.bars}", color = Color.White, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-            TextButton(onClick = { if (bar < clip.bars - 1) bar++ }) { Text("▶", color = Color.White) }
-        }
         Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             for (voice in voices) {
                 Row(Modifier.fillMaxWidth().height(24.dp), horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {

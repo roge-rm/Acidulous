@@ -53,6 +53,9 @@ fun AutomationStrip(
     clip: Clip,
     ticksPerBar: Int,
     playheadTick: Long?,
+    /** The same window the roll is showing, so the playheads agree. */
+    firstTick: Int = 0,
+    visibleTicks: Int = 0,
     laneKeys: List<String>,          // every parameter a lane could be added for
     selected: String?,
     onSelect: (String?) -> Unit,
@@ -123,10 +126,12 @@ fun AutomationStrip(
                     val down = awaitFirstDown()
                     val key = keyState ?: return@awaitEachGesture
                     val total = (clipState.bars * ticksPerBar).coerceAtLeast(1)
+                    val from = firstTick.coerceIn(0, total - 1)
+                    val span = (if (visibleTicks > 0) minOf(visibleTicks, total - from) else total).coerceAtLeast(1)
                     val grid = clipState.grid.coerceAtLeast(1)
                     val stroke = HashMap<Int, Float>()
                     fun add(p: Offset) {
-                        val tick = (((p.x / size.width) * total).roundToInt() / grid * grid).coerceIn(0, total - 1)
+                        val tick = ((from + (p.x / size.width) * span).roundToInt() / grid * grid).coerceIn(0, total - 1)
                         stroke[tick] = (1f - p.y / size.height).coerceIn(0f, 1f)
                         cb.second(key, stroke)
                     }
@@ -138,10 +143,14 @@ fun AutomationStrip(
             },
         ) {
             val total = (clip.bars * ticksPerBar).coerceAtLeast(1)
-            val pxPerTick = size.width / total
-            var t = 0
-            while (t <= total) {
-                val x = t * pxPerTick
+            val from = firstTick.coerceIn(0, total - 1)
+            val span = (if (visibleTicks > 0) minOf(visibleTicks, total - from) else total).coerceAtLeast(1)
+            val last = from + span
+            val pxPerTick = size.width / span
+            fun xOf(tick: Int) = (tick - from) * pxPerTick
+            var t = from
+            while (t <= last) {
+                val x = xOf(t)
                 drawLine(if (t % ticksPerBar == 0) Color(0xFF55555C) else Color(0xFF2E2E33), Offset(x, 0f), Offset(size.width, 0f).copy(x = x, y = size.height), 1f)
                 t += PPQN
             }
@@ -149,22 +158,25 @@ fun AutomationStrip(
                 // sample the lane at every grid tick so step and linear both draw right
                 val step = clip.grid.coerceAtLeast(8)
                 var prev: Offset? = null
-                var tick = 0
-                while (tick <= total) {
+                var tick = from
+                while (tick <= last) {
                     val v = lane.valueAt(tick)
-                    val p = Offset(tick * pxPerTick, (1f - v) * (size.height - 4f) + 2f)
+                    val p = Offset(xOf(tick), (1f - v) * (size.height - 4f) + 2f)
                     prev?.let { drawLine(Color(0xFFFFB454), it, p, 2f) }
                     prev = p
                     tick += step
                 }
                 for (pt in lane.points) {
-                    val p = Offset(pt.tick * pxPerTick, (1f - pt.value) * (size.height - 4f) + 2f)
+                    if (pt.tick < from || pt.tick > last) continue
+                    val p = Offset(xOf(pt.tick), (1f - pt.value) * (size.height - 4f) + 2f)
                     drawRect(Color(0xFFFFE0A0), Offset(p.x - 3f, p.y - 3f), Size(6f, 6f))
                 }
             }
             playheadTick?.let { pt ->
-                val x = (pt % total) * pxPerTick
-                drawLine(Color(0xFFFFB454), Offset(x, 0f), Offset(x, size.height), 2f)
+                val t = (pt % total).toInt()
+                if (t in from until last) {
+                    drawLine(Color(0xFFFFB454), Offset(xOf(t), 0f), Offset(xOf(t), size.height), 2f)
+                }
             }
         }
     }

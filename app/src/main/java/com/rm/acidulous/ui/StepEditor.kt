@@ -46,6 +46,8 @@ fun StepEditor(
     clip: Clip,
     ticksPerBar: Int,
     playheadTick: Long?,
+    /** Which bar to show; the Edit screen's header owns the paging. */
+    barIndex: Int,
     onSetStep: (tick: Int, note: Note?) -> Unit,          // null clears the step (one undo step)
     onPitchGestureBegin: () -> Unit,
     onPitchGesture: (tick: Int, note: Note) -> Unit,        // absolute from the gesture base
@@ -54,16 +56,10 @@ fun StepEditor(
 ) {
     val grid = clip.grid.coerceAtLeast(1)
     val stepsPerBar = (ticksPerBar / grid).coerceAtLeast(1)
-    var bar by remember { mutableStateOf(0) }
-    bar = bar.coerceIn(0, clip.bars - 1)
+    val bar = barIndex.coerceIn(0, (clip.bars - 1).coerceAtLeast(0))
     val lastPitch = clip.notes.lastOrNull()?.pitch ?: 36
 
     Column(modifier.background(Color(0xFF1B1B1E)).padding(4.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { if (bar > 0) bar-- }) { Text("◀", color = Color.White) }
-            Text("bar ${bar + 1}/${clip.bars}", color = Color.White, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-            TextButton(onClick = { if (bar < clip.bars - 1) bar++ }) { Text("▶", color = Color.White) }
-        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             for (s in 0 until stepsPerBar) {
                 val tick = bar * ticksPerBar + s * grid
