@@ -462,6 +462,11 @@ JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeStopAllClips(JNIEnv *, jobject) { host().stopAllClips(); }
 
 JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCancelLaunch(JNIEnv *, jobject, jint rack) {
+    host().cancelLaunch(rack);
+}
+
+JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeLaunchStates(JNIEnv *env, jobject, jlongArray out) {
     const jsize n = env->GetArrayLength(out);
     int64_t packed[acidulous::kRackCount] = {};

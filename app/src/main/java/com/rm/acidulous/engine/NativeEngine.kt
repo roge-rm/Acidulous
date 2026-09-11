@@ -155,6 +155,9 @@ object NativeEngine {
     fun launchClip(rack: Int, sceneId: Long) = nativeLaunchClip(rack, sceneId)
     fun stopAllClips() = nativeStopAllClips()
 
+    /** Forget what this track had queued, whatever has happened since. */
+    fun cancelLaunch(rack: Int) = nativeCancelLaunch(rack)
+
     /** Fills [out] (one per rack) with packed scene | pending | tick-in-cycle. */
     fun launchStates(out: LongArray) = nativeLaunchStates(out)
 
@@ -357,6 +360,7 @@ object NativeEngine {
     private external fun nativeSetLaunchQuantise(ticks: Int)
     private external fun nativeLaunchClip(rack: Int, sceneId: Long)
     private external fun nativeStopAllClips()
+    private external fun nativeCancelLaunch(rack: Int)
     private external fun nativeLaunchStates(out: LongArray)
     private external fun nativeIsPlaying(): Boolean
     private external fun nativeSetLoopScene(on: Boolean)

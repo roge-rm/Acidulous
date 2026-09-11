@@ -565,6 +565,7 @@ void EngineHost::setLauncher(bool on) { sEngine.transport.setLauncher(on); }
 void EngineHost::setLaunchQuantise(int32_t ticks) { sEngine.transport.setLaunchQuantise(ticks); }
 void EngineHost::launchClip(int32_t rack, int64_t sceneId) { sEngine.transport.launchClip(rack, sceneId); }
 void EngineHost::stopAllClips() { sEngine.transport.requestStopAll(); }
+void EngineHost::cancelLaunch(int32_t rack) { sEngine.transport.launchClip(rack, seq::Launcher::kCancelId); }
 void EngineHost::launchStates(int64_t *out, int32_t count) const {
     for (int32_t r = 0; r < count && r < kRackCount; ++r) {
         out[r] = sEngine.transport.launchState(r);

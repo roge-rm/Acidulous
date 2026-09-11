@@ -35,6 +35,17 @@ class Launcher {
     // to mean "nothing" and a negative value is free to mean "stop".
     static constexpr int64_t kNone = 0;
     static constexpr int64_t kStopId = -1;
+    /**
+     * "Whatever is queued on this rack, forget it" - and nothing else.
+     *
+     * A second tap could be left to mean cancel by itself, since tapping a
+     * queued clip toggles it off. But if the first tap has already landed in
+     * the intervening quarter second, that same toggle reads as "stop the
+     * clip that is now playing", and a double tap meant to open the editor
+     * would leave a stop queued behind it. An explicit cancel cannot be
+     * misread whatever happened in between.
+     */
+    static constexpr int64_t kCancelId = -2;
 
     void reset() {
         for (auto &s : slots) {
@@ -71,6 +82,14 @@ class Launcher {
             return;
         }
         queueAt(s, sceneId, cycle, boundary(s, cycle, now));
+    }
+
+    /** Forget what this rack had queued; leave what it is playing alone. */
+    void cancel(int32_t rack) {
+        if (valid(rack)) {
+            slots[rack].pendingId = kNone;
+            slots[rack].pendingCycle = 0;
+        }
     }
 
     /** Every rack that is sounding is queued to stop at its own boundary. */

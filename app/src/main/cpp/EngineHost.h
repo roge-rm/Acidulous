@@ -109,6 +109,7 @@ class EngineHost {
     void setLaunchQuantise(int32_t ticks);
     void launchClip(int32_t rack, int64_t sceneId);
     void stopAllClips();
+    void cancelLaunch(int32_t rack);
     void launchStates(int64_t *out, int32_t count) const;
 
     // Drain stamped live events into `out`, 5 longs per event:

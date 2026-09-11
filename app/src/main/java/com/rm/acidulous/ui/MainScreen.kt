@@ -10,6 +10,10 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -279,6 +283,7 @@ fun MainScreen(
                                 clipMode = clipMode,
                                 queued = clipMode && launch.pending == sceneIndex,
                                 stopping = clipMode && launch.stopping && launch.scene == sceneIndex,
+                                onCancelLaunch = { NativeEngine.cancelLaunch(trackIndex) },
                                 onLaunch = {
                                     if (clip != null) {
                                         NativeEngine.launchClip(trackIndex, scene.engineId)
@@ -601,7 +606,17 @@ private fun ClipCell(
     queued: Boolean = false,
     stopping: Boolean = false,
     onLaunch: () -> Unit = {},
+    onCancelLaunch: () -> Unit = {},
 ) {
+    // pointerInput keeps the lambdas it was built with, so they are read
+    // through rememberUpdatedState or a cell would launch whatever it held
+    // when it was first composed.
+    val launchNow by rememberUpdatedState(onLaunch)
+    val cancelNow by rememberUpdatedState(onCancelLaunch)
+    val openNow by rememberUpdatedState(onOpen)
+    val settingsNow by rememberUpdatedState(onSettings)
+    val doubleTapMs = LocalViewConfiguration.current.doubleTapTimeoutMillis
+    var lastTap by remember { mutableStateOf(0L) }
     val pulse by rememberInfiniteTransition(label = "queuedclip").animateFloat(
         initialValue = 1f, targetValue = 0.3f,
         animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse), label = "queuedclip",
@@ -618,13 +633,32 @@ private fun ClipCell(
             .clip(RoundedCornerShape(6.dp))
             .background(Acid.colors.card)
             .border(if (queued || stopping) 2.dp else 1.dp, edge, RoundedCornerShape(6.dp))
-            // A tap launches and a double tap edits, which is the other way
-            // round from the arranger - so the arranger keeps its instant
-            // single tap and only clip mode pays the double-tap wait. That
-            // wait is inaudible: the launch lands on a boundary either way.
             .then(
                 if (clipMode) {
-                    Modifier.combinedClickable(onClick = onLaunch, onLongClick = onSettings, onDoubleClick = onOpen)
+                    // A tap launches and a double tap edits. Registering a
+                    // double-tap handler at all would make Compose sit on
+                    // every tap for the double-tap timeout before admitting
+                    // it was single - a third of a second of nothing on the
+                    // one gesture this screen exists for. So the launch goes
+                    // out on the first tap and a second tap *retracts* it:
+                    // queue, unqueue, open, and the net effect of a double
+                    // tap is that nothing changed and the editor opened.
+                    Modifier.pointerInput(clipMode) {
+                        detectTapGestures(
+                            onLongPress = { settingsNow() },
+                            onTap = {
+                                val now = System.currentTimeMillis()
+                                if (now - lastTap <= doubleTapMs) {
+                                    lastTap = 0L
+                                    cancelNow()
+                                    openNow()
+                                } else {
+                                    lastTap = now
+                                    launchNow()
+                                }
+                            },
+                        )
+                    }
                 } else {
                     Modifier.combinedClickable(onClick = onOpen, onLongClick = onSettings)
                 },

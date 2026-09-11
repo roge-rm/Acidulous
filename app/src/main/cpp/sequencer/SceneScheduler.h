@@ -318,6 +318,10 @@ class SceneScheduler {
             if (id == 0) {
                 continue;
             }
+            if (id == Launcher::kCancelId) {
+                launcher.cancel(r);
+                continue;
+            }
             const int32_t idx = snap->indexOfScene(id);
             if (idx < 0) {
                 continue;

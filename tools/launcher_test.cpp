@@ -150,6 +150,29 @@ int main() {
         eq("...so it keeps playing", t.l.playing(0) ? 1 : 0, 1);
     }
 
+    printf("--- an explicit cancel, which is what a double tap sends ---\n");
+    {
+        Timeline t;
+        t.l.request(0, 111, 4 * kBar, 0);
+        t.run(kBar);
+        t.l.request(0, 222, 4 * kBar, t.now);
+        t.l.cancel(0);
+        eq("cancel clears the queue", t.l.pendingId(0), Launcher::kNone);
+        t.run(20 * kBar);
+        eq("...and the playing clip is untouched", t.l.sceneId(0), 111);
+    }
+    {
+        // The case the toggle could not handle: the first tap has already
+        // landed by the time the second arrives.
+        Timeline t;
+        t.l.request(0, 111, 1 * kBar, 0);
+        t.run(3 * kBar);
+        t.l.cancel(0);
+        eq("cancelling with nothing queued changes nothing", t.l.pendingId(0), Launcher::kNone);
+        eq("...and does not queue a stop", t.l.playing(0) ? 1 : 0, 1);
+        eq("...on the clip that was already playing", t.l.sceneId(0), 111);
+    }
+
     printf("--- a scene column launches every track on the same tick ---\n");
     {
         Timeline t;
