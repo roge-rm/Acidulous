@@ -11,6 +11,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -68,16 +72,36 @@ fun AutomationStrip(
     val keyState by rememberUpdatedState(current)
 
     Row(modifier.background(Color(0xFF17171A))) {
-        Column(Modifier.width(72.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-            TextButton(onClick = {
-                if (existing.size > 1) {
-                    val i = existing.indexOf(current)
-                    onSelect(existing[(i + 1) % existing.size])
-                } else menu = true
-            }) {
-                Text(current?.let { laneParam(it) } ?: "auto", color = Color(0xFFFFB454), fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+        // As narrow as the roll's name gutter, so a tick is at the same x in
+        // both and the two playheads line up. The upper part names the lane
+        // being drawn and cycles through the ones that exist; the lower opens
+        // the full list.
+        Column(Modifier.width(GutterWidth).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                Modifier.weight(1f).fillMaxWidth().clickable {
+                    if (existing.size > 1) {
+                        val i = existing.indexOf(current)
+                        onSelect(existing[(i + 1) % existing.size])
+                    } else {
+                        menu = true
+                    }
+                },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    current?.let { laneParam(it) } ?: "∿ auto",
+                    color = Color(0xFFFFB454), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                    maxLines = 1, softWrap = false,
+                    // Turned on its side for the same reason the scale chip is:
+                    // the width belongs to the graph.
+                    modifier = Modifier.requiredWidth(120.dp).rotate(-90f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                )
             }
-            TextButton(onClick = { menu = true }) { Text("⋯", color = Color.White, fontSize = 10.sp) }
+            Box(
+                Modifier.fillMaxWidth().height(18.dp).clickable { menu = true },
+                contentAlignment = Alignment.Center,
+            ) { Text("⋯", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
             val menuScroll = rememberScrollState()
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll), scrollState = menuScroll) {
                 for (k in laneKeys) {

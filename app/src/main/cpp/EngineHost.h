@@ -83,6 +83,10 @@ class EngineHost {
     void setLoopScene(bool on);
     void setLoopSong(bool on);
     void setRecordArmed(bool on);
+    void setStopAtEnd(bool on);
+    bool isStopAtEndArmed() const;
+    void queueScene(int idx);
+    int queuedScene() const;
     bool isRecordArmed() const;
     void setTempo(float bpm);
     float tempo() const;

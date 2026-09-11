@@ -136,6 +136,17 @@ class SceneScheduler {
                 iterationOrigin = iterEnd;
                 if (++repeatIdx >= sc.repeat) {
                     repeatIdx = 0;
+                    // This boundary is where everything queued from the UI
+                    // lands: a scene waiting its turn, or an armed finish.
+                    const int32_t queued = transport->takeQueuedScene();
+                    if (queued >= 0 && queued < static_cast<int32_t>(snap->scenes.size())) {
+                        enterScene(queued, /*allowSmooth=*/true);
+                        continue;
+                    }
+                    if (transport->takeStopAtEnd()) {
+                        lastTickInIteration = 0;
+                        return false;
+                    }
                     if (!transport->loopScene()) {
                         int32_t next = sceneIdx + 1;
                         if (next >= static_cast<int32_t>(snap->scenes.size())) {

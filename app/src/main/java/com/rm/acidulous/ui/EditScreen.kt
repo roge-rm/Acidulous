@@ -97,6 +97,7 @@ fun EditScreen(
     var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 eventors - in the same space
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var scaleDialog by remember { mutableStateOf(false) }
+    var scaleView by rememberSaveable { mutableStateOf(ScaleView.Dim) }
 
     // The scale lives in a Scale eventor; the chip and its dialog are only a
     // shortcut to the one eventor worth reaching while playing.
@@ -191,6 +192,15 @@ fun EditScreen(
             playheadTick = playhead,
             lowestPitch = lowestPitch,
             rows = ROWS,
+            scalePitchClasses = Scales.activeFor(track),
+            scaleView = scaleView,
+            onCycleScaleView = {
+                scaleView = when (scaleView) {
+                    ScaleView.Chromatic -> ScaleView.Dim
+                    ScaleView.Dim -> ScaleView.Fold
+                    ScaleView.Fold -> ScaleView.Chromatic
+                }
+            },
             onTapEmpty = { tick, pitch ->
                 selection = emptySet()
                 editor.editClip(trackIndex, sceneId) { c -> c.copy(notes = c.notes + Note(tick, c.grid, pitch, 100)) }

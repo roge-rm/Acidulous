@@ -37,8 +37,19 @@ import kotlin.math.roundToInt
 
 enum class EditMode { Draw, Select }
 
-/** The name gutter down the left and the bar ruler across the top. */
-private val GutterWidth = 34.dp
+/**
+ * How the roll treats a scale. Chromatic ignores it, Dim greys the rows a
+ * Scale eventor would move, and Fold drops those rows entirely so only
+ * playable notes have a lane. The corner of the roll cycles them.
+ */
+enum class ScaleView { Chromatic, Dim, Fold }
+
+/**
+ * The name gutter down the left and the bar ruler across the top. The gutter
+ * width is shared with the automation strip below, so the two playheads sit
+ * on the same tick.
+ */
+internal val GutterWidth = 34.dp
 private val RulerHeight = 17.dp
 
 /**
@@ -64,6 +75,9 @@ fun PianoRoll(
     playheadTick: Long?,
     lowestPitch: Int,
     rows: Int,
+    scalePitchClasses: Set<Int>?,
+    scaleView: ScaleView,
+    onCycleScaleView: () -> Unit,
     onTapEmpty: (tick: Int, pitch: Int) -> Unit,
     onTapNote: (index: Int) -> Unit,
     onSelectionChange: (Set<Int>) -> Unit,
@@ -86,8 +100,26 @@ fun PianoRoll(
     val rowsState by rememberUpdatedState(rows)
     val cb by rememberUpdatedState(
         Callbacks(onTapEmpty, onTapNote, onSelectionChange, onGestureBegin, onMove, onResize, onDraw, onGestureEnd,
-            onAudition),
+            onAudition, onCycleScaleView),
     )
+    // Which pitch each row carries. Chromatic and Dim step by semitone; Fold
+    // keeps only what the scale allows, so a row is always a playable note.
+    val scale = scalePitchClasses?.takeIf { it.isNotEmpty() && scaleView != ScaleView.Chromatic }
+    val rowPitches = remember(lowestPitch, rows, scale, scaleView) {
+        if (scale == null || scaleView != ScaleView.Fold) {
+            IntArray(rows) { lowestPitch + rows - 1 - it }
+        } else {
+            val kept = ArrayList<Int>(rows)
+            var p = lowestPitch
+            while (kept.size < rows && p <= 127) {
+                if (scale.contains(((p % 12) + 12) % 12)) kept += p
+                ++p
+            }
+            while (kept.size < rows) kept += kept.lastOrNull() ?: lowestPitch
+            IntArray(rows) { kept[rows - 1 - it] }
+        }
+    }
+    val rowsState2 by rememberUpdatedState(rowPitches)
 
     var rubberBand by remember { mutableStateOf<Rect?>(null) }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
@@ -97,14 +129,16 @@ fun PianoRoll(
             awaitEachGesture {
                 val down = awaitFirstDown()
                 val geo = Geometry(
-                    canvasSize, clipState, ticksPerBar, lowestState, rowsState,
-                    GutterWidth.toPx(), RulerHeight.toPx(),
+                    canvasSize, clipState, ticksPerBar, rowsState,
+                    GutterWidth.toPx(), RulerHeight.toPx(), rowsState2,
                 )
                 val press = down.position
                 // The gutter plays the row it names; the ruler is a legend and
-                // takes no edits, so neither can draw a note by accident.
+                // takes no edits; the corner between them cycles the scale
+                // view. None of the three can draw a note by accident.
                 if (press.x < geo.originX || press.y < geo.originY) {
-                    if (press.x < geo.originX && press.y >= geo.originY) cb.onAudition(geo.pitchAt(press.y))
+                    if (press.x < geo.originX && press.y < geo.originY) cb.onCycleScaleView()
+                    else if (press.x < geo.originX) cb.onAudition(geo.pitchAt(press.y))
                     down.consume()
                     return@awaitEachGesture
                 }
@@ -186,13 +220,19 @@ fun PianoRoll(
         },
     ) {
         canvasSize = size
-        val geo = Geometry(size, clip, ticksPerBar, lowestPitch, rows, GutterWidth.toPx(), RulerHeight.toPx())
+        val geo = Geometry(size, clip, ticksPerBar, rows, GutterWidth.toPx(), RulerHeight.toPx(), rowPitches)
 
-        // Rows: black keys darker, C rows marked.
+        // Rows: black keys darker, C rows marked, and rows the scale would
+        // move pushed further back when Dim is on.
         for (r in 0 until rows) {
-            val pitch = geo.topPitch - r
+            val pitch = geo.pitchOfRow(r)
+            val inScale = scale?.contains(((pitch % 12) + 12) % 12) ?: true
             drawRect(
-                color = if (isBlackKey(pitch)) Color(0xFF232326) else Color(0xFF2C2C30),
+                color = when {
+                    !inScale -> Color(0xFF202023)
+                    isBlackKey(pitch) -> Color(0xFF232326)
+                    else -> Color(0xFF2C2C30)
+                },
                 topLeft = Offset(geo.originX, geo.originY + r * geo.rowH),
                 size = Size(geo.fieldW, geo.rowH),
             )
@@ -240,8 +280,9 @@ fun PianoRoll(
             drawLine(Color(0xFFFFB454), Offset(x, geo.originY), Offset(x, size.height), 3f)
         }
 
-        drawNameGutter(geo, textMeasurer)
+        drawNameGutter(geo, textMeasurer, scale)
         drawBarRuler(geo, size, textMeasurer, playheadTick)
+        drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView)
     }
 }
 
@@ -254,23 +295,33 @@ fun PianoRoll(
  *
  * When rows are too short for a label, only the C rows keep one.
  */
-private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer) {
+private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scale: Set<Int>?) {
     drawRect(Color(0xFF1B1B1E), Offset.Zero, Size(geo.originX, size.height))
     val labelEveryRow = geo.rowH >= 11.dp.toPx()
     for (r in 0 until geo.rows) {
-        val pitch = geo.topPitch - r
+        val pitch = geo.pitchOfRow(r)
         if (pitch < 0 || pitch > 127) continue
         val top = geo.originY + r * geo.rowH
         val black = isBlackKey(pitch)
         val isC = pitch % 12 == 0
+        val inScale = scale?.contains(((pitch % 12) + 12) % 12) ?: true
         drawRect(
-            color = if (black) Color(0xFF191A1D) else Color(0xFF303036),
+            color = when {
+                !inScale -> Color(0xFF151517)
+                black -> Color(0xFF191A1D)
+                else -> Color(0xFF303036)
+            },
             topLeft = Offset(0f, top + 0.5f),
             size = Size(geo.originX - 2f, max(1f, geo.rowH - 1f)),
         )
         if (!labelEveryRow && !isC) continue
         val style = TextStyle(
-            color = if (isC) Color(0xFFFFB454) else if (black) Color(0xFF8A8A92) else Color(0xFFDDDDE2),
+            color = when {
+                !inScale -> Color(0xFF55555C)
+                isC -> Color(0xFFFFB454)
+                black -> Color(0xFF8A8A92)
+                else -> Color(0xFFDDDDE2)
+            },
             fontSize = 8.sp,
             fontFamily = FontFamily.Monospace,
         )
@@ -337,9 +388,34 @@ private class Callbacks(
     val onDraw: (Int, Int, Int) -> Unit,
     val onGestureEnd: () -> Unit,
     val onAudition: (Int) -> Unit,
+    val onCycleScaleView: () -> Unit,
 )
 
 private class Hit(val index: Int, val onEdge: Boolean)
+
+/**
+ * The corner where the gutter meets the ruler was empty; it now cycles how
+ * the roll treats the scale. It greys out and stops responding when no scale
+ * is running, because there would be nothing to cycle through.
+ */
+private fun DrawScope.drawScaleCorner(geo: Geometry, measurer: TextMeasurer, hasScale: Boolean, view: ScaleView) {
+    drawRect(Color(0xFF202024), Offset.Zero, Size(geo.originX, geo.originY))
+    val label = if (!hasScale) "—" else when (view) {
+        ScaleView.Chromatic -> "chr"
+        ScaleView.Dim -> "dim"
+        ScaleView.Fold -> "fit"
+    }
+    val colour = when {
+        !hasScale -> Color(0xFF4A4A52)
+        view == ScaleView.Chromatic -> Color(0xFF9A9AA2)
+        else -> Color(0xFFFFB454)
+    }
+    val laid = measurer.measure(
+        AnnotatedString(label),
+        TextStyle(color = colour, fontSize = 8.sp, fontFamily = FontFamily.Monospace),
+    )
+    drawText(laid, topLeft = Offset((geo.originX - laid.size.width) / 2f, (geo.originY - laid.size.height) / 2f))
+}
 
 internal fun isBlackKey(pitch: Int): Boolean = (((pitch % 12) + 12) % 12) in intArrayOf(1, 3, 6, 8, 10)
 
@@ -352,19 +428,42 @@ internal fun isBlackKey(pitch: Int): Boolean = (((pitch % 12) + 12) % 12) in int
  * system and one thing to keep in step.
  */
 private class Geometry(
-    size: Size, val clip: Clip, val ticksPerBar: Int, lowestPitch: Int, val rows: Int,
+    size: Size, val clip: Clip, val ticksPerBar: Int, val rows: Int,
     val originX: Float = 0f, val originY: Float = 0f,
+    /** The pitch each row carries, top first. Not always chromatic. */
+    private val rowPitches: IntArray = IntArray(0),
 ) {
     val totalTicks = clip.bars * ticksPerBar
     val fieldW = max(1f, size.width - originX)
     val fieldH = max(1f, size.height - originY)
     val pxPerTick = if (totalTicks > 0) fieldW / totalTicks else 1f
     val rowH = if (rows > 0) fieldH / rows else 1f
-    val topPitch = lowestPitch + rows - 1
+    val topPitch = rowPitches.firstOrNull() ?: 0
     private val grid = clip.grid.coerceAtLeast(1)
 
+    fun pitchOfRow(r: Int): Int = rowPitches.getOrElse(r) { topPitch - r }
+
+    /**
+     * The row a pitch belongs on. When the rows are folded to a scale, a note
+     * the scale does not contain takes the row nearest to where it will
+     * actually sound, which is the truth the eventor will impose anyway.
+     */
+    fun rowOfPitch(pitch: Int): Int {
+        if (rowPitches.isEmpty()) return topPitch - pitch
+        var best = 0
+        var bestD = Int.MAX_VALUE
+        for (r in rowPitches.indices) {
+            val d = kotlin.math.abs(rowPitches[r] - pitch)
+            if (d < bestD) { bestD = d; best = r }
+            if (d == 0) break
+        }
+        return best
+    }
+
+    fun isExact(pitch: Int): Boolean = rowPitches.isEmpty() || rowPitches.any { it == pitch }
+
     fun xOf(tick: Int): Float = originX + tick * pxPerTick
-    fun yOf(pitch: Int): Float = originY + (topPitch - pitch) * rowH
+    fun yOf(pitch: Int): Float = originY + rowOfPitch(pitch) * rowH
 
     fun tickAt(x: Float, snap: Boolean): Int {
         val raw = ((x - originX) / pxPerTick).roundToInt().coerceIn(0, max(0, totalTicks - 1))
@@ -373,9 +472,10 @@ private class Geometry(
 
     fun snapDelta(dx: Float): Int = ((dx / pxPerTick) / grid).roundToInt() * grid
 
-    fun pitchAt(y: Float): Int = (topPitch - ((y - originY) / rowH).toInt()).coerceIn(0, 127)
-
-    fun rowOf(pitch: Int): Int = topPitch - pitch
+    fun pitchAt(y: Float): Int {
+        val r = ((y - originY) / rowH).toInt().coerceIn(0, max(0, rows - 1))
+        return pitchOfRow(r).coerceIn(0, 127)
+    }
 
     fun noteRect(note: Note): Rect {
         val left = xOf(note.tick)

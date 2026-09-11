@@ -113,10 +113,16 @@ fun PianoKeys(
                     val black = isBlackKey(note)
                     val colour = when {
                         down.contains(note) -> if (black) Color(0xFF3F7D5E) else Color(0xFF7FD1B9)
-                        black -> Color(0xFF2A2A30)
+                        // Light enough to read as a key rather than a gap: on
+                        // this background a true black note disappears.
+                        black -> Color(0xFF43434C)
                         else -> Color(0xFFECECE6)
                     }
                     drawRect(colour, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
+                    if (black) {
+                        drawRect(Color(0xFF6A6A76), Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height),
+                            style = Stroke(1f))
+                    }
                     // The tonic gets its name, so the scale has a landmark.
                     if (root != null && ((note % 12) + 12) % 12 == root) {
                         val laid = measurer.measure(

@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include <android/log.h>
 #include <sequencer/Song.h>
 
 namespace acidulous {

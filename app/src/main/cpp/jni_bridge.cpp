@@ -236,6 +236,22 @@ JNIEXPORT jfloat JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeRenderedPeak(JNIEnv *, jobject) { return host().renderedPeak(); }
 
 JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetStopAtEnd(JNIEnv *, jobject, jboolean on) {
+    host().setStopAtEnd(on == JNI_TRUE);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeIsStopAtEndArmed(JNIEnv *, jobject) {
+    return host().isStopAtEndArmed() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeQueueScene(JNIEnv *, jobject, jint idx) { host().queueScene(idx); }
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeQueuedScene(JNIEnv *, jobject) { return host().queuedScene(); }
+
+JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeTransportStop(JNIEnv *, jobject) { host().transportStop(); }
 
 JNIEXPORT jboolean JNICALL

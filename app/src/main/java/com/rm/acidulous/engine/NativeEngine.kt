@@ -95,6 +95,16 @@ object NativeEngine {
     /** Play from the top of [sceneIdx]; -1 restarts the current scene. */
     fun transportPlay(sceneIdx: Int = -1) = nativeTransportPlay(sceneIdx)
     fun transportStop() = nativeTransportStop()
+
+    /** The scene lined up to follow this one, or -1. Setting it cancels a pending stop. */
+    var queuedScene: Int
+        get() = nativeQueuedScene()
+        set(value) = nativeQueueScene(value)
+
+    /** Let the playing scene finish its repeats and then stop. */
+    var stopAtEnd: Boolean
+        get() = nativeIsStopAtEndArmed()
+        set(value) = nativeSetStopAtEnd(value)
     val isPlaying: Boolean get() = nativeIsPlaying()
     fun setLoopScene(on: Boolean) = nativeSetLoopScene(on)
     fun setLoopSong(on: Boolean) = nativeSetLoopSong(on)
@@ -194,6 +204,10 @@ object NativeEngine {
     private external fun nativeGetMasterFade(): Float
     private external fun nativeTransportPlay(sceneIdx: Int)
     private external fun nativeTransportStop()
+    private external fun nativeSetStopAtEnd(on: Boolean)
+    private external fun nativeIsStopAtEndArmed(): Boolean
+    private external fun nativeQueueScene(idx: Int)
+    private external fun nativeQueuedScene(): Int
     private external fun nativeIsPlaying(): Boolean
     private external fun nativeSetLoopScene(on: Boolean)
     private external fun nativeSetLoopSong(on: Boolean)

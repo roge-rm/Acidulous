@@ -1,6 +1,12 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.offset
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +46,7 @@ import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.Song
+import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.addScene
 import com.rm.acidulous.model.addTrack
@@ -70,6 +77,8 @@ fun MainScreen(
     playing: Boolean,
     armed: Boolean,
     loopScene: Boolean,
+    stopAtEnd: Boolean,
+    queuedScene: Int,
     bpm: Float,
     diagnostics: String,
     rackPeaks: FloatArray,
@@ -149,7 +158,26 @@ fun MainScreen(
                             hasTempo = scene.tempo != null,
                             progress = if (isCurrent && iterTicks > 0) position.tickInIteration.toFloat() / iterTicks else null,
                             repeatIdx = if (isCurrent) position.repeat else null,
-                            onAudition = { onLoopScene(true); NativeEngine.transportPlay(index) },
+                            holding = isCurrent && loopScene && playing,
+                            finishing = isCurrent && playing && stopAtEnd,
+                            queued = playing && !isCurrent && queuedScene == index,
+                            // A tap has always held the scene it starts; now it
+                            // says so, and the menu offers the other choice.
+                            onAudition = {
+                                when {
+                                    // Already running: a tap says "finish the
+                                    // repeats you owe and stop", and another
+                                    // tap takes it back.
+                                    playing && isCurrent -> NativeEngine.stopAtEnd = !stopAtEnd
+                                    // Something else is running: line this one
+                                    // up rather than cutting in. Tap again to
+                                    // take it out of the queue.
+                                    playing -> NativeEngine.queuedScene = if (queuedScene == index) -1 else index
+                                    else -> { onLoopScene(true); NativeEngine.transportPlay(index) }
+                                }
+                            },
+                            onLoopThis = { onLoopScene(true); NativeEngine.transportPlay(index) },
+                            onPlayThrough = { onLoopScene(false); NativeEngine.transportPlay(index) },
                             onSettings = { dialog = Dialog.SceneSettings(index) },
                             onInsertAfter = { editor.editSong { it.addScene(afterIndex = index) } },
                             onDuplicate = { editor.editSong { it.duplicateScene(index) } },
@@ -173,6 +201,12 @@ fun MainScreen(
                                 ticksPerBar = song.signatureOf(scene).ticksPerBar,
                                 colour = trackColour(trackIndex),
                                 playing = playing && position.scene == sceneIndex,
+                                progress = if (playing && position.scene == sceneIndex && clip != null && !clip.mute) {
+                                    val len = song.clipLengthTicks(scene.id, clip)
+                                    if (len > 0) (position.tickInIteration % len).toFloat() / len else null
+                                } else {
+                                    null
+                                },
                                 onOpen = { onOpenClip(trackIndex, scene.id) },
                                 onSettings = { dialog = Dialog.ClipSettings(trackIndex, scene.id) },
                             )
@@ -199,7 +233,7 @@ fun MainScreen(
                     Text(if (playing) "■" else "▶")
                 }
                 OutlinedButton(onClick = { onLoopScene(!loopScene) }, contentPadding = pad) {
-                    Text(if (loopScene) "⟳ scene" else "⟳ song", fontSize = 12.sp, maxLines = 1)
+                    Text(if (loopScene) "loop: scene" else "loop: song", fontSize = 12.sp, maxLines = 1)
                 }
                 OutlinedButton(onClick = { onArm(!armed) }, contentPadding = pad) {
                     Text(if (armed) "● REC" else "○ rec", color = if (armed) Color(0xFFE74C3C) else Color.Unspecified, fontSize = 12.sp, maxLines = 1)
@@ -282,23 +316,47 @@ private sealed class Dialog {
 @Composable
 private fun SceneHeader(
     index: Int, name: String, repeat: Int, bars: Int, hasTempo: Boolean,
-    progress: Float?, repeatIdx: Int?,
-    onAudition: () -> Unit, onSettings: () -> Unit, onInsertAfter: () -> Unit,
+    progress: Float?, repeatIdx: Int?, holding: Boolean, finishing: Boolean, queued: Boolean,
+    onAudition: () -> Unit, onLoopThis: () -> Unit, onPlayThrough: () -> Unit,
+    onSettings: () -> Unit, onInsertAfter: () -> Unit,
     onDuplicate: () -> Unit, onDelete: () -> Unit, onMoveLeft: () -> Unit, onMoveRight: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
+    val pulse by rememberInfiniteTransition(label = "finishing").animateFloat(
+        initialValue = 1f, targetValue = 0.25f,
+        animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse), label = "finishing",
+    )
     Box(
         Modifier
             .width(CELL_W).height(SCENE_H).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(if (progress != null) Color(0xFF3F7D5E) else Color(0xFF2E2E33))
+            .background(
+                when {
+                    // Both pending states pulse, so a scene about to end and
+                    // one about to start are never mistaken for settled ones.
+                    finishing -> Color(0xFF3F7D5E).copy(alpha = pulse)
+                    queued -> Color(0xFF7A5A24).copy(alpha = pulse)
+                    progress != null -> Color(0xFF3F7D5E)
+                    else -> Color(0xFF2E2E33)
+                },
+            )
             .combinedClickable(onClick = onAudition, onLongClick = { menu = true }),
     ) {
         if (progress != null) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)).background(Color(0xFF55A583)))
         }
         Column(Modifier.padding(horizontal = 6.dp, vertical = 2.dp)) {
-            Text("${index + 1} $name", color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                // The loop mark sits on the scene being held, so "which one
+                // is repeating" is answered where you are looking.
+                when {
+                    finishing -> "${index + 1} $name ■"
+                    queued -> "${index + 1} $name →"
+                    holding -> "${index + 1} $name ⟳"
+                    else -> "${index + 1} $name"
+                },
+                color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
             Text(
                 buildString {
                     append("×$repeat ${bars}b")
@@ -310,6 +368,8 @@ private fun SceneHeader(
             )
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(text = { Text("Loop this scene") }, onClick = { menu = false; onLoopThis() })
+            DropdownMenuItem(text = { Text("Play on from here") }, onClick = { menu = false; onPlayThrough() })
             DropdownMenuItem(text = { Text("Settings…") }, onClick = { menu = false; onSettings() })
             DropdownMenuItem(text = { Text("Insert after") }, onClick = { menu = false; onInsertAfter() })
             DropdownMenuItem(text = { Text("Duplicate") }, onClick = { menu = false; onDuplicate() })
@@ -350,6 +410,8 @@ private fun TrackHeader(
 @Composable
 private fun ClipCell(
     clip: com.rm.acidulous.model.Clip?, ticksPerBar: Int, colour: Color, playing: Boolean,
+    /** How far through its own loop this clip is, 0..1, or null when silent. */
+    progress: Float?,
     onOpen: () -> Unit, onSettings: () -> Unit,
 ) {
     Box(
@@ -364,6 +426,19 @@ private fun ClipCell(
             Text("+", color = Color(0xFF666666), fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))
         } else {
             ClipThumbnail(clip, ticksPerBar, colour, Modifier.fillMaxSize())
+            // A clip shorter than its scene comes round more than once, so
+            // the scene's progress bar cannot speak for it.
+            if (progress != null) {
+                Box(
+                    Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f))
+                        .background(Color(0x22FFFFFF)),
+                )
+                Box(
+                    Modifier.fillMaxHeight().width(2.dp).align(Alignment.CenterStart)
+                        .offset(x = (CELL_W - 6.dp) * progress.coerceIn(0f, 1f))
+                        .background(Color(0xFFFFB454)),
+                )
+            }
             Text(
                 buildString {
                     append("${clip.bars}b")

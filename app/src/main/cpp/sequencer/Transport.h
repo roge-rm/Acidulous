@@ -22,6 +22,28 @@ class Transport {
     }
     void requestStop() { request.store(Request::Stop, std::memory_order_release); }
 
+    /**
+     * Let the current scene finish the repeats it owes and then stop. Armed
+     * from the UI, disarmed by arming it off, by any play or stop request, or
+     * by the scheduler when it fires.
+     */
+    void setStopAtEnd(bool on) {
+        stopAtEndFlag.store(on, std::memory_order_relaxed);
+        if (on) queuedScene.store(-1, std::memory_order_relaxed); // the two are alternatives
+    }
+    bool stopAtEndArmed() const { return stopAtEndFlag.load(std::memory_order_relaxed); }
+
+    /**
+     * Line a scene up to start when the current one has finished the repeats
+     * it owes. -1 cancels. Queuing and arming a finish are alternatives, so
+     * each clears the other.
+     */
+    void queueScene(int32_t idx) {
+        queuedScene.store(idx, std::memory_order_relaxed);
+        if (idx >= 0) stopAtEndFlag.store(false, std::memory_order_relaxed);
+    }
+    int32_t queuedSceneIndex() const { return queuedScene.load(std::memory_order_relaxed); }
+
     // The reference sequencer's two loop toggles: the transport button loops the current scene;
     // the one beside Add Scene loops the whole song.
     void setLoopScene(bool on) { loopSceneFlag.store(on, std::memory_order_relaxed); }
@@ -34,11 +56,17 @@ class Transport {
 
     // --- Audio thread ---------------------------------------------------------
     // Returns true if the state changed this block.
+    /** True once, when the scheduler should stop at this repeat boundary. */
+    bool takeStopAtEnd() { return stopAtEndFlag.exchange(false, std::memory_order_relaxed); }
+    int32_t takeQueuedScene() { return queuedScene.exchange(-1, std::memory_order_relaxed); }
+
     bool applyRequests() {
         const Request r = request.exchange(Request::None, std::memory_order_acq_rel);
         if (r == Request::None) {
             return false;
         }
+        stopAtEndFlag.store(false, std::memory_order_relaxed); // a new play or stop cancels both
+        queuedScene.store(-1, std::memory_order_relaxed);
         const bool wanted = (r == Request::Play);
         if (wanted == playing) {
             return false;
@@ -55,6 +83,8 @@ class Transport {
     void stopFromAudioThread() {
         playing = false;
         playingForUi.store(false, std::memory_order_relaxed);
+        stopAtEndFlag.store(false, std::memory_order_relaxed);
+        queuedScene.store(-1, std::memory_order_relaxed);
     }
     bool isPlaying() const { return playing; }
     bool isRecording() const { return playing && recordArmed.load(std::memory_order_relaxed); }
@@ -78,6 +108,8 @@ class Transport {
     std::atomic<int32_t> startScene{kCurrentScene};
     std::atomic<bool> loopSceneFlag{false};
     std::atomic<bool> loopSongFlag{true};
+    std::atomic<bool> stopAtEndFlag{false};
+    std::atomic<int32_t> queuedScene{-1};
     std::atomic<bool> recordArmed{false};
     bool playing = false; // audio-thread truth
     std::atomic<bool> playingForUi{false};

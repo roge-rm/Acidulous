@@ -467,6 +467,10 @@ bool EngineHost::isPlaying() const { return sEngine.transport.isPlayingForUi(); 
 void EngineHost::setLoopScene(bool on) { sEngine.transport.setLoopScene(on); }
 void EngineHost::setLoopSong(bool on) { sEngine.transport.setLoopSong(on); }
 void EngineHost::setRecordArmed(bool on) { sEngine.transport.setRecordArmed(on); }
+void EngineHost::setStopAtEnd(bool on) { sEngine.transport.setStopAtEnd(on); }
+bool EngineHost::isStopAtEndArmed() const { return sEngine.transport.stopAtEndArmed(); }
+void EngineHost::queueScene(int idx) { sEngine.transport.queueScene(idx); }
+int EngineHost::queuedScene() const { return sEngine.transport.queuedSceneIndex(); }
 bool EngineHost::isRecordArmed() const { return sEngine.transport.isRecordArmed(); }
 void EngineHost::setTempo(float bpm) { sEngine.clock.requestSongTempo(bpm); }
 float EngineHost::tempo() const { return sEngine.clock.bpm(); }

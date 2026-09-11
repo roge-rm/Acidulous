@@ -263,6 +263,8 @@ private fun App(modifier: Modifier = Modifier) {
     var bpm by remember { mutableStateOf(120f) }
     var armed by remember { mutableStateOf(false) }
     var loopScene by remember { mutableStateOf(false) }
+    var stopAtEnd by remember { mutableStateOf(false) }
+    var queuedScene by remember { mutableStateOf(-1) }
     var notesOn by remember { mutableStateOf(0) }
     var notesOff by remember { mutableStateOf(0) }
     var load by remember { mutableStateOf(0f) }
@@ -299,6 +301,8 @@ private fun App(modifier: Modifier = Modifier) {
             load = NativeEngine.loadAvg
             xruns = NativeEngine.xRunCount
             fade = NativeEngine.masterFade
+            stopAtEnd = NativeEngine.stopAtEnd
+            queuedScene = NativeEngine.queuedScene
             rackPeaks = FloatArray(16) { i -> if (i < song.tracks.size) NativeEngine.readRackPeak(i) else 0f }
             if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf))
             delay(80)
@@ -329,7 +333,8 @@ private fun App(modifier: Modifier = Modifier) {
     when (val s = screen) {
         Screen.Main -> MainScreen(
             song = song, editor = editor, position = position, playing = playing, armed = armed,
-            loopScene = loopScene, bpm = bpm, diagnostics = diagnostics,
+            loopScene = loopScene, stopAtEnd = stopAtEnd, queuedScene = queuedScene,
+            bpm = bpm, diagnostics = diagnostics,
             rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn,
             onClick = { on -> clickOn = on; EngineSync.setMetronome(on) },
             onArm = onArm, onLoopScene = onLoopScene,
