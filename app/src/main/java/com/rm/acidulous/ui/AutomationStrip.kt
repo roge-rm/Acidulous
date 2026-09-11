@@ -2,6 +2,8 @@ package com.rm.acidulous.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
@@ -11,11 +13,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
@@ -48,6 +52,7 @@ import kotlin.math.roundToInt
  * from the gesture base, so a stroke is one undo step); the picker cycles the
  * clip's lanes, and its menu adds a lane for any parameter or clears one.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AutomationStrip(
     clip: Clip,
@@ -63,6 +68,9 @@ fun AutomationStrip(
     onDraw: (key: String, points: Map<Int, Float>) -> Unit, // all points of this stroke so far
     onGestureEnd: () -> Unit,
     onClear: (String) -> Unit,
+    /** Folded to a single row, with the height handed back to the roll. */
+    collapsed: Boolean = false,
+    onToggleCollapse: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val existing = clip.automation.keys.sorted()
@@ -73,43 +81,62 @@ fun AutomationStrip(
     val clipState by rememberUpdatedState(clip)
     val cb by rememberUpdatedState(Triple(onGestureBegin, onDraw, onGestureEnd))
     val keyState by rememberUpdatedState(current)
+    val foldedState by rememberUpdatedState(collapsed)
+    val expand by rememberUpdatedState(onToggleCollapse)
 
     Row(modifier.background(Color(0xFF17171A))) {
         // As narrow as the roll's name gutter, so a tick is at the same x in
         // both and the two playheads line up. The upper part names the lane
-        // being drawn and cycles through the ones that exist; the lower opens
-        // the full list.
+        // being drawn and cycles through the ones that exist; a long press
+        // opens the full list, where lanes are added and cleared. The lower
+        // part folds the whole strip away - the roll is what an editor wants
+        // the height for, and automation is not always being drawn.
         Column(Modifier.width(GutterWidth).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                Modifier.weight(1f).fillMaxWidth().clickable {
-                    if (existing.size > 1) {
-                        val i = existing.indexOf(current)
-                        onSelect(existing[(i + 1) % existing.size])
-                    } else {
-                        menu = true
-                    }
-                },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    current?.let { laneParam(it) } ?: "∿ auto",
-                    color = Color(0xFFFFB454), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
-                    maxLines = 1, softWrap = false,
-                    // Turned on its side for the same reason the scale chip is:
-                    // the width belongs to the graph.
-                    modifier = Modifier.requiredWidth(120.dp).rotate(-90f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                )
+            if (!collapsed) {
+                Box(
+                    Modifier.weight(1f).fillMaxWidth().combinedClickable(
+                        onClick = {
+                            if (existing.size > 1) {
+                                val i = existing.indexOf(current)
+                                onSelect(existing[(i + 1) % existing.size])
+                            } else {
+                                menu = true
+                            }
+                        },
+                        onLongClick = { menu = true },
+                    ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        current?.let { laneParam(it) } ?: "∿ auto",
+                        color = Color(0xFFFFB454), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                        maxLines = 1, softWrap = false,
+                        // Turned on its side for the same reason the scale chip is:
+                        // the width belongs to the graph.
+                        modifier = Modifier.requiredWidth(120.dp).rotate(-90f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    )
+                }
             }
             Box(
-                Modifier.fillMaxWidth().height(18.dp).clickable { menu = true },
+                Modifier.fillMaxWidth()
+                    .then(if (collapsed) Modifier.fillMaxHeight() else Modifier.height(18.dp))
+                    .clickable { onToggleCollapse() },
                 contentAlignment = Alignment.Center,
-            ) { Text("⋯", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
+            ) { Text(if (collapsed) "▴" else "▾", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
             val menuScroll = rememberScrollState()
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll), scrollState = menuScroll) {
                 for (k in laneKeys) {
                     DropdownMenuItem(
                         text = { Text((if (k in existing) "● " else "  ") + k, fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
+                        // A lane is cleared where it is listed, so every lane
+                        // that exists can be got rid of without selecting it first.
+                        trailingIcon = if (k !in existing) null else ({
+                            Text(
+                                "✕", color = Color(0xFFE74C3C), fontSize = 13.sp,
+                                modifier = Modifier.clickable { menu = false; onClear(k) }.padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                        }),
                         onClick = { menu = false; onSelect(k) },
                     )
                 }
@@ -118,12 +145,19 @@ fun AutomationStrip(
                 }
             }
         }
+        Box(Modifier.fillMaxWidth().fillMaxHeight()) {
         Canvas(
             Modifier.fillMaxWidth().fillMaxHeight().pointerInput(Unit) {
                 awaitEachGesture {
                     // Always consume a touch before bailing: a block that returns
                     // without suspending makes awaitEachGesture spin the main thread.
                     val down = awaitFirstDown()
+                    if (foldedState) {
+                        // Too short to draw on: a touch here asks for it back.
+                        down.consume()
+                        expand()
+                        return@awaitEachGesture
+                    }
                     val key = keyState ?: return@awaitEachGesture
                     val total = (clipState.bars * ticksPerBar).coerceAtLeast(1)
                     val from = firstTick.coerceIn(0, total - 1)
@@ -178,6 +212,20 @@ fun AutomationStrip(
                     drawLine(Color(0xFFFFB454), Offset(xOf(t), 0f), Offset(xOf(t), size.height), 2f)
                 }
             }
+        }
+        if (collapsed) {
+            // The graph keeps drawing while folded, so the name needs a ground
+            // of its own or it reads as part of the curve.
+            Text(
+                current?.let { laneParam(it) } ?: "∿ auto",
+                color = Color(0xFFFFB454), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                maxLines = 1, softWrap = false,
+                modifier = Modifier.align(Alignment.CenterStart)
+                    .padding(start = 3.dp)
+                    .background(Color(0xEE17171A), RoundedCornerShape(3.dp))
+                    .padding(horizontal = 4.dp, vertical = 1.dp),
+            )
+        }
         }
     }
 }

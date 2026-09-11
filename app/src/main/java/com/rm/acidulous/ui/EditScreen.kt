@@ -100,6 +100,8 @@ fun EditScreen(
     var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 eventors - in the same space
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var scaleDialog by remember { mutableStateOf(false) }
+    // Folded by preference, remembered across rotation: most editing is notes.
+    var autoFolded by rememberSaveable { mutableStateOf(false) }
     var scaleView by rememberSaveable { mutableStateOf(ScaleView.Dim) }
     // Long clips are paged two bars at a time, as the drum grid is paged one.
     // More than two bars across a phone leaves notes too narrow to grab.
@@ -237,7 +239,10 @@ fun EditScreen(
             firstTick = firstTick,
             visibleTicks = pageTicks,
             onCycleScaleView = {
-                scaleView = when (scaleView) {
+                // Dim and fit need a scale to dim or fit to, so before one is
+                // set the corner does the only useful thing: asks for one.
+                if (Scales.activeFor(track) == null) scaleDialog = true
+                else scaleView = when (scaleView) {
                     ScaleView.Chromatic -> ScaleView.Dim
                     ScaleView.Dim -> ScaleView.Fold
                     ScaleView.Fold -> ScaleView.Chromatic
@@ -297,7 +302,9 @@ fun EditScreen(
             },
             onGestureEnd = { editor.endGesture() },
             onClear = { key -> editor.editClip(trackIndex, sceneId) { c -> c.copy(automation = c.automation - key) } },
-            modifier = Modifier.fillMaxWidth().height(88.dp).padding(top = 4.dp),
+            collapsed = autoFolded,
+            onToggleCollapse = { autoFolded = !autoFolded },
+            modifier = Modifier.fillMaxWidth().height(if (autoFolded) 24.dp else 88.dp).padding(top = 4.dp),
         )
 
         // The machine's face: knobs go to the engine as gestures and into the document as undo steps.

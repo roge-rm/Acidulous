@@ -412,20 +412,34 @@ private class Hit(val index: Int, val onEdge: Boolean)
  * is running, because there would be nothing to cycle through.
  */
 private fun DrawScope.drawScaleCorner(geo: Geometry, measurer: TextMeasurer, hasScale: Boolean, view: ScaleView) {
-    drawRect(Color(0xFF202024), Offset.Zero, Size(geo.originX, geo.originY))
-    val label = if (!hasScale) "—" else when (view) {
+    drawRect(Color(0xFF1B1B1E), Offset.Zero, Size(geo.originX, geo.originY))
+    // Drawn as a key, not as a label: the corner of a table reads as blank
+    // unless something in it says otherwise, and this one is a button.
+    val pad = 2f
+    drawRoundRect(
+        Color(0xFF2A2A31), Offset(pad, pad),
+        Size(geo.originX - pad * 2f, geo.originY - pad * 2f),
+        androidx.compose.ui.geometry.CornerRadius(3f, 3f),
+    )
+    drawRoundRect(
+        if (hasScale && view != ScaleView.Chromatic) Color(0xFFFFB454) else Color(0xFF55555C),
+        Offset(pad, pad), Size(geo.originX - pad * 2f, geo.originY - pad * 2f),
+        androidx.compose.ui.geometry.CornerRadius(3f, 3f),
+        style = Stroke(width = 1f),
+    )
+    val label = if (!hasScale) "scl" else when (view) {
         ScaleView.Chromatic -> "chr"
         ScaleView.Dim -> "dim"
         ScaleView.Fold -> "fit"
     }
     val colour = when {
-        !hasScale -> Color(0xFF4A4A52)
-        view == ScaleView.Chromatic -> Color(0xFF9A9AA2)
+        !hasScale -> Color(0xFF8A8A92)
+        view == ScaleView.Chromatic -> Color(0xFFBBBBC2)
         else -> Color(0xFFFFB454)
     }
     val laid = measurer.measure(
         AnnotatedString(label),
-        TextStyle(color = colour, fontSize = 8.sp, fontFamily = FontFamily.Monospace),
+        TextStyle(color = colour, fontSize = 9.sp, fontFamily = FontFamily.Monospace),
     )
     drawText(laid, topLeft = Offset((geo.originX - laid.size.width) / 2f, (geo.originY - laid.size.height) / 2f))
 }
