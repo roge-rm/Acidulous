@@ -81,8 +81,9 @@ class Rack {
     void toMachine(uint8_t status, uint8_t d1, uint8_t d2);
     void forgetHeld(uint8_t note);
 
-    // Held notes, oldest first. A limit above this is the same as none.
-    static constexpr int32_t kMaxHeld = 64;
+    // Held notes, oldest first. Room for more than the largest limit on
+    // offer, so the count stays honest when the limit is off.
+    static constexpr int32_t kMaxHeld = 128;
     uint8_t held[kMaxHeld]{};
     int32_t heldCount = 0;
 

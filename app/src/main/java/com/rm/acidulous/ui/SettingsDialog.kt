@@ -85,9 +85,10 @@ fun SettingsDialog(trackNames: List<String>, onDismiss: () -> Unit) {
                 Section(
                     "voices",
                     if (UiPrefs.voiceLimit == 0) "Every machine plays as many notes as it was built for."
-                    else "At most ${UiPrefs.voiceLimit} notes held per track; the oldest is released to make room.",
+                    else "At most ${UiPrefs.voiceLimit} notes held per track; the oldest is released to make room. " +
+                        "A machine with fewer voices of its own than that is unaffected.",
                 ) {
-                    for (n in listOf(4, 8, 16)) {
+                    for (n in listOf(4, 8, 16, 32, 48, 64)) {
                         Choice("$n", UiPrefs.voiceLimit == n) { UiPrefs.chooseVoiceLimit(n) }
                     }
                     Choice("all", UiPrefs.voiceLimit == 0) { UiPrefs.chooseVoiceLimit(0) }
