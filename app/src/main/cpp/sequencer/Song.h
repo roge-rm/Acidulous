@@ -1,5 +1,6 @@
 #pragma once
 #include "Clip.h"
+#include <algorithm>
 #include <engine/core/Constants.h>
 #include <cstdint>
 #include <memory>
@@ -57,6 +58,49 @@ struct SongSnapshot {
         }
         const size_t idx = static_cast<size_t>(rack) * scenes.size() + static_cast<size_t>(scene);
         return idx < clips.size() ? clips[idx].get() : nullptr;
+    }
+
+    /**
+     * Where a position sits on the whole arrangement's timeline, in ticks.
+     *
+     * The scheduler's position is scene-relative and resets at every repeat,
+     * which is all playback ever needed. A Song Position Pointer is absolute,
+     * so it needs this - in both directions, which is why the inverse is here
+     * too. Neither existed before; a prefix sum over the scenes is all they
+     * are, but nothing was keeping one.
+     */
+    int64_t songTickAt(int32_t scene, int32_t repeat, int64_t tickIn) const {
+        int64_t t = 0;
+        const int32_t count = static_cast<int32_t>(scenes.size());
+        for (int32_t i = 0; i < scene && i < count; ++i) {
+            t += scenes[i].iterationTicks() * std::max(1, scenes[i].repeat);
+        }
+        if (scene >= 0 && scene < count) {
+            t += static_cast<int64_t>(repeat) * scenes[scene].iterationTicks() + tickIn;
+        }
+        return t;
+    }
+
+    void locate(int64_t songTick, int32_t &scene, int32_t &repeat, int64_t &tickIn) const {
+        scene = 0;
+        repeat = 0;
+        tickIn = 0;
+        if (scenes.empty()) {
+            return;
+        }
+        int64_t left = songTick > 0 ? songTick : 0;
+        for (size_t i = 0; i < scenes.size(); ++i) {
+            const int64_t iter = std::max<int64_t>(1, scenes[i].iterationTicks());
+            const int32_t reps = std::max(1, scenes[i].repeat);
+            const int64_t whole = iter * reps;
+            if (left < whole || i + 1 == scenes.size()) {
+                scene = static_cast<int32_t>(i);
+                repeat = static_cast<int32_t>(std::min<int64_t>(left / iter, reps - 1));
+                tickIn = left - static_cast<int64_t>(repeat) * iter;
+                return;
+            }
+            left -= whole;
+        }
     }
 
     // --- Builder side (never the audio thread) --------------------------------

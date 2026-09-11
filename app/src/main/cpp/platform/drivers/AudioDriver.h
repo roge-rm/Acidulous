@@ -57,6 +57,28 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     bool isLowLatency() const { return actualLowLatency; }
     int64_t getXRunCount() const;
 
+    /**
+     * When the audio being written now will actually be heard.
+     *
+     * The engine counts the frames it has rendered; the stream counts the
+     * frames it has presented, and the two are the same timeline offset by
+     * whatever is sitting in the buffers. One (frame, nanosecond) pair from
+     * the stream ties them together, and from it any future frame converts
+     * to a wall-clock time - which is the only way MIDI sent to hardware can
+     * be made to land with the app's own audio rather than ahead of it.
+     *
+     * Returns false until the stream has run long enough to have an answer.
+     */
+    bool presentationAnchor(int64_t &frame, int64_t &nanos) const {
+        const int32_t s = anchorSlot.load(std::memory_order_acquire);
+        if (anchors[s].frame < 0) {
+            return false;
+        }
+        frame = anchors[s].frame;
+        nanos = anchors[s].nanos;
+        return true;
+    }
+
     // Peak absolute sample seen since the last read, then reset. Lets the UI
     // (and bring-up on a silent emulator) confirm the engine is actually
     // producing signal, and is the basis for a real level meter later.
@@ -92,6 +114,16 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
 
     void pumpInput(int32_t frames);
     const float *nextInputBlock();
+
+    // Double-buffered so the audio thread can publish a pair without the
+    // reader ever seeing half of one. Two 64-bit values cannot share an
+    // atomic, and a seqlock is more than this needs.
+    struct Anchor {
+        int64_t frame = -1;
+        int64_t nanos = 0;
+    };
+    Anchor anchors[2];
+    std::atomic<int32_t> anchorSlot{0};
 
     int32_t engineBlockFrames = 0;
     int32_t bufferBursts = 2;

@@ -60,6 +60,9 @@ class Transport {
     // exchanges at a boundary. Sixteen slots instead of one, because in clip
     // mode every rack has its own idea of what happens next.
 
+    void setClockOut(bool on) { clockOutFlag.store(on, std::memory_order_relaxed); }
+    bool clockOut() const { return clockOutFlag.load(std::memory_order_relaxed); }
+
     void setLauncher(bool on) { launcherFlag.store(on, std::memory_order_relaxed); }
     bool launcherMode() const { return launcherFlag.load(std::memory_order_relaxed); }
 
@@ -172,6 +175,7 @@ class Transport {
     std::atomic<int32_t> queuedScene{-1};
     std::atomic<bool> recordArmed{false};
     std::atomic<bool> launcherFlag{false};
+    std::atomic<bool> clockOutFlag{false};
     std::atomic<int32_t> launchQ{0};
     std::atomic<bool> stopAllFlag{false};
     std::atomic<int64_t> queuedClip[kRackCount]{};

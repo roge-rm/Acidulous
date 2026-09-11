@@ -186,12 +186,25 @@ int64_t AudioDriver::getXRunCount() const {
     return result ? result.value() : 0;
 }
 
-oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream * /*audioStream*/,
+oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStream,
                                                    void *audioData,
                                                    int32_t numFrames) {
     auto *out = static_cast<float *>(audioData);
     int32_t written = 0;
     pumpInput(numFrames);
+
+    // Where the stream is, in both of its clocks. It refuses to answer until
+    // it has run a little, and it can refuse again later, so the last good
+    // answer is kept rather than the anchor being lost.
+    if (audioStream != nullptr) {
+        const auto stamp = audioStream->getTimestamp(CLOCK_MONOTONIC);
+        if (stamp) {
+            const int32_t next = 1 - anchorSlot.load(std::memory_order_relaxed);
+            anchors[next].frame = stamp.value().position;
+            anchors[next].nanos = stamp.value().timestamp;
+            anchorSlot.store(next, std::memory_order_release);
+        }
+    }
 
     while (written < numFrames) {
         if (carryFrames == 0) {

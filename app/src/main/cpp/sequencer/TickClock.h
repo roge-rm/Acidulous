@@ -74,6 +74,23 @@ class TickClock {
         end = tick;
     }
 
+    double samplesPerTickNow() const { return samplesPerTick; }
+
+    /**
+     * How many frames into the block just advanced the tick boundary [t]
+     * falls. Exact, because `sampleRemainder` is the true sub-tick phase at
+     * the *end* of the block and the tempo is constant across it.
+     *
+     * Without this the only thing a caller can do is pretend the block began
+     * on a tick boundary, which it almost never does - the metronome did
+     * exactly that and was late by up to a whole tick, 2 ms at 120 bpm, on
+     * every click it has ever played.
+     */
+    double frameOffsetOfTick(int64_t t, int32_t frames) const {
+        return static_cast<double>(frames) - sampleRemainder -
+               static_cast<double>(end - t) * samplesPerTick;
+    }
+
     int64_t blockStart() const { return start; }
     int64_t blockEnd() const { return end; }
     int64_t position() const { return tick; }

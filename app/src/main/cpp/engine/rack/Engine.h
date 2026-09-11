@@ -40,6 +40,8 @@ class Engine {
     seq::TickClock clock;
     seq::SceneScheduler scheduler;
     seq::RecordQueue recordQueue;
+    /** Notes and clock on their way to hardware. Drained by the MIDI sender. */
+    MidiOutQueue midiOut;
     MasterBus master;
     Rack racks[kRackCount];
     Retirer retirer;
@@ -71,8 +73,16 @@ class Engine {
     RtQueue<MidiMessage, 256> midiIn;
     RtQueue<ParamMessage, 512> paramsIn;
 
+    void emitClock(int64_t blockStartTick, int64_t blockEndTick);
+    void emitTransport(bool nowPlaying);
+
     bool playing = false;
     bool startPending = false;
+    /** Frames the engine has produced since the stream started - the same
+     *  timeline the audio stream presents on, which is what lets a MIDI
+     *  event's frame become a wall-clock time on the far side. */
+    int64_t framesRendered = 0;
+    int64_t lastClockTick = -1;
     std::atomic<float> load{0.0f};
 };
 

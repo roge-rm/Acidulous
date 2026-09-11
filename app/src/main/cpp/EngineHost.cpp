@@ -417,6 +417,8 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         if (name == "solo") return Rack::Solo;
         if (name == "sendreverb") return Rack::SendReverb;
         if (name == "senddelay") return Rack::SendDelay;
+        if (name == "midimode") return Rack::MidiMode;
+        if (name == "midichannel") return Rack::MidiChannel;
         return -1;
     }
     if (u == Unit::Master) return sEngine.master.params().indexOf(name.c_str());
@@ -454,6 +456,8 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         else if (name == "solo") index = Rack::Solo;
         else if (name == "sendreverb") index = Rack::SendReverb;
         else if (name == "senddelay") index = Rack::SendDelay;
+        else if (name == "midimode") index = Rack::MidiMode;
+        else if (name == "midichannel") index = Rack::MidiChannel;
     } else if (u == Unit::Master) {
         index = sEngine.master.params().indexOf(name.c_str());
     } else if (u == Unit::Effect1 || u == Unit::Effect2) {
@@ -565,6 +569,30 @@ void EngineHost::setLauncher(bool on) { sEngine.transport.setLauncher(on); }
 void EngineHost::setLaunchQuantise(int32_t ticks) { sEngine.transport.setLaunchQuantise(ticks); }
 void EngineHost::launchClip(int32_t rack, int64_t sceneId) { sEngine.transport.launchClip(rack, sceneId); }
 void EngineHost::stopAllClips() { sEngine.transport.requestStopAll(); }
+void EngineHost::setClockOut(bool on) { sEngine.transport.setClockOut(on); }
+
+/**
+ * Two longs per event: the frame it belongs on, and the bytes. Bulk, like
+ * drainRecorded, because one JNI call per MIDI byte at 24 pulses a beat is
+ * a call every twenty milliseconds that need not happen.
+ */
+int EngineHost::drainMidiOut(int64_t *out, int maxEvents) {
+    int n = 0;
+    MidiOutEvent e;
+    while (n < maxEvents && sEngine.midiOut.pop(e)) {
+        out[n * 2 + 0] = e.frame;
+        out[n * 2 + 1] = (static_cast<int64_t>(e.rack) << 24) | (static_cast<int64_t>(e.status) << 16) |
+                         (static_cast<int64_t>(e.data1) << 8) | static_cast<int64_t>(e.data2);
+        ++n;
+    }
+    return n;
+}
+
+bool EngineHost::audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate) const {
+    sampleRate = sAudio.getSampleRate() > 0 ? sAudio.getSampleRate() : kSampleRate;
+    return sAudio.presentationAnchor(frame, nanos);
+}
+
 void EngineHost::cancelLaunch(int32_t rack) { sEngine.transport.launchClip(rack, seq::Launcher::kCancelId); }
 void EngineHost::launchStates(int64_t *out, int32_t count) const {
     for (int32_t r = 0; r < count && r < kRackCount; ++r) {

@@ -116,6 +116,21 @@ private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEdit
             ToggleChip("M", m.mute, c.red) { tap { it.copy(mute = !it.mute) } }
             ToggleChip("S", m.solo, c.accent) { tap { it.copy(solo = !it.solo) } }
         }
+        // Where this track's notes go. Off, both, or out only - and at "out"
+        // the machine is not asked at all, which is how driving something
+        // else gives the CPU back. The channel sits beside it because one
+        // without the other is no use.
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            val label = when (m.midiMode) { 1 -> "both"; 2 -> "out"; else -> "midi" }
+            ToggleChip(label, m.midiMode != 0, c.teal) {
+                tap { it.copy(midiMode = (it.midiMode + 1) % 3) }
+            }
+            if (m.midiMode != 0) {
+                ToggleChip("${m.midiChannel + 1}", true, c.accentDim) {
+                    tap { it.copy(midiChannel = (it.midiChannel + 1) % 16) }
+                }
+            }
+        }
     }
 }
 

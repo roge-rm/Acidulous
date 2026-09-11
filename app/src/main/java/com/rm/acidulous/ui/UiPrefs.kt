@@ -124,6 +124,8 @@ object UiPrefs {
         MidiHub.routing = runCatching { MidiHub.Routing.valueOf(p.getString(KEY_MIDI_ROUTE, null) ?: "SelectedTrack") }
             .getOrDefault(MidiHub.Routing.SelectedTrack)
         MidiHub.fixedRack = p.getInt(KEY_MIDI_RACK, 0)
+        MidiHub.outOffsetMs = p.getInt(KEY_MIDI_AHEAD, 0)
+        MidiHub.chooseClockOut(p.getBoolean(KEY_MIDI_CLOCK_OUT, false))
     }
 
     /**
@@ -213,6 +215,18 @@ object UiPrefs {
             ?.putInt(KEY_SCALE_INDEX, index)?.apply()
     }
 
+    fun chooseClockOut(on: Boolean) {
+        MidiHub.chooseClockOut(on)
+        store?.edit()?.putBoolean(KEY_MIDI_CLOCK_OUT, on)?.apply()
+    }
+
+    /** How far ahead of the audio MIDI goes out, in milliseconds. */
+    fun chooseMidiOffset(ms: Int) {
+        val v = ms.coerceIn(-50, 50)
+        MidiHub.outOffsetMs = v
+        store?.edit()?.putInt(KEY_MIDI_AHEAD, v)?.apply()
+    }
+
     fun chooseMidiRouting(r: MidiHub.Routing, rack: Int = MidiHub.fixedRack) {
         MidiHub.routing = r
         MidiHub.fixedRack = rack
@@ -236,6 +250,8 @@ object UiPrefs {
     private const val KEY_SCALE_INDEX = "new_scale_index"
     private const val KEY_MIDI_ROUTE = "midi_routing"
     private const val KEY_MIDI_RACK = "midi_rack"
+    private const val KEY_MIDI_CLOCK_OUT = "midi_clock_out"
+    private const val KEY_MIDI_AHEAD = "midi_ahead_ms"
 
     // --- What a new song and a new track start as ------------------------
 

@@ -158,6 +158,20 @@ object NativeEngine {
     /** Forget what this track had queued, whatever has happened since. */
     fun cancelLaunch(rack: Int) = nativeCancelLaunch(rack)
 
+    // --- MIDI out ------------------------------------------------------------
+    /** Twenty-four pulses a quarter note, plus start, stop and song position. */
+    fun setClockOut(on: Boolean) = nativeSetClockOut(on)
+
+    /** Fills [out] with two longs per event - frame, then rack|status|d1|d2. */
+    fun drainMidiOut(out: LongArray): Int = nativeDrainMidiOut(out)
+
+    /**
+     * Ties the engine's frame count to the wall clock: [out] becomes
+     * frame, nanoseconds, sample rate. The frame is -1 until the audio
+     * stream has run long enough to know.
+     */
+    fun audioAnchor(out: LongArray) = nativeAudioAnchor(out)
+
     /** Fills [out] (one per rack) with packed scene | pending | tick-in-cycle. */
     fun launchStates(out: LongArray) = nativeLaunchStates(out)
 
@@ -361,6 +375,9 @@ object NativeEngine {
     private external fun nativeLaunchClip(rack: Int, sceneId: Long)
     private external fun nativeStopAllClips()
     private external fun nativeCancelLaunch(rack: Int)
+    private external fun nativeSetClockOut(on: Boolean)
+    private external fun nativeDrainMidiOut(out: LongArray): Int
+    private external fun nativeAudioAnchor(out: LongArray)
     private external fun nativeLaunchStates(out: LongArray)
     private external fun nativeIsPlaying(): Boolean
     private external fun nativeSetLoopScene(on: Boolean)

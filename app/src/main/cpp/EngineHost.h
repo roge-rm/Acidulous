@@ -112,6 +112,12 @@ class EngineHost {
     void cancelLaunch(int32_t rack);
     void launchStates(int64_t *out, int32_t count) const;
 
+    // MIDI out: the queue the audio thread fills, and the anchor that turns
+    // a frame into a time the far side can schedule against.
+    void setClockOut(bool on);
+    int drainMidiOut(int64_t *out, int maxEvents);
+    bool audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate) const;
+
     // Drain stamped live events into `out`, 5 longs per event:
     //   absTick, sceneId, tickInIteration, (rack << 24 | cmd << 16 | p1 << 8 | p2),
     //   and for parameter events (cmd 0xf0, p1 = unit): (index << 32 | float bits of value)

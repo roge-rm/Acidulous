@@ -406,6 +406,8 @@ object EngineSync {
         NativeEngine.setParam(rack, "channel", "gain", EngineParams.volume01(m.volume), record = false)
         NativeEngine.setParam(rack, "channel", "pan", EngineParams.pan01(m.pan), record = false)
         NativeEngine.setParam(rack, "channel", "mute", EngineParams.bool01(m.mute), record = false)
+        NativeEngine.setParam(rack, "channel", "midimode", m.midiMode / 2f, record = false)
+        NativeEngine.setParam(rack, "channel", "midichannel", m.midiChannel / 15f, record = false)
         NativeEngine.setParam(rack, "channel", "solo", EngineParams.bool01(m.solo), record = false)
         NativeEngine.setParam(rack, "channel", "sendreverb", EngineParams.unit01(m.sendReverb), record = false)
         NativeEngine.setParam(rack, "channel", "senddelay", EngineParams.unit01(m.sendDelay), record = false)

@@ -183,6 +183,17 @@ data class Mixer(
     val sendDelay: Float = 0f,
     val mute: Boolean = false,
     val solo: Boolean = false,
+    /**
+     * Where this track's notes go. 0 the machine, 1 the machine and the
+     * hardware, 2 the hardware alone - and at 2 the machine is not asked at
+     * all, which is the point of driving something else.
+     *
+     * It lives on the mixer because it is a routing choice, and it reaches
+     * the engine as a "channel" parameter beside the fader for the same
+     * reason. Defaulted, so songs written before this still open.
+     */
+    val midiMode: Int = 0,
+    val midiChannel: Int = 0,
 )
 
 @Serializable

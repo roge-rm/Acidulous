@@ -58,11 +58,17 @@ void Engine::renderBlock(const float *in, float *out) {
             transport.clearLaunchRequests();
         }
         playing = transport.isPlaying();
+        emitTransport(playing);
     }
     if (startPending) {
         scheduler.start(transport.requestedStartScene());
         startPending = false;
     }
+
+    if (racks[0].midiOutBound() == false) {
+        for (int32_t r = 0; r < kRackCount; ++r) racks[r].bindMidiOut(&midiOut, r);
+    }
+    for (int32_t r = 0; r < kRackCount; ++r) racks[r].updateMidiOut(framesRendered);
 
     clock.advance(kBlockFrames);
     // Mounts before parameters: the UI queues a unit and then its values, so
@@ -95,6 +101,12 @@ void Engine::renderBlock(const float *in, float *out) {
         scheduler.applyIdleTempo();
     }
 
+    // Twenty-four pulses a quarter note, which at 240 PPQN is every tenth
+    // tick exactly, at every tempo. The clock runs whether or not the
+    // transport does, because that is what the specification asks for and
+    // what the engine's free-running clock already did.
+    emitClock(clock.blockStart(), clock.blockEnd());
+
     // Metronome: every beat boundary this block crossed, at its sample offset.
     if (playing && master.clickEnabled() && scheduler.launcherActive()) {
         // No scene owns the bar line here, so the song's signature counts
@@ -112,13 +124,20 @@ void Engine::renderBlock(const float *in, float *out) {
         const int64_t tickEnd = scheduler.currentTickInIteration();
         const int64_t ticksPerBar = sceneBefore->ticksPerBar;
         const int64_t iterLen = sceneBefore->iterationTicks() > 0 ? sceneBefore->iterationTicks() : ticksPerBar;
-        const float samplesPerTick = static_cast<float>(kSampleRate) * 60.0f / (clock.bpm() * static_cast<float>(kPPQN));
+        // The offset comes from the clock, which knows the sub-tick phase.
+        // Worked out here instead, from the block's start as though it began
+        // on a tick boundary, every click was late by up to a whole tick -
+        // two milliseconds at 120 bpm - and any offset past the block was
+        // clamped to its end. It had been doing that since M2.
+        const int64_t absStart = clock.blockStart();
         auto beatsIn = [&](int64_t from, int64_t to, int64_t baseOffsetTicks) {
             int64_t t = (from / kPPQN) * kPPQN;
             if (t < from) t += kPPQN;
             for (; t < to; t += kPPQN) {
-                const int32_t offset = static_cast<int32_t>(static_cast<float>(baseOffsetTicks + t - from) * samplesPerTick);
-                master.clickAt(t % ticksPerBar == 0, offset < kBlockFrames ? offset : kBlockFrames - 1);
+                const double at = clock.frameOffsetOfTick(absStart + baseOffsetTicks + t - from, kBlockFrames);
+                int32_t offset = static_cast<int32_t>(at < 0.0 ? 0.0 : at);
+                if (offset >= kBlockFrames) offset = kBlockFrames - 1;
+                master.clickAt(t % ticksPerBar == 0, offset);
             }
         };
         if (tickEnd >= tickStart) {
@@ -168,11 +187,61 @@ void Engine::renderBlock(const float *in, float *out) {
     }
 
     transport.publishPosition(scheduler.packedPosition());
+    framesRendered += kBlockFrames;
 
     // Block budget at 48 kHz / 64 frames is 1333 us.
     const auto us = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - t0).count();
     const float pct = static_cast<float>(us) / 1333.3f * 100.0f;
     load.store(load.load(std::memory_order_relaxed) * 0.95f + pct * 0.05f, std::memory_order_relaxed);
+}
+
+/**
+ * A pulse at every tenth tick this block crossed, on the frame it truly
+ * falls on rather than the frame the block began on.
+ */
+void Engine::emitClock(int64_t blockStartTick, int64_t blockEndTick) {
+    if (!transport.clockOut()) {
+        lastClockTick = blockEndTick;
+        return;
+    }
+    // (start, end]: the range whose frames the clock can place exactly.
+    int64_t t = blockStartTick + 1;
+    if (lastClockTick >= blockStartTick) t = lastClockTick + 1;
+    for (; t <= blockEndTick; ++t) {
+        if (t % (kPPQN / 24) != 0) continue;
+        const double at = clock.frameOffsetOfTick(t, kBlockFrames);
+        const int64_t frame = framesRendered + static_cast<int64_t>(at < 0.0 ? 0.0 : at);
+        midiOut.push({frame, 0xf8, 0, 0, 0xff});
+    }
+    lastClockTick = blockEndTick;
+}
+
+/**
+ * Start, stop, and - when the playhead is not at the top of the song -
+ * a song position followed by continue, which is what a hardware sequencer
+ * needs in order to join in at the right bar rather than from its own start.
+ */
+void Engine::emitTransport(bool nowPlaying) {
+    if (!transport.clockOut()) return;
+    if (!nowPlaying) {
+        midiOut.push({framesRendered, 0xfc, 0, 0, 0xff});
+        return;
+    }
+    int64_t songTick = 0;
+    const seq::SongSnapshot *snap = scheduler.snapshot();
+    if (snap != nullptr && !transport.launcherMode()) {
+        songTick = snap->songTickAt(scheduler.currentScene(), scheduler.currentRepeat(),
+                                    scheduler.currentTickInIteration());
+    }
+    // A MIDI beat is a sixteenth: 60 ticks at 240 PPQN.
+    const int64_t beats = songTick / (kPPQN / 4);
+    if (beats > 0) {
+        midiOut.push({framesRendered, 0xf2, static_cast<uint8_t>(beats & 0x7f),
+                      static_cast<uint8_t>((beats >> 7) & 0x7f), 0xff});
+        midiOut.push({framesRendered, 0xfb, 0, 0, 0xff});
+    } else {
+        midiOut.push({framesRendered, 0xfa, 0, 0, 0xff});
+    }
 }
 
 void Engine::drainMidi() {

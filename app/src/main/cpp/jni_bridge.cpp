@@ -466,6 +466,34 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeCancelLaunch(JNIEnv *, jobject, 
     host().cancelLaunch(rack);
 }
 
+// --- MIDI out ----------------------------------------------------------------
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetClockOut(JNIEnv *, jobject, jboolean on) {
+    host().setClockOut(on == JNI_TRUE);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeDrainMidiOut(JNIEnv *env, jobject, jlongArray out) {
+    const jsize cap = env->GetArrayLength(out) / 2;
+    if (cap <= 0) return 0;
+    jlong *data = env->GetLongArrayElements(out, nullptr);
+    const int n = host().drainMidiOut(reinterpret_cast<int64_t *>(data), static_cast<int>(cap));
+    env->ReleaseLongArrayElements(out, data, 0);
+    return n;
+}
+
+/** frame, nanoseconds, sample rate - or a zero frame when the stream cannot say yet. */
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeAudioAnchor(JNIEnv *env, jobject, jlongArray out) {
+    if (env->GetArrayLength(out) < 3) return;
+    int64_t frame = 0, nanos = 0;
+    int32_t rate = acidulous::kSampleRate;
+    const bool ok = host().audioAnchor(frame, nanos, rate);
+    jlong v[3] = {ok ? frame : -1, nanos, rate};
+    env->SetLongArrayRegion(out, 0, 3, v);
+}
+
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeLaunchStates(JNIEnv *env, jobject, jlongArray out) {
     const jsize n = env->GetArrayLength(out);

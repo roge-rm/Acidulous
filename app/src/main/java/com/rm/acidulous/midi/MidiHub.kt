@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import android.media.midi.MidiDevice
 import android.media.midi.MidiDeviceInfo
 import android.media.midi.MidiManager
+import android.media.midi.MidiInputPort
 import android.media.midi.MidiReceiver
 import android.os.Build
 import android.os.Handler
@@ -53,6 +54,8 @@ object MidiHub {
     private const val TAG = "Acidulous.MIDI"
 
     data class Port(val id: Int, val name: String, val maker: String, val bluetooth: Boolean, val open: Boolean)
+    /** Somewhere to send to. Android calls it the device's *input* port. */
+    data class Destination(val id: Int, val name: String, val open: Boolean)
     /** [midi] is true when the advertisement actually named the MIDI service. */
     data class Found(val address: String, val name: String, val midi: Boolean)
 
@@ -72,6 +75,7 @@ object MidiHub {
     private val parsers = HashMap<Int, MidiParser>()
 
     val ports = mutableStateListOf<Port>()
+    val destinations = mutableStateListOf<Destination>()
     val discovered = mutableStateListOf<Found>()
     var scanning by mutableStateOf(false)
         private set
@@ -83,6 +87,38 @@ object MidiHub {
     var lastMessage by mutableStateOf("")
         private set
     var received by mutableStateOf(0)
+        private set
+
+    // --- out -----------------------------------------------------------------
+    private val outPorts = HashMap<Int, MidiInputPort>()
+    private val outBuffer = LongArray(256 * 2)
+    private val anchor = LongArray(3)
+    private val outBytes = ByteArray(3)
+
+    /** Twenty-four pulses a quarter note, to every destination that is open. */
+    var clockOut by mutableStateOf(false)
+        private set
+
+    /**
+     * How far ahead of the audio to send, in milliseconds. The engine's own
+     * latency is compensated automatically from the stream's anchor; this is
+     * the trim for everything after it - the cable, the synth, and the last
+     * few milliseconds of a phone's audio path that nothing can measure.
+     */
+    var outOffsetMs by mutableStateOf(0)
+
+    /** What the engine has handed over, whether or not anything was listening.
+     *  Separate from [sent] because "the clock is running but nothing is
+     *  plugged in" and "nothing is happening" are different problems. */
+    var produced by mutableStateOf(0)
+        private set
+    var sent by mutableStateOf(0)
+        private set
+    /** How far from its intended time the last batch went out. The number to
+     *  report when something sounds loose. */
+    var outLateMs by mutableStateOf(0f)
+        private set
+    var anchored by mutableStateOf(false)
         private set
 
     /** Which rack plays when routing is [Routing.SelectedTrack]. */
@@ -108,6 +144,10 @@ object MidiHub {
                 refresh()
             }
         }, handler)
+        // Preferences are restored one line before this runs, so a clock-out
+        // setting that survived a restart asked for a sender that had no
+        // thread to run on yet. Ask again now there is one.
+        if (clockOut) startSender()
     }
 
     fun refresh() {
@@ -125,6 +165,150 @@ object MidiHub {
                 open = opened.containsKey(info.id),
             )
         }
+        destinations.clear()
+        @Suppress("DEPRECATION")
+        mgr.devices.filter { it.inputPortCount > 0 }.forEach { info ->
+            val props = info.properties
+            destinations += Destination(
+                id = info.id,
+                name = props.getString(MidiDeviceInfo.PROPERTY_NAME)
+                    ?: props.getString(MidiDeviceInfo.PROPERTY_PRODUCT) ?: "MIDI device",
+                open = outPorts.containsKey(info.id),
+            )
+        }
+    }
+
+    // --- Sending ---------------------------------------------------------------
+    //
+    // The engine stamps every event with the frame it belongs on; the audio
+    // stream says which wall-clock nanosecond a frame will be heard at; and
+    // Android's MidiInputPort.send takes a nanosecond timestamp and schedules
+    // it. So the sender has to be *early*, not fast - it drains every few
+    // milliseconds and hands over events that are still in the future, and
+    // the platform does the fine timing. A tight loop would be worse and
+    // would still be at the mercy of the scheduler.
+
+    fun toggleDestination(id: Int) {
+        val mgr = manager ?: return
+        val existing = outPorts.remove(id)
+        if (existing != null) {
+            runCatching { existing.close() }
+            refresh()
+            return
+        }
+        @Suppress("DEPRECATION")
+        val info = mgr.devices.firstOrNull { it.id == id } ?: return
+        mgr.openDevice(info, { device ->
+            val port = device?.openInputPort(0)
+            if (port == null) {
+                Log.w(TAG, "could not open an input port on $id")
+            } else {
+                outPorts[id] = port
+                startSender()
+            }
+            refresh()
+        }, handler)
+    }
+
+    private var sending = false
+    private val pumpTask = object : Runnable {
+        override fun run() {
+            pump()
+            if (sending) handler?.postDelayed(this, 4)
+        }
+    }
+
+    private fun startSender() {
+        // Idempotent by re-posting rather than by an early return on a flag:
+        // preferences are restored before the thread exists, so the first
+        // call sets the flag and loses the post, and a flag-guarded second
+        // call would then do nothing at all and the sender would never run.
+        sending = true
+        handler?.let { h ->
+            h.removeCallbacks(pumpTask)
+            h.post(pumpTask)
+        }
+    }
+
+    private fun stopSender() {
+        sending = false
+        handler?.removeCallbacks(pumpTask)
+    }
+
+    /** How many bytes a status byte carries with it. */
+    private fun lengthOf(status: Int): Int = when {
+        status == 0xf2 -> 3                       // song position
+        status >= 0xf8 -> 1                       // clock, start, continue, stop
+        status == 0xf1 || status == 0xf3 -> 2
+        (status and 0xf0) == 0xc0 -> 2            // program change
+        (status and 0xf0) == 0xd0 -> 2            // channel pressure
+        else -> 3
+    }
+
+    private fun pump() {
+        // Drain first and unconditionally. With the clock running and nothing
+        // listening the queue would otherwise fill and stay full, and the
+        // anchor readout would never say anything at all.
+        val n = NativeEngine.drainMidiOut(outBuffer)
+        NativeEngine.audioAnchor(anchor)
+        anchored = anchor[0] >= 0
+        produced += n
+        if (n <= 0 || outPorts.isEmpty()) {
+            if (!clockOut && outPorts.isEmpty()) stopSender()
+            return
+        }
+        val anchorFrame = anchor[0]
+        val anchorNanos = anchor[1]
+        val rate = if (anchor[2] > 0) anchor[2] else 48000L
+        val trim = outOffsetMs.toLong() * 1_000_000L
+        val now = System.nanoTime()
+        var worstLate = 0L
+
+        for (i in 0 until n) {
+            val frame = outBuffer[i * 2]
+            val packed = outBuffer[i * 2 + 1]
+            val rack = ((packed shr 24) and 0xff).toInt()
+            val status = ((packed shr 16) and 0xff).toInt()
+            val d1 = ((packed shr 8) and 0xff).toInt()
+            val d2 = (packed and 0xff).toInt()
+
+            // When this frame will actually be heard, less the trim. Without
+            // an anchor the stream cannot say, so it goes out now and the
+            // readout says as much rather than pretending.
+            val at = if (anchorFrame >= 0) {
+                anchorNanos + (frame - anchorFrame) * 1_000_000_000L / rate - trim
+            } else {
+                now
+            }
+            if (at < now) worstLate = maxOf(worstLate, now - at)
+
+            val len = lengthOf(status)
+            outBytes[0] = status.toByte()
+            if (len > 1) outBytes[1] = d1.toByte()
+            if (len > 2) outBytes[2] = d2.toByte()
+
+            if (rack == 0xff) {
+                // The transport's own: clock, start, stop, position. Everyone
+                // listening gets it.
+                for (port in outPorts.values) runCatching { port.send(outBytes, 0, len, at) }
+            } else {
+                val port = outPorts.values.firstOrNull()
+                if (port != null) runCatching { port.send(outBytes, 0, len, at) }
+            }
+            sent += 1
+        }
+        // Anything already in the past by the time it was handed over is the
+        // measure of whether this is working. Smoothed, because one late
+        // batch is the scheduler and a hundred is a problem.
+        outLateMs = outLateMs * 0.9f + (worstLate / 1_000_000.0f) * 0.1f
+    }
+
+    // Not setClockOut: the property's own generated setter has that JVM
+    // signature already, the same trap as chooseTheme and chooseClipMode.
+    fun chooseClockOut(on: Boolean) {
+        clockOut = on
+        NativeEngine.setClockOut(on)
+        if (on) startSender()
     }
 
     fun toggle(portId: Int) {

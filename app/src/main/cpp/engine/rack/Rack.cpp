@@ -11,6 +11,11 @@ const ParamDef kChannelDefs[Rack::ChannelCount] = {
     {"solo", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
     {"sendreverb", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     {"senddelay", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+    // Where this track's notes go: the machine, the machine and the world,
+    // or only the world. Stepped, and read unsmoothed, because a three-way
+    // switch must not ramp through the middle on its way across.
+    {"midimode", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},
+    {"midichannel", 0.0f, 15.0f, 0.0f, Curve::Stepped, 16, ""},
 };
 } // namespace
 
@@ -43,7 +48,39 @@ void Rack::deliver(int32_t fromStage, uint8_t status, uint8_t d1, uint8_t d2) {
  * one starts, which is the same thing a real instrument does when it runs
  * out of strings.
  */
+int32_t Rack::midiOutMode() const {
+    // Normalised, not smoothed: a three-way switch must not ramp through
+    // "both" on its way from one end to the other.
+    const float v = channel.normalized(MidiMode);
+    return static_cast<int32_t>(v * 2.0f + 0.5f);
+}
+
+void Rack::updateMidiOut(int64_t frame) {
+    outFrame = frame;
+    const int32_t mode = midiOutMode();
+    const uint8_t ch = static_cast<uint8_t>(channel.normalized(MidiChannel) * 15.0f + 0.5f);
+    if ((mode != lastOutMode || ch != lastOutChannel) && lastOutMode != OutInternal && outQueue != nullptr) {
+        // It was sending and now it is sending somewhere else, or nowhere.
+        // Whatever it left sounding out there is its responsibility.
+        outQueue->push({frame, static_cast<uint8_t>(0xb0 | lastOutChannel), 123, 0,
+                        static_cast<uint8_t>(rackIndex)});
+    }
+    lastOutMode = mode;
+    lastOutChannel = ch;
+}
+
 void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2) {
+    // After the eventors, so what leaves for the hardware is what you hear -
+    // arpeggiated, scale-corrected, and the same whether it came from a clip,
+    // the on-screen keyboard or a controller, because all three arrive here.
+    // Before the voice limiter, which is a property of the machine and no
+    // business of a synthesizer on the other end of a cable.
+    const int32_t mode = lastOutMode;
+    if (mode != OutInternal && outQueue != nullptr) {
+        outQueue->push({outFrame, static_cast<uint8_t>((status & 0xf0) | lastOutChannel), d1, d2,
+                        static_cast<uint8_t>(rackIndex)});
+    }
+    if (mode == OutMidi) return;
     if (machine == nullptr) return;
     const uint8_t kind = status & 0xf0;
     const bool on = kind == 0x90 && d2 > 0;

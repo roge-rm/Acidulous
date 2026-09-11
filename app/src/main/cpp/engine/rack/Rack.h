@@ -17,7 +17,12 @@ namespace acidulous {
 
 class Rack {
   public:
-    enum ChannelParam : int32_t { Gain, Pan, Mute, Solo, SendReverb, SendDelay, ChannelCount };
+    enum ChannelParam : int32_t { Gain, Pan, Mute, Solo, SendReverb, SendDelay, MidiMode, MidiChannel, ChannelCount };
+
+    /** internal: the machine only. both: and the hardware. midi: the
+     *  hardware only, and the machine is not asked - which is the point,
+     *  because driving something else should give the CPU back. */
+    enum MidiOutMode : int32_t { OutInternal = 0, OutBoth, OutMidi };
 
     Rack();
 
@@ -94,12 +99,32 @@ class Rack {
     float readPeak() { return peakHold.exchange(0.0f, std::memory_order_relaxed); }
     float channelNormalized(int32_t index) const { return channel.normalized(index); }
 
+    /** Where this rack's notes go when they are bound for the outside world. */
+    void bindMidiOut(MidiOutQueue *queue, int32_t index) {
+        outQueue = queue;
+        rackIndex = index;
+    }
+    /**
+     * Once a block: the frame its notes will be stamped with, and a chance to
+     * notice the mode changing. A track switched away from sending mid-note
+     * would otherwise leave the note hanging on the hardware for ever.
+     */
+    void updateMidiOut(int64_t frame);
+    int32_t midiOutMode() const;
+    bool midiOutBound() const { return outQueue != nullptr; }
+
   private:
     struct Sink final : MidiSink {
         Rack *rack = nullptr;
         int32_t stage = 0; // which eventor slot output this is
         void send(uint8_t status, uint8_t d1, uint8_t d2) override;
     };
+
+    MidiOutQueue *outQueue = nullptr;
+    int32_t rackIndex = 0;
+    int64_t outFrame = 0;
+    int32_t lastOutMode = OutInternal;
+    uint8_t lastOutChannel = 0;
 
     void deliver(int32_t fromStage, uint8_t status, uint8_t d1, uint8_t d2);
     // Everything bound for the machine goes through here, so the voice limit
