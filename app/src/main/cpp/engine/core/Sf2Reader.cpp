@@ -13,6 +13,7 @@ namespace {
 
 struct Phdr { char name[20]; uint16_t preset, bank, bagNdx; uint32_t library, genre, morphology; };
 struct Bag { uint16_t genNdx, modNdx; };
+struct Mod { uint16_t src, dest, amtSrc, trans; int16_t amount; };
 struct Gen { uint16_t oper; uint16_t amount; };
 struct Inst { char name[20]; uint16_t bagNdx; };
 struct Shdr {
@@ -73,6 +74,8 @@ struct Chunks {
     const uint8_t *phdr = nullptr; size_t phdrBytes = 0;
     const uint8_t *pbag = nullptr; size_t pbagBytes = 0;
     const uint8_t *pgen = nullptr; size_t pgenBytes = 0;
+    const uint8_t *pmod = nullptr; size_t pmodBytes = 0;
+    const uint8_t *imod = nullptr; size_t imodBytes = 0;
     const uint8_t *inst = nullptr; size_t instBytes = 0;
     const uint8_t *ibag = nullptr; size_t ibagBytes = 0;
     const uint8_t *igen = nullptr; size_t igenBytes = 0;
@@ -94,6 +97,8 @@ void scanList(const uint8_t *p, const uint8_t *end, Chunks &c) {
         take("phdr", c.phdr, c.phdrBytes);
         take("pbag", c.pbag, c.pbagBytes);
         take("pgen", c.pgen, c.pgenBytes);
+        take("pmod", c.pmod, c.pmodBytes);
+        take("imod", c.imod, c.imodBytes);
         take("inst", c.inst, c.instBytes);
         take("ibag", c.ibag, c.ibagBytes);
         take("igen", c.igen, c.igenBytes);
@@ -135,6 +140,97 @@ Phdr readPhdr(const uint8_t *p) {
     return h;
 }
 Bag readBag(const uint8_t *p) { return {rd16(p), rd16(p + 2)}; }
+Mod readMod(const uint8_t *p) { return {rd16(p), rd16(p + 2), rd16(p + 6), rd16(p + 8), asSigned(rd16(p + 4))}; }
+
+// --- Modulators -------------------------------------------------------------------
+//
+// A modulator is a controller, a curve and an amount aimed at a generator.
+// The spec also defines ten that are present in every instrument unless the
+// file overrides them, and those are where a SoundFont's velocity response
+// actually lives - a bank whose velocity layers all point at one sample is
+// relying on them entirely.
+
+// The source field is a bitfield: index, a flag saying whether the index is a
+// MIDI CC, then direction, polarity and curve type.
+struct ModSourceBits {
+    uint8_t index;
+    bool isCc, decreasing, bipolar;
+    uint8_t type;
+};
+
+ModSourceBits decodeSource(uint16_t v) {
+    ModSourceBits b{};
+    b.index = static_cast<uint8_t>(v & 0x7f);
+    b.isCc = (v & 0x80) != 0;
+    b.decreasing = (v & 0x100) != 0;
+    b.bipolar = (v & 0x200) != 0;
+    b.type = static_cast<uint8_t>((v >> 10) & 0x3f);
+    return b;
+}
+
+// General controller numbers, used when the CC flag is clear.
+enum GeneralController : uint8_t { CtrlNone = 0, CtrlVelocity = 2, CtrlKeyNumber = 3, CtrlPolyPressure = 10,
+                                   CtrlChannelPressure = 13, CtrlPitchWheel = 14, CtrlPitchWheelSens = 16 };
+
+/**
+ * Turns one file modulator into one this engine can evaluate, or reports
+ * that it cannot. A modulator is dropped when its destination is something
+ * the engine has no equivalent for - the SoundFont LFOs, the effect sends -
+ * or when it has a second amount source, which nothing here needs.
+ */
+bool resolveMod(const Mod &m, ZoneMod &out) {
+    const ModSourceBits src = decodeSource(m.src);
+    if (src.type > 3) return false;
+    // A second amount source multiplies two controllers together. Only the
+    // pitch-wheel default uses it, and that is handled by the machine's own
+    // bend, so it is not worth carrying.
+    if (m.amtSrc != 0) return false;
+
+    if (src.isCc) {
+        out.source = ZoneMod::SrcCc;
+        out.cc = src.index;
+    } else {
+        switch (src.index) {
+        case CtrlNone: out.source = ZoneMod::SrcNone; break;
+        case CtrlVelocity: out.source = ZoneMod::SrcVelocity; break;
+        case CtrlKeyNumber: out.source = ZoneMod::SrcKeyNumber; break;
+        case CtrlPolyPressure: out.source = ZoneMod::SrcPolyPressure; break;
+        case CtrlChannelPressure: out.source = ZoneMod::SrcChannelPressure; break;
+        case CtrlPitchWheel: return false; // the machine's own bend range governs pitch
+        default: return false;
+        }
+    }
+    switch (m.dest) {
+    case GenInitialAttenuation: out.dest = ZoneMod::DstAttenuation; break;
+    case 8 /* initialFilterFc */: out.dest = ZoneMod::DstFilterCutoff; break;
+    case GenPan: out.dest = ZoneMod::DstPan; break;
+    case GenCoarseTune: out.dest = ZoneMod::DstTuning; out.amount = static_cast<float>(m.amount) * 100.0f; break;
+    case GenFineTune: out.dest = ZoneMod::DstTuning; break;
+    default: return false;
+    }
+    if (out.dest != ZoneMod::DstTuning || m.dest == GenFineTune) out.amount = static_cast<float>(m.amount);
+    out.curve = src.type <= 3 ? src.type : 0;
+    out.decreasing = src.decreasing;
+    out.bipolar = src.bipolar;
+    return true;
+}
+
+/** The spec's default modulators, minus the ones this engine cannot honour. */
+const Mod kDefaultMods[] = {
+    // velocity -> attenuation, 960 cB, concave, decreasing, unipolar
+    {0x0502, GenInitialAttenuation, 0, 0, 960},
+    // velocity -> filter cutoff, -2400 cents, linear, decreasing, unipolar
+    {0x0102, 8, 0, 0, -2400},
+    // CC7 volume -> attenuation, concave, decreasing
+    {0x0587, GenInitialAttenuation, 0, 0, 960},
+    // CC11 expression -> attenuation, concave, decreasing
+    {0x058b, GenInitialAttenuation, 0, 0, 960},
+    // CC10 pan -> pan, linear, bipolar
+    {0x028a, GenPan, 0, 0, 1000},
+};
+
+bool sameModTarget(const Mod &a, const Mod &b) { return a.src == b.src && a.dest == b.dest && a.amtSrc == b.amtSrc; }
+
 Gen readGen(const uint8_t *p) { return {rd16(p), rd16(p + 2)}; }
 Inst readInst(const uint8_t *p) {
     Inst h{};
@@ -198,9 +294,9 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
     if (!parseChunks(bytes, c, error)) return nullptr;
 
     const size_t presetCount = c.phdrBytes / 38;
-    const size_t pbagCount = c.pbagBytes / 4, pgenCount = c.pgenBytes / 4;
+    const size_t pbagCount = c.pbagBytes / 4, pgenCount = c.pgenBytes / 4, pmodCount = c.pmodBytes / 10;
     const size_t instCount = c.instBytes / 22;
-    const size_t ibagCount = c.ibagBytes / 4, igenCount = c.igenBytes / 4;
+    const size_t ibagCount = c.ibagBytes / 4, igenCount = c.igenBytes / 4, imodCount = c.imodBytes / 10;
     const size_t shdrCount = c.shdrBytes / 46;
     if (presetIndex < 0 || static_cast<size_t>(presetIndex) + 1 >= presetCount) {
         error = "no such preset";
@@ -227,6 +323,7 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
     for (size_t pb = preset.bagNdx; pb < nextPreset.bagNdx && pb + 1 <= pbagCount; ++pb) {
         const Bag bag = readBag(c.pbag + pb * 4);
         const size_t genEnd = (pb + 1 < pbagCount) ? readBag(c.pbag + (pb + 1) * 4).genNdx : pgenCount;
+        const size_t pModEnd = (pb + 1 < pbagCount) ? readBag(c.pbag + (pb + 1) * 4).modNdx : pmodCount;
         GenSet pset;
         gensOf(c.pgen, pgenCount, bag.genNdx, genEnd, pset);
         if (!pset.has(GenInstrument)) continue; // a global preset zone; its defaults are rare, skip
@@ -237,15 +334,20 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
         const Inst nextInst = readInst(c.inst + (static_cast<size_t>(instIndex) + 1) * 22);
 
         GenSet globalInst;
+        std::vector<Mod> globalInstMods;
         bool haveGlobal = false;
         for (size_t ib = inst.bagNdx; ib < nextInst.bagNdx && ib + 1 <= ibagCount; ++ib) {
             const Bag ibag = readBag(c.ibag + ib * 4);
             const size_t iEnd = (ib + 1 < ibagCount) ? readBag(c.ibag + (ib + 1) * 4).genNdx : igenCount;
+            const size_t iModEnd = (ib + 1 < ibagCount) ? readBag(c.ibag + (ib + 1) * 4).modNdx : imodCount;
             GenSet iset;
             if (haveGlobal) iset = globalInst;
             gensOf(c.igen, igenCount, ibag.genNdx, iEnd, iset);
             if (!iset.has(GenSampleID)) { // the instrument's global zone: defaults for the rest
                 globalInst = iset;
+                globalInstMods.clear();
+                for (size_t mi = ibag.modNdx; mi < iModEnd && mi < imodCount; ++mi)
+                    globalInstMods.push_back(readMod(c.imod + mi * 10));
                 haveGlobal = true;
                 continue;
             }
@@ -310,6 +412,33 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
                 const float sustainCb = static_cast<float>(iset.sign(GenSustainVol, 0));
                 zone.sustain = std::pow(10.0f, -std::max(0.0f, sustainCb) / 200.0f);
                 zone.release = timecentsToSeconds(iset.sign(GenReleaseVol, -12000));
+            }
+
+            // Modulators: start from the ten the spec says are always there,
+            // then let the instrument's global zone, this zone, and the preset
+            // zone each replace one by target or add their own.
+            {
+                std::vector<Mod> effective(std::begin(kDefaultMods), std::end(kDefaultMods));
+                auto merge = [&effective](const Mod &m) {
+                    for (auto &e : effective) {
+                        if (sameModTarget(e, m)) { e = m; return; }
+                    }
+                    effective.push_back(m);
+                };
+                for (const Mod &m : globalInstMods) merge(m);
+                for (size_t mi = ibag.modNdx; mi < iModEnd && mi < imodCount; ++mi) merge(readMod(c.imod + mi * 10));
+                for (size_t mi = bag.modNdx; mi < pModEnd && mi < pmodCount; ++mi) merge(readMod(c.pmod + mi * 10));
+                for (const Mod &m : effective) {
+                    if (m.amount == 0) continue;
+                    ZoneMod zm;
+                    if (!resolveMod(m, zm)) { ++map->droppedMods; continue; }
+                    if (zm.source == ZoneMod::SrcNone) continue;
+                    if (zone.modCount >= kMaxZoneMods) { ++map->droppedMods; continue; }
+                    if (zm.source == ZoneMod::SrcVelocity && zm.dest == ZoneMod::DstAttenuation) {
+                        zone.velocityToLevel = true;
+                    }
+                    zone.mods[zone.modCount++] = zm;
+                }
             }
 
             // Decode the source window once, however many zones point at it.

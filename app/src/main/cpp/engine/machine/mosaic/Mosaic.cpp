@@ -44,6 +44,7 @@ const ParamDef *Mosaic::paramDefs(int32_t &count) const {
         putN(LoopModeIndex, "loop", 0.0f, LoopModeCount - 1.0f, 0.0f, Curve::Stepped, LoopModeCount, "");
         putN(Reverse, "reverse", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, "");
         putN(EnvSourceIndex, "envfrom", 0.0f, EnvSourceCount - 1.0f, 0.0f, Curve::Stepped, EnvSourceCount, "");
+        putN(FileMods, "filemod", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, "");
         putN(GrainMode, "grain", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, "");
         putN(GrainPos, "gpos", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         putN(GrainRate, "grate", -2.0f, 2.0f, 1.0f, Curve::Linear, 0, "");
@@ -133,6 +134,13 @@ void Mosaic::reset() {
         for (auto &m : v.mod) m = 0.0f;
     }
     modWheel = pressure = bend = 0.0f;
+    // A SoundFont's default modulators pull volume down from CC7 and CC11 and
+    // pan from CC10, so those have to start where a synth powers up rather
+    // than at zero, or an untouched instrument would be silent and hard left.
+    for (auto &v : cc) v = 0.0f;
+    cc[7] = 1.0f;
+    cc[11] = 1.0f;
+    cc[10] = 64.0f / 127.0f;
 }
 
 void *Mosaic::swapObject(int32_t slot, void *object) {
@@ -257,7 +265,10 @@ void Mosaic::allNotesOff() {
 }
 
 void Mosaic::onBlock(int64_t, int64_t, float bpmNow) { bpm = bpmNow; }
-void Mosaic::controlChange(uint8_t cc, uint8_t value) { if (cc == 1) modWheel = static_cast<float>(value) / 127.0f; }
+void Mosaic::controlChange(uint8_t number, uint8_t value) {
+    cc[number & 0x7f] = static_cast<float>(value) / 127.0f;
+    if (number == 1) modWheel = static_cast<float>(value) / 127.0f;
+}
 void Mosaic::channelPressure(uint8_t value) { pressure = static_cast<float>(value) / 127.0f; }
 void Mosaic::pitchBend(int16_t value14) { bend = static_cast<float>(value14) / 8192.0f; }
 
@@ -279,7 +290,51 @@ float Mosaic::sourceValue(const Voice &v, int src) const {
     }
 }
 
+/**
+ * The file's own modulators, evaluated for one voice. Their sources are the
+ * note and the continuous controllers, so this has to run every block, not
+ * only at note-on. Attenuation, pan and tuning belong to a zone; the filter
+ * is per voice, so it takes what the loudest layer asks for.
+ */
+void Mosaic::applyFileMods(Voice &v) {
+    v.modCutoffCents = 0.0f;
+    v.fileDrivesLevel = false;
+    const bool honour = paramOf(FileMods) >= 0.5f;
+    float bestGain = -1.0f;
+    for (int32_t i = 0; i < v.layerCount; ++i) {
+        Layer &L = v.layer[i];
+        L.modGain = 1.0f;
+        L.modPan = 0.0f;
+        L.modTuneCents = 0.0f;
+        if (!honour || L.zone == nullptr) continue;
+        float attenuation = 0.0f, cutoff = 0.0f;
+        for (int32_t m = 0; m < L.zone->modCount; ++m) {
+            const ZoneMod &zm = L.zone->mods[m];
+            float x;
+            switch (zm.source) {
+            case ZoneMod::SrcVelocity: x = static_cast<float>(v.velocity) / 127.0f; break;
+            case ZoneMod::SrcKeyNumber: x = static_cast<float>(v.note) / 127.0f; break;
+            case ZoneMod::SrcChannelPressure:
+            case ZoneMod::SrcPolyPressure: x = pressure; break;
+            case ZoneMod::SrcCc: x = cc[zm.cc & 0x7f]; break;
+            default: continue;
+            }
+            const float out = zm.apply(x) * zm.amount;
+            switch (zm.dest) {
+            case ZoneMod::DstAttenuation: attenuation += out; break;
+            case ZoneMod::DstFilterCutoff: cutoff += out; break;
+            case ZoneMod::DstPan: L.modPan += out / 500.0f; break;
+            default: L.modTuneCents += out; break;
+            }
+        }
+        if (attenuation > 0.0f) L.modGain = std::pow(10.0f, -attenuation / 200.0f);
+        if (L.zone->velocityToLevel) v.fileDrivesLevel = true;
+        if (L.gain > bestGain) { bestGain = L.gain; v.modCutoffCents = cutoff; }
+    }
+}
+
 void Mosaic::updateVoiceMod(Voice &v, float blockSeconds) {
+    applyFileMods(v);
     for (int l = 0; l < kLfos; ++l) {
         const int32_t b = LfoBase + l * LfoParams;
         const int sync = stepOf(b + LSync);
@@ -319,9 +374,11 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
     // A power curve, not a straight line: SoundFonts express dynamics through
     // modulators this reader ignores, so the machine's own velocity response
     // has to cover the range a sampled instrument needs.
-    const float velAmp = paramOf(VelocityAmount) <= 0.001f ? 1.0f
-                                                           : std::pow(clampf(vel, 0.001f, 1.0f),
-                                                                      paramOf(VelocityAmount) * 2.5f);
+    // When the file drives level from velocity, the panel's own curve would
+    // double up on it, so it stands aside.
+    const float velAmp = (v.fileDrivesLevel || paramOf(VelocityAmount) <= 0.001f)
+                             ? 1.0f
+                             : std::pow(clampf(vel, 0.001f, 1.0f), paramOf(VelocityAmount) * 2.5f);
     const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * velAmp * 0.7f;
     const float panBase = clampf(paramOf(Pan) + v.mod[DstPan], -1.0f, 1.0f);
     const int loopMode = stepOf(LoopModeIndex);
@@ -330,7 +387,8 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
 
     const float filterBase = paramOf(FilterFreq) *
         std::exp2(paramOf(FilterKey) * (static_cast<float>(v.note) - 60.0f) / 12.0f +
-                  v.mod[DstFilterFreq] * 6.0f + paramOf(VelToFilter) * vel * 4.0f);
+                  v.mod[DstFilterFreq] * 6.0f + paramOf(VelToFilter) * vel * 4.0f +
+                  v.modCutoffCents / 1200.0f);
     const float filterEnvAmt = paramOf(FilterEnv);
     const float filterRes = clampf(paramOf(FilterRes) + v.mod[DstFilterRes], 0.0f, 1.0f);
     const int filterType = stepOf(FilterType);
@@ -371,7 +429,7 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
             Layer &L = v.layer[best];
             if (L.sample != nullptr && L.sample->frames > 1) {
                 const double natural = static_cast<double>(v.freq) / mtof(static_cast<float>(L.zone->rootKey)) *
-                                       std::exp2(L.zone->tuneCents / 1200.0f) * pitchMul *
+                                       std::exp2((L.zone->tuneCents + L.modTuneCents) / 1200.0f) * pitchMul *
                                        (static_cast<double>(L.sample->rate) / static_cast<double>(sampleRate));
                 v.grainOffset += natural * static_cast<double>(gRate);
                 const double span = static_cast<double>(L.sample->frames);
@@ -409,8 +467,8 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                     if (g.pos < 0.0) g.pos += span;
                     if (++g.age >= g.length) g.active = false;
                 }
-                sum *= L.gain;
-                const float angle = (clampf(panBase + L.pan, -1.0f, 1.0f) + 1.0f) * 0.25f * kPi;
+                sum *= L.gain * L.modGain;
+                const float angle = (clampf(panBase + L.pan + L.modPan, -1.0f, 1.0f) + 1.0f) * 0.25f * kPi;
                 l += sum * std::cos(angle) * 1.4142f;
                 r += sum * std::sin(angle) * 1.4142f;
             }
@@ -419,10 +477,10 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                 Layer &L = v.layer[z];
                 if (L.sample == nullptr || L.finished || L.sample->frames < 2) continue;
                 const double inc = static_cast<double>(v.freq) / mtof(static_cast<float>(L.zone->rootKey)) *
-                                   std::exp2(L.zone->tuneCents / 1200.0f) * pitchMul *
+                                   std::exp2((L.zone->tuneCents + L.modTuneCents) / 1200.0f) * pitchMul *
                                    (static_cast<double>(L.sample->rate) / static_cast<double>(sampleRate));
-                const float s = readSample(*L.sample, L.pos) * L.gain;
-                const float angle = (clampf(panBase + L.pan, -1.0f, 1.0f) + 1.0f) * 0.25f * kPi;
+                const float s = readSample(*L.sample, L.pos) * L.gain * L.modGain;
+                const float angle = (clampf(panBase + L.pan + L.modPan, -1.0f, 1.0f) + 1.0f) * 0.25f * kPi;
                 l += s * std::cos(angle) * 1.4142f;
                 r += s * std::sin(angle) * 1.4142f;
 

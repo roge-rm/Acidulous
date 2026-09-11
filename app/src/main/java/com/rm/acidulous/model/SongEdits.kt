@@ -86,8 +86,21 @@ const val MAX_TRACKS = 16
 
 fun Song.addTrack(machineType: String, name: String? = null): Song {
     if (tracks.size >= MAX_TRACKS) return this
-    val track = Track(id = newId("t"), name = name ?: "$machineType ${tracks.size + 1}", machine = Machine(type = machineType))
+    val track = Track(id = newId("t"), name = name ?: uniqueTrackName(machineType), machine = Machine(type = machineType))
     return copy(tracks = tracks + track)
+}
+
+/**
+ * The machine's own name for the first track that uses it, then 2, 3 and so
+ * on. One Subvert is just "Subvert"; a number only appears once it means
+ * something.
+ */
+fun Song.uniqueTrackName(base: String): String {
+    val taken = tracks.map { it.name }.toSet()
+    if (base !in taken) return base
+    var n = 2
+    while ("$base $n" in taken) ++n
+    return "$base $n"
 }
 
 fun Song.deleteTrack(index: Int): Song {

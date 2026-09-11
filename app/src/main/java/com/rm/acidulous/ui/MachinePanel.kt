@@ -743,6 +743,7 @@ private fun MosaicPanel(
                         PanelSwitch(b, "loop", MOSAIC_LOOP, "loop")
                         PanelSwitch(b, "reverse", listOf("fwd", "rev"), "dir")
                         PanelSwitch(b, "envfrom", MOSAIC_ENVFROM, "env from")
+                        PanelSwitch(b, "filemod", listOf("ignore", "honour"), "file mod")
                     }
                     Group("tuning") {
                         PanelKnob(b, "coarse", "coarse")

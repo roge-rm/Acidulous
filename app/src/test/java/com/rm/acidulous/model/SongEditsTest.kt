@@ -117,4 +117,17 @@ class SongEditsTest {
         assertEquals(1, blank.tracks.size)
         assertEquals("Subvert", blank.tracks[0].machine.type)
     }
+
+    @Test
+    fun newTracksAreNumberedOnlyWhenTheNameIsTaken() {
+        val one = demo.addTrack("Mosaic")
+        assertEquals("Mosaic", one.tracks.last().name)
+        val two = one.addTrack("Mosaic")
+        assertEquals("Mosaic 2", two.tracks.last().name)
+        val three = two.addTrack("Mosaic")
+        assertEquals("Mosaic 3", three.tracks.last().name)
+        // a gap left by a rename or delete is filled rather than skipped
+        val renamed = three.renameTrack(three.tracks.size - 2, "Keys")
+        assertEquals("Mosaic 2", renamed.addTrack("Mosaic").tracks.last().name)
+    }
 }

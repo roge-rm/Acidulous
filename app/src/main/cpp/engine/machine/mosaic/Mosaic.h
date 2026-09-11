@@ -46,7 +46,7 @@ class Mosaic final : public Machine {
 
     enum P : int32_t {
         LayerScan = 0, ScanAmount, KeyFade, VelFade,
-        Start, LoopModeIndex, Reverse, EnvSourceIndex,
+        Start, LoopModeIndex, Reverse, EnvSourceIndex, FileMods,
         GrainMode, GrainPos, GrainRate, GrainSize, GrainDensity, GrainSpray, GrainPitch,
         AmpAttack, AmpDecay, AmpSustain, AmpRelease,
         FilterType, FilterFreq, FilterRes, FilterEnv, FilterKey,
@@ -93,6 +93,11 @@ class Mosaic final : public Machine {
         double inc = 1.0;      // source frames per engine frame, before modulation
         float gain = 0.0f;
         float pan = 0.0f;
+        // What the file's own modulators ask of this layer, recomputed per
+        // block because some of their sources are continuous controllers.
+        float modGain = 1.0f;
+        float modPan = 0.0f;
+        float modTuneCents = 0.0f;
         bool finished = true;
     };
 
@@ -119,6 +124,8 @@ class Mosaic final : public Machine {
         dsp::LfoGen lfo[kLfos];
         dsp::MultiFilter filter;
         float mod[DestCount]{};
+        float modCutoffCents = 0.0f; // from the file's modulators, not the matrix
+        bool fileDrivesLevel = false;
         uint32_t rng = 0x31415926u;
     };
 
@@ -134,7 +141,11 @@ class Mosaic final : public Machine {
     const SampleMap *map = nullptr;
     float sampleRate = 48000.0f;
     uint32_t ageCounter = 1;
+    void applyFileMods(Voice &v);
+
     float modWheel = 0.0f, pressure = 0.0f, bend = 0.0f, bpm = 120.0f;
+    /** Continuous controllers the file's modulators can name. */
+    float cc[128]{};
     float voiceL[64]{}, voiceR[64]{};
 };
 
