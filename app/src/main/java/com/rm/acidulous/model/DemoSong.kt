@@ -74,8 +74,8 @@ object DemoSong {
                     mixer = Mixer(sendReverb = 0.25f, sendDelay = 0.2f),
                 ),
                 Track(
-                    id = "t-pad",
-                    name = "Pad",
+                    id = "t-poly",
+                    name = "Poly",
                     machine = Machine(type = "Trinity", params = PatchStore.factory("Trinity").first { it.name == "Glass Pad" }.params),
                     clips = mapOf(
                         intro.id to pad(1, listOf(listOf(60, 63, 67))),
