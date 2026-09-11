@@ -111,7 +111,7 @@ fun MainScreen(
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
             spacing = 4.dp,
         ) {
-            Text(song.name, color = Color.White, fontSize = 16.sp, modifier = Modifier.fill(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(song.name, color = Color.White, fontSize = 16.sp, modifier = Modifier.flexible(), maxLines = 1, overflow = TextOverflow.Ellipsis)
             HeaderButton("↶", enabled = editor.canUndoSong()) { editor.undoSong() }
             HeaderButton("↷", enabled = editor.canRedoSong()) { editor.redoSong() }
             HeaderTextButton("save", onClick = onSave)

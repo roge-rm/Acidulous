@@ -83,8 +83,7 @@ class MainActivity : ComponentActivity() {
                     // sides and the bottom are taken here, because the top
                     // strip is where each screen's header lays itself out
                     // around the hole rather than below it (see ui/Cutout.kt).
-                    contentWindowInsets = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+                    contentWindowInsets = com.rm.acidulous.ui.AppContentInsets,
                 ) { innerPadding ->
                     App(Modifier.padding(innerPadding))
                 }

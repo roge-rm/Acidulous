@@ -174,7 +174,7 @@ fun EditScreen(
         // this row costs no height at all - see ui/Cutout.kt.
         CutoutRow(
             Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+            contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 2.dp),
             spacing = 2.dp,
         ) {
             HeaderButton("◀") { onBack() }
@@ -182,7 +182,7 @@ fun EditScreen(
                 "${track.name} · ${scene.name} · ${clip.bars}b · ${clip.notes.size}n" +
                     (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a"),
                 color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
-                modifier = Modifier.fill().padding(horizontal = 4.dp), maxLines = 1,
+                modifier = Modifier.flexible().padding(horizontal = 4.dp), maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
             // Paging lives here rather than in a row of its own: a whole row of
@@ -205,7 +205,7 @@ fun EditScreen(
 
         // Everything below the header keeps the old margin; the header
         // cannot have one, because it works in window coordinates.
-        Column(Modifier.fillMaxSize().padding(start = 8.dp, end = 8.dp, bottom = 8.dp)) {
+        Column(Modifier.fillMaxWidth().weight(1f).padding(start = 8.dp, end = 8.dp, bottom = 8.dp)) {
 
             if (steps && kind == MachineKind.Drums) DrumGrid(
                 clip = clip,
