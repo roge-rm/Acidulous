@@ -473,6 +473,19 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSetClockOut(JNIEnv *, jobject, j
     host().setClockOut(on == JNI_TRUE);
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetExternalSync(JNIEnv *, jobject, jboolean on) {
+    host().setExternalSync(on == JNI_TRUE);
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMidiClockIn(JNIEnv *, jobject, jlong frame, jint status, jint d1, jint d2) {
+    host().midiClockIn(frame, static_cast<uint8_t>(status), static_cast<uint8_t>(d1), static_cast<uint8_t>(d2));
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSyncState(JNIEnv *, jobject) { return host().syncState(); }
+
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeDrainMidiOut(JNIEnv *env, jobject, jlongArray out) {
     const jsize cap = env->GetArrayLength(out) / 2;

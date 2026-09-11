@@ -34,6 +34,7 @@ class Engine {
     // --- Any thread ------------------------------------------------------------------
     bool mount(const Mount &m) { return mounts.push(m); }
     bool pushMidi(const MidiMessage &m) { return midiIn.push(m); }
+    bool pushClock(const MidiInEvent &e) { return clockIn.push(e); }
     bool pushParam(const ParamMessage &m) { return paramsIn.push(m); }
 
     seq::Transport transport;
@@ -42,6 +43,9 @@ class Engine {
     seq::RecordQueue recordQueue;
     /** Notes and clock on their way to hardware. Drained by the MIDI sender. */
     MidiOutQueue midiOut;
+    /** Realtime bytes from a master, stamped with when they were heard. */
+    MidiClockQueue clockIn;
+    seq::ClockFollower follower;
     MasterBus master;
     Rack racks[kRackCount];
     Retirer retirer;
@@ -74,6 +78,8 @@ class Engine {
     RtQueue<ParamMessage, 512> paramsIn;
 
     void emitClock(int64_t blockStartTick, int64_t blockEndTick);
+    void drainClockIn();
+    void followExternal();
     void emitTransport(bool nowPlaying);
 
     bool playing = false;

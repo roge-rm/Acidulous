@@ -594,6 +594,12 @@ bool EngineHost::audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate
     return sAudio.presentationAnchor(frame, nanos);
 }
 
+void EngineHost::setExternalSync(bool on) { sEngine.transport.setExternalSync(on); }
+void EngineHost::midiClockIn(int64_t frame, uint8_t status, uint8_t d1, uint8_t d2) {
+    sEngine.pushClock({frame, status, d1, d2});
+}
+int64_t EngineHost::syncState() const { return sEngine.transport.syncState(); }
+
 void EngineHost::cancelLaunch(int32_t rack) { sEngine.transport.launchClip(rack, seq::Launcher::kCancelId); }
 void EngineHost::launchStates(int64_t *out, int32_t count) const {
     for (int32_t r = 0; r < count && r < kRackCount; ++r) {

@@ -21,6 +21,14 @@ struct MidiOutEvent {
     uint8_t rack = 0xff; // 0xff: the transport's own, belonging to no track
 };
 
+/** A realtime byte arriving from outside, on the frame it was heard. */
+struct MidiInEvent {
+    int64_t frame = 0;
+    uint8_t status = 0;
+    uint8_t data1 = 0;
+    uint8_t data2 = 0;
+};
+
 struct MidiMessage {
     uint8_t status = 0; // channel in the low nibble == rack
     uint8_t data1 = 0;
@@ -43,5 +51,6 @@ struct ParamMessage {
 /** Sixteen tracks of notes plus a clock pulse every ten ticks; 1024 is
  *  minutes of headroom if the sender is ever late. */
 using MidiOutQueue = RtQueue<MidiOutEvent, 1024>;
+using MidiClockQueue = RtQueue<MidiInEvent, 256>;
 
 } // namespace acidulous

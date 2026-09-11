@@ -23,6 +23,26 @@ class TickClock {
     void requestSongTempo(float bpm) { songTempo.store(clamp(bpm), std::memory_order_relaxed); }
     float songTempoRequested() const { return songTempo.load(std::memory_order_relaxed); }
 
+    /**
+     * Audio thread: run at somebody else's rate.
+     *
+     * The tempo is no longer a number the song chose, it is however long a
+     * tick is taking out there, so the period is set directly and the bpm
+     * is derived for the display rather than the other way round.
+     */
+    void setExternalFramesPerTick(double framesPerTick) {
+        if (framesPerTick < 1.0) {
+            return;
+        }
+        ramping = false;
+        samplesPerTick = framesPerTick;
+        currentBpm = clamp(static_cast<float>(static_cast<double>(sampleRate) * 60.0 /
+                                              (framesPerTick * static_cast<double>(kPPQN))));
+    }
+
+    /** Shift the phase without moving the tick count: for pulling into line. */
+    void nudge(double frames) { sampleRemainder += frames; }
+
     // Audio thread: set the effective tempo now, cancelling any ramp.
     void setTempo(float bpm) {
         ramping = false;

@@ -305,6 +305,72 @@ object MidiHub {
 
     // Not setClockOut: the property's own generated setter has that JVM
     // signature already, the same trap as chooseTheme and chooseClipMode.
+    // --- Following someone else's clock ---------------------------------------
+    var clockIn by mutableStateOf(false)
+        private set
+    var followBpm by mutableStateOf(0f)
+        private set
+    var followErrorMs by mutableStateOf(0f)
+        private set
+    var followLocked by mutableStateOf(false)
+        private set
+
+    /**
+     * A realtime byte arrived. Its timestamp is turned into a frame here,
+     * through the same anchor the sender uses in the other direction, so
+     * the engine is handed something already in its own time base.
+     */
+    private fun clockIn(status: Int, d1: Int, d2: Int, stamp: Long) {
+        if (!clockIn) return
+        NativeEngine.audioAnchor(anchor)
+        val anchorFrame = anchor[0]
+        val rate = if (anchor[2] > 0) anchor[2] else 48000L
+        val at = if (stamp > 0L) stamp else System.nanoTime()
+        val frame = if (anchorFrame >= 0) {
+            anchorFrame + (at - anchor[1]) * rate / 1_000_000_000L
+        } else {
+            0L
+        }
+        NativeEngine.midiClockIn(frame, status, d1, d2)
+    }
+
+    fun chooseExternalSync(on: Boolean) {
+        clockIn = on
+        NativeEngine.setExternalSync(on)
+    }
+
+    /** Called from the poll: what the follower is making of it. */
+    fun readSync() {
+        if (!clockIn) return
+        val packed = NativeEngine.syncState()
+        followLocked = ((packed ushr 56) and 0xff) != 0L
+        followBpm = (((packed ushr 32) and 0xffffff).toInt()) / 100f
+        followErrorMs = (packed and 0xffffffffL).toInt() / 1000f
+    }
+
+    /**
+     * Ten seconds of a perfectly regular master, generated here.
+     *
+     * The follower cannot be tested without something to follow, and an
+     * emulator has nothing to plug in. The pulses are stamped from a fixed
+     * start rather than from when this thread happens to wake up, so what
+     * is being tested is the loop and the whole chain behind it - parser,
+     * JNI, queue, clock - rather than the accuracy of a Handler.
+     */
+    fun testClock(bpm: Float = 120f) {
+        if (!clockIn) return
+        val periodNs = (60.0e9 / (bpm.toDouble() * 24.0)).toLong()
+        val start = System.nanoTime() + 50_000_000L
+        val pulses = (10.0 * 24.0 * bpm / 60.0).toInt()
+        clockIn(0xfa, 0, 0, start)
+        for (i in 0 until pulses) {
+            val at = start + i * periodNs
+            handler?.postDelayed({ clockIn(0xf8, 0, 0, at) }, ((at - System.nanoTime()) / 1_000_000L).coerceAtLeast(0))
+        }
+        handler?.postDelayed({ clockIn(0xfc, 0, 0, start + pulses * periodNs) },
+            ((start + pulses * periodNs - System.nanoTime()) / 1_000_000L).coerceAtLeast(0))
+    }
+
     fun chooseClockOut(on: Boolean) {
         clockOut = on
         NativeEngine.setClockOut(on)
@@ -327,11 +393,17 @@ object MidiHub {
             return
         }
         opened[portId] = device
-        val parser = MidiParser { status, d1, d2 -> dispatch(status, d1, d2) }
+        val parser = MidiParser(
+            onMessage = { status, d1, d2 -> dispatch(status, d1, d2) },
+            onRealtime = { status, d1, d2, stamp -> clockIn(status, d1, d2, stamp) },
+        )
         parsers[portId] = parser
         val receiver = object : MidiReceiver() {
+            // The timestamp is the whole point of following a clock: a
+            // handler thread's wake-up is jittery by milliseconds, and this
+            // is not.
             override fun onSend(msg: ByteArray, offset: Int, count: Int, timestamp: Long) {
-                parser.parse(msg, offset, count)
+                parser.parse(msg, offset, count, timestamp)
             }
         }
         for (p in 0 until device.info.outputPortCount) {

@@ -1,9 +1,6 @@
 package com.rm.acidulous.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -13,7 +10,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.material3.Surface
@@ -25,9 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +62,7 @@ fun SettingsDialog(trackNames: List<String>, onDismiss: () -> Unit) {
             { AudioTab() },
             { RecordTab() },
             { NewSongSection() },
-            { MidiSection(trackNames) },
+            { MidiRoutingSection(trackNames) },
         ),
         onDismiss = onDismiss,
         spacing = 16.dp,
@@ -201,8 +195,9 @@ private fun NewSongSection() {
     }
 }
 
+/** Where an arriving note lands. Shown here and on the MIDI window's in tab. */
 @Composable
-private fun MidiSection(trackNames: List<String>) {
+internal fun MidiRoutingSection(trackNames: List<String>) {
     Section(
         "routing",
         when (MidiHub.routing) {
@@ -259,27 +254,5 @@ private fun ScalePickerDialog(key: Int, scale: Int, onDismiss: () -> Unit, onPic
     )
 }
 
-@Composable
-private fun Section(title: String, note: String, content: @Composable () -> Unit) {
-    val c = Acid.colors
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(title, color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { content() }
-        Text(note, color = c.textDim, fontSize = 11.sp)
-    }
-}
-
-/** One of a set: filled when it is the one in force. */
-@Composable
-private fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onPick: () -> Unit) {
-    val c = Acid.colors
-    Box(
-        modifier.clip(RoundedCornerShape(4.dp))
-            .background(if (on) c.accent else c.control)
-            .clickable(onClick = onPick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(label, color = if (on) c.onAccent else c.textMid, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-    }
-}
+// Section and Choice live in ui/Dialogs.kt: they are the shared vocabulary
+// of every window here, not a settings idea.

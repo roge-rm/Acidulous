@@ -381,3 +381,98 @@ private fun TallestOf(selected: Int, pages: List<@Composable () -> Unit>, spacin
         layout(constraints.maxWidth, height) { shown.forEach { it.place(0, 0) } }
     }
 }
+
+// --- The vocabulary every window shares --------------------------------------------
+
+/**
+ * A titled group of chips: the name in teal monospace, the chips under it,
+ * and one line saying what the current choice actually *means*.
+ */
+@Composable
+internal fun Section(title: String, note: String = "", content: @Composable () -> Unit) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(title, color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) { content() }
+        if (note.isNotEmpty()) Text(note, color = c.textDim, fontSize = 11.sp)
+    }
+}
+
+/** The same, for a stack of full-width rows rather than a row of chips. */
+@Composable
+internal fun ListSection(
+    title: String,
+    note: String = "",
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(title, color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+        content()
+        if (note.isNotEmpty()) Text(note, color = c.textDim, fontSize = 11.sp)
+    }
+}
+
+/** One of a set: filled when it is the one in force. */
+@Composable
+internal fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onPick: () -> Unit) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    Box(
+        modifier.clip(RoundedCornerShape(4.dp))
+            .background(if (on) c.accent else c.control)
+            .clickable(onClick = onPick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, color = if (on) c.onAccent else c.textMid, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+    }
+}
+
+/**
+ * A row in a list: a mark, a name with an optional line under it, and a word
+ * on the right saying what tapping it would do. `on` fills it, the way a
+ * chosen machine is filled in the picker.
+ */
+@Composable
+internal fun DialogRow(
+    mark: String,
+    name: String,
+    under: String = "",
+    trailing: String = "",
+    on: Boolean = false,
+    monoUnder: Boolean = false,
+    onClick: () -> Unit,
+) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp))
+            .background(if (on) c.accentDim else c.control)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(mark, color = c.accent, fontSize = 13.sp, modifier = Modifier.padding(end = 8.dp))
+        Column(Modifier.weight(1f)) {
+            Text(name, color = if (on) c.accent else c.text, fontSize = 14.sp, maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            if (under.isNotEmpty()) {
+                Text(under, color = c.textDim, fontSize = 11.sp, maxLines = 1,
+                    fontFamily = if (monoUnder) FontFamily.Monospace else FontFamily.Default,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            }
+        }
+        if (trailing.isNotEmpty()) {
+            Text(trailing, color = if (on) c.teal else c.textDim, fontSize = 10.sp)
+        }
+    }
+}
+
+/** A line of numbers: the readouts that say whether something is working. */
+@Composable
+internal fun Readout(text: String, good: Boolean = false) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    Text(text, color = if (good) c.teal else c.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+}

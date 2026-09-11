@@ -1,4 +1,5 @@
 #pragma once
+#include "ClockFollower.h"
 #include "Launcher.h"
 #include "Song.h"
 #include "TickClock.h"
@@ -118,6 +119,30 @@ class SceneScheduler {
 
     // On play. Call after the clock has been reset. kCurrentScene restarts
     // whichever scene we are on from its top.
+    /** 0xFB: pick up where the playhead is, without restarting anything. */
+    void resume() {
+        if (snap == nullptr || snap->scenes.empty()) {
+            return;
+        }
+        iterationOrigin = clock->position() - lastTickInIteration;
+        pointClipPlayers();
+    }
+
+    /** Put the playhead at a song-absolute tick, for an incoming locate. */
+    void locateTo(int64_t songTick) {
+        if (snap == nullptr || snap->scenes.empty()) {
+            return;
+        }
+        int32_t sc = 0, rp = 0;
+        int64_t tickIn = 0;
+        snap->locate(songTick, sc, rp, tickIn);
+        sceneIdx = sc;
+        repeatIdx = rp;
+        lastTickInIteration = tickIn;
+        iterationOrigin = clock->position() - tickIn;
+        pointClipPlayers();
+    }
+
     void start(int32_t requestedScene) {
         if (transport != nullptr && transport->launcherMode()) {
             // Nothing plays until a clip is tapped, so the clock simply runs
@@ -165,6 +190,9 @@ class SceneScheduler {
 
     // While stopped the song tempo from the UI applies directly.
     void applyIdleTempo() {
+        if (transport != nullptr && transport->externalSync()) {
+            return; // somebody else owns the tempo
+        }
         const float want = clock->songTempoRequested();
         if (!clock->isRamping() && want != clock->bpm()) {
             clock->setTempo(want);
@@ -302,7 +330,7 @@ class SceneScheduler {
     bool processLauncher(int64_t blockStart, int64_t blockEnd) {
         // No scene owns the tempo when clips come from four of them, so the
         // song tempo rules and scene overrides, ramps and fades sit this out.
-        if (!clock->isRamping()) {
+        if (!clock->isRamping() && !(transport != nullptr && transport->externalSync())) {
             const float want = clock->songTempoRequested();
             if (want != clock->bpm()) {
                 clock->setTempo(want);
@@ -398,6 +426,9 @@ class SceneScheduler {
         repeatIdx = 0;
         pointClipPlayers();
         const SceneInfo &sc = snap->scenes[idx];
+        if (transport != nullptr && transport->externalSync()) {
+            return; // the tempo, and the ramp into it, are not ours to set
+        }
         const float want = sc.bpmOverride > 0.0f ? sc.bpmOverride : clock->songTempoRequested();
         if (allowSmooth && sc.smooth && want != clock->bpm()) {
             clock->rampTempo(want, sc.ticksPerBar); // over the first bar of the new scene
@@ -408,6 +439,13 @@ class SceneScheduler {
 
     // A scene without a tempo of its own follows the UI's song tempo live.
     void followTempo() {
+        // Four places assert a tempo every block - here, applyIdleTempo,
+        // the launcher's own, and enterScene. Miss one while slaved and it
+        // stamps over the follower thirteen hundred times a second, which
+        // looks exactly like the follower failing.
+        if (transport != nullptr && transport->externalSync()) {
+            return;
+        }
         if (clock->isRamping()) {
             return;
         }

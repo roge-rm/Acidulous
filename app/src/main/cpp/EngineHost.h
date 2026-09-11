@@ -117,6 +117,9 @@ class EngineHost {
     void setClockOut(bool on);
     int drainMidiOut(int64_t *out, int maxEvents);
     bool audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate) const;
+    void setExternalSync(bool on);
+    void midiClockIn(int64_t frame, uint8_t status, uint8_t d1, uint8_t d2);
+    int64_t syncState() const;
 
     // Drain stamped live events into `out`, 5 longs per event:
     //   absTick, sceneId, tickInIteration, (rack << 24 | cmd << 16 | p1 << 8 | p2),

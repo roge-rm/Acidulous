@@ -172,6 +172,16 @@ object NativeEngine {
      */
     fun audioAnchor(out: LongArray) = nativeAudioAnchor(out)
 
+    // --- Clock in ------------------------------------------------------------
+    /** Follow an incoming clock rather than the song's own tempo. */
+    fun setExternalSync(on: Boolean) = nativeSetExternalSync(on)
+
+    /** A realtime byte, on the frame it was heard. */
+    fun midiClockIn(frame: Long, status: Int, d1: Int, d2: Int) = nativeMidiClockIn(frame, status, d1, d2)
+
+    /** Packed locked | bpm x100 | phase error in microseconds. */
+    fun syncState(): Long = nativeSyncState()
+
     /** Fills [out] (one per rack) with packed scene | pending | tick-in-cycle. */
     fun launchStates(out: LongArray) = nativeLaunchStates(out)
 
@@ -378,6 +388,9 @@ object NativeEngine {
     private external fun nativeSetClockOut(on: Boolean)
     private external fun nativeDrainMidiOut(out: LongArray): Int
     private external fun nativeAudioAnchor(out: LongArray)
+    private external fun nativeSetExternalSync(on: Boolean)
+    private external fun nativeMidiClockIn(frame: Long, status: Int, d1: Int, d2: Int)
+    private external fun nativeSyncState(): Long
     private external fun nativeLaunchStates(out: LongArray)
     private external fun nativeIsPlaying(): Boolean
     private external fun nativeSetLoopScene(on: Boolean)

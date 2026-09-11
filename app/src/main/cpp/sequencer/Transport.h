@@ -11,7 +11,7 @@ namespace acidulous::seq {
 
 class Transport {
   public:
-    enum class Request : uint8_t { None, Play, Stop };
+    enum class Request : uint8_t { None, Play, Stop, Continue };
     static constexpr int32_t kCurrentScene = -1;
 
     // --- UI thread ------------------------------------------------------------
@@ -22,6 +22,14 @@ class Transport {
         request.store(Request::Play, std::memory_order_release);
     }
     void requestStop() { request.store(Request::Stop, std::memory_order_release); }
+
+    /**
+     * Carry on from where the playhead is, rather than from the top of a
+     * scene. There was no such thing until a master asked for one: Play
+     * resets the clock and restarts the scene, which is not what 0xFB means.
+     */
+    void requestContinue() { request.store(Request::Continue, std::memory_order_release); }
+    bool takeContinued() { return continued.exchange(false, std::memory_order_relaxed); }
 
     /**
      * Let the current scene finish the repeats it owes and then stop. Armed
@@ -59,6 +67,14 @@ class Transport {
     // The same discipline as queueScene: the UI stores, the audio thread
     // exchanges at a boundary. Sixteen slots instead of one, because in clip
     // mode every rack has its own idea of what happens next.
+
+    /** Follow an incoming clock rather than the song's own tempo. */
+    void setExternalSync(bool on) { externalFlag.store(on, std::memory_order_relaxed); }
+    bool externalSync() const { return externalFlag.load(std::memory_order_relaxed); }
+
+    // What the follower is doing, for the readout: packed bpm and error.
+    void publishSync(int64_t packed) { syncForUi.store(packed, std::memory_order_relaxed); }
+    int64_t syncState() const { return syncForUi.load(std::memory_order_relaxed); }
 
     void setClockOut(bool on) { clockOutFlag.store(on, std::memory_order_relaxed); }
     bool clockOut() const { return clockOutFlag.load(std::memory_order_relaxed); }
@@ -129,7 +145,10 @@ class Transport {
         // transport is how the first tapped clip gets to sound at all: the UI
         // queues the clip and then asks for play, and wiping the queue in
         // between would cost that clip a whole cycle.
-        const bool wanted = (r == Request::Play);
+        if (r == Request::Continue) {
+            continued.store(true, std::memory_order_relaxed);
+        }
+        const bool wanted = (r == Request::Play || r == Request::Continue);
         if (wanted == playing) {
             return false;
         }
@@ -176,6 +195,9 @@ class Transport {
     std::atomic<bool> recordArmed{false};
     std::atomic<bool> launcherFlag{false};
     std::atomic<bool> clockOutFlag{false};
+    std::atomic<bool> externalFlag{false};
+    std::atomic<bool> continued{false};
+    std::atomic<int64_t> syncForUi{0};
     std::atomic<int32_t> launchQ{0};
     std::atomic<bool> stopAllFlag{false};
     std::atomic<int64_t> queuedClip[kRackCount]{};

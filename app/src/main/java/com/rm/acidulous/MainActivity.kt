@@ -429,6 +429,7 @@ private fun App(modifier: Modifier = Modifier) {
             fade = NativeEngine.masterFade
             stopAtEnd = NativeEngine.stopAtEnd
             queuedScene = NativeEngine.queuedScene
+            com.rm.acidulous.midi.MidiHub.readSync()
             if (com.rm.acidulous.ui.UiPrefs.clipMode) {
                 NativeEngine.launchStates(launchPacked)
                 launchStates = launchPacked.map { LaunchState.unpack(it) }

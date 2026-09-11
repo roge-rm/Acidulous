@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include <sequencer/ClockFollower.h>
 #include <android/log.h>
 #include <sequencer/Song.h>
 
@@ -61,9 +62,16 @@ void Engine::renderBlock(const float *in, float *out) {
         emitTransport(playing);
     }
     if (startPending) {
-        scheduler.start(transport.requestedStartScene());
+        if (transport.takeContinued()) {
+            scheduler.resume();
+        } else {
+            scheduler.start(transport.requestedStartScene());
+        }
         startPending = false;
     }
+
+    drainClockIn();
+    followExternal();
 
     if (racks[0].midiOutBound() == false) {
         for (int32_t r = 0; r < kRackCount; ++r) racks[r].bindMidiOut(&midiOut, r);
@@ -241,6 +249,87 @@ void Engine::emitTransport(bool nowPlaying) {
         midiOut.push({framesRendered, 0xfb, 0, 0, 0xff});
     } else {
         midiOut.push({framesRendered, 0xfa, 0, 0, 0xff});
+    }
+}
+
+/**
+ * What a master is telling us. The frame each byte carries was worked out
+ * on the far side from the audio stream's own anchor, so it is in the same
+ * time base the clock counts in.
+ */
+void Engine::drainClockIn() {
+    MidiInEvent e;
+    while (clockIn.pop(e)) {
+        switch (e.status) {
+        case 0xf8:
+            follower.pulse(e.frame);
+            break;
+        case 0xfa: // start: from the top
+            follower.relocate(0);
+            if (transport.externalSync()) {
+                scheduler.locateTo(0);
+                transport.requestPlay(0);
+            }
+            break;
+        case 0xfb: // continue: from wherever the locate left us
+            if (transport.externalSync()) {
+                transport.requestContinue();
+            }
+            break;
+        case 0xfc:
+            if (transport.externalSync()) {
+                transport.requestStop();
+            }
+            break;
+        case 0xf2: { // song position, in sixteenths
+            const int64_t beats = static_cast<int64_t>(e.data1) | (static_cast<int64_t>(e.data2) << 7);
+            const int64_t songTick = beats * (kPPQN / 4);
+            follower.relocate(songTick);
+            if (transport.externalSync()) {
+                scheduler.locateTo(songTick);
+            }
+            break;
+        }
+        default:
+            break;
+        }
+    }
+}
+
+/**
+ * Run the clock at the follower's rate, and lean on it gently until the
+ * engine's own position agrees with the master's.
+ *
+ * The rate alone would keep time but drift in phase, because nothing would
+ * ever correct where the two started. The pull is deliberately slow - a few
+ * per cent of the error a block - so it shows up as the engine easing into
+ * line rather than as a tempo that wavers.
+ */
+void Engine::followExternal() {
+    if (!transport.externalSync() || !follower.running()) {
+        return;
+    }
+    const double perTick = follower.framesPerTick();
+    if (perTick < 1.0) {
+        return;
+    }
+    double want = perTick;
+    if (playing && follower.locked()) {
+        const double theirs = follower.tickAt(framesRendered);
+        const double ours = static_cast<double>(clock.position());
+        const double errTicks = ours - theirs;
+        const double pull = errTicks > 8.0 ? 8.0 : (errTicks < -8.0 ? -8.0 : errTicks);
+        want = perTick * (1.0 + pull * 0.002);
+    }
+    clock.setExternalFramesPerTick(want);
+    if (follower.stale(framesRendered)) {
+        transport.publishSync(0);
+    } else {
+        const int32_t bpmMilli = static_cast<int32_t>(follower.bpm() * 100.0f);
+        const int32_t errMicro = static_cast<int32_t>(follower.phaseErrorMs() * 1000.0f);
+        transport.publishSync((static_cast<int64_t>(follower.locked() ? 1 : 0) << 56) |
+                              (static_cast<int64_t>(bpmMilli & 0xffffff) << 32) |
+                              (static_cast<int64_t>(errMicro) & 0xffffffffLL));
     }
 }
 

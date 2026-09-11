@@ -452,7 +452,7 @@ fun MainScreen(
             onDelete = onDelete,
             onDismiss = { dialog = null },
         )
-        Dialog.Midi -> MidiDialog(onDismiss = { dialog = null })
+        Dialog.Midi -> MidiDialog(song.tracks.map { it.name }, onDismiss = { dialog = null })
         Dialog.Sampler -> SamplerDialog(onDismiss = { dialog = null })
         Dialog.Settings -> SettingsDialog(song.tracks.map { it.name }, onDismiss = { dialog = null })
         Dialog.Quantise -> QuantiseDialog(

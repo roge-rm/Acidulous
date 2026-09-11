@@ -126,6 +126,7 @@ object UiPrefs {
         MidiHub.fixedRack = p.getInt(KEY_MIDI_RACK, 0)
         MidiHub.outOffsetMs = p.getInt(KEY_MIDI_AHEAD, 0)
         MidiHub.chooseClockOut(p.getBoolean(KEY_MIDI_CLOCK_OUT, false))
+        MidiHub.chooseExternalSync(p.getBoolean(KEY_MIDI_FOLLOW, false))
     }
 
     /**
@@ -140,6 +141,7 @@ object UiPrefs {
         NativeEngine.setQuality(if (fullQuality) 1 else 0)
         NativeEngine.setRecordBits(recordBits)
         NativeEngine.setLauncher(clipMode)
+        NativeEngine.setExternalSync(MidiHub.clockIn)
         // The quantise is in bars here and in ticks there; the song's own
         // signature converts it, and MainScreen re-sends it when that changes.
         NativeEngine.setLaunchQuantise(launchQuantise * 4 * 240)
@@ -215,6 +217,11 @@ object UiPrefs {
             ?.putInt(KEY_SCALE_INDEX, index)?.apply()
     }
 
+    fun chooseExternalSync(on: Boolean) {
+        MidiHub.chooseExternalSync(on)
+        store?.edit()?.putBoolean(KEY_MIDI_FOLLOW, on)?.apply()
+    }
+
     fun chooseClockOut(on: Boolean) {
         MidiHub.chooseClockOut(on)
         store?.edit()?.putBoolean(KEY_MIDI_CLOCK_OUT, on)?.apply()
@@ -251,6 +258,7 @@ object UiPrefs {
     private const val KEY_MIDI_ROUTE = "midi_routing"
     private const val KEY_MIDI_RACK = "midi_rack"
     private const val KEY_MIDI_CLOCK_OUT = "midi_clock_out"
+    private const val KEY_MIDI_FOLLOW = "midi_follow"
     private const val KEY_MIDI_AHEAD = "midi_ahead_ms"
 
     // --- What a new song and a new track start as ------------------------
