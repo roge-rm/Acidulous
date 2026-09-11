@@ -22,7 +22,8 @@ object MachineUi {
      * pressure gets no strip rather than a dead one.
      */
     fun usesPerformance(type: String): Boolean =
-        type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual"
+        type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
+            type == "Cipher"
 
     val hexbeatVoices: List<DrumVoice> = listOf(
         DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Rim", "RS"), DrumVoice(38, "Snare", "SD"), DrumVoice(39, "Clap", "CP"),

@@ -42,6 +42,7 @@ object PatchStore {
         "Mosaic" -> MosaicPresets.all
         "Hexbeat" -> HexbeatPresets.all
         "Manual" -> ManualPresets.all
+        "Cipher" -> CipherPresets.all
         else -> emptyList()
     }
 
@@ -365,5 +366,39 @@ object ManualPresets {
             "m2_src" to st(11, 15), "m2_dst" to st(10, 25), "m2_amt" to 0.3f,
             "spray" to 0.45f, "spraywide" to 0.8f, "sprayrate" to 0.3f,
             "rotary" to 1f, "rotspeed" to st(1, 3), "drive" to 0.25f)).toMap()),
+    )
+}
+
+/**
+ * Cipher's factory patches. The first is a vocoder anybody would recognise;
+ * the rest are the reasons this one is not that.
+ */
+object CipherPresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Cipher", name, kv.toMap())
+    private fun st(index: Int, steps: Int) = index.toFloat() / (steps - 1).toFloat()
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        p("Classic", "bands" to st(12, 37), "q" to 0.55f, "wave a" to st(0, 5), "wave b" to st(2, 5),
+            "mix" to 0.4f, "detune" to 0.25f, "sub" to 0.25f, "sibilance" to 0.5f, "siblevel" to 0.5f,
+            "drive" to 0.15f),
+        p("Choir", "bands" to st(24, 37), "attack" to 0.35f, "release" to 0.5f, "wave a" to st(2, 5),
+            "wave b" to st(2, 5), "detune" to 0.5f, "mix" to 0.5f, "smear" to 0.62f),
+        // Speech through a reversed bank: still speech-shaped, wholly
+        // unintelligible, which is the point of it.
+        p("Backwards", "bands" to st(20, 37), "remap" to st(1, 6), "remapamt" to 1f, "sibilance" to 0.2f,
+            "wave a" to st(0, 5), "wave b" to st(1, 5), "mix" to 0.5f),
+        p("Shuffled", "bands" to st(16, 37), "remap" to st(4, 6), "seed" to st(7, 32), "remapamt" to 0.8f,
+            "smear" to 0.7f, "release" to 0.4f),
+        p("Held Vowel", "freeze" to 1f, "frzmorph" to 1f, "frzdecay" to 0.9f, "bands" to st(24, 37),
+            "wave a" to st(2, 5), "mix" to 0.3f, "detune" to 0.4f),
+        p("Talkbox", "track" to 1f, "trackamt" to 1f, "trackglide" to 0.25f, "bands" to st(16, 37),
+            "wave a" to st(1, 5), "pw" to 0.3f, "sub" to 0.35f, "sibilance" to 0.45f),
+        // The input is the carrier and the synth does the talking, so a
+        // chord chops whatever is plugged in.
+        p("Inverted", "role" to 1f, "bands" to st(20, 37), "attack" to 0.1f, "release" to 0.12f,
+            "wave a" to st(1, 5), "mix" to 0f, "wet" to 1f),
+        p("Runaway", "feedback" to 0.62f, "fbtone" to 0.35f, "bands" to st(12, 37), "smear" to -0.5f,
+            "gate" to 0.15f, "drive" to 0.35f),
     )
 }

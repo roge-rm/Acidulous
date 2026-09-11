@@ -104,6 +104,7 @@ fun MachinePanel(
             "Trinity" -> TrinityPanel(binding)
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
+            "Cipher" -> CipherPanel(binding)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample, onAssignSample)
             else -> GenericPanel(binding)
@@ -911,6 +912,188 @@ private fun ManualPanel(b: ParamBinding) {
                     Group("touch") {
                         PanelKnob(b, "vel", "velocity")
                         PanelStepKnob(b, "express", listOf("off", "mod", "prs"), "swell", PanelAmber)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// --- Cipher -----------------------------------------------------------------
+//
+// The bank first, because that is what a vocoder is, then the map, which is
+// what this one is. Everything between measuring the modulator and imposing
+// it on the carrier lives under "map", and that is where the machine stops
+// being an ordinary vocoder.
+
+private val CIPHER_REMAP = listOf("direct", "reverse", "mirror", "odd/even", "shuffle", "fold")
+private val CIPHER_ROLE = listOf("in speaks", "in sings")
+private val CIPHER_WAVES = listOf("saw", "pulse", "super", "noise", "ring")
+private val CIPHER_SOURCES = listOf(
+    "off", "on", "mod", "prs", "vel", "key", "eg1", "eg2", "lfo1", "lfo2", "loud", "bright", "pitch",
+)
+private val CIPHER_DESTS = listOf(
+    "off", "shift", "stretch", "remap", "freeze", "smear", "q", "pitch", "mix", "noise", "feedback",
+    "drive", "volume", "pan", "low", "high", "gate",
+)
+private val CIPHER_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
+
+/**
+ * A vocoder with nothing coming in is a synth with the volume down, so the
+ * panel owns the microphone rather than making you find it in a menu.
+ */
+@Composable
+private fun CipherInput() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var running by remember { mutableStateOf(NativeEngine.inputRunning) }
+    var level by remember { mutableStateOf(0f) }
+    val ask = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { ok -> if (ok) running = NativeEngine.startInput() }
+    LaunchedEffect(Unit) {
+        while (true) {
+            running = NativeEngine.inputRunning
+            if (running) level = NativeEngine.inputPeak()
+            delay(100)
+        }
+    }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("input", color = Color(0xFF7FD1B9), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        TextButton(onClick = {
+            if (running) {
+                NativeEngine.stopInput()
+                running = false
+            } else if (context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                running = NativeEngine.startInput()
+            } else {
+                ask.launch(android.Manifest.permission.RECORD_AUDIO)
+            }
+        }) { Text(if (running) "listening" else "open", color = if (running) PanelTeal else PanelAmber, fontSize = 11.sp) }
+        Meter(level, Modifier.width(70.dp).height(8.dp), vertical = false)
+    }
+}
+
+@Composable
+private fun CipherPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    Column {
+        SectionChips(listOf("bank", "map", "carrier", "voice", "mod", "out"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("listen") { CipherInput() }
+                    Group("bank") {
+                        PanelKnob(b, "bands", "bands", PanelAmber)
+                        PanelKnob(b, "low", "low", PanelAmber)
+                        PanelKnob(b, "high", "high", PanelAmber)
+                        PanelKnob(b, "q", "width")
+                        PanelSwitch(b, "slope", listOf("2 pole", "4 pole"), "slope")
+                    }
+                    Group("follow") {
+                        PanelKnob(b, "attack", "attack", PanelAmber)
+                        PanelKnob(b, "release", "release", PanelAmber)
+                        PanelKnob(b, "smear", "smear", PanelPink)
+                    }
+                    Group("gate") {
+                        PanelKnob(b, "gate", "threshold")
+                        PanelKnob(b, "gatedepth", "depth")
+                    }
+                    Group("consonants") {
+                        PanelKnob(b, "sibilance", "detect", PanelAmber)
+                        PanelKnob(b, "sibhz", "above")
+                        PanelKnob(b, "siblevel", "level")
+                    }
+                }
+                1 -> {
+                    Group("remap") {
+                        PanelStepKnob(b, "remap", CIPHER_REMAP, "order", PanelAmber)
+                        PanelKnob(b, "remapamt", "amount", PanelAmber)
+                        PanelKnob(b, "seed", "seed")
+                    }
+                    Group("formant") {
+                        PanelKnob(b, "shift", "shift", PanelAmber)
+                        PanelKnob(b, "stretch", "stretch", PanelAmber)
+                    }
+                    Group("freeze") {
+                        PanelSwitch(b, "freeze", listOf("live", "hold"), "hold")
+                        PanelKnob(b, "frzmorph", "morph", PanelAmber)
+                        PanelKnob(b, "frzdecay", "decay")
+                    }
+                    Group("feedback") {
+                        PanelKnob(b, "feedback", "amount", PanelPink)
+                        PanelKnob(b, "fbtone", "tone")
+                    }
+                }
+                2 -> {
+                    Group("carrier") {
+                        PanelStepKnob(b, "wave a", CIPHER_WAVES, "wave a", PanelAmber)
+                        PanelStepKnob(b, "wave b", CIPHER_WAVES, "wave b", PanelAmber)
+                        PanelKnob(b, "mix", "mix", PanelAmber)
+                        PanelKnob(b, "detune", "detune")
+                        PanelKnob(b, "pw", "width")
+                        PanelKnob(b, "sub", "sub")
+                        PanelKnob(b, "noise", "noise")
+                        PanelKnob(b, "cardrive", "drive", PanelPink)
+                    }
+                    Group("envelope") {
+                        PanelKnob(b, "ampatk", "attack"); PanelKnob(b, "ampdec", "decay")
+                        PanelKnob(b, "ampsus", "sustain"); PanelKnob(b, "amprel", "release")
+                    }
+                }
+                3 -> {
+                    Group("roles") {
+                        PanelStepKnob(b, "role", CIPHER_ROLE, "input is", PanelAmber)
+                        PanelKnob(b, "dry", "dry")
+                        PanelKnob(b, "wet", "wet", PanelAmber)
+                    }
+                    Group("tracking") {
+                        PanelSwitch(b, "track", listOf("off", "on"), "follow")
+                        PanelKnob(b, "trackamt", "amount", PanelAmber)
+                        PanelKnob(b, "trackglide", "glide")
+                    }
+                    Group("keys") {
+                        PanelKnob(b, "glide", "glide")
+                        PanelKnob(b, "bend", "bend")
+                        PanelKnob(b, "octave", "octave")
+                        PanelKnob(b, "transpose", "transpose")
+                        PanelKnob(b, "fine", "fine")
+                        PanelKnob(b, "vel", "velocity")
+                    }
+                }
+                4 -> {
+                    Group("lfo 1") {
+                        PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                        PanelKnob(b, "lfo1rate", "rate", PanelAmber)
+                        PanelStepKnob(b, "lfo1sync", CIPHER_SYNC, "sync")
+                        PanelKnob(b, "lfo1depth", "depth")
+                    }
+                    Group("lfo 2") {
+                        PanelStepKnob(b, "lfo2wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                        PanelKnob(b, "lfo2rate", "rate", PanelAmber)
+                        PanelStepKnob(b, "lfo2sync", CIPHER_SYNC, "sync")
+                        PanelKnob(b, "lfo2depth", "depth")
+                    }
+                    Group("eg 1") {
+                        PanelKnob(b, "eg1atk", "attack"); PanelKnob(b, "eg1dec", "decay")
+                        PanelKnob(b, "eg1sus", "sustain"); PanelKnob(b, "eg1rel", "release")
+                    }
+                    Group("eg 2") {
+                        PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
+                        PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
+                    }
+                    for (m in 1..8) Group("mod $m") {
+                        PanelStepKnob(b, "m${m}_src", CIPHER_SOURCES, "from", PanelAmber)
+                        PanelStepKnob(b, "m${m}_dst", CIPHER_DESTS, "to", PanelAmber)
+                        PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
+                    }
+                }
+                else -> {
+                    Group("out") {
+                        PanelKnob(b, "drive", "drive", PanelPink)
+                        PanelKnob(b, "volume", "volume")
+                        PanelKnob(b, "pan", "pan")
                     }
                 }
             }
