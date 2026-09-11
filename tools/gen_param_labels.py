@@ -18,6 +18,9 @@ OUT = pathlib.Path("app/src/main/java/com/rm/acidulous/model/ParamLabels.kt")
 PANELS = {
     "SubvertPanel": "Subvert", "HexbeatPanel": "Hexbeat", "TrinityPanel": "Trinity",
     "RatioPanel": "Ratio", "MosaicPanel": "Mosaic", "ForagePanel": "Forage",
+    "ManualPanel": "Manual", "CipherPanel": "Cipher", "FilamentPanel": "Filament",
+    "NexusPanel": "Nexus", "CumulusPanel": "Cumulus", "FormulatePanel": "Formulate",
+    "PollenPanel": "Pollen",
 }
 # Forage names every control for the selected pad, so one panel describes
 # thirteen pads' worth of parameters.
@@ -103,14 +106,17 @@ def harvest():
                         # "e${e}_attack" inside for (e in 1..2): one per pass.
                         var, lo, hi = loop
                         for v in range(lo, hi + 1):
-                            put(labels, fn, expand(stem, var, v), expand(title, var, v), label or stem)
+                            # The label is a template too: "macro $i" has to
+                            # become "macro 3", or the list shows the source.
+                            put(labels, fn, expand(stem, var, v), expand(title, var, v),
+                                expand(label or stem, var, v))
                     else:
                         put(labels, fn, stem, title, label or stem)
                 elif pref and prefix_tpl and loop:
                     var, lo, hi = loop
                     for v in range(lo, hi + 1):
                         key = expand(prefix_tpl, var, v) + pref.group(1)
-                        put(labels, fn, key, expand(title, var, v), label or pref.group(1))
+                        put(labels, fn, key, expand(title, var, v), expand(label or pref.group(1), var, v))
                 elif pad and fn == "Forage":
                     for v in FORAGE_PADS:
                         put(labels, fn, "p%02d_%s" % (v, pad.group(1)),
@@ -142,8 +148,11 @@ def main():
     # A key that still carries a template never matches a real parameter, so
     # it is a parsing failure, not a label.
     bad = [k for k in labels if "$" in k or "%" in k]
+    # A label that still carries a template is as wrong as a key that does,
+    # and it is the half a player actually reads.
+    bad += ["%s -> %s" % (k, v[0]) for k, v in labels.items() if "$" in v[0] or "%" in v[0]]
     if bad:
-        print("unexpanded keys: %s" % bad[:6], file=sys.stderr)
+        print("unexpanded: %s" % bad[:6], file=sys.stderr)
         return 1
     if len(labels) < 300:
         print("only %d labels harvested - the panel format probably changed" % len(labels), file=sys.stderr)

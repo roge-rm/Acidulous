@@ -52,6 +52,7 @@ object PatchStore {
         "Mosaic" -> MosaicPresets.all
         "Hexbeat" -> HexbeatPresets.all
         "Manual" -> ManualPresets.all
+        "Pollen" -> PollenPresets.all
         "Cumulus" -> CumulusPresets.all
         "Formulate" -> FormulatePresets.all
         "Cipher" -> CipherPresets.all
@@ -674,5 +675,45 @@ object FormulatePresets {
             "ampattack" to 0.0771f, "ampdecay" to 0.6242f, "ampsustain" to 0.7000f, "amprelease" to 0.4060f,
             "volume" to 0.4667f,
             settings = mapOf("formula" to "t >> 9 & 1 ? 255 : 0", "arp" to "0 0 12 7", "duty" to "", "vol" to "")),
+    )
+}
+
+/**
+ * Pollen's factory clouds: a plain wash, a self-seeding one, a chord of
+ * dust, a slicer that only lands on transients, the microphone held, and
+ * the one that eats its own output. The last two read the live ring, which
+ * is why they have no sample.
+ */
+object PollenPresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Pollen", name, kv.toMap())
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        // The plain cloud: a slow wash over whatever is loaded.
+        p("Drift", "source" to 0.0000f, "size" to 0.7952f, "density" to 0.5981f, "jitter" to 0.3500f,
+            "spray" to 0.2500f, "scan" to 0.5050f, "panspread" to 0.7000f, "ampattack" to 0.7118f,
+            "amprelease" to 0.7985f, "window" to 0.0000f, "volume" to 0.5333f),
+        // One seed and three generations: the cloud makes its own.
+        p("Pollinate", "source" to 0.0000f, "size" to 0.7241f, "density" to 0.4628f, "bloom" to 1.0000f,
+            "generations" to 0.4000f, "drift" to 0.3500f, "mutate" to 0.3500f, "spray" to 0.1000f,
+            "panspread" to 0.9000f, "ampattack" to 0.6347f, "amprelease" to 0.8219f, "window" to 0.0000f,
+            "volume" to 0.5333f),
+        // Every grain lands on a fifth or an octave, so a spray is a chord.
+        p("Chord Dust", "source" to 0.0000f, "size" to 0.6588f, "density" to 0.7510f, "spread" to 0.5000f,
+            "scatter" to 0.5000f, "spray" to 0.4000f, "panspread" to 0.8000f, "ampattack" to 0.4353f,
+            "amprelease" to 0.7328f, "volume" to 0.4667f),
+        // Grains land on the transients and nowhere else.
+        p("Slicer", "source" to 0.0000f, "size" to 0.7564f, "density" to 0.5562f, "snap" to 1.0000f,
+            "spray" to 0.8000f, "jitter" to 0.2000f, "window" to 0.6667f, "ampattack" to 0.0771f,
+            "ampdecay" to 0.7181f, "amprelease" to 0.5260f, "keytrack" to 0.0000f, "volume" to 0.6000f),
+        // The microphone, held: freeze it and the last few seconds keep going.
+        p("Live Hold", "source" to 1.0000f, "buffer" to 0.8000f, "size" to 0.8356f, "density" to 0.6316f,
+            "spray" to 0.1500f, "position" to 0.1000f, "scan" to 0.5000f, "keytrack" to 0.0000f,
+            "dry" to 0.3000f, "ampattack" to 0.5895f, "amprelease" to 0.7042f, "volume" to 0.5333f),
+        // Live, with the output going back in: the texture feeds on what it made.
+        p("Eat Itself", "source" to 1.0000f, "buffer" to 0.6000f, "feedback" to 0.7368f, "size" to 0.8679f,
+            "density" to 0.6834f, "spray" to 0.5000f, "scan" to 0.6250f, "keytrack" to 0.0000f,
+            "bloom" to 0.5000f, "generations" to 0.2000f, "mutate" to 0.5000f, "bits" to 0.6000f,
+            "wobble" to 0.2400f, "ampattack" to 0.6915f, "amprelease" to 0.8219f, "volume" to 0.4667f),
     )
 }

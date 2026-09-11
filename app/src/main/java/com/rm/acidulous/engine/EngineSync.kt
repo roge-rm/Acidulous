@@ -37,6 +37,7 @@ object EngineSync {
     private val loadedFreezes = arrayOfNulls<String>(RACKS) // which frozen clips a rack has, as one identity string
     private val builtClouds = arrayOfNulls<String>(RACKS)   // the spectrum a rack's Cumulus tables were built from
     private val loadedFormulas = arrayOfNulls<String>(RACKS) // the text a rack's Formulate was compiled from
+    private val loadedTakes = arrayOfNulls<String>(RACKS)    // the file a rack's Pollen is granulating
 
     /**
      * What the last compile said, by rack: empty when it read, the reason
@@ -94,6 +95,7 @@ object EngineSync {
                     mounted[rack] = track.machine.type
                     for (pad in 0 until 13) loadedSamples.remove("$rack:$pad") // a new machine starts empty
                     loadedMaps[rack] = null
+                    loadedTakes[rack] = null
                 } else {
                     Log.w(TAG, "could not mount ${track.machine.type} on rack $rack")
                 }
@@ -269,6 +271,34 @@ object EngineSync {
         }
     }
 
+    /**
+     * Pollen's take: one WAV, decoded with its transients found, mounted as
+     * one object. The live ring is the machine's own and needs nothing from
+     * here.
+     */
+    fun ensurePollenTakes(song: Song) {
+        val root = sampleRoot ?: return
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            val wanted = when {
+                track?.machine?.type != "Pollen" -> null
+                mounted[rack] != "Pollen" -> null // wait for the machine
+                else -> track.machine.settings["sample"].orEmpty()
+            }
+            if (loadedTakes[rack] == wanted) continue
+            loadedTakes[rack] = wanted
+            if (wanted == null) continue
+            mapLoader.execute {
+                val path = if (wanted.isEmpty()) "" else java.io.File(root, wanted).absolutePath
+                val error = NativeEngine.loadPollenTake(rack, path)
+                if (error.isNotEmpty()) {
+                    Log.w(TAG, "pollen rack $rack: $error")
+                    loadedTakes[rack] = null // let a retry happen
+                }
+            }
+        }
+    }
+
     fun sync(song: Song): Boolean {
         ensureMachines(song)
         ensureSamples(song)
@@ -278,6 +308,7 @@ object EngineSync {
         ensureNexusPatches(song)
         ensureClouds(song)
         ensureFormulas(song)
+        ensurePollenTakes(song)
         ensureFrozen(song)
         return push(song)
     }

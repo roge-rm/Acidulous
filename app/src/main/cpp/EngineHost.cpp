@@ -19,6 +19,7 @@
 #include <engine/machine/forage/Forage.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/formulate/Formulate.h>
+#include <engine/machine/pollen/Pollen.h>
 #include <engine/machine/mosaic/Mosaic.h>
 #include <map>
 #include <sstream>
@@ -715,6 +716,44 @@ std::string EngineHost::buildCloud(int rack, const float *spectrum01, int32_t co
     mount.deleter = deleteAs<machine::cumulus::CloudSet>;
     if (!mountObjectWithRetry(mount)) return "mount queue full";
     set.release();
+    return "";
+}
+
+std::string EngineHost::loadPollenTake(int rack, const std::string &path) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (awaitMachine(sEngine, rack, "Pollen") == nullptr) return "that rack is not a Pollen";
+    if (path.empty()) {
+        // An empty path clears the take: the machine falls back to whatever
+        // is in its live ring.
+        Mount clear;
+        clear.kind = Mount::Kind::Object;
+        clear.rack = rack;
+        clear.slot = 0;
+        clear.object = nullptr;
+        clear.deleter = deleteAs<machine::pollen::Source>;
+        return mountObjectWithRetry(clear) ? "" : "mount queue full";
+    }
+    std::string error;
+    auto data = WavReader::read(path, kSampleRate, error);
+    if (!data) return error.empty() ? "that file could not be read" : error;
+    auto take = std::make_unique<machine::pollen::Source>();
+    take->name = data->name;
+    take->frames = data->frames;
+    take->left = std::move(data->left);
+    take->right = data->stereo ? std::move(data->right) : take->left;
+    // The transients are found here, on a worker, once - the live ring finds
+    // its own as it records, with the same detector.
+    take->detect(static_cast<float>(kSampleRate));
+    LOGI("pollen rack %d: '%s', %d frames (%.2f s), %zu onsets", rack, take->name.c_str(), take->frames,
+         static_cast<double>(take->frames) / kSampleRate, take->onsets.size());
+    Mount mount;
+    mount.kind = Mount::Kind::Object;
+    mount.rack = rack;
+    mount.slot = 0;
+    mount.object = take.get();
+    mount.deleter = deleteAs<machine::pollen::Source>;
+    if (!mountObjectWithRetry(mount)) return "mount queue full";
+    take.release();
     return "";
 }
 

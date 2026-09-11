@@ -190,9 +190,10 @@ private fun App(modifier: Modifier = Modifier) {
 
     // Importing a sample: the system picker, a copy into user/samples/, and the
     // pad's setting pointing at it. The engine loads it on the next sync.
-    var importTarget by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    // (track, settings key): Forage keys a sample per pad, Pollen has one.
+    var importTarget by remember { mutableStateOf<Pair<Int, String>?>(null) }
     val samplePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        val (track, pad) = importTarget ?: return@rememberLauncherForActivityResult
+        val (track, key) = importTarget ?: return@rememberLauncherForActivityResult
         importTarget = null
         if (uri == null) return@rememberLauncherForActivityResult
         runCatching {
@@ -205,7 +206,7 @@ private fun App(modifier: Modifier = Modifier) {
             val dir = File(EngineAssets.userRoot(context), "samples").apply { mkdirs() }
             val dest = File(dir, safe)
             context.contentResolver.openInputStream(uri)!!.use { input -> dest.outputStream().use { input.copyTo(it) } }
-            editor.edit(track) { t -> t.withSetting("p%02d_sample".format(pad), "samples/$safe") }
+            editor.edit(track) { t -> t.withSetting(key, "samples/$safe") }
         }.onFailure { Log.w(TAG, "sample import failed", it) }
     }
     val scope = rememberCoroutineScope()
@@ -485,7 +486,14 @@ private fun App(modifier: Modifier = Modifier) {
             factoryPatchNames = { PatchStore.factoryNames(song.tracks[s.track].machine.type) },
             userPatchNames = { PatchStore.userList(context, song.tracks[s.track].machine.type) },
             onDeletePatch = { name -> PatchStore.delete(context, song.tracks[s.track].machine.type, name) },
-            onImportSample = { track, pad -> importTarget = track to pad; samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*")) },
+            onImportSample = { track, pad ->
+                importTarget = track to "p%02d_sample".format(pad)
+                samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*"))
+            },
+            onImportOneSample = { track ->
+                importTarget = track to "sample"
+                samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*"))
+            },
             onImportSoundFont = { track -> mapTarget = track; soundFontPicker.launch(arrayOf("*/*")) },
             onPickPreset = { track ->
                 val rel = song.tracks[track].machine.settings["sf2"]

@@ -14,6 +14,12 @@ object MachineUi {
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
     /**
+     * Machines that hold one sample of their own, under the plain key
+     * "sample" - as against Forage, whose thirteen pads each have their own.
+     */
+    fun acceptsOneSample(type: String): Boolean = type == "Pollen"
+
+    /**
      * The machines, in groups, with a line each saying what they are.
      *
      * The picker was a list of names, and a name is no help when there are
@@ -26,7 +32,7 @@ object MachineUi {
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup("drums", listOf("Hexbeat", "Forage")),
-        MachineGroup("realish", listOf("Manual", "Filament", "Mosaic")),
+        MachineGroup("realish", listOf("Manual", "Filament", "Mosaic", "Pollen")),
         MachineGroup("beyond", listOf("Cipher", "Nexus")),
     )
 
@@ -42,6 +48,7 @@ object MachineUi {
         "Manual" -> "tonewheel organ, two manuals and a spinning cabinet"
         "Filament" -> "strings by modelling - pluck, bow or breathe at them"
         "Mosaic" -> "multisamples: zones, SoundFonts, grain clouds"
+        "Pollen" -> "granular clouds that seed their own, from a file or live"
         "Cipher" -> "a vocoder whose band map is the instrument"
         "Nexus" -> "a modular whose blocks are the other machines"
         else -> ""
@@ -57,7 +64,7 @@ object MachineUi {
      */
     fun usesPerformance(type: String): Boolean =
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
-            type == "Cipher" || type == "Filament" || type == "Cumulus"
+            type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen"
 
     val hexbeatVoices: List<DrumVoice> = listOf(
         DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Rim", "RS"), DrumVoice(38, "Snare", "SD"), DrumVoice(39, "Clap", "CP"),

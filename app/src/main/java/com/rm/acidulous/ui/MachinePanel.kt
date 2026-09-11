@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,6 +50,7 @@ import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withPatch
 import com.rm.acidulous.model.withSetting
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.DrawbarBlack
 import com.rm.acidulous.ui.theme.DrawbarBrown
@@ -88,6 +90,8 @@ fun MachinePanel(
     onAssignSample: (pad: Int, relative: String) -> Unit = { _, _ -> },
     /** Nexus keeps its graph on a screen of its own. */
     onOpenPatch: () -> Unit = {},
+    /** Pollen holds one sample of its own, under the plain key. */
+    onImportOneSample: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val type = track.machine.type
@@ -123,6 +127,7 @@ fun MachinePanel(
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
+            "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample, onAssignSample)
             else -> GenericPanel(binding)
@@ -1428,6 +1433,176 @@ private fun FormulaDialog(
             }
         }
     }
+}
+
+
+// --- Pollen ----------------------------------------------------------------------
+
+private val POLLEN_SOURCES = listOf("sample", "live")
+private val POLLEN_WINDOWS = listOf("hann", "tukey", "decay", "swell")
+private val POLLEN_SCATTER = listOf("free", "8ve", "5ths", "triad", "scale")
+private val POLLEN_SCALES = com.rm.acidulous.model.Scales.names
+private val POLLEN_KEYS = com.rm.acidulous.model.Scales.keyNames
+
+/**
+ * Pollen's panel. The source section is where the machine is decided - a
+ * file or the microphone - and everything else shapes the cloud over it.
+ *
+ * Two things here that no other panel has: a line saying what the buffer
+ * currently holds, and a warning when the source is live, because a live
+ * buffer is not part of the song and an exported song will not have it.
+ */
+@Composable
+private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor, onImport: () -> Unit) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    var picking by remember { mutableStateOf(false) }
+    val c = Acid.colors
+    val sample = track.machine.settings["sample"].orEmpty()
+    val live = (b.value("source") ?: 0f) >= 0.5f
+    Column {
+        SectionChips(listOf("source", "cloud", "spray", "pollen", "tone", "voice"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("buffer") {
+                        PanelSwitch(b, "source", POLLEN_SOURCES, "read from")
+                        PanelKnob(b, "buffer", "length", PanelAmber)
+                        PanelSwitch(b, "freeze", listOf("roll", "hold"), "live")
+                        MomentaryButton(b, "capture", "capture")
+                    }
+                    Group("file") {
+                        Column(Modifier.widthIn(min = 140.dp, max = 260.dp)) {
+                            Text(
+                                sample.substringAfterLast('/').ifEmpty { "no file" },
+                                color = if (sample.isEmpty()) c.textDim else c.textHi,
+                                fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            )
+                            if (live) {
+                                Text(
+                                    "live: not saved with the song, and silent on export",
+                                    color = c.accent, fontSize = 9.sp, maxLines = 2,
+                                )
+                            }
+                            Row {
+                                TextButton(onClick = onImport) { Text("import…", color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = { picking = true }) { Text("recorded…", color = c.textMid, fontSize = 11.sp) }
+                            }
+                        }
+                    }
+                    Group("listen") { InputListen() }
+                    Group("in") {
+                        PanelKnob(b, "ingain", "gain", PanelAmber)
+                        PanelKnob(b, "feedback", "feedback", PanelPink)
+                        PanelKnob(b, "dry", "thru")
+                    }
+                }
+                1 -> {
+                    Group("grains") {
+                        PanelKnob(b, "size", "size", PanelAmber)
+                        PanelKnob(b, "sizespread", "· spread")
+                        PanelKnob(b, "density", "density", PanelAmber)
+                        PanelKnob(b, "jitter", "· jitter")
+                    }
+                    Group("shape") {
+                        PanelStepKnob(b, "window", POLLEN_WINDOWS, "window")
+                        PanelKnob(b, "skew", "skew")
+                        PanelKnob(b, "reverse", "reverse")
+                    }
+                    Group("stereo") {
+                        PanelKnob(b, "panspread", "spread", PanelAmber)
+                        PanelKnob(b, "width", "width")
+                    }
+                }
+                2 -> {
+                    Group("where") {
+                        PanelKnob(b, "position", "position", PanelAmber)
+                        PanelKnob(b, "scan", "scan", PanelAmber)
+                        PanelKnob(b, "spray", "spray", PanelAmber)
+                        PanelKnob(b, "snap", "onset snap", PanelPink)
+                    }
+                    Group("pitch") {
+                        PanelKnob(b, "pitch", "pitch", PanelAmber)
+                        PanelKnob(b, "fine", "fine")
+                        PanelKnob(b, "keytrack", "key track")
+                    }
+                    Group("scatter") {
+                        PanelKnob(b, "spread", "amount", PanelAmber)
+                        PanelStepKnob(b, "scatter", POLLEN_SCATTER, "onto")
+                        PanelStepKnob(b, "scale", POLLEN_SCALES, "scale")
+                        PanelStepKnob(b, "key", POLLEN_KEYS, "key")
+                    }
+                }
+                3 -> {
+                    Group("pollination") {
+                        PanelKnob(b, "bloom", "bloom", PanelAmber)
+                        PanelStepKnob(b, "generations", (1..6).map { "$it" }, "depth", PanelAmber)
+                    }
+                    Group("what changes") {
+                        PanelKnob(b, "drift", "drift")
+                        PanelKnob(b, "mutate", "mutate", PanelAmber)
+                    }
+                }
+                4 -> {
+                    Group("filter") {
+                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                        PanelKnob(b, "resonance", "reso", PanelAmber)
+                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                    }
+                    Group("lo-fi") {
+                        PanelStepKnob(b, "bits", (1..16).map { "$it" }, "bits", PanelPink)
+                        PanelKnob(b, "crush", "rate", PanelPink)
+                        PanelKnob(b, "wobble", "wobble")
+                        PanelKnob(b, "wobblerate", "· rate")
+                    }
+                    Group("out") {
+                        PanelKnob(b, "drive", "drive", PanelPink)
+                        PanelKnob(b, "volume", "volume")
+                        PanelKnob(b, "pan", "pan")
+                    }
+                }
+                else -> {
+                    Group("amp") {
+                        PanelKnob(b, "ampattack", "A")
+                        PanelKnob(b, "ampdecay", "D")
+                        PanelKnob(b, "ampsustain", "S")
+                        PanelKnob(b, "amprelease", "R")
+                    }
+                    Group("voice") {
+                        PanelSwitch(b, "mono", listOf("poly", "mono"), "voices")
+                        PanelKnob(b, "glide", "glide")
+                        PanelKnob(b, "velocity", "velocity")
+                        PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                    }
+                    Group("tune") {
+                        PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
+                        PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
+                    }
+                }
+            }
+        }
+    }
+    if (picking) SampleBrowserDialog(
+        onPick = { rel ->
+            picking = false
+            editor.edit(trackIndex) { t -> t.withSetting("sample", rel) }
+        },
+        onDismiss = { picking = false },
+    )
+}
+
+/**
+ * A control that is an action rather than a value: it sets the parameter,
+ * and lets go. The engine acts on the edge, and reads the raw target rather
+ * than the smoothed value so a pulse cannot be smoothed away.
+ */
+@Composable
+private fun MomentaryButton(b: ParamBinding, name: String, label: String) {
+    val scope = rememberCoroutineScope()
+    TextButton(onClick = {
+        b.set(name, 1f)
+        scope.launch { delay(120); b.set(name, 0f) }
+    }) { Text(label, color = Acid.colors.accent, fontSize = 12.sp) }
 }
 
 // --- Filament ---------------------------------------------------------------

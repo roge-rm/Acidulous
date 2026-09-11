@@ -161,6 +161,9 @@ object NativeEngine {
     fun snapshotCommit(handle: Long): Boolean = nativeSnapshotCommit(handle)
     fun snapshotAbandon(handle: Long) = nativeSnapshotAbandon(handle)
 
+    /** Decode a WAV for Pollen and mount it with its transients. Worker only. */
+    fun loadPollenTake(rack: Int, path: String): String = nativeLoadPollenTake(rack, path)
+
     /** Compile and mount Formulate's expression and tables. "" or the reason. */
     fun loadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String =
         nativeLoadFormula(rack, formula, arp, duty, vol)
@@ -308,6 +311,7 @@ object NativeEngine {
     private external fun nativeControlChange(rackId: Int, cc: Int, value: Int)
     private external fun nativeChannelPressure(rackId: Int, value: Int)
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
+    private external fun nativeLoadPollenTake(rack: Int, path: String): String
     private external fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
     private external fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     private external fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
