@@ -272,6 +272,31 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeGetSampleRate(JNIEnv *, jobject)
     return host().sampleRate();
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetBufferBursts(JNIEnv *, jobject, jint bursts) {
+    host().setBufferBursts(bursts);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeBufferFrames(JNIEnv *, jobject) {
+    return host().bufferFrames();
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetVoiceLimit(JNIEnv *, jobject, jint notes) {
+    host().setVoiceLimit(notes);
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetQuality(JNIEnv *, jobject, jint level) {
+    host().setQuality(level);
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetRecordBits(JNIEnv *, jobject, jint bits) {
+    host().setRecordBits(bits);
+}
+
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeGetFramesPerBurst(JNIEnv *, jobject) {
     return host().framesPerBurst();

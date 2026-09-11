@@ -1,4 +1,5 @@
 #include "Capture.h"
+#include "Settings.h"
 #include "WavWriter.h"
 #include <algorithm>
 #include <chrono>
@@ -19,11 +20,13 @@ bool Capture::start(const std::string &path, int32_t sampleRate, Source source, 
     }
     // Prove the file can be written before the audio thread starts pushing.
     WavWriter probe;
-    if (!probe.open(path, sampleRate, error)) return false;
+    const int32_t bits = EngineSettings::get().recordBits.load(std::memory_order_relaxed);
+    if (!probe.open(path, sampleRate, error, bits)) return false;
     probe.close();
 
     outPath = path;
     rate = sampleRate;
+    depth = bits;
     which = source;
     ring.assign(static_cast<size_t>(kRingFrames) * 2, 0.0f);
     writeIndex.store(0, std::memory_order_relaxed);
@@ -65,7 +68,7 @@ void Capture::push(const float *interleaved, int32_t frames) {
 void Capture::drain() {
     WavWriter writer;
     std::string error;
-    if (!writer.open(outPath, rate, error)) {
+    if (!writer.open(outPath, rate, error, depth)) {
         running.store(false, std::memory_order_release);
         return;
     }

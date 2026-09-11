@@ -1,5 +1,7 @@
 #include "Effects.h"
+#include <algorithm>
 #include <cmath>
+#include <engine/core/Settings.h>
 
 namespace acidulous::effect {
 
@@ -265,7 +267,13 @@ const ParamDef *Distortion::paramDefs(int32_t &count) const {
 }
 
 void Distortion::prepare(int32_t sampleRate) { sr = static_cast<float>(sampleRate); reset(); }
-void Distortion::reset() { for (int c = 0; c < 2; ++c) { tone[c].reset(); dcIn[c] = dcOut[c] = 0.0f; } }
+void Distortion::reset() {
+    for (int c = 0; c < 2; ++c) {
+        tone[c].reset();
+        halfband[c].reset();
+        dcIn[c] = dcOut[c] = prevIn[c] = 0.0f;
+    }
+}
 
 bool Distortion::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
@@ -275,21 +283,39 @@ bool Distortion::process(float *L, float *R, int32_t frames, bool stereoIn) {
     // Level roughly follows the input: a loud drive is a texture change, not a jump.
     const float comp = 1.0f / std::sqrt(drive);
     const int chans = stereoIn ? 2 : 1;
+    // A waveshaper makes harmonics above the ones it is fed, and anything
+    // past half the sample rate folds back down as something inharmonic -
+    // which is what makes a hard clip sound like a cheap plugin. At full
+    // quality the shaper runs at twice the rate and the extra octave is
+    // filtered off before the result is thinned back out; at lean quality
+    // it runs once, as it always did.
+    const bool oversample = fullQuality();
+    for (int c = 0; c < 2; ++c) halfband[c].lowpass(std::min(19000.0f, sr * 0.45f), 0.707f, sr * 2.0f);
+    auto shape = [&](float x) {
+        switch (mode) {
+        case 1: return clampf(x, -1.0f, 1.0f);
+        case 2: { // wavefold: triangle-wrap x back into -1..1
+            const float t = x * 0.25f + 0.25f;
+            return 4.0f * std::fabs(t - std::floor(t + 0.5f)) - 1.0f;
+        }
+        case 3: return fastTanh(x) - 0.3f * fastTanh(x * 0.5f) * fastTanh(x * 0.5f); // tube: soft with a sag
+        default: return fastTanh(x);
+        }
+    };
     for (int c = 0; c < chans; ++c) {
         float *buf = c == 0 ? L : R;
         for (int32_t i = 0; i < frames; ++i) {
             const float in = buf[i];
-            float x = in * drive + bias; // bias: asymmetry -> even harmonics
             float y;
-            switch (mode) {
-            case 1: y = clampf(x, -1.0f, 1.0f); break;
-            case 2: { // wavefold: triangle-wrap x back into -1..1
-                const float t = x * 0.25f + 0.25f;
-                y = 4.0f * std::fabs(t - std::floor(t + 0.5f)) - 1.0f;
-                break;
-            }
-            case 3: y = fastTanh(x) - 0.3f * fastTanh(x * 0.5f) * fastTanh(x * 0.5f); break; // tube: soft with a sag
-            default: y = fastTanh(x); break;
+            if (oversample) {
+                // Two sub-samples: the midpoint of the last input and this
+                // one, then this one. Both are filtered; the second is kept.
+                const float mid = (prevIn[c] + in) * 0.5f;
+                halfband[c].process(shape(mid * drive + bias));
+                y = halfband[c].process(shape(in * drive + bias));
+                prevIn[c] = in;
+            } else {
+                y = shape(in * drive + bias);
             }
             y *= comp * 2.0f;
             // Block the DC that bias introduces (one-pole highpass at ~10 Hz).

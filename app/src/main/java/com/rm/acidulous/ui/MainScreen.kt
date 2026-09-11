@@ -50,6 +50,7 @@ import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.addScene
 import com.rm.acidulous.model.addTrack
+import com.rm.acidulous.ui.UiPrefs.withDefaultScale
 import com.rm.acidulous.model.changeMachine
 import com.rm.acidulous.model.deleteScene
 import com.rm.acidulous.model.deleteTrack
@@ -292,7 +293,10 @@ fun MainScreen(
             }
         }
         is Dialog.PickMachine -> PickerDialog("Machine", NativeEngine.machineTypes, onDismiss = { dialog = null }) { type ->
-            editor.editSong { if (d.track == null) it.addTrack(type) else it.changeMachine(d.track, type) }
+            editor.editSong {
+                if (d.track == null) it.addTrack(type).withDefaultScale(it.tracks.size)
+                else it.changeMachine(d.track, type)
+            }
             dialog = null
         }
         is Dialog.RenameTrack -> TextInputDialog("Track name", song.tracks.getOrNull(d.index)?.name ?: "", onDismiss = { dialog = null }) { name ->
@@ -311,7 +315,7 @@ fun MainScreen(
         )
         Dialog.Midi -> MidiDialog(onDismiss = { dialog = null })
         Dialog.Sampler -> SamplerDialog(onDismiss = { dialog = null })
-        Dialog.Settings -> SettingsDialog(onDismiss = { dialog = null })
+        Dialog.Settings -> SettingsDialog(song.tracks.map { it.name }, onDismiss = { dialog = null })
         Dialog.SaveAs -> TextInputDialog("Save as", song.name, onDismiss = { dialog = null }) { name ->
             onSaveAs(name)
             dialog = null

@@ -193,7 +193,7 @@ private fun LabeledSwitch(label: String, checked: Boolean, onChange: (Boolean) -
     }
 }
 
-private val SIGNATURES = listOf(
+internal val SIGNATURES = listOf(
     Signature(4, 4), Signature(3, 4), Signature(2, 4), Signature(5, 4),
     Signature(6, 8), Signature(7, 8), Signature(9, 8), Signature(12, 8),
 )

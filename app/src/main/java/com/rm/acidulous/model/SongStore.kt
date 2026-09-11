@@ -48,8 +48,10 @@ object SongStore {
     fun exists(context: Context, name: String): Boolean = fileFor(context, name).isFile
 
     /** A new song: one scene, one Subvert track, nothing in it. */
-    fun blank(name: String): Song = Song(
+    fun blank(name: String, tempo: Float = 120f, signature: Signature = Signature()): Song = Song(
         name = name,
+        tempo = tempo,
+        signature = signature,
         tracks = listOf(Track(id = newId("t"), name = "Bass", machine = Machine("Subvert"))),
         scenes = listOf(Scene(id = newId("s"), name = "Scene 1")),
     )

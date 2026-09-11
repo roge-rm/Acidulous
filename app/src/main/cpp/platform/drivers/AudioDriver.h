@@ -41,6 +41,16 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
 
     bool isRunning() const { return stream != nullptr; }
 
+    /**
+     * How many bursts deep the output buffer is: 1 is as tight as the device
+     * allows and will glitch on a slow phone, 2 is the default, more is
+     * safer and slower. Applied immediately when a stream is open, and
+     * remembered for the next one.
+     */
+    void setBufferBursts(int32_t bursts);
+    int32_t getBufferBursts() const { return bufferBursts; }
+    int32_t getBufferFrames() const;
+
     // What the device actually gave us, which may differ from what we asked.
     int32_t getSampleRate() const { return actualSampleRate; }
     int32_t getFramesPerBurst() const { return actualFramesPerBurst; }
@@ -84,6 +94,7 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     const float *nextInputBlock();
 
     int32_t engineBlockFrames = 0;
+    int32_t bufferBursts = 2;
     int32_t actualSampleRate = 0;
     int32_t actualFramesPerBurst = 0;
     bool actualLowLatency = false;

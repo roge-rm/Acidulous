@@ -311,6 +311,10 @@ private fun App(modifier: Modifier = Modifier) {
         // thread now rather than stalling the first mount.
         Thread { NativeEngine.prewarm() }.start()
         if (NativeEngine.start()) {
+            // The engine keeps no preferences: the buffer depth, voice limit,
+            // quality and record format have to be pushed once the stream is
+            // up, and again whenever one of them changes.
+            com.rm.acidulous.ui.UiPrefs.applyToEngine()
             // Come back to whatever was open. Only a first run falls through
             // to the demo - reloading it every launch used to overwrite
             // Demo.json and throw away the session.
@@ -357,6 +361,15 @@ private fun App(modifier: Modifier = Modifier) {
     val onLoopScene: (Boolean) -> Unit = { on ->
         loopScene = on
         NativeEngine.setLoopScene(on)
+    }
+
+    // A take that dies because the screen locked is a take lost, so the
+    // window is held awake while the transport runs - and only while it
+    // runs, and only if the setting says so.
+    val view = androidx.compose.ui.platform.LocalView.current
+    androidx.compose.runtime.DisposableEffect(playing, com.rm.acidulous.ui.UiPrefs.keepAwake) {
+        view.keepScreenOn = playing && com.rm.acidulous.ui.UiPrefs.keepAwake
+        onDispose { view.keepScreenOn = false }
     }
 
     LaunchedEffect(Unit) {
@@ -411,7 +424,7 @@ private fun App(modifier: Modifier = Modifier) {
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },
             onSave = { SongStore.save(context, song); Log.i(TAG, "saved ${song.name}") },
             onSaveAs = { name -> val renamed = song.copy(name = name); editor.replace(renamed); SongStore.save(context, renamed); Log.i(TAG, "saved as $name") },
-            onNew = { name -> val fresh = SongStore.blank(name); editor.replace(fresh); SongStore.save(context, fresh) },
+            onNew = { name -> val fresh = com.rm.acidulous.ui.UiPrefs.newSong(name); editor.replace(fresh); SongStore.save(context, fresh) },
             onLoad = { name -> runCatching { SongStore.load(context, name) }.onSuccess { editor.replace(it) }.onFailure { Log.w(TAG, "load failed", it) } },
             onDelete = { name -> SongStore.delete(context, name); Log.i(TAG, "deleted $name") },
             songNames = { SongStore.list(context) },

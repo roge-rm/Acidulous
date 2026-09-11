@@ -3,6 +3,7 @@
 #include <engine/core/Constants.h>
 #include <engine/core/Messages.h>
 #include <engine/core/Params.h>
+#include <engine/core/Settings.h>
 #include <engine/effect/Effect.h>
 #include <engine/eventor/Eventor.h>
 #include <engine/machine/Machine.h>
@@ -75,6 +76,15 @@ class Rack {
     };
 
     void deliver(int32_t fromStage, uint8_t status, uint8_t d1, uint8_t d2);
+    // Everything bound for the machine goes through here, so the voice limit
+    // has one place to stand and eventor-generated notes are counted too.
+    void toMachine(uint8_t status, uint8_t d1, uint8_t d2);
+    void forgetHeld(uint8_t note);
+
+    // Held notes, oldest first. A limit above this is the same as none.
+    static constexpr int32_t kMaxHeld = 64;
+    uint8_t held[kMaxHeld]{};
+    int32_t heldCount = 0;
 
     Machine *machine = nullptr;
     Effect *effects[kEffectSlots]{};

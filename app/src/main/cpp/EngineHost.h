@@ -123,6 +123,17 @@ class EngineHost {
     bool snapshotCommit(int64_t handle);
     void snapshotAbandon(int64_t handle);
 
+    // --- Settings that belong to the device -----------------------------
+    /** Output buffer depth in bursts: 1 tight, 2 default, 4 safe. */
+    void setBufferBursts(int32_t bursts);
+    int32_t bufferFrames() const;
+    /** Held notes per rack, 0 for no limit. */
+    void setVoiceLimit(int32_t notes);
+    /** 1 full, 0 lean: reverb density and distortion oversampling. */
+    void setQuality(int32_t level);
+    /** Bits in a recorded or exported WAV: 24 or 16. */
+    void setRecordBits(int32_t bits);
+
     // --- Diagnostics ----------------------------------------------------------
     int32_t sampleRate() const;
     int32_t framesPerBurst() const;

@@ -46,6 +46,9 @@ class Capture {
     std::thread worker;
     std::string outPath;
     int32_t rate = 48000;
+    // Fixed when recording starts: changing the setting mid-take must not
+    // change the format halfway down the file.
+    int32_t depth = 24;
     Source which = FromInput;
 };
 

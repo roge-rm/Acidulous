@@ -47,8 +47,13 @@ object MidiHub {
     data class Port(val id: Int, val name: String, val maker: String, val bluetooth: Boolean, val open: Boolean)
     data class Found(val address: String, val name: String)
 
-    /** Where incoming notes go. */
-    enum class Routing { SelectedTrack, ChannelToRack }
+    /**
+     * Where incoming notes go. Following the selected track is what you want
+     * while writing; a fixed track is what you want when the phone is a
+     * sound module and nobody is looking at its screen; channel-to-rack is
+     * for a controller that addresses several at once.
+     */
+    enum class Routing { SelectedTrack, FixedTrack, ChannelToRack }
 
     private var manager: MidiManager? = null
     private var appContext: Context? = null
@@ -69,6 +74,9 @@ object MidiHub {
 
     /** Which rack plays when routing is [Routing.SelectedTrack]. */
     var target: () -> Int = { 0 }
+
+    /** Which rack plays when routing is [Routing.FixedTrack]. */
+    var fixedRack by mutableStateOf(0)
 
     val supported: Boolean
         get() = appContext?.packageManager?.hasSystemFeature(PackageManager.FEATURE_MIDI) == true
@@ -150,6 +158,7 @@ object MidiHub {
         if (kind == 0xc0) return // program change: nothing to address it to yet
         val rack = when (routing) {
             Routing.SelectedTrack -> target()
+            Routing.FixedTrack -> fixedRack
             Routing.ChannelToRack -> status and 0x0f
         }
         NativeEngine.midiEvent(rack, kind, d1, d2)

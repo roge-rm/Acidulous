@@ -52,8 +52,9 @@ bool AudioDriver::start() {
     actualLowLatency = stream->getPerformanceMode() == oboe::PerformanceMode::LowLatency;
 
     // Two bursts is the usual starting point: low enough to stay responsive,
-    // deep enough to absorb a late callback. AAudio tunes down from here.
-    stream->setBufferSizeInFrames(actualFramesPerBurst * 2);
+    // deep enough to absorb a late callback. AAudio tunes down from here,
+    // and Settings can ask for a different depth.
+    stream->setBufferSizeInFrames(actualFramesPerBurst * bufferBursts);
 
     result = stream->requestStart();
     if (result != oboe::Result::OK) {
@@ -236,4 +237,15 @@ void AudioDriver::onErrorAfterClose(oboe::AudioStream * /*audioStream*/, oboe::R
     if (!start()) {
         LOGE("reopen failed; audio is stopped");
     }
+}
+
+void AudioDriver::setBufferBursts(int32_t bursts) {
+    if (bursts < 1) bursts = 1;
+    if (bursts > 8) bursts = 8;
+    bufferBursts = bursts;
+    if (stream != nullptr) stream->setBufferSizeInFrames(actualFramesPerBurst * bufferBursts);
+}
+
+int32_t AudioDriver::getBufferFrames() const {
+    return stream != nullptr ? stream->getBufferSizeInFrames() : actualFramesPerBurst * bufferBursts;
 }

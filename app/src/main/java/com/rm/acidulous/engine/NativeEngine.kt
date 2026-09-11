@@ -161,6 +161,18 @@ object NativeEngine {
     fun snapshotCommit(handle: Long): Boolean = nativeSnapshotCommit(handle)
     fun snapshotAbandon(handle: Long) = nativeSnapshotAbandon(handle)
 
+    // --- Settings that belong to the device ----------------------------------
+    /** Output buffer depth in bursts: 1 tight, 2 default, 4 safe. */
+    fun setBufferBursts(bursts: Int) = nativeSetBufferBursts(bursts)
+    /** What the stream is actually buffering, which the device may round. */
+    val bufferFrames: Int get() = nativeBufferFrames()
+    /** Held notes per rack, 0 for no limit. */
+    fun setVoiceLimit(notes: Int) = nativeSetVoiceLimit(notes)
+    /** 1 full, 0 lean. */
+    fun setQuality(level: Int) = nativeSetQuality(level)
+    /** Bits in a recorded or exported WAV: 24 or 16. */
+    fun setRecordBits(bits: Int) = nativeSetRecordBits(bits)
+
     // --- Diagnostics ---------------------------------------------------------
     val sampleRate: Int get() = nativeGetSampleRate()
     val framesPerBurst: Int get() = nativeGetFramesPerBurst()
@@ -259,6 +271,11 @@ object NativeEngine {
     private external fun nativeControlChange(rackId: Int, cc: Int, value: Int)
     private external fun nativeChannelPressure(rackId: Int, value: Int)
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
+    private external fun nativeSetBufferBursts(bursts: Int)
+    private external fun nativeBufferFrames(): Int
+    private external fun nativeSetVoiceLimit(notes: Int)
+    private external fun nativeSetQuality(level: Int)
+    private external fun nativeSetRecordBits(bits: Int)
     private external fun nativeGetSampleRate(): Int
     private external fun nativeGetFramesPerBurst(): Int
     private external fun nativeIsLowLatency(): Boolean

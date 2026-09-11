@@ -1,4 +1,5 @@
 #include "EngineHost.h"
+#include <engine/core/Settings.h>
 #include <engine/machine/nexus/Nexus.h>
 
 #include <algorithm>
@@ -475,7 +476,8 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     renderPeak.store(0.0f, std::memory_order_relaxed);
 
     WavWriter wav;
-    if (!wav.open(path, kSampleRate, error)) { rendering.store(false); return false; }
+    const int32_t bits = EngineSettings::get().recordBits.load(std::memory_order_relaxed);
+    if (!wav.open(path, kSampleRate, error, bits)) { rendering.store(false); return false; }
 
     // Take the engine off the device: from here every block is ours to pull.
     sAudio.stop();
@@ -672,6 +674,18 @@ void EngineHost::snapshotAbandon(int64_t handle) { delete fromHandle(handle); }
 // --- Diagnostics -----------------------------------------------------------------
 
 int32_t EngineHost::sampleRate() const { return sAudio.getSampleRate(); }
+void EngineHost::setBufferBursts(int32_t bursts) { sAudio.setBufferBursts(bursts); }
+int32_t EngineHost::bufferFrames() const { return sAudio.getBufferFrames(); }
+void EngineHost::setVoiceLimit(int32_t notes) {
+    EngineSettings::get().voiceLimit.store(notes < 0 ? 0 : notes, std::memory_order_relaxed);
+}
+void EngineHost::setQuality(int32_t level) {
+    EngineSettings::get().quality.store(level != 0 ? 1 : 0, std::memory_order_relaxed);
+}
+void EngineHost::setRecordBits(int32_t bits) {
+    EngineSettings::get().recordBits.store(bits == 16 ? 16 : 24, std::memory_order_relaxed);
+}
+
 int32_t EngineHost::framesPerBurst() const { return sAudio.getFramesPerBurst(); }
 bool EngineHost::lowLatency() const { return sAudio.isLowLatency(); }
 int64_t EngineHost::xRunCount() const { return sAudio.getXRunCount(); }

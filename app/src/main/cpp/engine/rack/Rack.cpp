@@ -32,7 +32,47 @@ void Rack::deliver(int32_t fromStage, uint8_t status, uint8_t d1, uint8_t d2) {
             return; // the eventor forwards through its sink
         }
     }
-    if (machine != nullptr) machine->handleMidi(status, d1, d2);
+    toMachine(status, d1, d2);
+}
+
+/**
+ * The voice limit, applied here rather than in each machine: a machine knows
+ * how to steal one of its own voices, but only the rack knows how many notes
+ * are being asked for in the first place - including the ones an arpeggiator
+ * made up. Over the limit, the oldest held note is released before the new
+ * one starts, which is the same thing a real instrument does when it runs
+ * out of strings.
+ */
+void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2) {
+    if (machine == nullptr) return;
+    const uint8_t kind = status & 0xf0;
+    const bool on = kind == 0x90 && d2 > 0;
+    const bool off = kind == 0x80 || (kind == 0x90 && d2 == 0);
+    if (on) {
+        forgetHeld(d1); // a retrigger is not a second note
+        int32_t limit = EngineSettings::get().voiceLimit.load(std::memory_order_relaxed);
+        if (limit > 0) {
+            if (limit > kMaxHeld) limit = kMaxHeld;
+            while (heldCount >= limit) {
+                const uint8_t oldest = held[0];
+                machine->handleMidi(0x80, oldest, 0);
+                forgetHeld(oldest);
+            }
+        }
+        if (heldCount < kMaxHeld) held[heldCount++] = d1;
+    } else if (off) {
+        forgetHeld(d1);
+    }
+    machine->handleMidi(status, d1, d2);
+}
+
+void Rack::forgetHeld(uint8_t note) {
+    for (int32_t i = 0; i < heldCount; ++i) {
+        if (held[i] != note) continue;
+        for (int32_t j = i; j + 1 < heldCount; ++j) held[j] = held[j + 1];
+        --heldCount;
+        return;
+    }
 }
 
 void Rack::handleMidi(uint8_t status, uint8_t d1, uint8_t d2) { deliver(0, status, d1, d2); }
@@ -42,6 +82,7 @@ void Rack::allNotesOff() {
         if (eventors[s] != nullptr) eventors[s]->allNotesOff(sinks[s]);
     }
     if (machine != nullptr) machine->allNotesOff();
+    heldCount = 0;
 }
 
 void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
@@ -98,6 +139,7 @@ void Rack::render(int32_t frames) {
 Machine *Rack::swapMachine(Machine *next) {
     Machine *old = machine;
     if (old != nullptr) old->allNotesOff();
+    heldCount = 0; // the notes went with the machine
     machine = next;
     return old;
 }

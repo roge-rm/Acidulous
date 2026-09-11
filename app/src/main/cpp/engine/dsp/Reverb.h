@@ -1,5 +1,6 @@
 #pragma once
 #include "Math.h"
+#include <engine/core/Settings.h>
 #include <cstdint>
 #include <vector>
 
@@ -42,13 +43,24 @@ class Reverb {
     }
 
     // In: a mono send. Out: added to L/R (100% wet).
+    //
+    // At lean quality half the combs and half the allpasses are skipped and
+    // the sum is scaled to match. It is the same reverb with a thinner tail
+    // for half the arithmetic, which is the cheapest real saving in the
+    // engine - eight comb filters per channel per sample is the master bus's
+    // largest single cost.
     void process(const float *in, float *outL, float *outR, int32_t frames) {
+        const bool full = fullQuality();
+        const int nc = full ? kCombs : kCombs / 2;
+        const int na = full ? kAllpasses : kAllpasses / 2;
+        const float norm = static_cast<float>(kCombs) / static_cast<float>(nc);
         for (int32_t i = 0; i < frames; ++i) {
             const float x = in[i] * 0.015f;
             for (int c = 0; c < 2; ++c) {
                 float acc = 0.0f;
-                for (auto &comb : combs[c]) acc += comb.process(x, feedback, damping);
-                for (auto &ap : allpasses[c]) acc = ap.process(acc);
+                for (int k = 0; k < nc; ++k) acc += combs[c][k].process(x, feedback, damping);
+                acc *= norm;
+                for (int k = 0; k < na; ++k) acc = allpasses[c][k].process(acc);
                 lp[c] += (acc - lp[c]) * toneCoeff;
                 if (c == 0) outL[i] += lp[c]; else outR[i] += lp[c];
             }

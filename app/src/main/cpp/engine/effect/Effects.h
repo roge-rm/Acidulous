@@ -62,7 +62,10 @@ class Distortion final : public Effect {
     ACIDULOUS_EFFECT_COMMON(Distortion)
   private:
     dsp::Biquad tone[2];
-    float dcIn[2]{}, dcOut[2]{}, sr = 48000.0f;
+    // The downsampling filter runs at twice the engine rate, which is why it
+    // is not the tone filter reused.
+    dsp::Biquad halfband[2];
+    float dcIn[2]{}, dcOut[2]{}, prevIn[2]{}, sr = 48000.0f;
 };
 
 class Compressor final : public Effect {
