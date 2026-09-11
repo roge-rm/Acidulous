@@ -940,11 +940,13 @@ private val CIPHER_DESTS = listOf(
 private val CIPHER_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
 
 /**
- * A vocoder with nothing coming in is a synth with the volume down, so the
- * panel owns the microphone rather than making you find it in a menu.
+ * A machine that listens has to be able to open the ear. A vocoder with
+ * nothing coming in is a synth with the volume down, and a string waiting to
+ * be spoken to is silent, so the panels own the microphone rather than
+ * sending you to a menu to find it.
  */
 @Composable
-private fun CipherInput() {
+private fun InputListen() {
     val context = androidx.compose.ui.platform.LocalContext.current
     var running by remember { mutableStateOf(NativeEngine.inputRunning) }
     var level by remember { mutableStateOf(0f) }
@@ -984,7 +986,7 @@ private fun CipherPanel(b: ParamBinding) {
         GroupRow {
             when (section) {
                 0 -> {
-                    Group("listen") { CipherInput() }
+                    Group("listen") { InputListen() }
                     Group("bank") {
                         PanelKnob(b, "bands", "bands", PanelAmber)
                         PanelKnob(b, "low", "low", PanelAmber)
@@ -1139,6 +1141,9 @@ private fun FilamentPanel(b: ParamBinding) {
                         PanelKnob(b, "speed", "speed", PanelAmber)
                         PanelKnob(b, "in gain", "in gain")
                     }
+                    // The input exciter plays the string with whatever is
+                    // coming in, which needs something to be coming in.
+                    Group("listen") { InputListen() }
                     Group("touch") {
                         PanelKnob(b, "velocity", "velocity", PanelAmber)
                         PanelSwitch(b, "on release", listOf("ring", "damp"), "let go")
