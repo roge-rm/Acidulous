@@ -77,6 +77,8 @@ fun MachinePanel(
     selectedPad: Int = 0,
     onImportSample: (pad: Int) -> Unit = {},
     onClearSample: (pad: Int) -> Unit = {},
+    /** A sample already in the app's own folder, chosen rather than imported. */
+    onAssignSample: (pad: Int, relative: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     val type = track.machine.type
@@ -103,7 +105,7 @@ fun MachinePanel(
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
-            "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample)
+            "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample, onAssignSample)
             else -> GenericPanel(binding)
         }
     }
@@ -334,7 +336,8 @@ private fun HexbeatPanel(b: ParamBinding) {
 
 /** Forage: the selected pad's sample and its controls; tap a pad to select it. */
 @Composable
-private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit, onClear: (Int) -> Unit) {
+private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit,
+                        onClear: (Int) -> Unit, onAssign: (Int, String) -> Unit) {
     val p = pad.coerceIn(0, 12)
     fun n(name: String) = "p%02d_%s".format(p, name)
     val rel = track.machine.settings[n("sample")]
@@ -343,6 +346,11 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         while (true) { info = NativeEngine.sampleInfo(b.trackIndex, p); delay(400) }
     }
     val hot = Color(0xFFFFB454)
+    var picking by remember { mutableStateOf(false) }
+    if (picking) SampleBrowserDialog(
+        onPick = { rel -> picking = false; onAssign(p, rel) },
+        onDismiss = { picking = false },
+    )
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("pad ${p + 1}", color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
@@ -351,6 +359,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                 color = Color(0xFFDDDDDD), fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f), maxLines = 1,
             )
             TextButton(onClick = { onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
+            TextButton(onClick = { picking = true }) { Text("recorded…", color = hot, fontSize = 11.sp) }
             if (rel != null) TextButton(onClick = { onClear(p) }) { Text("clear", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
         }
         Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -931,12 +940,25 @@ private fun MosaicPanel(
     var section by rememberSaveable { mutableStateOf(0) }
     var selectedZone by rememberSaveable(trackIndex) { mutableStateOf(0) }
     var editing by remember { mutableStateOf(false) }
+    var pickingZone by remember { mutableStateOf(false) }
     val zones = remember(track.machine.settings["zones"]) { Zones.decode(track.machine.settings["zones"]) }
     val sf2 = track.machine.settings["sf2"].orEmpty()
     var info by remember(trackIndex) { mutableStateOf("") }
     LaunchedEffect(trackIndex, sf2, zones.size) {
         while (true) { info = NativeEngine.sampleMapInfo(trackIndex); delay(500) }
     }
+    // A sample recorded in the app is added as a zone the same way an
+    // imported one is; a SoundFont owns the whole map, so it steps aside.
+    if (pickingZone) SampleBrowserDialog(
+        onPick = { rel ->
+            pickingZone = false
+            editor.edit(trackIndex) { t ->
+                t.withSetting("sf2", null).withSetting("sf2preset", null)
+                    .withSetting("zones", Zones.encode(zones + com.rm.acidulous.model.Zone(path = rel)))
+            }
+        },
+        onDismiss = { pickingZone = false },
+    )
 
     fun putZones(list: List<Zone>) =
         editor.edit(trackIndex) { t -> t.withSetting("zones", if (list.isEmpty()) null else Zones.encode(list)) }
@@ -975,6 +997,7 @@ private fun MosaicPanel(
                                 TextButton(onClick = onImportSoundFont) { Text("soundfont…", color = PanelAmber, fontSize = 10.sp) }
                                 if (sf2.isNotEmpty()) TextButton(onClick = onPickPreset) { Text("preset…", color = PanelAmber, fontSize = 10.sp) }
                                 TextButton(onClick = onImportZoneSamples) { Text("samples…", color = Color(0xFFBBBBBB), fontSize = 10.sp) }
+                                TextButton(onClick = { pickingZone = true }) { Text("recorded…", color = Color(0xFFBBBBBB), fontSize = 10.sp) }
                             }
                         }
                     }

@@ -17,8 +17,18 @@ void Engine::start() {
 }
 void Engine::stop() { retirer.stop(); }
 
-void Engine::renderBlock(float *out) {
+void Engine::renderBlock(const float *in, float *out) {
     const auto t0 = std::chrono::steady_clock::now();
+
+    // Publish the input before anything renders, so a machine reading it
+    // sees this block's audio and not the last one's.
+    const float gain = inputGain.load(std::memory_order_relaxed);
+    if (in != nullptr && gain != 1.0f) {
+        for (int32_t i = 0; i < kBlockFrames * 2; ++i) inputScratch[i] = in[i] * gain;
+        InputBus::get().publish(inputScratch, kBlockFrames);
+    } else {
+        InputBus::get().publish(in, in != nullptr ? kBlockFrames : 0);
+    }
 
     // Transport: apply a play/stop the UI asked for, only ever between blocks.
     if (transport.applyRequests()) {
@@ -99,6 +109,19 @@ void Engine::renderBlock(float *out) {
         }
     }
     master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade);
+
+    // Monitoring is after the master so it is heard at the master's level,
+    // and deliberately not recorded when capturing the input: nobody wants
+    // their own monitor path printed into the sample.
+    const InputBus &bus = InputBus::get();
+    if (capture.armed()) {
+        capture.push(capture.source() == Capture::FromInput && bus.live() ? bus.block() : out, kBlockFrames);
+    }
+    const float monitor = monitorLevel.load(std::memory_order_relaxed);
+    if (monitor > 0.0001f && bus.live()) {
+        const float *src = bus.block();
+        for (int32_t i = 0; i < kBlockFrames * 2; ++i) out[i] += src[i] * monitor;
+    }
 
     transport.publishPosition(scheduler.packedPosition());
 

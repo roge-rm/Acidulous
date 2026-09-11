@@ -174,6 +174,37 @@ object NativeEngine {
     /** The scene fade multiplier the master is applying right now (1 = none). */
     val masterFade: Float get() = nativeGetMasterFade()
 
+    // --- Audio in --------------------------------------------------------
+
+    /** Opens the microphone or line in. Needs RECORD_AUDIO to have been granted. */
+    fun startInput(): Boolean = nativeStartInput()
+    fun stopInput() = nativeStopInput()
+    val inputRunning: Boolean get() = nativeInputRunning()
+    /** Peak since the last read, then reset. */
+    fun inputPeak(): Float = nativeInputPeak()
+    fun setInputGain(gain: Float) = nativeSetInputGain(gain)
+    fun setMonitorLevel(level: Float) = nativeSetMonitorLevel(level)
+
+    /** source 0 = what is coming in, 1 = what is going out. Returns "" or an error. */
+    fun startCapture(path: String, source: Int): String = nativeStartCapture(path, source)
+    fun stopCapture() = nativeStopCapture()
+    val capturing: Boolean get() = nativeCapturing()
+    val capturedSeconds: Float get() = nativeCapturedSeconds()
+    val capturedPeak: Float get() = nativeCapturedPeak()
+    val captureOverflowed: Boolean get() = nativeCaptureOverflowed()
+
+    private external fun nativeStartInput(): Boolean
+    private external fun nativeStopInput()
+    private external fun nativeInputRunning(): Boolean
+    private external fun nativeInputPeak(): Float
+    private external fun nativeSetInputGain(gain: Float)
+    private external fun nativeSetMonitorLevel(level: Float)
+    private external fun nativeStartCapture(path: String, source: Int): String
+    private external fun nativeStopCapture()
+    private external fun nativeCapturing(): Boolean
+    private external fun nativeCapturedSeconds(): Float
+    private external fun nativeCapturedPeak(): Float
+    private external fun nativeCaptureOverflowed(): Boolean
     private external fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int)
     private external fun nativeStart(): Boolean
     private external fun nativeStop()

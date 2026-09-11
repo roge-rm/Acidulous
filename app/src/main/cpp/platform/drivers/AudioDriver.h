@@ -28,6 +28,17 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     bool start();
     void stop();
 
+    // Recording and the vocoder both want what is coming in. The input
+    // stream is opened on demand - a synth has no business holding the
+    // microphone open - and is read from inside the output callback rather
+    // than running a second callback of its own, so there is one audio
+    // thread and no drift to reconcile between two.
+    bool startInput();
+    void stopInput();
+    bool isInputRunning() const { return inputStream != nullptr; }
+    int32_t inputChannels() const { return actualInputChannels; }
+    float readInputPeak() { return inputPeak.exchange(0.0f, std::memory_order_relaxed); }
+
     bool isRunning() const { return stream != nullptr; }
 
     // What the device actually gave us, which may differ from what we asked.
@@ -51,12 +62,26 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
 
   private:
     std::shared_ptr<oboe::AudioStream> stream;
+    std::shared_ptr<oboe::AudioStream> inputStream;
     std::function<void(float *, float *, unsigned long)> callback;
 
     // Carry buffer: one engine block of interleaved stereo, partially drained.
     std::vector<float> carry;
     int32_t carryFrames = 0;  // frames still unread in `carry`
     int32_t carryOffset = 0;  // read cursor, in frames
+
+    // What the input stream handed us, waiting to be served to the engine
+    // one block at a time. Read and written only on the audio thread.
+    std::vector<float> inputRing;   // interleaved stereo
+    int32_t inputRingFrames = 0;
+    int32_t inputRingRead = 0;
+    std::vector<float> inputScratch;
+    std::vector<float> inputBlock;
+    int32_t actualInputChannels = 0;
+    std::atomic<float> inputPeak{0.0f};
+
+    void pumpInput(int32_t frames);
+    const float *nextInputBlock();
 
     int32_t engineBlockFrames = 0;
     int32_t actualSampleRate = 0;

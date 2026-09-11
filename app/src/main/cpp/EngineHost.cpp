@@ -56,7 +56,7 @@ EngineHost::~EngineHost() { stop(); }
 bool EngineHost::start() {
     if (running) return true;
     sEngine.start();
-    sAudio.registerCallback([](float *, float *out, unsigned long) { sEngine.renderBlock(out); });
+    sAudio.registerCallback([](float *in, float *out, unsigned long) { sEngine.renderBlock(in, out); });
     if (!sAudio.start()) {
         LOGE("audio failed to start");
         sEngine.stop();
@@ -418,7 +418,7 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     sEngine.transport.setLoopScene(false);
     sEngine.transport.requestStop();
     float silent[kBlockFrames * 2];
-    sEngine.renderBlock(silent); // apply the stop, settle
+    sEngine.renderBlock(nullptr, silent); // apply the stop, settle
     ParamMessage click;
     click.rack = 0; click.unit = Unit::Master; click.index = sEngine.master.params().indexOf("clickon"); click.value = 0.0f; click.record = false;
     sEngine.pushParam(click);
@@ -432,7 +432,7 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     bool ended = false, cancelled = false;
     for (;;) {
         if (renderCancel.load(std::memory_order_relaxed)) { cancelled = true; break; }
-        sEngine.renderBlock(block);
+        sEngine.renderBlock(nullptr, block);
         wav.write(block, kBlockFrames);
         for (float v : block) { const float a = v < 0 ? -v : v; if (a > peak) peak = a; }
         ++blocks;
@@ -447,7 +447,7 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     renderSeconds.store(static_cast<float>(blocks) * kBlockFrames / kSampleRate, std::memory_order_relaxed);
     renderPeak.store(peak, std::memory_order_relaxed);
     sEngine.transport.requestStop();
-    sEngine.renderBlock(silent);
+    sEngine.renderBlock(nullptr, silent);
     const bool closed = wav.close();
 
     // Hand the device back exactly as it was.
@@ -613,6 +613,33 @@ float EngineHost::rackPeak(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].readPeak() : 0.0f;
 }
 float EngineHost::masterFade() const { return sEngine.master.currentFade(); }
+bool EngineHost::startInput() { return sAudio.startInput(); }
+void EngineHost::stopInput() {
+    sAudio.stopInput();
+    sEngine.capture.stop();
+}
+bool EngineHost::inputRunning() const { return sAudio.isInputRunning(); }
+float EngineHost::inputPeak() { return sAudio.readInputPeak(); }
+void EngineHost::setInputGain(float gain) { sEngine.inputGain.store(gain, std::memory_order_relaxed); }
+void EngineHost::setMonitorLevel(float level) { sEngine.monitorLevel.store(level, std::memory_order_relaxed); }
+
+std::string EngineHost::startCapture(const std::string &path, int source) {
+    const auto which = source == 1 ? Capture::FromMaster : Capture::FromInput;
+    // Recording the input with nothing open would write a silent file and
+    // look like a bug at the other end, so say so here.
+    if (which == Capture::FromInput && !sAudio.isInputRunning()) return "audio input is not open";
+    std::string error;
+    if (!sEngine.capture.start(path, kSampleRate, which, error)) return error;
+    return "";
+}
+void EngineHost::stopCapture() { sEngine.capture.stop(); }
+bool EngineHost::capturing() const { return sEngine.capture.armed(); }
+float EngineHost::capturedSeconds() const {
+    return static_cast<float>(sEngine.capture.frames()) / static_cast<float>(kSampleRate);
+}
+float EngineHost::capturedPeak() const { return sEngine.capture.peak(); }
+bool EngineHost::captureOverflowed() const { return sEngine.capture.overflowed(); }
+
 uint32_t EngineHost::notesOn(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].clipPlayer.notesOn() : 0;
 }

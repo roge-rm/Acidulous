@@ -173,6 +173,61 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOff(JNIEnv *, jobject, jint 
     host().noteOff(rackId, static_cast<uint8_t>(note & 0x7f));
 }
 
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeStartInput(JNIEnv *, jobject) {
+    return host().startInput() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeStopInput(JNIEnv *, jobject) { host().stopInput(); }
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeInputRunning(JNIEnv *, jobject) {
+    return host().inputRunning() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeInputPeak(JNIEnv *, jobject) { return host().inputPeak(); }
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetInputGain(JNIEnv *, jobject, jfloat g) {
+    host().setInputGain(g);
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetMonitorLevel(JNIEnv *, jobject, jfloat level) {
+    host().setMonitorLevel(level);
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeStartCapture(JNIEnv *env, jobject, jstring path, jint source) {
+    const char *chars = env->GetStringUTFChars(path, nullptr);
+    const std::string result = host().startCapture(chars ? chars : "", source);
+    if (chars) env->ReleaseStringUTFChars(path, chars);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeStopCapture(JNIEnv *, jobject) { host().stopCapture(); }
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCapturing(JNIEnv *, jobject) {
+    return host().capturing() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCapturedSeconds(JNIEnv *, jobject) {
+    return host().capturedSeconds();
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCapturedPeak(JNIEnv *, jobject) { return host().capturedPeak(); }
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureOverflowed(JNIEnv *, jobject) {
+    return host().captureOverflowed() ? JNI_TRUE : JNI_FALSE;
+}
+
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeMidiEvent(JNIEnv *, jobject, jint rackId, jint status,
                                                    jint d1, jint d2) {

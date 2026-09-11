@@ -125,6 +125,21 @@ class EngineHost {
     float peakLevel() const;
     float rackPeak(int rack) const;
     float masterFade() const;
+    // --- Audio in -------------------------------------------------------
+    bool startInput();
+    void stopInput();
+    bool inputRunning() const;
+    float inputPeak();
+    void setInputGain(float gain);
+    void setMonitorLevel(float level);
+    /** Record either what is coming in or what is going out. */
+    std::string startCapture(const std::string &path, int source);
+    void stopCapture();
+    bool capturing() const;
+    float capturedSeconds() const;
+    float capturedPeak() const;
+    bool captureOverflowed() const;
+
     uint32_t notesOn(int rack) const;
     uint32_t notesOff(int rack) const;
     // Debug: the live (smoothed, unit-range) value of a mounted machine's parameter.

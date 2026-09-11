@@ -345,6 +345,9 @@ fun EditScreen(
             selectedPad = selectedPad,
             onImportSample = { pad -> onImportSample(trackIndex, pad) },
             onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },
+            onAssignSample = { pad, rel ->
+                editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), rel) }
+            },
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         )
         }
