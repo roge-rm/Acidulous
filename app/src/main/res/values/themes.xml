@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Acidulous" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+      Dark, edge to edge, and into the cutout. The app is a dark instrument
+      face; a light system theme painted the status and navigation bars white
+      around it and took a strip off the top and bottom of the screen, which
+      on a phone is the space a piano roll wants. The bars are transparent
+      here and hidden at runtime (MainActivity), and the layout keeps its
+      content out of the cutout with safeDrawing insets.
+    -->
+    <style name="Theme.Acidulous" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/ink</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
 </resources>

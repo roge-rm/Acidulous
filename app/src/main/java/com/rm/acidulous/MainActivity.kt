@@ -27,6 +27,15 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.activity.SystemBarStyle
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.ui.graphics.Color
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.rm.acidulous.engine.EngineAssets
@@ -55,15 +64,46 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.rm.acidulous.ui.UiPrefs.init(this)
         EngineAssets.install(this)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+        )
+        goFullScreen()
         setContent {
             AcidulousTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = Color(0xFF1B1B1E),
+                    // The bars are hidden, so their insets are not space this
+                    // app has to give up; a camera cutout is, and so is the
+                    // gesture handle at the bottom. Those two only.
+                    contentWindowInsets = WindowInsets.displayCutout.union(WindowInsets.navigationBars),
+                ) { innerPadding ->
                     App(Modifier.padding(innerPadding))
                 }
             }
         }
+    }
+
+    /**
+     * The screen is the instrument. A phone gives back two strips of height
+     * by hiding the status and navigation bars, which is a bar of piano roll
+     * or a row of pads, and nothing in this app needs a clock on top of it.
+     * The bars stay one swipe away and hide themselves again afterwards.
+     */
+    private fun goFullScreen() {
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // A dialog, a permission prompt or the recents screen brings them
+        // back; take the height again as soon as we have focus.
+        if (hasFocus) goFullScreen()
     }
 }
 

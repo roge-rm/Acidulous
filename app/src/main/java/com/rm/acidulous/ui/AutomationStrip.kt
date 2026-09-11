@@ -62,6 +62,10 @@ fun AutomationStrip(
     firstTick: Int = 0,
     visibleTicks: Int = 0,
     laneKeys: List<String>,          // every parameter a lane could be added for
+    /** "Mosaic · grains position" for the list. */
+    nameOf: (String) -> String = { it },
+    /** "position" for the gutter, where one word fits. */
+    shortOf: (String) -> String = { laneParam(it) },
     selected: String?,
     onSelect: (String?) -> Unit,
     onGestureBegin: () -> Unit,
@@ -108,7 +112,7 @@ fun AutomationStrip(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        current?.let { laneParam(it) } ?: "∿ auto",
+                        current?.let { shortOf(it) } ?: "∿ auto",
                         color = Color(0xFFFFB454), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                         maxLines = 1, softWrap = false,
                         // Turned on its side for the same reason the scale chip is:
@@ -128,7 +132,7 @@ fun AutomationStrip(
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll), scrollState = menuScroll) {
                 for (k in laneKeys) {
                     DropdownMenuItem(
-                        text = { Text((if (k in existing) "● " else "  ") + k, fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
+                        text = { Text((if (k in existing) "● " else "  ") + nameOf(k), fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
                         // A lane is cleared where it is listed, so every lane
                         // that exists can be got rid of without selecting it first.
                         trailingIcon = if (k !in existing) null else ({
@@ -141,7 +145,7 @@ fun AutomationStrip(
                     )
                 }
                 if (current != null) {
-                    DropdownMenuItem(text = { Text("Clear ${laneParam(current)}") }, onClick = { menu = false; onClear(current) })
+                    DropdownMenuItem(text = { Text("Clear ${shortOf(current)}") }, onClick = { menu = false; onClear(current) })
                 }
             }
         }
@@ -217,7 +221,7 @@ fun AutomationStrip(
             // The graph keeps drawing while folded, so the name needs a ground
             // of its own or it reads as part of the curve.
             Text(
-                current?.let { laneParam(it) } ?: "∿ auto",
+                current?.let { shortOf(it) } ?: "∿ auto",
                 color = Color(0xFFFFB454), fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                 maxLines = 1, softWrap = false,
                 modifier = Modifier.align(Alignment.CenterStart)

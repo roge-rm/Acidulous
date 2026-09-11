@@ -10,6 +10,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -76,6 +78,8 @@ fun MachinePanel(
     modifier: Modifier = Modifier,
 ) {
     val type = track.machine.type
+    // Folded away, the panel is just its title row: the roll takes the rest.
+    var minimized by rememberSaveable { mutableStateOf(false) }
     val info = remember(type) { NativeEngine.machineParamInfo(type) }
     val binding = rememberParamBinding(trackIndex, type, info, editor)
 
@@ -86,8 +90,11 @@ fun MachinePanel(
                 binding.applyAll(params)
             }
         }
-        PatchBar(type, patchNames, onSavePatch, loadPatch, factoryPatchNames, userPatchNames, onDeletePatch)
-        when (type) {
+        PatchBar(
+            type, patchNames, onSavePatch, loadPatch, factoryPatchNames, userPatchNames, onDeletePatch,
+            minimized = minimized, onToggleMinimized = { minimized = !minimized },
+        )
+        if (!minimized) when (type) {
             "Subvert" -> SubvertPanel(binding)
             "Hexbeat" -> HexbeatPanel(binding)
             "Trinity" -> TrinityPanel(binding)
@@ -165,16 +172,22 @@ fun rememberParamBinding(
 private fun PatchBar(
     type: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit,
     factoryNames: () -> List<String>, userNames: () -> List<String>, onDelete: (String) -> Unit,
+    minimized: Boolean, onToggleMinimized: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var browsing by remember { mutableStateOf(false) }
     var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(type, color = Color.White, fontSize = 13.sp)
         TextButton(onClick = { menu = true }) { Text("patch ▾", color = Color(0xFFFFB454), fontSize = 11.sp) }
         TextButton(onClick = { saving = true }) { Text("save as…", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
         TextButton(onClick = { browsing = true }) { Text("browse…", color = Color(0xFFBBBBBB), fontSize = 11.sp) }
+        // Pushed to the far edge: the title row stays, everything under it goes.
+        Spacer(Modifier.weight(1f))
+        TextButton(onClick = onToggleMinimized, contentPadding = PaddingValues(horizontal = 8.dp)) {
+            Text(if (minimized) "▴" else "▾", color = Color(0xFFBBBBBB), fontSize = 13.sp)
+        }
         val menuScroll = rememberScrollState()
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll), scrollState = menuScroll) {
             for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })

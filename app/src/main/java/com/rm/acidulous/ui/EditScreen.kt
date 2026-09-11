@@ -100,8 +100,9 @@ fun EditScreen(
     var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 eventors - in the same space
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var scaleDialog by remember { mutableStateOf(false) }
-    // Folded by preference, remembered across rotation: most editing is notes.
-    var autoFolded by rememberSaveable { mutableStateOf(false) }
+    // Folding the strip is a preference, not a property of this clip, so it
+    // is held for the whole app and across launches - see UiPrefs.
+    val autoFolded = UiPrefs.automationFolded
     var scaleView by rememberSaveable { mutableStateOf(ScaleView.Dim) }
     // Long clips are paged two bars at a time, as the drum grid is paged one.
     // More than two bars across a phone leaves notes too narrow to grab.
@@ -290,6 +291,8 @@ fun EditScreen(
             firstTick = firstTick,
             visibleTicks = pageTicks,
             laneKeys = laneKeys,
+            nameOf = { com.rm.acidulous.model.laneLabel(track, it) },
+            shortOf = { com.rm.acidulous.model.laneShortLabel(track, it) },
             selected = laneKey,
             onSelect = { laneKey = it },
             onGestureBegin = { editor.beginGesture(trackIndex) },
@@ -303,7 +306,7 @@ fun EditScreen(
             onGestureEnd = { editor.endGesture() },
             onClear = { key -> editor.editClip(trackIndex, sceneId) { c -> c.copy(automation = c.automation - key) } },
             collapsed = autoFolded,
-            onToggleCollapse = { autoFolded = !autoFolded },
+            onToggleCollapse = { UiPrefs.foldAutomation(!autoFolded) },
             modifier = Modifier.fillMaxWidth().height(if (autoFolded) 24.dp else 88.dp).padding(top = 4.dp),
         )
 
