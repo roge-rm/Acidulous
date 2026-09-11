@@ -41,6 +41,7 @@ object PatchStore {
         "Ratio" -> RatioPresets.all
         "Mosaic" -> MosaicPresets.all
         "Hexbeat" -> HexbeatPresets.all
+        "Manual" -> ManualPresets.all
         else -> emptyList()
     }
 
@@ -305,5 +306,64 @@ object MosaicPresets {
             "a_sustain" to 1f, "a_release" to decay(0.5f),
             "m01_src" to src(SRC_MOD), "m01_dest" to dest(DST_SCAN), "m01_depth" to depth(0.8f)),
         p("Backwards", "reverse" to 1f, "start" to 0.99f, "a_attack" to attack(0.15f), "a_sustain" to 1f),
+    )
+}
+
+/**
+ * Manual's factory registrations. A drawbar is quoted the way an organist
+ * quotes one - 88 8000 000, eight being all the way out - so the helper
+ * takes those digits and the rest is normalised the usual way.
+ *
+ * The first five are tonewheel registrations anybody would recognise. The
+ * last four are the other three instruments and one that only this organ
+ * can do.
+ */
+object ManualPresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Manual", name, kv.toMap())
+    private fun st(index: Int, steps: Int) = index.toFloat() / (steps - 1).toFloat()
+    private val barNames = listOf("16", "513", "8", "4", "223", "2", "135", "113", "1")
+
+    /** "888000000" as the nine drawbars of one manual. */
+    private fun bars(prefix: String, digits: String): List<Pair<String, Float>> =
+        digits.mapIndexed { i, c -> "$prefix${barNames[i]}" to (c - '0') / 8f }
+
+    private fun reg(name: String, upper: String, lower: String, vararg kv: Pair<String, Float>) =
+        Patch("Manual", name, (bars("ua_", upper) + bars("la_", lower) + kv.toList()).toMap())
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        reg("Gospel", "888000000", "008800000",
+            "perc" to 1f, "percharm" to 1f, "percfast" to 1f, "perclvl" to 0.7f,
+            "rotary" to 1f, "rotspeed" to st(2, 3), "drive" to 0.3f, "vibtype" to st(3, 6), "vibdepth" to 0.5f),
+        reg("Smoke", "888800000", "888000000",
+            "perc" to 0f, "rotary" to 1f, "rotspeed" to st(1, 3), "drive" to 0.45f, "click" to 0.5f,
+            "age" to 0.4f, "leakage" to 0.3f),
+        reg("Booker", "868868868", "848000000",
+            "perc" to 1f, "percharm" to 0f, "percfast" to 0f, "perclvl" to 0.5f,
+            "rotary" to 1f, "rotspeed" to st(2, 3), "drive" to 0.35f),
+        reg("Full Draw", "888888888", "888888888",
+            "perc" to 0f, "rotary" to 1f, "rotspeed" to st(2, 3), "drive" to 0.55f, "vibtype" to st(5, 6),
+            "vibdepth" to 0.8f, "click" to 0.6f),
+        reg("Combo", "800000000", "000000000",
+            "model" to st(1, 4), "combowave" to st(0, 3), "tab16" to 0.8f, "tab8" to 1f, "tab4" to 0.7f,
+            "tab2r" to 0.5f, "reedy" to 0.6f, "vibtype" to st(1, 6), "vibdepth" to 0.7f, "vibrate" to 0.75f,
+            "rotary" to 0f, "drive" to 0.2f),
+        reg("Cathedral", "888000000", "808000000",
+            "model" to st(2, 4), "principal" to 1f, "flute" to 0.7f, "string" to 0.45f, "reed" to 0.3f,
+            "mixture" to 0.6f, "chiff" to 0.45f, "tracker" to 0.3f, "windsag" to 0.35f, "windnoise" to 0.15f,
+            "rotary" to 0f, "perc" to 0f, "attack" to 0.35f, "release" to 0.3f),
+        reg("Harmonium", "880000000", "800000000",
+            "model" to st(3, 4), "pressure" to 0.75f, "buzz" to 0.45f, "reedtrem" to 0.35f,
+            "windsag" to 0.5f, "tremrate" to 0.4f, "rotary" to 0f, "perc" to 0f),
+        // The one no organ does: two registrations, morphed by an LFO, over a
+        // generator that has been sprayed apart.
+        Patch("Manual", "Drift", (bars("ua_", "888000000") + bars("ub_", "004568888") +
+            bars("la_", "808000000") + listOf(
+            "morph" to 0f, "morphsrc" to st(9, 15), "morphamt" to 1f,
+            "lfo1wave" to st(0, 9), "lfo1rate" to 0.2f, "lfo1depth" to 1f,
+            "m1_src" to st(9, 15), "m1_dst" to st(1, 25), "m1_amt" to 0.75f,
+            "m2_src" to st(11, 15), "m2_dst" to st(10, 25), "m2_amt" to 0.3f,
+            "spray" to 0.45f, "spraywide" to 0.8f, "sprayrate" to 0.3f,
+            "rotary" to 1f, "rotspeed" to st(1, 3), "drive" to 0.25f)).toMap()),
     )
 }
