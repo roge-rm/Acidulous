@@ -234,6 +234,14 @@ fun MainScreen(
                 OutlinedButton(onClick = { if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(position.scene) }, contentPadding = pad) {
                     Text(if (playing) "■" else "▶")
                 }
+                // Panic. A modular makes a runaway easy to build and a pair
+                // of headphones does not forgive one, so this is one tap,
+                // never behind a menu, and it is red for a reason.
+                OutlinedButton(
+                    onClick = { NativeEngine.panic() },
+                    contentPadding = PaddingValues(horizontal = 10.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE74C3C)),
+                ) { Text("panic", color = Color(0xFFE74C3C), fontSize = 12.sp, maxLines = 1) }
                 OutlinedButton(onClick = { onLoopScene(!loopScene) }, contentPadding = pad) {
                     Text(if (loopScene) "loop: scene" else "loop: song", fontSize = 12.sp, maxLines = 1)
                 }

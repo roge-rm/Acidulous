@@ -34,11 +34,16 @@ class MasterBus {
     float readPeak() { return peakHold.exchange(0.0f, std::memory_order_relaxed); }
     float currentFade() const { return fadeNow.load(std::memory_order_relaxed); }
 
+    /** Empty every tail and come back from silence. Audio thread. */
+    void panic();
+
   private:
     ParamSet params_;
     dsp::Reverb reverb;
     dsp::Delay delay;
     dsp::Limiter<kBlockFrames> limiter;
+    float sampleRate = 48000.0f;
+    float panicRamp = 1.0f;
     dsp::Click click;
     Smoothed fadeSmooth;
     float sumL[kBlockFrames]{}, sumR[kBlockFrames]{};

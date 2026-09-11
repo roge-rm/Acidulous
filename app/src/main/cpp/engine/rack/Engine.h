@@ -51,6 +51,13 @@ class Engine {
     std::atomic<float> inputGain{1.0f};
     std::atomic<float> monitorLevel{0.0f};
     Capture capture;
+
+    /**
+     * Stop everything, now. Set from any thread; acted on at the next block
+     * boundary, because that is the only safe moment to reset a machine that
+     * the audio thread is otherwise in the middle of.
+     */
+    std::atomic<bool> panicFlag{false};
     float inputScratch[kBlockFrames * 2] = {};
 
   private:

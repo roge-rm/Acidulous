@@ -31,6 +31,7 @@ void MasterBus::prepare(int32_t sampleRate) {
     reverb.prepare(sampleRate);
     delay.prepare(sampleRate);
     limiter.prepare(sampleRate);
+    this->sampleRate = static_cast<float>(sampleRate);
     click.prepare(sampleRate);
     params_.jumpAll();
 }
@@ -83,9 +84,25 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
 
     if (clickEnabled()) click.process(sumL, sumR, frames, params_.get(ClickVolume));
 
+    // Coming back from a panic, the output is ramped rather than switched,
+    // so the recovery itself cannot click.
+    if (panicRamp < 1.0f) {
+        const float step = 1.0f / (0.03f * sampleRate);
+        for (int32_t i = 0; i < frames; ++i) {
+            panicRamp = panicRamp + step > 1.0f ? 1.0f : panicRamp + step;
+            sumL[i] *= panicRamp;
+            sumR[i] *= panicRamp;
+        }
+    }
+
     float peak = 0.0f;
     for (int32_t i = 0; i < frames; ++i) {
         float l = sumL[i], r = sumR[i];
+        // A NaN is not greater than one and not less than minus one, so the
+        // clamp below lets it straight through to the speakers as noise at
+        // full scale. Whatever produced it, it stops here.
+        if (!std::isfinite(l)) l = 0.0f;
+        if (!std::isfinite(r)) r = 0.0f;
         if (l > 1.0f) l = 1.0f; else if (l < -1.0f) l = -1.0f;
         if (r > 1.0f) r = 1.0f; else if (r < -1.0f) r = -1.0f;
         out[i * 2] = l;
@@ -95,6 +112,16 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
         if (b > peak) peak = b;
     }
     if (peak > peakHold.load(std::memory_order_relaxed)) peakHold.store(peak, std::memory_order_relaxed);
+}
+
+void MasterBus::panic() {
+    // Everything with a tail is emptied: a runaway that has already filled
+    // the reverb and the delay would otherwise go on sounding after the
+    // machines that made it have stopped.
+    reverb.reset();
+    delay.reset();
+    limiter.reset();
+    panicRamp = 0.0f;
 }
 
 } // namespace acidulous

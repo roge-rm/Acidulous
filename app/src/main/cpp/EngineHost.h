@@ -147,6 +147,9 @@ class EngineHost {
     float capturedPeak() const;
     bool captureOverflowed() const;
 
+    /** Stop everything and silence every tail. Safe from any thread. */
+    void panic();
+
     uint32_t notesOn(int rack) const;
     uint32_t notesOff(int rack) const;
     // Debug: the live (smoothed, unit-range) value of a mounted machine's parameter.

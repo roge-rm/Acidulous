@@ -174,6 +174,15 @@ object NativeEngine {
     /** The scene fade multiplier the master is applying right now (1 = none). */
     val masterFade: Float get() = nativeGetMasterFade()
 
+    /**
+     * Stop everything and silence every tail, now. For the moment a patch
+     * runs away, which a modular makes easy and a headphone amplifier does
+     * not forgive.
+     */
+    fun panic() = nativePanic()
+
+    private external fun nativePanic()
+
     // --- Nexus -----------------------------------------------------------
 
     /** Build a patch on this thread and hand it to the rack. "" or an error. */

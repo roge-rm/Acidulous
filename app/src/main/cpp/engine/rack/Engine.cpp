@@ -30,6 +30,23 @@ void Engine::renderBlock(const float *in, float *out) {
         InputBus::get().publish(in, in != nullptr ? kBlockFrames : 0);
     }
 
+    // Panic first, before anything else runs: whatever is happening, the
+    // next thing that leaves this engine should be silence.
+    if (panicFlag.exchange(false, std::memory_order_acq_rel)) {
+        transport.stopFromAudioThread();
+        playing = false;
+        startPending = false;
+        scheduler.allNotesOff();
+        for (int32_t r = 0; r < kRackCount; ++r) {
+            racks[r].allNotesOff();
+            if (Machine *m = racks[r].currentMachine()) m->reset();
+            for (int32_t s = 0; s < kEffectSlots; ++s) {
+                if (Effect *e = racks[r].currentEffect(s)) e->reset();
+            }
+        }
+        master.panic();
+    }
+
     // Transport: apply a play/stop the UI asked for, only ever between blocks.
     if (transport.applyRequests()) {
         if (transport.isPlaying()) {

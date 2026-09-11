@@ -708,6 +708,8 @@ float EngineHost::capturedSeconds() const {
 float EngineHost::capturedPeak() const { return sEngine.capture.peak(); }
 bool EngineHost::captureOverflowed() const { return sEngine.capture.overflowed(); }
 
+void EngineHost::panic() { sEngine.panicFlag.store(true, std::memory_order_release); }
+
 uint32_t EngineHost::notesOn(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].clipPlayer.notesOn() : 0;
 }

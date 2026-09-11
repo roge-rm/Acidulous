@@ -173,6 +173,9 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOff(JNIEnv *, jobject, jint 
     host().noteOff(rackId, static_cast<uint8_t>(note & 0x7f));
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativePanic(JNIEnv *, jobject) { host().panic(); }
+
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeLoadNexusPatch(JNIEnv *env, jobject, jint rack, jstring spec) {
     const char *chars = env->GetStringUTFChars(spec, nullptr);
