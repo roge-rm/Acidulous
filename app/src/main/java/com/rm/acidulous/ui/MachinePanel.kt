@@ -129,6 +129,7 @@ fun MachinePanel(
             "Cumulus" -> CumulusPanel(binding)
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding)
+            "Brazen" -> BrazenPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
@@ -2010,6 +2011,99 @@ private fun FilamentPanel(b: ParamBinding) {
                     Group("out") {
                         PanelKnob(b, "drive", "drive", PanelPink)
                         PanelKnob(b, "exciter out", "exciter")
+                        PanelKnob(b, "volume", "volume")
+                        PanelKnob(b, "pan", "pan")
+                    }
+                }
+            }
+        }
+    }
+}
+
+// --- Brazen -----------------------------------------------------------------
+//
+// The horn first, because the horn is the instrument: how big the tube is,
+// what the bell does with the wave, and what is stuffed into it. Then the
+// player - lips, air, how hard they are leaning on it. Then the section,
+// which is the reason this machine exists and the only page here with no
+// equivalent on a sampled brass library.
+
+private val BRAZEN_MUTES = listOf("open", "straight", "cup", "harmon")
+
+@Composable
+private fun BrazenPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    Column {
+        SectionChips(listOf("horn", "player", "section", "shape", "out"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("tube") {
+                        PanelKnob(b, "size", "tuba→trpt", PanelAmber)
+                        PanelKnob(b, "bell", "bell", PanelAmber)
+                        PanelKnob(b, "loss", "loss")
+                    }
+                    Group("mute") {
+                        PanelStepKnob(b, "mute", BRAZEN_MUTES, "kind", PanelAmber)
+                        PanelKnob(b, "mutetone", "tone")
+                    }
+                    Group("filter") {
+                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                        PanelKnob(b, "resonance", "reso", PanelAmber)
+                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                    }
+                }
+                1 -> {
+                    Group("lips") {
+                        PanelKnob(b, "tension", "tension", PanelAmber)
+                        PanelKnob(b, "lipdamp", "damping", PanelAmber)
+                        PanelKnob(b, "bite", "bite", PanelPink)
+                    }
+                    Group("air") {
+                        PanelKnob(b, "pressure", "pressure", PanelAmber)
+                        PanelKnob(b, "breath", "breath")
+                        PanelKnob(b, "brass", "brassiness", PanelPink)
+                    }
+                    Group("growl") {
+                        PanelKnob(b, "growl", "growl", PanelPink)
+                        PanelKnob(b, "growlrate", "rate")
+                    }
+                }
+                2 -> {
+                    Group("players") {
+                        PanelStepKnob(b, "players", listOf("1", "2", "3", "4"), "how many", PanelAmber)
+                        PanelKnob(b, "spread", "spread", PanelAmber)
+                        PanelKnob(b, "scatter", "scatter")
+                        PanelKnob(b, "width", "width")
+                    }
+                    Group("listening") {
+                        PanelKnob(b, "lock", "lock", PanelPink)
+                        PanelKnob(b, "drift", "drift", PanelPink)
+                    }
+                }
+                3 -> {
+                    Group("envelope") {
+                        PanelKnob(b, "attack", "attack"); PanelKnob(b, "decay", "decay")
+                        PanelKnob(b, "sustain", "sustain"); PanelKnob(b, "release", "release")
+                    }
+                    Group("vibrato") {
+                        PanelKnob(b, "vibrato", "depth", PanelAmber)
+                        PanelKnob(b, "vibratorate", "rate")
+                        PanelKnob(b, "vibratodelay", "delay")
+                    }
+                    Group("tuning") {
+                        PanelSwitch(b, "mono", listOf("poly", "mono"), "mode")
+                        PanelKnob(b, "glide", "glide")
+                        PanelKnob(b, "bendrange", "bend")
+                        PanelKnob(b, "octave", "octave")
+                        PanelKnob(b, "transpose", "transpose")
+                        PanelKnob(b, "fine", "fine")
+                    }
+                }
+                else -> {
+                    Group("out") {
+                        PanelKnob(b, "velocity", "velocity", PanelAmber)
+                        PanelKnob(b, "drive", "drive", PanelPink)
                         PanelKnob(b, "volume", "volume")
                         PanelKnob(b, "pan", "pan")
                     }

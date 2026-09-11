@@ -35,7 +35,7 @@ object MachineUi {
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup("drums", listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
-        MachineGroup("realish", listOf("Manual", "Filament", "Mosaic", "Pollen")),
+        MachineGroup("realish", listOf("Manual", "Filament", "Brazen", "Mosaic", "Pollen")),
         MachineGroup("beyond", listOf("Cipher", "Nexus")),
     )
 
@@ -53,6 +53,7 @@ object MachineUi {
         "Forage" -> "sampled drums, with a filter and envelope per pad"
         "Manual" -> "tonewheel organ, two manuals and a spinning cabinet"
         "Filament" -> "strings by modelling - pluck, bow or breathe at them"
+        "Brazen" -> "brass by modelling - one player, or a section that listens"
         "Mosaic" -> "multisamples: zones, SoundFonts, grain clouds"
         "Pollen" -> "granular clouds that seed their own, from a file or live"
         "Cipher" -> "a vocoder whose band map is the instrument"
@@ -70,7 +71,8 @@ object MachineUi {
      */
     fun usesPerformance(type: String): Boolean =
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
-            type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen"
+            type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen" ||
+            type == "Brazen"
 
     /** Genesis's kit, mirroring engine/machine/genesis/Genesis.h's Voice order. */
     val genesisVoices: List<DrumVoice> = listOf(

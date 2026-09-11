@@ -60,6 +60,7 @@ object PatchStore {
         "Formulate" -> FormulatePresets.all
         "Cipher" -> CipherPresets.all
         "Filament" -> FilamentPresets.all
+        "Brazen" -> BrazenPresets.all
         "Nexus" -> NexusPresets.all
         else -> emptyList()
     }
@@ -463,6 +464,55 @@ object FilamentPresets {
         p("Wire", "exciter" to st(1, 6), "position" to 0.05f, "sustain" to 0.99f, "tone" to 0.85f,
             "stiffness" to 0.85f, "stages" to st(4, 5), "tension" to 0.8f, "detune" to 0.6f,
             "couple" to 0.8f, "rattle" to 0.3f, "drive" to 0.3f),
+    )
+}
+
+/**
+ * Brazen's factory patches. The first five are the instrument: the same
+ * model with a different tube and a different pair of lips, tuba to
+ * trumpet. The last three are the section, which is the machine's own
+ * argument - the same four players listening hard, listening a little, and
+ * not listening at all.
+ */
+object BrazenPresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Brazen", name, kv.toMap())
+    private fun st(index: Int, steps: Int) = index.toFloat() / (steps - 1).toFloat()
+
+    // The awkward ranges, written out so the numbers below mean something.
+    private fun bell(hz: Float) = (hz - 0.05f) / 0.9f          // "bell", 0.05..0.95
+    private fun damp(v: Float) = (v - 0.05f) / 0.9f            // "lipdamp", 0.05..0.95
+    private fun tense(v: Float) = (v - 0.45f) / 0.9f           // "tension", 0.45..1.35
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        p("Tuba", "size" to 0.1f, "bell" to bell(0.8f), "lipdamp" to damp(0.55f), "brass" to 0.6f,
+            "pressure" to 0.75f, "bite" to 0.3f, "attack" to 0.55f, "release" to 0.6f,
+            "octave" to st(2, 7), "vibrato" to 0.05f, "volume" to 0.6f),
+        p("Trombone", "size" to 0.45f, "bell" to bell(0.6f), "lipdamp" to damp(0.6f), "brass" to 0.6f,
+            "pressure" to 0.8f, "bite" to 0.4f, "attack" to 0.45f, "glide" to 0.1f,
+            "vibrato" to 0.1f, "volume" to 0.55f),
+        // The horn is played into a hand, from the wrong end of a very long
+        // tube: dark, slow to speak, and never quite in tune with itself.
+        p("Horn", "size" to 0.5f, "bell" to bell(0.3f), "lipdamp" to damp(0.45f), "brass" to 0.3f,
+            "pressure" to 0.7f, "attack" to 0.62f, "release" to 0.65f, "players" to st(1, 4),
+            "spread" to 0.12f, "lock" to 0.6f, "vibrato" to 0.12f, "volume" to 0.55f),
+        p("Trumpet", "size" to 0.9f, "bell" to bell(0.65f), "lipdamp" to damp(0.65f), "brass" to 0.55f,
+            "pressure" to 0.85f, "bite" to 0.5f, "attack" to 0.3f, "vibrato" to 0.15f,
+            "volume" to 0.5f),
+        p("Harmon", "size" to 0.9f, "bell" to bell(0.6f), "lipdamp" to damp(0.6f), "brass" to 0.4f,
+            "mute" to st(3, 4), "mutetone" to 0.6f, "pressure" to 0.8f, "attack" to 0.35f,
+            "vibrato" to 0.2f, "volume" to 0.45f),
+        // Four players who have been together twenty years.
+        p("Section", "size" to 0.7f, "bell" to bell(0.6f), "lipdamp" to damp(0.6f), "brass" to 0.5f,
+            "pressure" to 0.8f, "players" to st(3, 4), "spread" to 0.3f, "scatter" to 0.25f,
+            "lock" to 0.85f, "drift" to 0.2f, "width" to 0.85f, "attack" to 0.45f, "volume" to 0.45f),
+        // Four who met this morning. Same notes, same knobs, one number.
+        p("Shambles", "size" to 0.7f, "bell" to bell(0.6f), "lipdamp" to damp(0.6f), "brass" to 0.5f,
+            "pressure" to 0.8f, "players" to st(3, 4), "spread" to 0.75f, "scatter" to 0.67f,
+            "lock" to 0.05f, "drift" to 0.7f, "width" to 1f, "attack" to 0.5f, "volume" to 0.45f),
+        p("Growl", "size" to 0.85f, "bell" to bell(0.7f), "lipdamp" to damp(0.7f), "brass" to 0.8f,
+            "tension" to tense(1.05f), "pressure" to 0.9f, "bite" to 0.6f, "growl" to 0.7f,
+            "growlrate" to 0.6f, "drive" to 0.25f, "attack" to 0.3f, "volume" to 0.45f),
     )
 }
 
