@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.DrumVoice
 import com.rm.acidulous.model.Note
@@ -54,7 +53,14 @@ fun DrumGrid(
         Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             for (voice in voices) {
                 Row(Modifier.fillMaxWidth().height(24.dp), horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(voice.short, color = Color(0xFFBBBBBB), fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.width(24.dp))
+                    // Same width and size as the roll's pitch gutter: the
+                    // two editors show the same clip and are read as one.
+                    Text(
+                        voice.short, color = Color(0xFFBBBBBB),
+                        fontSize = NameTextSize, fontFamily = FontFamily.Monospace,
+                        maxLines = 1, softWrap = false,
+                        modifier = Modifier.width(GutterWidth),
+                    )
                     for (s in 0 until stepsPerBar) {
                         val tick = bar * ticksPerBar + s * grid
                         val hit = clip.notes.firstOrNull { it.tick == tick && it.pitch == voice.note }

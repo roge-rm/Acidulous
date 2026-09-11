@@ -24,7 +24,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import com.rm.acidulous.model.Clip
@@ -43,14 +42,6 @@ enum class EditMode { Draw, Select }
  * playable notes have a lane. The corner of the roll cycles them.
  */
 enum class ScaleView { Chromatic, Dim, Fold }
-
-/**
- * The name gutter down the left and the bar ruler across the top. The gutter
- * width is shared with the automation strip below, so the two playheads sit
- * on the same tick.
- */
-internal val GutterWidth = 34.dp
-private val RulerHeight = 18.dp
 
 /**
  * The clip editor: one Canvas, notes drawn by hand, hit-tested by hand.
@@ -333,7 +324,7 @@ private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scal
                 black -> Color(0xFF8A8A92)
                 else -> Color(0xFFDDDDE2)
             },
-            fontSize = 10.sp,
+            fontSize = NameTextSize,
             fontFamily = FontFamily.Monospace,
         )
         val laid = measurer.measure(AnnotatedString(noteName(pitch)), style)
@@ -357,8 +348,8 @@ private fun DrawScope.drawBarRuler(geo: Geometry, size: Size, measurer: TextMeas
     // Number the beats too when a bar is wide enough to read them; otherwise
     // they stay as ticks and only the bars are named.
     val nameBeats = barW / beats > 56.dp.toPx()
-    val barStyle = TextStyle(color = Color(0xFFDDDDE2), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-    val beatStyle = TextStyle(color = Color(0xFF75757E), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+    val barStyle = TextStyle(color = Color(0xFFDDDDE2), fontSize = RulerTextSize, fontFamily = FontFamily.Monospace)
+    val beatStyle = TextStyle(color = Color(0xFF75757E), fontSize = TickTextSize, fontFamily = FontFamily.Monospace)
     val firstBar = geo.firstTick / geo.ticksPerBar
     val lastBar = (geo.lastTick + geo.ticksPerBar - 1) / geo.ticksPerBar
     for (bar in firstBar until max(firstBar + 1, lastBar)) {
@@ -441,7 +432,7 @@ private fun DrawScope.drawScaleCorner(geo: Geometry, measurer: TextMeasurer, has
     }
     val laid = measurer.measure(
         AnnotatedString(label),
-        TextStyle(color = colour, fontSize = 10.sp, fontFamily = FontFamily.Monospace),
+        TextStyle(color = colour, fontSize = NameTextSize, fontFamily = FontFamily.Monospace),
     )
     drawText(laid, topLeft = Offset((geo.originX - laid.size.width) / 2f, (geo.originY - laid.size.height) / 2f))
 }
