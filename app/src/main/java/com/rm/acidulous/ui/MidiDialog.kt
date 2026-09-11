@@ -71,9 +71,36 @@ private fun DevicesTab(context: android.content.Context) {
     if (!MidiHub.supported) {
         Text("This device has no MIDI support.", color = Acid.colors.red, fontSize = 12.sp)
     }
+
+    // Scanning is the only thing on this tab you *do*; the rest is what came
+    // back. A cable appears in the list by itself, so the one case where you
+    // opened this window to act - a Bluetooth instrument that is not here
+    // yet - should not be below the list of things that are.
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TextButton(onClick = {
+            val missing = MidiHub.bluetoothPermissions().filter {
+                context.checkSelfPermission(it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            }
+            if (missing.isEmpty()) MidiHub.scanBluetooth(context) else permission.launch(missing.toTypedArray())
+        }) {
+            Text(if (MidiHub.scanning) "scanning…" else "scan for bluetooth",
+                color = Acid.colors.accent, fontSize = 12.sp)
+        }
+        if (MidiHub.scanning) {
+            TextButton(onClick = { MidiHub.stopScan() }) { Text("stop", fontSize = 12.sp) }
+        }
+        if (!MidiHub.bluetoothReady(context)) {
+            Text("Bluetooth is off", color = Acid.colors.red, fontSize = 11.sp)
+        }
+    }
+    // Why the list looks the way it does. A scan that finds nothing and says
+    // nothing is indistinguishable from a scan that is broken, which is
+    // exactly how a wrong service UUID went unnoticed.
+    if (MidiHub.scanStatus.isNotEmpty()) Readout(MidiHub.scanStatus)
+
     ListSection(
         "connected",
-        if (ports.isEmpty()) "Plug something in over USB, or find it under bluetooth below."
+        if (ports.isEmpty()) "Plug something in over USB, or scan for a Bluetooth instrument above."
         else "Tap one to start or stop listening to it. ⎓ is a cable, ᛒ is Bluetooth.",
     ) {
         ports.forEach { port ->
@@ -88,35 +115,19 @@ private fun DevicesTab(context: android.content.Context) {
         if (ports.isEmpty()) Text("nothing connected", color = Acid.colors.textDim, fontSize = 12.sp)
     }
 
-    ListSection("bluetooth") {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = {
-                val missing = MidiHub.bluetoothPermissions().filter {
-                    context.checkSelfPermission(it) != android.content.pm.PackageManager.PERMISSION_GRANTED
-                }
-                if (missing.isEmpty()) MidiHub.scanBluetooth(context) else permission.launch(missing.toTypedArray())
-            }) { Text(if (MidiHub.scanning) "scanning…" else "scan", color = Acid.colors.accent, fontSize = 12.sp) }
-            if (MidiHub.scanning) {
-                TextButton(onClick = { MidiHub.stopScan() }) { Text("stop", fontSize = 12.sp) }
+    if (found.isNotEmpty()) {
+        ListSection("found", "Tap one to open it. It then appears above, like anything plugged in.") {
+            found.forEach { device ->
+                // A device that actually advertised the MIDI service is worth
+                // saying so about: in a widened scan everything else is a guess.
+                DialogRow(
+                    mark = if (device.midi) "ᛒ" else "·",
+                    name = device.name,
+                    under = if (device.midi) device.address else device.address + "  (no MIDI service)",
+                    trailing = "connect",
+                    monoUnder = true,
+                ) { MidiHub.connectBluetooth(context, device.address) }
             }
-            if (!MidiHub.bluetoothReady(context)) {
-                Text("Bluetooth is off", color = Acid.colors.red, fontSize = 11.sp)
-            }
-        }
-        // Why the list looks the way it does. A scan that finds nothing and
-        // says nothing is indistinguishable from a scan that is broken,
-        // which is exactly how a wrong service UUID went unnoticed.
-        if (MidiHub.scanStatus.isNotEmpty()) Readout(MidiHub.scanStatus)
-        found.forEach { device ->
-            // A device that actually advertised the MIDI service is worth
-            // saying so about: in a widened scan everything else is a guess.
-            DialogRow(
-                mark = if (device.midi) "ᛒ" else "·",
-                name = device.name,
-                under = if (device.midi) device.address else device.address + "  (no MIDI service)",
-                trailing = "connect",
-                monoUnder = true,
-            ) { MidiHub.connectBluetooth(context, device.address) }
         }
     }
 }
