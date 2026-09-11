@@ -243,15 +243,25 @@ internal fun GroupRow(content: @Composable () -> Unit) {
 @Composable
 internal fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()).padding(bottom = 4.dp),
+        Modifier.fillMaxWidth().padding(bottom = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         labels.forEachIndexed { i, l ->
             val on = i == selected
             Box(
-                Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Color(0xFF3F7D5E) else Color(0xFF2E2E33))
-                    .clickable { onSelect(i) }.padding(horizontal = 10.dp, vertical = 4.dp),
-            ) { Text(l, color = if (on) Color.White else Color(0xFFBBBBBB), fontSize = 10.sp, fontFamily = FontFamily.Monospace) }
+                // Equal shares of the full width: these are the machine's
+                // tabs, and a row of tabs that stops half way reads as broken.
+                Modifier.weight(1f).clip(RoundedCornerShape(4.dp))
+                    .background(if (on) Color(0xFF3F7D5E) else Color(0xFF2E2E33))
+                    .clickable { onSelect(i) }.padding(vertical = 5.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    l, color = if (on) Color.White else Color(0xFFBBBBBB), fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace, maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Clip, softWrap = false,
+                )
+            }
         }
     }
 }

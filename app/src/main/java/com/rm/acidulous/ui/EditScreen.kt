@@ -33,6 +33,14 @@ import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
 import com.rm.acidulous.model.MachineKind
 import com.rm.acidulous.model.MachineUi
+import com.rm.acidulous.model.Scales
+import com.rm.acidulous.model.EVENTOR_SLOTS
+import com.rm.acidulous.model.withEventor
+import com.rm.acidulous.model.withEventorBypass
+import com.rm.acidulous.model.withEventorParam
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
@@ -88,6 +96,36 @@ fun EditScreen(
     val laneKeys = remember(track.machine.type, slotTypes) { automationKeysFor(track) }
     var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 eventors - in the same space
     var selection by remember { mutableStateOf(emptySet<Int>()) }
+    var scaleDialog by remember { mutableStateOf(false) }
+
+    // The scale lives in a Scale eventor; the chip and its dialog are only a
+    // shortcut to the one eventor worth reaching while playing.
+    fun scaleSlot(): Int =
+        (0 until EVENTOR_SLOTS).firstOrNull { track.eventorAt(it).type == "Scale" }
+            ?: (0 until EVENTOR_SLOTS).firstOrNull { track.eventorAt(it).isEmpty } ?: 0
+
+    fun currentScale(): ScaleSetting {
+        val ev = track.eventorAt(scaleSlot())
+        return ScaleSetting(
+            on = ev.type == "Scale" && !ev.bypass,
+            key = Math.round((ev.params["key"] ?: 0f) * 11f),
+            scale = Math.round((ev.params["scale"] ?: 0f) * 32f),
+            degree = (ev.params["mode"] ?: 0f) >= 0.5f,
+            snap = Math.round((ev.params["snap"] ?: 0f) * 2f),
+        )
+    }
+
+    fun applyScale(s: ScaleSetting) {
+        val slot = scaleSlot()
+        editor.edit(trackIndex) { t ->
+            (if (t.eventorAt(slot).type == "Scale") t else t.withEventor(slot, "Scale"))
+                .withEventorParam(slot, "key", s.key / 11f)
+                .withEventorParam(slot, "scale", s.scale / 32f)
+                .withEventorParam(slot, "mode", if (s.degree) 1f else 0f)
+                .withEventorParam(slot, "snap", s.snap / 2f)
+                .withEventorBypass(slot, !s.on)
+        }
+    }
     var lowestPitch by remember {
         val lowest = clip.notes.minOfOrNull { it.pitch } ?: 36
         mutableStateOf((lowest - 3).coerceIn(0, 127 - ROWS))
@@ -163,6 +201,7 @@ fun EditScreen(
                 editor.editClip(trackIndex, sceneId) { c -> c.copy(notes = c.notes.filterIndexed { i, _ -> i != index }) }
             },
             onSelectionChange = { selection = it },
+            onAudition = { pitch -> preview(pitch) },
             onGestureBegin = { editor.beginGesture(trackIndex) },
             onMove = { indices, dTick, dPitch ->
                 editor.updateGestureClip(sceneId) { base ->
@@ -228,16 +267,18 @@ fun EditScreen(
             PerformanceStrip(trackIndex, Modifier.fillMaxWidth().padding(top = 6.dp))
         }
 
-        // Played from pads or from a slim keyboard, by machine kind.
-        var octave by remember { mutableStateOf(2) }
+        // Played from pads or from a real keyboard, by machine kind.
+        var octave by rememberSaveable(trackIndex) { mutableStateOf(3) }
         if (kind == MachineKind.Drums) DrumPads(trackIndex, voices, selectedPad, { selectedPad = it }, Modifier.fillMaxWidth().height(72.dp).padding(top = 6.dp))
-        else Row(Modifier.fillMaxWidth().height(64.dp).padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            TextButton(onClick = { if (octave > 0) octave-- }) { Text("−", color = Color.White) }
-            for (semitone in intArrayOf(0, 2, 4, 5, 7, 9, 11, 12)) {
-                val note = 12 * (octave + 1) + semitone
-                KeyboardKey(note, trackIndex, Modifier.weight(1f).fillMaxSize())
-            }
-            TextButton(onClick = { if (octave < 8) octave++ }) { Text("+", color = Color.White) }
+        else Row(Modifier.fillMaxWidth().height(78.dp).padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            ScaleChip(
+                label = Scales.labelFor(track),
+                onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
+                onOpen = { scaleDialog = true },
+                modifier = Modifier.width(22.dp).fillMaxHeight(),
+            )
+            PianoKeys(trackIndex, octave, { octave = it }, Scales.activeFor(track), Scales.rootFor(track),
+                Modifier.weight(1f).fillMaxHeight())
         }
 
         // Footer: mode · undo/redo · transport · rec
@@ -273,9 +314,20 @@ fun EditScreen(
             )
         }
     }
+
+    if (scaleDialog) {
+        ScaleDialog(
+            current = currentScale(),
+            onDismiss = { scaleDialog = false },
+            onApply = { applyScale(it); scaleDialog = false },
+        )
+    }
 }
 
-private const val ROWS = 24
+// Sixteen rows rather than two full octaves: tall enough that every row can
+// carry its name and be hit with a finger, which matters more on a phone
+// than seeing the whole range at once. The arrows move the window.
+private const val ROWS = 16
 
 @Composable
 private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
