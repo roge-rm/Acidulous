@@ -119,6 +119,7 @@ fun MachinePanel(
         if (!minimized) when (type) {
             "Subvert" -> SubvertPanel(binding)
             "Hexbeat" -> HexbeatPanel(binding)
+            "Resonance" -> ResonancePanel(binding, selectedPad)
             "Trinity" -> TrinityPanel(binding)
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
@@ -1435,6 +1436,67 @@ private fun FormulaDialog(
     }
 }
 
+
+
+// --- Resonance -------------------------------------------------------------------
+
+private val RESONANCE_SHAPES = listOf("membrane", "bar", "plate", "tube", "bowl", "metal")
+
+/**
+ * Resonance's panel: one object at a time, chosen with the pads, because
+ * eight sets of fourteen knobs at once is a wall rather than an instrument.
+ * The kit-wide controls sit at the end, where they belong - coupling is the
+ * one that makes eight objects into one kit.
+ */
+@Composable
+private fun ResonancePanel(b: ParamBinding, pad: Int) {
+    val p = pad.coerceIn(0, 7)
+    fun n(name: String) = "p%02d_%s".format(p, name)
+    val hot = Acid.colors.accent
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("object ${p + 1}", color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+            Text(
+                "a shape, hit somewhere, with something - and it can hear the others",
+                color = Acid.colors.textDim, fontSize = 10.sp, maxLines = 1,
+            )
+        }
+        GroupRow {
+            Group("object") {
+                PanelStepKnob(b, n("kind"), RESONANCE_SHAPES, "shape", hot)
+                PanelKnob(b, n("tune"), "tune", hot)
+                PanelKnob(b, n("inharm"), "stiffness", hot)
+            }
+            Group("ring") {
+                PanelKnob(b, n("decay"), "decay", hot)
+                PanelKnob(b, n("damp"), "damping", hot)
+            }
+            Group("strike") {
+                PanelKnob(b, n("hit"), "where", hot)
+                PanelKnob(b, n("hard"), "hardness", hot)
+                PanelKnob(b, n("noise"), "grit")
+            }
+            Group("bend") {
+                PanelKnob(b, n("bend"), "amount")
+                PanelKnob(b, n("bendtime"), "time")
+            }
+            Group("out") {
+                PanelKnob(b, n("drive"), "drive", Acid.colors.pink)
+                PanelKnob(b, n("level"), "level")
+                PanelKnob(b, n("pan"), "pan")
+                PanelKnob(b, n("couple"), "listens", hot)
+            }
+            Group("kit") {
+                PanelKnob(b, "coupling", "coupling", hot)
+                PanelStepKnob(b, "modes", listOf("4", "8", "12", "16", "20", "24"), "modes")
+                PanelKnob(b, "humanise", "humanise")
+                PanelKnob(b, "accent", "accent")
+                PanelKnob(b, "volume", "volume")
+                PanelKnob(b, "pan", "pan")
+            }
+        }
+    }
+}
 
 // --- Pollen ----------------------------------------------------------------------
 

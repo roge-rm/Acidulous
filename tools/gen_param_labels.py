@@ -20,11 +20,11 @@ PANELS = {
     "RatioPanel": "Ratio", "MosaicPanel": "Mosaic", "ForagePanel": "Forage",
     "ManualPanel": "Manual", "CipherPanel": "Cipher", "FilamentPanel": "Filament",
     "NexusPanel": "Nexus", "CumulusPanel": "Cumulus", "FormulatePanel": "Formulate",
-    "PollenPanel": "Pollen",
+    "PollenPanel": "Pollen", "ResonancePanel": "Resonance",
 }
-# Forage names every control for the selected pad, so one panel describes
-# thirteen pads' worth of parameters.
-FORAGE_PADS = range(0, 13)
+# Some panels name every control for the *selected* pad, so one panel
+# describes a whole machine's worth of parameters.
+PAD_COUNTS = {"Forage": 13, "Resonance": 8}
 
 
 def split_args(text, start):
@@ -117,8 +117,8 @@ def harvest():
                     for v in range(lo, hi + 1):
                         key = expand(prefix_tpl, var, v) + pref.group(1)
                         put(labels, fn, key, expand(title, var, v), expand(label or pref.group(1), var, v))
-                elif pad and fn == "Forage":
-                    for v in FORAGE_PADS:
+                elif pad and fn in PAD_COUNTS:
+                    for v in range(PAD_COUNTS[fn]):
                         put(labels, fn, "p%02d_%s" % (v, pad.group(1)),
                             "pad %d %s" % (v + 1, title), label or pad.group(1))
         depth += line.count("{") - line.count("}")
