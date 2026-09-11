@@ -4,6 +4,17 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -114,4 +125,37 @@ fun Meter(peak: Float, modifier: Modifier = Modifier, vertical: Boolean = true) 
             drawRect(color, Offset(0f, 0f), Size(frac * size.width, size.height))
         }
     }
+}
+
+/**
+ * A header control sized to its glyph. Material's TextButton reserves a 48dp
+ * touch target in both directions, and a row of those leaves the title no
+ * room - which matters twice over now that a header has to fit beside a
+ * camera hole. These take the height of the row and only the width they need.
+ */
+@Composable
+fun HeaderButton(glyph: String, enabled: Boolean = true, onClick: () -> Unit) {
+    Box(
+        Modifier.size(width = 30.dp, height = 40.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(glyph, color = if (enabled) Color.White else Color(0xFF55555C), fontSize = 14.sp) }
+}
+
+/** The same, for a control that needs a word rather than a glyph. */
+@Composable
+fun HeaderTextButton(
+    label: String,
+    color: Color = Color(0xFFBBBBBB),
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier.height(40.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) { Text(label, color = if (enabled) color else Color(0xFF55555C), fontSize = 13.sp, maxLines = 1) }
 }

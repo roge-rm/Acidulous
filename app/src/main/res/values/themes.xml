@@ -6,8 +6,9 @@
       face; a light system theme painted the status and navigation bars white
       around it and took a strip off the top and bottom of the screen, which
       on a phone is the space a piano roll wants. The bars are transparent
-      here and hidden at runtime (MainActivity), and the layout keeps its
-      content out of the cutout with safeDrawing insets.
+      here and hidden at runtime (MainActivity). The window is allowed into
+      the cutout area, and each screen's header lays itself out around the
+      camera hole rather than below it - see ui/Cutout.kt.
     -->
     <style name="Theme.Acidulous" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>

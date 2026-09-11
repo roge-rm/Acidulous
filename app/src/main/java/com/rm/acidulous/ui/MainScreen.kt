@@ -106,16 +106,16 @@ fun MainScreen(
 
     Column(modifier.fillMaxSize().background(Color(0xFF1B1B1E))) {
         // --- Header: song, structure undo, file ----------------------------------------
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        CutoutRow(
+            Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+            spacing = 4.dp,
         ) {
-            Text(song.name, color = Color.White, fontSize = 16.sp, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            TextButton(onClick = { editor.undoSong() }, enabled = editor.canUndoSong()) { Text("↶") }
-            TextButton(onClick = { editor.redoSong() }, enabled = editor.canRedoSong()) { Text("↷") }
-            TextButton(onClick = onSave) { Text("save", fontSize = 12.sp) }
-            TextButton(onClick = { fileMenu = true }) { Text("file ▾", fontSize = 12.sp) }
+            Text(song.name, color = Color.White, fontSize = 16.sp, modifier = Modifier.fill(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            HeaderButton("↶", enabled = editor.canUndoSong()) { editor.undoSong() }
+            HeaderButton("↷", enabled = editor.canRedoSong()) { editor.redoSong() }
+            HeaderTextButton("save", onClick = onSave)
+            HeaderTextButton("file ▾", color = Color(0xFFFFB454)) { fileMenu = true }
             DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
                 DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
                 DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })

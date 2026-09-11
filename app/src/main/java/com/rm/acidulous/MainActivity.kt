@@ -29,7 +29,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.activity.SystemBarStyle
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.ui.graphics.Color
@@ -77,9 +79,12 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     containerColor = Color(0xFF1B1B1E),
                     // The bars are hidden, so their insets are not space this
-                    // app has to give up; a camera cutout is, and so is the
-                    // gesture handle at the bottom. Those two only.
-                    contentWindowInsets = WindowInsets.displayCutout.union(WindowInsets.navigationBars),
+                    // app has to give up. A camera cutout is - but only the
+                    // sides and the bottom are taken here, because the top
+                    // strip is where each screen's header lays itself out
+                    // around the hole rather than below it (see ui/Cutout.kt).
+                    contentWindowInsets = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
+                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
                 ) { innerPadding ->
                     App(Modifier.padding(innerPadding))
                 }
