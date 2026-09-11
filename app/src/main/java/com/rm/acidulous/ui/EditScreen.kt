@@ -224,6 +224,7 @@ fun EditScreen(
                 )
                 HeaderButton("▶") { page = (page + 1) % pages }
             }
+            LoadMeter()
             // Only the roll scrolls by octave; the step views have fixed rows.
             if (!steps) {
                 HeaderButton("▲") { lowestPitch = (lowestPitch + 12).coerceAtMost(127 - rows) }

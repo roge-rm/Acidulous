@@ -13,6 +13,40 @@ object MachineUi {
     fun kindOf(type: String): MachineKind = if (type == "Hexbeat" || type == "Forage") MachineKind.Drums else MachineKind.Keyboard
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
+    /**
+     * The machines, in groups, with a line each saying what they are.
+     *
+     * The picker was a list of names, and a name is no help when there are
+     * twelve of them and more coming: "Cipher" does not say vocoder. The
+     * order inside a group is the order they were built, which is also
+     * roughly simplest first.
+     */
+    data class MachineGroup(val label: String, val machines: List<String>)
+
+    val machineGroups: List<MachineGroup> = listOf(
+        MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
+        MachineGroup("drums", listOf("Hexbeat", "Forage")),
+        MachineGroup("real", listOf("Manual", "Filament", "Mosaic")),
+        MachineGroup("other", listOf("Cipher", "Nexus")),
+    )
+
+    /** One line per machine: what it is, not what it has. */
+    fun describe(type: String): String = when (type) {
+        "Subvert" -> "acid bass - one oscillator, one filter that screams, and slide"
+        "Trinity" -> "three oscillators, wavetables, dual filters, a mod matrix"
+        "Ratio" -> "six-operator FM, with the algorithm itself on a knob"
+        "Cumulus" -> "pads by spectrum: partials smeared into bands, four of them morphed"
+        "Formulate" -> "the chip, and an equation you can type into it"
+        "Hexbeat" -> "drums by synthesis, in the 606's vocabulary"
+        "Forage" -> "sampled drums, with a filter, crush and pitch envelope per pad"
+        "Manual" -> "tonewheel organ: two manuals, pedals, and a cabinet that spins"
+        "Filament" -> "strings by modelling - pluck, bow or breathe at them"
+        "Mosaic" -> "multisamples: key and velocity zones, SoundFonts, grain clouds"
+        "Cipher" -> "a vocoder whose band map is the instrument"
+        "Nexus" -> "a modular whose blocks are the other machines"
+        else -> ""
+    }
+
     /** Machines that play a whole multisample map rather than one-shot pads. */
     fun acceptsSampleMap(type: String): Boolean = type == "Mosaic"
 

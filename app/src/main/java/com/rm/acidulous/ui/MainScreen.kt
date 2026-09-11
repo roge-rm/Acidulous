@@ -150,6 +150,7 @@ fun MainScreen(
                     DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
                 }
             }
+            LoadMeter()
         }
 
         // --- Song section -----------------------------------------------------------------
@@ -327,7 +328,10 @@ fun MainScreen(
                 dialog = null
             }
         }
-        is Dialog.PickMachine -> PickerDialog("Machine", NativeEngine.machineTypes, onDismiss = { dialog = null }) { type ->
+        is Dialog.PickMachine -> MachinePickerDialog(
+            current = d.track?.let { song.tracks.getOrNull(it)?.machine?.type },
+            onDismiss = { dialog = null },
+        ) { type ->
             editor.editSong {
                 if (d.track == null) it.addTrack(type).withDefaultScale(it.tracks.size)
                 else it.changeMachine(d.track, type)

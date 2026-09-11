@@ -1,5 +1,13 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -146,6 +154,66 @@ fun ClipSettingsDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
+}
+
+/**
+ * The machine picker: four groups behind chips, each machine with a line
+ * saying what it is. A flat list of twelve names told you nothing unless you
+ * already knew, which defeats the point of having twelve.
+ */
+@Composable
+fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String) -> Unit) {
+    val groups = com.rm.acidulous.model.MachineUi.machineGroups
+    val known = remember { com.rm.acidulous.engine.NativeEngine.machineTypes.toSet() }
+    var tab by rememberSaveable {
+        mutableStateOf(groups.indexOfFirst { current in it.machines }.coerceAtLeast(0))
+    }
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        androidx.compose.material3.Surface(
+            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = c.card,
+        ) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                Text("Machine", color = c.text, fontSize = 20.sp)
+                Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) {
+                    SectionChips(groups.map { it.label }, tab) { tab = it }
+                }
+                Column(
+                    Modifier.weight(1f, fill = false).heightIn(max = 460.dp)
+                        .verticalScrollWithBar(rememberScrollState()),
+                ) {
+                    // Anything the engine offers that no group claims still
+                    // has to be reachable, so it lands in the last one.
+                    val listed = groups.flatMap { it.machines }.toSet()
+                    val extras = if (tab == groups.lastIndex) known.filter { it !in listed } else emptyList()
+                    for (type in groups[tab].machines.filter { it in known } + extras) {
+                        val on = type == current
+                        Column(
+                            Modifier.fillMaxWidth().padding(vertical = 3.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (on) c.accentDim else c.control)
+                                .clickable { onPick(type) }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                        ) {
+                            Text(type, color = if (on) c.accent else c.text, fontSize = 14.sp)
+                            Text(
+                                com.rm.acidulous.model.MachineUi.describe(type),
+                                color = c.textDim, fontSize = 11.sp,
+                            )
+                        }
+                    }
+                }
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                }
+            }
+        }
+    }
 }
 
 @Composable
