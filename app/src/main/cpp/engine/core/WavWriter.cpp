@@ -18,7 +18,8 @@ bool WavWriter::open(const std::string &path, int32_t sampleRate, std::string &e
     file = std::fopen(path.c_str(), "wb");
     if (file == nullptr) { error = "cannot create " + path; return false; }
     rate = sampleRate;
-    bytesPerSample = bits == 16 ? 2 : 3;
+    floatFormat = bits == 32;
+    bytesPerSample = floatFormat ? 4 : (bits == 16 ? 2 : 3);
     frames = 0;
     writeHeader();
     return true;
@@ -32,7 +33,7 @@ void WavWriter::writeHeader() {
     std::fwrite("WAVE", 1, 4, file);
     std::fwrite("fmt ", 1, 4, file);
     put32(file, 16);
-    put16(file, 1); // PCM
+    put16(file, floatFormat ? 3 : 1); // 1 PCM, 3 IEEE float
     put16(file, kChannels);
     put32(file, static_cast<uint32_t>(rate));
     put32(file, static_cast<uint32_t>(rate * kChannels * bytesPerSample));
@@ -44,12 +45,17 @@ void WavWriter::writeHeader() {
 
 void WavWriter::write(const float *interleaved, int32_t framesIn) {
     if (file == nullptr) return;
-    uint8_t buf[64 * kChannels * 3];
+    uint8_t buf[64 * kChannels * 4];
     int32_t done = 0;
     while (done < framesIn) {
         const int32_t n = framesIn - done < 64 ? framesIn - done : 64;
         for (int32_t i = 0; i < n * kChannels; ++i) {
             float v = interleaved[(done * kChannels) + i];
+            if (floatFormat) {
+                // No clamp: the point of float is that it does not need one.
+                std::memcpy(buf + i * 4, &v, 4);
+                continue;
+            }
             if (v > 1.0f) v = 1.0f;
             if (v < -1.0f) v = -1.0f;
             if (bytesPerSample == 2) {

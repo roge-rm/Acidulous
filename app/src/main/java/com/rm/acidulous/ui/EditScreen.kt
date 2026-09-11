@@ -192,6 +192,20 @@ fun EditScreen(
             spacing = 2.dp,
         ) {
             HeaderButton("◀") { onBack() }
+            // A frozen clip is playing audio, so nothing edited here is
+            // heard until it is thawed - which this does, since the alarm
+            // and the way out belong in the same place.
+            if (clip.frozen != null) {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val stale = com.rm.acidulous.model.Freeze.stale(song, sceneId, clip)
+                HeaderTextButton(
+                    "\u2744\uFE0E",
+                    color = if (stale) Acid.colors.accent else Acid.colors.teal,
+                ) {
+                    com.rm.acidulous.model.Freeze.discard(context, song, com.rm.acidulous.model.Freeze.Target(trackIndex, sceneId))
+                    editor.editClip(trackIndex, sceneId) { it.copy(frozen = null) }
+                }
+            }
             Text(
                 "${track.name} · ${scene.name} · ${clip.bars}b · ${clip.notes.size}n" +
                     (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a"),

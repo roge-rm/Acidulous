@@ -215,7 +215,10 @@ class SceneScheduler {
 
     void fire(int64_t from, int64_t to) {
         for (int32_t r = 0; r < rackCount; ++r) {
-            if (racks[r].isActive()) {
+            // A frozen rack is sent nothing: its notes and its automation are
+            // both already in the audio, and running them again would cost
+            // the CPU that freezing was meant to give back.
+            if (racks[r].isActive() && !racks[r].frozenActive()) {
                 Rack &rack = racks[r];
                 if (rack.clipPlayer.originChanged(iterationOrigin)) rack.clearTouched();
                 rack.clipPlayer.process(from, to, iterationOrigin,

@@ -307,6 +307,7 @@ private fun App(modifier: Modifier = Modifier) {
 
     DisposableEffect(Unit) {
         EngineSync.sampleRoot = EngineAssets.userRoot(context)
+        EngineSync.freezeRoot = EngineAssets.freezeRoot(context)
         // Trinity's wavetables take a moment to build; do it off the main
         // thread now rather than stalling the first mount.
         Thread { NativeEngine.prewarm() }.start()
@@ -354,6 +355,42 @@ private fun App(modifier: Modifier = Modifier) {
         }
         if (result.push) EngineSync.sync(editor.song)
     }
+    // --- Freeze ---------------------------------------------------------
+    // The render takes the audio stream down for as long as it runs, so it
+    // happens on a worker with the transport stopped, one clip at a time,
+    // and the model is only touched back on the main thread.
+    var freezeStatus by remember { mutableStateOf<String?>(null) }
+    val onFreeze: (List<com.rm.acidulous.model.Freeze.Target>) -> Unit = { targets ->
+        if (targets.isNotEmpty() && freezeStatus == null) {
+            scope.launch {
+                if (NativeEngine.isPlaying) {
+                    NativeEngine.transportStop()
+                    delay(120)
+                }
+                var done = 0
+                targets.forEachIndexed { i, t ->
+                    freezeStatus = "freezing ${i + 1} of ${targets.size}…"
+                    val frozen = withContext(Dispatchers.IO) {
+                        com.rm.acidulous.model.Freeze.render(context, editor.song, t)
+                    }
+                    if (frozen != null) {
+                        ++done
+                        editor.editClip(t.track, t.sceneId) { it.copy(frozen = frozen) }
+                    }
+                }
+                freezeStatus = null
+                Log.i(TAG, "froze $done of ${targets.size} clip(s)")
+            }
+        }
+    }
+    val onThaw: (List<com.rm.acidulous.model.Freeze.Target>) -> Unit = { targets ->
+        for (t in targets) {
+            if (editor.song.tracks.getOrNull(t.track)?.clips?.get(t.sceneId)?.frozen == null) continue
+            com.rm.acidulous.model.Freeze.discard(context, editor.song, t)
+            editor.editClip(t.track, t.sceneId) { it.copy(frozen = null) }
+        }
+    }
+
     val onArm: (Boolean) -> Unit = { on ->
         NativeEngine.recordArmed = on
         if (!on) applyRecorded(recorder.flush(song, sceneIdOf))
@@ -432,6 +469,9 @@ private fun App(modifier: Modifier = Modifier) {
             exportState = exportState,
             onExportCancel = { NativeEngine.cancelRender() },
             onExportDismiss = { exportState = null },
+            onFreeze = onFreeze,
+            onThaw = onThaw,
+            freezeStatus = freezeStatus,
             modifier = modifier,
         )
         is Screen.Edit -> EditScreen(

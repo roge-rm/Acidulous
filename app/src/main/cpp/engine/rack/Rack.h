@@ -1,6 +1,7 @@
 #pragma once
 #include <atomic>
 #include <engine/core/Constants.h>
+#include <engine/core/Frozen.h>
 #include <engine/core/Messages.h>
 #include <engine/core/Params.h>
 #include <engine/core/Settings.h>
@@ -33,6 +34,31 @@ class Rack {
 
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm);
     void render(int32_t frames);
+
+    // --- Freeze ---------------------------------------------------------
+    // Which scene is playing decides whether this rack plays its machine or
+    // the audio that machine already made. Called before the scheduler fires
+    // notes, because a frozen rack is not sent any.
+    void updateFrozen(int64_t sceneId, float bpm, bool playing);
+    bool frozenActive() const { return frozenNow != nullptr; }
+    /** Where in the frozen clip this block starts. Called before render(). */
+    void syncFrozen(int64_t tickInIteration, float bpm);
+    /** Returns the displaced set for the caller to retire. */
+    const FrozenSet *swapFrozen(const FrozenSet *next) {
+        const FrozenSet *old = frozenSet;
+        frozenSet = next;
+        frozenNow = nullptr; // re-decided at the next block
+        return old;
+    }
+
+    /**
+     * Freezing: copy the rack's output after its effects and before its
+     * channel strip, so the fader, pan, sends and mute stay live over the
+     * frozen audio. Armed only by the offline render.
+     */
+    bool tapDry = false;
+    float dryL[kBlockFrames]{};
+    float dryR[kBlockFrames]{};
     bool isStereo() const { return stereo; }
 
     // Return the displaced object for the caller to retire.
@@ -86,6 +112,10 @@ class Rack {
     static constexpr int32_t kMaxHeld = 128;
     uint8_t held[kMaxHeld]{};
     int32_t heldCount = 0;
+
+    const FrozenSet *frozenSet = nullptr;
+    const FrozenClip *frozenNow = nullptr;
+    int64_t frozenCursor = 0;
 
     Machine *machine = nullptr;
     Effect *effects[kEffectSlots]{};

@@ -34,6 +34,7 @@ object EngineSync {
     private val mountedEventors = Array(RACKS) { arrayOfNulls<String>(EVENTOR_SLOTS) }
     private val loadedSamples = HashMap<String, String>() // "rack:slot" -> relative path
     private val loadedMaps = arrayOfNulls<String>(RACKS)   // the source string a rack's map was built from
+    private val loadedFreezes = arrayOfNulls<String>(RACKS) // which frozen clips a rack has, as one identity string
     // Building a multisample means parsing and decoding, sometimes tens of
     // megabytes, so it never runs on the caller's thread.
     private val mapLoader = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
@@ -45,6 +46,9 @@ object EngineSync {
 
     /** Where relative sample paths in the document resolve. Set once at startup. */
     var sampleRoot: java.io.File? = null
+
+    /** Where frozen clips are written and read. Set once, at startup. */
+    var freezeRoot: java.io.File? = null
     private val loadedPatches = arrayOfNulls<String>(RACKS)
     var patchStatus: String = ""
         private set
@@ -164,6 +168,41 @@ object EngineSync {
     }
 
     /** Everything the engine needs after any edit: machines, effects, eventors, then the snapshot. */
+    /**
+     * The frozen clips a rack should be holding. The identity is the whole
+     * list, so adding or thawing one clip reloads that rack's set and leaves
+     * the other fifteen alone - and nothing reloads when a song is merely
+     * being edited around a freeze.
+     */
+    fun ensureFrozen(song: Song) {
+        val root = freezeRoot ?: return
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            val frozen = song.scenes.mapNotNull { scene ->
+                val f = track?.clips?.get(scene.id)?.frozen ?: return@mapNotNull null
+                Triple(scene.engineId, f, java.io.File(root, f.file))
+            }.filter { it.third.isFile }
+            val identity = frozen.joinToString(";") { "${it.first}:${it.second.file}:${it.second.bpm}:${it.second.ticks}" }
+            if (loadedFreezes[rack] == identity) continue
+            loadedFreezes[rack] = identity
+            mapLoader.execute {
+                val error = NativeEngine.loadFrozen(
+                    rack,
+                    frozen.map { it.first }.toLongArray(),
+                    frozen.map { it.third.absolutePath }.toTypedArray(),
+                    frozen.map { it.second.bpm }.toFloatArray(),
+                    frozen.map { it.second.ticks }.toIntArray(),
+                )
+                if (error.isNotEmpty()) {
+                    Log.w(TAG, "frozen clips for rack $rack: $error")
+                    loadedFreezes[rack] = null // let a retry happen
+                } else if (frozen.isNotEmpty()) {
+                    Log.i(TAG, "rack $rack holds ${frozen.size} frozen clip(s)")
+                }
+            }
+        }
+    }
+
     fun sync(song: Song): Boolean {
         ensureMachines(song)
         ensureSamples(song)
@@ -171,6 +210,7 @@ object EngineSync {
         ensureEventors(song)
         ensureSampleMaps(song)
         ensureNexusPatches(song)
+        ensureFrozen(song)
         return push(song)
     }
 

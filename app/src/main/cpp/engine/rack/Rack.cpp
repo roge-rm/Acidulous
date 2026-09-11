@@ -95,15 +95,70 @@ void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
     if (machine != nullptr) machine->onBlock(tickStart, tickEnd, bpm);
 }
 
+/**
+ * Is this rack playing audio it made earlier?
+ *
+ * Only when a clip for the scene now playing has been frozen *and* the song
+ * is at the tempo it was frozen at - audio does not stretch, and a frozen
+ * clip played at another tempo would be in the wrong place within a beat of
+ * starting. Falling back to the machine is both correct and quiet about it;
+ * the UI says the freeze is stale.
+ */
+void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing) {
+    const FrozenClip *want = nullptr;
+    if (playing && frozenSet != nullptr) {
+        const FrozenClip *c = frozenSet->find(sceneId);
+        // The tempo has to be the one it was rendered at, to a hundredth of
+        // a beat: a second of audio at 121 bpm is a different number of
+        // frames than at 120, so the loop would walk away from the beat.
+        if (c != nullptr && c->frames > 0 && std::fabs(c->bpm - bpm) < 0.01f) want = c;
+    }
+    if (want == frozenNow) return;
+    // Crossing in either direction: whatever the machine was holding has to
+    // stop, or it hangs while the audio takes over and after it hands back.
+    if (machine != nullptr) machine->allNotesOff();
+    frozenNow = want;
+    frozenCursor = -1;
+}
+
+void Rack::syncFrozen(int64_t tickInIteration, float bpm) {
+    if (frozenNow == nullptr) return;
+    const double perTick = static_cast<double>(kSampleRate) * 60.0 / (static_cast<double>(bpm) * kPPQN);
+    const int64_t ticks = frozenNow->ticks > 0 ? frozenNow->ticks : 1;
+    const int64_t target = static_cast<int64_t>((tickInIteration % ticks) * perTick) % frozenNow->frames;
+    // The cursor runs free between blocks and is only pulled back when it has
+    // drifted audibly - recomputing it from the tick every block would step
+    // the read position by a sample or two each time, which clicks.
+    if (frozenCursor < 0 || std::llabs(target - frozenCursor) > 256) frozenCursor = target;
+}
+
 void Rack::render(int32_t frames) {
-    if (machine == nullptr) {
+    if (frozenNow != nullptr) {
+        const FrozenClip *f = frozenNow;
+        int64_t at = frozenCursor < 0 ? 0 : frozenCursor;
+        for (int32_t i = 0; i < frames; ++i) {
+            if (at >= f->frames) at = 0; // the loop, which the render wrapped its tail into
+            bufL[i] = f->left[static_cast<size_t>(at)];
+            bufR[i] = f->right[static_cast<size_t>(at)];
+            ++at;
+        }
+        frozenCursor = at;
+        stereo = true;
+    } else if (machine == nullptr) {
         for (int32_t i = 0; i < frames; ++i) bufL[i] = bufR[i] = 0.0f;
         stereo = false;
         return;
+    } else {
+        stereo = machine->render(bufL, bufR, frames);
+        for (int32_t s = 0; s < kEffectSlots; ++s) {
+            if (effects[s] != nullptr) stereo = effects[s]->run(bufL, bufR, frames, stereo);
+        }
     }
-    stereo = machine->render(bufL, bufR, frames);
-    for (int32_t s = 0; s < kEffectSlots; ++s) {
-        if (effects[s] != nullptr) stereo = effects[s]->run(bufL, bufR, frames, stereo);
+    if (tapDry) {
+        for (int32_t i = 0; i < frames; ++i) {
+            dryL[i] = bufL[i];
+            dryR[i] = stereo ? bufR[i] : bufL[i];
+        }
     }
     // Channel strip: gain and equal-power pan, smoothed; a mono source pans
     // from L and becomes stereo here.

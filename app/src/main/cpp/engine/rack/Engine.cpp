@@ -69,6 +69,13 @@ void Engine::renderBlock(const float *in, float *out) {
     drainMidi();
     drainParams();
 
+    // Does any rack play audio it made earlier? Decided before the scheduler
+    // fires, because a frozen rack is sent no notes.
+    {
+        const int64_t sceneNow = scheduler.currentSceneId();
+        for (int32_t r = 0; r < kRackCount; ++r) racks[r].updateFrozen(sceneNow, clock.bpm(), playing);
+    }
+
     // Where in the scene this block starts, before the scheduler moves on.
     const int64_t tickStart = scheduler.currentTickInIteration();
     const seq::SceneInfo *sceneBefore = scheduler.currentSceneInfo();
@@ -121,7 +128,11 @@ void Engine::renderBlock(const float *in, float *out) {
 
     for (int32_t r = 0; r < kRackCount; ++r) {
         if (racks[r].isActive()) {
-            racks[r].onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
+            if (racks[r].frozenActive()) {
+                racks[r].syncFrozen(scheduler.currentTickInIteration(), clock.bpm());
+            } else {
+                racks[r].onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
+            }
             racks[r].render(kBlockFrames);
         }
     }
@@ -238,6 +249,15 @@ void Engine::applyMount(const Mount &m) {
             back = racks[m.rack].currentMachine()->swapObject(m.slot, m.object);
         }
         if (m.deleter != nullptr) retirer.retire(back, m.deleter);
+        break;
+    }
+    case Mount::Kind::Frozen: {
+        if (m.rack >= 0 && m.rack < kRackCount) {
+            const FrozenSet *old = racks[m.rack].swapFrozen(static_cast<const FrozenSet *>(m.object));
+            retirer.retire(const_cast<FrozenSet *>(old), deleteAs<FrozenSet>);
+        } else if (m.deleter != nullptr) {
+            retirer.retire(m.object, m.deleter);
+        }
         break;
     }
     case Mount::Kind::Song: {

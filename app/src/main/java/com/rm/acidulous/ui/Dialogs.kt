@@ -91,7 +91,16 @@ fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () ->
 
 /** The reference sequencer's "1 Bar" chip, expanded: bars, play mode, mute, grid. */
 @Composable
-fun ClipSettingsDialog(clip: Clip, onDismiss: () -> Unit, onConfirm: (Clip) -> Unit) {
+fun ClipSettingsDialog(
+    clip: Clip,
+    onDismiss: () -> Unit,
+    /** The song's tempo here, to say whether a freeze can still be used. */
+    tempo: Float = 0f,
+    /** Render this clip to audio, or throw the render away. Both dismiss. */
+    onFreeze: () -> Unit = {},
+    onThaw: () -> Unit = {},
+    onConfirm: (Clip) -> Unit,
+) {
     var bars by remember { mutableStateOf(clip.bars) }
     var mode by remember { mutableStateOf(clip.playMode) }
     var mute by remember { mutableStateOf(clip.mute) }
@@ -112,6 +121,23 @@ fun ClipSettingsDialog(clip: Clip, onDismiss: () -> Unit, onConfirm: (Clip) -> U
                 Text("Grid", fontSize = 12.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     for ((label, ticks) in GRIDS) SmallToggle(label, grid == ticks) { grid = ticks }
+                }
+                // Freeze is an action rather than a setting, so it does its
+                // own thing and closes: the other fields here are edits that
+                // wait for OK.
+                val frozen = clip.frozen
+                if (frozen != null) {
+                    val stale = tempo > 0f && kotlin.math.abs(frozen.bpm - tempo) >= 0.01f
+                    Text(
+                        "Frozen: %.1f s of audio at %.0f bpm, peak %.2f.".format(
+                            frozen.frames / 48000f, frozen.bpm, frozen.peak,
+                        ) + if (stale) " The song is at %.0f now, so the machine is playing instead - freeze it again.".format(tempo) else "",
+                        fontSize = 11.sp,
+                    )
+                    OutlinedButton(onClick = onThaw) { Text("Thaw", fontSize = 12.sp) }
+                } else if (clip.notes.isNotEmpty()) {
+                    Text("Freezing renders this clip to audio: the track stops running its machine.", fontSize = 11.sp)
+                    OutlinedButton(onClick = onFreeze) { Text("Freeze", fontSize = 12.sp) }
                 }
             }
         },

@@ -8,6 +8,7 @@
 #include <chrono>
 #include <drivers/AudioDriver.h>
 #include <engine/core/Constants.h>
+#include <engine/core/Frozen.h>
 #include <engine/core/WavReader.h>
 #include <engine/dsp/Wavetable.h>
 #include <engine/core/WavWriter.h>
@@ -674,6 +675,145 @@ void EngineHost::snapshotAbandon(int64_t handle) { delete fromHandle(handle); }
 // --- Diagnostics -----------------------------------------------------------------
 
 int32_t EngineHost::sampleRate() const { return sAudio.getSampleRate(); }
+
+// --- Freeze -----------------------------------------------------------------------
+
+std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,
+                                   int32_t &framesOut, int32_t &ticksOut, float &bpmOut, float &peakOut) {
+    if (!running) return "engine not running";
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (sEngine.transport.isPlaying()) return "stop the transport first";
+    if (rendering.exchange(true)) return "already rendering";
+
+    struct Guard {
+        std::atomic<bool> &flag;
+        ~Guard() { flag.store(false); }
+    } guard{rendering};
+
+    const seq::SongSnapshot *snap = sEngine.scheduler.snapshot();
+    if (snap == nullptr) return "no song";
+    const int32_t sceneIdx = snap->indexOfScene(sceneId);
+    if (sceneIdx < 0) return "no such scene";
+    const seq::Clip *clip = snap->clipFor(rack, sceneIdx);
+    if (clip == nullptr) return "no clip there";
+    const int64_t ticks = clip->lengthTicks();
+    if (ticks <= 0) return "that clip has no length";
+    if (sEngine.racks[rack].currentMachine() == nullptr) return "that track has no machine";
+
+    const seq::SceneInfo &scene = snap->scenes[static_cast<size_t>(sceneIdx)];
+    const float bpm = scene.bpmOverride > 0.0f ? scene.bpmOverride : sEngine.clock.songTempoRequested();
+    const double perTick = static_cast<double>(kSampleRate) * 60.0 / (static_cast<double>(bpm) * kPPQN);
+    const int64_t clipFrames = static_cast<int64_t>(std::llround(static_cast<double>(ticks) * perTick));
+    if (clipFrames <= 0) return "that clip is too short to render";
+    const int64_t tailFrames = static_cast<int64_t>(std::max(0.0f, tailSeconds) * kSampleRate);
+
+    // Off the device: from here every block is ours to pull, at whatever
+    // speed the CPU manages.
+    sAudio.stop();
+    const bool loopSongBefore = sEngine.transport.loopSong();
+    const bool loopSceneBefore = sEngine.transport.loopScene();
+    sEngine.transport.setLoopSong(false);
+    sEngine.transport.setLoopScene(true); // stay in this scene for the whole render
+    sEngine.transport.requestStop();
+    float scratch[kBlockFrames * 2];
+    sEngine.renderBlock(nullptr, scratch);
+
+    // A clean start: nothing ringing from whatever was played before.
+    Rack &r = sEngine.racks[rack];
+    r.allNotesOff();
+    if (r.currentMachine() != nullptr) r.currentMachine()->reset();
+    for (int32_t sl = 0; sl < kEffectSlots; ++sl) {
+        if (r.currentEffect(sl) != nullptr) r.currentEffect(sl)->reset();
+    }
+
+    std::vector<float> left(static_cast<size_t>(clipFrames + tailFrames), 0.0f);
+    std::vector<float> right(static_cast<size_t>(clipFrames + tailFrames), 0.0f);
+
+    r.tapDry = true;
+    sEngine.transport.requestPlay(sceneIdx);
+    int64_t done = 0;
+    const int64_t total = clipFrames + tailFrames;
+    while (done < total) {
+        sEngine.renderBlock(nullptr, scratch);
+        const int64_t n = std::min<int64_t>(kBlockFrames, total - done);
+        for (int64_t i = 0; i < n; ++i) {
+            left[static_cast<size_t>(done + i)] = r.dryL[i];
+            right[static_cast<size_t>(done + i)] = r.dryR[i];
+        }
+        done += n;
+    }
+    r.tapDry = false;
+    sEngine.transport.requestStop();
+    sEngine.renderBlock(nullptr, scratch);
+    sEngine.transport.setLoopSong(loopSongBefore);
+    sEngine.transport.setLoopScene(loopSceneBefore);
+    if (!sAudio.start()) LOGE("audio failed to restart after a freeze");
+
+    // The tail belongs at the start: a clip loops, so what is still ringing
+    // when it ends is heard over its own beginning. Without this a frozen
+    // clip would cut its own reverb off every bar.
+    for (int64_t i = 0; i < tailFrames; ++i) {
+        const size_t dst = static_cast<size_t>(i % clipFrames);
+        left[dst] += left[static_cast<size_t>(clipFrames + i)];
+        right[dst] += right[static_cast<size_t>(clipFrames + i)];
+    }
+
+    float peak = 0.0f;
+    std::vector<float> inter(static_cast<size_t>(clipFrames) * 2);
+    for (int64_t i = 0; i < clipFrames; ++i) {
+        const float a = left[static_cast<size_t>(i)], b = right[static_cast<size_t>(i)];
+        inter[static_cast<size_t>(i) * 2] = a;
+        inter[static_cast<size_t>(i) * 2 + 1] = b;
+        peak = std::max(peak, std::max(std::fabs(a), std::fabs(b)));
+    }
+
+    WavWriter wav;
+    std::string error;
+    // Float, not PCM: this is the rack's output before its fader, which can
+    // sit above full scale perfectly legitimately - the mixer is what brings
+    // it down. Clamping here would bake in distortion that the live track
+    // does not have. Measured on the demo: Hexbeat's bar peaks at 1.84.
+    if (!wav.open(path, kSampleRate, error, 32)) return error;
+    wav.write(inter.data(), static_cast<int32_t>(clipFrames));
+    if (!wav.close()) return "could not finish the file";
+
+    framesOut = static_cast<int32_t>(clipFrames);
+    ticksOut = static_cast<int32_t>(ticks);
+    bpmOut = bpm;
+    peakOut = peak;
+    LOGI("froze rack %d scene %lld: %lld frames (%.2f s at %.1f bpm), peak %.3f -> %s",
+         rack, static_cast<long long>(sceneId), static_cast<long long>(clipFrames),
+         static_cast<double>(clipFrames) / kSampleRate, bpm, peak, path.c_str());
+    return "";
+}
+
+std::string EngineHost::loadFrozenSet(int rack, const std::vector<std::pair<int64_t, std::string>> &clips,
+                                      const std::vector<float> &bpms, const std::vector<int32_t> &ticks) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    auto set = std::make_unique<FrozenSet>();
+    for (size_t i = 0; i < clips.size(); ++i) {
+        std::string error;
+        auto data = WavReader::read(clips[i].second, kSampleRate, error);
+        if (!data) return clips[i].second + ": " + error;
+        auto fc = std::make_shared<FrozenClip>();
+        fc->frames = data->frames;
+        fc->left = std::move(data->left);
+        fc->right = data->stereo ? std::move(data->right) : fc->left;
+        fc->bpm = i < bpms.size() ? bpms[i] : 120.0f;
+        fc->ticks = i < ticks.size() ? ticks[i] : 0;
+        set->entries.push_back({clips[i].first, std::move(fc)});
+    }
+    Mount m;
+    m.kind = Mount::Kind::Frozen;
+    m.rack = rack;
+    m.slot = 0;
+    m.object = set.get();
+    m.deleter = deleteAs<FrozenSet>;
+    if (!mountObjectWithRetry(m)) return "mount queue full";
+    set.release();
+    return "";
+}
+
 void EngineHost::setBufferBursts(int32_t bursts) { sAudio.setBufferBursts(bursts); }
 int32_t EngineHost::bufferFrames() const { return sAudio.getBufferFrames(); }
 void EngineHost::setVoiceLimit(int32_t notes) {

@@ -49,6 +49,7 @@ import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.addScene
+import com.rm.acidulous.model.Freeze
 import com.rm.acidulous.model.addTrack
 import com.rm.acidulous.ui.UiPrefs.withDefaultScale
 import com.rm.acidulous.model.changeMachine
@@ -100,9 +101,24 @@ fun MainScreen(
     exportState: ExportState?,
     onExportCancel: () -> Unit,
     onExportDismiss: () -> Unit,
+    /** Render these clips to audio, or throw the renders away. */
+    onFreeze: (List<Freeze.Target>) -> Unit,
+    onThaw: (List<Freeze.Target>) -> Unit,
+    /** What freezing is doing at the moment, or null when it is not. */
+    freezeStatus: String?,
     modifier: Modifier = Modifier,
 ) {
     var dialog by remember { mutableStateOf<Dialog?>(null) }
+    if (freezeStatus != null) {
+        // Modal on purpose: the audio stream is down while a render runs, so
+        // there is nothing useful to do until it comes back.
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Freezing") },
+            text = { Text(freezeStatus, fontSize = 12.sp) },
+            confirmButton = {},
+        )
+    }
     var fileMenu by remember { mutableStateOf(false) }
     var showMixer by remember { mutableStateOf(false) }
 
@@ -144,12 +160,19 @@ fun MainScreen(
             Column(Modifier.width(TRACK_W)) {
                 Spacer(Modifier.height(SCENE_H))
                 song.tracks.forEachIndexed { index, track ->
+                    val row = remember(song, index) { Freeze.track(song, index) }
+                    val rowFrozen = remember(song, index) {
+                        song.scenes.count { track.clips[it.id]?.frozen != null }
+                    }
                     TrackHeader(
                         name = track.name, machine = track.machine.type, colour = trackColour(index),
                         onChangeMachine = { dialog = Dialog.PickMachine(index) },
                         onRename = { dialog = Dialog.RenameTrack(index) },
                         onDuplicate = { editor.editSong { it.duplicateTrack(index) } },
                         onDelete = { editor.editSong { it.deleteTrack(index) } },
+                        freezable = row.size, frozen = rowFrozen,
+                        onFreeze = { onFreeze(row) },
+                        onThaw = { onThaw(song.scenes.map { Freeze.Target(index, it.id) }) },
                     )
                 }
                 OutlinedButton(
@@ -196,6 +219,10 @@ fun MainScreen(
                             onDelete = { editor.editSong { it.deleteScene(index) } },
                             onMoveLeft = { editor.editSong { it.moveScene(index, index - 1) } },
                             onMoveRight = { editor.editSong { it.moveScene(index, index + 1) } },
+                            freezable = Freeze.scene(song, scene.id).size,
+                            frozen = song.tracks.count { it.clips[scene.id]?.frozen != null },
+                            onFreeze = { onFreeze(Freeze.scene(song, scene.id)) },
+                            onThaw = { onThaw(song.tracks.indices.map { Freeze.Target(it, scene.id) }) },
                         )
                     }
                     OutlinedButton(
@@ -221,6 +248,8 @@ fun MainScreen(
                                 },
                                 onOpen = { onOpenClip(trackIndex, scene.id) },
                                 onSettings = { dialog = Dialog.ClipSettings(trackIndex, scene.id) },
+                                frozen = clip?.frozen != null,
+                                stale = clip != null && Freeze.stale(song, scene.id, clip),
                             )
                         }
                     }
@@ -287,7 +316,13 @@ fun MainScreen(
         }
         is Dialog.ClipSettings -> {
             val current = song.tracks.getOrNull(d.track)?.clips?.get(d.sceneId) ?: song.emptyClipFor(d.sceneId)
-            ClipSettingsDialog(current, onDismiss = { dialog = null }) { edited ->
+            ClipSettingsDialog(
+                current,
+                onDismiss = { dialog = null },
+                tempo = song.scenes.firstOrNull { it.id == d.sceneId }?.tempo?.bpm ?: song.tempo,
+                onFreeze = { dialog = null; onFreeze(listOf(Freeze.Target(d.track, d.sceneId))) },
+                onThaw = { dialog = null; onThaw(listOf(Freeze.Target(d.track, d.sceneId))) },
+            ) { edited ->
                 editor.editClip(d.track, d.sceneId) { edited }
                 dialog = null
             }
@@ -349,6 +384,9 @@ private fun SceneHeader(
     onAudition: () -> Unit, onLoopThis: () -> Unit, onPlayThrough: () -> Unit,
     onSettings: () -> Unit, onInsertAfter: () -> Unit,
     onDuplicate: () -> Unit, onDelete: () -> Unit, onMoveLeft: () -> Unit, onMoveRight: () -> Unit,
+    /** How many clips in this scene could be frozen, and how many already are. */
+    freezable: Int, frozen: Int,
+    onFreeze: () -> Unit, onThaw: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     val pulse by rememberInfiniteTransition(label = "finishing").animateFloat(
@@ -400,6 +438,12 @@ private fun SceneHeader(
             DropdownMenuItem(text = { Text("Loop this scene") }, onClick = { menu = false; onLoopThis() })
             DropdownMenuItem(text = { Text("Play on from here") }, onClick = { menu = false; onPlayThrough() })
             DropdownMenuItem(text = { Text("Settings…") }, onClick = { menu = false; onSettings() })
+            if (freezable > 0) {
+                DropdownMenuItem(text = { Text("Freeze scene ($freezable)") }, onClick = { menu = false; onFreeze() })
+            }
+            if (frozen > 0) {
+                DropdownMenuItem(text = { Text("Thaw scene ($frozen)") }, onClick = { menu = false; onThaw() })
+            }
             DropdownMenuItem(text = { Text("Insert after") }, onClick = { menu = false; onInsertAfter() })
             DropdownMenuItem(text = { Text("Duplicate") }, onClick = { menu = false; onDuplicate() })
             DropdownMenuItem(text = { Text("Move left") }, onClick = { menu = false; onMoveLeft() })
@@ -413,6 +457,7 @@ private fun SceneHeader(
 private fun TrackHeader(
     name: String, machine: String, colour: Color,
     onChangeMachine: () -> Unit, onRename: () -> Unit, onDuplicate: () -> Unit, onDelete: () -> Unit,
+    freezable: Int, frozen: Int, onFreeze: () -> Unit, onThaw: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     Box(
@@ -430,6 +475,12 @@ private fun TrackHeader(
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             DropdownMenuItem(text = { Text("Change machine…") }, onClick = { menu = false; onChangeMachine() })
             DropdownMenuItem(text = { Text("Rename…") }, onClick = { menu = false; onRename() })
+            if (freezable > 0) {
+                DropdownMenuItem(text = { Text("Freeze track ($freezable)") }, onClick = { menu = false; onFreeze() })
+            }
+            if (frozen > 0) {
+                DropdownMenuItem(text = { Text("Thaw track ($frozen)") }, onClick = { menu = false; onThaw() })
+            }
             DropdownMenuItem(text = { Text("Duplicate") }, onClick = { menu = false; onDuplicate() })
             DropdownMenuItem(text = { Text("Delete") }, onClick = { menu = false; onDelete() })
         }
@@ -442,6 +493,9 @@ private fun ClipCell(
     /** How far through its own loop this clip is, 0..1, or null when silent. */
     progress: Float?,
     onOpen: () -> Unit, onSettings: () -> Unit,
+    frozen: Boolean = false,
+    /** Frozen, but at another tempo, so the machine is playing after all. */
+    stale: Boolean = false,
 ) {
     Box(
         Modifier
@@ -477,6 +531,18 @@ private fun ClipCell(
                 color = Acid.colors.textHi, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                 modifier = Modifier.align(Alignment.TopEnd).padding(3.dp),
             )
+            // A frozen clip is playing audio, not notes. It says so in the
+            // corner rather than by looking different, because what is in
+            // it - the notes - has not changed.
+            if (frozen) {
+                Text(
+                    // U+FE0E: the text presentation of the snowflake. Without
+                    // it Android draws the emoji, in its own blue, and the
+                    // teal-for-playing amber-for-stale distinction is lost.
+                    "\u2744\uFE0E", color = if (stale) Acid.colors.accent else Acid.colors.teal, fontSize = 11.sp,
+                    modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = 3.dp),
+                )
+            }
         }
     }
 }

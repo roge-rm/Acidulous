@@ -161,6 +161,31 @@ object NativeEngine {
     fun snapshotCommit(handle: Long): Boolean = nativeSnapshotCommit(handle)
     fun snapshotAbandon(handle: Long) = nativeSnapshotAbandon(handle)
 
+    // --- Freeze --------------------------------------------------------------
+    /** What a freeze produced, or why it did not happen. */
+    sealed class FreezeResult {
+        data class Ok(val frames: Int, val ticks: Int, val bpm: Float, val peak: Float) : FreezeResult()
+        data class Failed(val reason: String) : FreezeResult()
+    }
+
+    /**
+     * Render one clip to [path]. Stops the audio stream for the duration, so
+     * this belongs on a worker and not while the transport is running.
+     */
+    fun freezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float = 2f): FreezeResult {
+        val out = nativeFreezeClip(rack, sceneId, path, tailSeconds)
+        val parts = out.split("|")
+        return if (parts.size == 5 && parts[0] == "ok") {
+            FreezeResult.Ok(parts[1].toInt(), parts[2].toInt(), parts[3].toFloat(), parts[4].toFloat())
+        } else {
+            FreezeResult.Failed(out)
+        }
+    }
+
+    /** Give a rack its frozen clips, or none. Returns "" or the reason. */
+    fun loadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray): String =
+        nativeLoadFrozen(rack, sceneIds, paths, bpms, ticks)
+
     // --- Settings that belong to the device ----------------------------------
     /** Output buffer depth in bursts: 1 tight, 2 default, 4 safe. */
     fun setBufferBursts(bursts: Int) = nativeSetBufferBursts(bursts)
@@ -271,6 +296,8 @@ object NativeEngine {
     private external fun nativeControlChange(rackId: Int, cc: Int, value: Int)
     private external fun nativeChannelPressure(rackId: Int, value: Int)
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
+    private external fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
+    private external fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray): String
     private external fun nativeSetBufferBursts(bursts: Int)
     private external fun nativeBufferFrames(): Int
     private external fun nativeSetVoiceLimit(notes: Int)

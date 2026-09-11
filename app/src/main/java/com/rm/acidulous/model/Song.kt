@@ -69,6 +69,21 @@ fun laneKey(unit: String, name: String): String = "$unit:$name"
 fun laneUnit(key: String): String = key.substringBefore(':')
 fun laneParam(key: String): String = key.substringAfter(':')
 
+/**
+ * A clip rendered to audio, so the rack can play the file instead of running
+ * the machine. [file] is relative to the freeze directory; [bpm] is the tempo
+ * it was rendered at, and a song at any other tempo ignores it and plays live
+ * - audio does not stretch.
+ */
+@Serializable
+data class Frozen(
+    val file: String,
+    val bpm: Float,
+    val ticks: Int,
+    val frames: Int,
+    val peak: Float = 0f,
+)
+
 /** One track's material for one scene. */
 @Serializable
 data class Clip(
@@ -80,6 +95,8 @@ data class Clip(
     val notes: List<Note> = emptyList(),
     /** Parameter movement, keyed by [laneKey]. */
     val automation: Map<String, Lane> = emptyMap(),
+    /** Set while this clip plays as audio rather than as notes. */
+    val frozen: Frozen? = null,
 ) {
     /**
      * Instance identity as a number. Lives outside the constructor on purpose:

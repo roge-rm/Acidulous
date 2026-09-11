@@ -4,6 +4,8 @@
 #include <memory>
 #include <sequencer/Clip.h>
 #include <string>
+#include <utility>
+#include <vector>
 #include <unordered_map>
 
 // The app's handle on the engine. Owns the Engine and the audio stream and
@@ -122,6 +124,24 @@ class EngineHost {
                          const float *points, int pointCount);
     bool snapshotCommit(int64_t handle);
     void snapshotAbandon(int64_t handle);
+
+    // --- Freeze ---------------------------------------------------------
+    /**
+     * Render one clip to a WAV, off the device: the rack's own output after
+     * its effects and before its channel strip, exactly one clip long, with
+     * whatever is still ringing at the end wrapped back into the start so
+     * the loop joins. Returns "" on success and fills in what the playback
+     * side needs to know; anything else is the reason it did not happen.
+     */
+    std::string freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,
+                           int32_t &framesOut, int32_t &ticksOut, float &bpmOut, float &peakOut);
+
+    /**
+     * Give a rack its frozen clips: pairs of scene id and WAV path, read
+     * here and handed over as one object. An empty list thaws the rack.
+     */
+    std::string loadFrozenSet(int rack, const std::vector<std::pair<int64_t, std::string>> &clips,
+                              const std::vector<float> &bpms, const std::vector<int32_t> &ticks);
 
     // --- Settings that belong to the device -----------------------------
     /** Output buffer depth in bursts: 1 tight, 2 default, 4 safe. */
