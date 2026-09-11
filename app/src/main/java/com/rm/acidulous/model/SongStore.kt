@@ -15,7 +15,36 @@ object SongStore {
     }
 
     fun encode(song: Song): String = json.encodeToString(Song.serializer(), song)
-    fun decode(text: String): Song = json.decodeFromString(Song.serializer(), text)
+    fun decode(text: String): Song = normalise(json.decodeFromString(Song.serializer(), text))
+
+    /**
+     * Put each eventor in the slot its control owns.
+     *
+     * Eventors used to go wherever there was room, because only two of the
+     * three could run at once. Now chord, scale and arp have a chip each and
+     * a slot each, and a song written before that has, say, an Arp sitting
+     * in the chord's slot - where the chord chip would read it as absent and
+     * the first tap would quietly replace it. Moving them on the way in is
+     * cheaper than teaching every control to look everywhere, and it costs
+     * nothing for a song that is already in order.
+     */
+    private fun normalise(song: Song): Song {
+        val home = mapOf("Chord" to 0, "Scale" to 1, "Arp" to 2)
+        if (song.tracks.none { t -> (0 until EVENTOR_SLOTS).any { home[t.eventorAt(it).type]?.let { h -> h != it } == true } }) {
+            return song
+        }
+        return song.copy(
+            tracks = song.tracks.map { track ->
+                val placed = arrayOfNulls<UnitSlot>(EVENTOR_SLOTS)
+                for (slot in 0 until EVENTOR_SLOTS) {
+                    val ev = track.eventorAt(slot)
+                    val h = home[ev.type] ?: continue
+                    if (placed[h] == null) placed[h] = ev
+                }
+                track.copy(eventors = List(EVENTOR_SLOTS) { placed[it] ?: UnitSlot() })
+            },
+        )
+    }
 
     fun directory(context: Context): File = File(EngineAssets.userRoot(context), "songs").apply { mkdirs() }
 

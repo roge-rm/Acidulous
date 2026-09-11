@@ -41,6 +41,7 @@ import com.rm.acidulous.model.MachineKind
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Scales
 import com.rm.acidulous.model.EVENTOR_SLOTS
+import com.rm.acidulous.model.eventorUnit
 import com.rm.acidulous.model.withEventor
 import com.rm.acidulous.model.withEventorBypass
 import com.rm.acidulous.model.withEventorParam
@@ -64,6 +65,11 @@ import com.rm.acidulous.ui.theme.AcidColors
  * The reference sequencer's Edit screen, phone-sized: header, piano roll, footer. The machine
  * panel sits under the roll.
  */
+// One slot per eventor, in the order the notes travel through them.
+private const val EV_CHORD = 0
+private const val EV_SCALE = 1
+private const val EV_ARP = 2
+
 @Composable
 fun EditScreen(
     song: Song,
@@ -128,9 +134,11 @@ fun EditScreen(
 
     // The scale lives in a Scale eventor; the chip and its dialog are only a
     // shortcut to the one eventor worth reaching while playing.
-    fun scaleSlot(): Int =
-        (0 until EVENTOR_SLOTS).firstOrNull { track.eventorAt(it).type == "Scale" }
-            ?: (0 until EVENTOR_SLOTS).firstOrNull { track.eventorAt(it).isEmpty } ?: 0
+    // One slot each, fixed, left to right as the chips are: chord builds the
+    // notes, scale corrects them, arp sequences what comes out. Before this
+    // the scale took whichever slot was free, which was fine while two of
+    // three could run at once and is not now that all three can.
+    fun scaleSlot(): Int = EV_SCALE
 
     fun currentScale(): ScaleSetting {
         val ev = track.eventorAt(scaleSlot())
@@ -419,15 +427,19 @@ fun EditScreen(
                 // is running; holding opens it. They used to be a button at
                 // the foot of the screen that swapped the whole lower pane,
                 // which is a long way to go to find out if the arp is on.
-                EventorChip(0, track, trackIndex, editor) { eventorSlot = 0 }
+                EventorChip("Chord", EV_CHORD, track, trackIndex, editor) { eventorSlot = EV_CHORD }
                 ScaleChip(
                     label = Scales.labelFor(track),
                     onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
                     onOpen = { scaleDialog = true },
                     vertical = false,
-                    modifier = Modifier.widthIn(min = 96.dp).fillMaxHeight(),
+                    // A fixed width, not a minimum: the label goes from
+                    // "scale" to "C Ionian (Major)" and back, and a chip
+                    // that grew by half its width each time would shove the
+                    // two eventor chips sideways every time it was touched.
+                    modifier = Modifier.width(112.dp).fillMaxHeight(),
                 )
-                EventorChip(1, track, trackIndex, editor) { eventorSlot = 1 }
+                EventorChip("Arp", EV_ARP, track, trackIndex, editor) { eventorSlot = EV_ARP }
                 Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.CenterEnd) {
                     OctaveStepper(octave, { octave = it }, Modifier.fillMaxHeight())
                 }
@@ -522,7 +534,10 @@ fun EditScreen(
     }
 
     if (eventorSlot >= 0) {
-        SlotDialog(SlotKind.Eventors, track, trackIndex, eventorSlot, editor) { eventorSlot = -1 }
+        SlotDialog(
+            SlotKind.Eventors, track, trackIndex, eventorSlot, editor,
+            fixedType = if (eventorSlot == EV_CHORD) "Chord" else "Arp",
+        ) { eventorSlot = -1 }
     }
 
     if (scaleDialog) {
@@ -586,33 +601,55 @@ private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
 }
 
 /**
- * One eventor, as a chip. Shows what it is and whether it is running; a tap
- * switches it, a long press opens it.
+ * One eventor, as a chip that knows what it is.
  *
- * Switching is a *parameter* - bypass is a pseudo-parameter on the eventor
- * unit - so a tap saves, undoes and automates like anything else, and the
+ * There are three eventors and three controls, so nothing is ever chosen
+ * from a list: chord on the left, scale in the middle, arp on the right,
+ * each pinned to its own slot. A tap switches it on or off, a long press
+ * opens it - the grammar the scale chip between them already uses.
+ *
+ * Switching is a *parameter*: bypass is a pseudo-parameter on the eventor
+ * unit, so a tap saves, undoes and automates like anything else, and the
  * flag goes straight to the running eventor as well as into the document.
- * Note the inversion: the field is `bypass`, so lit means `bypass == false`.
- * An empty slot has nothing to switch, so a tap opens it instead.
+ * Note the inversion - the field is `bypass`, so lit means `bypass == false`.
+ * An empty slot is filled on the first tap rather than asking.
  */
 @Composable
-private fun EventorChip(slot: Int, track: Track, trackIndex: Int, editor: SongEditor, onOpen: () -> Unit) {
+private fun EventorChip(
+    type: String,
+    slot: Int,
+    track: Track,
+    trackIndex: Int,
+    editor: SongEditor,
+    onOpen: () -> Unit,
+) {
     val ev = track.eventorAt(slot)
-    val unit = if (slot == 0) "eventor1" else "eventor2"
+    val loaded = ev.type == type
     SlotChip(
-        text = if (ev.isEmpty) "ev${slot + 1}" else ev.type.lowercase().take(5),
-        on = !ev.isEmpty && !ev.bypass,
+        text = type.lowercase(),
+        on = loaded && !ev.bypass,
         onToggle = {
-            if (ev.isEmpty) {
-                onOpen()
+            if (!loaded) {
+                // Nothing there yet: the first tap is what puts it there,
+                // switched on, because that is plainly what was meant.
+                editor.edit(trackIndex) { t -> t.withEventor(slot, type).withEventorBypass(slot, false) }
+                NativeEngine.setParam(trackIndex, eventorUnit(slot), "bypass", 0f, record = true)
             } else {
                 val bypass = !ev.bypass
                 editor.edit(trackIndex) { t -> t.withEventorBypass(slot, bypass) }
-                NativeEngine.setParam(trackIndex, unit, "bypass", if (bypass) 1f else 0f, record = true)
+                NativeEngine.setParam(trackIndex, eventorUnit(slot), "bypass", if (bypass) 1f else 0f, record = true)
             }
         },
-        onOpen = onOpen,
+        onOpen = {
+            // The selector needs something to select on, so hold fills an
+            // empty slot too - bypassed, because holding is "let me look",
+            // not "turn it on".
+            if (!loaded) {
+                editor.edit(trackIndex) { t -> t.withEventor(slot, type).withEventorBypass(slot, true) }
+            }
+            onOpen()
+        },
         vertical = false,
-        modifier = Modifier.widthIn(min = 40.dp).fillMaxHeight(),
+        modifier = Modifier.widthIn(min = 52.dp).fillMaxHeight(),
     )
 }

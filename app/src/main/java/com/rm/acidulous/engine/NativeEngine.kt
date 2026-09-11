@@ -94,7 +94,7 @@ object NativeEngine {
     fun channelPressure(rackId: Int, value: Int) = nativeChannelPressure(rackId, value)
 
     /**
-     * [unit] is "machine", "effect1", "effect2", "eventor1", "eventor2" or "channel";
+     * [unit] is "machine", "effect1", "effect2", "eventor1", "eventor2", "eventor3" or "channel";
      * [value] is normalised 0..1. Returns false if the name is unknown for what is mounted.
      */
     fun setParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean = true): Boolean =

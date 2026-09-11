@@ -27,7 +27,10 @@ struct MidiMessage {
     uint8_t data2 = 0;
 };
 
-enum class Unit : uint8_t { Machine, Effect1, Effect2, Eventor1, Eventor2, Channel, Master };
+// The ordinal crosses the queue and the JNI boundary but is never written
+// to a file - lanes are keyed by unit *name* - so inserting here is safe,
+// as long as Recorder.UNITS on the Kotlin side is kept in the same order.
+enum class Unit : uint8_t { Machine, Effect1, Effect2, Eventor1, Eventor2, Eventor3, Channel, Master };
 
 struct ParamMessage {
     int32_t rack = 0;

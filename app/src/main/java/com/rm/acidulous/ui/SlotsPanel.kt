@@ -77,14 +77,24 @@ fun SlotsPanel(kind: SlotKind, track: Track, trackIndex: Int, editor: SongEditor
  * with it.
  */
 @Composable
-fun SlotDialog(kind: SlotKind, track: Track, trackIndex: Int, slot: Int, editor: SongEditor, onDismiss: () -> Unit) {
+fun SlotDialog(
+    kind: SlotKind,
+    track: Track,
+    trackIndex: Int,
+    slot: Int,
+    editor: SongEditor,
+    /** When the slot's type is decided by the control that opened it, there
+     *  is nothing to pick and the dropdown only invites a mistake. */
+    fixedType: String? = null,
+    onDismiss: () -> Unit,
+) {
     val types = remember(kind) { kind.types() }
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("${kind.label}${slot + 1}", fontSize = 15.sp) },
+        title = { Text(fixedType?.lowercase() ?: "${kind.label}${slot + 1}", fontSize = 15.sp) },
         text = {
             Column(Modifier.heightIn(max = 420.dp).verticalScrollWithBar(rememberScrollState())) {
-                SlotRow(kind, track, trackIndex, slot, types, editor)
+                SlotRow(kind, track, trackIndex, slot, types, editor, fixedType)
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
@@ -96,13 +106,16 @@ fun EffectsPanel(track: Track, trackIndex: Int, editor: SongEditor, modifier: Mo
     SlotsPanel(SlotKind.Effects, track, trackIndex, editor, modifier)
 
 @Composable
-private fun SlotRow(kind: SlotKind, track: Track, trackIndex: Int, slot: Int, types: List<String>, editor: SongEditor) {
+private fun SlotRow(
+    kind: SlotKind, track: Track, trackIndex: Int, slot: Int, types: List<String>, editor: SongEditor,
+    fixedType: String? = null,
+) {
     val fx = kind.at(track, slot)
     var menu by remember { mutableStateOf(false) }
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("${kind.label}${slot + 1}", color = Acid.colors.teal, fontSize = 10.sp)
-            TextButton(onClick = { menu = true }) {
+            if (fixedType == null) Text("${kind.label}${slot + 1}", color = Acid.colors.teal, fontSize = 10.sp)
+            if (fixedType == null) TextButton(onClick = { menu = true }) {
                 Text(if (fx.isEmpty) "none ▾" else "${fx.type} ▾", color = Acid.colors.accent, fontSize = 12.sp)
             }
             val menuScroll = rememberScrollState()

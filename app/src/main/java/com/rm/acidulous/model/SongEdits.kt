@@ -166,7 +166,7 @@ fun Track.withEventorParam(slot: Int, name: String, v01: Float): Track =
 fun Track.withEventorBypass(slot: Int, bypass: Boolean): Track = withEventorSlot(slot) { it.copy(bypass = bypass) }
 
 fun eventorUnit(slot: Int): String = "eventor${slot + 1}"
-fun eventorSlotOf(unit: String): Int? = when (unit) { "eventor1" -> 0; "eventor2" -> 1; else -> null }
+fun eventorSlotOf(unit: String): Int? = when (unit) { "eventor1" -> 0; "eventor2" -> 1; "eventor3" -> 2; else -> null }
 
 /** How long the song plays once through: per-scene tempo honoured, smooth ramps ignored. */
 fun Song.durationSeconds(): Float {

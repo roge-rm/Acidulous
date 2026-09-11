@@ -172,7 +172,9 @@ data class UnitSlot(
 typealias EffectSlot = UnitSlot
 
 const val EFFECT_SLOTS = 2
-const val EVENTOR_SLOTS = 2
+/** One per eventor - chord, scale, arp - because the keyboard strip gives
+ *  each of them a control and all three must be able to run together. */
+const val EVENTOR_SLOTS = 3
 
 /** A track's channel strip. Units are musical (gain 0..1.5, pan -1..1, sends 0..1). */
 @Serializable

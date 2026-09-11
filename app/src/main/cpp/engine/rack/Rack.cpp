@@ -263,8 +263,9 @@ void Rack::setParam(Unit unit, int32_t index, float v01) {
         break;
     }
     case Unit::Eventor1:
-    case Unit::Eventor2: {
-        const int32_t s = unit == Unit::Eventor1 ? 0 : 1;
+    case Unit::Eventor2:
+    case Unit::Eventor3: {
+        const int32_t s = unit == Unit::Eventor1 ? 0 : (unit == Unit::Eventor2 ? 1 : 2);
         Eventor *ev = eventors[s];
         if (ev == nullptr) break;
         if (index == kEventorBypassIndex) ev->setBypass(v01 >= 0.5f, sinks[s]);

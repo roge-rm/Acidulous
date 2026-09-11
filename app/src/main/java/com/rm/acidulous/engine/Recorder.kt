@@ -142,8 +142,8 @@ class Recorder {
                 else if (type.isEmpty()) null
                 else effectParamNames.getOrPut(type) { NativeEngine.effectParamInfo(type).map { it.name } }.getOrNull(index)
             }
-            "eventor1", "eventor2" -> {
-                val type = track.eventorAt(if (unit == "eventor1") 0 else 1).type
+            "eventor1", "eventor2", "eventor3" -> {
+                val type = track.eventorAt(if (unit == "eventor1") 0 else if (unit == "eventor2") 1 else 2).type
                 if (index == EFFECT_BYPASS_INDEX) "bypass"
                 else if (type.isEmpty()) null
                 else eventorParamNames.getOrPut(type) { NativeEngine.eventorParamInfo(type).map { it.name } }.getOrNull(index)
@@ -169,7 +169,9 @@ class Recorder {
     private companion object {
         const val TAG = "Acidulous.Rec"
         // Mirrors acidulous::Unit
-        val UNITS = listOf("machine", "effect1", "effect2", "eventor1", "eventor2", "channel", "master")
+        // Order matters: this is the Unit enum's ordinal, read off events the
+        // audio thread stamped. Keep it in step with Messages.h.
+        val UNITS = listOf("machine", "effect1", "effect2", "eventor1", "eventor2", "eventor3", "channel", "master")
         val CHANNEL_PARAMS = listOf("gain", "pan", "mute", "solo", "sendreverb", "senddelay")
         const val EFFECT_BYPASS_INDEX = -2 // mirrors kEffectBypassIndex
     }

@@ -204,7 +204,7 @@ fun ScaleChip(
     modifier: Modifier = Modifier,
     /** Turned on its side when it stands beside the keys; flat in a strip. */
     vertical: Boolean = true,
-) = SlotChip(label ?: "scale off", label != null, onToggle, onOpen, modifier, vertical)
+) = SlotChip(label ?: "scale", label != null, onToggle, onOpen, modifier, vertical)
 
 /**
  * The chip grammar the keyboard strip uses for everything that sits between
@@ -234,6 +234,7 @@ fun SlotChip(
             text,
             color = if (on) c.accent else c.textDim,
             fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             // Laid out long and then turned: rotation does not change a
             // layout's size, so the width has to be demanded before it spins.
             modifier = if (vertical) Modifier.requiredWidth(96.dp).rotate(-90f) else Modifier,

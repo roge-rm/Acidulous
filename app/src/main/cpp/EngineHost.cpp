@@ -43,6 +43,7 @@ Unit unitFromName(const std::string &u) {
     if (u == "effect2") return Unit::Effect2;
     if (u == "eventor1") return Unit::Eventor1;
     if (u == "eventor2") return Unit::Eventor2;
+    if (u == "eventor3") return Unit::Eventor3;
     if (u == "channel") return Unit::Channel;
     if (u == "master") return Unit::Master;
     return Unit::Machine;
@@ -429,7 +430,7 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
         return -1;
     }
-    if (u == Unit::Eventor1 || u == Unit::Eventor2) {
+    if (u == Unit::Eventor1 || u == Unit::Eventor2 || u == Unit::Eventor3) {
         if (name == "bypass") return kEventorBypassIndex;
         int32_t n = 0;
         const ParamDef *defs = EventorRegistry::paramDefs(machineType.c_str(), n); // the eventor's type here
@@ -462,7 +463,7 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         index = sEngine.master.params().indexOf(name.c_str());
     } else if (u == Unit::Effect1 || u == Unit::Effect2) {
         index = paramIndex(mountedEffectType[rack][u == Unit::Effect1 ? 0 : 1], unit, name);
-    } else if (u == Unit::Eventor1 || u == Unit::Eventor2) {
+    } else if (u == Unit::Eventor1 || u == Unit::Eventor2 || u == Unit::Eventor3) {
         index = paramIndex(mountedEventorType[rack][u == Unit::Eventor1 ? 0 : 1], unit, name);
     }
     if (index == -1) return false;
@@ -1031,7 +1032,7 @@ float EngineHost::paramNormalized(int rack, const std::string &unit, const std::
     if (rack < 0 || rack >= kRackCount) return -1.0f;
     const Unit u = unitFromName(unit);
     const bool isFx = u == Unit::Effect1 || u == Unit::Effect2;
-    const bool isEv = u == Unit::Eventor1 || u == Unit::Eventor2;
+    const bool isEv = u == Unit::Eventor1 || u == Unit::Eventor2 || u == Unit::Eventor3;
     const int slot = (u == Unit::Effect1 || u == Unit::Eventor1) ? 0 : 1;
     const int index = paramIndex(isFx ? mountedEffectType[rack][slot] : (isEv ? mountedEventorType[rack][slot] : mountedType[rack]), unit, name);
     if (index == -1) return -1.0f;

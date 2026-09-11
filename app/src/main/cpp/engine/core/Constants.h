@@ -9,7 +9,9 @@ constexpr int32_t kBlockFrames = 64;   // one render block; the sequencer's even
 constexpr int32_t kRackCount = 16;     // one per MIDI channel; a 4x4 picker
 constexpr int32_t kPPQN = 240;         // ticks per quarter note
 constexpr int32_t kEffectSlots = 2;    // per rack, for now
-constexpr int32_t kEventorSlots = 2;
+// Three, one per eventor: the keyboard strip gives chord, scale and arp a
+// control each, so all three have to be able to run at once.
+constexpr int32_t kEventorSlots = 3;
 constexpr int32_t kMaxParams = 256;    // per unit (Forage: 14 per pad x 13 pads, plus globals)
 
 } // namespace acidulous
