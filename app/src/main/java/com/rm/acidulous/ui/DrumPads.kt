@@ -47,15 +47,31 @@ private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> 
             .clip(RoundedCornerShape(4.dp))
             .background(if (pressed) Color(0xFFFFB454) else if (selected) Color(0xFF3F4A55) else Color(0xFF2E2E33))
             .pointerInput(voice.note, rack) {
-                awaitPointerEventScope {
-                    while (true) {
-                        awaitPointerEvent()
-                        val down = currentEvent.changes.any { it.pressed }
-                        if (down != pressed) {
-                            pressed = down
-                            if (down) { NativeEngine.noteOn(rack, voice.note, 110); onSelect() } else NativeEngine.noteOff(rack, voice.note)
+                // The loop keeps its own idea of what is down. Comparing
+                // against the drawn state instead lets a fast tap be missed,
+                // and the finally is what stops a pad left sounding when the
+                // gesture is cancelled out from under it.
+                var down = false
+                try {
+                    awaitPointerEventScope {
+                        while (true) {
+                            awaitPointerEvent()
+                            val now = currentEvent.changes.any { it.pressed }
+                            if (now != down) {
+                                down = now
+                                pressed = now
+                                if (now) {
+                                    NativeEngine.noteOn(rack, voice.note, 110)
+                                    onSelect()
+                                } else {
+                                    NativeEngine.noteOff(rack, voice.note)
+                                }
+                            }
                         }
                     }
+                } finally {
+                    if (down) NativeEngine.noteOff(rack, voice.note)
+                    pressed = false
                 }
             },
         contentAlignment = Alignment.Center,

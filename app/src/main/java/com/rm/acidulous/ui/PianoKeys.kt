@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,38 +64,56 @@ fun PianoKeys(
 ) {
     val measurer = rememberTextMeasurer()
     var held by remember { mutableStateOf(mapOf<Long, Int>()) }
-    val heldNow by rememberUpdatedState(held)
     val base = 12 * (octave + 1)
     val scale = scalePitchClasses?.takeIf { it.isNotEmpty() }?.sorted()
 
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
         Canvas(
             Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(3.dp)).pointerInput(base, scale) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val layout = Layout(size.width.toFloat(), size.height.toFloat(), base, MinKey.toPx(), scale)
-                        val next = HashMap(heldNow)
-                        for (change in event.changes) {
-                            val id = change.id.value
-                            if (change.pressed) {
-                                val note = layout.noteAt(change.position)
-                                if (next[id] != note) {
-                                    next[id]?.let { NativeEngine.noteOff(rack, it) }
-                                    if (note != null) {
-                                        NativeEngine.noteOn(rack, note, 100)
-                                        next[id] = note
-                                    } else {
-                                        next.remove(id)
+                // What is down is owned by this loop, not by composition.
+                // Rebuilding it from the drawn state each event was the bug:
+                // touches arrive faster than recomposition, so a finger that
+                // had just lifted was read back out of a stale snapshot and
+                // put down again, and its key stayed lit with nothing on it.
+                val down = HashMap<Long, Int>()
+                try {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val layout =
+                                Layout(size.width.toFloat(), size.height.toFloat(), base, MinKey.toPx(), scale)
+                            var changed = false
+                            for (change in event.changes) {
+                                val id = change.id.value
+                                if (change.pressed) {
+                                    val note = layout.noteAt(change.position)
+                                    if (down[id] != note) {
+                                        down[id]?.let { NativeEngine.noteOff(rack, it) }
+                                        if (note != null) {
+                                            NativeEngine.noteOn(rack, note, 100)
+                                            down[id] = note
+                                        } else {
+                                            down.remove(id)
+                                        }
+                                        changed = true
                                     }
+                                } else if (down.containsKey(id)) {
+                                    down.remove(id)?.let { NativeEngine.noteOff(rack, it) }
+                                    changed = true
                                 }
-                            } else {
-                                next.remove(id)?.let { NativeEngine.noteOff(rack, it) }
+                                change.consume()
                             }
-                            change.consume()
+                            if (changed) held = HashMap(down)
                         }
-                        held = next
                     }
+                } finally {
+                    // Changing octave or scale restarts this loop, and leaving
+                    // the screen cancels it. Either way the fingers that were
+                    // down will never report going up, so let go of them here
+                    // rather than leaving notes sounding and keys lit.
+                    for (note in down.values) NativeEngine.noteOff(rack, note)
+                    down.clear()
+                    held = emptyMap()
                 }
             },
         ) {

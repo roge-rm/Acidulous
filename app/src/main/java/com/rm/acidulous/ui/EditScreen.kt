@@ -474,15 +474,23 @@ private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
             .clip(RoundedCornerShape(4.dp))
             .background(if (pressed) Color(0xFF7FD1B9) else Color(0xFFE8E8E4))
             .pointerInput(note, rack) {
-                awaitPointerEventScope {
-                    while (true) {
-                        awaitPointerEvent()
-                        val down = currentEvent.changes.any { it.pressed }
-                        if (down != pressed) {
-                            pressed = down
-                            if (down) NativeEngine.noteOn(rack, note, 100) else NativeEngine.noteOff(rack, note)
+                var down = false
+                try {
+                    awaitPointerEventScope {
+                        while (true) {
+                            awaitPointerEvent()
+                            val now = currentEvent.changes.any { it.pressed }
+                            if (now != down) {
+                                down = now
+                                pressed = now
+                                if (now) NativeEngine.noteOn(rack, note, 100) else NativeEngine.noteOff(rack, note)
+                            }
                         }
                     }
+                } finally {
+                    // A cancelled gesture never reports the finger lifting.
+                    if (down) NativeEngine.noteOff(rack, note)
+                    pressed = false
                 }
             },
         contentAlignment = Alignment.BottomCenter,
