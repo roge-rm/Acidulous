@@ -120,6 +120,7 @@ fun MachinePanel(
             "Subvert" -> SubvertPanel(binding)
             "Hexbeat" -> HexbeatPanel(binding)
             "Resonance" -> ResonancePanel(binding, selectedPad)
+            "Dice" -> DicePanel(binding, track, trackIndex, editor, selectedPad, onImportOneSample)
             "Trinity" -> TrinityPanel(binding)
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
@@ -1496,6 +1497,117 @@ private fun ResonancePanel(b: ParamBinding, pad: Int) {
             }
         }
     }
+}
+
+
+// --- Dice ------------------------------------------------------------------------
+
+private val DICE_CUTS = listOf("onsets", "grid")
+
+/**
+ * Dice's panel: the loop and where it is cut, the dice themselves, and then
+ * one slice at a time - chosen with the pads, the way Forage chooses a pad.
+ */
+@Composable
+private fun DicePanel(
+    b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor, pad: Int, onImport: () -> Unit,
+) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    var picking by remember { mutableStateOf(false) }
+    val c = Acid.colors
+    val p = pad.coerceIn(0, 15)
+    fun n(name: String) = "s%02d_%s".format(p, name)
+    val sample = track.machine.settings["sample"].orEmpty()
+    Column {
+        SectionChips(listOf("loop", "dice", "slice", "tone"), section) { section = it }
+        if (section == 2) {
+            Text(
+                "slice ${p + 1} - chosen with the pads",
+                color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                modifier = Modifier.padding(bottom = 2.dp),
+            )
+        }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("loop") {
+                        Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
+                            Text(
+                                sample.substringAfterLast('/').ifEmpty { "no loop" },
+                                color = if (sample.isEmpty()) c.textDim else c.textHi,
+                                fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            )
+                            Row {
+                                TextButton(onClick = onImport) { Text("import…", color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = { picking = true }) { Text("recorded…", color = c.textMid, fontSize = 11.sp) }
+                            }
+                        }
+                    }
+                    Group("cut") {
+                        PanelSwitch(b, "cut", DICE_CUTS, "at")
+                        PanelStepKnob(b, "slices", (2..16).map { "$it" }, "how many", PanelAmber)
+                    }
+                    Group("play") {
+                        PanelKnob(b, "gate", "gate", PanelAmber)
+                        PanelKnob(b, "rate", "rate", PanelAmber)
+                        PanelKnob(b, "pitch", "pitch")
+                        PanelKnob(b, "fine", "fine")
+                        PanelKnob(b, "accent", "accent")
+                    }
+                }
+                1 -> {
+                    Group("the odds") {
+                        PanelKnob(b, "swap", "swap", PanelAmber)
+                        PanelKnob(b, "reverse", "reverse", PanelAmber)
+                        PanelKnob(b, "drop", "drop", PanelAmber)
+                    }
+                    Group("stutter") {
+                        PanelKnob(b, "stutter", "chance", PanelAmber)
+                        PanelStepKnob(b, "stutterdiv", (2..8).map { "$it" }, "times")
+                    }
+                    Group("jump") {
+                        PanelKnob(b, "jump", "chance", PanelAmber)
+                        PanelStepKnob(b, "jumprange", (1..12).map { "$it" }, "up to")
+                    }
+                    Group("the same roll") {
+                        PanelSwitch(b, "hold", listOf("free", "hold"), "dice")
+                        PanelStepKnob(b, "seed", (0..63).map { "$it" }, "seed")
+                    }
+                }
+                2 -> {
+                    // The group's title is harvested for the lane list, so it
+                    // stays a constant; which slice is selected is said above.
+                    Group("slice") {
+                        PanelKnob(b, n("level"), "level", PanelAmber)
+                        PanelKnob(b, n("pan"), "pan")
+                        PanelKnob(b, n("pitch"), "pitch", PanelAmber)
+                        PanelKnob(b, n("decay"), "decay", PanelAmber)
+                        PanelSwitch(b, n("dir"), listOf("fwd", "rev"), "play")
+                    }
+                }
+                else -> {
+                    Group("filter") {
+                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                        PanelKnob(b, "resonance", "reso", PanelAmber)
+                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                    }
+                    Group("out") {
+                        PanelKnob(b, "drive", "drive", PanelPink)
+                        PanelKnob(b, "volume", "volume")
+                        PanelKnob(b, "pan", "pan")
+                    }
+                }
+            }
+        }
+    }
+    if (picking) SampleBrowserDialog(
+        onPick = { rel ->
+            picking = false
+            editor.edit(trackIndex) { t -> t.withSetting("sample", rel) }
+        },
+        onDismiss = { picking = false },
+    )
 }
 
 // --- Pollen ----------------------------------------------------------------------

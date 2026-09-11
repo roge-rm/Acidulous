@@ -272,17 +272,17 @@ object EngineSync {
     }
 
     /**
-     * Pollen's take: one WAV, decoded with its transients found, mounted as
-     * one object. The live ring is the machine's own and needs nothing from
-     * here.
+     * A machine's one take: a WAV decoded with its transients found, mounted
+     * as one object - Pollen granulates it, Dice cuts it up. Pollen's live
+     * ring is the machine's own and needs nothing from here.
      */
-    fun ensurePollenTakes(song: Song) {
+    fun ensureTakes(song: Song) {
         val root = sampleRoot ?: return
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             val wanted = when {
-                track?.machine?.type != "Pollen" -> null
-                mounted[rack] != "Pollen" -> null // wait for the machine
+                track == null || !MachineUi.acceptsOneSample(track.machine.type) -> null
+                mounted[rack] != track.machine.type -> null // wait for the machine
                 else -> track.machine.settings["sample"].orEmpty()
             }
             if (loadedTakes[rack] == wanted) continue
@@ -290,9 +290,9 @@ object EngineSync {
             if (wanted == null) continue
             mapLoader.execute {
                 val path = if (wanted.isEmpty()) "" else java.io.File(root, wanted).absolutePath
-                val error = NativeEngine.loadPollenTake(rack, path)
+                val error = NativeEngine.loadTake(rack, path)
                 if (error.isNotEmpty()) {
-                    Log.w(TAG, "pollen rack $rack: $error")
+                    Log.w(TAG, "take on rack $rack: $error")
                     loadedTakes[rack] = null // let a retry happen
                 }
             }
@@ -308,7 +308,7 @@ object EngineSync {
         ensureNexusPatches(song)
         ensureClouds(song)
         ensureFormulas(song)
-        ensurePollenTakes(song)
+        ensureTakes(song)
         ensureFrozen(song)
         return push(song)
     }

@@ -1,9 +1,9 @@
-#include "Source.h"
+#include "Take.h"
 #include <cmath>
 
-namespace acidulous::machine::pollen {
+namespace acidulous::audio {
 
-void Source::detect(float sampleRate) {
+void Take::detect(float sampleRate) {
     onsets.clear();
     if (frames <= 0) return;
     OnsetFinder finder;
@@ -16,4 +16,4 @@ void Source::detect(float sampleRate) {
     }
 }
 
-} // namespace acidulous::machine::pollen
+} // namespace acidulous::audio

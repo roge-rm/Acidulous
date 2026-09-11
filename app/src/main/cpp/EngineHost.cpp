@@ -19,6 +19,7 @@
 #include <engine/machine/forage/Forage.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/formulate/Formulate.h>
+#include <engine/machine/dice/Dice.h>
 #include <engine/machine/pollen/Pollen.h>
 #include <engine/machine/mosaic/Mosaic.h>
 #include <map>
@@ -719,9 +720,12 @@ std::string EngineHost::buildCloud(int rack, const float *spectrum01, int32_t co
     return "";
 }
 
-std::string EngineHost::loadPollenTake(int rack, const std::string &path) {
+std::string EngineHost::loadTake(int rack, const std::string &path) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
-    if (awaitMachine(sEngine, rack, "Pollen") == nullptr) return "that rack is not a Pollen";
+    // Either machine that plays one piece of audio with its transients.
+    if (awaitMachine(sEngine, rack, "Pollen") == nullptr && awaitMachine(sEngine, rack, "Dice") == nullptr) {
+        return "that rack takes no sample";
+    }
     if (path.empty()) {
         // An empty path clears the take: the machine falls back to whatever
         // is in its live ring.
@@ -730,13 +734,13 @@ std::string EngineHost::loadPollenTake(int rack, const std::string &path) {
         clear.rack = rack;
         clear.slot = 0;
         clear.object = nullptr;
-        clear.deleter = deleteAs<machine::pollen::Source>;
+        clear.deleter = deleteAs<audio::Take>;
         return mountObjectWithRetry(clear) ? "" : "mount queue full";
     }
     std::string error;
     auto data = WavReader::read(path, kSampleRate, error);
     if (!data) return error.empty() ? "that file could not be read" : error;
-    auto take = std::make_unique<machine::pollen::Source>();
+    auto take = std::make_unique<audio::Take>();
     take->name = data->name;
     take->frames = data->frames;
     take->left = std::move(data->left);
@@ -744,14 +748,14 @@ std::string EngineHost::loadPollenTake(int rack, const std::string &path) {
     // The transients are found here, on a worker, once - the live ring finds
     // its own as it records, with the same detector.
     take->detect(static_cast<float>(kSampleRate));
-    LOGI("pollen rack %d: '%s', %d frames (%.2f s), %zu onsets", rack, take->name.c_str(), take->frames,
+    LOGI("take on rack %d: '%s', %d frames (%.2f s), %zu onsets", rack, take->name.c_str(), take->frames,
          static_cast<double>(take->frames) / kSampleRate, take->onsets.size());
     Mount mount;
     mount.kind = Mount::Kind::Object;
     mount.rack = rack;
     mount.slot = 0;
     mount.object = take.get();
-    mount.deleter = deleteAs<machine::pollen::Source>;
+    mount.deleter = deleteAs<audio::Take>;
     if (!mountObjectWithRetry(mount)) return "mount queue full";
     take.release();
     return "";

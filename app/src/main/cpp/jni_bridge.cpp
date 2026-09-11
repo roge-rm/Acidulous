@@ -273,9 +273,9 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeGetSampleRate(JNIEnv *, jobject)
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadPollenTake(JNIEnv *env, jobject, jint rack, jstring path) {
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoadTake(JNIEnv *env, jobject, jint rack, jstring path) {
     const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
-    const std::string out = host().loadPollenTake(rack, p);
+    const std::string out = host().loadTake(rack, p);
     if (path != nullptr) env->ReleaseStringUTFChars(path, p);
     return env->NewStringUTF(out.c_str());
 }

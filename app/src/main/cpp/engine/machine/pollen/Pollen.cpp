@@ -7,8 +7,8 @@
 
 namespace acidulous::machine {
 
-using pollen::Source;
-using pollen::View;
+using audio::Take;
+using audio::View;
 
 namespace {
 constexpr float kTwoPi = 6.28318530718f;
@@ -143,8 +143,8 @@ void *Pollen::swapObject(int32_t slot, void *object) {
     // Grains hold positions into the old source, so they stop with it.
     for (auto &g : grains) g.active = false;
     for (auto &v : voices) v.living = 0;
-    void *old = const_cast<Source *>(source);
-    source = static_cast<const Source *>(object);
+    void *old = const_cast<Take *>(source);
+    source = static_cast<const Take *>(object);
     return old;
 }
 

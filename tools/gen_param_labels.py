@@ -20,11 +20,13 @@ PANELS = {
     "RatioPanel": "Ratio", "MosaicPanel": "Mosaic", "ForagePanel": "Forage",
     "ManualPanel": "Manual", "CipherPanel": "Cipher", "FilamentPanel": "Filament",
     "NexusPanel": "Nexus", "CumulusPanel": "Cumulus", "FormulatePanel": "Formulate",
-    "PollenPanel": "Pollen", "ResonancePanel": "Resonance",
+    "PollenPanel": "Pollen", "ResonancePanel": "Resonance", "DicePanel": "Dice",
 }
 # Some panels name every control for the *selected* pad, so one panel
 # describes a whole machine's worth of parameters.
-PAD_COUNTS = {"Forage": 13, "Resonance": 8}
+PAD_COUNTS = {"Forage": 13, "Resonance": 8, "Dice": 16}
+# And what the per-pad keys are called in each.
+PAD_PREFIX = {"Forage": "p%02d_", "Resonance": "p%02d_", "Dice": "s%02d_"}
 
 
 def split_args(text, start):
@@ -119,7 +121,7 @@ def harvest():
                         put(labels, fn, key, expand(title, var, v), expand(label or pref.group(1), var, v))
                 elif pad and fn in PAD_COUNTS:
                     for v in range(PAD_COUNTS[fn]):
-                        put(labels, fn, "p%02d_%s" % (v, pad.group(1)),
+                        put(labels, fn, (PAD_PREFIX[fn] % v) + pad.group(1),
                             "pad %d %s" % (v + 1, title), label or pad.group(1))
         depth += line.count("{") - line.count("}")
         while groups and depth <= groups[-1][0]:

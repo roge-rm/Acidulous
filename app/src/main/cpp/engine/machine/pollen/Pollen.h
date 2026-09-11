@@ -2,7 +2,7 @@
 #include <engine/dsp/Adsr.h>
 #include <engine/dsp/MultiFilter.h>
 #include <engine/machine/Machine.h>
-#include <engine/machine/pollen/Source.h>
+#include <engine/core/Take.h>
 #include <vector>
 
 // Pollen - granular, both ways round.
@@ -110,11 +110,11 @@ class Pollen final : public Machine {
 
     Voice *allocate();
     int32_t takeGrain();
-    void spawn(Voice &v, int32_t voiceIndex, const pollen::View &view, float env);
-    void pollinate(const Grain &parent, const pollen::View &view);
+    void spawn(Voice &v, int32_t voiceIndex, const audio::View &view, float env);
+    void pollinate(const Grain &parent, const audio::View &view);
     float windowAt(int32_t shape, float phase, float skew) const;
     float scatterSemis(float amount, uint32_t &state) const;
-    pollen::View resolveView(int32_t mode, int32_t liveLen) const;
+    audio::View resolveView(int32_t mode, int32_t liveLen) const;
 
     float nextRandom() {
         rng = rng * 1664525u + 1013904223u;
@@ -122,14 +122,14 @@ class Pollen final : public Machine {
     }
 
     float sampleRate = 48000.0f;
-    const pollen::Source *source = nullptr;
+    const audio::Take *source = nullptr;
 
     // The live ring, owned here and written on the audio thread.
     std::vector<float> ringL, ringR;
     int32_t ringCapacity = 0, writePos = 0, liveLength = 0;
     int32_t captureLeft = 0;
     bool lastCapture = false;
-    pollen::OnsetFinder finder;
+    audio::OnsetFinder finder;
     int32_t liveOnsets[kLiveOnsets] = {};
     int32_t liveOnsetCount = 0, liveOnsetNext = 0;
 

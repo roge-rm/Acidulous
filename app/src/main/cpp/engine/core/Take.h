@@ -4,13 +4,14 @@
 #include <string>
 #include <vector>
 
-// What Pollen's grains read, and how the transients in it are found.
+// A piece of audio with its transients found: what Pollen's grains read,
+// and what Dice cuts into slices.
 //
 // Two things can feed a cloud: a file, decoded on a worker and mounted
 // read-only, or the machine's own ring of what came in through the
 // microphone a moment ago. A grain must not care which, so both are reached
 // through one View, resolved once a block.
-namespace acidulous::machine::pollen {
+namespace acidulous::audio {
 
 /**
  * Where a transient is. A hop of energy against a slow average, which is
@@ -50,7 +51,7 @@ class OnsetFinder {
 };
 
 /** A decoded file, with its transients. Built on a worker, never mutated. */
-struct Source {
+struct Take {
     std::vector<float> left, right; // both always filled; a mono file is copied across
     int32_t frames = 0;
     std::vector<int32_t> onsets; // sorted, in frames
@@ -59,7 +60,7 @@ struct Source {
     void detect(float sampleRate);
 };
 
-/** What a grain actually reads. Resolved once per block. */
+/** What a reader actually reads. Resolved once per block. */
 struct View {
     const float *l = nullptr, *r = nullptr;
     int32_t frames = 0;
@@ -81,4 +82,4 @@ struct View {
     }
 };
 
-} // namespace acidulous::machine::pollen
+} // namespace acidulous::audio

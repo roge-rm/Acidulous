@@ -133,10 +133,11 @@ class EngineHost {
     std::string buildCloud(int rack, const float *spectrum01, int32_t count);
 
     /**
-     * Decode a WAV for Pollen, find its transients, and hand the whole take
-     * to the rack. Worker only. "" or the reason it would not load.
+     * Decode a WAV, find its transients, and hand the whole take to the
+     * rack - for Pollen to granulate or Dice to cut up. Worker only.
+     * "" or the reason it would not load.
      */
-    std::string loadPollenTake(int rack, const std::string &path);
+    std::string loadTake(int rack, const std::string &path);
 
     /**
      * Compile Formulate's expression and its three step tables, and mount

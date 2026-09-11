@@ -52,6 +52,7 @@ object PatchStore {
         "Mosaic" -> MosaicPresets.all
         "Hexbeat" -> HexbeatPresets.all
         "Resonance" -> ResonancePresets.all
+        "Dice" -> DicePresets.all
         "Manual" -> ManualPresets.all
         "Pollen" -> PollenPresets.all
         "Cumulus" -> CumulusPresets.all
@@ -852,5 +853,38 @@ object ResonancePresets {
             "p07_pan" to 0.5000f, "p07_couple" to 0.9000f, "p07_drive" to 0.0000f, "p07_bend" to 0.0000f,
             "p07_bendtime" to 0.5111f, "coupling" to 0.9000f, "modes" to 1.0000f, "humanise" to 0.1000f,
             "volume" to 0.5000f),
+    )
+}
+
+/**
+ * Dice's factory rolls: the loop straight, then four degrees of luck, and
+ * one that holds the dice so a take can be recorded.
+ */
+object DicePresets {
+    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Dice", name, kv.toMap())
+
+    val all: List<Patch> = listOf(
+        p("Init"),
+        // The loop, cut at its own hits and played back as it was.
+        p("Straight", "cut" to 0.0000f, "slices" to 0.4286f, "gate" to 1.0000f, "rate" to 0.5000f,
+            "volume" to 0.6000f),
+        // A tenth of the hits come out somewhere else. Enough to notice, not enough to argue with.
+        p("Nudge", "cut" to 0.0000f, "slices" to 0.4286f, "swap" to 0.1000f, "reverse" to 0.0800f,
+            "gate" to 0.9000f, "volume" to 0.6000f),
+        // Half the slices are somebody else's, a third of them backwards.
+        p("Broken", "cut" to 0.0000f, "slices" to 0.7143f, "swap" to 0.5000f, "reverse" to 0.3000f,
+            "drop" to 0.0800f, "stutter" to 0.1500f, "stutterdiv" to 0.3333f, "gate" to 0.7000f,
+            "volume" to 0.6000f),
+        // Stutters and octave jumps: the bar before the chorus.
+        p("Fill", "cut" to 1.0000f, "slices" to 1.0000f, "stutter" to 0.6000f, "stutterdiv" to 0.6667f,
+            "jump" to 0.3500f, "jumprange" to 1.0000f, "swap" to 0.3000f, "gate" to 0.5000f, "drive" to 0.2000f,
+            "volume" to 0.5667f),
+        // The same rolls every pass, so a take can be recorded.
+        p("Held", "cut" to 0.0000f, "slices" to 0.4286f, "swap" to 0.4000f, "reverse" to 0.2500f,
+            "stutter" to 0.2000f, "hold" to 1.0000f, "seed" to 0.1746f, "gate" to 0.8500f, "volume" to 0.6000f),
+        // Short slices, quiet drops, a filter closing: a loop remembered rather than played.
+        p("Dust", "cut" to 1.0000f, "slices" to 1.0000f, "gate" to 0.2500f, "drop" to 0.3000f,
+            "swap" to 0.3500f, "cutoff" to 0.6559f, "resonance" to 0.1500f, "reverse" to 0.2000f,
+            "volume" to 0.5333f),
     )
 }

@@ -11,14 +11,15 @@ data class DrumVoice(val note: Int, val name: String, val short: String)
 
 object MachineUi {
     fun kindOf(type: String): MachineKind =
-        if (type == "Hexbeat" || type == "Forage" || type == "Resonance") MachineKind.Drums else MachineKind.Keyboard
+        if (type == "Hexbeat" || type == "Forage" || type == "Resonance" || type == "Dice") MachineKind.Drums
+        else MachineKind.Keyboard
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
     /**
      * Machines that hold one sample of their own, under the plain key
      * "sample" - as against Forage, whose thirteen pads each have their own.
      */
-    fun acceptsOneSample(type: String): Boolean = type == "Pollen"
+    fun acceptsOneSample(type: String): Boolean = type == "Pollen" || type == "Dice"
 
     /**
      * The machines, in groups, with a line each saying what they are.
@@ -32,7 +33,7 @@ object MachineUi {
 
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
-        MachineGroup("drums", listOf("Hexbeat", "Resonance", "Forage")),
+        MachineGroup("drums", listOf("Hexbeat", "Resonance", "Forage", "Dice")),
         MachineGroup("realish", listOf("Manual", "Filament", "Mosaic", "Pollen")),
         MachineGroup("beyond", listOf("Cipher", "Nexus")),
     )
@@ -46,6 +47,7 @@ object MachineUi {
         "Formulate" -> "the chip, and an equation you can type into it"
         "Hexbeat" -> "drums by synthesis, in the 606's vocabulary"
         "Resonance" -> "eight struck objects that ring, and hear each other"
+        "Dice" -> "a loop cut into slices, and rolled: swap, stutter, drop"
         "Forage" -> "sampled drums, with a filter and envelope per pad"
         "Manual" -> "tonewheel organ, two manuals and a spinning cabinet"
         "Filament" -> "strings by modelling - pluck, bow or breathe at them"
@@ -81,6 +83,7 @@ object MachineUi {
         // Eight objects, and what each one is is a parameter rather than a
         // name - so they are numbered here and named on the panel.
         "Resonance" -> (0 until 8).map { DrumVoice(36 + it, "Object ${it + 1}", "${it + 1}") }
+        "Dice" -> (0 until 16).map { DrumVoice(36 + it, "Slice ${it + 1}", "${it + 1}") }
         "Forage" -> (0 until 13).map { pad ->
             val file = settings["p%02d_sample".format(pad)]
             val name = file?.substringAfterLast('/')?.substringBeforeLast('.') ?: ""
