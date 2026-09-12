@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.rememberScrollState
@@ -20,9 +19,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
+import com.rm.acidulous.model.Action
 import com.rm.acidulous.model.MachineKind
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Scales
@@ -213,7 +211,11 @@ fun EditScreen(
             contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
             spacing = 2.dp,
         ) {
-            HeaderButton("◀") { onBack() }
+            // Thirty dp, not forty-two: this arrow is no longer the whole of
+            // the way out - the title beside it goes back too - so what has
+            // to be hit is the arrow *plus* two hundred dp of title, and the
+            // arrow only has to say so. What it gives up goes to the title.
+            HeaderButton("◀", width = 30.dp) { onBack() }
             // A frozen clip is playing audio, so nothing edited here is
             // heard until it is thawed - which this does, since the alarm
             // and the way out belong in the same place.
@@ -247,6 +249,24 @@ fun EditScreen(
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
+            // Undo and redo, first after the title - the same place, the same
+            // glyphs and the same gesture as the arranger's. They were in the
+            // bottom bar, where they took a weighted share with five other
+            // buttons and came out twenty-six dp wide, and where they were on
+            // the opposite side of the screen from the arranger's pair.
+            //
+            // They cost the header nothing: they are two forty-two dp buttons
+            // standing exactly where the roll's two octave buttons stood, and
+            // those have gone to a drag on the roll's own name gutter.
+            HeaderButton("\u21B6", enabled = editor.canUndo(trackIndex)) {
+                selection = emptySet(); editor.undo(trackIndex)
+            }
+            HeaderButton(
+                "\u21B7",
+                enabled = editor.canRedo(trackIndex),
+                color = if (UiPrefs.mapMode) Acid.colors.accent else null,
+                modifier = Modifier.onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
+            ) { selection = emptySet(); editor.redo(trackIndex) }
             // Paging lives here rather than in a row of its own: a whole row of
             // chrome to show one number costs more height than a phone has to
             // spare, and the header already has the two buttons it belongs with.
@@ -257,11 +277,6 @@ fun EditScreen(
                     fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
                 )
                 HeaderButton("▶") { page = (page + 1) % pages }
-            }
-            // Only the roll scrolls by octave; the step views have fixed rows.
-            if (!steps) {
-                HeaderButton("▲") { lowestPitch = (lowestPitch + 12).coerceAtMost(127 - rows) }
-                HeaderButton("▼") { lowestPitch = (lowestPitch - 12).coerceAtLeast(0) }
             }
             // Last, at the far edge, as it is on the patch editor: a reading
             // rather than a control, so it sits past the things you press.
@@ -336,6 +351,9 @@ fun EditScreen(
             },
             onSelectionChange = { selection = it },
             onAudition = { pitch -> preview(pitch) },
+            // The same clamp the octave buttons had, so the window can never
+            // run off either end of the keyboard.
+            onScrollPitch = { delta -> lowestPitch = (lowestPitch + delta).coerceIn(0, 127 - rows) },
             onGestureBegin = { editor.beginGesture(trackIndex) },
             onMove = { indices, dTick, dPitch ->
                 editor.updateGestureClip(sceneId) { base ->
@@ -491,52 +509,74 @@ fun EditScreen(
         }
         }
         val footerSlot: @Composable () -> Unit = {
-        // Footer: mode · undo/redo · transport · rec
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        // The bottom bar: what this screen is showing, then the three that
+        // end every row in the app - mix, rec, play - at the width and in
+        // the order the arranger has them, so nothing you reach for moves
+        // when you open a clip. See ui/BottomBar.kt.
+        //
+        // Undo and redo used to be here, taking a weighted share alongside
+        // five other buttons; on a Subvert track that left every one of them
+        // twenty-six dp wide. They are in the header now, where the arranger
+        // has always kept its pair. What is left shares the same pool and
+        // gets forty-six dp each.
+        //
+        // Sideways they stop being anchors and take a share like everything
+        // else. Anchoring is a portrait rule: it works because both screens'
+        // bars are the width of the phone there, so a natural-width pill
+        // lands in the same place on each. In landscape this bar is a 300dp
+        // column beside the roll and the arranger's is still full width -
+        // they cannot line up whatever we do - and three fixed pills in 300dp
+        // leave the five beside them seven dp each, which is no button at all.
+        val anchor = if (landscape) Modifier.weight(1f) else Modifier
+        BottomBar {
             if (hasSteps) {
-                OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { steps = !steps }) { Text(if (steps) "▦" else "▤", fontSize = 12.sp) }
+                BarButton(if (steps) "\u25A6" else "\u25A4", Modifier.weight(1f)) { steps = !steps }
             }
-            if (!steps) OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw }) {
-                Text(if (mode == EditMode.Draw) "✎" else "⬚", fontSize = 12.sp)
+            if (!steps) {
+                BarButton(if (mode == EditMode.Draw) "\u270E" else "\u2B1A", Modifier.weight(1f)) {
+                    mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw
+                }
             }
-            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 1) 0 else 1 }) {
-                Text("fx", color = if (panel == 1) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
-            }
-            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { panel = if (panel == 2) 0 else 2 }) {
-                Text("mix", color = if (panel == 2) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
-            }
-            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }
-            // Mapping mode, on a long press of redo - the same gesture in
-            // the same place as the arranger's, and no button of its own in
-            // a bar that has none to spare.
-            OutlinedButton(
-                modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp)
-                    .onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
-                contentPadding = PaddingValues(0.dp),
-                onClick = { selection = emptySet(); editor.redo(trackIndex) },
-                enabled = editor.canRedo(trackIndex),
-            ) {
-                Text("↷", color = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
-            }
-            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = {
-                if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(song.scenes.indexOf(scene))
-            }) { Text(if (playing) "■" else "▶", fontSize = 12.sp) }
-            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { onArm(!armed) }) {
-                Text(if (armed) "●" else "○", color = if (armed) Acid.colors.red else Color.Unspecified, fontSize = 12.sp)
-            }
+            BarButton(
+                "fx", Modifier.weight(1f),
+                colour = if (panel == 1) Acid.colors.accent else Color.Unspecified,
+            ) { panel = if (panel == 1) 0 else 1 }
+            // A fixed width rather than the width of what it says: this goes
+            // from nothing to "12 sel" as you drag, and a count that shoved
+            // the buttons beside it sideways would move them mid-gesture.
             Text(
                 if (selection.isEmpty()) "" else "${selection.size} sel",
                 color = Acid.colors.textMid, fontFamily = FontFamily.Monospace, fontSize = 11.sp,
-                softWrap = false, maxLines = 1,
+                softWrap = false, maxLines = 1, modifier = Modifier.width(40.dp),
             )
+            BarButton(
+                // The arrow says which way the panel is, which is worth a
+                // pill's width in portrait and is not true sideways - there
+                // the panel is the column this bar is the foot of. It also
+                // does not fit: a share of the control column is 26dp.
+                if (landscape) "mix" else if (panel == 2) "\u25BE mix" else "\u25B4 mix", anchor,
+                colour = if (panel == 2) Acid.colors.accent else Color.Unspecified,
+            ) { panel = if (panel == 2) 0 else 2 }
+            BarButton(
+                // The arranger's own words, so the pill is identical and not
+                // merely the same size. There is room for them now that undo
+                // and redo have gone to the header - sideways there is not,
+                // and the glyph alone says it.
+                if (landscape) (if (armed) "\u25CF" else "\u25CB")
+                else (if (armed) "\u25CF REC" else "\u25CB rec"),
+                anchor.mappable(MapTargets.action(Action.RecordArm.name)),
+                colour = if (armed) Acid.colors.red else Color.Unspecified,
+            ) { onArm(!armed) }
+            BarButton(
+                if (playing) "\u25A0" else "\u25B6",
+                anchor.mappable(MapTargets.action(Action.PlayStop.name)),
+            ) {
+                if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(song.scenes.indexOf(scene))
+            }
         }
         }
 
-        val pad = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+        val pad = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
         if (landscape) {
             // Sideways the grid is the point: it takes the whole left side and
             // the full height, and everything that was competing with it for
@@ -556,13 +596,16 @@ fun EditScreen(
                 }
             }
         } else {
+            // The bar is outside the padding, so it reaches the edges of
+            // the screen as the arranger's does; everything above it keeps
+            // its margins.
             Column(Modifier.fillMaxWidth().weight(1f).then(pad)) {
                 gridSlot()
                 automationSlot()
                 panelSlot()
                 keysSlot(if (kind == MachineKind.Drums) PADS_H else KEYS_H)
-                footerSlot()
             }
+            footerSlot()
         }
     }
 

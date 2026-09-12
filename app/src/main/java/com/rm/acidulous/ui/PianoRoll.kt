@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -86,6 +87,14 @@ fun PianoRoll(
     onGestureEnd: () -> Unit,
     /** Tapping a name in the gutter sounds that pitch, as a keyboard would. */
     onAudition: (pitch: Int) -> Unit = {},
+    /**
+     * Dragging the gutter moves the pitch window, by this many semitones.
+     * The roll shows sixteen rows of a hundred and twenty-eight notes, and
+     * this is how you reach the rest: the two header buttons that used to do
+     * it were forty-two dp each in a row that had to fit around a camera
+     * hole, and the pitch axis already had a column of its own.
+     */
+    onScrollPitch: (delta: Int) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val textMeasurer = rememberTextMeasurer()
@@ -98,7 +107,7 @@ fun PianoRoll(
     val rowsState by rememberUpdatedState(rows)
     val cb by rememberUpdatedState(
         Callbacks(onTapEmpty, onTapNote, onSelectionChange, onGestureBegin, onMove, onResize, onDraw, onGestureEnd,
-            onAudition, onCycleScaleView),
+            onAudition, onCycleScaleView, onScrollPitch),
     )
     // Which pitch each row carries. Chromatic and Dim step by semitone; Fold
     // keeps only what the scale allows, so a row is always a playable note.
@@ -135,13 +144,48 @@ fun PianoRoll(
                     GutterWidth.toPx(), RulerHeight.toPx(), rowsState2, firstTick, visibleTicks,
                 )
                 val press = down.position
-                // The gutter plays the row it names; the ruler is a legend and
-                // takes no edits; the corner between them cycles the scale
-                // view. None of the three can draw a note by accident.
+                // The gutter plays the row it names and scrolls the window;
+                // the ruler is a legend and takes no edits; the corner
+                // between them cycles the scale view. None of the three can
+                // draw a note by accident.
                 if (press.x < geo.originX || press.y < geo.originY) {
-                    if (press.x < geo.originX && press.y < geo.originY) cb.onCycleScaleView()
-                    else if (press.x < geo.originX) cb.onAudition(geo.pitchAt(press.y))
-                    down.consume()
+                    if (press.y < geo.originY) {
+                        if (press.x < geo.originX) cb.onCycleScaleView()
+                        down.consume()
+                        return@awaitEachGesture
+                    }
+                    // The down is *not* consumed here, unlike the ruler and
+                    // the corner: awaitTouchSlopOrCancellation gives up the
+                    // moment it sees a consumed change, so consuming first
+                    // meant the drag below could never begin.
+                    //
+                    // The audition waits for the finger to lift rather than
+                    // firing on the way down, or every scroll would begin
+                    // with a note nobody asked for.
+                    val slop = awaitTouchSlopOrCancellation(down.id) { change, _ -> change.consume() }
+                    if (slop == null) {
+                        if (currentEvent.changes.none { it.pressed }) cb.onAudition(geo.pitchAt(press.y))
+                        return@awaitEachGesture
+                    }
+                    // The window follows the finger: drag down and the rows
+                    // come down with it, which brings higher notes in at the
+                    // top - the way a list scrolls, and the way every other
+                    // drag in this app already behaves.
+                    //
+                    // Measured from where the press began rather than summed
+                    // from each event's delta, because positionChange() is
+                    // zero on a change that has been consumed and everything
+                    // here consumes. The rest of this file reads absolute
+                    // positions for the same reason.
+                    var applied = 0
+                    drag(slop.id) { change ->
+                        change.consume()
+                        val want = ((change.position.y - press.y) / geo.rowH).toInt()
+                        if (want != applied) {
+                            cb.onScrollPitch(want - applied)
+                            applied = want
+                        }
+                    }
                     return@awaitEachGesture
                 }
                 val hit = geo.hitTest(press)
@@ -289,9 +333,38 @@ fun PianoRoll(
         }
 
         drawNameGutter(geo, textMeasurer, scale, c, noteSpelling)
+        drawPitchPosition(geo, c)
         drawBarRuler(geo, size, textMeasurer, playheadTick, c)
         drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView, c)
     }
+}
+
+/**
+ * Where the sixteen rows on screen sit in the hundred and twenty-eight.
+ *
+ * Every scrolling thing in this app carries a position bar, and since the
+ * octave buttons left the header the roll is plainly one of them. It does
+ * two jobs: it answers "where am I" the way the buttons never did, and it is
+ * the only thing on screen that says the gutter can be dragged at all.
+ *
+ * Drawn to `ui/Scrollbar.kt`'s measurements - three dp thick, one dp in, a
+ * twenty dp floor under the thumb - because a bar that matched the lists
+ * everywhere else is the point of having a rule about it.
+ */
+private fun DrawScope.drawPitchPosition(geo: Geometry, c: AcidColors) {
+    val top = geo.pitchOfRow(0)
+    val bottom = geo.pitchOfRow(geo.rows - 1)
+    val shown = (top - bottom + 1).coerceIn(1, 128)
+    if (shown >= 128) return
+    val track = geo.fieldH
+    val thickness = 3.dp.toPx()
+    val inset = 1.dp.toPx()
+    val thumb = (track * shown / 128f).coerceIn(20.dp.toPx(), track)
+    // Pitch runs up the screen and the bar runs down it, so the top of the
+    // thumb is measured from the highest note, not the lowest.
+    val travel = track - thumb
+    val pos = geo.originY + travel * ((127 - top).coerceIn(0, 127) / (128f - shown).coerceAtLeast(1f))
+    drawRoundRect(c.scrollbar, Offset(inset, pos), Size(thickness, thumb), CornerRadius(thickness / 2f))
 }
 
 /**
@@ -406,6 +479,7 @@ private class Callbacks(
     val onGestureEnd: () -> Unit,
     val onAudition: (Int) -> Unit,
     val onCycleScaleView: () -> Unit,
+    val onScrollPitch: (Int) -> Unit,
 )
 
 private class Hit(val index: Int, val onEdge: Boolean)

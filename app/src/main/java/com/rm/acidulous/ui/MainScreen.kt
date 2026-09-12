@@ -14,16 +14,13 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -34,7 +31,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,12 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -327,114 +317,98 @@ fun MainScreen(
         val bar = position.tickInIteration / ticksPerBar + 1
         val beat = (position.tickInIteration % ticksPerBar) / PPQN + 1
         val tick = position.tickInIteration % PPQN
-        Column(Modifier.fillMaxWidth().background(Acid.colors.bar).padding(horizontal = 8.dp, vertical = 6.dp)) {
-            // 4dp between, not 6. Six buttons at Material's 58dp minimum plus
-            // five six-dp gaps is 379dp, and a 393dp phone has 377 to give -
-            // so the row was two dp over-full and panic, being last, was the
-            // one that paid: 54.5dp against its neighbours' 58.2, which reads
-            // as the wrong shape rather than as a narrower button.
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                // Tight, because panic now has to fit at the far end of the same
-                // row and a transport bar that scrolls is a transport bar you
-                // cannot hit in a hurry.
-                val pad = PaddingValues(horizontal = 8.dp)
-                // In clip mode stop is a two-stage thing: once to let every
-                // clip finish the cycle it is in, again to cut. A launcher
-                // that only ever cut would be useless for ending a piece.
-                val anyLaunched = clipMode && launchStates.any { it.playing }
-                val anyStopping = clipMode && launchStates.any { it.stopping }
-                OutlinedButton(
-                    modifier = Modifier.mappable(MapTargets.action(Action.PlayStop.name)),
-                    onClick = {
-                        when {
-                            !playing -> NativeEngine.transportPlay(if (clipMode) 0 else position.scene)
-                            clipMode && anyLaunched && !anyStopping -> NativeEngine.stopAllClips()
-                            else -> NativeEngine.transportStop()
+        BottomBar(
+            // The readout sits above the buttons, not below them. It is the
+            // one thing that had to move for the two screens' rows to land at
+            // the same height, and of the two the row is what a thumb goes
+            // looking for.
+            readout = {
+                BarReadout(
+                    if (clipMode) {
+                        // One entry per sounding track: which scene it took its
+                        // clip from and how far through its own cycle it is. Every
+                        // track keeps its own count, which is the whole point, and
+                        // is the only place you can read that as a number.
+                        val live = song.tracks.indices.mapNotNull { t ->
+                            val st = launchStates.getOrElse(t) { LaunchState.idle }
+                            if (!st.playing) {
+                                null
+                            } else {
+                                val tpb = song.scenes.getOrNull(st.scene)
+                                    ?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
+                                val sc = song.scenes.getOrNull(st.scene)
+                                val cyc = (song.tracks[t].clips[sc?.id]?.bars ?: 1) * (sc?.repeat ?: 1)
+                                "%d>%d %d.%d/%d".format(t + 1, st.scene + 1,
+                                    st.tickInCycle / tpb + 1, (st.tickInCycle % tpb) / PPQN + 1, cyc)
+                            }
                         }
-                    },
-                    contentPadding = pad,
-                ) {
-                    Text(if (playing) "■" else "▶", color = if (anyStopping) Acid.colors.red else Color.Unspecified)
-                }
-                OutlinedButton(onClick = { showMixer = !showMixer }, contentPadding = pad) {
-                    Text(if (showMixer) "▾ mix" else "▴ mix",
-                        color = if (showMixer) Acid.colors.accent else Color.Unspecified,
-                        fontSize = 12.sp, maxLines = 1)
-                }
-                if (clipMode) {
-                    // What a tap waits for. "clip end" is the musical default:
-                    // the clip you are replacing finishes what it was doing.
-                    OutlinedButton(onClick = { dialog = Dialog.Quantise }, contentPadding = pad) {
-                        Text(
-                            "q: " + quantiseLabel(UiPrefs.launchQuantise),
-                            fontSize = 12.sp, maxLines = 1,
+                        if (live.isEmpty()) "clip  -  q:" + quantiseShort(UiPrefs.launchQuantise)
+                        else "clip  " + live.joinToString("  ") + "  q:" + quantiseShort(UiPrefs.launchQuantise)
+                    } else if (countInBeats > 0) {
+                        // The count replaces the position rather than sitting
+                        // beside it: while it runs there is no position to read,
+                        // and a number counting down is the only thing worth
+                        // looking at.
+                        "counting in\u2026 %d".format(countInBeats)
+                    } else {
+                        "S%d/%d %-8s r%d/%d  %d.%d.%03d".format(
+                            position.scene + 1, song.scenes.size, scene?.name ?: "-",
+                            position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
                         )
-                    }
-                } else {
-                    OutlinedButton(
-                        modifier = Modifier.mappable(MapTargets.action(Action.LoopScene.name)),
-                        onClick = { onLoopScene(!loopScene) },
-                        contentPadding = pad,
-                    ) {
-                        Text(if (loopScene) "\u27F3 scene" else "\u27F3 song", fontSize = 12.sp, maxLines = 1)
-                    }
+                    },
+                    if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi,
+                )
+                BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
+            },
+        ) {
+            // In clip mode stop is a two-stage thing: once to let every
+            // clip finish the cycle it is in, again to cut. A launcher
+            // that only ever cut would be useless for ending a piece.
+            val anyLaunched = clipMode && launchStates.any { it.playing }
+            val anyStopping = clipMode && launchStates.any { it.stopping }
+            // Panic, alone at the left end. A modular makes a runaway easy
+            // to build and a pair of headphones does not forgive one, so it
+            // is one tap and never behind a menu - but it is also the one
+            // button here you must not hit by accident, so it keeps the
+            // whole width of the row between itself and the transport.
+            PanicButton { NativeEngine.panic() }
+            if (clipMode) {
+                // What a tap waits for. "end" is the musical default: the
+                // clip you are replacing finishes what it was doing.
+                BarButton("q: " + quantiseShort(UiPrefs.launchQuantise), Modifier.weight(1f)) {
+                    dialog = Dialog.Quantise
                 }
-                OutlinedButton(
-                    modifier = Modifier.mappable(MapTargets.action(Action.RecordArm.name)),
-                    onClick = { onArm(!armed) },
-                    contentPadding = pad,
-                ) {
-                    Text(if (armed) "● REC" else "○ rec", color = if (armed) Acid.colors.red else Color.Unspecified, fontSize = 12.sp, maxLines = 1)
-                }
-                TextButton(onClick = { dialog = Dialog.Tempo }, contentPadding = PaddingValues(horizontal = 6.dp)) {
-                    Text("%.1f".format(bpm), color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
-                }
-                // Panic, over on its own at the end of the row. A modular
-                // makes a runaway easy to build and a pair of headphones does
-                // not forgive one, so it is one tap and never behind a menu -
-                // but it is also the one button here you must not hit by
-                // accident, so it keeps its distance and its red.
-                Spacer(Modifier.weight(1f))
-                PanicButton { NativeEngine.panic() }
+            } else {
+                BarButton(
+                    if (loopScene) "\u27F3 scene" else "\u27F3 song",
+                    Modifier.weight(1f).mappable(MapTargets.action(Action.LoopScene.name)),
+                ) { onLoopScene(!loopScene) }
             }
-            Text(
-                if (clipMode) {
-                    // One entry per sounding track: which scene it took its
-                    // clip from and how far through its own cycle it is. Every
-                    // track keeps its own count, which is the whole point, and
-                    // is the only place you can read that as a number.
-                    val live = song.tracks.indices.mapNotNull { t ->
-                        val st = launchStates.getOrElse(t) { LaunchState.idle }
-                        if (!st.playing) {
-                            null
-                        } else {
-                            val tpb = song.scenes.getOrNull(st.scene)
-                                ?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
-                            val sc = song.scenes.getOrNull(st.scene)
-                            val cyc = (song.tracks[t].clips[sc?.id]?.bars ?: 1) * (sc?.repeat ?: 1)
-                            "%d>%d %d.%d/%d".format(t + 1, st.scene + 1,
-                                st.tickInCycle / tpb + 1, (st.tickInCycle % tpb) / PPQN + 1, cyc)
-                        }
-                    }
-                    if (live.isEmpty()) "clip  -  q:" + quantiseLabel(UiPrefs.launchQuantise)
-                    else "clip  " + live.joinToString("  ") + "  q:" + quantiseLabel(UiPrefs.launchQuantise)
-                } else if (countInBeats > 0) {
-                    // The count replaces the position rather than sitting
-                    // beside it: while it runs there is no position to read,
-                    // and a number counting down is the only thing worth
-                    // looking at.
-                    "counting in… %d".format(countInBeats)
-                } else {
-                    "S%d/%d %-8s r%d/%d  %d.%d.%03d".format(
-                        position.scene + 1, song.scenes.size, scene?.name ?: "-",
-                        position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
-                    )
-                },
-                color = if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi,
-                fontFamily = FontFamily.Monospace, fontSize = 12.sp,
-                maxLines = 1, overflow = TextOverflow.Ellipsis,
-            )
-            Text(diagnostics, color = Acid.colors.textFaint, fontFamily = FontFamily.Monospace, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            BarButton(
+                "%.1f".format(bpm), Modifier.weight(1f),
+                colour = Acid.colors.text, fontFamily = FontFamily.Monospace,
+            ) { dialog = Dialog.Tempo }
+            // And the three that end every row in the app, in this order.
+            BarButton(
+                if (showMixer) "\u25BE mix" else "\u25B4 mix",
+                colour = if (showMixer) Acid.colors.accent else Color.Unspecified,
+            ) { showMixer = !showMixer }
+            BarButton(
+                if (armed) "\u25CF REC" else "\u25CB rec",
+                Modifier.mappable(MapTargets.action(Action.RecordArm.name)),
+                colour = if (armed) Acid.colors.red else Color.Unspecified,
+            ) { onArm(!armed) }
+            BarButton(
+                if (playing) "\u25A0" else "\u25B6",
+                Modifier.mappable(MapTargets.action(Action.PlayStop.name)),
+                colour = if (anyStopping) Acid.colors.red else Color.Unspecified,
+            ) {
+                when {
+                    !playing -> NativeEngine.transportPlay(if (clipMode) 0 else position.scene)
+                    clipMode && anyLaunched && !anyStopping -> NativeEngine.stopAllClips()
+                    else -> NativeEngine.transportStop()
+                }
+            }
         }
     }
 
@@ -762,8 +736,15 @@ private fun ClipCell(
     }
 }
 
-/** "clip end", or a number of bars. */
+/** "clip end", or a number of bars, as the dialog lists them. */
 internal fun quantiseLabel(bars: Int): String = if (bars <= 0) "clip end" else "$bars bar"
+
+/**
+ * The same, for the places with no room to say it in full: a pill in the
+ * bottom bar is about sixty dp wide and the readout is one ellipsised line.
+ * "end" and "4b" - the vocabulary the scene chips already use.
+ */
+internal fun quantiseShort(bars: Int): String = if (bars <= 0) "end" else "${bars}b"
 
 /**
  * How long a tapped clip waits. Zero is the musical answer - the clip being
@@ -787,58 +768,6 @@ private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () ->
  * grid, it is not part of either axis, and it is nowhere near anything that
  * makes a sound.
  */
-/**
- * Panic, and the load meter, in one control.
- *
- * The button fills from the bottom as the audio thread runs out of room -
- * teal, amber, red - and floods when a block is actually dropped. The thing
- * filling up is the thing you would press, which is the argument for it
- * living here rather than as a number in the corner of a header.
- *
- * An ordinary OutlinedButton, so it is its neighbours' shape by
- * construction rather than by arithmetic. That took two goes. Material
- * expands a button's layout node to the 48dp touch target while drawing its
- * outline at 40dp, so a fill clipped to the node is a bigger stadium than
- * the border around it; built by hand instead, it came out the right height
- * and the wrong width, because MinWidth is Material's and not mine to
- * restate. So the button stays Material's and the fill is inset to the
- * outline it actually draws.
- */
-@Composable
-private fun PanicButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val c = Acid.colors
-    val load = rememberEngineLoad()
-    val colour = loadColour(load)
-    OutlinedButton(
-        modifier = modifier
-            // Outermost, as on every other mappable control: inside the clip
-            // its highlight is cut away and cannot be seen.
-            .mappable(MapTargets.action(Action.Panic.name))
-            .drawBehind {
-                val level = if (load.dropped) 1f else load.level
-                if (level <= 0.001f) return@drawBehind
-                // The outline Material actually draws, inside the node it
-                // actually occupies.
-                val drawn = ButtonDefaults.MinHeight.toPx()
-                val top = ((size.height - drawn) / 2f).coerceAtLeast(0f)
-                // Translucent, and behind the label: panic is a thing you
-                // do, not a state the app is in, and a solid fill would
-                // read as "switched on".
-                clipRect(top = top + drawn * (1f - level)) {
-                    drawRoundRect(
-                        colour.copy(alpha = if (load.dropped) 0.45f else 0.30f),
-                        topLeft = Offset(0f, top),
-                        size = Size(size.width, drawn),
-                        cornerRadius = CornerRadius(drawn / 2f),
-                    )
-                }
-            },
-        onClick = onClick,
-        contentPadding = PaddingValues(horizontal = 8.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, c.red),
-    ) { Text("panic", color = c.red, fontSize = 12.sp, maxLines = 1) }
-}
-
 @Composable
 private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
     Box(

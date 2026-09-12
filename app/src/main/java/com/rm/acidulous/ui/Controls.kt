@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
@@ -151,12 +152,20 @@ fun HeaderButton(
     enabled: Boolean = true,
     /** Overrides the enabled/disabled pair, for a button also showing a mode. */
     color: Color? = null,
+    /**
+     * Narrower than the floor, for a button that is not the whole of its own
+     * target. The editor's back arrow is one: the title beside it goes back
+     * too, so between them there is a fifth of the screen to hit and the
+     * arrow only has to be *visible*. A parameter because the size below is
+     * applied after the caller's modifier and so cannot be overridden by one.
+     */
+    width: Dp = 42.dp,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     val c = Acid.colors
     Box(
-        modifier.size(width = 42.dp, height = LocalHeaderBand.current)
+        modifier.size(width = width, height = LocalHeaderBand.current)
             .clip(RoundedCornerShape(4.dp))
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
