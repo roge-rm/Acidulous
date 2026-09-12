@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -233,26 +232,16 @@ internal fun MidiRoutingSection(trackNames: List<String>) {
 @Composable
 private fun ScalePickerDialog(key: Int, scale: Int, onDismiss: () -> Unit, onPick: (Int, Int) -> Unit) {
     var k by remember { mutableStateOf(key) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Scale") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Scales.keyNames.forEachIndexed { i, name -> Choice(name, k == i) { k = i } }
-                }
-                Column(
-                    Modifier.heightIn(max = 300.dp).verticalScrollWithBar(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Scales.names.forEachIndexed { i, name ->
-                        Choice(name, scale == i, Modifier.fillMaxWidth()) { onPick(k, i) }
-                    }
-                }
+    PlainDialog(title = "Scale", onDismiss = onDismiss, spacing = 10.dp) {
+        Section("key") {
+            Scales.keyNames.forEachIndexed { i, name -> Choice(name, k == i) { k = i } }
+        }
+        ListSection("scale") {
+            Scales.names.forEachIndexed { i, name ->
+                DialogRow(mark = if (scale == i) "●" else "·", name = name, on = scale == i) { onPick(k, i) }
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+        }
+    }
 }
 
 // Section and Choice live in ui/Dialogs.kt: they are the shared vocabulary

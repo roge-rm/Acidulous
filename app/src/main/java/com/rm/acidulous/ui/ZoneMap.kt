@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -89,54 +88,44 @@ fun ZoneMapView(
 @Composable
 fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onDelete: () -> Unit) {
     var z by remember(zone) { mutableStateOf(zone) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(z.name.ifEmpty { "Zone" }, fontSize = 15.sp) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Field("low key", z.lowKey, 0, 127) { z = z.copy(lowKey = it, highKey = maxOf(it, z.highKey)) }
-                Field("high key", z.highKey, 0, 127) { z = z.copy(highKey = it, lowKey = minOf(it, z.lowKey)) }
-                Field("root key", z.rootKey, 0, 127) { z = z.copy(rootKey = it) }
-                Field("low vel", z.lowVel, 0, 127) { z = z.copy(lowVel = it, highVel = maxOf(it, z.highVel)) }
-                Field("high vel", z.highVel, 0, 127) { z = z.copy(highVel = it, lowVel = minOf(it, z.lowVel)) }
-                FloatField("tune", z.tuneCents, -1200f, 1200f, "%.0f¢") { z = z.copy(tuneCents = it) }
-                FloatField("gain", z.gain, 0f, 2f, "%.2f") { z = z.copy(gain = it) }
-                FloatField("pan", z.pan, -1f, 1f, "%+.2f") { z = z.copy(pan = it) }
-                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text("loop", color = Acid.colors.textDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(end = 8.dp))
-                    TextButton(onClick = { z = z.copy(loop = !z.loop) }) { Text(if (z.loop) "on" else "off") }
-                }
-            }
-        },
-        confirmButton = { Button(onClick = { onConfirm(z) }) { Text("OK") } },
-        dismissButton = {
-            Row {
-                TextButton(onClick = onDelete) { Text("Delete", color = Acid.colors.red) }
-                TextButton(onClick = onDismiss) { Text("Cancel") }
-            }
-        },
-    )
-}
+    PlainDialog(
+        title = z.name.ifEmpty { "Zone" },
+        onDismiss = onDismiss,
+        confirmLabel = "OK",
+        onConfirm = { onConfirm(z) },
+        spacing = 10.dp,
+    ) {
+        SliderSection("low key", "${z.lowKey}", "", z.lowKey.toFloat(), 0f..127f) {
+            z = z.copy(lowKey = it.toInt(), highKey = maxOf(it.toInt(), z.highKey))
+        }
+        SliderSection("high key", "${z.highKey}", "", z.highKey.toFloat(), 0f..127f) {
+            z = z.copy(highKey = it.toInt(), lowKey = minOf(it.toInt(), z.lowKey))
+        }
+        SliderSection("root key", "${z.rootKey}", "", z.rootKey.toFloat(), 0f..127f) {
+            z = z.copy(rootKey = it.toInt())
+        }
+        SliderSection("low velocity", "${z.lowVel}", "", z.lowVel.toFloat(), 0f..127f) {
+            z = z.copy(lowVel = it.toInt(), highVel = maxOf(it.toInt(), z.highVel))
+        }
+        SliderSection("high velocity", "${z.highVel}", "", z.highVel.toFloat(), 0f..127f) {
+            z = z.copy(highVel = it.toInt(), lowVel = minOf(it.toInt(), z.lowVel))
+        }
+        SliderSection("tune", "%.0f¢".format(z.tuneCents), "", z.tuneCents, -1200f..1200f) {
+            z = z.copy(tuneCents = it)
+        }
+        SliderSection("gain", "%.2f".format(z.gain), "", z.gain, 0f..2f) { z = z.copy(gain = it) }
+        SliderSection("pan", "%+.2f".format(z.pan), "", z.pan, -1f..1f) { z = z.copy(pan = it) }
 
-@Composable
-private fun Field(label: String, value: Int, min: Int, max: Int, onChange: (Int) -> Unit) {
-    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Text("%-9s %3d".format(label, value), color = Acid.colors.textHi, fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace, modifier = Modifier.padding(end = 6.dp))
-        Slider(
-            value = value.toFloat(), onValueChange = { onChange(it.toInt().coerceIn(min, max)) },
-            valueRange = min.toFloat()..max.toFloat(), modifier = Modifier.fillMaxWidth().height(28.dp),
-        )
+        Section("loop") {
+            Choice("off", !z.loop) { z = z.copy(loop = false) }
+            Choice("on", z.loop) { z = z.copy(loop = true) }
+        }
+        // Deleting is not the window's action, so it is not the window's
+        // button - a third thing beside OK and Cancel is the one you hit by
+        // accident.
+        ListSection("remove", "Takes this zone out of the map.") {
+            DialogRow(mark = "✕", name = "delete this zone", onClick = onDelete)
+        }
     }
 }
 
-@Composable
-private fun FloatField(label: String, value: Float, min: Float, max: Float, fmt: String, onChange: (Float) -> Unit) {
-    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Text("%-9s %s".format(label, fmt.format(value)), color = Acid.colors.textHi, fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace, modifier = Modifier.padding(end = 6.dp))
-        Slider(value = value.coerceIn(min, max), onValueChange = onChange, valueRange = min..max,
-            modifier = Modifier.fillMaxWidth().height(28.dp))
-    }
-}

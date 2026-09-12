@@ -330,10 +330,14 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
         (com.rm.acidulous.model.Scales.intervals.getOrNull(s.scale) ?: emptyList())
             .map { (it + s.key) % 12 }.toSet()
     }
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Scale", fontSize = 15.sp) },
-        text = {
+    PlainDialog(
+        title = "Scale",
+        onDismiss = onDismiss,
+        confirmLabel = "OK",
+        onConfirm = { onApply(s) },
+        spacing = 6.dp,
+    ) {
+        run {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(Modifier.fillMaxWidth().horizontalScrollWithBar(androidx.compose.foundation.rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -393,10 +397,8 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                     }
                 }
             }
-        },
-        confirmButton = { androidx.compose.material3.Button(onClick = { onApply(s) }) { Text("OK") } },
-        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+        }
+    }
 }
 
 @Composable

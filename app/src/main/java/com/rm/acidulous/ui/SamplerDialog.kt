@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
@@ -107,14 +106,17 @@ fun SamplerDialog(onDismiss: () -> Unit, onRecorded: (String) -> Unit = {}) {
         }
     }
 
-    AlertDialog(
-        onDismissRequest = { if (!recording) onDismiss() },
-        title = { Text("Record a sample", fontSize = 15.sp) },
-        text = {
-            Column(
-                Modifier.heightIn(max = 420.dp).verticalScrollWithBar(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
+    PlainDialog(
+        title = "Record a sample",
+        // While it is recording the window will not go away by itself:
+        // tapping outside mid-take and losing it is not a thing to allow.
+        onDismiss = { if (!recording) onDismiss() },
+        dismissLabel = if (recording) "Recording…" else "Close",
+        maxBodyHeight = 420.dp,
+        spacing = 6.dp,
+    ) {
+        run {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     SourceChip("in", fromInput) { if (!recording) fromInput = true }
                     SourceChip("out (resample)", !fromInput) { if (!recording) fromInput = false }
@@ -184,12 +186,10 @@ fun SamplerDialog(onDismiss: () -> Unit, onRecorded: (String) -> Unit = {}) {
                         },
                         enabled = !fromInput || havePermission,
                     ) { Text(if (recording) "stop" else "record") }
-                    if (!recording) TextButton(onClick = onDismiss) { Text("close") }
                 }
             }
-        },
-        confirmButton = {},
-    )
+        }
+    }
 }
 
 /** Samples this app recorded or imported, for machines to draw on. */
@@ -201,35 +201,28 @@ fun SampleBrowserDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
         (dir.listFiles { f -> f.isFile && f.name.endsWith(".wav", true) } ?: emptyArray())
             .sortedByDescending { it.lastModified() }
     }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Samples", fontSize = 15.sp) },
-        text = {
-            Column(
-                Modifier.heightIn(max = 420.dp).verticalScrollWithBar(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                if (files.isEmpty()) {
-                    Text("Nothing here yet. Record one, or import a WAV.", fontSize = 12.sp,
-                        color = Acid.colors.textDim)
-                }
-                files.forEach { file ->
-                    OutlinedButton(
-                        onClick = { onPick("samples/${file.name}") },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Column(Modifier.fillMaxWidth()) {
-                            Text(file.name, maxLines = 1, fontSize = 12.sp)
-                            Text("%.1f kB".format(file.length() / 1024f), fontSize = 9.sp,
-                                color = Acid.colors.textDim, fontFamily = FontFamily.Monospace)
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
-    )
+    PlainDialog(
+        title = "Samples",
+        onDismiss = onDismiss,
+        dismissLabel = "Close",
+        maxBodyHeight = 420.dp,
+        spacing = 6.dp,
+    ) {
+        if (files.isEmpty()) {
+            Text(
+                "Nothing here yet. Record one, or import a WAV.",
+                fontSize = 12.sp, color = Acid.colors.textDim,
+            )
+        }
+        files.forEach { file ->
+            DialogRow(
+                mark = "♪",
+                name = file.name,
+                under = "%.1f kB".format(file.length() / 1024f),
+                monoUnder = true,
+            ) { onPick("samples/${file.name}") }
+        }
+    }
 }
 
 @Composable

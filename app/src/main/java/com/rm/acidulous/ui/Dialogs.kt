@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -256,30 +255,29 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
 
 @Composable
 fun PickerDialog(title: String, options: List<String>, onDismiss: () -> Unit, onPick: (String) -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (options.isEmpty()) Text("Nothing here yet.", fontSize = 12.sp)
-                for (o in options) OutlinedButton(onClick = { onPick(o) }, modifier = Modifier.fillMaxWidth()) { Text(o) }
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+    PlainDialog(title = title, onDismiss = onDismiss, spacing = 6.dp) {
+        if (options.isEmpty()) {
+            Text("Nothing here yet.", color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 12.sp)
+        }
+        for (o in options) DialogRow(mark = "·", name = o) { onPick(o) }
+    }
 }
 
 @Composable
 fun TextInputDialog(title: String, initial: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var value by remember { mutableStateOf(initial) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { OutlinedTextField(value = value, onValueChange = { value = it }, singleLine = true) },
-        confirmButton = { Button(onClick = { if (value.isNotBlank()) onConfirm(value.trim()) }) { Text("OK") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+    PlainDialog(
+        title = title,
+        onDismiss = onDismiss,
+        confirmLabel = "OK",
+        confirmEnabled = value.isNotBlank(),
+        onConfirm = { if (value.isNotBlank()) onConfirm(value.trim()) },
+    ) {
+        OutlinedTextField(
+            value = value, onValueChange = { value = it }, singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 /**
@@ -541,14 +539,21 @@ private fun DialogShell(
                 ) {
                     body()
                 }
-                Row(
-                    Modifier.fillMaxWidth().padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextButton(onClick = onDismiss) { Text(dismissLabel) }
-                    if (onConfirm != null) {
-                        Button(onClick = onConfirm, enabled = confirmEnabled) { Text(confirmLabel) }
+                // An empty dismiss label and no action means no footer at
+                // all - for a window that is reporting rather than asking,
+                // and that must not be dismissed while it works.
+                if (dismissLabel.isNotEmpty() || onConfirm != null) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (dismissLabel.isNotEmpty()) {
+                            TextButton(onClick = onDismiss) { Text(dismissLabel) }
+                        }
+                        if (onConfirm != null) {
+                            Button(onClick = onConfirm, enabled = confirmEnabled) { Text(confirmLabel) }
+                        }
                     }
                 }
             }
@@ -641,6 +646,8 @@ internal fun DialogRow(
     trailing: String = "",
     on: Boolean = false,
     monoUnder: Boolean = false,
+    /** A second action at the end of the row - deleting, usually. */
+    onRemove: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
@@ -663,6 +670,14 @@ internal fun DialogRow(
         }
         if (trailing.isNotEmpty()) {
             Text(trailing, color = if (on) c.teal else c.textDim, fontSize = 10.sp)
+        }
+        if (onRemove != null) {
+            Text(
+                "✕", color = c.red, fontSize = 14.sp,
+                modifier = Modifier.clip(RoundedCornerShape(4.dp))
+                    .clickable(onClick = onRemove)
+                    .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            )
         }
     }
 }

@@ -123,12 +123,9 @@ fun MainScreen(
     if (freezeStatus != null) {
         // Modal on purpose: the audio stream is down while a render runs, so
         // there is nothing useful to do until it comes back.
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = {},
-            title = { Text("Freezing") },
-            text = { Text(freezeStatus, fontSize = 12.sp) },
-            confirmButton = {},
-        )
+        PlainDialog(title = "Freezing", onDismiss = {}, dismissLabel = "") {
+            Readout(freezeStatus)
+        }
     }
     var fileMenu by remember { mutableStateOf(false) }
     var showMixer by remember { mutableStateOf(false) }
@@ -748,24 +745,13 @@ internal fun quantiseLabel(bars: Int): String = if (bars <= 0) "clip end" else "
  */
 @Composable
 private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Launch quantise") },
-        text = {
-            Column {
-                for (bars in listOf(0, 1, 2, 4, 8)) {
-                    TextButton(onClick = { onPick(bars); onDismiss() }) {
-                        Text(
-                            (if (bars == current) "\u2022 " else "   ") + quantiseLabel(bars),
-                            color = if (bars == current) Acid.colors.accent else Acid.colors.text,
-                            fontSize = 14.sp,
-                        )
-                    }
-                }
+    PlainDialog(title = "Launch quantise", onDismiss = onDismiss, dismissLabel = "Close") {
+        Section("clips start on", "A clip waits for this line before it begins, so a stack stays in step.") {
+            for (bars in listOf(0, 1, 2, 4, 8)) {
+                Choice(quantiseLabel(bars), bars == current) { onPick(bars); onDismiss() }
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
-    )
+        }
+    }
 }
 
 /**

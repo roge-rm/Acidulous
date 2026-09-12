@@ -89,16 +89,14 @@ fun SlotDialog(
     onDismiss: () -> Unit,
 ) {
     val types = remember(kind) { kind.types() }
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(fixedType?.lowercase() ?: "${kind.label}${slot + 1}", fontSize = 15.sp) },
-        text = {
-            Column(Modifier.heightIn(max = 420.dp).verticalScrollWithBar(rememberScrollState())) {
-                SlotRow(kind, track, trackIndex, slot, types, editor, fixedType)
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
-    )
+    PlainDialog(
+        title = fixedType?.lowercase() ?: "${kind.label}${slot + 1}",
+        onDismiss = onDismiss,
+        dismissLabel = "Done",
+        maxBodyHeight = 420.dp,
+    ) {
+        SlotRow(kind, track, trackIndex, slot, types, editor, fixedType)
+    }
 }
 
 @Composable

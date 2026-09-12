@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
@@ -34,31 +33,30 @@ fun SongBrowserDialog(
     onLoad: (String) -> Unit, onDelete: (String) -> Unit, onDismiss: () -> Unit,
 ) {
     var confirm by remember { mutableStateOf<String?>(null) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Songs") },
-        text = {
-            Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (names.isEmpty()) Text("Nothing saved yet.", fontSize = 12.sp)
-                for (n in names) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    OutlinedButton(onClick = { onLoad(n) }, modifier = Modifier.weight(1f)) {
-                        Text(if (n == current) "● $n" else n, maxLines = 1)
-                    }
-                    TextButton(onClick = { confirm = n }) { Text("✕", color = Acid.colors.red) }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
-    )
+    PlainDialog(title = "Songs", onDismiss = onDismiss, dismissLabel = "Close", spacing = 6.dp) {
+        if (names.isEmpty()) Text("Nothing saved yet.", color = Acid.colors.textDim, fontSize = 12.sp)
+        for (n in names) {
+            DialogRow(
+                mark = if (n == current) "●" else "♪",
+                name = n,
+                trailing = if (n == current) "open" else "",
+                on = n == current,
+                onRemove = { confirm = n },
+            ) { onLoad(n) }
+        }
+    }
     confirm?.let { name ->
-        AlertDialog(
-            onDismissRequest = { confirm = null },
-            title = { Text("Delete \"$name\"?") },
-            text = { Text("The file is removed. The song stays open if it is the one you are editing.", fontSize = 12.sp) },
-            confirmButton = { Button(onClick = { onDelete(name); confirm = null }) { Text("Delete") } },
-            dismissButton = { TextButton(onClick = { confirm = null }) { Text("Cancel") } },
-        )
+        PlainDialog(
+            title = "Delete \"$name\"?",
+            onDismiss = { confirm = null },
+            confirmLabel = "Delete",
+            onConfirm = { onDelete(name); confirm = null },
+        ) {
+            Text(
+                "The file is removed. The song stays open if it is the one you are editing.",
+                color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
+            )
+        }
     }
 }
 
@@ -68,24 +66,18 @@ fun PatchBrowserDialog(
     machine: String, factory: List<String>, user: List<String>,
     onLoad: (String) -> Unit, onDelete: (String) -> Unit, onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("$machine patches") },
-        text = {
-            Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (factory.isNotEmpty()) Text("factory", color = Acid.colors.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                for (n in factory) OutlinedButton(onClick = { onLoad(n) }, modifier = Modifier.fillMaxWidth()) { Text(n, maxLines = 1) }
-                Text("yours", color = Acid.colors.accent, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                if (user.isEmpty()) Text("None saved yet - \"save as…\" on the panel.", fontSize = 12.sp)
-                for (n in user) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    OutlinedButton(onClick = { onLoad(n) }, modifier = Modifier.weight(1f)) { Text(n, maxLines = 1) }
-                    TextButton(onClick = { onDelete(n) }) { Text("✕", color = Acid.colors.red) }
-                }
+    PlainDialog(title = "$machine patches", onDismiss = onDismiss, dismissLabel = "Close") {
+        if (factory.isNotEmpty()) {
+            ListSection("factory") {
+                for (n in factory) DialogRow(mark = "◆", name = n) { onLoad(n) }
             }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
-    )
+        }
+        ListSection("yours", if (user.isEmpty()) "None saved yet - \"save as…\" on the panel." else "") {
+            for (n in user) {
+                DialogRow(mark = "◇", name = n, onRemove = { onDelete(n) }) { onLoad(n) }
+            }
+        }
+    }
 }
 
 /** What the export is doing; shown until dismissed so the result is read. */
@@ -100,40 +92,46 @@ sealed class ExportState {
 
 @Composable
 fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = { if (state !is ExportState.Running) onDismiss() },
-        title = { Text("Export") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                when (state) {
-                    is ExportState.Running -> {
-                        val frac = if (state.expectedSeconds > 0f) (state.seconds / state.expectedSeconds).coerceIn(0f, 1f) else 0f
-                        Text("rendering %.1f s of about %.1f s".format(state.seconds, state.expectedSeconds), fontFamily = FontFamily.Monospace, fontSize = 12.sp)
-                        LinearProgressIndicator(progress = { frac }, modifier = Modifier.fillMaxWidth())
-                    }
-                    is ExportState.Done -> Text(
-                        buildString {
-                            if (state.files > 1) append("%d files in %s/\n".format(state.files, state.fileName))
-                            else append(state.fileName).append("\n")
-                            if (state.bits > 0) {
-                                append("%.1f s · 48 kHz · %s · %s stereo · peak %.3f".format(
-                                    state.seconds, state.format,
-                                    if (state.bits == 32) "32-bit float" else "%d-bit".format(state.bits),
-                                    state.peak,
-                                ))
-                            } else {
-                                append(state.format)
-                            }
-                        },
-                        fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+    val running = state is ExportState.Running
+    PlainDialog(
+        title = "Export",
+        // While it renders the only thing to do is stop it, so the one
+        // button says so; afterwards the only thing to do is read it.
+        onDismiss = { if (running) onCancel() else onDismiss() },
+        dismissLabel = if (running) "Cancel" else "OK",
+        spacing = 8.dp,
+    ) {
+        when (state) {
+            is ExportState.Running -> {
+                val frac = if (state.expectedSeconds > 0f) {
+                    (state.seconds / state.expectedSeconds).coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
+                Readout("rendering %.1f s of about %.1f s".format(state.seconds, state.expectedSeconds))
+                LinearProgressIndicator(progress = { frac }, modifier = Modifier.fillMaxWidth())
+            }
+            is ExportState.Done -> {
+                Readout(
+                    if (state.files > 1) "%d files in %s/".format(state.files, state.fileName) else state.fileName,
+                    good = true,
+                )
+                if (state.bits > 0) {
+                    Readout(
+                        "%.1f s · 48 kHz · %s · %s stereo · peak %.3f".format(
+                            state.seconds, state.format,
+                            if (state.bits == 32) "32-bit float" else "%d-bit".format(state.bits),
+                            state.peak,
+                        ),
                     )
-                    is ExportState.Failed -> Text("Export failed: ${state.error}", fontSize = 12.sp, color = Acid.colors.red)
+                } else {
+                    Readout(state.format)
                 }
             }
-        },
-        confirmButton = {
-            if (state is ExportState.Running) TextButton(onClick = onCancel) { Text("Cancel") }
-            else Button(onClick = onDismiss) { Text("OK") }
-        },
-    )
+            is ExportState.Failed -> Text(
+                "Export failed: ${state.error}",
+                color = Acid.colors.red, fontSize = 12.sp, lineHeight = 15.sp,
+            )
+        }
+    }
 }

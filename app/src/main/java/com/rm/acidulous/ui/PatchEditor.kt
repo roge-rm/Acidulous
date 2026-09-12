@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -523,32 +522,30 @@ private fun AddModuleDialog(
     onPick: (String) -> Unit,
 ) {
     val c = Acid.colors
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add a module", fontSize = 15.sp) },
-        text = {
-            Column(
-                Modifier.heightIn(max = 420.dp).verticalScrollWithBar(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(3.dp),
-            ) {
-                palette.chunked(3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        row.forEach { info ->
-                            Text(
-                                info.name,
-                                color = Acid.colors.textHi, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
-                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(4.dp))
-                                    .background(c.overlay)
-                                    .clickable { onPick(info.name) }
-                                    .padding(vertical = 8.dp, horizontal = 6.dp),
-                            )
-                        }
-                        repeat(3 - row.size) { Box(Modifier.weight(1f)) }
-                    }
+    PlainDialog(
+        title = "Add a module",
+        onDismiss = onDismiss,
+        dismissLabel = "Cancel",
+        maxBodyHeight = 420.dp,
+        spacing = 3.dp,
+    ) {
+        // A fixed three-across grid rather than a FlowRow: the names are
+        // very different lengths and wrapping them left ragged rows that
+        // were hard to scan for the one you wanted.
+        palette.chunked(3).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                row.forEach { info ->
+                    Text(
+                        info.name,
+                        color = Acid.colors.textHi, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.weight(1f).clip(RoundedCornerShape(4.dp))
+                            .background(c.control)
+                            .clickable { onPick(info.name) }
+                            .padding(vertical = 8.dp, horizontal = 6.dp),
+                    )
                 }
+                repeat(3 - row.size) { Box(Modifier.weight(1f)) }
             }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
-    )
+        }
+    }
 }
