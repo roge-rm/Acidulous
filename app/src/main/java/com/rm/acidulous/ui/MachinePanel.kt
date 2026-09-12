@@ -271,7 +271,16 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
     // free, and paying for it halves the width.
     val cols = if (labels.size <= 2) 1 else (labels.size + 1) / 2
     Column(
-        Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).fillMaxHeight(),
+        Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name))
+            // Fill the row's height, but never more than a control's worth of
+            // it. Without the ceiling this asks its parent how tall to be
+            // while the parent is asking it the same question - Group's row
+            // is IntrinsicSize.Max - and the two can agree on an absurd
+            // answer: a Filter's three-way mode switch came out 490dp tall
+            // and pushed the piano roll and the keyboard clean off the
+            // screen. The cap is what a knob measures, which is what the
+            // filling was for in the first place.
+            .heightIn(max = PanelControlH).fillMaxHeight(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
@@ -383,6 +392,13 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
     )
 }
+
+/**
+ * How tall one control in a panel stands: a knob's label, its 52dp dial and
+ * its value, which at a 9sp line box is 24 + 52 + 24. Switches are capped to
+ * it so that a row of controls cannot be taller than the controls in it.
+ */
+internal val PanelControlH = 100.dp
 
 @Composable
 internal fun Group(title: String, content: @Composable () -> Unit) {

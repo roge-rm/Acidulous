@@ -359,7 +359,11 @@ private fun DrawScope.drawPitchPosition(geo: Geometry, c: AcidColors) {
     val track = geo.fieldH
     val thickness = 3.dp.toPx()
     val inset = 1.dp.toPx()
-    val thumb = (track * shown / 128f).coerceIn(20.dp.toPx(), track)
+    // Floor first, then ceiling, and never coerceIn between the two: the roll
+    // can be squeezed to nothing - open the fx panel with a Filter in it and
+    // the weighted grid gets zero - and a twenty dp floor above a one pixel
+    // track is an empty range, which throws rather than clamping.
+    val thumb = (track * shown / 128f).coerceAtLeast(20.dp.toPx()).coerceAtMost(track)
     // Pitch runs up the screen and the bar runs down it, so the top of the
     // thumb is measured from the highest note, not the lowest.
     val travel = track - thumb

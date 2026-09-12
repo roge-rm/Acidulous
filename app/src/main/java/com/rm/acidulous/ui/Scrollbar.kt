@@ -31,7 +31,10 @@ fun Modifier.scrollbar(state: ScrollState, vertical: Boolean = true, color: Colo
         val thickness = 3.dp.toPx()
         val inset = 1.dp.toPx()
         val minThumb = 20.dp.toPx()
-        val thumb = (viewport * viewport / content).coerceIn(minThumb, viewport)
+        // Floor then ceiling. coerceIn(minThumb, viewport) throws outright
+        // when a container is shorter than the thumb's own minimum, which a
+        // squeezed one can be - see the same fix in PianoRoll.
+        val thumb = (viewport * viewport / content).coerceAtLeast(minThumb).coerceAtMost(viewport)
         val travel = viewport - thumb
         val pos = travel * state.value / max
         val radius = CornerRadius(thickness / 2f)
