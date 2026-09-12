@@ -357,21 +357,29 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                         }
                     }
                 }
-                // The shape of the scale: twelve semitones, the ones it keeps lit.
-                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                // The shape of the scale: the notes it keeps, and nothing
+                // else. It used to show all twelve with the rejected ones
+                // greyed, which asked you to read past them to see the
+                // scale; the notes that are in it are the answer.
+                // A FlowRow, by the usual rule: the widest scale
+                // here is eight notes and fits, but a fixed Row that does
+                // not fit crushes its children rather than wrapping them.
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
                     for (pc in 0 until 12) {
+                        if (pc !in pitches) continue
                         Box(
-                            Modifier.width(18.dp).height(14.dp).clip(RoundedCornerShape(2.dp)).background(
-                                when {
-                                    pc == s.key -> c.accent
-                                    pc in pitches -> c.green
-                                    else -> c.controlAlt
-                                },
-                            ),
+                            Modifier.width(26.dp).height(20.dp).clip(RoundedCornerShape(3.dp))
+                                .background(if (pc == s.key) c.accent else c.green),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(com.rm.acidulous.model.Scales.keyNames[pc].take(2),
-                                color = if (pc in pitches) Color.White else c.textFaint, fontSize = 7.sp)
+                            Text(
+                                com.rm.acidulous.model.Scales.keyNames[pc].take(2),
+                                color = Color.White, fontSize = 9.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            )
                         }
                     }
                 }
