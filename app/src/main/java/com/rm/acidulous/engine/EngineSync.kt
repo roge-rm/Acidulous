@@ -288,9 +288,14 @@ object EngineSync {
             if (loadedTakes[rack] == wanted) continue
             loadedTakes[rack] = wanted
             if (wanted == null) continue
+            // Molt asks a different question of the same file - where the
+            // glottal pulses are rather than where the transients are - so it
+            // gets its own decode. Both are a worker's job either way.
+            val sung = track?.machine?.type == "Molt"
             mapLoader.execute {
                 val path = if (wanted.isEmpty()) "" else java.io.File(root, wanted).absolutePath
-                val error = NativeEngine.loadTake(rack, path)
+                val error = if (sung) NativeEngine.loadUtterance(rack, path)
+                            else NativeEngine.loadTake(rack, path)
                 if (error.isNotEmpty()) {
                     Log.w(TAG, "take on rack $rack: $error")
                     loadedTakes[rack] = null // let a retry happen

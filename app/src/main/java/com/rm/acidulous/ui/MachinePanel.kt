@@ -123,6 +123,7 @@ fun MachinePanel(
             "Genesis" -> GenesisPanel(binding)
             "Resonance" -> ResonancePanel(binding, selectedPad)
             "Dice" -> DicePanel(binding, track, trackIndex, editor, selectedPad, onImportOneSample)
+            "Molt" -> MoltPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Trinity" -> TrinityPanel(binding)
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
@@ -1686,6 +1687,101 @@ private val DICE_CUTS = listOf("onsets", "grid")
  * Dice's panel: the loop and where it is cut, the dice themselves, and then
  * one slice at a time - chosen with the pads, the way Forage chooses a pad.
  */
+/**
+ * Molt: the take across the top, then what is done to it.
+ *
+ * The take is the instrument here, so it comes first and says what it is -
+ * a name, or "no take" - with the two ways of getting one beside it. There is
+ * no harmony section and no key: the notes in the clip are both, which is the
+ * whole idea, and a knob for it would be a second opinion.
+ */
+@Composable
+private fun MoltPanel(
+    b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor, onImport: () -> Unit,
+) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    var picking by remember { mutableStateOf(false) }
+    val c = Acid.colors
+    val sample = track.machine.settings["sample"].orEmpty()
+    Column {
+        SectionChips(listOf("take", "tune", "voice", "tone"), section) { section = it }
+        GroupRow {
+            when (section) {
+                0 -> {
+                    Group("take") {
+                        Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
+                            Text(
+                                sample.substringAfterLast('/').ifEmpty { "no take" },
+                                color = if (sample.isEmpty()) c.textDim else c.textHi,
+                                fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            )
+                            Row {
+                                TextButton(onClick = onImport) { Text("import…", color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = { picking = true }) { Text("recorded…", color = c.textMid, fontSize = 11.sp) }
+                            }
+                        }
+                    }
+                    Group("sing") {
+                        PanelSwitch(b, "record", listOf("rec"))
+                        PanelKnob(b, "seconds", "length", PanelAmber)
+                        PanelKnob(b, "ingain", "in")
+                    }
+                    Group("phrase") {
+                        PanelKnob(b, "start", "start", PanelAmber)
+                        PanelSwitch(b, "loop", listOf("loop"))
+                    }
+                }
+                1 -> {
+                    Group("pull") {
+                        PanelKnob(b, "tune", "amount", PanelAmber)
+                        PanelKnob(b, "rate", "rate", PanelAmber)
+                        PanelSwitch(b, "robot", listOf("robot"))
+                    }
+                    Group("note") {
+                        PanelKnob(b, "glide", "glide")
+                        PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                        PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "oct")
+                        PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semi")
+                    }
+                }
+                2 -> {
+                    Group("voice") {
+                        PanelKnob(b, "formant", "formant", PanelAmber)
+                        PanelKnob(b, "mega", "mega", PanelAmber)
+                    }
+                    Group("amp") {
+                        PanelKnob(b, "ampattack", "att")
+                        PanelKnob(b, "ampdecay", "dec")
+                        PanelKnob(b, "ampsustain", "sus")
+                        PanelKnob(b, "amprelease", "rel")
+                        PanelKnob(b, "velocity", "vel")
+                    }
+                }
+                else -> {
+                    Group("filter") {
+                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                        PanelKnob(b, "resonance", "reso", PanelAmber)
+                        PanelStepKnob(b, "filtertype", TRINITY_FILTERS, "type")
+                    }
+                    Group("out") {
+                        PanelKnob(b, "drive", "drive")
+                        PanelKnob(b, "volume", "vol")
+                        PanelKnob(b, "pan", "pan")
+                    }
+                }
+            }
+        }
+    }
+    if (picking) SampleBrowserDialog(
+        onPick = { rel ->
+            picking = false
+            editor.edit(trackIndex) { t -> t.withSetting("sample", rel) }
+        },
+        onDismiss = { picking = false },
+    )
+}
+
 @Composable
 private fun DicePanel(
     b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor, pad: Int, onImport: () -> Unit,

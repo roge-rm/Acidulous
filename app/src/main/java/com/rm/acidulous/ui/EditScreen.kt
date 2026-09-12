@@ -450,7 +450,10 @@ fun EditScreen(
                 if (touchable) {
                     TouchWheel(
                         value = pressure, accent = Acid.colors.pink, vertical = false,
-                        springBackTo = 0f, label = "prs",
+                        // No label: the ridges say it is a wheel, its place in
+                        // the row says which one, and three letters of it were
+                        // the only text in the strip.
+                        springBackTo = 0f, label = null,
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     ) { v -> pressure = v; NativeEngine.channelPressure(trackIndex, (v * 127f).toInt()) }
                 } else {

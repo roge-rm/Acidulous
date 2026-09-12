@@ -294,6 +294,24 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadTake(JNIEnv *env, jobject, j
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoadUtterance(JNIEnv *env, jobject, jint rack, jstring path) {
+    const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
+    const std::string out = host().loadUtterance(rack, p);
+    if (path != nullptr) env->ReleaseStringUTFChars(path, p);
+    return env->NewStringUTF(out.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeAnalyseCapture(JNIEnv *env, jobject, jint rack) {
+    return env->NewStringUTF(host().analyseCapture(rack).c_str());
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureSerial(JNIEnv *, jobject, jint rack) {
+    return host().captureSerial(rack);
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeLoadFormula(JNIEnv *env, jobject, jint rack, jstring formula,
                                                             jstring arp, jstring duty, jstring vol) {
     auto str = [&](jstring s) {

@@ -244,6 +244,19 @@ object NativeEngine {
     /** Decode a WAV and mount it with its transients. Worker only. */
     fun loadTake(rack: Int, path: String): String = nativeLoadTake(rack, path)
 
+    /**
+     * A sung take for a Molt. Decoding and pitch-marking happen on the caller's
+     * thread - a worker - so this must never be called from the main one; an
+     * empty path clears what is mounted.
+     */
+    fun loadUtterance(rack: Int, path: String): String = nativeLoadUtterance(rack, path)
+
+    /** Turn what a Molt just recorded into a take. Also a worker's job. */
+    fun analyseCapture(rack: Int): String = nativeAnalyseCapture(rack)
+
+    /** Changes when a Molt finishes recording, so the UI can notice. */
+    fun captureSerial(rack: Int): Int = nativeCaptureSerial(rack)
+
     /** Compile and mount Formulate's expression and tables. "" or the reason. */
     fun loadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String =
         nativeLoadFormula(rack, formula, arp, duty, vol)
@@ -367,6 +380,9 @@ object NativeEngine {
     private external fun nativeStart(): Boolean
     private external fun nativeStop()
     private external fun nativeIsRunning(): Boolean
+    private external fun nativeLoadUtterance(rack: Int, path: String): String
+    private external fun nativeAnalyseCapture(rack: Int): String
+    private external fun nativeCaptureSerial(rack: Int): Int
     private external fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     private external fun nativeUnmountMachine(rackId: Int)
     private external fun nativeRenderSong(

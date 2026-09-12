@@ -8,6 +8,8 @@ DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
 
 SRC=$(find "$CPP/engine/machine" "$CPP/engine/dsp" "$CPP/engine/effect" -name "*.cpp")
+# Molt reads an analysed take, whose search lives in core.
+SRC="$SRC $CPP/engine/core/Utterance.cpp"
 
 g++ -O2 -std=c++17 -I "$CPP" "$ROOT/tools/reset_test.cpp" $SRC -o "$DIR/reset_test" || exit 1
 "$DIR/reset_test"

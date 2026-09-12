@@ -20,7 +20,8 @@ object MachineUi {
      * Machines that hold one sample of their own, under the plain key
      * "sample" - as against Forage, whose thirteen pads each have their own.
      */
-    fun acceptsOneSample(type: String): Boolean = type == "Pollen" || type == "Dice"
+    fun acceptsOneSample(type: String): Boolean =
+        type == "Pollen" || type == "Dice" || type == "Molt"
 
     /**
      * The machines, in groups, with a line each saying what they are.
@@ -35,7 +36,7 @@ object MachineUi {
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup("drums", listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
-        MachineGroup("realish", listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen")),
+        MachineGroup("realish", listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
         MachineGroup("beyond", listOf("Cipher", "Nexus")),
     )
 
@@ -57,6 +58,7 @@ object MachineUi {
         "Timber" -> "woodwinds by modelling - reed, double reed or air, and the holes"
         "Mosaic" -> "multisamples: zones, SoundFonts, grain clouds"
         "Pollen" -> "granular clouds that seed their own, from a file or live"
+        "Molt" -> "a sung take, tuned by the notes you draw"
         "Cipher" -> "a vocoder whose band map is the instrument"
         "Nexus" -> "a modular whose blocks are the other machines"
         else -> ""
@@ -73,7 +75,7 @@ object MachineUi {
     fun usesPerformance(type: String): Boolean =
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
             type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen" ||
-            type == "Brazen" || type == "Timber"
+            type == "Brazen" || type == "Timber" || type == "Molt"
 
     /** Genesis's kit, mirroring engine/machine/genesis/Genesis.h's Voice order. */
     val genesisVoices: List<DrumVoice> = listOf(

@@ -183,6 +183,16 @@ class EngineHost {
     std::string loadTake(int rack, const std::string &path);
 
     /**
+     * A sung take for a Molt: decoded, summed to mono and pitch-marked on a
+     * worker, then mounted. An empty path clears it.
+     */
+    std::string loadUtterance(int rack, const std::string &path);
+    /** The same, from what the machine just recorded through the input bus. */
+    std::string analyseCapture(int rack);
+    /** Bumped when a capture finishes, so the UI can notice and analyse it. */
+    int32_t captureSerial(int rack);
+
+    /**
      * Compile Formulate's expression and its three step tables, and mount
      * them. Returns "" or the reason it would not read - which the panel
      * shows, because a typed formula that fails silently is a trap.

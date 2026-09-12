@@ -1,4 +1,5 @@
 #include "EngineHost.h"
+#include <engine/machine/molt/Molt.h>
 #include <engine/core/Settings.h>
 #include <engine/machine/nexus/Nexus.h>
 
@@ -963,6 +964,81 @@ std::string EngineHost::loadTake(int rack, const std::string &path) {
     if (!mountObjectWithRetry(mount)) return "mount queue full";
     take.release();
     return "";
+}
+
+namespace {
+
+/** Mount an analysed take on a Molt, or say why not. */
+std::string mountUtterance(EngineHost &host, int rack, std::unique_ptr<audio::Utterance> utterance) {
+    LOGI("molt take on rack %d: '%s', %d frames (%.2f s), %zu marks, root %.1f Hz", rack,
+         utterance->name.c_str(), utterance->frames,
+         static_cast<double>(utterance->frames) / kSampleRate, utterance->epochs.size(),
+         static_cast<double>(utterance->rootHz));
+    Mount mount;
+    mount.kind = Mount::Kind::Object;
+    mount.rack = rack;
+    mount.slot = 0;
+    mount.object = utterance.get();
+    mount.deleter = deleteAs<audio::Utterance>;
+    if (!host.mountObjectWithRetry(mount)) return "mount queue full";
+    utterance.release();
+    return "";
+}
+
+} // namespace
+
+std::string EngineHost::loadUtterance(int rack, const std::string &path) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (awaitMachine(sEngine, rack, "Molt") == nullptr) return "that rack is not a Molt";
+    if (path.empty()) {
+        Mount clear;
+        clear.kind = Mount::Kind::Object;
+        clear.rack = rack;
+        clear.slot = 0;
+        clear.object = nullptr;
+        clear.deleter = deleteAs<audio::Utterance>;
+        return mountObjectWithRetry(clear) ? "" : "mount queue full";
+    }
+    std::string error;
+    auto data = WavReader::read(path, kSampleRate, error);
+    if (!data) return error.empty() ? "that file could not be read" : error;
+    auto utterance = std::make_unique<audio::Utterance>();
+    utterance->name = data->name;
+    utterance->mono.resize(static_cast<size_t>(data->frames));
+    for (int32_t i = 0; i < data->frames; ++i) {
+        // A voice is mono, and two channels of one are the same voice twice.
+        utterance->mono[static_cast<size_t>(i)] =
+            data->stereo ? 0.5f * (data->left[static_cast<size_t>(i)] + data->right[static_cast<size_t>(i)])
+                         : data->left[static_cast<size_t>(i)];
+    }
+    // The pitch marks are found here, on a worker, once. It is a few hundred
+    // milliseconds for a ten second take and must never be on the audio
+    // thread; the machine only ever reads what comes out of this.
+    utterance->analyse(static_cast<float>(kSampleRate));
+    return mountUtterance(*this, rack, std::move(utterance));
+}
+
+std::string EngineHost::analyseCapture(int rack) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    auto *molt = static_cast<machine::Molt *>(awaitMachine(sEngine, rack, "Molt"));
+    if (molt == nullptr) return "that rack is not a Molt";
+    // The audio thread writes the capture buffer only while it says it is
+    // capturing, so reading it once that has gone low needs no lock - the
+    // release on the flag publishes everything written before it.
+    if (molt->capturing()) return "still recording";
+    const int32_t frames = molt->capturedFrames();
+    if (frames < 2) return "nothing was recorded";
+    auto utterance = std::make_unique<audio::Utterance>();
+    utterance->name = "take";
+    utterance->mono.assign(molt->capturedAudio(), molt->capturedAudio() + frames);
+    utterance->analyse(static_cast<float>(kSampleRate));
+    return mountUtterance(*this, rack, std::move(utterance));
+}
+
+int32_t EngineHost::captureSerial(int rack) {
+    if (rack < 0 || rack >= kRackCount) return 0;
+    auto *molt = static_cast<machine::Molt *>(awaitMachine(sEngine, rack, "Molt"));
+    return molt != nullptr ? molt->captureSerial() : 0;
 }
 
 std::string EngineHost::loadFormula(int rack, const std::string &formula, const std::string &arp,
