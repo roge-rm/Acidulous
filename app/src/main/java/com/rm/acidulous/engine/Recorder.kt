@@ -136,6 +136,7 @@ class Recorder {
         val name = when (unit) {
             "machine" -> paramNames.getOrPut(track.machine.type) { NativeEngine.machineParamNames(track.machine.type) }.getOrNull(index)
             "channel" -> CHANNEL_PARAMS.getOrNull(index)
+            "performance" -> PERF_PARAMS.getOrNull(index)
             "effect1", "effect2" -> {
                 val type = track.effectAt(if (unit == "effect1") 0 else 1).type
                 if (index == EFFECT_BYPASS_INDEX) "bypass"
@@ -171,7 +172,12 @@ class Recorder {
         // Mirrors acidulous::Unit
         // Order matters: this is the Unit enum's ordinal, read off events the
         // audio thread stamped. Keep it in step with Messages.h.
-        val UNITS = listOf("machine", "effect1", "effect2", "eventor1", "eventor2", "eventor3", "channel", "master")
+        val UNITS = listOf(
+            "machine", "effect1", "effect2", "eventor1", "eventor2", "eventor3", "channel", "master",
+            "performance",
+        )
+        /** Unit::Performance's two indices; see kPerfMod in Messages.h. */
+        val PERF_PARAMS = listOf("mod", "pressure")
         val CHANNEL_PARAMS = listOf("gain", "pan", "mute", "solo", "sendreverb", "senddelay")
         const val EFFECT_BYPASS_INDEX = -2 // mirrors kEffectBypassIndex
     }

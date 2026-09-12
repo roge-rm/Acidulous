@@ -384,7 +384,7 @@ void Engine::drainMidi() {
         if (status == 0x90 && d2 == 0) status = 0x80;
         if (!racks[rack].isActive()) continue;
         racks[rack].handleMidi(status, m.data1, d2);
-        if (transport.isRecording()) {
+        if (recordingNow()) {
             seq::RecordedEvent ev;
             ev.absTick = clock.position();
             // The rack's own clip, not the scheduler's: in clip mode a take
@@ -407,7 +407,7 @@ void Engine::drainParams() {
             master.params().set(p.index, p.value);
         } else if (p.rack >= 0 && p.rack < kRackCount) {
             racks[p.rack].setParam(p.unit, p.index, p.value);
-            if (p.record && transport.isRecording()) {
+            if (p.record && recordingNow()) {
                 racks[p.rack].touch(p.unit, p.index);
                 seq::RecordedEvent ev;
                 ev.absTick = clock.position();

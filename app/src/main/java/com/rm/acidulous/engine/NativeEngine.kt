@@ -100,8 +100,17 @@ object NativeEngine {
         nativeMidiEvent(rackId, status, data1, data2)
 
     /** Mod wheel is CC 1; pressure is channel aftertouch. Both 0..127. */
-    fun controlChange(rackId: Int, cc: Int, value: Int) = nativeControlChange(rackId, cc, value)
-    fun channelPressure(rackId: Int, value: Int) = nativeChannelPressure(rackId, value)
+    /**
+     * [record] says this was a gesture. Mod and pressure are recorded into a
+     * lane when the transport is armed, so re-asserting a control's current
+     * value - which the editor does when you change track - must say false,
+     * or opening a track would write a point nobody played.
+     */
+    fun controlChange(rackId: Int, cc: Int, value: Int, record: Boolean = true) =
+        nativeControlChange(rackId, cc, value, record)
+
+    fun channelPressure(rackId: Int, value: Int, record: Boolean = true) =
+        nativeChannelPressure(rackId, value, record)
 
     /**
      * [unit] is "machine", "effect1", "effect2", "eventor1", "eventor2", "eventor3" or "channel";
@@ -377,8 +386,8 @@ object NativeEngine {
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
     private external fun nativeNoteOff(rackId: Int, note: Int)
-    private external fun nativeControlChange(rackId: Int, cc: Int, value: Int)
-    private external fun nativeChannelPressure(rackId: Int, value: Int)
+    private external fun nativeControlChange(rackId: Int, cc: Int, value: Int, record: Boolean)
+    private external fun nativeChannelPressure(rackId: Int, value: Int, record: Boolean)
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
     private external fun nativeLoadTake(rack: Int, path: String): String
     private external fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String

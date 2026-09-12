@@ -401,7 +401,8 @@ fun EditScreen(
         var pressure by remember(trackIndex) { mutableStateOf(0f) }
         var bend by remember(trackIndex) { mutableStateOf(0.5f) }
         val touchable = MachineUi.usesPerformance(track.machine.type)
-        LaunchedEffect(trackIndex) { NativeEngine.controlChange(trackIndex, 1, (mod * 127f).toInt()) }
+        // Not a gesture: opening a track must not write a lane point.
+        LaunchedEffect(trackIndex) { NativeEngine.controlChange(trackIndex, 1, (mod * 127f).toInt(), record = false) }
 
         val keysSlot: @Composable (Dp) -> Unit = { height ->
         if (kind == MachineKind.Drums) DrumPads(trackIndex, voices, selectedPad, { selectedPad = it }, Modifier.fillMaxWidth().height(height - 6.dp).padding(top = 6.dp))

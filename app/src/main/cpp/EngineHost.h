@@ -98,8 +98,8 @@ class EngineHost {
     void noteOff(int rack, uint8_t note);
     // Performance controllers. They travel as MIDI so the eventor chain and,
     // later, a USB controller share one path into the machine.
-    void controlChange(int rack, uint8_t cc, uint8_t value);
-    void channelPressure(int rack, uint8_t value);
+    void controlChange(int rack, uint8_t cc, uint8_t value, bool record = true);
+    void channelPressure(int rack, uint8_t value, bool record = true);
     // A channel message straight from a MIDI port. The rack is the channel:
     // whatever the message was addressed to on the wire is re-addressed here.
     void midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2);

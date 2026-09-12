@@ -288,4 +288,13 @@ fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
             else (com.rm.acidulous.engine.NativeEngine.effectParamInfo(fx.type).map { it.name } + "bypass")
                 .map { laneKey(com.rm.acidulous.model.effectUnit(slot), it) }
         } +
-        listOf("gain", "pan", "sendreverb", "senddelay").map { laneKey("channel", it) }
+        listOf("gain", "pan", "sendreverb", "senddelay").map { laneKey("channel", it) } +
+        // The performance strip, for machines that answer it. These are the
+        // only lanes that are not a unit's parameter: they leave as MIDI.
+        (
+            if (com.rm.acidulous.model.MachineUi.usesPerformance(track.machine.type)) {
+                listOf("mod", "pressure").map { laneKey("performance", it) }
+            } else {
+                emptyList()
+            }
+            )

@@ -273,6 +273,20 @@ void Rack::setParam(Unit unit, int32_t index, float v01) {
         break;
     }
     case Unit::Channel: channel.set(index, v01); break;
+    case Unit::Performance: {
+        // Back into the MIDI it arrived as, so a lane and a finger on the
+        // strip reach the machine by exactly the same path - through the
+        // eventors, as a controller, the way a hardware wheel would.
+        const auto byte = static_cast<uint8_t>(
+            v01 <= 0.0f ? 0 : (v01 >= 1.0f ? 127 : static_cast<int32_t>(v01 * 127.0f + 0.5f)));
+        if (index == kPerfMod) {
+            handleMidi(0xb0, 1, byte);
+        } else if (index == kPerfPressure) {
+            handleMidi(0xd0, byte, 0);
+        }
+        break;
+    }
+    case Unit::Master: break; // never addressed at a rack
     }
 }
 

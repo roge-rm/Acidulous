@@ -68,6 +68,17 @@ class Engine {
     // at, so the screen can be told about it in ticks.
     double countInFrames = 0.0;
     double countInPerTick = 0.0;
+
+    /**
+     * Armed, running, and past the count-in.
+     *
+     * The transport's own isRecording() is playing-and-armed and knows
+     * nothing about a count-in, during which the transport *is* playing but
+     * the scheduler has not started - so a note or a wheel moved while the
+     * clicks are still counting would be filed against whatever position
+     * the last pass left behind. Counting you in is not recording you.
+     */
+    bool recordingNow() const { return transport.isRecording() && countInFrames <= 0.0; }
     float inputScratch[kBlockFrames * 2] = {};
 
   private:

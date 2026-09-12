@@ -46,6 +46,7 @@ Unit unitFromName(const std::string &u) {
     if (u == "eventor3") return Unit::Eventor3;
     if (u == "channel") return Unit::Channel;
     if (u == "master") return Unit::Master;
+    if (u == "performance") return Unit::Performance;
     return Unit::Machine;
 }
 
@@ -388,14 +389,41 @@ void EngineHost::noteOff(int rack, uint8_t note) {
     sEngine.pushMidi({static_cast<uint8_t>(0x80 | rack), note, 0});
 }
 
-void EngineHost::controlChange(int rack, uint8_t cc, uint8_t value) {
+namespace {
+/**
+ * Mod and pressure go in as parameters rather than as MIDI.
+ *
+ * They come out the far end as MIDI again - Rack::setParam turns them back -
+ * so the machine cannot tell the difference. What the detour buys is
+ * everything the parameter path already does: the move is recorded into a
+ * lane, it marks the control touched so its own lane cannot fight it for
+ * the rest of the pass, and on playback the lane drives it. Sending them
+ * straight through as MIDI, which is what they used to do, is why they were
+ * the one gesture in the app that nothing remembered.
+ */
+void pushPerformance(int rack, int32_t index, uint8_t value, bool record) {
+    ParamMessage p;
+    p.rack = rack;
+    p.unit = Unit::Performance;
+    p.index = index;
+    p.value = static_cast<float>(value) / 127.0f;
+    p.record = record;
+    sEngine.pushParam(p);
+}
+} // namespace
+
+void EngineHost::controlChange(int rack, uint8_t cc, uint8_t value, bool record) {
     if (rack < 0 || rack >= kRackCount) return;
+    if (cc == 1) {
+        pushPerformance(rack, kPerfMod, value, record);
+        return;
+    }
     sEngine.pushMidi({static_cast<uint8_t>(0xb0 | rack), cc, value});
 }
 
-void EngineHost::channelPressure(int rack, uint8_t value) {
+void EngineHost::channelPressure(int rack, uint8_t value, bool record) {
     if (rack < 0 || rack >= kRackCount) return;
-    sEngine.pushMidi({static_cast<uint8_t>(0xd0 | rack), value, 0});
+    pushPerformance(rack, kPerfPressure, value, record);
 }
 
 void EngineHost::midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2) {
@@ -423,6 +451,11 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         return -1;
     }
     if (u == Unit::Master) return sEngine.master.params().indexOf(name.c_str());
+    if (u == Unit::Performance) {
+        if (name == "mod") return kPerfMod;
+        if (name == "pressure") return kPerfPressure;
+        return -1;
+    }
     if (u == Unit::Effect1 || u == Unit::Effect2) {
         if (name == "bypass") return kEffectBypassIndex;
         int32_t n = 0;

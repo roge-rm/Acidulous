@@ -38,7 +38,26 @@ struct MidiMessage {
 // The ordinal crosses the queue and the JNI boundary but is never written
 // to a file - lanes are keyed by unit *name* - so inserting here is safe,
 // as long as Recorder.UNITS on the Kotlin side is kept in the same order.
-enum class Unit : uint8_t { Machine, Effect1, Effect2, Eventor1, Eventor2, Eventor3, Channel, Master };
+// Appended, never inserted: the ordinal crosses the queue and the JNI
+// boundary, and Recorder.UNITS on the Kotlin side is this list by position.
+// Automation lanes are keyed by unit *name* in the document, so a new unit
+// costs nothing to songs already written.
+enum class Unit : uint8_t {
+    Machine, Effect1, Effect2, Eventor1, Eventor2, Eventor3, Channel, Master,
+    /**
+     * The performance strip: mod and pressure.
+     *
+     * Not a unit with parameters of its own - a pseudo-unit, so that the
+     * mod wheel and aftertouch can be recorded into a lane and played back
+     * by the same machinery every knob already uses. What comes out the
+     * other end is MIDI again, which is how they arrived.
+     */
+    Performance,
+};
+
+/** Indices within Unit::Performance. */
+constexpr int32_t kPerfMod = 0;      // CC 1
+constexpr int32_t kPerfPressure = 1; // channel aftertouch
 
 struct ParamMessage {
     int32_t rack = 0;

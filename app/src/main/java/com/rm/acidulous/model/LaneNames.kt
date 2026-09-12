@@ -53,6 +53,7 @@ fun humanise(name: String): String =
 fun laneUnitLabel(track: Track, key: String): String = when (val unit = laneUnit(key)) {
     "machine" -> track.machine.type
     "channel" -> "mixer"
+    "performance" -> "perform"
     else -> {
         val slot = unit.takeLast(1).toIntOrNull()?.minus(1) ?: 0
         when {
