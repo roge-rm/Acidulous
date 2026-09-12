@@ -62,8 +62,8 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
 
 /**
- * The edit screen, phone-sized: header, piano roll, footer. The machine
- * panel sits under the roll.
+ * The edit screen, phone-sized: header, piano roll, footer, and the
+ * machine panel under the roll.
  */
 // One slot per eventor, in the order the notes travel through them.
 private const val EV_CHORD = 0

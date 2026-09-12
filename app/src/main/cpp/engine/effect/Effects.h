@@ -8,8 +8,8 @@
 #include <engine/dsp/Math.h>
 #include <engine/effect/Effect.h>
 
-// The first wave of insert effects. Each is the classic thing plus the extra
-// that takes it somewhere.
+// The first wave of insert effects. Each is the classic thing plus the one
+// extra that takes it somewhere.
 namespace acidulous::effect {
 
 #define ACIDULOUS_EFFECT_COMMON(Name)                                         \
