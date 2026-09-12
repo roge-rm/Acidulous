@@ -6,8 +6,8 @@
 
 // Formulate - the chip, and the equation.
 //
-// The reference app's chip machine was an equation solver: you typed an expression and
-// heard it. That is half of what made chip music sound the way it does. The
+// An equation solver - type an expression, hear it - is half of what made
+// chip music sound the way it does. The
 // other half is the hardware it was written for - a pulse whose duty jumps
 // in four steps, a triangle quantised to sixteen levels, a shift register
 // for noise - and the *tables* a tracker clocked at the video frame rate,

@@ -48,7 +48,7 @@ object MidiHub {
      * This is the scan filter, so one wrong digit in it is not a bug that
      * degrades anything - it is a scan that can never match, on any device,
      * for ever, and reports "nothing found" perfectly calmly. It had an 8
-     * where the spec has a 4 and cost a BLE controller an evening.
+     * where the spec has a 4, and cost an evening to find.
      */
     private val BLE_MIDI_SERVICE = ParcelUuid.fromString("03B80E5A-EDE8-4B33-A751-6CE34EC4C700")
     private const val TAG = "Acidulous.MIDI"

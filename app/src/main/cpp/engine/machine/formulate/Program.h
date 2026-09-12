@@ -10,7 +10,7 @@
 // Chip music's expression came from tables clocked at the video frame rate -
 // arpeggios, duty sweeps, volume shapes - and from whatever the programmer
 // could make the hardware do between them. This carries both: the tables,
-// and the formula that the reference app's chip machine made the point of the machine.
+// and the formula that is the point of the machine.
 //
 // Built on a worker from four strings, handed over as one object.
 namespace acidulous::machine::formulate {

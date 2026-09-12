@@ -49,7 +49,7 @@ enum class ScaleView { Chromatic, Dim, Fold }
  * The clip editor: one Canvas, notes drawn by hand, hit-tested by hand.
  * A composable per note would crawl on a 16-bar clip with chords.
  *
- * The reference sequencer's conventions, kept: in Draw mode a tap on empty adds a note of one
+ * The conventions kept: in Draw mode a tap on empty adds a note of one
  * grid unit and a tap on a note deletes it; dragging a note moves it, dragging
  * its right edge resizes it; dragging on empty draws a note and stretches it.
  * In Select mode dragging on empty rubber-bands, tapping toggles a note,

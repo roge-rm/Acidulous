@@ -3,7 +3,7 @@ package com.rm.acidulous.model
 /**
  * The editing surface over the document: every change goes through here.
  *
- * The reference sequencer's undo is per track, so that is the unit for note edits: each track
+ * Undo is per track, which is the unit that suits note edits: each track
  * has its own undo/redo history of *whole Track values* (they are immutable, so
  * a history entry is just a reference). Structure edits - scenes, tracks, song
  * settings - have a separate song-level history, which is what the main

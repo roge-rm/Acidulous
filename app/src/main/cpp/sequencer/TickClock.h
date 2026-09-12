@@ -51,7 +51,7 @@ class TickClock {
     }
 
     // Audio thread: glide from the current tempo to `toBpm` over `overTicks`
-    // ticks starting now. This is the reference sequencer's "Smooth" scene transition.
+    // ticks starting now. This is the "smooth" scene transition.
     void rampTempo(float toBpm, int64_t overTicks) {
         if (overTicks <= 0) {
             setTempo(toBpm);

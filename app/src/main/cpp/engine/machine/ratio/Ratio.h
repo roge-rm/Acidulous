@@ -5,7 +5,7 @@
 #include <engine/machine/Machine.h>
 #include <engine/machine/ratio/Algorithms.h>
 
-// Ratio - six-operator FM, after the six-op reference, where an operator is not
+// Ratio - six-operator FM of the modern kind, where an operator is not
 // only an FM operator: it can ring-modulate, filter, fold, sync, distort its
 // own phase or crush whatever is fed into it.
 //

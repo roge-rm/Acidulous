@@ -49,7 +49,7 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
 
 /**
- * The reference sequencer's parameter strip under the piano roll: one lane at a time, drawn as
+ * The parameter strip under the piano roll: one lane at a time, drawn as
  * a graph the width of the clip. Drag to write points at grid ticks (absolute
  * from the gesture base, so a stroke is one undo step); the picker cycles the
  * clip's lanes, and its menu adds a lane for any parameter or clears one.

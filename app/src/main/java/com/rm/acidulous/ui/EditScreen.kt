@@ -62,7 +62,7 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
 
 /**
- * The reference sequencer's Edit screen, phone-sized: header, piano roll, footer. The machine
+ * The edit screen, phone-sized: header, piano roll, footer. The machine
  * panel sits under the roll.
  */
 // One slot per eventor, in the order the notes travel through them.
@@ -345,7 +345,7 @@ fun EditScreen(
         )
         }
         val automationSlot: @Composable () -> Unit = {
-        // Automation: the reference sequencer's parameter strip under the notes.
+        // Automation: the parameter strip under the notes.
         AutomationStrip(
             clip = clip,
             ticksPerBar = ticksPerBar,

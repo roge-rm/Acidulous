@@ -34,7 +34,7 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
 
 /**
- * The reference sequencer's mixer section as a slide-up panel: a strip per track, then the
+ * The mixer section as a slide-up panel: a strip per track, then the
  * master. Fader drags are one undo step (per track, or song-level for the
  * master) and also go straight to the engine for immediacy.
  */

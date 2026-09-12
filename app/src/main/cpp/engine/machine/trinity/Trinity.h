@@ -6,15 +6,14 @@
 #include <engine/dsp/Wavetable.h>
 #include <engine/machine/Machine.h>
 
-// Trinity - the polyphonic machine, three oscillators deep. Modelled on the
-// reference poly's architecture (Dan's favourite poly): three equal
-// oscillators that each carry analogue waves or wavetables, density stacking,
-// virtual sync, two filters with drive, six envelopes, three LFOs and a
-// modulation matrix.
+// Trinity - the polyphonic machine, three oscillators deep. The shape is a
+// modern wavetable poly's: three equal oscillators that each carry analogue
+// waves or wavetables, density stacking, virtual sync, two filters with
+// drive, six envelopes, three LFOs and a modulation matrix.
 //
-// What it adds beyond that model, in the TB-3 spirit: FM between the
-// oscillators (the reference poly rings and syncs but never phase-modulates), and
-// per-voice drift so held chords breathe.
+// What it adds beyond that shape: FM between the oscillators - the ones this
+// follows ring and sync but never phase-modulate - and per-voice drift so
+// held chords breathe.
 namespace acidulous::machine {
 
 class Trinity final : public Machine {

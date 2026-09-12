@@ -7,7 +7,7 @@
 
 // Cumulus - pads by spectrum.
 //
-// The reference app's spectral pad was the machine nothing else sounded like: harmonics
+// The spectral-pad idea is the one nothing else sounds quite like: harmonics
 // smeared into bands, inverse transformed into one enormous table, and the
 // result is a chorus of hundreds of oscillators for the price of reading an
 // array. This is our own implementation of that idea, and then the part

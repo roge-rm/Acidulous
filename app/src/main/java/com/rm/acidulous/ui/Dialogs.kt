@@ -43,7 +43,7 @@ import com.rm.acidulous.model.SceneTempo
 import com.rm.acidulous.model.Signature
 
 /**
- * The reference sequencer's "4/4 × 1" chip, expanded: name, signature, repeat, tempo, fades.
+ * The scene's "4/4 × 1" chip, expanded: name, signature, repeat, tempo, fades.
  *
  * Rebuilt in the same vocabulary as every other window here. It used to be
  * a Material `AlertDialog` full of switches and outlined buttons, and its
@@ -125,7 +125,7 @@ fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () ->
     }
 }
 
-/** The reference sequencer's "1 Bar" chip, expanded: bars, play mode, mute, grid. */
+/** The clip's "1 Bar" chip, expanded: bars, play mode, mute, grid. */
 @Composable
 fun ClipSettingsDialog(
     clip: Clip,

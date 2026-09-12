@@ -12,7 +12,7 @@ import java.util.zip.ZipOutputStream
  * uses is named by a path relative to the user folder and lives outside it.
  * That is right for working - one copy of a drum hit serves forty songs -
  * and useless for moving a song to another device, where the JSON arrives
- * and every pad is silent. This is what that old bundle format was: the document plus
+ * and every pad is silent. So a bundle is the old answer: the document plus
  * its media, zipped, and unzipped back into place at the other end.
  *
  * **Which files come along is decided by looking, not by guessing.** Sample

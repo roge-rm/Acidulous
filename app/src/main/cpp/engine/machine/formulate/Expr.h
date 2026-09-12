@@ -5,7 +5,7 @@
 
 // A tiny integer expression language, compiled to a stack machine.
 //
-// The reference app's chip machine let you type an equation and hear it. The language
+// Typing an equation and hearing it is bytebeat's idea. The language
 // people already write those in is C - `t*((t>>12|t>>8)&63&t>>4)` and its
 // relatives - so this is that subset: integers, the C operators in the C
 // precedence, a handful of functions, and the named values the machine

@@ -53,12 +53,12 @@ class Transport {
     }
     int32_t queuedSceneIndex() const { return queuedScene.load(std::memory_order_relaxed); }
 
-    // The reference sequencer's two loop toggles: the transport button loops the current scene;
-    // the one beside Add Scene loops the whole song.
+    // Two loop toggles: the transport button loops the current scene; the one
+    // beside Add Scene loops the whole song.
     void setLoopScene(bool on) { loopSceneFlag.store(on, std::memory_order_relaxed); }
 
-    // The reference sequencer's REC is a stand-by: arm now, and playing (or starting to play)
-    // records. Disarm at any time.
+    // REC is a stand-by: arm now, and playing (or starting to play) records.
+    // Disarm at any time.
     void setRecordArmed(bool on) { recordArmed.store(on, std::memory_order_relaxed); }
     bool isRecordArmed() const { return recordArmed.load(std::memory_order_relaxed); }
     void setLoopSong(bool on) { loopSongFlag.store(on, std::memory_order_relaxed); }

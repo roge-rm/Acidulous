@@ -71,7 +71,7 @@ import com.rm.acidulous.model.updateScene
 import com.rm.acidulous.ui.theme.Acid
 
 /**
- * The reference sequencer's main screen, phone-sized: the song section (scene columns x track
+ * The main screen, phone-sized: the song section (scene columns x track
  * rows, each cell a clip) with transport below. The mixer becomes a slide-up
  * panel in M5.
  *
