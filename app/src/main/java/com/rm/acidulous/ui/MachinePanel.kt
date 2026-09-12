@@ -3,6 +3,7 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.background
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -260,18 +261,56 @@ internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, acce
 internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
     val info = b.infoOf(name) ?: return
     val idx = info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)
+    // Two rows at most, one column when there are only two options.
+    //
+    // A Material TextButton is 58dp wide whatever is written in it, and this
+    // was a row of them: `saw` and `pulse`, forty-three dp of words, in a
+    // hundred and nineteen. Meanwhile the row a switch sits in is bottom
+    // aligned against knobs that are a hundred dp tall to its seventy-two,
+    // so there was space going spare directly above it. The second row is
+    // free, and paying for it halves the width.
+    val cols = if (labels.size <= 2) 1 else (labels.size + 1) / 2
     Column(
-        Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
+        Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).fillMaxHeight(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-        Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            labels.forEachIndexed { i, l ->
-                val on = i == idx
-                TextButton(
-                    onClick = { b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) },
-                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
-                ) { Text(l, color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
+        // IntrinsicSize.Max, then a weight on every cell: the grid takes the
+        // width of its widest row and the weights divide it evenly, so all
+        // the cells in one switch are the size of its longest label and the
+        // selected one never moves as you change it.
+        Column(
+            Modifier.width(IntrinsicSize.Max).weight(1f)
+                .clip(RoundedCornerShape(4.dp)).background(Acid.colors.card),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
+            labels.chunked(cols).forEachIndexed { row, cells ->
+                Row(
+                    Modifier.fillMaxWidth().weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(1.dp),
+                ) {
+                    cells.forEachIndexed { col, l ->
+                        val i = row * cols + col
+                        val on = i == idx
+                        Box(
+                            Modifier.weight(1f).fillMaxHeight()
+                                .background(if (on) Acid.colors.green else Acid.colors.control)
+                                .clickable { b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                l, color = if (on) Acid.colors.onAccent else Acid.colors.textMid,
+                                fontSize = 10.sp, maxLines = 1, softWrap = false,
+                                modifier = Modifier.padding(horizontal = 6.dp),
+                            )
+                        }
+                    }
+                    // An odd count leaves a hole in the last row. It has to be
+                    // a weighted box and not nothing, or the row above it
+                    // divides its width between fewer cells and the grid comes
+                    // out ragged.
+                    repeat(cols - cells.size) { Box(Modifier.weight(1f).fillMaxHeight()) }
+                }
             }
         }
     }
@@ -349,7 +388,17 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
 internal fun Group(title: String, content: @Composable () -> Unit) {
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(6.dp)) {
         Text(title, color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) { content() }
+        // IntrinsicSize.Max so the row knows how tall its tallest control is
+        // - a knob, almost always - and anything that wants to can fill it.
+        // Switches do, so their cells line up with the knobs beside them
+        // instead of leaving a gap above. Taken from the children rather
+        // than written down as a number, so it still holds when the text
+        // scale changes the height of a knob's label.
+        Row(
+            Modifier.height(IntrinsicSize.Max),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) { content() }
     }
 }
 
