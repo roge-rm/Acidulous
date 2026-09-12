@@ -73,6 +73,21 @@ import com.rm.acidulous.ui.theme.Acid
  * you left it whichever screen you are on.
  */
 val BarAnchor = 44.dp
+
+/**
+ * The gap that stands undo and redo off from the group beside them.
+ *
+ * They sit between the two halves of the row - what this screen is showing on
+ * one side, what the transport is doing on the other - and belong to neither.
+ * Pressed up against mix they read as part of the transport, which is the one
+ * thing they are not. Twelve dp on top of the row's own four is enough to say
+ * so and little enough that nothing else has to move for it.
+ *
+ * Fixed rather than weighted: everything to the right of it is a fixed width,
+ * so undo and redo land at the same x on every screen and every machine -
+ * which was the point of putting them in one place at all.
+ */
+val BarIsland = 12.dp
 @Composable
 fun BottomBar(
     modifier: Modifier = Modifier,

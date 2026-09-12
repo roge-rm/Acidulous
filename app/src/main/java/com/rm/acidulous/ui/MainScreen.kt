@@ -17,6 +17,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -394,6 +395,7 @@ fun MainScreen(
                 colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
                 enabled = editor.canRedoSong(),
             ) { editor.redoSong() }
+            Spacer(Modifier.width(BarIsland))
             BarButton(
                 if (showMixer) "\u25BE mix" else "\u25B4 mix",
                 Modifier.width(BarAnchor),

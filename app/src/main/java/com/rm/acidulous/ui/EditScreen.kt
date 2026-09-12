@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -114,7 +115,16 @@ fun EditScreen(
     var steps by remember(trackIndex, kind) { mutableStateOf(kind == MachineKind.Drums) }
     val voices = MachineUi.voicesOf(track.machine.type, track.machine.settings)
     var selectedPad by remember(trackIndex) { mutableStateOf(0) }
-    val hasSteps = track.machine.type == "Subvert" || kind == MachineKind.Drums
+    // Subvert only. A drum machine opens on its grid and stays there: the
+    // grid *is* the editor for one, and a roll of it - sixteen lanes of
+    // one-tick notes you cannot name - answers no question the grid does not
+    // answer better. Subvert keeps the choice because its two views are
+    // genuinely different instruments to edit in, a roll and a step row.
+    //
+    // Note what this does not do: `steps` still starts true for drums and
+    // simply never changes, so the grid is reached the same way it always
+    // was. Nothing below has to learn that drums are a special case.
+    val hasSteps = track.machine.type == "Subvert"
     var laneKey by remember { mutableStateOf<String?>(null) }
     val slotTypes = track.effects.map { it.type } + track.eventors.map { it.type }
     val laneKeys = remember(track.machine.type, slotTypes) { automationKeysFor(track) }
@@ -236,7 +246,13 @@ fun EditScreen(
             // arrow alone is a small target at the far corner.
             Text(
                 "${track.name} · ${scene.name} · ${clip.bars}b · ${clip.notes.size}n" +
-                    (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a"),
+                    (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a") +
+                    // The selection count reads here rather than in the bar.
+                    // It is a reading, and this line is where this screen's
+                    // readings are; in the bar it was forty dp reserved
+                    // against a number that is usually not there, and that
+                    // forty dp is what the buttons beside it needed.
+                    (if (selection.isEmpty()) "" else " · ${selection.size} sel"),
                 color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                 // The band's own height rather than fillMaxHeight: the row is
                 // a SubcomposeLayout and does not hand children a bounded
@@ -508,27 +524,35 @@ fun EditScreen(
         // they cannot line up whatever we do - and three fixed pills in 300dp
         // leave the five beside them seven dp each, which is no button at all.
         val anchor = if (landscape) Modifier.weight(1f) else Modifier.width(BarAnchor)
+        // How many buttons the left of this row carries: fx, and whichever
+        // view toggles this machine has. It varies by machine - a drum track
+        // has only fx - and a lone weighted child takes the whole pool, which
+        // made fx a ninety-three dp pill beside a row of forty-fours.
+        //
+        // So they take an anchor's width like everything else, and a spacer
+        // holds the right-hand group where it belongs. Three of them will not
+        // fit at that width - three anchors, the island and the five on the
+        // right is 400dp of a phone's 377 - and only then do they share, at
+        // about thirty-eight dp each.
+        val views = 1 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0)
+        val view = if (views >= 3 || landscape) Modifier.weight(1f) else Modifier.width(BarAnchor)
         BottomBar {
+            // fx first, at the head of the row. It is the pair to mix at the
+            // other end - both swap what the panel under the roll is showing -
+            // and the two beside it are about the roll itself.
+            BarButton(
+                "fx", view,
+                colour = if (panel == 1) Acid.colors.accent else Color.Unspecified,
+            ) { panel = if (panel == 1) 0 else 1 }
             if (hasSteps) {
-                BarButton(if (steps) "\u25A6" else "\u25A4", Modifier.weight(1f)) { steps = !steps }
+                BarButton(if (steps) "\u25A6" else "\u25A4", view) { steps = !steps }
             }
             if (!steps) {
-                BarButton(if (mode == EditMode.Draw) "\u270E" else "\u2B1A", Modifier.weight(1f)) {
+                BarButton(if (mode == EditMode.Draw) "\u270E" else "\u2B1A", view) {
                     mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw
                 }
             }
-            BarButton(
-                "fx", Modifier.weight(1f),
-                colour = if (panel == 1) Acid.colors.accent else Color.Unspecified,
-            ) { panel = if (panel == 1) 0 else 1 }
-            // A fixed width rather than the width of what it says: this goes
-            // from nothing to "12 sel" as you drag, and a count that shoved
-            // the buttons beside it sideways would move them mid-gesture.
-            Text(
-                if (selection.isEmpty()) "" else "${selection.size} sel",
-                color = Acid.colors.textMid, fontFamily = FontFamily.Monospace, fontSize = 11.sp,
-                softWrap = false, maxLines = 1, modifier = Modifier.width(40.dp),
-            )
+            if (views < 3 && !landscape) Spacer(Modifier.weight(1f))
             BarButton(
                 "\u21B6", anchor, enabled = editor.canUndo(trackIndex),
             ) { selection = emptySet(); editor.undo(trackIndex) }
@@ -540,6 +564,7 @@ fun EditScreen(
                 colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
                 enabled = editor.canRedo(trackIndex),
             ) { selection = emptySet(); editor.redo(trackIndex) }
+            Spacer(Modifier.width(BarIsland))
             BarButton(
                 // The arrow says which way the panel is, which is worth a
                 // pill's width in portrait and is not true sideways - there
