@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -227,11 +228,23 @@ fun EditScreen(
                     editor.editClip(trackIndex, sceneId) { it.copy(frozen = null) }
                 }
             }
+            // The title goes back too, so the ◀ and everything after it up to
+            // the paging is one long back button. It is the widest thing in
+            // the header and it did nothing; on a phone held one-handed the
+            // arrow alone is a small target at the far corner.
             Text(
                 "${track.name} · ${scene.name} · ${clip.bars}b · ${clip.notes.size}n" +
                     (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a"),
                 color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
-                modifier = Modifier.flexible().padding(horizontal = 4.dp), maxLines = 1,
+                // The band's own height rather than fillMaxHeight: the row is
+                // a SubcomposeLayout and does not hand children a bounded
+                // height to fill.
+                modifier = Modifier.flexible()
+                    .height(LocalHeaderBand.current)
+                    .clickable(onClick = onBack)
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    .padding(horizontal = 4.dp),
+                maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
             // Paging lives here rather than in a row of its own: a whole row of
