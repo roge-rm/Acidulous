@@ -228,6 +228,14 @@ const ParamDef *Arp::paramDefs(int32_t &count) const {
 void Arp::reset() {
     heldCount = 0; latched = false; seqLen = 0; pos = 0; dir = 1; stepCounter = 0; cycle = 0; lastPitch = -1;
     nextStep = -1;
+    // The three that used to be left behind. `rng` drives step chance,
+    // ratchets, humanised timing and humanised velocity, so an arp carried
+    // it from one playing to the next and the "same" bar came out
+    // differently - which is what made an offline render of a song with an
+    // arp on it unrepeatable. A reset means from the beginning.
+    anchor = 0;
+    orderCounter = 0;
+    rng = 0x9E3779B9u;
     for (auto &q : pending) q.live = false;
     outs = OutputNotes();
 }

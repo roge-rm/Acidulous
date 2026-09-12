@@ -40,9 +40,24 @@ void Engine::renderBlock(const float *in, float *out) {
         scheduler.allNotesOff();
         for (int32_t r = 0; r < kRackCount; ++r) {
             racks[r].allNotesOff();
-            if (Machine *m = racks[r].currentMachine()) m->reset();
+            // Parameters jump rather than glide. Every one of them is
+            // smoothed, so after a reset they were still sliding in from
+            // wherever they had been - which left the first few
+            // milliseconds of a render depending on what had been playing
+            // before it. A panic is a discontinuity by definition; there
+            // is nothing here to be smooth about.
+            if (Machine *m = racks[r].currentMachine()) { m->reset(); m->params().jumpAll(); }
             for (int32_t s = 0; s < kEffectSlots; ++s) {
-                if (Effect *e = racks[r].currentEffect(s)) e->reset();
+                if (Effect *e = racks[r].currentEffect(s)) { e->reset(); e->params().jumpAll(); }
+            }
+            // The eventors too. They were missed here from the start, and
+            // the cost was not obvious: an arpeggiator keeps a step, so a
+            // panic - or an offline render, which panics first - left it
+            // part way through its pattern and the next notes to arrive
+            // came out somewhere else in the run. It is why exporting the
+            // same song twice gave two different files.
+            for (int32_t s = 0; s < kEventorSlots; ++s) {
+                if (Eventor *e = racks[r].currentEventor(s)) e->reset();
             }
         }
         master.panic();

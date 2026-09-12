@@ -41,6 +41,14 @@ class AsrEnv {
         releaseCoeff = onePoleCoeff(releaseSec, sampleRate);
     }
     void gate(bool on) { gateOn = on; }
+    /**
+     * Straight to silence, with no release.
+     *
+     * `gate(false)` only lets go; the level then decays over the release
+     * time, which is right for a note ending and wrong for a reset - it
+     * leaves the last note still fading into whatever comes next.
+     */
+    void kill() { gateOn = false; level = 0.0f; }
     bool active() const { return gateOn || level > 1e-4f; }
 
     float next() {

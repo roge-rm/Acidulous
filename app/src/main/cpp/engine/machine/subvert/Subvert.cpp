@@ -49,9 +49,23 @@ void Subvert::reset() {
     accented = false;
     filterEnv.kill();
     accentEnv.kill();
-    ampEnv.gate(false);
+    ampEnv.kill();
     svf1.reset();
     svf2.reset();
+    // The oscillators too, and the pitch they were gliding toward.
+    //
+    // These free-run: nothing restarts them on a note, because a 303's
+    // oscillator does not restart either, and that continuity is part of
+    // the sound. But it means a reset that leaves them alone is not a
+    // reset - the next note begins part way through a cycle, at whatever
+    // point the last one happened to stop. Live that is invisible. It is
+    // why rendering the same song twice gave two different files: the
+    // notes were identical, and the waveform under them began somewhere
+    // else each time.
+    osc.reset();
+    sub.reset();
+    pitch = targetPitch = 48.0f;
+    coeffCountdown = 0;
 }
 
 void Subvert::startNote(uint8_t note, bool legato, bool accent) {
