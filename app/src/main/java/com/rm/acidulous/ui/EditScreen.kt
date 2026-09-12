@@ -531,9 +531,8 @@ fun EditScreen(
         //
         // So they take an anchor's width like everything else, and a spacer
         // holds the right-hand group where it belongs. Three of them will not
-        // fit at that width - three anchors, the island and the five on the
-        // right is 400dp of a phone's 377 - and only then do they share, at
-        // about thirty-eight dp each.
+        // fit at that width - eight pills and their gaps is 380dp of a
+        // phone's 377 - and only then do they share.
         val views = 1 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0)
         val view = if (views >= 3 || landscape) Modifier.weight(1f) else Modifier.width(BarAnchor)
         BottomBar {
@@ -564,7 +563,6 @@ fun EditScreen(
                 colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
                 enabled = editor.canRedo(trackIndex),
             ) { selection = emptySet(); editor.redo(trackIndex) }
-            Spacer(Modifier.width(BarIsland))
             // One glyph each, as play has always been, so the three read as
             // one group and say the same thing at any width - which retires
             // the two labels that had to be shortened for landscape.

@@ -399,7 +399,6 @@ fun MainScreen(
                 colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
                 enabled = editor.canRedoSong(),
             ) { editor.redoSong() }
-            Spacer(Modifier.width(BarIsland))
             BarButton(
                 "\u21C5", Modifier.width(BarAnchor),
                 colour = if (showMixer) Acid.colors.accent else Color.Unspecified,
