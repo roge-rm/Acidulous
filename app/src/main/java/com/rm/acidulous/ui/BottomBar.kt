@@ -18,10 +18,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -144,7 +147,10 @@ fun BarButton(
         onClick = onClick,
         enabled = enabled,
         contentPadding = PaddingValues(horizontal = 4.dp),
-        border = border?.let { BorderStroke(1.dp, it) },
+        // Falling back to Material's own outline, not to null: null means
+        // *no* border, and passing it quietly stripped the outline from every
+        // pill in the app the day this parameter was added.
+        border = border?.let { BorderStroke(1.dp, it) } ?: ButtonDefaults.outlinedButtonBorder,
     ) {
         Text(label, color = colour, fontSize = 12.sp, fontFamily = fontFamily, maxLines = 1)
     }
@@ -162,25 +168,38 @@ fun BarReadout(text: String, colour: Color, size: Int = 12) {
 /**
  * Panic, and the load meter, in one control.
  *
- * The button fills from the bottom as the audio thread runs out of room -
- * teal, amber, red - and floods when a block is actually dropped. The thing
- * filling up is the thing you would press, which is the argument for it
- * living here rather than as a number in the corner of a header.
+ * The meter is a ladder of segments lit from the bottom - teal to about half,
+ * amber past that, red past four fifths, and the whole ladder when a block
+ * has actually been dropped. It is the front of every compressor and mixer
+ * ever made, which is the point: a smooth fill creeping up a pill reads as a
+ * button highlight, and discrete segments read as a level. They also make a
+ * small change visible, where a continuous fill just creeps.
  *
- * An ordinary OutlinedButton, so it is its neighbours' shape by
- * construction rather than by arithmetic. That took two goes. Material
- * expands a button's layout node to the 48dp touch target while drawing its
- * outline at 40dp, so a fill clipped to the node is a bigger stadium than
- * the border around it; built by hand instead, it came out the right height
- * and the wrong width, because MinWidth is Material's and not mine to
- * restate. So the button stays Material's and the fill is inset to the
- * outline it actually draws.
+ * The thing filling up is the thing you would press, which is the argument
+ * for it living here rather than as a number in the corner of a header. It is
+ * ornament over a working button, so it stays behind the word and well under
+ * full strength - you read the ladder when you look for it, and the rest of
+ * the time it is the transport's most-pressed-in-a-hurry control and nothing
+ * else.
+ *
+ * No border of its own any more. Every other pill's outline is all but
+ * invisible against the bar, so a red ring here was the only one on the row
+ * you actually saw, and it made panic look like a different kind of control
+ * rather than the same kind with a different job. The red word is signal
+ * enough.
+ *
+ * An ordinary OutlinedButton, so it is its neighbours' shape by construction
+ * rather than by arithmetic. That took two goes. Material expands a button's
+ * layout node to the 48dp touch target while drawing its outline at 40dp, so
+ * a fill clipped to the node is a bigger stadium than the border around it;
+ * built by hand instead, it came out the right height and the wrong width,
+ * because MinWidth is Material's and not mine to restate. So the button stays
+ * Material's and the ladder is inset to the outline it actually draws.
  */
 @Composable
 fun PanicButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     val c = Acid.colors
     val load = rememberEngineLoad()
-    val colour = loadColour(load)
     OutlinedButton(
         modifier = modifier
             // Outermost, as on every other mappable control: inside the clip
@@ -193,20 +212,46 @@ fun PanicButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
                 // actually occupies.
                 val drawn = ButtonDefaults.MinHeight.toPx()
                 val top = ((size.height - drawn) / 2f).coerceAtLeast(0f)
-                // Translucent, and behind the label: panic is a thing you
-                // do, not a state the app is in, and a solid fill would
-                // read as "switched on".
-                clipRect(top = top + drawn * (1f - level)) {
-                    drawRoundRect(
-                        colour.copy(alpha = if (load.dropped) 0.45f else 0.30f),
-                        topLeft = Offset(0f, top),
-                        size = Size(size.width, drawn),
-                        cornerRadius = CornerRadius(drawn / 2f),
+                val gap = 1.dp.toPx()
+                val h = (drawn - gap * (kLadder - 1)) / kLadder
+                if (h <= 0f) return@drawBehind
+                // The rungs are rectangles and the button is a stadium, so
+                // they are clipped to its shape. Without this the bottom one
+                // runs out past the curve at either end and the meter reads
+                // as a spill rather than as a reading.
+                val pill = Path().apply {
+                    addRoundRect(
+                        RoundRect(Rect(Offset(0f, top), Size(size.width, drawn)), CornerRadius(drawn / 2f)),
                     )
+                }
+                clipPath(pill) {
+                    for (i in 0 until kLadder) {
+                        // Lit once the level reaches the foot of the rung, so
+                        // the count reads as the percentage rather than
+                        // trailing it by one.
+                        if (level < i.toFloat() / kLadder) break
+                        // Colour by where the rung sits on the scale, not by
+                        // the reading: a meter's own scale does not change
+                        // colour as the needle moves.
+                        val at = (i + 0.5f) / kLadder
+                        val colour = when {
+                            load.dropped -> c.red
+                            at > 0.8f -> c.red
+                            at > 0.5f -> c.accent
+                            else -> c.teal
+                        }
+                        drawRect(
+                            colour.copy(alpha = if (load.dropped) 0.55f else 0.40f),
+                            topLeft = Offset(0f, top + (kLadder - 1 - i) * (h + gap)),
+                            size = Size(size.width, h),
+                        )
+                    }
                 }
             },
         onClick = onClick,
         contentPadding = PaddingValues(horizontal = 4.dp),
-        border = BorderStroke(1.dp, c.red),
     ) { Text("panic", color = c.red, fontSize = 12.sp, maxLines = 1) }
 }
+
+/** Segments in the ladder. Seven of them is 4dp a rung in a 40dp pill. */
+private const val kLadder = 7
