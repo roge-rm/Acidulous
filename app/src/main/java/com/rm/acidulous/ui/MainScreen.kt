@@ -142,7 +142,13 @@ fun MainScreen(
             // is a reading you tap to change, which is what everything else
             // in this row is, and a bordered pill among them looked like a
             // transport control that had wandered up from the bar.
-            HeaderTextButton("%.1f".format(bpm), color = Acid.colors.text) { dialog = Dialog.Tempo }
+            // Lit while the click is running: a long press of rec turns the
+            // metronome on and off, and this is where its settings live, so
+            // this is where it says so. Nothing else on the screen would.
+            HeaderTextButton(
+                "%.1f".format(bpm),
+                color = if (clickOn) Acid.colors.accent else Acid.colors.text,
+            ) { dialog = Dialog.Tempo }
             HeaderTextButton("save", onClick = onSave)
             // Button and menu in one box on purpose: a Popup anchors to its
             // parent layout node, and left loose in the row that parent is
@@ -405,7 +411,9 @@ fun MainScreen(
             ) { showMixer = !showMixer }
             BarButton(
                 if (armed) "\u25CF" else "\u25CB",
-                Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name)),
+                // Hold it for the click - see the same gesture in the editor.
+                Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name))
+                    .onLongPress { if (!UiPrefs.mapMode) onClick(!clickOn) },
                 border = if (armed) Acid.colors.red else null,
             ) { onArm(!armed) }
             BarButton(

@@ -72,9 +72,14 @@ fun PianoKeys(
     val base = 12 * (octave + 1)
     val scale = scalePitchClasses?.takeIf { it.isNotEmpty() }?.sorted()
 
-    Box(modifier) {
-        Canvas(
-            Modifier.fillMaxSize().clip(RoundedCornerShape(3.dp)).pointerInput(base, scale) {
+    // The pointer area is the whole box and the keys are drawn inset into it,
+    // so the gap between the keyboard and the wheel either side belongs to
+    // the keys rather than to nobody. The outermost key is the one a finger
+    // misses - it is as wide as its neighbours but has a wheel three dp away
+    // instead of another key - and this hands it that three dp to be hit in.
+    Box(
+        modifier.pointerInput(base, scale) {
+            val grab = EdgeGrab.toPx()
                 // What is down is owned by this loop, not by composition.
                 // Rebuilding it from the drawn state each event was the bug:
                 // touches arrive faster than recomposition, so a finger that
@@ -85,13 +90,19 @@ fun PianoKeys(
                     awaitPointerEventScope {
                         while (true) {
                             val event = awaitPointerEvent()
-                            val layout =
-                                Layout(size.width.toFloat(), size.height.toFloat(), base, MinKey.toPx(), scale)
+                            // Measured against the drawn keys, not the box,
+                            // and the touch is moved into their space.
+                            val layout = Layout(
+                                size.width.toFloat() - grab * 2f, size.height.toFloat(),
+                                base, MinKey.toPx(), scale,
+                            )
                             var changed = false
                             for (change in event.changes) {
                                 val id = change.id.value
                                 if (change.pressed) {
-                                    val note = layout.noteAt(change.position)
+                                    val note = layout.noteAt(
+                                        Offset(change.position.x - grab, change.position.y),
+                                    )
                                     if (down[id] != note) {
                                         down[id]?.let { NativeEngine.noteOff(rack, it) }
                                         if (note != null) {
@@ -121,7 +132,8 @@ fun PianoKeys(
                     held = emptyMap()
                 }
             },
-        ) {
+    ) {
+        Canvas(Modifier.fillMaxSize().padding(horizontal = EdgeGrab).clip(RoundedCornerShape(3.dp))) {
             val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale)
             val down = held.values.toSet()
             val nameStyle = TextStyle(color = c.keyLabel, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
@@ -248,6 +260,15 @@ fun SlotChip(
 /** Narrower than this and a key is harder to hit than it is worth. */
 private val MinKey = 23.dp
 
+/**
+ * How far past the drawn keys a touch still counts as one.
+ *
+ * The same three dp that separates the keyboard from the wheel either side,
+ * so the gap is drawn rather than merely empty and the first and last key
+ * each get it to be hit in.
+ */
+private val EdgeGrab = 3.dp
+
 /** Semitone offsets of one octave's white keys. */
 private val WhiteSteps = intArrayOf(0, 2, 4, 5, 7, 9, 11)
 
@@ -293,7 +314,10 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
     }
 
     fun noteAt(p: Offset): Int? {
-        if (p.x < 0f || p.x > width || p.y < 0f || p.y > height) return null
+        // Across, the coerceIn below does the work: a touch in the grab margin
+        // beyond either end is the outermost key, which is what a finger that
+        // slightly missed it meant. Above and below really is nothing.
+        if (p.y < 0f || p.y > height) return null
         scaleKeys?.let { keys ->
             val i = (p.x / keyW).toInt().coerceIn(0, keys.size - 1)
             return keys.getOrNull(i)

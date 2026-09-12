@@ -481,7 +481,11 @@ fun EditScreen(
             }
             Row(
                 Modifier.fillMaxWidth().height(height - 30.dp).padding(top = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                // No spacing: the keyboard draws its own three dp either side
+                // and owns them for touch, so a finger that misses the
+                // outermost key by a hair still plays it instead of grabbing
+                // the wheel beyond it. See EdgeGrab in ui/PianoKeys.kt.
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 TouchWheel(
                     value = mod, accent = Acid.colors.accent, vertical = true, label = null,
@@ -572,7 +576,13 @@ fun EditScreen(
             ) { panel = if (panel == 2) 0 else 2 }
             BarButton(
                 if (armed) "\u25CF" else "\u25CB",
-                anchor.mappable(MapTargets.action(Action.RecordArm.name)),
+                // Hold it for the click. The metronome is a thing you want on
+                // for one take and off for the next, and it lived two taps
+                // deep behind the tempo. Guarded on mapping mode, because
+                // mappable already claims a long press there to forget what
+                // drives a control.
+                anchor.mappable(MapTargets.action(Action.RecordArm.name))
+                    .onLongPress { if (!UiPrefs.mapMode) onClick(!clickOn) },
                 border = if (armed) Acid.colors.red else null,
             ) { onArm(!armed) }
             BarButton(

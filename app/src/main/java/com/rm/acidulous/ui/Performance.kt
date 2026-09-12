@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitTouchSlopOrCancellation
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,9 +71,18 @@ fun TouchWheel(
                         val v = if (vertical) 1f - (at.y / size.height) else at.x / size.width
                         change(v.coerceIn(0f, 1f))
                     }
-                    report(down.position)
-                    down.consume()
-                    drag(down.id) { c -> report(c.position); c.consume() }
+                    // A drag, never a jab. This used to report the down's own
+                    // position immediately, so the wheel jumped to wherever a
+                    // finger landed - including a finger that was aiming at
+                    // the outermost piano key three dp away and missed. Mod
+                    // does not spring back, and a control change records, so
+                    // a missed note could leave the wheel somewhere new and
+                    // write a point into the lane on the way. A real wheel
+                    // cannot teleport under your thumb either.
+                    val slop = awaitTouchSlopOrCancellation(down.id) { c, _ -> c.consume() }
+                        ?: return@awaitEachGesture
+                    report(slop.position)
+                    drag(slop.id) { c -> report(c.position); c.consume() }
                     spring?.let { change(it) }
                 }
             },
