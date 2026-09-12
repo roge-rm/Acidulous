@@ -179,6 +179,12 @@ object UiPrefs {
         MidiHub.outOffsetMs = p.getInt(KEY_MIDI_AHEAD, 0)
         MidiHub.chooseClockOut(p.getBoolean(KEY_MIDI_CLOCK_OUT, false))
         MidiHub.chooseExternalSync(p.getBoolean(KEY_MIDI_FOLLOW, false))
+        // 48 semitones is what the MPE specification asks a receiver to
+        // assume, and is nothing like what a keyboard means by a bend.
+        MidiHub.chooseMpe(
+            p.getInt(KEY_MPE_ZONE, 0), p.getInt(KEY_MPE_MEMBERS, 15),
+            p.getFloat(KEY_MPE_BEND, 48f), p.getBoolean(KEY_MPE_TIMBRE, true),
+        )
     }
 
     /**
@@ -339,6 +345,25 @@ object UiPrefs {
         store?.edit()?.putInt(KEY_MIDI_AHEAD, v)?.apply()
     }
 
+    /**
+     * The MPE zone, and what a finger's bend is worth.
+     *
+     * Kept here with the other MIDI settings rather than in the song: a
+     * zone describes the controller on the desk, not the music.
+     */
+    fun chooseMpe(
+        zone: Int = MidiHub.mpeZone,
+        members: Int = MidiHub.mpeMembers,
+        bendSemis: Float = MidiHub.mpeBendSemis,
+        timbre: Boolean = MidiHub.mpeTimbre,
+    ) {
+        val m = com.rm.acidulous.midi.MpeZone.clampMembers(members)
+        val b = com.rm.acidulous.midi.MpeZone.clampBend(bendSemis)
+        MidiHub.chooseMpe(zone, m, b, timbre)
+        store?.edit()?.putInt(KEY_MPE_ZONE, MidiHub.mpeZone)?.putInt(KEY_MPE_MEMBERS, m)
+            ?.putFloat(KEY_MPE_BEND, b)?.putBoolean(KEY_MPE_TIMBRE, timbre)?.apply()
+    }
+
     fun chooseMidiRouting(r: MidiHub.Routing, rack: Int = MidiHub.fixedRack) {
         MidiHub.routing = r
         MidiHub.fixedRack = rack
@@ -367,6 +392,10 @@ object UiPrefs {
     private const val KEY_SCALE_KEY = "new_scale_key"
     private const val KEY_SCALE_INDEX = "new_scale_index"
     private const val KEY_MIDI_ROUTE = "midi_routing"
+    private const val KEY_MPE_ZONE = "mpe_zone"
+    private const val KEY_MPE_MEMBERS = "mpe_members"
+    private const val KEY_MPE_BEND = "mpe_bend"
+    private const val KEY_MPE_TIMBRE = "mpe_timbre"
     private const val KEY_MIDI_RACK = "midi_rack"
     private const val KEY_MIDI_CLOCK_OUT = "midi_clock_out"
     private const val KEY_MIDI_FOLLOW = "midi_follow"

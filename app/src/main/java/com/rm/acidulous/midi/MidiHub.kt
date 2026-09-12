@@ -353,7 +353,20 @@ object MidiHub {
     }
 
     /** Called from the poll: what the follower is making of it. */
+    /**
+     * Which member channels are holding a note, as a bit per channel.
+     *
+     * State here rather than polled inside the window, because the window
+     * measures every one of its pages to size itself to the tallest and a
+     * `remember` in a page that is measured and discarded never keeps
+     * anything. Everything else on that page reads state from this object
+     * for the same reason.
+     */
+    var mpeHeld by mutableStateOf(0)
+        private set
+
     fun readSync() {
+        if (mpeZone != 0) mpeHeld = NativeEngine.mpeHeldMask
         if (!clockIn) return
         val packed = NativeEngine.syncState()
         followLocked = ((packed ushr 56) and 0xff) != 0L
@@ -444,29 +457,27 @@ object MidiHub {
      * channels are fingers, not tracks. Follow and pinned still choose
      * which track the zone plays.
      */
-    var mpeZone = 0
+    // Compose state, like every other setting here: the MIDI window reads
+    // these directly and would not redraw for a plain var.
+    var mpeZone by mutableStateOf(0)
         private set
-    var mpeMembers = 15
+    var mpeMembers by mutableStateOf(15)
         private set
-    var mpeBendSemis = 48f
+    var mpeBendSemis by mutableStateOf(48f)
         private set
-    var mpeTimbre = true
+    var mpeTimbre by mutableStateOf(true)
         private set
 
     fun chooseMpe(zone: Int, members: Int, bendSemis: Float, timbre: Boolean) {
-        mpeZone = zone
-        mpeMembers = members
-        mpeBendSemis = bendSemis
+        mpeZone = MpeZone.clampZone(zone)
+        mpeMembers = MpeZone.clampMembers(members)
+        mpeBendSemis = MpeZone.clampBend(bendSemis)
         mpeTimbre = timbre
-        NativeEngine.setMpeZone(zone, members, bendSemis)
+        NativeEngine.setMpeZone(mpeZone, mpeMembers, mpeBendSemis)
     }
 
     /** Is this channel one of the zone's fingers? Channels are 0-based here. */
-    fun mpeMember(channel: Int): Boolean = when (mpeZone) {
-        1 -> channel in 1..mpeMembers
-        2 -> channel <= 14 && channel >= 15 - mpeMembers
-        else -> false
-    }
+    fun mpeMember(channel: Int): Boolean = MpeZone.member(mpeZone, mpeMembers, channel)
 
     private fun dispatch(status: Int, d1: Int, d2: Int) {
         val kind = status and 0xf0
@@ -689,5 +700,37 @@ object MidiHub {
         for (i in 0..20) {
             handler?.postDelayed({ dispatch(0xb0, cc, i * 127 / 20) }, (i * 60).toLong())
         }
+    }
+
+    /**
+     * Two fingers, and only one of them moves.
+     *
+     * The whole of MPE in one gesture: two notes arrive on their own member
+     * channels, and then a bend, a press and a slide are sent on the first
+     * channel only. If the second note moves too, the expression is not
+     * reaching the voice that owns it - which is the one thing that can go
+     * wrong here and the one thing an emulator cannot otherwise show.
+     *
+     * The channels are the zone's own first two members, so this exercises
+     * the same arithmetic a controller would.
+     */
+    fun testMpe() {
+        if (mpeZone == 0) return
+        val a = if (mpeZone == 1) 1 else 14
+        val b = if (mpeZone == 1) 2 else 13
+        dispatch(0x90 or a, 60, 100)
+        dispatch(0x90 or b, 64, 100)
+        for (i in 0..20) {
+            val t = (i * 140).toLong()
+            val bend = 8192 + i * 8191 / 20
+            handler?.postDelayed({
+                dispatch(0xe0 or a, bend and 0x7f, (bend shr 7) and 0x7f)
+                dispatch(0xd0 or a, i * 127 / 20, 0)
+                dispatch(0xb0 or a, 74, i * 127 / 20)
+            }, t)
+        }
+        // Long enough to hear, and long enough to watch the readout: the
+        // sweep alone is three seconds.
+        handler?.postDelayed({ dispatch(0x80 or a, 60, 0); dispatch(0x80 or b, 64, 0) }, 3400)
     }
 }

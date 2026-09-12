@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.midi.MidiHub
 import com.rm.acidulous.model.Mapping
 import com.rm.acidulous.model.Mappings
@@ -42,6 +44,14 @@ import com.rm.acidulous.ui.theme.Acid
 @Composable
 fun MidiDialog(song: Song, onDismiss: () -> Unit) {
     val trackNames = song.tracks.map { it.name }
+    // Read here, in the ordinary composition, and handed down.
+    //
+    // The pages are subcomposed inside a SubcomposeLayout's measure block so
+    // the window can size itself to the tallest of them, and a value that
+    // changes on its own - which member channels are holding a note - does
+    // not reliably re-measure from in there. Read at this level it is a
+    // plain state read, the window recomposes, and the page is rebuilt.
+    val mpeHeld = MidiHub.mpeHeld
     val context = LocalContext.current
     var tab by rememberSaveable { mutableStateOf(0) }
     LaunchedEffect(Unit) { MidiHub.refresh() }
@@ -54,7 +64,7 @@ fun MidiDialog(song: Song, onDismiss: () -> Unit) {
         chips = { SectionChips(TABS, tab) { tab = it } },
         pages = listOf(
             { DevicesTab(context) },
-            { InTab(trackNames) },
+            { InTab(trackNames, mpeHeld) },
             { OutTab() },
             { MapTab(song) },
             { SyncTab() },
@@ -139,8 +149,9 @@ private fun DevicesTab(context: android.content.Context) {
 
 /** Notes arriving: where they land, and proof that they do. */
 @Composable
-private fun InTab(trackNames: List<String>) {
+private fun InTab(trackNames: List<String>, mpeHeld: Int) {
     MidiRoutingSection(trackNames)
+    MpeSection(mpeHeld)
     ListSection("is anything arriving?") {
         Readout(
             if (MidiHub.received == 0) "nothing received yet"
@@ -338,6 +349,77 @@ private fun MappingList(title: String, mappings: List<Mapping>, song: Song) {
                     color = Acid.colors.text, fontSize = 11.sp,
                 )
             }
+        }
+    }
+}
+
+/**
+ * MPE: one instrument played on many channels, a finger to each.
+ *
+ * A zone is a property of what is plugged in rather than of the music, so
+ * it lives here with the routing and not in the song. While one is on, the
+ * member channels are fingers and cannot also be tracks - routing still
+ * chooses *which* track the zone plays, but by-channel has nothing left to
+ * mean.
+ */
+@Composable
+private fun MpeSection(mpeHeld: Int) {
+    val zone = MidiHub.mpeZone
+    Section(
+        "mpe",
+        when (zone) {
+            1 -> "Channel 1 carries the whole zone; ${MidiHub.mpeMembers} channels above it are fingers."
+            2 -> "Channel 16 carries the whole zone; ${MidiHub.mpeMembers} channels below it are fingers."
+            else -> "Off: every channel is an ordinary channel, and a bend bends everything."
+        },
+    ) {
+        Choice("off", zone == 0) { UiPrefs.chooseMpe(zone = 0) }
+        Choice("lower", zone == 1) { UiPrefs.chooseMpe(zone = 1) }
+        Choice("upper", zone == 2) { UiPrefs.chooseMpe(zone = 2) }
+    }
+    if (zone != 0) {
+        SliderSection(
+            "member channels", "${MidiHub.mpeMembers}",
+            "How many fingers the controller spreads across. Fifteen unless it says otherwise.",
+            (MidiHub.mpeMembers - 1) / 14f, 0f..1f, steps = 13,
+        ) { UiPrefs.chooseMpe(members = (it * 14f).toInt() + 1) }
+        SliderSection(
+            "bend range", "±%.0f st".format(MidiHub.mpeBendSemis),
+            "How far one finger's bend goes. The specification says 48; a lot of controllers " +
+                "ship 24, and getting it wrong makes every slide the wrong size.",
+            (MidiHub.mpeBendSemis - 1f) / 95f, 0f..1f,
+        ) { UiPrefs.chooseMpe(bendSemis = 1f + it * 95f) }
+        Section(
+            "slide",
+            if (MidiHub.mpeTimbre) {
+                "CC 74 is taken as a finger moving up and down the key. Each machine's " +
+                    "\"slide\" knob says how much that does."
+            } else {
+                "CC 74 is an ordinary controller, free to be mapped."
+            },
+        ) {
+            Choice("timbre", MidiHub.mpeTimbre) { UiPrefs.chooseMpe(timbre = true) }
+            Choice("plain cc", !MidiHub.mpeTimbre) { UiPrefs.chooseMpe(timbre = false) }
+        }
+        ListSection("is it reaching the voices?") {
+            val mask = mpeHeld
+            val held = (0 until 16).filter { (mask shr it) and 1 == 1 }.map { it + 1 }
+            Readout(
+                if (held.isEmpty()) "no member channel is holding a note"
+                else "channels ${held.joinToString(", ")} are holding a note",
+                good = held.isNotEmpty(),
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = { MidiHub.testMpe() }) {
+                    Text("test mpe", color = Acid.colors.accent, fontSize = 12.sp)
+                }
+            }
+            Text(
+                "Two notes on the first two member channels, then a bend, a press and a slide " +
+                    "on the first of them only. If both notes move, the expression is not " +
+                    "reaching the voice that owns it.",
+                color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
+            )
         }
     }
 }
