@@ -80,43 +80,34 @@ fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () ->
             )
         },
     ) {
-        ListSection("name", "What the scene's chip says in the arranger.") {
+        ListSection("name") {
             OutlinedTextField(
                 value = name, onValueChange = { name = it }, singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
 
-        Section(
+        // Nine of these, and as chips they wrapped onto a second row and
+        // pushed everything under them down the screen. Ordered, discrete
+        // and too many for a row: a slider with a stop on each.
+        val sigIndex = signature?.let { SIGNATURES.indexOf(it) + 1 } ?: 0
+        SliderSection(
             "signature",
-            if (signature == null) "Whatever the song is in, so changing the song changes this scene with it."
-            else "This scene only. The bar line, the metronome and the count-in all follow it.",
-        ) {
-            Choice("song (${songSignature.beats}/${songSignature.unit})", signature == null) { signature = null }
-            for (s in SIGNATURES) {
-                Choice("${s.beats}/${s.unit}", signature == s) { signature = s }
-            }
+            if (sigIndex == 0) "song (${songSignature.beats}/${songSignature.unit})"
+            else SIGNATURES[sigIndex - 1].let { "${it.beats}/${it.unit}" },
+            "",
+            sigIndex.toFloat(), 0f..SIGNATURES.size.toFloat(), SIGNATURES.size - 1,
+        ) { v ->
+            val i = v.toInt().coerceIn(0, SIGNATURES.size)
+            signature = if (i == 0) null else SIGNATURES[i - 1]
         }
 
-        ListSection(
-            "repeat",
-            if (repeat == 1) "Played once before the song moves on."
-            else "Played $repeat times through before the song moves on.",
-        ) {
-            BigNumber("$repeat", 1, 4) { repeat = (repeat + it).coerceIn(1, 32) }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                for (n in listOf(1, 2, 4, 8, 16)) {
-                    Choice("$n", repeat == n) { repeat = n }
-                }
-            }
-        }
+        SliderSection(
+            "repeat", "$repeat", "",
+            repeat.toFloat(), 1f..32f,
+        ) { repeat = it.toInt().coerceIn(1, 32) }
 
-        Section(
-            "tempo",
-            if (!ownTempo) "Runs at the song's tempo."
-            else if (smooth) "Glides to %.0f over the first bar of the scene.".format(bpm)
-            else "Jumps to %.0f the moment the scene starts.".format(bpm),
-        ) {
+        Section("tempo") {
             Choice("song", !ownTempo) { ownTempo = false }
             Choice("own", ownTempo) { ownTempo = true }
             if (ownTempo) {
@@ -125,20 +116,10 @@ fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () ->
             }
         }
         if (ownTempo) {
-            ListSection("beats a minute") {
-                BigNumber("%.0f".format(bpm), 1, 5) { bpm = (bpm + it).coerceIn(40f, 240f) }
-            }
+            SliderSection("beats a minute", "%.0f".format(bpm), "", bpm, 40f..240f) { bpm = it }
         }
 
-        Section(
-            "fades",
-            when {
-                fadeIn && fadeOut -> "Fades up as the scene starts and away as it ends."
-                fadeIn -> "Fades up as the scene starts."
-                fadeOut -> "Fades away as the scene ends."
-                else -> "Starts and ends at full level."
-            },
-        ) {
+        Section("fades") {
             Choice("in", fadeIn) { fadeIn = !fadeIn }
             Choice("out", fadeOut) { fadeOut = !fadeOut }
         }
@@ -304,32 +285,51 @@ fun TextInputDialog(title: String, initial: String, onDismiss: () -> Unit, onCon
 }
 
 /**
- * A number worth reading, with nudges either side of it.
+ * A number set by dragging: the name, its value on the right, a line saying
+ * what it is, and the slider under them.
  *
- * The house style is chips and a line of explanation, and a slider is the
- * one Material control that refuses to look like it belongs - so anything
- * continuous is set this way instead: two sizes of step each side, and a
- * number big enough to read while you are pressing them.
+ * This is the shape for anything continuous. Chips are right for a handful
+ * of named choices and wrong for a range - thirty-two repeat counts is not
+ * a set of chips, and even eight of them wrap onto a second row and push
+ * everything below them down the screen. A slider is one row whatever the
+ * range, which is how a settings page stays short enough to read without
+ * scrolling.
+ *
+ * It must be given a Column, not a `Section` - a Section's content is a
+ * FlowRow, which hands a slider constraints it cannot make sense of and
+ * draws it as a bar, a gap and a stray dot.
  */
 @Composable
-internal fun BigNumber(text: String, small: Int, large: Int, onNudge: (Int) -> Unit) {
+internal fun SliderSection(
+    title: String,
+    value: String,
+    note: String,
+    position: Float,
+    range: ClosedFloatingPointRange<Float>,
+    /** Stops to draw. 0 for a plain slider - see the note in the body. */
+    steps: Int = 0,
+    onChange: (Float) -> Unit,
+) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
-    // fillMaxWidth, or the row takes its intrinsic width and the last chip
-    // is cut off by the card's edge - which is what it did.
-    Row(
-        Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Choice("−$large", false) { onNudge(-large) }
-        Choice("−$small", false) { onNudge(-small) }
-        Text(
-            text,
-            color = c.text, fontSize = 34.sp, fontFamily = FontFamily.Monospace,
-            modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(title, color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+            Text(value, color = c.accent, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+        }
+        // Tight leading: these lines are the bulk of a settings page, and at
+        // the default they were spaced like prose.
+        if (note.isNotEmpty()) {
+            Text(note, color = c.textDim, fontSize = 11.sp, lineHeight = 14.sp)
+        }
+        // Ticks only when you could count them. A stop on each of eight
+        // signatures helps; two hundred dots along a tempo is a dotted line.
+        Slider(
+            value = position,
+            onValueChange = onChange,
+            valueRange = range,
+            steps = steps,
+            modifier = Modifier.fillMaxWidth(),
         )
-        Choice("+$small", false) { onNudge(small) }
-        Choice("+$large", false) { onNudge(large) }
     }
 }
 
@@ -374,18 +374,15 @@ fun TempoDialog(tempo: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit)
 
 @Composable
 private fun TempoPage(bpm: Float, onBpm: (Float) -> Unit) {
-    // No slider. Every other settings page here is chips and a line of
-    // explanation, and Material's slider - an active bar, a gap, a tall
-    // thumb, a gap, an inactive bar with a stop dot on the end - reads as a
-    // piece of some other application that wandered in. Nudges either side
-    // of the number get anywhere in a few taps, and the presets get to the
-    // tempos anybody actually counts in without touching either.
-    ListSection("beats a minute", "What the whole song runs at, unless a scene says otherwise.") {
-        BigNumber("%.0f".format(bpm), 1, 5) { onBpm((bpm + it).coerceIn(40f, 240f)) }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (preset in listOf(80f, 90f, 100f, 110f, 120f, 128f, 140f, 174f)) {
-                Choice("%.0f".format(preset), kotlin.math.abs(bpm - preset) < 0.5f) { onBpm(preset) }
-            }
+    SliderSection(
+        "beats a minute", "%.0f".format(bpm), "",
+        bpm, 40f..240f,
+    ) { onBpm(it) }
+    // The tempos people actually count in, so an exact 128 is one tap
+    // rather than a careful drag.
+    Section("") {
+        for (preset in listOf(80f, 90f, 100f, 110f, 120f, 128f, 140f, 174f)) {
+            Choice("%.0f".format(preset), kotlin.math.abs(bpm - preset) < 0.5f) { onBpm(preset) }
         }
     }
 }
@@ -404,11 +401,7 @@ private fun ClickPage() {
             Choice(name, UiPrefs.clickVoice == i) { UiPrefs.chooseClickVoice(i) }
         }
     }
-    Section(
-        "ticks on",
-        if (UiPrefs.clickDivision == 0) "One click a bar, so you hear the shape rather than the pulse."
-        else "The bar, the beat and everything between get their own level, so you can still tell where the bar is.",
-    ) {
+    Section("ticks on") {
         CLICK_DIVISIONS.forEachIndexed { i, name ->
             Choice(name, UiPrefs.clickDivision == i) { UiPrefs.chooseClickDivision(i) }
         }
@@ -416,21 +409,21 @@ private fun ClickPage() {
     Section(
         "sounds",
         when (UiPrefs.clickWhen) {
-            1 -> "Only while the transport is armed. A metronome is for playing something in, and you stop wanting it the moment you are listening back."
+            1 -> "Only while the transport is armed."
             2 -> "Never during the song - only to count you in."
-            else -> "Whenever the transport is running."
+            else -> ""
         },
     ) {
         Choice("always", UiPrefs.clickWhen == 0) { UiPrefs.chooseClickWhen(0) }
         Choice("recording", UiPrefs.clickWhen == 1) { UiPrefs.chooseClickWhen(1) }
         Choice("count-in only", UiPrefs.clickWhen == 2) { UiPrefs.chooseClickWhen(2) }
     }
-    Section(
-        "count-in",
-        if (UiPrefs.countInBars == 0) "Play and record start straight away."
-        else "%d bar%s of clicks before anything moves. The bars are the song's own, so 7/8 counts seven."
-            .format(UiPrefs.countInBars, if (UiPrefs.countInBars == 1) "" else "s"),
-    ) {
+    SliderSection(
+        "level", "%.0f%%".format(UiPrefs.clickVolume * 100f),
+        "The master gives up this much headroom while the click is on.",
+        UiPrefs.clickVolume, 0f..1f,
+    ) { UiPrefs.chooseClickVolume(it) }
+    Section("count-in", "Bars of clicks before anything moves - the song's own, so 7/8 counts seven.") {
         for (bars in 0..4) {
             Choice(if (bars == 0) "none" else "$bars", UiPrefs.countInBars == bars) {
                 UiPrefs.chooseCountInBars(bars)
@@ -629,7 +622,7 @@ internal fun Section(title: String, note: String = "", content: @Composable () -
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) { content() }
-        if (note.isNotEmpty()) Text(note, color = c.textDim, fontSize = 11.sp)
+        if (note.isNotEmpty()) Text(note, color = c.textDim, fontSize = 11.sp, lineHeight = 14.sp)
     }
 }
 
@@ -644,7 +637,7 @@ internal fun ListSection(
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(title, color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
         content()
-        if (note.isNotEmpty()) Text(note, color = c.textDim, fontSize = 11.sp)
+        if (note.isNotEmpty()) Text(note, color = c.textDim, fontSize = 11.sp, lineHeight = 14.sp)
     }
 }
 

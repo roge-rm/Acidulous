@@ -447,10 +447,11 @@ object EngineSync {
      * when the metronome was next toggled, so a chosen voice sat there
      * doing nothing until you switched the click off and on again.
      */
-    fun setClickSettings(voice: Int, division: Int, whenOn: Int) {
+    fun setClickSettings(voice: Int, division: Int, whenOn: Int, volume: Float) {
         NativeEngine.setParam(0, "master", "clickvoice", EngineParams.unit01(voice / 2f), record = false)
         NativeEngine.setParam(0, "master", "clickdiv", EngineParams.unit01(division / 4f), record = false)
         NativeEngine.setParam(0, "master", "clickwhen", EngineParams.unit01(whenOn / 2f), record = false)
+        NativeEngine.setParam(0, "master", "clickvolume", EngineParams.unit01(volume), record = false)
     }
 
     /**

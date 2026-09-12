@@ -151,16 +151,17 @@ private fun RecordTab() {
 @Composable
 private fun NewSongSection() {
     val sig = UiPrefs.newSignature
-    Section("tempo", "A new song starts at %.0f bpm.".format(UiPrefs.newTempo)) {
-        Choice("−", false) { UiPrefs.chooseNewTempo(UiPrefs.newTempo - 1f) }
-        Choice("%.0f".format(UiPrefs.newTempo), true) { UiPrefs.chooseNewTempo(120f) }
-        Choice("+", false) { UiPrefs.chooseNewTempo(UiPrefs.newTempo + 1f) }
-    }
-    Section("signature", "Bars of ${sig.beats}/${sig.unit}, which a scene can still override.") {
-        for (s in SIGNATURES.take(5)) {
-            Choice("${s.beats}/${s.unit}", UiPrefs.newSignature == s) { UiPrefs.chooseNewSignature(s) }
-        }
-    }
+    SliderSection(
+        "tempo", "%.0f bpm".format(UiPrefs.newTempo), "",
+        UiPrefs.newTempo, 40f..240f,
+    ) { UiPrefs.chooseNewTempo(it) }
+    // A slider rather than five chips: it fits all eight signatures where
+    // the row fitted five, in the same height.
+    val sigIndex = SIGNATURES.indexOf(UiPrefs.newSignature).coerceAtLeast(0)
+    SliderSection(
+        "signature", "${sig.beats}/${sig.unit}", "",
+        sigIndex.toFloat(), 0f..(SIGNATURES.size - 1).toFloat(), SIGNATURES.size - 2,
+    ) { v -> UiPrefs.chooseNewSignature(SIGNATURES[v.toInt().coerceIn(0, SIGNATURES.size - 1)]) }
     // The scale a new track starts in: a Scale eventor is fitted to it, so
     // the keyboard and the roll agree with the song from the first note.
     var picking by remember { mutableStateOf(false) }

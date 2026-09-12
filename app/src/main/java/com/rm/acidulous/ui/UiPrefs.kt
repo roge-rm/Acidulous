@@ -164,7 +164,7 @@ object UiPrefs {
      * them there.
      */
     /** The three stepped click params, whenever one of them changes. */
-    private fun pushClick() = EngineSync.setClickSettings(clickVoice, clickDivision, clickWhen)
+    private fun pushClick() = EngineSync.setClickSettings(clickVoice, clickDivision, clickWhen, clickVolume)
 
     fun applyToEngine() {
         NativeEngine.setBufferBursts(buffer.bursts)
@@ -242,6 +242,7 @@ object UiPrefs {
     fun chooseClickVolume(v: Float) {
         clickVolume = v.coerceIn(0f, 1f)
         store?.edit()?.putFloat(KEY_CLICK_VOL, clickVolume)?.apply()
+        pushClick()
     }
 
     fun chooseClickWhen(w: Int) {
