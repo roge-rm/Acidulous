@@ -3,6 +3,7 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
@@ -260,6 +261,7 @@ fun TextInputDialog(title: String, initial: String, onDismiss: () -> Unit, onCon
 
 private val CLICK_VOICES = listOf("blip", "stick", "cowbell")
 private val CLICK_DIVISIONS = listOf("bar", "beat", "1/8", "1/16", "1/8T")
+private val TEMPO_TABS = listOf("tempo", "click")
 
 /**
  * Tempo, and everything that counts against it.
@@ -270,66 +272,105 @@ private val CLICK_DIVISIONS = listOf("bar", "beat", "1/8", "1/16", "1/8T")
  * how long before it starts - and you reach for them in the same moment.
  * Settings is for what you set once.
  *
- * The tempo waits for OK, because it is the song's and every change of it
- * is an edit. The click settings are the device's and apply as you touch
- * them, which is why Cancel says nothing about them.
+ * Two tabs rather than one long scroll, for the same reason the settings
+ * window has them, and it opens on the tempo because that is what the
+ * button you pressed says.
+ *
+ * The window mixes two lifetimes on purpose: the **tempo waits for OK**,
+ * being the song's and an edit every time, while the **click settings apply
+ * as you touch them**, being the device's - which is why Cancel says
+ * nothing about them.
  */
 @Composable
 fun TempoDialog(tempo: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit) {
     var bpm by remember { mutableStateOf(tempo) }
-    PlainDialog(
+    var tab by rememberSaveable { mutableStateOf(0) }
+    TabbedDialog(
         title = "Tempo",
+        selected = tab,
         onDismiss = onDismiss,
+        dismissLabel = "Cancel",
         confirmLabel = "OK",
         onConfirm = { onConfirm(bpm) },
-    ) {
-        Section("beats a minute", "%.0f bpm".format(bpm)) {
-            Slider(value = bpm, onValueChange = { bpm = it }, valueRange = 40f..240f)
-        }
+        spacing = 16.dp,
+        chips = { SectionChips(TEMPO_TABS, tab) { tab = it } },
+        pages = listOf({ TempoPage(bpm) { bpm = it } }, { ClickPage() }),
+    )
+}
 
-        Section(
-            "click",
-            when (UiPrefs.clickVoice) {
-                1 -> "Filtered noise. It sits away from anything tuned, so it stays audible over a busy mix without being loud."
-                2 -> "The 808's two detuned squares. For when the drums are loud enough to hide the other two."
-                else -> "A short decaying sine, higher on the downbeat. The plain one."
-            },
-        ) {
-            CLICK_VOICES.forEachIndexed { i, name ->
-                Choice(name, UiPrefs.clickVoice == i) { UiPrefs.chooseClickVoice(i) }
+@Composable
+private fun TempoPage(bpm: Float, onBpm: (Float) -> Unit) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    // No slider. Every other settings page here is chips and a line of
+    // explanation, and Material's slider - an active bar, a gap, a tall
+    // thumb, a gap, an inactive bar with a stop dot on the end - reads as a
+    // piece of some other application that wandered in. Nudges either side
+    // of the number get anywhere in a few taps, and the presets get to the
+    // tempos anybody actually counts in without touching either.
+    ListSection("beats a minute", "What the whole song runs at, unless a scene says otherwise.") {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Choice("−5", false) { onBpm((bpm - 5f).coerceIn(40f, 240f)) }
+            Choice("−1", false) { onBpm((bpm - 1f).coerceIn(40f, 240f)) }
+            Text(
+                "%.0f".format(bpm),
+                color = c.text, fontSize = 34.sp, fontFamily = FontFamily.Monospace,
+                modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Choice("+1", false) { onBpm((bpm + 1f).coerceIn(40f, 240f)) }
+            Choice("+5", false) { onBpm((bpm + 5f).coerceIn(40f, 240f)) }
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            for (preset in listOf(80f, 90f, 100f, 110f, 120f, 128f, 140f, 174f)) {
+                Choice("%.0f".format(preset), kotlin.math.abs(bpm - preset) < 0.5f) { onBpm(preset) }
             }
         }
-        Section(
-            "ticks on",
-            if (UiPrefs.clickDivision == 0) "One click a bar, so you hear the shape rather than the pulse."
-            else "The bar, the beat and everything between get their own level, so you can still tell where the bar is.",
-        ) {
-            CLICK_DIVISIONS.forEachIndexed { i, name ->
-                Choice(name, UiPrefs.clickDivision == i) { UiPrefs.chooseClickDivision(i) }
-            }
+    }
+}
+
+@Composable
+private fun ClickPage() {
+    Section(
+        "sound",
+        when (UiPrefs.clickVoice) {
+            1 -> "Filtered noise. It sits away from anything tuned, so it stays audible over a busy mix without being loud."
+            2 -> "The 808's two detuned squares. For when the drums are loud enough to hide the other two."
+            else -> "A short decaying sine, higher on the downbeat. The plain one."
+        },
+    ) {
+        CLICK_VOICES.forEachIndexed { i, name ->
+            Choice(name, UiPrefs.clickVoice == i) { UiPrefs.chooseClickVoice(i) }
         }
-        Section(
-            "sounds",
-            when (UiPrefs.clickWhen) {
-                1 -> "Only while the transport is armed. A metronome is for playing something in, and you stop wanting it the moment you are listening back."
-                2 -> "Never during the song - only to count you in."
-                else -> "Whenever the transport is running."
-            },
-        ) {
-            Choice("always", UiPrefs.clickWhen == 0) { UiPrefs.chooseClickWhen(0) }
-            Choice("recording", UiPrefs.clickWhen == 1) { UiPrefs.chooseClickWhen(1) }
-            Choice("count-in only", UiPrefs.clickWhen == 2) { UiPrefs.chooseClickWhen(2) }
+    }
+    Section(
+        "ticks on",
+        if (UiPrefs.clickDivision == 0) "One click a bar, so you hear the shape rather than the pulse."
+        else "The bar, the beat and everything between get their own level, so you can still tell where the bar is.",
+    ) {
+        CLICK_DIVISIONS.forEachIndexed { i, name ->
+            Choice(name, UiPrefs.clickDivision == i) { UiPrefs.chooseClickDivision(i) }
         }
-        Section(
-            "count-in",
-            if (UiPrefs.countInBars == 0) "Play and record start straight away."
-            else "%d bar%s of clicks before anything moves. The bars are the song's own, so 7/8 counts seven."
-                .format(UiPrefs.countInBars, if (UiPrefs.countInBars == 1) "" else "s"),
-        ) {
-            for (bars in 0..4) {
-                Choice(if (bars == 0) "none" else "$bars", UiPrefs.countInBars == bars) {
-                    UiPrefs.chooseCountInBars(bars)
-                }
+    }
+    Section(
+        "sounds",
+        when (UiPrefs.clickWhen) {
+            1 -> "Only while the transport is armed. A metronome is for playing something in, and you stop wanting it the moment you are listening back."
+            2 -> "Never during the song - only to count you in."
+            else -> "Whenever the transport is running."
+        },
+    ) {
+        Choice("always", UiPrefs.clickWhen == 0) { UiPrefs.chooseClickWhen(0) }
+        Choice("recording", UiPrefs.clickWhen == 1) { UiPrefs.chooseClickWhen(1) }
+        Choice("count-in only", UiPrefs.clickWhen == 2) { UiPrefs.chooseClickWhen(2) }
+    }
+    Section(
+        "count-in",
+        if (UiPrefs.countInBars == 0) "Play and record start straight away."
+        else "%d bar%s of clicks before anything moves. The bars are the song's own, so 7/8 counts seven."
+            .format(UiPrefs.countInBars, if (UiPrefs.countInBars == 1) "" else "s"),
+    ) {
+        for (bars in 0..4) {
+            Choice(if (bars == 0) "none" else "$bars", UiPrefs.countInBars == bars) {
+                UiPrefs.chooseCountInBars(bars)
             }
         }
     }
@@ -390,9 +431,14 @@ fun TabbedDialog(
     maxBodyHeight: Dp = 560.dp,
     /** Between whatever a page puts in itself. */
     spacing: Dp = 6.dp,
+    confirmLabel: String = "",
+    onConfirm: (() -> Unit)? = null,
     chips: @Composable () -> Unit,
 ) {
-    DialogShell(title, onDismiss, dismissLabel, maxBodyHeight, chips = chips) {
+    DialogShell(
+        title, onDismiss, dismissLabel, maxBodyHeight,
+        confirmLabel = confirmLabel, onConfirm = onConfirm, chips = chips,
+    ) {
         TallestOf(selected, pages, spacing)
     }
 }
