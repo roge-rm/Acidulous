@@ -556,6 +556,50 @@ private fun App(modifier: Modifier = Modifier) {
         loopScene = on
         NativeEngine.setLoopScene(on)
     }
+    // Hoisted, so the chip on screen and a mapped pad press the same thing.
+    val onClipMode: (Boolean) -> Unit = { on ->
+        // Switching how the grid plays stops it playing. Half a song in one
+        // mode and half in the other is a class of bug nobody needs, and a
+        // performer expects a mode switch to be a reset.
+        NativeEngine.transportStop()
+        com.rm.acidulous.ui.UiPrefs.chooseClipMode(on)
+        NativeEngine.setLaunchQuantise(com.rm.acidulous.ui.UiPrefs.launchQuantise * song.signature.ticksPerBar)
+        launchStates = List(16) { LaunchState.idle }
+    }
+
+    // Controller mappings. The hub offers every CC and note-on here before it
+    // reaches the engine; this decides whether it is being learned, drives
+    // something, or is nobody's business and carries on as MIDI. It sits
+    // here, below the transport's own handlers, so a mapped pad presses
+    // exactly the button the screen would have pressed.
+    com.rm.acidulous.midi.MidiHub.onMappable = onMappable@{ cc, note, value, routedRack ->
+        val waiting = com.rm.acidulous.ui.UiPrefs.mapWaiting
+        if (com.rm.acidulous.ui.UiPrefs.mapMode && waiting != null) {
+            learnMapping(waiting, cc, note)
+            return@onMappable true
+        }
+        val m = com.rm.acidulous.model.Mappings.find(
+            song, com.rm.acidulous.ui.UiPrefs.mappings, cc = cc, note = note,
+        ) ?: return@onMappable false
+        val pressed = note != null || value >= com.rm.acidulous.model.Mappings.PRESS
+        if (m.isAction) {
+            if (pressed) {
+                when (m.action) {
+                    com.rm.acidulous.model.Action.Play.name -> NativeEngine.transportPlay()
+                    com.rm.acidulous.model.Action.Stop.name -> NativeEngine.transportStop()
+                    com.rm.acidulous.model.Action.PlayStop.name ->
+                        if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay()
+                    com.rm.acidulous.model.Action.Panic.name -> NativeEngine.panic()
+                    com.rm.acidulous.model.Action.RecordArm.name -> { armed = !armed; onArm(armed) }
+                    com.rm.acidulous.model.Action.LoopScene.name -> onLoopScene(!loopScene)
+                    com.rm.acidulous.model.Action.ClipMode.name -> onClipMode(!com.rm.acidulous.ui.UiPrefs.clipMode)
+                }
+            }
+        } else {
+            fireMapping(m, value, note != null, routedRack, editor, midiTrack)
+        }
+        true
+    }
 
     // A take that dies because the screen locked is a take lost, so the
     // window is held awake while the transport runs - and only while it
@@ -636,15 +680,7 @@ private fun App(modifier: Modifier = Modifier) {
             countInBeats = countInBeats,
             clipMode = com.rm.acidulous.ui.UiPrefs.clipMode,
             launchStates = launchStates,
-            onClipMode = { on ->
-                // Switching how the grid plays stops it playing. Half a song
-                // in one mode and half in the other is a class of bug nobody
-                // needs, and a performer expects a mode switch to be a reset.
-                NativeEngine.transportStop()
-                com.rm.acidulous.ui.UiPrefs.chooseClipMode(on)
-                NativeEngine.setLaunchQuantise(com.rm.acidulous.ui.UiPrefs.launchQuantise * song.signature.ticksPerBar)
-                launchStates = List(16) { LaunchState.idle }
-            },
+            onClipMode = onClipMode,
             loopScene = loopScene, stopAtEnd = stopAtEnd, queuedScene = queuedScene,
             bpm = bpm, diagnostics = diagnostics,
             rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn,
@@ -743,6 +779,62 @@ private fun App(modifier: Modifier = Modifier) {
  * Rounded *up*, because the first beat of a four-beat count should read
  * "4" for the whole of that beat rather than flicking to 3 immediately.
  */
+/**
+ * A control was waiting; this is what arrived. Bind them.
+ *
+ * The target is the string mapping mode parked there - `"rack:unit:name"`
+ * for a parameter or `"action:Panic"` for a button. Learned mappings go to
+ * the device, not the song: a controller is the room you are in, and the
+ * commonest thing is to set one up once and forget it. A song may still
+ * carry its own and they win; nothing in the UI writes those yet.
+ */
+private fun learnMapping(target: String, cc: Int?, note: Int?) {
+    val prefs = com.rm.acidulous.ui.UiPrefs
+    val parts = target.split(":")
+    val mapping = when {
+        parts.size == 2 && parts[0] == "action" ->
+            com.rm.acidulous.model.Mapping(cc = cc, note = note, action = parts[1])
+        parts.size == 3 -> com.rm.acidulous.model.Mapping(
+            cc = cc, note = note, unit = parts[1], name = parts[2],
+            rack = parts[0].toIntOrNull(),
+        )
+        else -> return
+    }
+    prefs.chooseMappings(com.rm.acidulous.model.Mappings.set(prefs.mappings, mapping))
+    prefs.chooseMapWaiting(null)
+}
+
+/**
+ * Something mapped arrived. Do what it says.
+ *
+ * A parameter takes the value; an action takes the press edge and nothing
+ * else, so holding a footswitch does not fire it twice and letting go does
+ * not fire it at all. A note on a two-step parameter toggles it, because
+ * that is what a pad on a switch should do; on anything else it sets the
+ * value from its velocity.
+ */
+private fun fireMapping(
+    m: com.rm.acidulous.model.Mapping,
+    value: Int,
+    fromNote: Boolean,
+    routedRack: Int,
+    editor: com.rm.acidulous.model.SongEditor,
+    selectedRack: Int,
+) {
+    val unit = m.unit ?: return
+    val name = m.name ?: return
+    val rack = m.rack ?: routedRack.takeIf { it in 0 until com.rm.acidulous.model.MAX_TRACKS } ?: selectedRack
+    val track = editor.song.tracks.getOrNull(rack) ?: return
+    val stepped = com.rm.acidulous.model.mappedParamInfo(track, unit, name)
+        ?.let { it.curve == 2 && it.steps == 2 } ?: false
+    val v01 = when {
+        fromNote && stepped -> if (com.rm.acidulous.model.currentMapped(track, unit, name) >= 0.5f) 0f else 1f
+        else -> value / 127f
+    }
+    editor.applyMapped(rack, unit, name, v01)
+}
+
+
 private fun countInBeatsOf(ticks: Long): Int =
     if (ticks <= 0) 0 else ((ticks + com.rm.acidulous.model.PPQN - 1) / com.rm.acidulous.model.PPQN).toInt()
 

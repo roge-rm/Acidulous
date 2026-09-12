@@ -124,6 +124,19 @@ object MidiHub {
     /** Which rack plays when routing is [Routing.SelectedTrack]. */
     var target: () -> Int = { 0 }
 
+    /**
+     * Offered every controller and note-on before it reaches the engine.
+     *
+     * Returns true when the mapping layer took it, and then it goes no
+     * further. The policy - what is mapped, what is being learned, what a
+     * mapped thing does - lives with the song and the editor rather than
+     * here; this is a hub, and it should not need to know what a lane is.
+     */
+    var onMappable: (cc: Int?, note: Int?, value: Int, rack: Int) -> Boolean = { _, _, _, _ -> false }
+
+    /** Notes a mapping swallowed, so their note-offs go the same way. */
+    private val swallowed = HashSet<Int>()
+
     /** Which rack plays when routing is [Routing.FixedTrack]. */
     var fixedRack by mutableStateOf(0)
 
@@ -430,7 +443,17 @@ object MidiHub {
             Routing.FixedTrack -> fixedRack
             Routing.ChannelToRack -> status and 0x0f
         }
-        NativeEngine.midiEvent(rack, kind, d1, d2)
+        // A note whose note-on a mapping took must not have its note-off
+        // delivered either, or the machine is left holding a note it was
+        // never given.
+        val isOff = kind == 0x80 || (kind == 0x90 && d2 == 0)
+        val taken = when {
+            isOff -> swallowed.remove(d1)
+            kind == 0xb0 -> onMappable(d1, null, d2, rack)
+            kind == 0x90 -> onMappable(null, d1, d2, rack).also { if (it) swallowed += d1 }
+            else -> false
+        }
+        if (!taken) NativeEngine.midiEvent(rack, kind, d1, d2)
         received += 1
         lastMessage = when (kind) {
             0x90 -> if (d2 == 0) "off $d1" else "on $d1 v$d2"

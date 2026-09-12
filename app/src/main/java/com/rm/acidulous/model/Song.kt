@@ -244,6 +244,11 @@ data class Song(
     /** Order is the arrangement. */
     val scenes: List<Scene> = emptyList(),
     val master: Master = Master(),
+    /**
+     * Controller mappings that belong to this music rather than to the room
+     * it is played in. These win over the device's own; see [Mappings.find].
+     */
+    val mappings: List<Mapping> = emptyList(),
 ) {
     fun signatureOf(scene: Scene): Signature = scene.signature ?: signature
 

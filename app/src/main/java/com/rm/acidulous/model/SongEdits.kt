@@ -122,6 +122,25 @@ fun Song.renameTrack(index: Int, name: String): Song = updateTrack(index) { it.c
 
 // --- Machine parameters (document side of a knob) ----------------------------------
 
+/**
+ * A mixer value by the name the engine and the lanes use for it.
+ *
+ * The strip's own fields are in musical units - a gain of 0..1.5, a pan of
+ * -1..1 - while everything that addresses it by name speaks normalised, so
+ * the conversion belongs here rather than at each caller.
+ */
+fun Track.withMixerParam(name: String, v01: Float): Track = copy(
+    mixer = when (name) {
+        "gain" -> mixer.copy(volume = EngineParams.volumeFrom01(v01))
+        "pan" -> mixer.copy(pan = EngineParams.panFrom01(v01))
+        "sendreverb" -> mixer.copy(sendReverb = v01)
+        "senddelay" -> mixer.copy(sendDelay = v01)
+        "mute" -> mixer.copy(mute = v01 >= 0.5f)
+        "solo" -> mixer.copy(solo = v01 >= 0.5f)
+        else -> mixer
+    },
+)
+
 fun Track.withParam(name: String, v01: Float): Track =
     copy(machine = machine.copy(params = machine.params + (name to v01.coerceIn(0f, 1f))))
 

@@ -44,6 +44,33 @@ class SongEditor(
         onChange(song, push)
     }
 
+    /**
+     * A mapped controller moved a parameter.
+     *
+     * The same three things a knob does, because a mapping is a knob that
+     * happens to be somewhere else: the engine hears it, the lane records it
+     * while the transport is armed, and the document keeps it so the knob on
+     * screen agrees and the patch saves. Doing only the first would move the
+     * sound and leave the knob behind.
+     *
+     * Not a gesture, so no undo entry per message: a knob sweep would fill
+     * the history with a hundred of them. The value lands in the document
+     * without a history push, which is what `push = false` is for.
+     */
+    fun applyMapped(trackIndex: Int, unit: String, name: String, v01: Float) {
+        com.rm.acidulous.engine.NativeEngine.setParam(trackIndex, unit, name, v01, record = true)
+        val slot = effectSlotOf(unit) ?: eventorSlotOf(unit)
+        edit(trackIndex, push = false) { track ->
+            when {
+                unit == "machine" -> track.withParam(name, v01)
+                unit.startsWith("effect") && slot != null -> track.withEffectParam(slot, name, v01)
+                unit.startsWith("eventor") && slot != null -> track.withEventorParam(slot, name, v01)
+                unit == "channel" -> track.withMixerParam(name, v01)
+                else -> track
+            }
+        }
+    }
+
     // --- Track-scoped edits (undoable) ---------------------------------------------
 
     fun edit(trackIndex: Int, push: Boolean = true, f: (Track) -> Track) {

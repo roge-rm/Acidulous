@@ -90,6 +90,25 @@ object UiPrefs {
     var keepAwake by mutableStateOf(true)
         private set
 
+    // --- Controller mappings ---------------------------------------------
+    /** The device's own mappings; a song's win over these. */
+    var mappings by mutableStateOf<List<com.rm.acidulous.model.Mapping>>(emptyList())
+        private set
+
+    /**
+     * Mapping mode: every mappable control says so, and a tap arms it.
+     *
+     * Not persisted. It is a mode you are in for a minute, and coming back
+     * to the app in it - with every knob lit and none of them turning - is
+     * a puzzle nobody needs to solve twice.
+     */
+    var mapMode by mutableStateOf(false)
+        private set
+
+    /** The target waiting for a controller to arrive, or null. */
+    var mapWaiting by mutableStateOf<String?>(null)
+        private set
+
     // --- Metronome -------------------------------------------------------
     // The click belongs to the person and the device rather than the song:
     // two people working on the same file want different clicks, and
@@ -136,6 +155,11 @@ object UiPrefs {
         fullQuality = p.getBoolean(KEY_QUALITY, true)
         recordBits = p.getInt(KEY_BITS, 24)
         keepAwake = p.getBoolean(KEY_AWAKE, true)
+        mappings = runCatching {
+            kotlinx.serialization.json.Json.decodeFromString<List<com.rm.acidulous.model.Mapping>>(
+                p.getString(KEY_MAPPINGS, null) ?: "[]",
+            )
+        }.getOrDefault(emptyList())
         clickVoice = p.getInt(KEY_CLICK_VOICE, 0)
         clickDivision = p.getInt(KEY_CLICK_DIV, 1)
         clickVolume = p.getFloat(KEY_CLICK_VOL, 0.5f)
@@ -227,6 +251,24 @@ object UiPrefs {
         NativeEngine.setRecordBits(bits)
     }
 
+    fun chooseMapMode(on: Boolean) {
+        mapMode = on
+        if (!on) mapWaiting = null
+    }
+
+    /** Arm a target, or disarm it if it was already the one waiting. */
+    fun chooseMapWaiting(target: String?) {
+        mapWaiting = if (target != null && target == mapWaiting) null else target
+    }
+
+    fun chooseMappings(list: List<com.rm.acidulous.model.Mapping>) {
+        mappings = list
+        store?.edit()?.putString(
+            KEY_MAPPINGS,
+            kotlinx.serialization.json.Json.encodeToString(list),
+        )?.apply()
+    }
+
     fun chooseClickVoice(v: Int) {
         clickVoice = v.coerceIn(0, 2)
         store?.edit()?.putInt(KEY_CLICK_VOICE, clickVoice)?.apply()
@@ -312,6 +354,7 @@ object UiPrefs {
     private const val KEY_QUALITY = "quality_full"
     private const val KEY_BITS = "record_bits"
     private const val KEY_AWAKE = "keep_awake"
+    private const val KEY_MAPPINGS = "cc_mappings"
     private const val KEY_CLICK_VOICE = "click_voice"
     private const val KEY_CLICK_DIV = "click_div"
     private const val KEY_CLICK_VOL = "click_vol"
