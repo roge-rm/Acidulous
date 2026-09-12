@@ -130,71 +130,61 @@ void Engine::renderBlock(const float *in, float *out) {
     // what the engine's free-running clock already did.
     emitClock(clock.blockStart(), clock.blockEnd());
 
-    // Metronome: every beat boundary this block crossed, at its sample offset.
-    if (playing && master.clickEnabled() && scheduler.launcherActive()) {
-        // No scene owns the bar line here, so the song's signature counts
-        // from the transport's own zero.
-        const int64_t ticksPerBar = scheduler.songTicksPerBar();
-        const float samplesPerTick = static_cast<float>(kSampleRate) * 60.0f / (clock.bpm() * static_cast<float>(kPPQN));
-        const int64_t from = clock.blockStart(), to = clock.blockEnd();
-        int64_t t = (from / kPPQN) * kPPQN;
-        if (t < from) t += kPPQN;
-        for (; t < to; t += kPPQN) {
-            const int32_t offset = static_cast<int32_t>(static_cast<float>(t - from) * samplesPerTick);
-            master.clickAt(t % ticksPerBar == 0, offset < kBlockFrames ? offset : kBlockFrames - 1);
-        }
-    } else if (playing && master.clickEnabled() && sceneBefore != nullptr) {
-        const int64_t tickEnd = scheduler.currentTickInIteration();
-        const int64_t ticksPerBar = sceneBefore->ticksPerBar;
-        const int64_t iterLen = sceneBefore->iterationTicks() > 0 ? sceneBefore->iterationTicks() : ticksPerBar;
-        // The offset comes from the clock, which knows the sub-tick phase.
-        // Worked out here instead, from the block's start as though it began
-        // on a tick boundary, every click was late by up to a whole tick -
-        // two milliseconds at 120 bpm - and any offset past the block was
-        // clamped to its end. It had been doing that since M2.
-        const int64_t absStart = clock.blockStart();
-        auto beatsIn = [&](int64_t from, int64_t to, int64_t baseOffsetTicks) {
-            int64_t t = (from / kPPQN) * kPPQN;
-            if (t < from) t += kPPQN;
-            for (; t < to; t += kPPQN) {
-                const double at = clock.frameOffsetOfTick(absStart + baseOffsetTicks + t - from, kBlockFrames);
-                int32_t offset = static_cast<int32_t>(at < 0.0 ? 0.0 : at);
-                if (offset >= kBlockFrames) offset = kBlockFrames - 1;
-                master.clickAt(t % ticksPerBar == 0, offset);
-            }
+    // Metronome: every click boundary this block crossed, at its own sample
+    // offset. The step is a bar or a division of the beat; the accent says
+    // which of the three it is, because a metronome ticking sixteenths all
+    // at one level is a buzz you cannot find the beat in.
+    if (playing && master.clickEnabled()) {
+        const int64_t stepTicks = master.clickStepTicks();
+        auto accentFor = [](int64_t tickInBar, int64_t ticksPerBar) {
+            if (ticksPerBar > 0 && tickInBar % ticksPerBar == 0) return static_cast<int32_t>(dsp::Click::Bar);
+            if (tickInBar % kPPQN == 0) return static_cast<int32_t>(dsp::Click::Beat);
+            return static_cast<int32_t>(dsp::Click::Division);
         };
-        if (tickEnd >= tickStart) {
-            beatsIn(tickStart, tickEnd, 0);
-        } else { // wrapped an iteration inside this block
-            beatsIn(tickStart, iterLen, 0);
-            beatsIn(0, tickEnd, iterLen - tickStart);
-        }
-    }
 
-    // Scene fades: in over the first bar of the first pass, out over the last
-    // bar of the last pass. Stateless - derived from the position each block.
-    float fade = 1.0f;
-    if (playing && sceneBefore != nullptr && !scheduler.launcherActive()) {
-        const int64_t tpb = sceneBefore->ticksPerBar;
-        const int64_t iterLen = sceneBefore->iterationTicks();
-        if (sceneBefore->fadeIn && repeatBefore == 0 && tickStart < tpb) {
-            fade = static_cast<float>(tickStart) / static_cast<float>(tpb);
-        } else if (sceneBefore->fadeOut && repeatBefore == sceneBefore->repeat - 1 && tickStart >= iterLen - tpb) {
-            fade = static_cast<float>(iterLen - tickStart) / static_cast<float>(tpb);
-        }
-    }
-
-    for (int32_t r = 0; r < kRackCount; ++r) {
-        if (racks[r].isActive()) {
-            if (racks[r].frozenActive()) {
-                racks[r].syncFrozen(scheduler.rackTick(r), clock.bpm());
-            } else {
-                racks[r].onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
+        if (scheduler.launcherActive()) {
+            // No scene owns the bar line here, so the song's signature
+            // counts from the transport's own zero.
+            const int64_t ticksPerBar = scheduler.songTicksPerBar();
+            const int64_t step = stepTicks > 0 ? stepTicks : (ticksPerBar > 0 ? ticksPerBar : kPPQN);
+            const int64_t from = clock.blockStart(), to = clock.blockEnd();
+            int64_t t = (from / step) * step;
+            if (t < from) t += step;
+            for (; t < to; t += step) {
+                const double at = clock.frameOffsetOfTick(t, kBlockFrames);
+                master.clickAt(accentFor(t % ticksPerBar, ticksPerBar),
+                               static_cast<int32_t>(at < 0.0 ? 0.0 : at));
             }
-            racks[r].render(kBlockFrames);
+        } else if (sceneBefore != nullptr) {
+            const int64_t tickEnd = scheduler.currentTickInIteration();
+            const int64_t ticksPerBar = sceneBefore->ticksPerBar;
+            const int64_t iterLen = sceneBefore->iterationTicks() > 0 ? sceneBefore->iterationTicks() : ticksPerBar;
+            const int64_t step = stepTicks > 0 ? stepTicks : (ticksPerBar > 0 ? ticksPerBar : kPPQN);
+            // The offset comes from the clock, which knows the sub-tick
+            // phase. Worked out here instead, from the block's start as
+            // though it began on a tick boundary, every click was late by up
+            // to a whole tick - two milliseconds at 120 bpm - and any offset
+            // past the block was clamped to its end. It had been doing that
+            // since M2. Nothing is clamped now: an offset past this block is
+            // carried into the next one, which a fast division needs.
+            const int64_t absStart = clock.blockStart();
+            auto clicksIn = [&](int64_t from, int64_t to, int64_t baseOffsetTicks) {
+                int64_t t = (from / step) * step;
+                if (t < from) t += step;
+                for (; t < to; t += step) {
+                    const double at = clock.frameOffsetOfTick(absStart + baseOffsetTicks + t - from, kBlockFrames);
+                    master.clickAt(accentFor(t % ticksPerBar, ticksPerBar),
+                                   static_cast<int32_t>(at < 0.0 ? 0.0 : at));
+                }
+            };
+            if (tickEnd >= tickStart) {
+                clicksIn(tickStart, tickEnd, 0);
+            } else { // wrapped an iteration inside this block
+                clicksIn(tickStart, iterLen, 0);
+                clicksIn(0, tickEnd, iterLen - tickStart);
+            }
         }
     }
-    master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade);
 
     // Monitoring is after the master so it is heard at the master's level,
     // and deliberately not recorded when capturing the input: nobody wants

@@ -16,7 +16,7 @@ class MasterBus {
     enum P : int32_t {
         Volume, ReverbOn, ReverbSize, ReverbDamp, ReverbTone,
         DelayOn, DelayTime, DelayFeedback, DelayTone, DelayPingPong,
-        LimiterOn, LimiterDrive, ClickOn, ClickVolume, Count
+        LimiterOn, LimiterDrive, ClickOn, ClickVolume, ClickVoice, ClickDiv, Count
     };
 
     MasterBus();
@@ -28,8 +28,29 @@ class MasterBus {
     // be pending from the metronome.
     void process(Rack *racks, int32_t rackCount, float *outInterleaved, int32_t frames, float bpm, float fade);
 
-    void clickAt(bool downbeat, int32_t offsetSamples) { click.trigger(downbeat, offsetSamples); }
+    /** [accent] is dsp::Click::Bar, Beat or Division. */
+    void clickAt(int32_t accent, int32_t offsetSamples) { click.trigger(accent, offsetSamples); }
+    void setClickVoice(int32_t voice) { click.setVoice(voice); }
     bool clickEnabled() const { return params_.get(ClickOn) >= 0.5f; }
+
+    /**
+     * How often it ticks, in ticks: a bar, or a division of the beat.
+     *
+     * Read off the *target* rather than the smoothed value, as every
+     * stepped control must be - a smoothed one slides through the values
+     * in between on its way, and here that would mean the metronome
+     * briefly ticking sixteenths on its way from eighths to a bar.
+     */
+    int64_t clickStepTicks() const {
+        const int32_t index = static_cast<int32_t>(params_.normalized(ClickDiv) * 4.0f + 0.5f);
+        switch (index) {
+        case 0: return 0;             // the bar, whatever the signature says it is
+        case 2: return kPPQN / 2;     // eighths
+        case 3: return kPPQN / 4;     // sixteenths
+        case 4: return kPPQN / 3;     // eighth triplets
+        default: return kPPQN;        // the beat
+        }
+    }
 
     float readPeak() { return peakHold.exchange(0.0f, std::memory_order_relaxed); }
     float currentFade() const { return fadeNow.load(std::memory_order_relaxed); }

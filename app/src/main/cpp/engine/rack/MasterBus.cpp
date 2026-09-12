@@ -19,6 +19,8 @@ const ParamDef kDefs[MasterBus::Count] = {
     {"limiterdrive", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
     {"clickon", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
     {"clickvolume", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+    {"clickvoice", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},  // blip, stick, cowbell
+    {"clickdiv", 0.0f, 4.0f, 1.0f, Curve::Stepped, 5, ""},    // bar, 1/4, 1/8, 1/16, 1/8T
 };
 } // namespace
 
@@ -72,8 +74,21 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
     const float volume = params_.get(Volume);
     for (int32_t i = 0; i < frames; ++i) { sumL[i] *= volume; sumR[i] *= volume; }
 
+    // The click goes in after the limiter, so that a metronome can never
+    // duck the music every beat. That leaves it free to push the sum past
+    // full scale and into the clamp below, and it did: the limiter aims at
+    // 0.95 and a click at its default adds 0.30 on top, so every beat over
+    // a loud mix clipped - which sounds like the song distorting, not like
+    // the metronome.
+    //
+    // So the limiter gives up exactly the headroom the click is about to
+    // use. While the metronome is on the ceiling comes down by the click's
+    // own peak; the music loses a fixed fraction of a decibel instead of
+    // pumping, and has it back the moment the metronome goes off.
+    const float clickPeak = clickEnabled() ? dsp::Click::peakFor(params_.get(ClickVolume)) : 0.0f;
     if (params_.get(LimiterOn) >= 0.5f) {
-        limiter.set(params_.get(LimiterDrive), 0.95f);
+        const float ceiling = 0.95f - clickPeak;
+        limiter.set(params_.get(LimiterDrive), ceiling < 0.2f ? 0.2f : ceiling);
         limiter.process(sumL, sumR);
     }
 
@@ -82,7 +97,15 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
     fadeNow.store(f, std::memory_order_relaxed);
     for (int32_t i = 0; i < frames; ++i) { sumL[i] *= f; sumR[i] *= f; }
 
-    if (clickEnabled()) click.process(sumL, sumR, frames, params_.get(ClickVolume));
+    // With the limiter off there is no ceiling to borrow from, so a loud
+    // mix plus a click can still meet the clamp. That is the user's own
+    // arrangement of things, and the metronome is not what broke it.
+    if (clickEnabled()) {
+        // Stepped, so off the target rather than the smoothed value: a
+        // voice sliding from blip to cowbell would pass through stick.
+        click.setVoice(static_cast<int32_t>(params_.normalized(ClickVoice) * 2.0f + 0.5f));
+        click.process(sumL, sumR, frames, params_.get(ClickVolume));
+    }
 
     // Coming back from a panic, the output is ramped rather than switched,
     // so the recovery itself cannot click.
