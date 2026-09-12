@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Working design notes. Kept on disk, never committed.
+/docs/

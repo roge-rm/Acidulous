@@ -19,8 +19,3 @@ Everything else in this repository is original work. The C++ engine, every
 machine and effect, the sequencer, the WAV, AIFF and FLAC writers and the
 MIDI file writer were all written for this project; no DSP, presets or
 samples are taken from anywhere else.
-
-Two documents in docs/ record the feature sets this project is an homage to
-— the reference app and the reference sequencer. They are notes on what
-those programs do, written from public documentation and cited as such. No
-code, preset or sample from either is used here.
