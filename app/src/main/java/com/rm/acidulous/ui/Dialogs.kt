@@ -143,46 +143,44 @@ fun ClipSettingsDialog(
     var mute by remember { mutableStateOf(clip.mute) }
     var grid by remember { mutableStateOf(clip.grid) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Clip") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Stepper("Bars", bars, 1, 16) { bars = it }
-                Text("Play mode", fontSize = 12.sp)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    SmallToggle("Loop", mode == PlayMode.Loop) { mode = PlayMode.Loop }
-                    SmallToggle("1-Shot", mode == PlayMode.OneShot) { mode = PlayMode.OneShot }
-                }
-                LabeledSwitch("Mute", mute) { mute = it }
-                Text("Grid", fontSize = 12.sp)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    for ((label, ticks) in GRIDS) SmallToggle(label, grid == ticks) { grid = ticks }
-                }
-                // Freeze is an action rather than a setting, so it does its
-                // own thing and closes: the other fields here are edits that
-                // wait for OK.
-                val frozen = clip.frozen
-                if (frozen != null) {
-                    val stale = tempo > 0f && kotlin.math.abs(frozen.bpm - tempo) >= 0.01f
-                    Text(
-                        "Frozen: %.1f s of audio at %.0f bpm, peak %.2f.".format(
-                            frozen.frames / 48000f, frozen.bpm, frozen.peak,
-                        ) + if (stale) " The song is at %.0f now, so the machine is playing instead - freeze it again.".format(tempo) else "",
-                        fontSize = 11.sp,
-                    )
-                    OutlinedButton(onClick = onThaw) { Text("Thaw", fontSize = 12.sp) }
-                } else if (clip.notes.isNotEmpty()) {
-                    Text("Freezing renders this clip to audio: the track stops running its machine.", fontSize = 11.sp)
-                    OutlinedButton(onClick = onFreeze) { Text("Freeze", fontSize = 12.sp) }
-                }
+    PlainDialog(
+        title = "Clip",
+        onDismiss = onDismiss,
+        confirmLabel = "OK",
+        onConfirm = { onConfirm(clip.copy(bars = bars, playMode = mode, mute = mute, grid = grid)) },
+    ) {
+        SliderSection("bars", "$bars", "", bars.toFloat(), 1f..16f, 14) { bars = it.toInt().coerceIn(1, 16) }
+
+        Section("plays") {
+            Choice("loop", mode == PlayMode.Loop) { mode = PlayMode.Loop }
+            Choice("once", mode == PlayMode.OneShot) { mode = PlayMode.OneShot }
+            Choice("mute", mute) { mute = !mute }
+        }
+
+        Section("grid") {
+            for ((label, ticks) in GRIDS) {
+                Choice(label, grid == ticks) { grid = ticks }
             }
-        },
-        confirmButton = {
-            Button(onClick = { onConfirm(clip.copy(bars = bars, playMode = mode, mute = mute, grid = grid)) }) { Text("OK") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+        }
+
+        // Freeze is an action rather than a setting, so it does its own
+        // thing and closes; everything above waits for OK.
+        val frozen = clip.frozen
+        if (frozen != null) {
+            val stale = tempo > 0f && kotlin.math.abs(frozen.bpm - tempo) >= 0.01f
+            ListSection(
+                "audio",
+                "%.1f s of audio at %.0f bpm, peak %.2f.".format(frozen.frames / 48000f, frozen.bpm, frozen.peak) +
+                    if (stale) " The song is at %.0f now, so the machine is playing instead - freeze it again.".format(tempo) else "",
+            ) {
+                Choice("thaw", false, onPick = onThaw)
+            }
+        } else if (clip.notes.isNotEmpty()) {
+            ListSection("audio", "Freezing renders this clip down: the track stops running its machine.") {
+                Choice("freeze", false, onPick = onFreeze)
+            }
+        }
+    }
 }
 
 /** A name and its line, at a height every row shares. */
@@ -429,32 +427,6 @@ private fun ClickPage() {
                 UiPrefs.chooseCountInBars(bars)
             }
         }
-    }
-}
-
-// --- Small building blocks ------------------------------------------------------------
-
-@Composable
-private fun SmallToggle(label: String, selected: Boolean, onClick: () -> Unit) {
-    if (selected) Button(onClick = onClick) { Text(label, fontSize = 11.sp) }
-    else OutlinedButton(onClick = onClick) { Text(label, fontSize = 11.sp) }
-}
-
-@Composable
-private fun Stepper(label: String, value: Int, min: Int, max: Int, onChange: (Int) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(label, fontSize = 12.sp, modifier = Modifier.padding(end = 4.dp))
-        OutlinedButton(onClick = { if (value > min) onChange(value - 1) }) { Text("−") }
-        Text(value.toString(), fontFamily = FontFamily.Monospace)
-        OutlinedButton(onClick = { if (value < max) onChange(value + 1) }) { Text("+") }
-    }
-}
-
-@Composable
-private fun LabeledSwitch(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-        Text(label, fontSize = 12.sp)
-        Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 
