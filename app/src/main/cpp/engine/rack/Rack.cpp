@@ -1,5 +1,6 @@
 #include "Rack.h"
 #include <cmath>
+#include <cstdlib> // std::llabs, which the NDK happens to pull in and a host g++ does not
 
 namespace acidulous {
 
