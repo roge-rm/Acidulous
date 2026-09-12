@@ -19,6 +19,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.midi.MidiHub
+import com.rm.acidulous.model.Mapping
+import com.rm.acidulous.model.Mappings
+import com.rm.acidulous.model.Song
 import com.rm.acidulous.ui.theme.Acid
 
 /**
@@ -37,7 +40,8 @@ import com.rm.acidulous.ui.theme.Acid
  * one says out loud what it thinks is happening.
  */
 @Composable
-fun MidiDialog(trackNames: List<String>, onDismiss: () -> Unit) {
+fun MidiDialog(song: Song, onDismiss: () -> Unit) {
+    val trackNames = song.tracks.map { it.name }
     val context = LocalContext.current
     var tab by rememberSaveable { mutableStateOf(0) }
     LaunchedEffect(Unit) { MidiHub.refresh() }
@@ -52,12 +56,13 @@ fun MidiDialog(trackNames: List<String>, onDismiss: () -> Unit) {
             { DevicesTab(context) },
             { InTab(trackNames) },
             { OutTab() },
+            { MapTab(song) },
             { SyncTab() },
         ),
     )
 }
 
-private val TABS = listOf("devices", "in", "out", "sync")
+private val TABS = listOf("devices", "in", "out", "map", "sync")
 
 /** What is plugged in, and the hunt for what is not. */
 @Composable
@@ -251,6 +256,86 @@ private fun SyncTab() {
                     Text("test clock", color = Acid.colors.accent, fontSize = 12.sp)
                 }
                 Text("ten seconds of a perfect 120, from inside the app", color = Acid.colors.textDim, fontSize = 11.sp)
+            }
+        }
+    }
+}
+
+/**
+ * What the hardware has been pointed at.
+ *
+ * Mapping is learned by touching things, not by filling in a table, so this
+ * is a receipt rather than an editor: it says what is bound, which notes are
+ * no longer free to play, and offers the one destructive thing that has no
+ * home on a knob - forget the lot.
+ *
+ * The song's mappings and the device's are listed apart because they behave
+ * differently: the device's travel with the controller and the song's travel
+ * with the music, and when both claim a controller the song wins.
+ */
+@Composable
+private fun MapTab(song: Song) {
+    val device = UiPrefs.mappings
+    ListSection("mapping mode") {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { UiPrefs.chooseMapMode(!UiPrefs.mapMode) }) {
+                Text(
+                    if (UiPrefs.mapMode) "⇢ mapping: on" else "⇢ mapping: off",
+                    color = if (UiPrefs.mapMode) Acid.colors.accent else Acid.colors.textMid,
+                    fontSize = 12.sp,
+                )
+            }
+        }
+        Text(
+            "Tap a knob, fader or transport button, then move the control or hit the pad " +
+                "you want to drive it. Long-press one to forget it. The ⇢ button beside undo " +
+                "does the same thing from anywhere.",
+            color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
+        )
+    }
+
+    MappingList("this song", song.mappings, song)
+    MappingList("this device", device, song)
+
+    ListSection("notes in use") {
+        val claimed = Mappings.claimedNotes(song, device)
+        Readout(
+            if (claimed.isEmpty()) "none - every note still plays"
+            else claimed.joinToString(", ") { Mapping(note = it).sourceLabel().removePrefix("note ") } +
+                " · these fire their mapping instead of sounding",
+            good = claimed.isEmpty(),
+        )
+    }
+
+    ListSection("reset") {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextButton(
+                enabled = device.isNotEmpty(),
+                onClick = { UiPrefs.chooseMappings(emptyList()); UiPrefs.chooseMapWaiting(null) },
+            ) { Text("forget device mappings", color = Acid.colors.red, fontSize = 12.sp) }
+        }
+        Readout("${device.size} on this device, ${song.mappings.size} in this song")
+    }
+}
+
+@Composable
+private fun MappingList(title: String, mappings: List<Mapping>, song: Song) {
+    ListSection(title) {
+        if (mappings.isEmpty()) {
+            Readout("nothing mapped")
+            return@ListSection
+        }
+        for (m in mappings.sortedWith(compareBy({ it.cc ?: 1000 }, { it.note ?: 1000 }))) {
+            val track = m.rack?.let { song.tracks.getOrNull(it) } ?: song.tracks.firstOrNull()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    m.sourceLabel().padEnd(10),
+                    color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                )
+                Text(
+                    m.targetLabel(track) + if (m.rack != null) "  (track ${m.rack + 1})" else "",
+                    color = Acid.colors.text, fontSize = 11.sp,
+                )
             }
         }
     }

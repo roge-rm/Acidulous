@@ -197,3 +197,29 @@ fun Song.durationSeconds(): Float {
     }
     return total
 }
+
+/**
+ * The master section by parameter name, so a mapped controller reaches it
+ * the same way a mapped controller reaches a track.
+ *
+ * The names are the engine's own ([MasterBus]'s table), which is what makes
+ * this the mirror of [Track.withMixerParam] rather than a second vocabulary.
+ */
+fun Song.withMasterParam(name: String, v01: Float): Song = copy(
+    master = when (name) {
+        "volume" -> master.copy(volume = EngineParams.volumeFrom01(v01))
+        "reverbon" -> master.copy(reverb = master.reverb.copy(on = v01 >= 0.5f))
+        "reverbsize" -> master.copy(reverb = master.reverb.copy(size = v01))
+        "reverbdamp" -> master.copy(reverb = master.reverb.copy(damp = v01))
+        "reverbtone" -> master.copy(reverb = master.reverb.copy(tone = v01))
+        "delayon" -> master.copy(delay = master.delay.copy(on = v01 >= 0.5f))
+        "delaytime" -> master.copy(delay = master.delay.copy(
+            time = Math.round(v01 * (EngineParams.DELAY_TIMES - 1)).coerceIn(0, EngineParams.DELAY_TIMES - 1)))
+        "delayfeedback" -> master.copy(delay = master.delay.copy(feedback = v01))
+        "delaytone" -> master.copy(delay = master.delay.copy(tone = v01))
+        "delaypingpong" -> master.copy(delay = master.delay.copy(pingPong = v01 >= 0.5f))
+        "limiteron" -> master.copy(limiter = master.limiter.copy(on = v01 >= 0.5f))
+        "limiterdrive" -> master.copy(limiter = master.limiter.copy(drive = v01))
+        else -> master
+    },
+)

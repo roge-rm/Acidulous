@@ -70,6 +70,7 @@ private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEdit
         editor.updateGesture { t -> t.copy(mixer = update(t.mixer)) }
     }
     fun tap(update: (Mixer) -> Mixer) = editor.edit(index) { t -> t.copy(mixer = update(t.mixer)) }
+    fun map(name: String) = MapTargets.param(index, "channel", name)
 
     Column(
         Modifier.width(STRIP_W).clip(RoundedCornerShape(6.dp)).background(c.cardAlt).padding(4.dp),
@@ -81,7 +82,7 @@ private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEdit
             Meter(peak, Modifier.width(8.dp).height(FADER_H))
             VerticalFader(
                 value = EngineParams.volume01(m.volume),
-                modifier = Modifier.width(36.dp).height(FADER_H),
+                modifier = Modifier.width(36.dp).height(FADER_H).mappable(map("gain")),
                 accent = colour,
                 onStart = { editor.beginGesture(index) },
                 onChange = { v -> gesture("gain", v) { it.copy(volume = EngineParams.volumeFrom01(v)) } },
@@ -90,7 +91,8 @@ private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEdit
         }
         Labeled("pan") {
             MiniSlider(
-                value = EngineParams.pan01(m.pan), centered = true, modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp),
+                value = EngineParams.pan01(m.pan), centered = true,
+                modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("pan")),
                 onStart = { editor.beginGesture(index) },
                 onChange = { v -> gesture("pan", v) { it.copy(pan = EngineParams.panFrom01(v)) } },
                 onEnd = { editor.endGesture() },
@@ -98,7 +100,8 @@ private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEdit
         }
         Labeled("rev") {
             MiniSlider(
-                value = m.sendReverb, modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp),
+                value = m.sendReverb,
+                modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("sendreverb")),
                 onStart = { editor.beginGesture(index) },
                 onChange = { v -> gesture("sendreverb", v) { it.copy(sendReverb = v) } },
                 onEnd = { editor.endGesture() },
@@ -106,15 +109,16 @@ private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEdit
         }
         Labeled("dly") {
             MiniSlider(
-                value = m.sendDelay, modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp),
+                value = m.sendDelay,
+                modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("senddelay")),
                 onStart = { editor.beginGesture(index) },
                 onChange = { v -> gesture("senddelay", v) { it.copy(sendDelay = v) } },
                 onEnd = { editor.endGesture() },
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            ToggleChip("M", m.mute, c.red) { tap { it.copy(mute = !it.mute) } }
-            ToggleChip("S", m.solo, c.accent) { tap { it.copy(solo = !it.solo) } }
+            ToggleChip("M", m.mute, c.red, Modifier.mappable(map("mute"))) { tap { it.copy(mute = !it.mute) } }
+            ToggleChip("S", m.solo, c.accent, Modifier.mappable(map("solo"))) { tap { it.copy(solo = !it.solo) } }
         }
         // Where this track's notes go. Off, both, or out only - and at "out"
         // the machine is not asked at all, which is how driving something
@@ -143,6 +147,9 @@ private fun MasterStrip(song: Song, editor: SongEditor, peak: Float, clickOn: Bo
         live(name, v01)
         editor.updateSongGesture(update)
     }
+    // The master is rack 0 by convention - it has no rack of its own, and a
+    // mapping to it never follows the routing.
+    fun map(name: String) = MapTargets.param(0, "master", name)
 
     Column(
         Modifier.width(MASTER_W).clip(RoundedCornerShape(6.dp)).background(c.cardHi).padding(4.dp),
@@ -153,20 +160,20 @@ private fun MasterStrip(song: Song, editor: SongEditor, peak: Float, clickOn: Bo
             Meter(peak, Modifier.width(8.dp).height(FADER_H))
             VerticalFader(
                 value = EngineParams.volume01(master.volume),
-                modifier = Modifier.width(36.dp).height(FADER_H),
+                modifier = Modifier.width(36.dp).height(FADER_H).mappable(map("volume")),
                 accent = Acid.colors.knobPointer,
                 onStart = { editor.beginSongGesture() },
                 onChange = { v -> gesture("volume", v) { s -> s.copy(master = s.master.copy(volume = EngineParams.volumeFrom01(v))) } },
                 onEnd = { editor.endSongGesture() },
             )
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                ToggleChip("reverb", master.reverb.on, c.teal) {
+                ToggleChip("reverb", master.reverb.on, c.teal, Modifier.mappable(map("reverbon"))) {
                     editor.editSong { s -> s.copy(master = s.master.copy(reverb = s.master.reverb.copy(on = !s.master.reverb.on))) }
                 }
-                ToggleChip("delay", master.delay.on, c.teal) {
+                ToggleChip("delay", master.delay.on, c.teal, Modifier.mappable(map("delayon"))) {
                     editor.editSong { s -> s.copy(master = s.master.copy(delay = s.master.delay.copy(on = !s.master.delay.on))) }
                 }
-                ToggleChip("limiter", master.limiter.on, c.teal) {
+                ToggleChip("limiter", master.limiter.on, c.teal, Modifier.mappable(map("limiteron"))) {
                     editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
                 }
                 ToggleChip("♩ click", clickOn, c.accent) { onClick(!clickOn) }
@@ -175,19 +182,19 @@ private fun MasterStrip(song: Song, editor: SongEditor, peak: Float, clickOn: Bo
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Column {
                 Labeled("rev size") {
-                    MiniSlider(master.reverb.size, Modifier.width(88.dp).height(20.dp),
+                    MiniSlider(master.reverb.size, Modifier.width(88.dp).height(20.dp).mappable(map("reverbsize")),
                         onStart = { editor.beginSongGesture() },
                         onChange = { v -> gesture("reverbsize", v) { s -> s.copy(master = s.master.copy(reverb = s.master.reverb.copy(size = v))) } },
                         onEnd = { editor.endSongGesture() })
                 }
                 Labeled("rev damp") {
-                    MiniSlider(master.reverb.damp, Modifier.width(88.dp).height(20.dp),
+                    MiniSlider(master.reverb.damp, Modifier.width(88.dp).height(20.dp).mappable(map("reverbdamp")),
                         onStart = { editor.beginSongGesture() },
                         onChange = { v -> gesture("reverbdamp", v) { s -> s.copy(master = s.master.copy(reverb = s.master.reverb.copy(damp = v))) } },
                         onEnd = { editor.endSongGesture() })
                 }
                 Labeled("limit drive") {
-                    MiniSlider(master.limiter.drive, Modifier.width(88.dp).height(20.dp),
+                    MiniSlider(master.limiter.drive, Modifier.width(88.dp).height(20.dp).mappable(map("limiterdrive")),
                         onStart = { editor.beginSongGesture() },
                         onChange = { v -> gesture("limiterdrive", v) { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(drive = v))) } },
                         onEnd = { editor.endSongGesture() })
@@ -200,13 +207,13 @@ private fun MasterStrip(song: Song, editor: SongEditor, peak: Float, clickOn: Bo
                     }) { Text(EngineParams.DELAY_TIME_NAMES[master.delay.time.coerceIn(0, EngineParams.DELAY_TIMES - 1)], fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
                 }
                 Labeled("dly fb") {
-                    MiniSlider(master.delay.feedback, Modifier.width(88.dp).height(20.dp),
+                    MiniSlider(master.delay.feedback, Modifier.width(88.dp).height(20.dp).mappable(map("delayfeedback")),
                         onStart = { editor.beginSongGesture() },
                         onChange = { v -> gesture("delayfeedback", v) { s -> s.copy(master = s.master.copy(delay = s.master.delay.copy(feedback = v))) } },
                         onEnd = { editor.endSongGesture() })
                 }
                 Labeled("dly tone") {
-                    MiniSlider(master.delay.tone, Modifier.width(88.dp).height(20.dp),
+                    MiniSlider(master.delay.tone, Modifier.width(88.dp).height(20.dp).mappable(map("delaytone")),
                         onStart = { editor.beginSongGesture() },
                         onChange = { v -> gesture("delaytone", v) { s -> s.copy(master = s.master.copy(delay = s.master.delay.copy(tone = v))) } },
                         onEnd = { editor.endSongGesture() })
@@ -227,10 +234,16 @@ private fun Labeled(label: String, content: @Composable () -> Unit) {
 // Material buttons carry a 40 dp minimum height; these have to stack four high
 // beside a fader, so they are plain boxes.
 @Composable
-private fun ToggleChip(label: String, on: Boolean, colour: Color, onClick: () -> Unit) {
+private fun ToggleChip(
+    label: String,
+    on: Boolean,
+    colour: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     val c = Acid.colors
     Box(
-        Modifier
+        modifier
             .height(22.dp)
             .clip(RoundedCornerShape(4.dp))
             .background(if (on) colour.copy(alpha = 0.25f) else c.raised)

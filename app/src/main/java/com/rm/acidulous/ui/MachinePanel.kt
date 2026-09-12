@@ -251,6 +251,7 @@ internal val PanelPink: Color @Composable get() = Acid.colors.pink
 internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal) {
     Knob(
         label = label, value = b.value(name), display = b.display(name), accent = accent,
+        modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
     )
 }
@@ -259,7 +260,10 @@ internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, acce
 internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
     val info = b.infoOf(name) ?: return
     val idx = info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             labels.forEachIndexed { i, l ->
@@ -336,6 +340,7 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
     Knob(
         label = label, value = b.value(name), accent = accent,
         display = labels.getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
+        modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
     )
 }

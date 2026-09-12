@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.LaunchState
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
+import com.rm.acidulous.model.Action
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.clipLengthTicks
@@ -139,6 +140,14 @@ fun MainScreen(
         ) {
             Text(song.name, color = Acid.colors.text, fontSize = 16.sp, modifier = Modifier.flexible(), maxLines = 1, overflow = TextOverflow.Ellipsis)
             HeaderButton("↶", enabled = editor.canUndoSong()) { editor.undoSong() }
+            // Slim on purpose, and it has to be: the header only just fits
+            // beside the camera hole, and a sixth full-width button pushed
+            // the whole row underneath it.
+            HeaderButton(
+                "⇢",
+                width = 20.dp,
+                color = if (UiPrefs.mapMode) Acid.colors.accent else Acid.colors.textMid,
+            ) { UiPrefs.chooseMapMode(!UiPrefs.mapMode) }
             HeaderButton("↷", enabled = editor.canRedoSong()) { editor.redoSong() }
             HeaderTextButton("save", onClick = onSave)
             // Button and menu in one box on purpose: a Popup anchors to its
@@ -322,6 +331,7 @@ fun MainScreen(
                 val anyLaunched = clipMode && launchStates.any { it.playing }
                 val anyStopping = clipMode && launchStates.any { it.stopping }
                 OutlinedButton(
+                    modifier = Modifier.mappable(MapTargets.action(Action.PlayStop.name)),
                     onClick = {
                         when {
                             !playing -> NativeEngine.transportPlay(if (clipMode) 0 else position.scene)
@@ -348,11 +358,19 @@ fun MainScreen(
                         )
                     }
                 } else {
-                    OutlinedButton(onClick = { onLoopScene(!loopScene) }, contentPadding = pad) {
+                    OutlinedButton(
+                        modifier = Modifier.mappable(MapTargets.action(Action.LoopScene.name)),
+                        onClick = { onLoopScene(!loopScene) },
+                        contentPadding = pad,
+                    ) {
                         Text(if (loopScene) "\u27F3 scene" else "\u27F3 song", fontSize = 12.sp, maxLines = 1)
                     }
                 }
-                OutlinedButton(onClick = { onArm(!armed) }, contentPadding = pad) {
+                OutlinedButton(
+                    modifier = Modifier.mappable(MapTargets.action(Action.RecordArm.name)),
+                    onClick = { onArm(!armed) },
+                    contentPadding = pad,
+                ) {
                     Text(if (armed) "● REC" else "○ rec", color = if (armed) Acid.colors.red else Color.Unspecified, fontSize = 12.sp, maxLines = 1)
                 }
                 TextButton(onClick = { dialog = Dialog.Tempo }, contentPadding = PaddingValues(horizontal = 6.dp)) {
@@ -365,6 +383,7 @@ fun MainScreen(
                 // accident, so it keeps its distance and its red.
                 Spacer(Modifier.weight(1f))
                 OutlinedButton(
+                    modifier = Modifier.mappable(MapTargets.action(Action.Panic.name)),
                     onClick = { NativeEngine.panic() },
                     contentPadding = PaddingValues(horizontal = 8.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Acid.colors.red),
@@ -457,7 +476,7 @@ fun MainScreen(
             onDelete = onDelete,
             onDismiss = { dialog = null },
         )
-        Dialog.Midi -> MidiDialog(song.tracks.map { it.name }, onDismiss = { dialog = null })
+        Dialog.Midi -> MidiDialog(song, onDismiss = { dialog = null })
         Dialog.Sampler -> SamplerDialog(onDismiss = { dialog = null })
         Dialog.Settings -> SettingsDialog(song.tracks.map { it.name }, onDismiss = { dialog = null })
         Dialog.Quantise -> QuantiseDialog(
@@ -764,6 +783,7 @@ private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () ->
 private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
     Box(
         Modifier
+            .mappable(MapTargets.action(Action.ClipMode.name))
             .width(TRACK_W).height(SCENE_H).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(if (clipMode) Acid.colors.accentDim else Acid.colors.control)

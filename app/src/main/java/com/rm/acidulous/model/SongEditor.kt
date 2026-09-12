@@ -53,22 +53,32 @@ class SongEditor(
      * screen agrees and the patch saves. Doing only the first would move the
      * sound and leave the knob behind.
      *
-     * Not a gesture, so no undo entry per message: a knob sweep would fill
-     * the history with a hundred of them. The value lands in the document
-     * without a history push, which is what `push = false` is for.
+     * No undo entry, and this is deliberate rather than lazy: one turn of a
+     * controller knob is a hundred CC messages, and a hundred undo steps for
+     * one movement makes undo useless for everything else. An on-screen knob
+     * gets one step because it has a begin and an end; a controller sends no
+     * such thing, so there is no honest place to close a gesture.
      */
     fun applyMapped(trackIndex: Int, unit: String, name: String, v01: Float) {
         com.rm.acidulous.engine.NativeEngine.setParam(trackIndex, unit, name, v01, record = true)
-        val slot = effectSlotOf(unit) ?: eventorSlotOf(unit)
-        edit(trackIndex, push = false) { track ->
-            when {
-                unit == "machine" -> track.withParam(name, v01)
-                unit.startsWith("effect") && slot != null -> track.withEffectParam(slot, name, v01)
-                unit.startsWith("eventor") && slot != null -> track.withEventorParam(slot, name, v01)
-                unit == "channel" -> track.withMixerParam(name, v01)
-                else -> track
-            }
+        // The master is one thing, not one per track, so it is a song edit -
+        // the same split the mixer's own faders already make.
+        if (unit == "master") {
+            song = song.withMasterParam(name, v01)
+            onChange(song, false)
+            return
         }
+        val before = song.tracks.getOrNull(trackIndex) ?: return
+        val slot = effectSlotOf(unit) ?: eventorSlotOf(unit)
+        val after = when {
+            unit == "machine" -> before.withParam(name, v01)
+            unit.startsWith("effect") && slot != null -> before.withEffectParam(slot, name, v01)
+            unit.startsWith("eventor") && slot != null -> before.withEventorParam(slot, name, v01)
+            unit == "channel" -> before.withMixerParam(name, v01)
+            else -> before
+        }
+        if (after === before) return
+        commit(trackIndex, after, pushNow = false)
     }
 
     // --- Track-scoped edits (undoable) ---------------------------------------------

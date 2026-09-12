@@ -674,6 +674,9 @@ private fun App(modifier: Modifier = Modifier) {
         }
     }
 
+    androidx.compose.runtime.CompositionLocalProvider(
+        com.rm.acidulous.ui.LocalSongMappings provides song.mappings,
+    ) {
     when (val s = screen) {
         Screen.Main -> MainScreen(
             song = song, editor = editor, position = position, playing = playing, armed = armed,
@@ -745,6 +748,7 @@ private fun App(modifier: Modifier = Modifier) {
             onBack = { screen = Screen.Edit(s.track, s.sceneId) },
             modifier = modifier,
         )
+    }
     }
 
     // Choosing which preset of a SoundFont to play. Shown over either screen,
@@ -823,12 +827,23 @@ private fun fireMapping(
 ) {
     val unit = m.unit ?: return
     val name = m.name ?: return
-    val rack = m.rack ?: routedRack.takeIf { it in 0 until com.rm.acidulous.model.MAX_TRACKS } ?: selectedRack
-    val track = editor.song.tracks.getOrNull(rack) ?: return
-    val stepped = com.rm.acidulous.model.mappedParamInfo(track, unit, name)
-        ?.let { it.curve == 2 && it.steps == 2 } ?: false
+    // The master has no rack; everything else takes the mapping's own, then
+    // whatever the MIDI routing chose, then the selected track.
+    val rack = if (unit == "master") {
+        0
+    } else {
+        m.rack ?: routedRack.takeIf { it in 0 until com.rm.acidulous.model.MAX_TRACKS } ?: selectedRack
+    }
+    val track = editor.song.tracks.getOrNull(rack)
+    if (unit != "master" && track == null) return
+    val switch = com.rm.acidulous.model.mappedIsSwitch(track, unit, name)
+    val current = if (unit == "master") {
+        com.rm.acidulous.model.currentMaster(editor.song.master, name)
+    } else {
+        com.rm.acidulous.model.currentMapped(track!!, unit, name)
+    }
     val v01 = when {
-        fromNote && stepped -> if (com.rm.acidulous.model.currentMapped(track, unit, name) >= 0.5f) 0f else 1f
+        fromNote && switch -> if (current >= 0.5f) 0f else 1f
         else -> value / 127f
     }
     editor.applyMapped(rack, unit, name, v01)

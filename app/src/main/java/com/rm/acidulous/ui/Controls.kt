@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
@@ -146,14 +147,27 @@ fun Meter(peak: Float, modifier: Modifier = Modifier, vertical: Boolean = true) 
  * ellipsises, and not out of the roll.
  */
 @Composable
-fun HeaderButton(glyph: String, enabled: Boolean = true, onClick: () -> Unit) {
+fun HeaderButton(
+    glyph: String,
+    enabled: Boolean = true,
+    /**
+     * Narrower than the comfortable 42dp, for a button that has to squeeze
+     * into a header already full. Every dp here comes off the song title,
+     * and past a point off the whole row: a header that no longer fits
+     * beside the camera hole drops below it and costs the arranger a band
+     * of height it will not get back.
+     */
+    width: Dp = 42.dp,
+    color: Color? = null,
+    onClick: () -> Unit,
+) {
     val c = Acid.colors
     Box(
-        Modifier.size(width = 42.dp, height = LocalHeaderBand.current)
+        Modifier.size(width = width, height = LocalHeaderBand.current)
             .clip(RoundedCornerShape(4.dp))
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(glyph, color = if (enabled) c.text else c.textFaint, fontSize = 14.sp) }
+    ) { Text(glyph, color = color ?: if (enabled) c.text else c.textFaint, fontSize = 14.sp) }
 }
 
 /** The same, for a control that needs a word rather than a glyph. */

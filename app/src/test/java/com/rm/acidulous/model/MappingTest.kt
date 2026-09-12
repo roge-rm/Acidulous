@@ -120,6 +120,53 @@ class MappingTest {
     }
 
     @Test
+    fun `the master answers by name, and round trips through its own value`() {
+        // A mapped controller reaches the master through withMasterParam and
+        // the screen reads it back through currentMaster. If those two ever
+        // disagree a mapped fader would jump the moment it was touched.
+        val song = DemoSong.build()
+        val names = listOf(
+            "volume", "reverbsize", "reverbdamp", "reverbtone",
+            "delayfeedback", "delaytone", "limiterdrive",
+        )
+        for (name in names) {
+            val next = song.withMasterParam(name, 0.25f)
+            assertEquals(name, 0.25f, currentMaster(next.master, name), 1e-3f)
+        }
+        for (name in listOf("reverbon", "delayon", "limiteron", "delaypingpong")) {
+            assertEquals(name, 1f, currentMaster(song.withMasterParam(name, 1f).master, name), 0f)
+            assertEquals(name, 0f, currentMaster(song.withMasterParam(name, 0f).master, name), 0f)
+        }
+    }
+
+    @Test
+    fun `a stepped delay time lands on a step, not between two`() {
+        val song = DemoSong.build()
+        for (i in 0 until EngineParams.DELAY_TIMES) {
+            val v = i.toFloat() / (EngineParams.DELAY_TIMES - 1)
+            assertEquals(i, song.withMasterParam("delaytime", v).master.delay.time)
+        }
+    }
+
+    @Test
+    fun `an unknown master name changes nothing`() {
+        val song = DemoSong.build()
+        assertEquals(song.master, song.withMasterParam("nosuchthing", 1f).master)
+    }
+
+    @Test
+    fun `a note toggles the mixer switches and sets everything else`() {
+        // The engine's channel and master tables do not come over the bridge,
+        // so this list is the only thing that knows a mute is a switch.
+        val track = DemoSong.build().tracks.first()
+        assertTrue(mappedIsSwitch(track, "channel", "mute"))
+        assertTrue(mappedIsSwitch(track, "channel", "solo"))
+        assertTrue(mappedIsSwitch(null, "master", "limiteron"))
+        assertTrue(!mappedIsSwitch(track, "channel", "gain"))
+        assertTrue(!mappedIsSwitch(null, "master", "volume"))
+    }
+
+    @Test
     fun `a source label reads the way a musician would say it`() {
         assertEquals("CC 74", cutoff.sourceLabel())
         assertEquals("note C2", play.sourceLabel()) // MIDI 36

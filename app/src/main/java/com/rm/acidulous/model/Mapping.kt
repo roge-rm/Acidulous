@@ -135,3 +135,42 @@ fun currentMapped(track: Track, unit: String, name: String): Float = when {
     }
     else -> null
 } ?: mappedParamInfo(track, unit, name)?.defaultNormalized ?: 0f
+
+/**
+ * The mixer's two-step parameters, by name.
+ *
+ * A machine's parameter table comes back over the bridge and says whether a
+ * parameter is a switch; the channel and master tables do not, because they
+ * are fixed rather than per-machine and nothing has needed to ask before.
+ * A note mapped to one of these has to toggle rather than set from velocity,
+ * and that is the only thing the mapping needs to know about them. The names
+ * are the engine's own, from Rack.cpp and MasterBus.cpp.
+ */
+private val mixerSwitches = setOf(
+    "mute", "solo",                                   // channel
+    "reverbon", "delayon", "limiteron", "delaypingpong", // master
+)
+
+/** Would a note on this target toggle it, rather than set it from velocity? */
+fun mappedIsSwitch(track: Track?, unit: String, name: String): Boolean = when {
+    unit == "channel" || unit == "master" -> name in mixerSwitches
+    track != null -> mappedParamInfo(track, unit, name)?.let { it.curve == 2 && it.steps == 2 } ?: false
+    else -> false
+}
+
+/** What a master parameter is set to now, normalised. */
+fun currentMaster(master: Master, name: String): Float = when (name) {
+    "volume" -> EngineParams.volume01(master.volume)
+    "reverbon" -> if (master.reverb.on) 1f else 0f
+    "reverbsize" -> master.reverb.size
+    "reverbdamp" -> master.reverb.damp
+    "reverbtone" -> master.reverb.tone
+    "delayon" -> if (master.delay.on) 1f else 0f
+    "delaytime" -> master.delay.time.toFloat() / (EngineParams.DELAY_TIMES - 1)
+    "delayfeedback" -> master.delay.feedback
+    "delaytone" -> master.delay.tone
+    "delaypingpong" -> if (master.delay.pingPong) 1f else 0f
+    "limiteron" -> if (master.limiter.on) 1f else 0f
+    "limiterdrive" -> master.limiter.drive
+    else -> 0f
+}
