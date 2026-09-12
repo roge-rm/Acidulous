@@ -140,15 +140,17 @@ fun MainScreen(
         ) {
             Text(song.name, color = Acid.colors.text, fontSize = 16.sp, modifier = Modifier.flexible(), maxLines = 1, overflow = TextOverflow.Ellipsis)
             HeaderButton("↶", enabled = editor.canUndoSong()) { editor.undoSong() }
-            // Slim on purpose, and it has to be: the header only just fits
-            // beside the camera hole, and a sixth full-width button pushed
-            // the whole row underneath it.
+            // Mapping mode hangs off a long press of redo rather than a
+            // button of its own. It is a mode you step into for a minute,
+            // and the header has no room to spend on one: a sixth button
+            // here stopped the row fitting beside the camera hole, and
+            // CutoutRow dropped the whole thing underneath it.
             HeaderButton(
-                "⇢",
-                width = 20.dp,
-                color = if (UiPrefs.mapMode) Acid.colors.accent else Acid.colors.textMid,
-            ) { UiPrefs.chooseMapMode(!UiPrefs.mapMode) }
-            HeaderButton("↷", enabled = editor.canRedoSong()) { editor.redoSong() }
+                "↷",
+                enabled = editor.canRedoSong(),
+                color = if (UiPrefs.mapMode) Acid.colors.accent else null,
+                modifier = Modifier.onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
+            ) { editor.redoSong() }
             HeaderTextButton("save", onClick = onSave)
             // Button and menu in one box on purpose: a Popup anchors to its
             // parent layout node, and left loose in the row that parent is

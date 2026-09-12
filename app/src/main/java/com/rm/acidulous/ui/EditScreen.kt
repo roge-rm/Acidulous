@@ -495,20 +495,18 @@ fun EditScreen(
                 Text("mix", color = if (panel == 2) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
             }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.undo(trackIndex) }, enabled = editor.canUndo(trackIndex)) { Text("↶", fontSize = 12.sp) }
-            // Slim, between undo and redo: a mode you step into for a
-            // minute, not a thing you reach for while playing.
+            // Mapping mode, on a long press of redo - the same gesture in
+            // the same place as the arranger's, and no button of its own in
+            // a bar that has none to spare.
             OutlinedButton(
-                modifier = Modifier.width(30.dp).defaultMinSize(minWidth = 1.dp),
+                modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp)
+                    .onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
                 contentPadding = PaddingValues(0.dp),
-                onClick = { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
+                onClick = { selection = emptySet(); editor.redo(trackIndex) },
+                enabled = editor.canRedo(trackIndex),
             ) {
-                Text(
-                    "⇢",
-                    color = if (UiPrefs.mapMode) Acid.colors.accent else Acid.colors.textDim,
-                    fontSize = 12.sp,
-                )
+                Text("↷", color = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified, fontSize = 12.sp)
             }
-            OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = { selection = emptySet(); editor.redo(trackIndex) }, enabled = editor.canRedo(trackIndex)) { Text("↷", fontSize = 12.sp) }
             OutlinedButton(modifier = Modifier.weight(1f).defaultMinSize(minWidth = 1.dp), contentPadding = PaddingValues(0.dp), onClick = {
                 if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(song.scenes.indexOf(scene))
             }) { Text(if (playing) "■" else "▶", fontSize = 12.sp) }

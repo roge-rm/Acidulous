@@ -280,7 +280,7 @@ private fun MapTab(song: Song) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { UiPrefs.chooseMapMode(!UiPrefs.mapMode) }) {
                 Text(
-                    if (UiPrefs.mapMode) "⇢ mapping: on" else "⇢ mapping: off",
+                    if (UiPrefs.mapMode) "mapping: on" else "mapping: off",
                     color = if (UiPrefs.mapMode) Acid.colors.accent else Acid.colors.textMid,
                     fontSize = 12.sp,
                 )
@@ -288,8 +288,9 @@ private fun MapTab(song: Song) {
         }
         Text(
             "Tap a knob, fader or transport button, then move the control or hit the pad " +
-                "you want to drive it. Long-press one to forget it. The ⇢ button beside undo " +
-                "does the same thing from anywhere.",
+                "you want to drive it. Long-press one to forget it. A long press on the redo " +
+                "button - ↷, in the header here and at the bottom of the editor - turns the " +
+                "mode on and off from anywhere.",
             color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
         )
     }

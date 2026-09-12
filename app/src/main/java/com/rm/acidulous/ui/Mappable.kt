@@ -124,6 +124,37 @@ fun Modifier.mappable(target: String): Modifier = composed {
         }
 }
 
+/**
+ * A long press on something that already does something on tap.
+ *
+ * Mapping mode hangs off a long press of *redo*, which is a Material button
+ * with a `clickable` of its own inside it. A `combinedClickable` on the
+ * outside would never be reached, and disabling the button - redo is
+ * disabled most of the time - would take the long press with it.
+ *
+ * So this watches the Initial pass, which travels parent to child, and
+ * consumes nothing until the press has lasted long enough to be a long one.
+ * Up to that moment the button underneath behaves exactly as it did; after
+ * it, the rest of the gesture is eaten so the release does not also redo.
+ */
+fun Modifier.onLongPress(action: () -> Unit): Modifier = pointerInput(action) {
+    awaitEachGesture {
+        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val lifted = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+            while (true) {
+                if (awaitPointerEvent(PointerEventPass.Initial).changes.none { it.pressed }) break
+            }
+        }
+        if (lifted != null) return@awaitEachGesture // an ordinary tap; not ours
+        action()
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            event.changes.forEach { it.consume() }
+            if (event.changes.none { it.pressed }) break
+        }
+    }
+}
+
 /** Long press: forget whatever drives this target, in the song and the device alike. */
 private fun clearMapping(target: String) {
     val parts = target.split(":")

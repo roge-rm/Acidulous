@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
@@ -150,20 +149,14 @@ fun Meter(peak: Float, modifier: Modifier = Modifier, vertical: Boolean = true) 
 fun HeaderButton(
     glyph: String,
     enabled: Boolean = true,
-    /**
-     * Narrower than the comfortable 42dp, for a button that has to squeeze
-     * into a header already full. Every dp here comes off the song title,
-     * and past a point off the whole row: a header that no longer fits
-     * beside the camera hole drops below it and costs the arranger a band
-     * of height it will not get back.
-     */
-    width: Dp = 42.dp,
+    /** Overrides the enabled/disabled pair, for a button also showing a mode. */
     color: Color? = null,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     val c = Acid.colors
     Box(
-        Modifier.size(width = width, height = LocalHeaderBand.current)
+        modifier.size(width = 42.dp, height = LocalHeaderBand.current)
             .clip(RoundedCornerShape(4.dp))
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
