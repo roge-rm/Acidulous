@@ -67,7 +67,12 @@ fun LoadMeter(modifier: Modifier = Modifier) {
     }
     Row(modifier.padding(start = 2.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
-            "%2.0f%%".format(load), color = colour, fontSize = 9.sp,
+            // Three digits wide always, even at " 0%". The header packs its
+            // trailing controls as one run and flows the overflow around the
+            // camera hole, so a number that gains a glyph on its way past 99
+            // does not just get wider - it can push a button to the far side
+            // of the hole, a fifth of a second after the screen appears.
+            "%3.0f%%".format(load), color = colour, fontSize = 9.sp,
             fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
         )
         Canvas(Modifier.padding(start = 3.dp).width(5.dp).height(22.dp)) {
