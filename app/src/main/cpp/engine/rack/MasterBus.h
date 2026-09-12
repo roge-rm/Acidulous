@@ -16,7 +16,7 @@ class MasterBus {
     enum P : int32_t {
         Volume, ReverbOn, ReverbSize, ReverbDamp, ReverbTone,
         DelayOn, DelayTime, DelayFeedback, DelayTone, DelayPingPong,
-        LimiterOn, LimiterDrive, ClickOn, ClickVolume, ClickVoice, ClickDiv, Count
+        LimiterOn, LimiterDrive, ClickOn, ClickVolume, ClickVoice, ClickDiv, ClickWhen, Count
     };
 
     MasterBus();
@@ -32,6 +32,20 @@ class MasterBus {
     void clickAt(int32_t accent, int32_t offsetSamples) { click.trigger(accent, offsetSamples); }
     void setClickVoice(int32_t voice) { click.setVoice(voice); }
     bool clickEnabled() const { return params_.get(ClickOn) >= 0.5f; }
+
+    /**
+     * Whether the click should sound while the transport runs.
+     *
+     * "Recording only" is the setting most people end up on: a metronome
+     * is a thing you need while playing something in and a thing you stop
+     * hearing the moment you are listening back.
+     */
+    bool clickAllowed(bool recordArmed) const {
+        const int32_t when = static_cast<int32_t>(params_.normalized(ClickWhen) * 2.0f + 0.5f);
+        if (when == 1) return recordArmed;
+        if (when == 2) return false; // the count-in is not gated by this
+        return true;
+    }
 
     /**
      * How often it ticks, in ticks: a bar, or a division of the beat.

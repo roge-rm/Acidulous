@@ -21,6 +21,7 @@ const ParamDef kDefs[MasterBus::Count] = {
     {"clickvolume", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
     {"clickvoice", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},  // blip, stick, cowbell
     {"clickdiv", 0.0f, 4.0f, 1.0f, Curve::Stepped, 5, ""},    // bar, 1/4, 1/8, 1/16, 1/8T
+    {"clickwhen", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},   // always, recording, count-in only
 };
 } // namespace
 

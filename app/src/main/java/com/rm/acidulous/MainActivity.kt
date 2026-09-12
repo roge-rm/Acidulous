@@ -274,6 +274,8 @@ private fun App(modifier: Modifier = Modifier) {
 
     // Where the playhead is, which is also what "this scene" means.
     var position by remember { mutableStateOf(Position(0, 0, 0)) }
+    // Beats left of a count-in, or 0 when the song is simply running.
+    var countInBeats by remember { mutableStateOf(0) }
 
     // Exporting: the dialog chooses what and as what, the system picker gives
     // somewhere to put it, and the engine renders into the cache first. It
@@ -569,6 +571,7 @@ private fun App(modifier: Modifier = Modifier) {
             peak = NativeEngine.readPeakLevel()
             playing = NativeEngine.isPlaying
             position = Position.unpack(NativeEngine.positionPacked)
+            countInBeats = countInBeatsOf(NativeEngine.countInRemaining)
             bpm = NativeEngine.tempo
             armed = NativeEngine.recordArmed
             notesOn = NativeEngine.notesOn(0)
@@ -630,6 +633,7 @@ private fun App(modifier: Modifier = Modifier) {
     when (val s = screen) {
         Screen.Main -> MainScreen(
             song = song, editor = editor, position = position, playing = playing, armed = armed,
+            countInBeats = countInBeats,
             clipMode = com.rm.acidulous.ui.UiPrefs.clipMode,
             launchStates = launchStates,
             onClipMode = { on ->
@@ -644,7 +648,7 @@ private fun App(modifier: Modifier = Modifier) {
             loopScene = loopScene, stopAtEnd = stopAtEnd, queuedScene = queuedScene,
             bpm = bpm, diagnostics = diagnostics,
             rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn,
-            onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision) },
+            onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onArm = onArm, onLoopScene = onLoopScene,
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },
             onSave = { SongStore.save(context, song); Log.i(TAG, "saved ${song.name}") },
@@ -665,7 +669,7 @@ private fun App(modifier: Modifier = Modifier) {
         is Screen.Edit -> EditScreen(
             song = song, editor = editor, trackIndex = s.track, sceneId = s.sceneId,
             position = position, playing = playing, armed = armed, onArm = onArm,
-            rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision) },
+            rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onBack = { screen = Screen.Main },
             onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
             patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
@@ -733,6 +737,15 @@ private fun App(modifier: Modifier = Modifier) {
  * is set per launch - the picker uses it to suggest a folder and to name
  * the file sensibly, so it is worth getting right.
  */
+/**
+ * Ticks left of a count-in, as the number you would say out loud.
+ *
+ * Rounded *up*, because the first beat of a four-beat count should read
+ * "4" for the whole of that beat rather than flicking to 3 immediately.
+ */
+private fun countInBeatsOf(ticks: Long): Int =
+    if (ticks <= 0) 0 else ((ticks + com.rm.acidulous.model.PPQN - 1) / com.rm.acidulous.model.PPQN).toInt()
+
 private class CreateAnyDocument : ActivityResultContracts.CreateDocument("*/*") {
     var mime: String = "*/*"
     override fun createIntent(context: android.content.Context, input: String): android.content.Intent =

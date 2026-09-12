@@ -83,6 +83,7 @@ fun MainScreen(
     song: Song,
     editor: SongEditor,
     position: Position,
+    countInBeats: Int = 0,
     playing: Boolean,
     armed: Boolean,
     loopScene: Boolean,
@@ -393,13 +394,20 @@ fun MainScreen(
                     }
                     if (live.isEmpty()) "clip  -  q:" + quantiseLabel(UiPrefs.launchQuantise)
                     else "clip  " + live.joinToString("  ") + "  q:" + quantiseLabel(UiPrefs.launchQuantise)
+                } else if (countInBeats > 0) {
+                    // The count replaces the position rather than sitting
+                    // beside it: while it runs there is no position to read,
+                    // and a number counting down is the only thing worth
+                    // looking at.
+                    "counting in… %d".format(countInBeats)
                 } else {
                     "S%d/%d %-8s r%d/%d  %d.%d.%03d".format(
                         position.scene + 1, song.scenes.size, scene?.name ?: "-",
                         position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
                     )
                 },
-                color = Acid.colors.textHi, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                color = if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi,
+                fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             Text(diagnostics, color = Acid.colors.textFaint, fontFamily = FontFamily.Monospace, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)

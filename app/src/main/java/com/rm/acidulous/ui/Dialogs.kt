@@ -258,21 +258,81 @@ fun TextInputDialog(title: String, initial: String, onDismiss: () -> Unit, onCon
     )
 }
 
+private val CLICK_VOICES = listOf("blip", "stick", "cowbell")
+private val CLICK_DIVISIONS = listOf("bar", "beat", "1/8", "1/16", "1/8T")
+
+/**
+ * Tempo, and everything that counts against it.
+ *
+ * The metronome used to live in the settings window, a tab away from
+ * anything it relates to. It belongs here: the tempo, the click and the
+ * count-in are one thought - how fast, what am I hearing it against, and
+ * how long before it starts - and you reach for them in the same moment.
+ * Settings is for what you set once.
+ *
+ * The tempo waits for OK, because it is the song's and every change of it
+ * is an edit. The click settings are the device's and apply as you touch
+ * them, which is why Cancel says nothing about them.
+ */
 @Composable
 fun TempoDialog(tempo: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit) {
     var bpm by remember { mutableStateOf(tempo) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Song tempo") },
-        text = {
-            Column {
-                Text("%.0f bpm".format(bpm), fontFamily = FontFamily.Monospace)
-                Slider(value = bpm, onValueChange = { bpm = it }, valueRange = 40f..240f)
+    PlainDialog(
+        title = "Tempo",
+        onDismiss = onDismiss,
+        confirmLabel = "OK",
+        onConfirm = { onConfirm(bpm) },
+    ) {
+        Section("beats a minute", "%.0f bpm".format(bpm)) {
+            Slider(value = bpm, onValueChange = { bpm = it }, valueRange = 40f..240f)
+        }
+
+        Section(
+            "click",
+            when (UiPrefs.clickVoice) {
+                1 -> "Filtered noise. It sits away from anything tuned, so it stays audible over a busy mix without being loud."
+                2 -> "The 808's two detuned squares. For when the drums are loud enough to hide the other two."
+                else -> "A short decaying sine, higher on the downbeat. The plain one."
+            },
+        ) {
+            CLICK_VOICES.forEachIndexed { i, name ->
+                Choice(name, UiPrefs.clickVoice == i) { UiPrefs.chooseClickVoice(i) }
             }
-        },
-        confirmButton = { Button(onClick = { onConfirm(bpm) }) { Text("OK") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+        }
+        Section(
+            "ticks on",
+            if (UiPrefs.clickDivision == 0) "One click a bar, so you hear the shape rather than the pulse."
+            else "The bar, the beat and everything between get their own level, so you can still tell where the bar is.",
+        ) {
+            CLICK_DIVISIONS.forEachIndexed { i, name ->
+                Choice(name, UiPrefs.clickDivision == i) { UiPrefs.chooseClickDivision(i) }
+            }
+        }
+        Section(
+            "sounds",
+            when (UiPrefs.clickWhen) {
+                1 -> "Only while the transport is armed. A metronome is for playing something in, and you stop wanting it the moment you are listening back."
+                2 -> "Never during the song - only to count you in."
+                else -> "Whenever the transport is running."
+            },
+        ) {
+            Choice("always", UiPrefs.clickWhen == 0) { UiPrefs.chooseClickWhen(0) }
+            Choice("recording", UiPrefs.clickWhen == 1) { UiPrefs.chooseClickWhen(1) }
+            Choice("count-in only", UiPrefs.clickWhen == 2) { UiPrefs.chooseClickWhen(2) }
+        }
+        Section(
+            "count-in",
+            if (UiPrefs.countInBars == 0) "Play and record start straight away."
+            else "%d bar%s of clicks before anything moves. The bars are the song's own, so 7/8 counts seven."
+                .format(UiPrefs.countInBars, if (UiPrefs.countInBars == 1) "" else "s"),
+        ) {
+            for (bars in 0..4) {
+                Choice(if (bars == 0) "none" else "$bars", UiPrefs.countInBars == bars) {
+                    UiPrefs.chooseCountInBars(bars)
+                }
+            }
+        }
+    }
 }
 
 // --- Small building blocks ------------------------------------------------------------

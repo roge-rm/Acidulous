@@ -429,13 +429,28 @@ object EngineSync {
     }
 
     /** The metronome lives on the transport, not in the song. */
-    fun setMetronome(on: Boolean, volume: Float = 0.5f, voice: Int = 0, division: Int = 1) {
+    fun setMetronome(on: Boolean, volume: Float = 0.5f, voice: Int = 0, division: Int = 1, whenOn: Int = 0) {
         NativeEngine.setParam(0, "master", "clickon", EngineParams.bool01(on), record = false)
         NativeEngine.setParam(0, "master", "clickvolume", EngineParams.unit01(volume), record = false)
         // Both are stepped, and the engine reads them as an index off the
         // normalised value: three voices and five divisions.
         NativeEngine.setParam(0, "master", "clickvoice", EngineParams.unit01(voice / 2f), record = false)
         NativeEngine.setParam(0, "master", "clickdiv", EngineParams.unit01(division / 4f), record = false)
+        NativeEngine.setParam(0, "master", "clickwhen", EngineParams.unit01(whenOn / 2f), record = false)
+    }
+
+    /**
+     * The click's shape, without touching whether it is on.
+     *
+     * Its own call because the settings and the on/off switch are in
+     * different places: changing the voice used to reach the engine only
+     * when the metronome was next toggled, so a chosen voice sat there
+     * doing nothing until you switched the click off and on again.
+     */
+    fun setClickSettings(voice: Int, division: Int, whenOn: Int) {
+        NativeEngine.setParam(0, "master", "clickvoice", EngineParams.unit01(voice / 2f), record = false)
+        NativeEngine.setParam(0, "master", "clickdiv", EngineParams.unit01(division / 4f), record = false)
+        NativeEngine.setParam(0, "master", "clickwhen", EngineParams.unit01(whenOn / 2f), record = false)
     }
 
     /**

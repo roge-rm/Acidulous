@@ -1,5 +1,6 @@
 package com.rm.acidulous.ui
 
+import com.rm.acidulous.engine.EngineSync
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
@@ -104,6 +105,9 @@ object UiPrefs {
     /** Bars of clicks before a start actually starts. 0 is none. */
     var countInBars by mutableStateOf(0)
         private set
+    /** 0 always, 1 while recording, 2 only for the count-in. */
+    var clickWhen by mutableStateOf(0)
+        private set
 
     // --- New songs -------------------------------------------------------
     var newTempo by mutableStateOf(120f)
@@ -136,6 +140,7 @@ object UiPrefs {
         clickDivision = p.getInt(KEY_CLICK_DIV, 1)
         clickVolume = p.getFloat(KEY_CLICK_VOL, 0.5f)
         countInBars = p.getInt(KEY_COUNT_IN, 0)
+        clickWhen = p.getInt(KEY_CLICK_WHEN, 0)
         // Not pushed here: init() runs in onCreate, hundreds of lines
         // before NativeEngine.start(), so anything sent now goes nowhere.
         // applyToEngine() is where settings meet a running engine.
@@ -158,6 +163,9 @@ object UiPrefs {
      * keeps no preferences of its own, so this is the only thing that puts
      * them there.
      */
+    /** The three stepped click params, whenever one of them changes. */
+    private fun pushClick() = EngineSync.setClickSettings(clickVoice, clickDivision, clickWhen)
+
     fun applyToEngine() {
         NativeEngine.setBufferBursts(buffer.bursts)
         NativeEngine.setVoiceLimit(voiceLimit)
@@ -169,6 +177,7 @@ object UiPrefs {
         // signature converts it, and MainScreen re-sends it when that changes.
         NativeEngine.setLaunchQuantise(launchQuantise * 4 * 240)
         NativeEngine.setCountInBars(countInBars)
+        pushClick()
     }
 
     fun foldAutomation(folded: Boolean) {
@@ -221,16 +230,24 @@ object UiPrefs {
     fun chooseClickVoice(v: Int) {
         clickVoice = v.coerceIn(0, 2)
         store?.edit()?.putInt(KEY_CLICK_VOICE, clickVoice)?.apply()
+        pushClick()
     }
 
     fun chooseClickDivision(d: Int) {
         clickDivision = d.coerceIn(0, 4)
         store?.edit()?.putInt(KEY_CLICK_DIV, clickDivision)?.apply()
+        pushClick()
     }
 
     fun chooseClickVolume(v: Float) {
         clickVolume = v.coerceIn(0f, 1f)
         store?.edit()?.putFloat(KEY_CLICK_VOL, clickVolume)?.apply()
+    }
+
+    fun chooseClickWhen(w: Int) {
+        clickWhen = w.coerceIn(0, 2)
+        store?.edit()?.putInt(KEY_CLICK_WHEN, clickWhen)?.apply()
+        pushClick()
     }
 
     fun chooseCountInBars(bars: Int) {
@@ -298,6 +315,7 @@ object UiPrefs {
     private const val KEY_CLICK_DIV = "click_div"
     private const val KEY_CLICK_VOL = "click_vol"
     private const val KEY_COUNT_IN = "count_in"
+    private const val KEY_CLICK_WHEN = "click_when"
     private const val KEY_TEMPO = "new_tempo"
     private const val KEY_BEATS = "new_beats"
     private const val KEY_UNIT = "new_unit"

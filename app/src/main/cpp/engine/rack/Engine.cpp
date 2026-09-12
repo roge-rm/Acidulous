@@ -167,7 +167,7 @@ void Engine::renderBlock(const float *in, float *out) {
     // at one level is a buzz you cannot find the beat in.
     // A count-in always clicks - that is the whole of what it is - so it
     // does not ask whether the metronome is switched on.
-    if ((playing && master.clickEnabled()) || counting) {
+    if ((playing && master.clickEnabled() && master.clickAllowed(transport.isRecordArmed())) || counting) {
         const int64_t stepTicks = master.clickStepTicks();
         auto accentFor = [](int64_t tickInBar, int64_t ticksPerBar) {
             if (ticksPerBar > 0 && tickInBar % ticksPerBar == 0) return static_cast<int32_t>(dsp::Click::Bar);
