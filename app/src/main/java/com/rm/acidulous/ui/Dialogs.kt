@@ -43,7 +43,15 @@ import com.rm.acidulous.model.Scene
 import com.rm.acidulous.model.SceneTempo
 import com.rm.acidulous.model.Signature
 
-/** The reference sequencer's "4/4 × 1" chip, expanded: name, signature, repeat, tempo, fades. */
+/**
+ * The reference sequencer's "4/4 × 1" chip, expanded: name, signature, repeat, tempo, fades.
+ *
+ * Rebuilt in the same vocabulary as every other window here. It used to be
+ * a Material `AlertDialog` full of switches and outlined buttons, and its
+ * signatures sat in two fixed `Row`s - which do not wrap, so 2/4 and 5/4
+ * were crushed to slivers and 12/8 came out stacked vertically as "1 2 / 8".
+ * A `FlowRow` of chips fits them at any width.
+ */
 @Composable
 fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () -> Unit, onConfirm: (Scene) -> Unit) {
     var name by remember { mutableStateOf(scene.name) }
@@ -55,50 +63,86 @@ fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () ->
     var fadeIn by remember { mutableStateOf(scene.fadeIn) }
     var fadeOut by remember { mutableStateOf(scene.fadeOut) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Scene") },
-        text = {
-            Column(Modifier.verticalScrollWithBar(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true)
+    PlainDialog(
+        title = "Scene",
+        onDismiss = onDismiss,
+        confirmLabel = "OK",
+        onConfirm = {
+            onConfirm(
+                scene.copy(
+                    name = name.ifBlank { scene.name },
+                    signature = signature,
+                    repeat = repeat,
+                    tempo = if (ownTempo) SceneTempo(bpm = bpm, smooth = smooth) else null,
+                    fadeIn = fadeIn,
+                    fadeOut = fadeOut,
+                ),
+            )
+        },
+    ) {
+        ListSection("name", "What the scene's chip says in the arranger.") {
+            OutlinedTextField(
+                value = name, onValueChange = { name = it }, singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
-                Text("Signature", fontSize = 12.sp)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    SmallToggle("song (${songSignature.beats}/${songSignature.unit})", signature == null) { signature = null }
-                    for (s in SIGNATURES.take(4)) SmallToggle("${s.beats}/${s.unit}", signature == s) { signature = s }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    for (s in SIGNATURES.drop(4)) SmallToggle("${s.beats}/${s.unit}", signature == s) { signature = s }
-                }
-
-                Stepper("Repeat", repeat, 1, 32) { repeat = it }
-
-                LabeledSwitch("Own tempo", ownTempo) { ownTempo = it }
-                if (ownTempo) {
-                    Text("%.0f bpm".format(bpm), fontFamily = FontFamily.Monospace, fontSize = 12.sp)
-                    Slider(value = bpm, onValueChange = { bpm = it }, valueRange = 40f..240f)
-                    LabeledSwitch("Smooth (glide in over one bar)", smooth) { smooth = it }
-                }
-                LabeledSwitch("Fade in", fadeIn) { fadeIn = it }
-                LabeledSwitch("Fade out", fadeOut) { fadeOut = it }
+        Section(
+            "signature",
+            if (signature == null) "Whatever the song is in, so changing the song changes this scene with it."
+            else "This scene only. The bar line, the metronome and the count-in all follow it.",
+        ) {
+            Choice("song (${songSignature.beats}/${songSignature.unit})", signature == null) { signature = null }
+            for (s in SIGNATURES) {
+                Choice("${s.beats}/${s.unit}", signature == s) { signature = s }
             }
-        },
-        confirmButton = {
-            Button(onClick = {
-                onConfirm(
-                    scene.copy(
-                        name = name.ifBlank { scene.name },
-                        signature = signature,
-                        repeat = repeat,
-                        tempo = if (ownTempo) SceneTempo(bpm = bpm, smooth = smooth) else null,
-                        fadeIn = fadeIn,
-                        fadeOut = fadeOut,
-                    ),
-                )
-            }) { Text("OK") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+        }
+
+        ListSection(
+            "repeat",
+            if (repeat == 1) "Played once before the song moves on."
+            else "Played $repeat times through before the song moves on.",
+        ) {
+            BigNumber("$repeat", 1, 4) { repeat = (repeat + it).coerceIn(1, 32) }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (n in listOf(1, 2, 4, 8, 16)) {
+                    Choice("$n", repeat == n) { repeat = n }
+                }
+            }
+        }
+
+        Section(
+            "tempo",
+            if (!ownTempo) "Runs at the song's tempo."
+            else if (smooth) "Glides to %.0f over the first bar of the scene.".format(bpm)
+            else "Jumps to %.0f the moment the scene starts.".format(bpm),
+        ) {
+            Choice("song", !ownTempo) { ownTempo = false }
+            Choice("own", ownTempo) { ownTempo = true }
+            if (ownTempo) {
+                Choice("jump", !smooth) { smooth = false }
+                Choice("glide", smooth) { smooth = true }
+            }
+        }
+        if (ownTempo) {
+            ListSection("beats a minute") {
+                BigNumber("%.0f".format(bpm), 1, 5) { bpm = (bpm + it).coerceIn(40f, 240f) }
+            }
+        }
+
+        Section(
+            "fades",
+            when {
+                fadeIn && fadeOut -> "Fades up as the scene starts and away as it ends."
+                fadeIn -> "Fades up as the scene starts."
+                fadeOut -> "Fades away as the scene ends."
+                else -> "Starts and ends at full level."
+            },
+        ) {
+            Choice("in", fadeIn) { fadeIn = !fadeIn }
+            Choice("out", fadeOut) { fadeOut = !fadeOut }
+        }
+    }
 }
 
 /** The reference sequencer's "1 Bar" chip, expanded: bars, play mode, mute, grid. */
@@ -259,6 +303,36 @@ fun TextInputDialog(title: String, initial: String, onDismiss: () -> Unit, onCon
     )
 }
 
+/**
+ * A number worth reading, with nudges either side of it.
+ *
+ * The house style is chips and a line of explanation, and a slider is the
+ * one Material control that refuses to look like it belongs - so anything
+ * continuous is set this way instead: two sizes of step each side, and a
+ * number big enough to read while you are pressing them.
+ */
+@Composable
+internal fun BigNumber(text: String, small: Int, large: Int, onNudge: (Int) -> Unit) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    // fillMaxWidth, or the row takes its intrinsic width and the last chip
+    // is cut off by the card's edge - which is what it did.
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Choice("−$large", false) { onNudge(-large) }
+        Choice("−$small", false) { onNudge(-small) }
+        Text(
+            text,
+            color = c.text, fontSize = 34.sp, fontFamily = FontFamily.Monospace,
+            modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        Choice("+$small", false) { onNudge(small) }
+        Choice("+$large", false) { onNudge(large) }
+    }
+}
+
 private val CLICK_VOICES = listOf("blip", "stick", "cowbell")
 private val CLICK_DIVISIONS = listOf("bar", "beat", "1/8", "1/16", "1/8T")
 private val TEMPO_TABS = listOf("tempo", "click")
@@ -300,7 +374,6 @@ fun TempoDialog(tempo: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit)
 
 @Composable
 private fun TempoPage(bpm: Float, onBpm: (Float) -> Unit) {
-    val c = com.rm.acidulous.ui.theme.Acid.colors
     // No slider. Every other settings page here is chips and a line of
     // explanation, and Material's slider - an active bar, a gap, a tall
     // thumb, a gap, an inactive bar with a stop dot on the end - reads as a
@@ -308,17 +381,7 @@ private fun TempoPage(bpm: Float, onBpm: (Float) -> Unit) {
     // of the number get anywhere in a few taps, and the presets get to the
     // tempos anybody actually counts in without touching either.
     ListSection("beats a minute", "What the whole song runs at, unless a scene says otherwise.") {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Choice("−5", false) { onBpm((bpm - 5f).coerceIn(40f, 240f)) }
-            Choice("−1", false) { onBpm((bpm - 1f).coerceIn(40f, 240f)) }
-            Text(
-                "%.0f".format(bpm),
-                color = c.text, fontSize = 34.sp, fontFamily = FontFamily.Monospace,
-                modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
-            Choice("+1", false) { onBpm((bpm + 1f).coerceIn(40f, 240f)) }
-            Choice("+5", false) { onBpm((bpm + 5f).coerceIn(40f, 240f)) }
-        }
+        BigNumber("%.0f".format(bpm), 1, 5) { onBpm((bpm + it).coerceIn(40f, 240f)) }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             for (preset in listOf(80f, 90f, 100f, 110f, 120f, 128f, 140f, 174f)) {
                 Choice("%.0f".format(preset), kotlin.math.abs(bpm - preset) < 0.5f) { onBpm(preset) }
@@ -503,8 +566,13 @@ private fun DialogShell(
                     Box(Modifier.padding(top = 10.dp))
                 }
                 Box(
+                    // The position bar is drawn on the outer edge of this
+                    // box, so the content is inset to leave it a gutter -
+                    // without it a chip that reaches the full width has the
+                    // bar drawn straight through it.
                     Modifier.heightIn(max = maxBodyHeight)
-                        .verticalScrollWithBar(rememberScrollState()),
+                        .verticalScrollWithBar(rememberScrollState())
+                        .padding(end = 10.dp),
                 ) {
                     body()
                 }
