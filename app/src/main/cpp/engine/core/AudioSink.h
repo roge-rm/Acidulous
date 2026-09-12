@@ -20,6 +20,8 @@ enum class AudioFormat : int32_t {
     Wav = 0,
     Aiff = 1,
     Flac = 2,
+    /** Somebody else's encoder, and the only one - see Mp3Writer. */
+    Mp3 = 3,
 };
 
 class AudioSink {
@@ -38,7 +40,7 @@ class AudioSink {
 /** Null for a format that has no writer, which the caller must report. */
 std::unique_ptr<AudioSink> makeSink(AudioFormat format);
 
-/** ".wav", ".aiff", ".flac" - including the dot. */
+/** ".wav", ".aiff", ".flac", ".mp3" - including the dot. */
 const char *extensionFor(AudioFormat format);
 
 /** True where [bits] == 32 means IEEE floats rather than PCM. */

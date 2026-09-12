@@ -32,11 +32,14 @@ enum class ExportFormat(
     val mime: String,
     val engineFormat: Int,
     val audio: Boolean,
+    /** No bit depth to choose: the format throws audio away instead. */
+    val lossy: Boolean = false,
 ) {
     Wav("wav", ".wav", "audio/wav", 0, true),
     Aiff("aiff", ".aiff", "audio/aiff", 1, true),
     Flac("flac", ".flac", "audio/flac", 2, true),
-    Aac("m4a", ".m4a", "audio/mp4", -1, true),
+    Mp3("mp3", ".mp3", "audio/mpeg", 3, true, lossy = true),
+    Aac("m4a", ".m4a", "audio/mp4", -1, true, lossy = true),
     Midi("mid", ".mid", "audio/midi", -1, false),
     Bundle("bundle", ".zip", "application/zip", -1, false),
 }
@@ -45,6 +48,8 @@ data class ExportOptions(
     val what: ExportWhat = ExportWhat.Song,
     val format: ExportFormat = ExportFormat.Wav,
     val bits: Int = 24,
+    /** Kilobits a second, for the formats that throw audio away. */
+    val rate: Int = 256,
     val tailSeconds: Float = 2f,
 ) {
     /** Several files, so the picker has to ask for a folder. */
@@ -55,6 +60,9 @@ private fun describeFormat(f: ExportFormat): String = when (f) {
     ExportFormat.Wav -> "Uncompressed, and what every other program reads."
     ExportFormat.Aiff -> "Uncompressed, the same audio as a WAV with a different header on it."
     ExportFormat.Flac -> "Lossless and about half the size. Identical audio to the WAV, not merely close."
+    // LAME's own licence asks that its use be acknowledged, and this is where
+    // somebody choosing the format will see it.
+    ExportFormat.Mp3 -> "Small, lossy, and playable by everything there is. Encoded by LAME."
     ExportFormat.Aac -> "Small, and lossy. For sending someone a listen rather than for working on."
     ExportFormat.Midi -> "The notes, not the sound: every track's clips at their real positions, for another program to play."
     ExportFormat.Bundle -> "The song and every sample it uses, in one file you can move to another device."
@@ -75,12 +83,13 @@ fun ExportOptionsDialog(
     var what by rememberSaveable { mutableStateOf(ExportWhat.Song) }
     var format by rememberSaveable { mutableStateOf(ExportFormat.Wav) }
     var bits by rememberSaveable { mutableStateOf(24) }
+    var rate by rememberSaveable { mutableStateOf(256) }
     var tail by rememberSaveable { mutableStateOf(2f) }
 
     // The data formats describe the whole song by their nature: there is no
     // such thing as one track's worth of song bundle.
     val audio = format.audio
-    val options = ExportOptions(if (audio) what else ExportWhat.Song, format, bits, tail)
+    val options = ExportOptions(if (audio) what else ExportWhat.Song, format, bits, rate, tail)
 
     PlainDialog(
         title = "Export",
@@ -106,7 +115,23 @@ fun ExportOptionsDialog(
                     Choice(w.label, what == w) { what = w }
                 }
             }
-            Section(
+            // A bit depth is a thing a PCM format has. MP3 and AAC throw
+            // audio away instead - what they have is a budget, so that is
+            // what they are asked for.
+            if (format.lossy) Section(
+                "rate",
+                when (rate) {
+                    128 -> "Small, and it shows on cymbals and reverb tails. For a rough listen."
+                    192 -> "The old default, and fine for most things on most speakers."
+                    320 -> "As much as MP3 has to give. Hard to tell from the master on anything but headphones."
+                    else -> "Transparent enough for almost anybody, at two thirds the size of the top rate."
+                },
+            ) {
+                for (kbps in listOf(128, 192, 256, 320)) {
+                    Choice("$kbps", rate == kbps) { rate = kbps }
+                }
+            }
+            if (!format.lossy) Section(
                 "depth",
                 when (bits) {
                     16 -> "Half the size, and what a CD is. Fine for anything you are only going to listen to."

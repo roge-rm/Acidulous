@@ -86,6 +86,8 @@ sealed class ExportState {
     data class Done(
         val seconds: Float, val peak: Float, val fileName: String,
         val files: Int = 1, val format: String = "wav", val bits: Int = 24,
+        /** Kilobits a second, where the format has a rate rather than a depth. */
+        val rate: Int = 0,
     ) : ExportState()
     data class Failed(val error: String) : ExportState()
 }
@@ -116,11 +118,17 @@ fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit
                     if (state.files > 1) "%d files in %s/".format(state.files, state.fileName) else state.fileName,
                     good = true,
                 )
-                if (state.bits > 0) {
+                if (state.bits > 0 || state.rate > 0) {
                     Readout(
                         "%.1f s · 48 kHz · %s · %s stereo · peak %.3f".format(
                             state.seconds, state.format,
-                            if (state.bits == 32) "32-bit float" else "%d-bit".format(state.bits),
+                            when {
+                                // A lossy format has no depth to report, and
+                                // saying "24-bit" of an MP3 is just wrong.
+                                state.rate > 0 -> "%d kbit".format(state.rate)
+                                state.bits == 32 -> "32-bit float"
+                                else -> "%d-bit".format(state.bits)
+                            },
                             state.peak,
                         ),
                     )

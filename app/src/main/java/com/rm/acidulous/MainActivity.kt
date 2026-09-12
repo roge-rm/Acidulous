@@ -344,13 +344,16 @@ private fun App(modifier: Modifier = Modifier) {
                         pcm.delete()
                         emptyList<File>() to rendered
                     } else {
-                        val error = com.rm.acidulous.media.AacEncoder.encode(pcm, out)
+                        val error = com.rm.acidulous.media.AacEncoder.encode(pcm, out, options.rate * 1000)
                         pcm.delete()
                         if (error.isEmpty()) listOf(out) to "" else emptyList<File>() to error
                     }
                 }
                 else -> {
                     val engineFormat = options.format.engineFormat
+                    // MP3 has no bit depth, so the number the sinks call
+                    // `bits` carries its bitrate instead - see Mp3Writer.
+                    val depth = if (options.format.lossy) options.rate else options.bits
                     if (options.what == com.rm.acidulous.ui.ExportWhat.Stems) {
                         val racks = song.tracks.indices.filter { song.tracks[it].machine.type.isNotEmpty() }
                         if (racks.isEmpty()) {
@@ -366,14 +369,14 @@ private fun App(modifier: Modifier = Modifier) {
                                 }
                             val error = NativeEngine.renderStems(
                                 files.map { it.absolutePath }.toTypedArray(), (intArrayOf(-1) + racks.toIntArray()),
-                                options.tailSeconds, engineFormat, options.bits, scene, limit,
+                                options.tailSeconds, engineFormat, depth, scene, limit,
                             )
                             if (error.isEmpty()) files to "" else emptyList<File>() to error
                         }
                     } else {
                         val file = File(cache, "$base${options.format.extension}")
                         val error = NativeEngine.renderSong(
-                            file.absolutePath, options.tailSeconds, engineFormat, options.bits, scene, limit,
+                            file.absolutePath, options.tailSeconds, engineFormat, depth, scene, limit,
                         )
                         if (error.isEmpty()) listOf(file) to "" else emptyList<File>() to error
                     }
@@ -385,7 +388,9 @@ private fun App(modifier: Modifier = Modifier) {
         exportState = if (error.isEmpty()) {
             com.rm.acidulous.ui.ExportState.Done(
                 NativeEngine.renderedSeconds, NativeEngine.renderedPeak, where, files.size,
-                options.format.label, if (options.format.audio) options.bits else 0,
+                options.format.label,
+                if (options.format.audio && !options.format.lossy) options.bits else 0,
+                if (options.format.lossy) options.rate else 0,
             )
         } else {
             com.rm.acidulous.ui.ExportState.Failed(error)

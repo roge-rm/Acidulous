@@ -29,10 +29,17 @@ target_include_directories(acidulous PRIVATE
 
 target_compile_options(acidulous PRIVATE -Wall -Wextra -Wno-unused-parameter)
 
+# LAME, as a shared library of its own. It is LGPL, so it must stay
+# replaceable: linked in statically nobody could swap their own build in, and
+# that relinking freedom is the whole point of that licence. See
+# third_party/lame/PROVENANCE.md.
+add_subdirectory(third_party/lame)
+
 find_package(oboe REQUIRED CONFIG)
 
 target_link_libraries(acidulous
     oboe::oboe
+    mp3lame
     android
     log
 )

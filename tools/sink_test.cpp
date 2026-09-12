@@ -9,6 +9,11 @@
 // test is whether their headers say what the samples are - and a wrong
 // header is exactly what a listening test would not catch.
 //
+// MP3 is the one sink here that cannot be held to that standard - it is
+// lossy by design - so it is asked the questions it can answer: that it
+// produces a file of about the size its bitrate promises, and (in the shell
+// step) that a decoder reads back the right length at the right level.
+//
 // The signals are chosen to hit the corners: silence and a constant exercise
 // the CONSTANT subframe, a ramp suits a high fixed order, noise suits none of
 // them and should fall back gracefully, full-scale catches clipping, and a
@@ -127,6 +132,8 @@ int main(int argc, char **argv) {
         {"flac24", AudioFormat::Flac, 24}, {"flac16", AudioFormat::Flac, 16},
         // 32 means IEEE floats, which AIFF can only say by becoming AIFF-C.
         {"wav32", AudioFormat::Wav, 32},   {"aiff32", AudioFormat::Aiff, 32},
+        // MP3's "bits" is a bitrate in kbit - see Mp3Writer.h.
+        {"mp3256", AudioFormat::Mp3, 256}, {"mp3128", AudioFormat::Mp3, 128},
     };
 
     for (const Case &c : cases) {
@@ -145,13 +152,22 @@ int main(int argc, char **argv) {
         ok("frame count", sink->framesWritten() == frames, std::to_string(sink->framesWritten()).c_str());
         ok("closes", sink->close());
 
-        writeRaw(base + ".raw", pcm, c.bits);
+        // MP3 has no depth, so its reference is the float PCM it was fed.
+        writeRaw(base + ".raw", pcm, c.format == AudioFormat::Mp3 ? 32 : c.bits);
         const long bytes = fileSize(path);
         const long rawBytes = fileSize(base + ".raw");
         char note[96];
         snprintf(note, sizeof note, "%ld vs %ld raw, %.1f%%", bytes, rawBytes,
                  100.0 * static_cast<double>(bytes) / static_cast<double>(rawBytes));
-        if (c.format == AudioFormat::Flac) {
+        if (c.format == AudioFormat::Mp3) {
+            // Constant bitrate, so the size is arithmetic: the bitrate times
+            // the duration, plus the Xing frame. A quarter either side allows
+            // for that frame and the encoder's own padding on a short file.
+            const double seconds = frames / 48000.0;
+            const double expect = c.bits * 1000.0 / 8.0 * seconds;
+            snprintf(note, sizeof note, "%ld bytes, %.0f expected at %d kbit", bytes, expect, c.bits);
+            ok("size matches the bitrate", bytes > expect * 0.75 && bytes < expect * 1.25 + 2000, note);
+        } else if (c.format == AudioFormat::Flac) {
             // A real mix should land well under raw. At or above it means
             // the encoder fell back to VERBATIM everywhere.
             ok("smaller than raw", bytes > 0 && bytes < rawBytes * 9 / 10, note);
