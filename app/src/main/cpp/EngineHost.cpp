@@ -428,7 +428,21 @@ void EngineHost::channelPressure(int rack, uint8_t value, bool record) {
 
 void EngineHost::midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2) {
     if (rack < 0 || rack >= kRackCount) return;
-    sEngine.pushMidi({static_cast<uint8_t>((status & 0xf0) | rack), d1, d2});
+    const uint8_t kind = status & 0xf0;
+    // A wheel on a controller is the same gesture as the wheel on screen and
+    // is recorded the same way - by going down the same path, not by a
+    // parallel one that has to be kept in step with it. Everything else
+    // still goes straight through as MIDI: the machine hears it, and nothing
+    // yet knows what a lane for it would mean.
+    if (kind == 0xb0 && d1 == 1) {
+        controlChange(rack, 1, d2);
+        return;
+    }
+    if (kind == 0xd0) {
+        channelPressure(rack, d1);
+        return;
+    }
+    sEngine.pushMidi({static_cast<uint8_t>(kind | rack), d1, d2});
 }
 
 int EngineHost::paramIndex(const std::string &machineType, const std::string &unit, const std::string &name) const {

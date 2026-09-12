@@ -608,4 +608,18 @@ object MidiHub {
         dispatch(0x90, 60, 100)
         handler?.postDelayed({ dispatch(0x80, 60, 0) }, 1500)
     }
+
+    /**
+     * A knob sweep, down the path a real controller takes.
+     *
+     * There is no way to exercise an incoming CC on an emulator, and the one
+     * thing this window exists to do is say out loud what it thinks is
+     * happening. [cc] defaults to the mod wheel, which is the one controller
+     * the app already answers without any mapping.
+     */
+    fun testWheel(cc: Int = 1) {
+        for (i in 0..20) {
+            handler?.postDelayed({ dispatch(0xb0, cc, i * 127 / 20) }, (i * 60).toLong())
+        }
+    }
 }

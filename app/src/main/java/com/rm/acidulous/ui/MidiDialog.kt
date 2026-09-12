@@ -146,8 +146,14 @@ private fun InTab(trackNames: List<String>) {
             TextButton(onClick = { MidiHub.testNote() }) {
                 Text("test note", color = Acid.colors.accent, fontSize = 12.sp)
             }
-            Text("plays middle C as though a keyboard had", color = Acid.colors.textDim, fontSize = 11.sp)
+            TextButton(onClick = { MidiHub.testWheel() }) {
+                Text("test wheel", color = Acid.colors.accent, fontSize = 12.sp)
+            }
         }
+        Text(
+            "A middle C, and a sweep of the mod wheel, as though a keyboard had sent them.",
+            color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
+        )
     }
 }
 
