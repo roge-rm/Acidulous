@@ -80,7 +80,8 @@ class Dice final : public Machine {
     int32_t slices = 0;
     int32_t builtMode = -1, builtCount = -1, builtFrames = -1;
     Voice voices[kVoices];
-    uint32_t rng = 0x5bd1e995u;
+    static constexpr uint32_t kRngSeed = 0x5bd1e995u;
+    uint32_t rng = kRngSeed;
     int64_t triggers = 0;
 };
 

@@ -23,6 +23,20 @@ class Adsr {
     void retrigger() { trigger(); level = 0.0f; }
     void release() { if (stage != Stage::Idle) stage = Stage::Release; }
     void kill() { stage = Stage::Idle; level = 0.0f; }
+    /**
+     * Back to new, for a panic.
+     *
+     * kill() silences the envelope but leaves its coefficients, its sustain
+     * and its delay counter where the last patch put them, which is right
+     * for a note-off and wrong for a reset: a render would start with the
+     * shape of whatever was playing before it. The sample rate survives
+     * because prepare() set it, not a patch.
+     */
+    void reset() {
+        const float sr = sampleRate;
+        *this = Adsr();
+        sampleRate = sr;
+    }
     bool active() const { return stage != Stage::Idle; }
     float value() const { return level; }
 

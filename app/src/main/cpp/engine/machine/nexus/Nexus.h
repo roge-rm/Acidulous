@@ -80,7 +80,8 @@ class Nexus final : public Machine {
     float knobBuffer[nexus::kSlots * nexus::kKnobs] = {};
     float cableBuffer[nexus::kCables * 2] = {};
     float bendSemis = 0.0f;
-    uint32_t rng = 0x13579bdfu;
+    static constexpr uint32_t kRngSeed = 0x13579bdfu;
+    uint32_t rng = kRngSeed;
     double tickCursor = 0.0, tickStep = 0.0;
 };
 

@@ -78,9 +78,10 @@ void Brazen::reset() {
         v.amp.kill();
         v.filterL.reset();
         v.filterR.reset();
-        for (auto &p : v.players) p.bore.clear();
+        for (auto &p : v.players) { p.bore.clear(); p.rng = Player::kSeed; }
     }
     growlPhase = 0.0f;
+    rng = kRngSeed;
 }
 
 void Brazen::allNotesOff() {

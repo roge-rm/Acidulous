@@ -87,7 +87,8 @@ class Timber final : public Machine {
     int64_t ageCounter = 0;
     float bend = 0.0f, modWheel = 0.0f, aftertouch = 0.0f;
     float flutterPhase = 0.0f;
-    uint32_t rng = 0x2f6e2b1u;
+    static constexpr uint32_t kRngSeed = 0x2f6e2b1u;
+    uint32_t rng = kRngSeed;
     float lastLattice = 1500.0f;
 };
 

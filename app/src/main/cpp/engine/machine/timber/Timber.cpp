@@ -84,7 +84,7 @@ void Timber::reset() {
         v.tongueLeft = v.keyLeft = v.keyState = 0.0f;
     }
     flutterPhase = 0.0f;
-    rng = 0x2f6e2b1u; // the breath noise, from the top
+    rng = kRngSeed; // the breath noise, from the top
 }
 
 void Timber::allNotesOff() {

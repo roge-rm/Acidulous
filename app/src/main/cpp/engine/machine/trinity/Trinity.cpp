@@ -180,9 +180,11 @@ void Trinity::reset() {
         for (auto &f : v.filter) f.reset();
         for (auto &o : v.osc) o = OscState();
         for (auto &m : v.mod) m = 0.0f;
+        v.rng = Voice::kSeed;
     }
     modWheel = aftertouch = bend = 0.0f;
     noiseZ = 0.0f;
+    noiseRng = kNoiseSeed;
 }
 
 Trinity::Voice *Trinity::allocate() {

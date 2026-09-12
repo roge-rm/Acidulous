@@ -59,8 +59,23 @@ void Hexbeat::prepare(int32_t sampleRate) {
 }
 
 void Hexbeat::reset() {
-    for (int32_t v = 0; v < VoiceCount; ++v) { amp[v] = Env(); pitchEnv[v] = Env(); aux[v] = Env(); bp[v].reset(); bp2[v].reset(); }
+    // Assigning a fresh struct rather than clearing fields one at a time:
+    // the oscillator phases were the state this used to miss, and the next
+    // member somebody adds would have been missed the same way.
+    for (int32_t v = 0; v < VoiceCount; ++v) {
+        amp[v] = Env();
+        pitchEnv[v] = Env();
+        aux[v] = Env();
+        osc[v] = Osc();
+        osc2[v] = Osc();
+        gain[v] = 0.0f;
+        bp[v].reset();
+        bp2[v].reset();
+    }
+    for (auto &o : metal) o = Osc();
     clapPulse = 0;
+    clapTimer = 0.0f;
+    rng = kRngSeed;
 }
 
 void Hexbeat::allNotesOff() {} // nothing sustains; let tails ring

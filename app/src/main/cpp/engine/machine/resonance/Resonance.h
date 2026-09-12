@@ -69,6 +69,8 @@ class Resonance final : public Machine {
         float exciteLeft = 0.0f, exciteStep = 0.0f, exciteGain = 0.0f;
         float bendLeft = 0.0f, bendCoeff = 0.0f, bendDepth = 0.0f;
         float velocity = 1.0f;
+        // Where the last strike landed, humanise included. -1 until struck.
+        float hit = -1.0f;
         float last = 0.0f;   // what this pad put out, for the coupling bus
         bool ringing = false;
         // What the modes were built from, so they are only rebuilt when the
@@ -80,6 +82,19 @@ class Resonance final : public Machine {
     float padParam(int32_t pad, int32_t which) const { return params_.get(PadBase + pad * PadParamCount + which); }
     int32_t padStep(int32_t pad, int32_t which) const { return static_cast<int32_t>(padParam(pad, which) + 0.5f); }
     void buildPad(int32_t pad);
+    /**
+     * Where a pad is struck, humanise included.
+     *
+     * Humanise used to be written back into the Hit parameter itself, which
+     * made it a random walk with nothing pulling it home: the position you
+     * set drifted away over a session and eventually pinned at one end, and
+     * two renders of the same song could not agree because the drift
+     * survived a reset. Where a stick landed is a property of the hit, so
+     * it lives on the pad and a reset takes it back.
+     */
+    float hitOf(int32_t pad) const {
+        return pads[pad].hit >= 0.0f ? pads[pad].hit : padParam(pad, Hit);
+    }
     float noise() {
         rng ^= rng << 13;
         rng ^= rng >> 17;
@@ -90,7 +105,8 @@ class Resonance final : public Machine {
     float sr = 48000.0f;
     Pad pads[kPads];
     float bus = 0.0f; // what the kit is doing, one sample ago
-    uint32_t rng = 0x2545f491u;
+    static constexpr uint32_t kRngSeed = 0x2545f491u;
+    uint32_t rng = kRngSeed;
 };
 
 } // namespace acidulous::machine

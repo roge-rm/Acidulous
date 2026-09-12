@@ -108,7 +108,8 @@ class Ratio final : public Machine {
         dsp::LfoGen lfo[kLfos];
         dsp::MultiFilter filter;
         float mod[DestCount]{};
-        uint32_t rng = 0x7f4a7c15u;
+        static constexpr uint32_t kSeed = 0x7f4a7c15u;
+        uint32_t rng = kSeed;
     };
 
     /** The blended routing, rebuilt once per block rather than per voice. */

@@ -247,15 +247,68 @@ void Manual::rebuildTuning() {
 }
 
 void Manual::reset() {
-    for (auto &v : voices) { v.used = false; v.gate = false; v.amp.kill(); }
+    // Whole voices. Clearing the gate and killing the amp left the
+    // percussion, the key click and the chiff still decaying, and every
+    // contact still part way through its make time.
+    // A fresh Voice, then the one thing about it that prepare() owns rather
+    // than a patch: the envelope's sample rate. Without this line an organ
+    // at 44.1 kHz would run its envelopes as though it were at 48.
+    for (auto &v : voices) { v = Voice(); v.amp.setSampleRate(sampleRate); }
+
+    // The generator. Ninety-one wheels free-run by design - that is what
+    // gives an organ its beating - so a reset has to put every one of them
+    // back or a render starts wherever the last note left it.
     for (auto &p : wheelPhase) p = 0.0f;
+    for (auto &p : wheelOut) p = 0.0f;
     for (auto &p : sprayPhase) p = 0.0f;
+    for (auto &slot : wheelPeak) for (auto &p : slot) p = 0.0f;
+    // The stamp cache says which wheels a slot touched this frame. Left
+    // alone, stale stamps from before the reset match the new frame count
+    // and wheels are skipped that should have sounded.
+    for (auto &slot : wheelStamp) for (auto &p : slot) p = 0;
+    for (auto &slot : wheelGain) for (auto &p : slot) p = 0.0f;
+    for (auto &slot : usedWheel) for (auto &p : slot) p = 0;
+    for (auto &n : usedCount) n = 0;
+    frameStamp = 0;
+
+    // Derived from the model parameters, and rebuilt when these say so.
+    // Zeroed as well as invalidated: a half-built generator that is never
+    // asked to rebuild is worse than an empty one.
+    for (auto &p : wheelStep) p = 0.0f;
+    for (auto &p : wheelTrim) p = 0.0f;
+    for (auto &p : sprayPan) p = 0.0f;
+    for (auto &p : sprayStep) p = 0.0f;
+    modelAge = -1.0f;
+    modelSpray = -1.0f;
+    sprayDrift = 0.0f;
+
+    for (auto &l : lfo) l.reset(0.0f);
+    for (auto &v : lfoValue) v = 0.0f;
+    for (auto &e : eg) e.reset();
+    scanPhase = scanValue = 0.0f;
+    tremPhase = 0.0f;
+    humPhase = 0.0f;
+
     rotary.reset();
     scanner.clear();
+
+    // The tone stack. Its coefficients come from the patch every block, but
+    // its *history* is four samples of whatever was playing before, and a
+    // render that starts with those is not the render that starts without.
+    bassEq.reset();
+    midEq.reset();
+    trebleEq.reset();
+    reedyFilter.reset();
+    chiffFilter.reset();
+
     windPressure = 1.0f;
     heldCount = 0;
     bendSemis = 0.0f;
+    modWheel = pressure = 0.0f;
+    expression = 1.0f;
+    for (auto &m : blockMod) m = 0.0f;
     leakSum = 0.0f;
+    rngState = kRngSeed;
 }
 
 int32_t Manual::wheelFor(int32_t note, int32_t bar) const {

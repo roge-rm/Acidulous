@@ -8,7 +8,13 @@ namespace acidulous::dsp {
 class DelayLine {
   public:
     void prepare(int32_t maxSamples) { buf.assign(static_cast<size_t>(maxSamples < 2 ? 2 : maxSamples), 0.0f); wr = 0; }
-    void clear() { for (auto &v : buf) v = 0.0f; }
+    // The buffer *and* the write head: clear() used to leave wr wherever
+    // the last render stopped, so a line that had been used was not in the
+    // state a freshly prepared one is in.
+    void clear() {
+        for (auto &v : buf) v = 0.0f;
+        wr = 0;
+    }
     int32_t capacity() const { return static_cast<int32_t>(buf.size()); }
     void write(float v) { buf[static_cast<size_t>(wr)] = v; if (++wr >= capacity()) wr = 0; }
     // `samples` back from the write position, 1 <= samples < capacity.

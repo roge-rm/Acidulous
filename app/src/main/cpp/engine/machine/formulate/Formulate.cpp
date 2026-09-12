@@ -82,6 +82,7 @@ void Formulate::reset() {
         v.smoothed = 0.0f;
     }
     pwmPhase = 0.0f;
+    rng = kRngSeed;
 }
 
 void *Formulate::swapObject(int32_t slot, void *object) {

@@ -88,15 +88,13 @@ void Resonance::prepare(int32_t sampleRate) {
 }
 
 void Resonance::reset() {
-    for (auto &p : pads) {
-        for (auto &m : p.modes) m.clear();
-        p.exciteLeft = 0.0f;
-        p.bendLeft = 0.0f;
-        p.ringing = false;
-        p.last = 0.0f;
-        p.builtTune = -1.0f; // force a rebuild: the parameters may have moved
-    }
+    // A whole pad back to new. It carried the excitation step and gain, the
+    // bend coefficients and the velocity of the last hit, none of which were
+    // being cleared - and a default Pad has builtTune -1, which is what
+    // forces the rebuild the old code asked for by hand.
+    for (auto &p : pads) p = Pad();
     bus = 0.0f;
+    rng = kRngSeed;
 }
 
 void Resonance::allNotesOff() {
@@ -121,7 +119,7 @@ void Resonance::buildPad(int32_t pad) {
     const float decay = padParam(pad, Decay);
     const float damp = padParam(pad, Damp);
     const float inharm = padParam(pad, Inharm);
-    const float hit = padParam(pad, Hit);
+    const float hit = hitOf(pad);
     const int32_t want = std::clamp(static_cast<int32_t>(params_.get(Modes) + 0.5f), 1, kMaxModes);
 
     p.modeCount = want;
@@ -170,11 +168,8 @@ void Resonance::noteOn(uint8_t note, uint8_t velocity) {
     // a little and the object answers differently. It is the reason two hits
     // in a row do not sound like a copy.
     const float humanise = params_.get(Humanise);
-    if (humanise > 0.001f) {
-        const float wobble = noise() * humanise * 0.12f;
-        params_.set(PadBase + pad * PadParamCount + Hit,
-                    std::clamp(params_.normalized(PadBase + pad * PadParamCount + Hit) + wobble, 0.0f, 1.0f));
-    }
+    const float wobble = humanise > 0.001f ? noise() * humanise * 0.12f : 0.0f;
+    p.hit = std::clamp(padParam(pad, Hit) + wobble, 0.0f, 1.0f);
 
     const float hard = padParam(pad, Hard);
     // A hard stick is a short, bright hit; a soft one is longer and duller.
@@ -203,7 +198,7 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
         // not something to do per block for eight pads.
         if (p.builtKind != padStep(pad, Kind) || p.builtTune != padParam(pad, Tune) ||
             p.builtDecay != padParam(pad, Decay) || p.builtDamp != padParam(pad, Damp) ||
-            p.builtInharm != padParam(pad, Inharm) || p.builtHit != padParam(pad, Hit) ||
+            p.builtInharm != padParam(pad, Inharm) || p.builtHit != hitOf(pad) ||
             p.builtModes != wantModes) {
             buildPad(pad);
         }

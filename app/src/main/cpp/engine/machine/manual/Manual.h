@@ -176,7 +176,8 @@ class Manual final : public Machine {
     float bendSemis = 0.0f;
     float modWheel = 0.0f, pressure = 0.0f, expression = 1.0f;
     float bpm = 120.0f;
-    uint32_t rngState = 0x1234567u;
+    static constexpr uint32_t kRngSeed = 0x1234567u;
+    uint32_t rngState = kRngSeed;
     int32_t heldCount = 0;
     float blockMod[DestCount] = {};
 };

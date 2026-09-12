@@ -147,7 +147,8 @@ class Pollen final : public Machine {
     // The feedback path's own state: a loop needs somewhere for DC to go
     // other than into the ring, where it would sit until a reset.
     float dcInL = 0.0f, dcOutL = 0.0f, dcInR = 0.0f, dcOutR = 0.0f;
-    uint32_t rng = 0x51ed270bu;
+    static constexpr uint32_t kRngSeed = 0x51ed270bu;
+    uint32_t rng = kRngSeed;
 };
 
 } // namespace acidulous::machine

@@ -127,7 +127,8 @@ class Cumulus final : public Machine {
     float lfoValue[2] = {0.0f, 0.0f};
     float bpm = 120.0f;
     float bend = 0.0f, modWheel = 0.0f, pressure = 0.0f;
-    uint32_t rng = 0x9e3779b9u;
+    static constexpr uint32_t kRngSeed = 0x9e3779b9u;
+    uint32_t rng = kRngSeed;
 
     float nextRandom() {
         rng = rng * 1664525u + 1013904223u;

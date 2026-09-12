@@ -71,7 +71,8 @@ class Brazen final : public Machine {
         float breath = 1.0f;       // nor blow equally hard
         float pan = 0.0f;
         float push = 0.0f;      // what they are blowing, this block
-        uint32_t rng = 1u;
+        static constexpr uint32_t kSeed = 1u;
+        uint32_t rng = kSeed;
     };
     struct Voice {
         bool used = false, gate = false;
@@ -101,7 +102,8 @@ class Brazen final : public Machine {
     int64_t ageCounter = 0;
     float bend = 0.0f, modWheel = 0.0f, pressure = 0.0f;
     float growlPhase = 0.0f;
-    uint32_t rng = 0x6d2b79f5u;
+    static constexpr uint32_t kRngSeed = 0x6d2b79f5u;
+    uint32_t rng = kRngSeed;
     float lastSpreadCents = 0.0f;
 };
 

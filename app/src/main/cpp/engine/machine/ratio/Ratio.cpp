@@ -177,6 +177,7 @@ void Ratio::reset() {
         v.filter.reset();
         for (auto &o : v.op) o = OpState();
         for (auto &m : v.mod) m = 0.0f;
+        v.rng = Voice::kSeed;
     }
     modWheel = pressure = bend = 0.0f;
     buildRouting();

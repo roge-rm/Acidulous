@@ -106,7 +106,8 @@ class Trinity final : public Machine {
         dsp::LfoGen lfo[kLfos];
         dsp::MultiFilter filter[2];
         float mod[DestCount]{};
-        uint32_t rng = 0x2f6e2b1u;
+        static constexpr uint32_t kSeed = 0x2f6e2b1u;
+        uint32_t rng = kSeed;
     };
 
     void startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger);
@@ -123,7 +124,8 @@ class Trinity final : public Machine {
     uint32_t ageCounter = 1;
     float modWheel = 0.0f, aftertouch = 0.0f, bend = 0.0f, bpm = 120.0f;
     float noiseZ = 0.0f;
-    uint32_t noiseRng = 0x13579bdfu;
+    static constexpr uint32_t kNoiseSeed = 0x13579bdfu;
+    uint32_t noiseRng = kNoiseSeed;
     float voiceBuf[64]{};
 };
 

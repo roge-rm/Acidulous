@@ -142,7 +142,8 @@ class Cipher final : public Machine {
 
     float bendSemis = 0.0f, modWheel = 0.0f, pressure = 0.0f;
     float bpm = 120.0f;
-    uint32_t rngState = 0x2f6e1cu;
+    static constexpr uint32_t kRngSeed = 0x2f6e1cu;
+    uint32_t rngState = kRngSeed;
     int32_t shuffleMap[kMaxBands] = {};
     int32_t shuffleSeed = -1;
 };

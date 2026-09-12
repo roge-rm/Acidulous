@@ -94,7 +94,8 @@ class Genesis final : public Machine {
     void trigger(int32_t voice, float velocity);
 
     float sr = 48000.0f;
-    uint32_t rng = 0x1f123bb5u;
+    static constexpr uint32_t kRngSeed = 0x1f123bb5u;
+    uint32_t rng = kRngSeed;
 
     Env amp[VoiceCount], pitch[VoiceCount], aux[VoiceCount];
     float gain[VoiceCount]{};

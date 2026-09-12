@@ -151,6 +151,7 @@ void Filament::reset() {
     for (auto &s : sympathetic) s.clear();
     for (auto &bq : body) bq.reset();
     stringLevel = 0.0f;
+    rngState = kRngSeed;
 }
 
 // The sympathetic bank follows whatever was played last, so it is a set of

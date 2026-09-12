@@ -57,7 +57,8 @@ class Hexbeat final : public Machine {
     void renderVoice(int32_t voice, float *out, int32_t frames);
 
     float sr = 48000.0f;
-    uint32_t rng = 0x9e3779b9u;
+    static constexpr uint32_t kRngSeed = 0x9e3779b9u;
+    uint32_t rng = kRngSeed;
 
     // per-voice state
     Env amp[VoiceCount];

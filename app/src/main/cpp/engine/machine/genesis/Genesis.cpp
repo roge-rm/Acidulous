@@ -78,16 +78,24 @@ void Genesis::prepare(int32_t sampleRate) {
 
 void Genesis::reset() {
     for (int32_t v = 0; v < VoiceCount; ++v) {
-        amp[v].active = false;
-        amp[v].level = 0.0f;
-        pitch[v].level = 0.0f;
-        aux[v].level = 0.0f;
+        // Whole structs, not chosen fields: the envelopes kept their coeff
+        // and their active flag, and the oscillators kept their phase.
+        amp[v] = Env();
+        pitch[v] = Env();
+        aux[v] = Env();
+        osc[v] = Osc();
+        osc2[v] = Osc();
+        gain[v] = 0.0f;
+        tuneOf[v] = 0.0f;
         bp[v].reset();
         hp[v].reset();
     }
+    for (auto &o : metal) o = Osc();
     compEnv = 0.0f;
     duckEnv = 0.0f;
+    clapPhase = 0.0f;
     clapLeft = 0;
+    rng = kRngSeed;
 }
 
 void Genesis::allNotesOff() { reset(); }

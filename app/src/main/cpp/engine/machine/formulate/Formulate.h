@@ -95,7 +95,8 @@ class Formulate final : public Machine {
     int64_t ageCounter = 0;
     float bpm = 120.0f;
     float bend = 0.0f, modWheel = 0.0f;
-    uint32_t rng = 0x1234567u;
+    static constexpr uint32_t kRngSeed = 0x1234567u;
+    uint32_t rng = kRngSeed;
     float pwmPhase = 0.0f;
 };
 

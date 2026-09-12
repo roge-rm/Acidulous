@@ -126,7 +126,8 @@ class Mosaic final : public Machine {
         float mod[DestCount]{};
         float modCutoffCents = 0.0f; // from the file's modulators, not the matrix
         bool fileDrivesLevel = false;
-        uint32_t rng = 0x31415926u;
+        static constexpr uint32_t kSeed = 0x31415926u;
+        uint32_t rng = kSeed;
     };
 
     Voice *allocate();
