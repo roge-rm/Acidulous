@@ -419,7 +419,7 @@ private fun ClickPage() {
         "The master gives up this much headroom while the click is on.",
         UiPrefs.clickVolume, 0f..1f,
     ) { UiPrefs.chooseClickVolume(it) }
-    Section("count-in", "Bars of clicks before anything moves - the song's own, so 7/8 counts seven.") {
+    Section("count-in", "Bars of clicks before a take starts - the song's own, so 7/8 counts seven. Only when armed; plain playback starts at once.") {
         for (bars in 0..4) {
             Choice(if (bars == 0) "none" else "$bars", UiPrefs.countInBars == bars) {
                 UiPrefs.chooseCountInBars(bars)

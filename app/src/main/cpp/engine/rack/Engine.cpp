@@ -71,7 +71,12 @@ void Engine::renderBlock(const float *in, float *out) {
             // clicks are counted by - but the scheduler is not started, so
             // nothing sounds and nothing is recorded until the count is
             // out. The bars are the song's own, so 7/8 counts seven.
-            const int32_t bars = transport.countInBarsWanted();
+            //
+            // Only when armed. A count-in counts you in to a take; pressing
+            // play to hear where you are should not make you sit through
+            // four bars of clicks first. The setting stays on - it is how
+            // you record - and simply has nothing to do on a plain play.
+            const int32_t bars = transport.isRecordArmed() ? transport.countInBarsWanted() : 0;
             const int64_t ticks = bars > 0 ? static_cast<int64_t>(bars) * scheduler.songTicksPerBar() : 0;
             // Counted in frames rather than ticks, and as a double.
             //
