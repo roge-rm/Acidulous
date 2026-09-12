@@ -63,6 +63,8 @@ fun PianoKeys(
     scaleRoot: Int?,
     octave: Int,
     modifier: Modifier = Modifier,
+    /** How the running scale writes its notes; empty is chromatic. */
+    noteSpelling: Map<Int, String> = emptyMap(),
 ) {
     val c = Acid.colors
     val measurer = rememberTextMeasurer()
@@ -146,7 +148,7 @@ fun PianoKeys(
                     // The tonic gets its name, so the scale has a landmark.
                     if (root != null && ((note % 12) + 12) % 12 == root) {
                         val laid = measurer.measure(
-                            AnnotatedString(noteName(note)),
+                            AnnotatedString(noteName(note, noteSpelling)),
                             nameStyle.copy(color = if (black) c.keyLabelBlack else c.keyLabel),
                         )
                         if (laid.size.width < layout.keyW - 2f) {
@@ -162,7 +164,7 @@ fun PianoKeys(
                     val colour = if (down.contains(note)) c.teal else c.keyWhite
                     drawRect(colour, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
                     if (note % 12 == 0) {
-                        val laid = measurer.measure(AnnotatedString(noteName(note)), nameStyle)
+                        val laid = measurer.measure(AnnotatedString(noteName(note, noteSpelling)), nameStyle)
                         if (laid.size.width < layout.keyW - 2f) {
                             drawText(laid, topLeft = Offset(x + (layout.keyW - laid.size.width) / 2f,
                                                             size.height - laid.size.height - 3f))
@@ -330,6 +332,8 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
         (com.rm.acidulous.model.Scales.intervals.getOrNull(s.scale) ?: emptyList())
             .map { (it + s.key) % 12 }.toSet()
     }
+    // C Dorian is C D E♭ F G A B♭, not C D D♯ F G A A♯.
+    val spelling = remember(s.key, s.scale) { com.rm.acidulous.model.Scales.spelling(s.key, s.scale) }
     PlainDialog(
         title = "Scale",
         onDismiss = onDismiss,
@@ -341,8 +345,10 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(Modifier.fillMaxWidth().horizontalScrollWithBar(androidx.compose.foundation.rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    com.rm.acidulous.model.Scales.keyNames.forEachIndexed { i, name ->
-                        Pill(name, i == s.key) { s = s.copy(key = i) }
+                    for (i in 0 until 12) {
+                        Pill(com.rm.acidulous.model.Scales.rootName(i, s.scale), i == s.key) {
+                            s = s.copy(key = i)
+                        }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -376,7 +382,7 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                com.rm.acidulous.model.Scales.keyNames[pc].take(2),
+                                spelling[pc] ?: com.rm.acidulous.model.Scales.keyNames[pc],
                                 color = Color.White, fontSize = 9.sp,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             )

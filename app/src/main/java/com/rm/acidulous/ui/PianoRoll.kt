@@ -69,6 +69,8 @@ fun PianoRoll(
     lowestPitch: Int,
     rows: Int,
     scalePitchClasses: Set<Int>?,
+    /** How the running scale writes its notes; empty is chromatic. */
+    noteSpelling: Map<Int, String> = emptyMap(),
     scaleView: ScaleView,
     onCycleScaleView: () -> Unit,
     /** The window this page shows, in ticks from the start of the clip. */
@@ -286,7 +288,7 @@ fun PianoRoll(
             }
         }
 
-        drawNameGutter(geo, textMeasurer, scale, c)
+        drawNameGutter(geo, textMeasurer, scale, c, noteSpelling)
         drawBarRuler(geo, size, textMeasurer, playheadTick, c)
         drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView, c)
     }
@@ -301,7 +303,10 @@ fun PianoRoll(
  *
  * When rows are too short for a label, only the C rows keep one.
  */
-private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scale: Set<Int>?, c: AcidColors) {
+private fun DrawScope.drawNameGutter(
+    geo: Geometry, measurer: TextMeasurer, scale: Set<Int>?, c: AcidColors,
+    noteSpelling: Map<Int, String>,
+) {
     drawRect(c.bg, Offset.Zero, Size(geo.originX, size.height))
     // A 10sp line is about 12dp tall, so below this the names would collide
     // and only the Cs keep one. The measured guard below is the real stop.
@@ -333,7 +338,7 @@ private fun DrawScope.drawNameGutter(geo: Geometry, measurer: TextMeasurer, scal
             fontSize = NameTextSize,
             fontFamily = FontFamily.Monospace,
         )
-        val laid = measurer.measure(AnnotatedString(noteName(pitch)), style)
+        val laid = measurer.measure(AnnotatedString(noteName(pitch, noteSpelling)), style)
         if (laid.size.height <= geo.rowH) {
             drawText(laid, topLeft = Offset(3f, top + (geo.rowH - laid.size.height) / 2f))
         }

@@ -296,6 +296,7 @@ fun EditScreen(
             lowestPitch = lowestPitch,
             rows = rows,
             scalePitchClasses = Scales.activeFor(track),
+            noteSpelling = Scales.spellingFor(track),
             scaleView = scaleView,
             firstTick = firstTick,
             visibleTicks = pageTicks,
@@ -454,8 +455,11 @@ fun EditScreen(
                     value = mod, accent = Acid.colors.accent, vertical = true, label = null,
                     modifier = Modifier.width(26.dp).fillMaxHeight(),
                 ) { v -> mod = v; NativeEngine.controlChange(trackIndex, 1, (v * 127f).toInt()) }
-                PianoKeys(trackIndex, Scales.activeFor(track), Scales.rootFor(track), octave,
-                    Modifier.weight(1f).fillMaxHeight())
+                PianoKeys(
+                    trackIndex, Scales.activeFor(track), Scales.rootFor(track), octave,
+                    Modifier.weight(1f).fillMaxHeight(),
+                    noteSpelling = Scales.spellingFor(track),
+                )
                 // Bend springs back, so it is the one wheel you can let go of
                 // in a hurry and know where it landed.
                 TouchWheel(

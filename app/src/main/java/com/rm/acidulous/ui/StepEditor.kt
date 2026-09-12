@@ -135,4 +135,14 @@ private fun Toggle(label: String, on: Boolean, colour: Color, onClick: () -> Uni
 }
 
 private val NAMES = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
-fun noteName(pitch: Int): String = NAMES[((pitch % 12) + 12) % 12] + (pitch / 12 - 1)
+/**
+ * A note's name, spelled by the running scale where there is one.
+ *
+ * [spelling] comes from `Scales.spellingFor(track)`; empty means chromatic,
+ * and then everything is a sharp, which is the convention when there is no
+ * key to read it against.
+ */
+fun noteName(pitch: Int, spelling: Map<Int, String> = emptyMap()): String {
+    val pc = ((pitch % 12) + 12) % 12
+    return (spelling[pc] ?: NAMES[pc]) + (pitch / 12 - 1)
+}

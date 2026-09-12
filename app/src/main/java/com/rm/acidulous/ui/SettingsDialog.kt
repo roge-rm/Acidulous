@@ -168,7 +168,7 @@ private fun NewSongSection() {
         "scale",
         if (UiPrefs.newScaleOn) {
             "Each new track is fitted with a Scale eventor in " +
-                "${Scales.keyNames[UiPrefs.newScaleKey]} ${Scales.names[UiPrefs.newScaleIndex]}, so the keys and the roll agree from the first note."
+                "${Scales.rootName(UiPrefs.newScaleKey, UiPrefs.newScaleIndex)} ${Scales.names[UiPrefs.newScaleIndex]}, so the keys and the roll agree from the first note."
         } else {
             "New tracks start chromatic, with no Scale eventor fitted."
         },
@@ -176,7 +176,7 @@ private fun NewSongSection() {
         Choice("no scale", !UiPrefs.newScaleOn) { UiPrefs.chooseNewScale(false) }
         Choice(
             if (UiPrefs.newScaleOn) {
-                "${Scales.keyNames[UiPrefs.newScaleKey]} ${Scales.names[UiPrefs.newScaleIndex]}"
+                "${Scales.rootName(UiPrefs.newScaleKey, UiPrefs.newScaleIndex)} ${Scales.names[UiPrefs.newScaleIndex]}"
             } else {
                 "choose…"
             },
@@ -234,7 +234,7 @@ private fun ScalePickerDialog(key: Int, scale: Int, onDismiss: () -> Unit, onPic
     var k by remember { mutableStateOf(key) }
     PlainDialog(title = "Scale", onDismiss = onDismiss, spacing = 10.dp) {
         Section("key") {
-            Scales.keyNames.forEachIndexed { i, name -> Choice(name, k == i) { k = i } }
+            for (i in 0 until 12) Choice(Scales.rootName(i, scale), k == i) { k = i }
         }
         ListSection("scale") {
             Scales.names.forEachIndexed { i, name ->

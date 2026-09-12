@@ -5,9 +5,18 @@ import org.junit.Test
 
 class MidiParserTest {
     private val seen = mutableListOf<Triple<Int, Int, Int>>()
-    private val parser = MidiParser { s, a, b -> seen += Triple(s, a, b) }
 
-    private fun feed(vararg bytes: Int) = parser.parse(bytes.map { it.toByte() }.toByteArray(), 0, bytes.size)
+    /** Realtime bytes go to their own callback, with the arrival stamp. */
+    private val realtime = mutableListOf<Triple<Int, Int, Int>>()
+    private val stamps = mutableListOf<Long>()
+
+    private val parser = MidiParser(
+        onMessage = { s, a, b -> seen += Triple(s, a, b) },
+        onRealtime = { s, a, b, stamp -> realtime += Triple(s, a, b); stamps += stamp },
+    )
+
+    private fun feed(vararg bytes: Int, stamp: Long = 0L) =
+        parser.parse(bytes.map { it.toByte() }.toByteArray(), 0, bytes.size, stamp)
 
     @Test fun `a note on and off`() {
         feed(0x90, 60, 100, 0x80, 60, 0)
@@ -28,6 +37,29 @@ class MidiParserTest {
 
     @Test fun `clock in the middle of a message does not break it`() {
         feed(0x90, 0xf8, 60, 0xf8, 100)
+        assertEquals(listOf(Triple(0x90, 60, 100)), seen)
+        // ...and the clocks are still delivered, which is what M32 needs:
+        // the parser used to drop every realtime byte on the floor.
+        assertEquals(listOf(Triple(0xf8, 0, 0), Triple(0xf8, 0, 0)), realtime)
+    }
+
+    @Test fun `realtime bytes carry the arrival stamp`() {
+        feed(0xf8, 0xfa, 0xfc, stamp = 1234L)
+        assertEquals(listOf(Triple(0xf8, 0, 0), Triple(0xfa, 0, 0), Triple(0xfc, 0, 0)), realtime)
+        assertEquals(listOf(1234L, 1234L, 1234L), stamps)
+        assertEquals(emptyList<Triple<Int, Int, Int>>(), seen)
+    }
+
+    @Test fun `song position is realtime, and takes its two data bytes`() {
+        // 0xf2 is the one non-realtime message the realtime path wants, so
+        // it collects both bytes before it goes out.
+        feed(0xf2, 0x10, 0x00)
+        assertEquals(listOf(Triple(0xf2, 0x10, 0x00)), realtime)
+        assertEquals(emptyList<Triple<Int, Int, Int>>(), seen)
+    }
+
+    @Test fun `song position does not leave running status behind it`() {
+        feed(0x90, 60, 100, 0xf2, 0x10, 0x00, 62, 100)
         assertEquals(listOf(Triple(0x90, 60, 100)), seen)
     }
 
