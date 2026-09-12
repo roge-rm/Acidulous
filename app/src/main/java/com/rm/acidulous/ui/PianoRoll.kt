@@ -528,6 +528,9 @@ private class Callbacks(
  * gesture over the same clip.
  */
 internal class TwoFingers(val centre: Offset, val spreadX: Float, val spreadY: Float) {
+    /** How far apart the fingers are, for telling a pinch from a push. */
+    val distance: Float get() = kotlin.math.hypot(spreadX, spreadY)
+
     companion object {
         /**
          * How far apart two fingers must be on an axis before a pinch along
@@ -540,6 +543,13 @@ internal class TwoFingers(val centre: Offset, val spreadX: Float, val spreadY: F
          */
         const val MinSpread = 48f
 
+        /**
+         * How far a gesture must go before it is called one thing or the
+         * other. The same slop a drag uses: below it nobody knows what you
+         * meant yet, and guessing early is what made a pinch scroll.
+         */
+        const val LockSlop = 24.0f
+
         fun of(event: androidx.compose.ui.input.pointer.PointerEvent): TwoFingers? {
             val down = event.changes.filter { it.pressed }
             if (down.size < 2) return null
@@ -550,6 +560,31 @@ internal class TwoFingers(val centre: Offset, val spreadX: Float, val spreadY: F
                 abs(a.x - b.x), abs(a.y - b.y),
             )
         }
+    }
+}
+
+/**
+ * What a two-finger gesture turned out to be. One of them, and never two.
+ *
+ * Moving the fingers apart also moves their middle a little, and sliding them
+ * across also changes how far apart they are a little, so a handler that acts
+ * on both at once scrolls while it zooms and zooms while it scrolls - which
+ * reads as the grid squirming rather than as either thing being done. So the
+ * gesture is watched until one of the two is plainly winning, and from then
+ * on it is only that until the fingers come up. Zoom also takes one axis, the
+ * one the fingers are lined up along, for the same reason.
+ */
+internal enum class TwoFingerMode { Undecided, Pan, ZoomTime, ZoomPitch }
+
+/** Which of them this is, once it is far enough along to tell. */
+internal fun decideTwoFinger(start: TwoFingers, now: TwoFingers): TwoFingerMode {
+    val panned = (now.centre - start.centre).getDistance()
+    val pinched = abs(now.distance - start.distance)
+    return when {
+        panned < TwoFingers.LockSlop && pinched < TwoFingers.LockSlop -> TwoFingerMode.Undecided
+        panned >= pinched -> TwoFingerMode.Pan
+        now.spreadX >= now.spreadY -> TwoFingerMode.ZoomTime
+        else -> TwoFingerMode.ZoomPitch
     }
 }
 
@@ -589,29 +624,38 @@ private suspend fun AwaitPointerEventScope.slopOrSecondFinger(
  * do either or both without the two being tangled together.
  */
 private suspend fun AwaitPointerEventScope.twoFingers(geo: Geometry, cb: Callbacks) {
-    var last = TwoFingers.of(currentEvent) ?: return
+    val start = TwoFingers.of(currentEvent) ?: return
+    var last = start
+    var mode = TwoFingerMode.Undecided
     var rowCarry = 0f
     while (true) {
         val event = awaitPointerEvent()
         event.changes.forEach { it.consume() }
         val now = TwoFingers.of(event) ?: break
+        if (mode == TwoFingerMode.Undecided) mode = decideTwoFinger(start, now)
 
-        cb.onScrollTime(-(now.centre.x - last.centre.x) / geo.pxPerTick)
-        // Whole rows only, with the remainder carried, so a slow drag moves
-        // one row at a time rather than stalling.
-        rowCarry += (now.centre.y - last.centre.y) / geo.rowH
-        val rows = rowCarry.toInt()
-        if (rows != 0) {
-            cb.onScrollPitch(rows)
-            rowCarry -= rows.toFloat()
+        when (mode) {
+            TwoFingerMode.Pan -> {
+                cb.onScrollTime(-(now.centre.x - last.centre.x) / geo.pxPerTick)
+                // Whole rows only, with the remainder carried, so a slow drag
+                // moves one row at a time rather than stalling.
+                rowCarry += (now.centre.y - last.centre.y) / geo.rowH
+                val rows = rowCarry.toInt()
+                if (rows != 0) {
+                    cb.onScrollPitch(rows)
+                    rowCarry -= rows.toFloat()
+                }
+            }
+            TwoFingerMode.ZoomTime ->
+                if (last.spreadX > TwoFingers.MinSpread && now.spreadX > TwoFingers.MinSpread) {
+                    cb.onZoom(1.0f, last.spreadX / now.spreadX)
+                }
+            TwoFingerMode.ZoomPitch ->
+                if (last.spreadY > TwoFingers.MinSpread && now.spreadY > TwoFingers.MinSpread) {
+                    cb.onZoom(last.spreadY / now.spreadY, 1.0f)
+                }
+            TwoFingerMode.Undecided -> {}
         }
-
-        val wide = last.spreadX > TwoFingers.MinSpread && now.spreadX > TwoFingers.MinSpread
-        val tall = last.spreadY > TwoFingers.MinSpread && now.spreadY > TwoFingers.MinSpread
-        val timeScale = if (wide) last.spreadX / now.spreadX else 1.0f
-        val pitchScale = if (tall) last.spreadY / now.spreadY else 1.0f
-        if (wide || tall) cb.onZoom(pitchScale, timeScale)
-
         last = now
     }
 }

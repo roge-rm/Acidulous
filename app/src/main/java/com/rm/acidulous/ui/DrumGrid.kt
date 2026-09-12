@@ -84,20 +84,32 @@ fun DrumGrid(
                     }
                     if (!second) return@awaitEachGesture
 
-                    var last = TwoFingers.of(currentEvent) ?: return@awaitEachGesture
+                    val start = TwoFingers.of(currentEvent) ?: return@awaitEachGesture
+                    var last = start
+                    var mode = TwoFingerMode.Undecided
                     while (true) {
                         val event = awaitPointerEvent(PointerEventPass.Initial)
                         // From here everything is eaten, so the finger that
                         // landed on a pad does not toggle it on the way up.
                         event.changes.forEach { it.consume() }
                         val now = TwoFingers.of(event) ?: break
-                        onScrollTime(-(now.centre.x - last.centre.x) / (size.width.toFloat() / steps) * grid)
-                        scroll.dispatchRawDelta(last.centre.y - now.centre.y)
-                        if (last.spreadX > TwoFingers.MinSpread && now.spreadX > TwoFingers.MinSpread) {
-                            onZoomTime(last.spreadX / now.spreadX)
-                        }
-                        if (last.spreadY > TwoFingers.MinSpread && now.spreadY > TwoFingers.MinSpread) {
-                            rowHeight = (rowHeight * now.spreadY / last.spreadY).coerceIn(14f, 40f)
+                        if (mode == TwoFingerMode.Undecided) mode = decideTwoFinger(start, now)
+
+                        // One thing at a time, decided once - see TwoFingerMode.
+                        when (mode) {
+                            TwoFingerMode.Pan -> {
+                                onScrollTime(-(now.centre.x - last.centre.x) / (size.width.toFloat() / steps) * grid)
+                                scroll.dispatchRawDelta(last.centre.y - now.centre.y)
+                            }
+                            TwoFingerMode.ZoomTime ->
+                                if (last.spreadX > TwoFingers.MinSpread && now.spreadX > TwoFingers.MinSpread) {
+                                    onZoomTime(last.spreadX / now.spreadX)
+                                }
+                            TwoFingerMode.ZoomPitch ->
+                                if (last.spreadY > TwoFingers.MinSpread && now.spreadY > TwoFingers.MinSpread) {
+                                    rowHeight = (rowHeight * now.spreadY / last.spreadY).coerceIn(14f, 40f)
+                                }
+                            TwoFingerMode.Undecided -> {}
                         }
                         last = now
                     }
