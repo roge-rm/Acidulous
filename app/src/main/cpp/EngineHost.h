@@ -245,6 +245,10 @@ class EngineHost {
 
     /** Stop everything and silence every tail. Safe from any thread. */
     void panic();
+    /** Bars of clicks before a start actually starts. 0 is none. */
+    void setCountInBars(int32_t bars);
+    /** Ticks left of the count, for the screen; 0 when not counting. */
+    int64_t countInRemaining() const;
 
     uint32_t notesOn(int rack) const;
     uint32_t notesOff(int rack) const;

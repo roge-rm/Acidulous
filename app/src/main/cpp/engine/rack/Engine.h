@@ -64,6 +64,10 @@ class Engine {
      * the audio thread is otherwise in the middle of.
      */
     std::atomic<bool> panicFlag{false};
+    // Frames left of a count-in, and the frames-per-tick it was measured
+    // at, so the screen can be told about it in ticks.
+    double countInFrames = 0.0;
+    double countInPerTick = 0.0;
     float inputScratch[kBlockFrames * 2] = {};
 
   private:

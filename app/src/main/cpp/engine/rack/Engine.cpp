@@ -1,6 +1,5 @@
 #include "Engine.h"
 #include <sequencer/ClockFollower.h>
-#include <android/log.h>
 #include <sequencer/Song.h>
 
 namespace acidulous {
@@ -67,7 +66,22 @@ void Engine::renderBlock(const float *in, float *out) {
     if (transport.applyRequests()) {
         if (transport.isPlaying()) {
             clock.reset();
-            startPending = true;
+            // A count-in is a number of bars of clicks before the song
+            // moves at all. The clock runs through them - it is what the
+            // clicks are counted by - but the scheduler is not started, so
+            // nothing sounds and nothing is recorded until the count is
+            // out. The bars are the song's own, so 7/8 counts seven.
+            const int32_t bars = transport.countInBarsWanted();
+            const int64_t ticks = bars > 0 ? static_cast<int64_t>(bars) * scheduler.songTicksPerBar() : 0;
+            // Counted in frames rather than ticks, and as a double.
+            //
+            // A block is 0.64 ticks at 120 bpm, and rounding that to a whole
+            // tick per block drained a two-bar count in 2.56 seconds instead
+            // of four - and at some tempos would round to nought and never
+            // drain at all. Frames divide exactly into blocks; ticks do not.
+            countInFrames = static_cast<double>(ticks) * clock.samplesPerTickNow();
+            countInPerTick = clock.samplesPerTickNow();
+            startPending = countInFrames <= 0.0;
         } else {
             scheduler.allNotesOff();
             scheduler.stopLauncher();
@@ -76,6 +90,19 @@ void Engine::renderBlock(const float *in, float *out) {
         playing = transport.isPlaying();
         emitTransport(playing);
     }
+    // Counting. The clock is advanced by hand here, because the scheduler -
+    // which normally drives it - is deliberately not running yet.
+    if (countInFrames > 0.0) {
+        countInFrames -= static_cast<double>(kBlockFrames);
+        if (countInFrames <= 0.0) {
+            countInFrames = 0.0;
+            startPending = true; // the bar line the count was counting to
+        }
+    }
+    transport.publishCountIn(countInPerTick > 0.0
+                                 ? static_cast<int64_t>(countInFrames / countInPerTick)
+                                 : 0);
+
     if (startPending) {
         if (transport.takeContinued()) {
             scheduler.resume();
@@ -114,13 +141,17 @@ void Engine::renderBlock(const float *in, float *out) {
     const seq::SceneInfo *sceneBefore = scheduler.currentSceneInfo();
     const int32_t repeatBefore = scheduler.currentRepeat();
 
-    if (playing) {
+    // While counting, the transport is "playing" - the clock runs and the
+    // clicks are counted by it - but the scheduler must not, or the song
+    // would sound underneath its own count-in.
+    const bool counting = countInFrames > 0.0;
+    if (playing && !counting) {
         if (!scheduler.process(clock.blockStart(), clock.blockEnd())) {
             scheduler.allNotesOff();
             transport.stopFromAudioThread();
             playing = false;
         }
-    } else {
+    } else if (!counting) {
         scheduler.applyIdleTempo();
     }
 
@@ -134,7 +165,9 @@ void Engine::renderBlock(const float *in, float *out) {
     // offset. The step is a bar or a division of the beat; the accent says
     // which of the three it is, because a metronome ticking sixteenths all
     // at one level is a buzz you cannot find the beat in.
-    if (playing && master.clickEnabled()) {
+    // A count-in always clicks - that is the whole of what it is - so it
+    // does not ask whether the metronome is switched on.
+    if ((playing && master.clickEnabled()) || counting) {
         const int64_t stepTicks = master.clickStepTicks();
         auto accentFor = [](int64_t tickInBar, int64_t ticksPerBar) {
             if (ticksPerBar > 0 && tickInBar % ticksPerBar == 0) return static_cast<int32_t>(dsp::Click::Bar);
@@ -142,11 +175,15 @@ void Engine::renderBlock(const float *in, float *out) {
             return static_cast<int32_t>(dsp::Click::Division);
         };
 
-        if (scheduler.launcherActive()) {
+        if (counting || scheduler.launcherActive()) {
             // No scene owns the bar line here, so the song's signature
             // counts from the transport's own zero.
             const int64_t ticksPerBar = scheduler.songTicksPerBar();
-            const int64_t step = stepTicks > 0 ? stepTicks : (ticksPerBar > 0 ? ticksPerBar : kPPQN);
+            // A count-in counts beats, whatever the metronome is set to.
+            // "One, two, three, four" is the entire point of it, and
+            // counting sixteenths would not be counting.
+            const int64_t step = counting ? kPPQN
+                                          : (stepTicks > 0 ? stepTicks : (ticksPerBar > 0 ? ticksPerBar : kPPQN));
             const int64_t from = clock.blockStart(), to = clock.blockEnd();
             int64_t t = (from / step) * step;
             if (t < from) t += step;

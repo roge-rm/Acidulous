@@ -157,6 +157,22 @@ class Transport {
         return true;
     }
     int32_t requestedStartScene() const { return startScene.load(std::memory_order_relaxed); }
+
+    // --- Count-in ----------------------------------------------------------------
+    /**
+     * How many bars of clicks to play before the song actually starts.
+     *
+     * Held here rather than read from settings on the audio thread, and
+     * consumed at the moment of starting: changing the setting while a
+     * count is already running must not lengthen the count you are
+     * currently listening to.
+     */
+    void setCountInBars(int32_t bars) { countInBars.store(bars < 0 ? 0 : bars, std::memory_order_relaxed); }
+    int32_t countInBarsWanted() const { return countInBars.load(std::memory_order_relaxed); }
+
+    /** Ticks left of the count, for the screen. 0 when not counting. */
+    void publishCountIn(int64_t ticksLeft) { countInLeft.store(ticksLeft, std::memory_order_relaxed); }
+    int64_t countInRemaining() const { return countInLeft.load(std::memory_order_relaxed); }
     bool loopScene() const { return loopSceneFlag.load(std::memory_order_relaxed); }
     bool loopSong() const { return loopSongFlag.load(std::memory_order_relaxed); }
 
@@ -187,6 +203,8 @@ class Transport {
 
   private:
     std::atomic<Request> request{Request::None};
+    std::atomic<int32_t> countInBars{0};
+    std::atomic<int64_t> countInLeft{0};
     std::atomic<int32_t> startScene{kCurrentScene};
     std::atomic<bool> loopSceneFlag{false};
     std::atomic<bool> loopSongFlag{true};

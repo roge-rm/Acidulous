@@ -439,6 +439,16 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeRenderStems(JNIEnv *env, jobject
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeCancelRender(JNIEnv *, jobject) { host().cancelRender(); }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetCountInBars(JNIEnv *, jobject, jint bars) {
+    host().setCountInBars(bars);
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCountInRemaining(JNIEnv *, jobject) {
+    return static_cast<jlong>(host().countInRemaining());
+}
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeIsRendering(JNIEnv *, jobject) { return host().isRendering() ? JNI_TRUE : JNI_FALSE; }
 

@@ -89,6 +89,22 @@ object UiPrefs {
     var keepAwake by mutableStateOf(true)
         private set
 
+    // --- Metronome -------------------------------------------------------
+    // The click belongs to the person and the device rather than the song:
+    // two people working on the same file want different clicks, and
+    // nobody wants the one they inherited.
+    /** 0 blip, 1 stick, 2 cowbell. */
+    var clickVoice by mutableStateOf(0)
+        private set
+    /** 0 bar, 1 beat, 2 eighths, 3 sixteenths, 4 eighth triplets. */
+    var clickDivision by mutableStateOf(1)
+        private set
+    var clickVolume by mutableStateOf(0.5f)
+        private set
+    /** Bars of clicks before a start actually starts. 0 is none. */
+    var countInBars by mutableStateOf(0)
+        private set
+
     // --- New songs -------------------------------------------------------
     var newTempo by mutableStateOf(120f)
         private set
@@ -116,6 +132,13 @@ object UiPrefs {
         fullQuality = p.getBoolean(KEY_QUALITY, true)
         recordBits = p.getInt(KEY_BITS, 24)
         keepAwake = p.getBoolean(KEY_AWAKE, true)
+        clickVoice = p.getInt(KEY_CLICK_VOICE, 0)
+        clickDivision = p.getInt(KEY_CLICK_DIV, 1)
+        clickVolume = p.getFloat(KEY_CLICK_VOL, 0.5f)
+        countInBars = p.getInt(KEY_COUNT_IN, 0)
+        // Not pushed here: init() runs in onCreate, hundreds of lines
+        // before NativeEngine.start(), so anything sent now goes nowhere.
+        // applyToEngine() is where settings meet a running engine.
         newTempo = p.getFloat(KEY_TEMPO, 120f)
         newSignature = Signature(p.getInt(KEY_BEATS, 4), p.getInt(KEY_UNIT, 4))
         newScaleOn = p.getBoolean(KEY_SCALE_ON, false)
@@ -145,6 +168,7 @@ object UiPrefs {
         // The quantise is in bars here and in ticks there; the song's own
         // signature converts it, and MainScreen re-sends it when that changes.
         NativeEngine.setLaunchQuantise(launchQuantise * 4 * 240)
+        NativeEngine.setCountInBars(countInBars)
     }
 
     fun foldAutomation(folded: Boolean) {
@@ -192,6 +216,27 @@ object UiPrefs {
         recordBits = bits
         store?.edit()?.putInt(KEY_BITS, bits)?.apply()
         NativeEngine.setRecordBits(bits)
+    }
+
+    fun chooseClickVoice(v: Int) {
+        clickVoice = v.coerceIn(0, 2)
+        store?.edit()?.putInt(KEY_CLICK_VOICE, clickVoice)?.apply()
+    }
+
+    fun chooseClickDivision(d: Int) {
+        clickDivision = d.coerceIn(0, 4)
+        store?.edit()?.putInt(KEY_CLICK_DIV, clickDivision)?.apply()
+    }
+
+    fun chooseClickVolume(v: Float) {
+        clickVolume = v.coerceIn(0f, 1f)
+        store?.edit()?.putFloat(KEY_CLICK_VOL, clickVolume)?.apply()
+    }
+
+    fun chooseCountInBars(bars: Int) {
+        countInBars = bars.coerceIn(0, 4)
+        store?.edit()?.putInt(KEY_COUNT_IN, countInBars)?.apply()
+        NativeEngine.setCountInBars(countInBars)
     }
 
     fun chooseKeepAwake(on: Boolean) {
@@ -249,6 +294,10 @@ object UiPrefs {
     private const val KEY_QUALITY = "quality_full"
     private const val KEY_BITS = "record_bits"
     private const val KEY_AWAKE = "keep_awake"
+    private const val KEY_CLICK_VOICE = "click_voice"
+    private const val KEY_CLICK_DIV = "click_div"
+    private const val KEY_CLICK_VOL = "click_vol"
+    private const val KEY_COUNT_IN = "count_in"
     private const val KEY_TEMPO = "new_tempo"
     private const val KEY_BEATS = "new_beats"
     private const val KEY_UNIT = "new_unit"

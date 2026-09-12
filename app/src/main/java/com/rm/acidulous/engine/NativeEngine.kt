@@ -349,6 +349,14 @@ object NativeEngine {
         paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int,
         startScene: Int, maxSeconds: Float,
     ): String
+    /** Bars of clicks before a start actually starts. 0 is none. */
+    fun setCountInBars(bars: Int) = nativeSetCountInBars(bars)
+
+    /** Ticks left of the count, or 0 when the song is simply running. */
+    val countInRemaining: Long get() = nativeCountInRemaining()
+
+    private external fun nativeSetCountInBars(bars: Int)
+    private external fun nativeCountInRemaining(): Long
     private external fun nativeCancelRender()
     private external fun nativeIsRendering(): Boolean
     private external fun nativeRenderedSeconds(): Float

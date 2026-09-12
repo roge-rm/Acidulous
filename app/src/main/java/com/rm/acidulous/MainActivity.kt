@@ -644,7 +644,7 @@ private fun App(modifier: Modifier = Modifier) {
             loopScene = loopScene, stopAtEnd = stopAtEnd, queuedScene = queuedScene,
             bpm = bpm, diagnostics = diagnostics,
             rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn,
-            onClick = { on -> clickOn = on; EngineSync.setMetronome(on) },
+            onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision) },
             onArm = onArm, onLoopScene = onLoopScene,
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },
             onSave = { SongStore.save(context, song); Log.i(TAG, "saved ${song.name}") },
@@ -665,7 +665,7 @@ private fun App(modifier: Modifier = Modifier) {
         is Screen.Edit -> EditScreen(
             song = song, editor = editor, trackIndex = s.track, sceneId = s.sceneId,
             position = position, playing = playing, armed = armed, onArm = onArm,
-            rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on) },
+            rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision) },
             onBack = { screen = Screen.Main },
             onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
             patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
