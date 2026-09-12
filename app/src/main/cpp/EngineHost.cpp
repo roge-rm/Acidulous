@@ -479,21 +479,21 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
 // --- Offline render -------------------------------------------------------------
 
 bool EngineHost::renderSong(const std::string &path, float tailSeconds, AudioFormat format, int32_t bits,
-                            std::string &error) {
-    return renderTargets({RenderTarget{path, -1}}, tailSeconds, format, bits, error);
+                            std::string &error, int32_t startScene, float maxSeconds) {
+    return renderTargets({RenderTarget{path, -1}}, tailSeconds, format, bits, error, startScene, maxSeconds);
 }
 
 bool EngineHost::renderStems(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
-                             int32_t bits, std::string &error) {
+                             int32_t bits, std::string &error, int32_t startScene, float maxSeconds) {
     if (targets.empty()) {
         error = "nothing to render";
         return false;
     }
-    return renderTargets(targets, tailSeconds, format, bits, error);
+    return renderTargets(targets, tailSeconds, format, bits, error, startScene, maxSeconds);
 }
 
 bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
-                               int32_t bits, std::string &error) {
+                               int32_t bits, std::string &error, int32_t startScene, float maxSeconds) {
     if (!running) { error = "engine not running"; return false; }
     if (rendering.exchange(true)) { error = "already rendering"; return false; }
     renderCancel.store(false, std::memory_order_relaxed);
@@ -534,14 +534,38 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     sEngine.transport.requestStop();
     float silent[kBlockFrames * 2];
     sEngine.renderBlock(nullptr, silent); // apply the stop, settle
+
+    // Start from silence.
+    //
+    // Without this a render carries in whatever the engine was holding when
+    // it was asked - filter and delay state, the tail of the last thing
+    // played - and the top of the file has the previous take bleeding over
+    // it. freezeClip already reset the one rack it renders, for this reason.
+    //
+    // It does *not* make a render reproducible, and it was written in the
+    // belief that it would: three renders of the demo peaked at 0.947,
+    // 0.838 and 0.897, and they still do. The files agree for their first
+    // 0.376 s and then diverge, which points at per-note randomness - a
+    // breath or noise source seeded afresh each time - that reset() does
+    // not put back. Making an export repeatable means every machine's RNG
+    // starting from a known seed, which is its own job across every
+    // machine rather than a line here.
+    sEngine.panicFlag.store(true, std::memory_order_release);
+    sEngine.renderBlock(nullptr, silent);
+
     ParamMessage click;
     click.rack = 0; click.unit = Unit::Master; click.index = sEngine.master.params().indexOf("clickon"); click.value = 0.0f; click.record = false;
     sEngine.pushParam(click);
-    sEngine.transport.requestPlay(0);
+    sEngine.transport.requestPlay(startScene);
 
     float block[kBlockFrames * 2];
     float stem[kBlockFrames * 2];
-    const int64_t maxBlocks = static_cast<int64_t>(kSampleRate) * 60 * 60 / kBlockFrames; // an hour, as a guard
+    // An hour, as a guard - or the caller's own limit, which is how one
+    // scene is rendered without the song running on into the next.
+    int64_t maxBlocks = static_cast<int64_t>(kSampleRate) * 60 * 60 / kBlockFrames;
+    if (maxSeconds > 0.0f) {
+        maxBlocks = static_cast<int64_t>(maxSeconds * kSampleRate / kBlockFrames);
+    }
     int64_t tailBlocks = static_cast<int64_t>(tailSeconds * kSampleRate / kBlockFrames);
     int64_t blocks = 0;
     float peak = 0.0f;
@@ -565,9 +589,13 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
         }
         for (float v : block) { const float a = v < 0 ? -v : v; if (a > peak) peak = a; }
         ++blocks;
-        if (!ended && !sEngine.transport.isPlaying()) ended = true; // the song ran out
+        // Two ways to reach the end - the song running out, or the caller's
+        // own limit, which is how one scene is rendered without running on
+        // into the next. Either way the tail then gets its chance, rather
+        // than the file stopping dead on the last note.
+        if (!ended && !sEngine.transport.isPlaying()) ended = true;
+        if (!ended && blocks >= maxBlocks) ended = true;
         if (ended && --tailBlocks < 0) break;
-        if (blocks >= maxBlocks) { ended = true; break; }
         if ((blocks & 63) == 0) {
             renderSeconds.store(static_cast<float>(blocks) * kBlockFrames / kSampleRate, std::memory_order_relaxed);
             renderPeak.store(peak, std::memory_order_relaxed);

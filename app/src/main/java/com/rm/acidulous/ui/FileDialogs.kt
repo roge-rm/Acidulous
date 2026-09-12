@@ -91,7 +91,10 @@ fun PatchBrowserDialog(
 /** What the export is doing; shown until dismissed so the result is read. */
 sealed class ExportState {
     data class Running(val seconds: Float, val expectedSeconds: Float) : ExportState()
-    data class Done(val seconds: Float, val peak: Float, val fileName: String) : ExportState()
+    data class Done(
+        val seconds: Float, val peak: Float, val fileName: String,
+        val files: Int = 1, val format: String = "wav", val bits: Int = 24,
+    ) : ExportState()
     data class Failed(val error: String) : ExportState()
 }
 
@@ -99,7 +102,7 @@ sealed class ExportState {
 fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = { if (state !is ExportState.Running) onDismiss() },
-        title = { Text("Export WAV") },
+        title = { Text("Export") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (state) {
@@ -109,7 +112,19 @@ fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit
                         LinearProgressIndicator(progress = { frac }, modifier = Modifier.fillMaxWidth())
                     }
                     is ExportState.Done -> Text(
-                        "%s\n%.1f s · 48 kHz · 24-bit stereo · peak %.3f".format(state.fileName, state.seconds, state.peak),
+                        buildString {
+                            if (state.files > 1) append("%d files in %s/\n".format(state.files, state.fileName))
+                            else append(state.fileName).append("\n")
+                            if (state.bits > 0) {
+                                append("%.1f s · 48 kHz · %s · %s stereo · peak %.3f".format(
+                                    state.seconds, state.format,
+                                    if (state.bits == 32) "32-bit float" else "%d-bit".format(state.bits),
+                                    state.peak,
+                                ))
+                            } else {
+                                append(state.format)
+                            }
+                        },
                         fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                     )
                     is ExportState.Failed -> Text("Export failed: ${state.error}", fontSize = 12.sp, color = Acid.colors.red)

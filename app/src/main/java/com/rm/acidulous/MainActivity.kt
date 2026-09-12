@@ -272,38 +272,188 @@ private fun App(modifier: Modifier = Modifier) {
         }.onFailure { Log.w(TAG, "zone import failed", it) }
     }
 
-    // Exporting: the system save picker gives a target; the engine renders the
-    // song offline into the cache, and the file is copied into the target.
+    // Where the playhead is, which is also what "this scene" means.
+    var position by remember { mutableStateOf(Position(0, 0, 0)) }
+
+    // Exporting: the dialog chooses what and as what, the system picker gives
+    // somewhere to put it, and the engine renders into the cache first. It
+    // renders to a path and SAF only hands out a stream, so the copy at the
+    // end is not a detour - it is the only way across.
     var exportState by remember { mutableStateOf<com.rm.acidulous.ui.ExportState?>(null) }
-    val wavPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/wav")) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        val expected = song.durationSeconds() + 2f
-        exportState = com.rm.acidulous.ui.ExportState.Running(0f, expected)
-        val temp = File(context.cacheDir, "export.wav")
-        scope.launch {
-            val progress = launch {
-                while (true) { delay(100); exportState = com.rm.acidulous.ui.ExportState.Running(NativeEngine.renderedSeconds, expected) }
+    var exportAsk by remember { mutableStateOf(false) }
+    var exportWanted by remember { mutableStateOf(com.rm.acidulous.ui.ExportOptions()) }
+
+    fun safeName(text: String): String =
+        text.replace(Regex("[^A-Za-z0-9 _-]"), "_").trim().ifEmpty { "export" }
+
+    /** One pass of a scene, in seconds: its own length, repeats aside. */
+    fun sceneSeconds(scene: com.rm.acidulous.model.Scene): Float {
+        val bpm = scene.tempo?.bpm ?: song.tempo
+        val beats = song.signatureOf(scene).ticksPerBar.toFloat() / com.rm.acidulous.model.PPQN
+        return song.barsOf(scene) * beats * 60f / bpm
+    }
+
+    /** What the export will produce, before it produces it, for the progress bar. */
+    fun expectedSeconds(options: com.rm.acidulous.ui.ExportOptions): Float {
+        if (!options.format.audio) return 0.1f
+        val body = if (options.what == com.rm.acidulous.ui.ExportWhat.Scene) {
+            song.scenes.getOrNull(position.scene)?.let { sceneSeconds(it) } ?: song.durationSeconds()
+        } else {
+            song.durationSeconds()
+        }
+        return body + options.tailSeconds
+    }
+
+    // Renders or writes into the cache. Returns the files in the order they
+    // should be delivered, and an error if it did not get that far.
+    suspend fun produceExport(options: com.rm.acidulous.ui.ExportOptions): Pair<List<File>, String> =
+        withContext(Dispatchers.IO) {
+            val base = safeName(song.name)
+            val cache = context.cacheDir
+            val scene = if (options.what == com.rm.acidulous.ui.ExportWhat.Scene) position.scene else 0
+            val limit = if (options.what == com.rm.acidulous.ui.ExportWhat.Scene) {
+                song.scenes.getOrNull(position.scene)?.let { sceneSeconds(it) } ?: 0f
+            } else {
+                0f
             }
-            val error = withContext(Dispatchers.IO) {
-                val e = NativeEngine.renderSong(temp.absolutePath, tailSeconds = 2f)
-                if (e.isNotEmpty()) e else runCatching {
-                    context.contentResolver.openOutputStream(uri, "wt")!!.use { out -> temp.inputStream().use { it.copyTo(out) } }
+            when (options.format) {
+                com.rm.acidulous.ui.ExportFormat.Midi -> {
+                    val file = File(cache, "$base.mid")
+                    runCatching { com.rm.acidulous.model.MidiFile.write(song, file); listOf(file) to "" }
+                        .getOrElse { emptyList<File>() to (it.message ?: "could not write the MIDI file") }
+                }
+                com.rm.acidulous.ui.ExportFormat.Bundle -> {
+                    val file = File(cache, "$base.zip")
+                    runCatching {
+                        com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(context), file)
+                        listOf(file) to ""
+                    }.getOrElse { emptyList<File>() to (it.message ?: "could not write the bundle") }
+                }
+                com.rm.acidulous.ui.ExportFormat.Aac -> {
+                    // The platform encoder reads a file, so the render goes
+                    // to a 16-bit WAV first and is transcoded off it.
+                    val pcm = File(cache, "export-pcm.wav")
+                    val out = File(cache, "$base.m4a")
+                    val rendered = NativeEngine.renderSong(
+                        pcm.absolutePath, options.tailSeconds, format = 0, bits = 16,
+                        startScene = scene, maxSeconds = limit,
+                    )
+                    if (rendered.isNotEmpty()) {
+                        pcm.delete()
+                        emptyList<File>() to rendered
+                    } else {
+                        val error = com.rm.acidulous.media.AacEncoder.encode(pcm, out)
+                        pcm.delete()
+                        if (error.isEmpty()) listOf(out) to "" else emptyList<File>() to error
+                    }
+                }
+                else -> {
+                    val engineFormat = options.format.engineFormat
+                    if (options.what == com.rm.acidulous.ui.ExportWhat.Stems) {
+                        val racks = song.tracks.indices.filter { song.tracks[it].machine.type.isNotEmpty() }
+                        if (racks.isEmpty()) {
+                            emptyList<File>() to "no tracks to render"
+                        } else {
+                            // The mix comes too, as file 00. It costs one
+                            // more sink in a pass that is happening anyway,
+                            // and stems without the mix they came from are
+                            // hard to check and easy to misalign.
+                            val files = listOf(File(cache, "00 Mix${options.format.extension}")) +
+                                racks.map {
+                                    File(cache, "%02d %s%s".format(it + 1, safeName(song.tracks[it].name), options.format.extension))
+                                }
+                            val error = NativeEngine.renderStems(
+                                files.map { it.absolutePath }.toTypedArray(), (intArrayOf(-1) + racks.toIntArray()),
+                                options.tailSeconds, engineFormat, options.bits, scene, limit,
+                            )
+                            if (error.isEmpty()) files to "" else emptyList<File>() to error
+                        }
+                    } else {
+                        val file = File(cache, "$base${options.format.extension}")
+                        val error = NativeEngine.renderSong(
+                            file.absolutePath, options.tailSeconds, engineFormat, options.bits, scene, limit,
+                        )
+                        if (error.isEmpty()) listOf(file) to "" else emptyList<File>() to error
+                    }
+                }
+            }
+        }
+
+    fun finish(options: com.rm.acidulous.ui.ExportOptions, files: List<File>, error: String, where: String) {
+        exportState = if (error.isEmpty()) {
+            com.rm.acidulous.ui.ExportState.Done(
+                NativeEngine.renderedSeconds, NativeEngine.renderedPeak, where, files.size,
+                options.format.label, if (options.format.audio) options.bits else 0,
+            )
+        } else {
+            com.rm.acidulous.ui.ExportState.Failed(error)
+        }
+        Log.i(TAG, "export ${if (error.isEmpty()) "ok" else "failed: $error"}: ${files.size} file(s), " +
+            "%.2f s, peak %.3f".format(NativeEngine.renderedSeconds, NativeEngine.renderedPeak))
+        for (f in files) f.delete()
+    }
+
+    /** One file: the picker already made the document, so just fill it. */
+    // The contract is held separately from the launcher because the MIME
+    // type is per export, and a launcher will not give its contract back.
+    val fileContract = remember { CreateAnyDocument() }
+    val filePicker = rememberLauncherForActivityResult(fileContract) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val options = exportWanted
+        val expected = expectedSeconds(options)
+        exportState = com.rm.acidulous.ui.ExportState.Running(0f, expected)
+        scope.launch {
+            val ticker = launch {
+                while (true) {
+                    delay(100)
+                    exportState = com.rm.acidulous.ui.ExportState.Running(NativeEngine.renderedSeconds, expected)
+                }
+            }
+            val (files, error) = produceExport(options)
+            val copyError = if (error.isNotEmpty()) error else withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openOutputStream(uri, "wt")!!.use { out ->
+                        files.first().inputStream().use { it.copyTo(out) }
+                    }
                     ""
                 }.getOrElse { it.message ?: "copy failed" }
             }
-            progress.cancel()
-            val name = runCatching {
-                var display = uri.lastPathSegment ?: "export.wav"
-                context.contentResolver.query(uri, null, null, null, null)?.use { c ->
-                    val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                    if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+            ticker.cancel()
+            finish(options, files, copyError, displayName(context, uri))
+        }
+    }
+
+    /** Stems: several files, so the picker has to give up a folder instead. */
+    val folderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { tree ->
+        if (tree == null) return@rememberLauncherForActivityResult
+        val options = exportWanted
+        val expected = expectedSeconds(options)
+        exportState = com.rm.acidulous.ui.ExportState.Running(0f, expected)
+        scope.launch {
+            val ticker = launch {
+                while (true) {
+                    delay(100)
+                    exportState = com.rm.acidulous.ui.ExportState.Running(NativeEngine.renderedSeconds, expected)
                 }
-                display
-            }.getOrDefault("export.wav")
-            exportState = if (error.isEmpty()) com.rm.acidulous.ui.ExportState.Done(NativeEngine.renderedSeconds, NativeEngine.renderedPeak, name)
-            else com.rm.acidulous.ui.ExportState.Failed(error)
-            Log.i(TAG, "export ${if (error.isEmpty()) "ok" else "failed: $error"}: %.2f s, peak %.3f".format(NativeEngine.renderedSeconds, NativeEngine.renderedPeak))
-            temp.delete()
+            }
+            val (files, error) = produceExport(options)
+            val copyError = if (error.isNotEmpty()) error else withContext(Dispatchers.IO) {
+                runCatching {
+                    val parentId = android.provider.DocumentsContract.getTreeDocumentId(tree)
+                    val parent = android.provider.DocumentsContract.buildDocumentUriUsingTree(tree, parentId)
+                    for (file in files) {
+                        val target = android.provider.DocumentsContract.createDocument(
+                            context.contentResolver, parent, options.format.mime, file.name,
+                        ) ?: error("could not create ${file.name}")
+                        context.contentResolver.openOutputStream(target, "wt")!!.use { out ->
+                            file.inputStream().use { it.copyTo(out) }
+                        }
+                    }
+                    ""
+                }.getOrElse { it.message ?: "copy failed" }
+            }
+            ticker.cancel()
+            finish(options, files, copyError, displayName(context, tree))
         }
     }
 
@@ -336,7 +486,6 @@ private fun App(modifier: Modifier = Modifier) {
 
     var peak by remember { mutableStateOf(0f) }
     var playing by remember { mutableStateOf(false) }
-    var position by remember { mutableStateOf(Position(0, 0, 0)) }
     var bpm by remember { mutableStateOf(120f) }
     var armed by remember { mutableStateOf(false) }
     var loopScene by remember { mutableStateOf(false) }
@@ -461,6 +610,23 @@ private fun App(modifier: Modifier = Modifier) {
 
     val diagnostics = "%s · peak %.3f · fade %.2f · load %.0f%% · xruns %d · on %d off %d".format(status, peak, fade, load, xruns, notesOn, notesOff)
 
+    if (exportAsk) {
+        com.rm.acidulous.ui.ExportOptionsDialog(
+            sceneName = song.scenes.getOrNull(position.scene)?.name.orEmpty(),
+            onDismiss = { exportAsk = false },
+        ) { options ->
+            exportAsk = false
+            exportWanted = options
+            val base = safeName(song.name)
+            if (options.manyFiles) {
+                folderPicker.launch(null)
+            } else {
+                fileContract.mime = options.format.mime
+                filePicker.launch(base + options.format.extension)
+            }
+        }
+    }
+
     when (val s = screen) {
         Screen.Main -> MainScreen(
             song = song, editor = editor, position = position, playing = playing, armed = armed,
@@ -487,7 +653,7 @@ private fun App(modifier: Modifier = Modifier) {
             onLoad = { name -> runCatching { SongStore.load(context, name) }.onSuccess { editor.replace(it) }.onFailure { Log.w(TAG, "load failed", it) } },
             onDelete = { name -> SongStore.delete(context, name); Log.i(TAG, "deleted $name") },
             songNames = { SongStore.list(context) },
-            onExport = { if (!playing) wavPicker.launch(song.name.replace(Regex("[^A-Za-z0-9 _-]"), "_") + ".wav") },
+            onExport = { if (!playing) exportAsk = true },
             exportState = exportState,
             onExportCancel = { NativeEngine.cancelRender() },
             onExportDismiss = { exportState = null },
@@ -561,3 +727,33 @@ private fun App(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * `CreateDocument` fixes its MIME type when it is built, and this window
+ * writes six different kinds of file. Rather than six launchers, the type
+ * is set per launch - the picker uses it to suggest a folder and to name
+ * the file sensibly, so it is worth getting right.
+ */
+private class CreateAnyDocument : ActivityResultContracts.CreateDocument("*/*") {
+    var mime: String = "*/*"
+    override fun createIntent(context: android.content.Context, input: String): android.content.Intent =
+        super.createIntent(context, input).setType(mime)
+}
+
+/**
+ * What the system calls the place a file went, for the "done" line.
+ *
+ * A tree has no display name to query - asking gives back the whole
+ * document id - so the folder's own name is taken off the end of it.
+ */
+private fun displayName(context: android.content.Context, uri: android.net.Uri): String = runCatching {
+    if (android.provider.DocumentsContract.isTreeUri(uri)) {
+        val id = android.provider.DocumentsContract.getTreeDocumentId(uri)
+        return id.substringAfterLast(':').substringAfterLast('/').ifEmpty { "the folder" }
+    }
+    var display = uri.lastPathSegment ?: "the file"
+    context.contentResolver.query(uri, null, null, null, null)?.use { c ->
+        val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+        if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+    }
+    display
+}.getOrDefault("the file")

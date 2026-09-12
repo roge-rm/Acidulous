@@ -75,7 +75,7 @@ class EngineHost {
     // off) plus `tailSeconds` of silence-driven tail, then hands the stream
     // back to the device. Call from a worker thread.
     bool renderSong(const std::string &path, float tailSeconds, AudioFormat format, int32_t bits,
-                    std::string &error);
+                    std::string &error, int32_t startScene = 0, float maxSeconds = 0.0f);
     /**
      * The same single pass, written to several files at once.
      *
@@ -88,7 +88,7 @@ class EngineHost {
      * limiter - is by definition not in any single track.
      */
     bool renderStems(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
-                     int32_t bits, std::string &error);
+                     int32_t bits, std::string &error, int32_t startScene = 0, float maxSeconds = 0.0f);
     void cancelRender() { renderCancel.store(true, std::memory_order_relaxed); }
     bool isRendering() const { return rendering.load(std::memory_order_relaxed); }
     float renderedSeconds() const { return renderSeconds.load(std::memory_order_relaxed); }
@@ -195,7 +195,7 @@ class EngineHost {
      */
   private:
     bool renderTargets(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
-                       int32_t bits, std::string &error);
+                       int32_t bits, std::string &error, int32_t startScene, float maxSeconds);
 
   public:
     std::string freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,

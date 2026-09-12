@@ -332,6 +332,53 @@ fun TabbedDialog(
     spacing: Dp = 6.dp,
     chips: @Composable () -> Unit,
 ) {
+    DialogShell(title, onDismiss, dismissLabel, maxBodyHeight, chips = chips) {
+        TallestOf(selected, pages, spacing)
+    }
+}
+
+/**
+ * The same window without tabs, for the ones that are a single page.
+ *
+ * It exists so that a one-page window cannot drift from a tabbed one by
+ * being written out again from scratch - they are the same `DialogShell`,
+ * and the only difference is whether there is a row of chips in it.
+ * [confirm] adds an action to the left of the dismiss button, for a window
+ * that *does* something rather than just changing settings as you touch them.
+ */
+@Composable
+fun PlainDialog(
+    title: String,
+    onDismiss: () -> Unit,
+    dismissLabel: String = "Cancel",
+    confirmLabel: String = "",
+    confirmEnabled: Boolean = true,
+    onConfirm: (() -> Unit)? = null,
+    maxBodyHeight: Dp = 560.dp,
+    spacing: Dp = 16.dp,
+    content: @Composable () -> Unit,
+) {
+    DialogShell(
+        title, onDismiss, dismissLabel, maxBodyHeight,
+        confirmLabel = confirmLabel, confirmEnabled = confirmEnabled, onConfirm = onConfirm, chips = null,
+    ) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(spacing)) { content() }
+    }
+}
+
+/** The card every window in the app is. */
+@Composable
+private fun DialogShell(
+    title: String,
+    onDismiss: () -> Unit,
+    dismissLabel: String,
+    maxBodyHeight: Dp,
+    confirmLabel: String = "",
+    confirmEnabled: Boolean = true,
+    onConfirm: (() -> Unit)? = null,
+    chips: (@Composable () -> Unit)?,
+    body: @Composable () -> Unit,
+) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
@@ -344,15 +391,26 @@ fun TabbedDialog(
         ) {
             Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
                 Text(title, color = c.text, fontSize = 20.sp)
-                Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) { chips() }
+                if (chips != null) {
+                    Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) { chips() }
+                } else {
+                    Box(Modifier.padding(top = 10.dp))
+                }
                 Box(
                     Modifier.heightIn(max = maxBodyHeight)
                         .verticalScrollWithBar(rememberScrollState()),
                 ) {
-                    TallestOf(selected, pages, spacing)
+                    body()
                 }
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     TextButton(onClick = onDismiss) { Text(dismissLabel) }
+                    if (onConfirm != null) {
+                        Button(onClick = onConfirm, enabled = confirmEnabled) { Text(confirmLabel) }
+                    }
                 }
             }
         }

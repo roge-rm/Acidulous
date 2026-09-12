@@ -408,9 +408,10 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeTransportPlay(JNIEnv *, jobject,
 
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeRenderSong(JNIEnv *env, jobject, jstring path, jfloat tailSeconds,
-                                                           jint format, jint bits) {
+                                                           jint format, jint bits, jint startScene, jfloat maxSeconds) {
     std::string error;
-    const bool ok = host().renderSong(toStdString(env, path), tailSeconds, static_cast<acidulous::AudioFormat>(format), bits, error);
+    const bool ok = host().renderSong(toStdString(env, path), tailSeconds, static_cast<acidulous::AudioFormat>(format),
+                                      bits, error, startScene, maxSeconds);
     return env->NewStringUTF(ok ? "" : error.c_str());
 }
 
@@ -418,7 +419,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeRenderSong(JNIEnv *env, jobject,
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeRenderStems(JNIEnv *env, jobject, jobjectArray paths,
                                                             jintArray racks, jfloat tailSeconds, jint format,
-                                                            jint bits) {
+                                                            jint bits, jint startScene, jfloat maxSeconds) {
     const jsize count = env->GetArrayLength(paths);
     std::vector<acidulous::EngineHost::RenderTarget> targets;
     targets.reserve(static_cast<size_t>(count));
@@ -430,7 +431,8 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeRenderStems(JNIEnv *env, jobject
     }
     env->ReleaseIntArrayElements(racks, rackIds, JNI_ABORT);
     std::string error;
-    const bool ok = host().renderStems(targets, tailSeconds, static_cast<acidulous::AudioFormat>(format), bits, error);
+    const bool ok = host().renderStems(targets, tailSeconds, static_cast<acidulous::AudioFormat>(format), bits, error,
+                                       startScene, maxSeconds);
     return env->NewStringUTF(ok ? "" : error.c_str());
 }
 
