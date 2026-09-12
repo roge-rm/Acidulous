@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -41,6 +42,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.drawBehind
@@ -324,7 +328,12 @@ fun MainScreen(
         val beat = (position.tickInIteration % ticksPerBar) / PPQN + 1
         val tick = position.tickInIteration % PPQN
         Column(Modifier.fillMaxWidth().background(Acid.colors.bar).padding(horizontal = 8.dp, vertical = 6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // 4dp between, not 6. Six buttons at Material's 58dp minimum plus
+            // five six-dp gaps is 379dp, and a 393dp phone has 377 to give -
+            // so the row was two dp over-full and panic, being last, was the
+            // one that paid: 54.5dp against its neighbours' 58.2, which reads
+            // as the wrong shape rather than as a narrower button.
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 // Tight, because panic now has to fit at the far end of the same
                 // row and a transport bar that scrolls is a transport bar you
                 // cannot hit in a hurry.
@@ -786,49 +795,48 @@ private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () ->
  * filling up is the thing you would press, which is the argument for it
  * living here rather than as a number in the corner of a header.
  *
- * Built by hand rather than from an OutlinedButton, and that is the whole
- * reason this is a function. Material expands a button's layout node to the
- * 48dp touch target while drawing its outline at 40dp, so a fill clipped to
- * the node is a bigger stadium than the border around it - visibly the
- * wrong shape, sitting proud of the button at top and bottom. Here the
- * shape is declared once and the fill, the border and the hit area all use
- * it.
+ * An ordinary OutlinedButton, so it is its neighbours' shape by
+ * construction rather than by arithmetic. That took two goes. Material
+ * expands a button's layout node to the 48dp touch target while drawing its
+ * outline at 40dp, so a fill clipped to the node is a bigger stadium than
+ * the border around it; built by hand instead, it came out the right height
+ * and the wrong width, because MinWidth is Material's and not mine to
+ * restate. So the button stays Material's and the fill is inset to the
+ * outline it actually draws.
  */
 @Composable
 private fun PanicButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     val c = Acid.colors
     val load = rememberEngineLoad()
     val colour = loadColour(load)
-    val shape = RoundedCornerShape(50)
-    Box(
-        modifier
+    OutlinedButton(
+        modifier = modifier
             // Outermost, as on every other mappable control: inside the clip
-            // its highlight is cut to the stadium and cannot be seen.
+            // its highlight is cut away and cannot be seen.
             .mappable(MapTargets.action(Action.Panic.name))
-            .height(40.dp)
-            .clip(shape)
             .drawBehind {
+                val level = if (load.dropped) 1f else load.level
+                if (level <= 0.001f) return@drawBehind
+                // The outline Material actually draws, inside the node it
+                // actually occupies.
+                val drawn = ButtonDefaults.MinHeight.toPx()
+                val top = ((size.height - drawn) / 2f).coerceAtLeast(0f)
                 // Translucent, and behind the label: panic is a thing you
                 // do, not a state the app is in, and a solid fill would
                 // read as "switched on".
-                val fill = if (load.dropped) 1f else load.level
-                if (fill > 0.001f) {
-                    val h = size.height * fill
-                    drawRect(
+                clipRect(top = top + drawn * (1f - level)) {
+                    drawRoundRect(
                         colour.copy(alpha = if (load.dropped) 0.45f else 0.30f),
-                        topLeft = Offset(0f, size.height - h),
-                        size = Size(size.width, h),
+                        topLeft = Offset(0f, top),
+                        size = Size(size.width, drawn),
+                        cornerRadius = CornerRadius(drawn / 2f),
                     )
                 }
-            }
-            .border(1.dp, c.red, shape)
-            .clickable(onClick = onClick)
-            // The 8dp an OutlinedButton's contentPadding used: wider and the
-            // label is clipped, because the row ahead of it has already
-            // taken the width.
-            .padding(horizontal = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) { Text("panic", color = c.red, fontSize = 12.sp, maxLines = 1, softWrap = false) }
+            },
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = 8.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, c.red),
+    ) { Text("panic", color = c.red, fontSize = 12.sp, maxLines = 1) }
 }
 
 @Composable
