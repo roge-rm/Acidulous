@@ -306,7 +306,17 @@ fun EditScreen(
             ticksPerBar = ticksPerBar,
             voices = voices,
             playheadTick = playhead,
-            barIndex = page,
+            firstTick = firstTick,
+            visibleTicks = pageTicks.toInt(),
+            onScrollTime = { ticks -> scrollTick = (scrollTick + ticks).coerceIn(0f, maxScroll) },
+            onZoomTime = { scale ->
+                val was = if (zoomTicks > 0f) zoomTicks else defaultTicks
+                val span = clipLen.toFloat().coerceAtLeast(PPQN.toFloat())
+                val centre = scrollTick + was / 2f
+                val want = (was * scale).coerceIn(PPQN.toFloat(), span)
+                zoomTicks = want
+                scrollTick = (centre - want / 2f).coerceIn(0f, (clipLen - want).coerceAtLeast(0f))
+            },
             onSetHit = { tick, note, hit ->
                 editor.editClip(trackIndex, sceneId) { c ->
                     val others = c.notes.filter { !(it.tick == tick && it.pitch == note) }

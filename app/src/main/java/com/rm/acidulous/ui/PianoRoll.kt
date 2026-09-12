@@ -521,32 +521,37 @@ private class Callbacks(
     val onZoom: (Float, Float) -> Unit,
 )
 
-/** What two fingers are doing: where their middle is, and how far apart. */
-private class TwoFinger(val centre: Offset, val spreadX: Float, val spreadY: Float) {
+/**
+ * What two fingers are doing: where their middle is, and how far apart.
+ *
+ * Shared with the drum grid, which asks the same questions of the same
+ * gesture over the same clip.
+ */
+internal class TwoFingers(val centre: Offset, val spreadX: Float, val spreadY: Float) {
     companion object {
-        fun of(event: androidx.compose.ui.input.pointer.PointerEvent): TwoFinger? {
+        /**
+         * How far apart two fingers must be on an axis before a pinch along
+         * it is believed.
+         *
+         * A pinch is almost never square to the grid, so both axes report
+         * *some* change and zooming on both would wobble the one you did not
+         * mean. Below this the axis reports no change at all, which is what
+         * makes a sideways pinch zoom time and leave the pitch where it was.
+         */
+        const val MinSpread = 48f
+
+        fun of(event: androidx.compose.ui.input.pointer.PointerEvent): TwoFingers? {
             val down = event.changes.filter { it.pressed }
             if (down.size < 2) return null
             val a = down[0].position
             val b = down[1].position
-            return TwoFinger(
+            return TwoFingers(
                 Offset((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f),
                 abs(a.x - b.x), abs(a.y - b.y),
             )
         }
     }
 }
-
-/**
- * How far apart two fingers must be on an axis before a pinch along it is
- * believed.
- *
- * A pinch is almost never square to the grid, so both axes report *some*
- * change and zooming on both would wobble the one you did not mean. Below
- * this the axis reports no change at all, which is what makes a sideways
- * pinch zoom time and leave the pitch where it was.
- */
-private const val MinSpread = 48f
 
 /** The result of waiting for a drag: past the slop, or outvoted by a second finger. */
 private class Gate(val past: PointerInputChange?, val second: Boolean)
@@ -584,12 +589,12 @@ private suspend fun AwaitPointerEventScope.slopOrSecondFinger(
  * do either or both without the two being tangled together.
  */
 private suspend fun AwaitPointerEventScope.twoFingers(geo: Geometry, cb: Callbacks) {
-    var last = TwoFinger.of(currentEvent) ?: return
+    var last = TwoFingers.of(currentEvent) ?: return
     var rowCarry = 0f
     while (true) {
         val event = awaitPointerEvent()
         event.changes.forEach { it.consume() }
-        val now = TwoFinger.of(event) ?: break
+        val now = TwoFingers.of(event) ?: break
 
         cb.onScrollTime(-(now.centre.x - last.centre.x) / geo.pxPerTick)
         // Whole rows only, with the remainder carried, so a slow drag moves
@@ -601,8 +606,8 @@ private suspend fun AwaitPointerEventScope.twoFingers(geo: Geometry, cb: Callbac
             rowCarry -= rows.toFloat()
         }
 
-        val wide = last.spreadX > MinSpread && now.spreadX > MinSpread
-        val tall = last.spreadY > MinSpread && now.spreadY > MinSpread
+        val wide = last.spreadX > TwoFingers.MinSpread && now.spreadX > TwoFingers.MinSpread
+        val tall = last.spreadY > TwoFingers.MinSpread && now.spreadY > TwoFingers.MinSpread
         val timeScale = if (wide) last.spreadX / now.spreadX else 1.0f
         val pitchScale = if (tall) last.spreadY / now.spreadY else 1.0f
         if (wide || tall) cb.onZoom(pitchScale, timeScale)
