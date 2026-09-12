@@ -13,7 +13,7 @@ void put32(FILE *f, uint32_t v) {
 constexpr int32_t kChannels = 2;
 } // namespace
 
-bool WavWriter::open(const std::string &path, int32_t sampleRate, std::string &error, int32_t bits) {
+bool WavWriter::open(const std::string &path, int32_t sampleRate, int32_t bits, std::string &error) {
     close();
     file = std::fopen(path.c_str(), "wb");
     if (file == nullptr) { error = "cannot create " + path; return false; }

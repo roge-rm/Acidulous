@@ -21,7 +21,7 @@ bool Capture::start(const std::string &path, int32_t sampleRate, Source source, 
     // Prove the file can be written before the audio thread starts pushing.
     WavWriter probe;
     const int32_t bits = EngineSettings::get().recordBits.load(std::memory_order_relaxed);
-    if (!probe.open(path, sampleRate, error, bits)) return false;
+    if (!probe.open(path, sampleRate, bits, error)) return false;
     probe.close();
 
     outPath = path;
@@ -68,7 +68,7 @@ void Capture::push(const float *interleaved, int32_t frames) {
 void Capture::drain() {
     WavWriter writer;
     std::string error;
-    if (!writer.open(outPath, rate, error, depth)) {
+    if (!writer.open(outPath, rate, depth, error)) {
         running.store(false, std::memory_order_release);
         return;
     }

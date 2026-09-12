@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <cstdio>
+#include <engine/core/AudioSink.h>
 #include <string>
 
 // Writes stereo WAV, header patched on close. Ours; no dependency.
@@ -12,15 +13,15 @@
 // distortion into the render that nobody asked for.
 namespace acidulous {
 
-class WavWriter {
+class WavWriter : public AudioSink {
   public:
-    ~WavWriter() { close(); }
+    ~WavWriter() override { close(); }
     /** [bits]: 16 or 24 for PCM, 32 for float. */
-    bool open(const std::string &path, int32_t sampleRate, std::string &error, int32_t bits = 24);
+    bool open(const std::string &path, int32_t sampleRate, int32_t bits, std::string &error) override;
     // Interleaved stereo floats, clipped to -1..1.
-    void write(const float *interleaved, int32_t frames);
-    bool close();
-    int64_t framesWritten() const { return frames; }
+    void write(const float *interleaved, int32_t frames) override;
+    bool close() override;
+    int64_t framesWritten() const override { return frames; }
 
   private:
     void writeHeader();

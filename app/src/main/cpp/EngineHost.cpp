@@ -487,7 +487,7 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
 
     WavWriter wav;
     const int32_t bits = EngineSettings::get().recordBits.load(std::memory_order_relaxed);
-    if (!wav.open(path, kSampleRate, error, bits)) { rendering.store(false); return false; }
+    if (!wav.open(path, kSampleRate, bits, error)) { rendering.store(false); return false; }
 
     // Take the engine off the device: from here every block is ours to pull.
     sAudio.stop();
@@ -932,7 +932,7 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     // sit above full scale perfectly legitimately - the mixer is what brings
     // it down. Clamping here would bake in distortion that the live track
     // does not have. Measured on the demo: Hexbeat's bar peaks at 1.84.
-    if (!wav.open(path, kSampleRate, error, 32)) return error;
+    if (!wav.open(path, kSampleRate, 32, error)) return error;
     wav.write(inter.data(), static_cast<int32_t>(clipFrames));
     if (!wav.close()) return "could not finish the file";
 
