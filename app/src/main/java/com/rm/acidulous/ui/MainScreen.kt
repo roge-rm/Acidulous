@@ -370,15 +370,19 @@ fun MainScreen(
             if (clipMode) {
                 // What a tap waits for. "end" is the musical default: the
                 // clip you are replacing finishes what it was doing.
-                BarButton("q: " + quantiseShort(UiPrefs.launchQuantise), Modifier.weight(1f)) {
+                BarButton("q: " + quantiseShort(UiPrefs.launchQuantise), Modifier.width(BarWord)) {
                     dialog = Dialog.Quantise
                 }
             } else {
                 BarButton(
                     if (loopScene) "\u27F3 scene" else "\u27F3 song",
-                    Modifier.weight(1f).mappable(MapTargets.action(Action.LoopScene.name)),
+                    Modifier.width(BarWord).mappable(MapTargets.action(Action.LoopScene.name)),
                 ) { onLoopScene(!loopScene) }
             }
+            // The slack pools here, between what the song is doing and what
+            // the transport is doing, so the group on the right stays welded
+            // to the edge of the screen whatever size the screen is.
+            Spacer(Modifier.weight(1f))
             // And the five that end every row in the app, in this order and
             // at this width - see BarAnchor. Undo and redo are the song's
             // here and the clip's in the editor, which is the same rule
@@ -397,14 +401,13 @@ fun MainScreen(
             ) { editor.redoSong() }
             Spacer(Modifier.width(BarIsland))
             BarButton(
-                if (showMixer) "\u25BE mix" else "\u25B4 mix",
-                Modifier.width(BarAnchor),
+                "\u21C5", Modifier.width(BarAnchor),
                 colour = if (showMixer) Acid.colors.accent else Color.Unspecified,
             ) { showMixer = !showMixer }
             BarButton(
-                if (armed) "\u25CF REC" else "\u25CB rec",
+                if (armed) "\u25CF" else "\u25CB",
                 Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name)),
-                colour = if (armed) Acid.colors.red else Color.Unspecified,
+                border = if (armed) Acid.colors.red else null,
             ) { onArm(!armed) }
             BarButton(
                 if (playing) "\u25A0" else "\u25B6",

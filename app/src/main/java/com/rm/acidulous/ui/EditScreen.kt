@@ -565,24 +565,17 @@ fun EditScreen(
                 enabled = editor.canRedo(trackIndex),
             ) { selection = emptySet(); editor.redo(trackIndex) }
             Spacer(Modifier.width(BarIsland))
+            // One glyph each, as play has always been, so the three read as
+            // one group and say the same thing at any width - which retires
+            // the two labels that had to be shortened for landscape.
             BarButton(
-                // The arrow says which way the panel is, which is worth a
-                // pill's width in portrait and is not true sideways - there
-                // the panel is the column this bar is the foot of. It also
-                // does not fit: a share of the control column is 26dp.
-                if (landscape) "mix" else if (panel == 2) "\u25BE mix" else "\u25B4 mix",
-                anchor,
+                "\u21C5", anchor,
                 colour = if (panel == 2) Acid.colors.accent else Color.Unspecified,
             ) { panel = if (panel == 2) 0 else 2 }
             BarButton(
-                // The arranger's own words, so the pill is identical and
-                // not merely the same size. Sideways the anchors take a
-                // weighted share of a 300dp column instead, and there the
-                // glyph has to speak for itself.
-                if (landscape) (if (armed) "\u25CF" else "\u25CB")
-                else (if (armed) "\u25CF REC" else "\u25CB rec"),
+                if (armed) "\u25CF" else "\u25CB",
                 anchor.mappable(MapTargets.action(Action.RecordArm.name)),
-                colour = if (armed) Acid.colors.red else Color.Unspecified,
+                border = if (armed) Acid.colors.red else null,
             ) { onArm(!armed) }
             BarButton(
                 if (playing) "\u25A0" else "\u25B6",

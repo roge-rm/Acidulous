@@ -64,9 +64,9 @@ import com.rm.acidulous.ui.theme.Acid
  *
  * Material's own minimum is 58dp, and five anchors at that is 291dp of a
  * phone's 377 - which leaves the arranger's loop button four. So the anchors
- * state their own width instead. Forty-four is the floor: "● REC" is the
- * widest label any of them carries, at 41.8dp measured, and four dp of
- * padding a side is what the rest of the row uses.
+ * state their own width instead. Forty-four is now a target size rather than
+ * a label size: every anchor carries one glyph, so what sets the floor is
+ * the finger and not the text.
  *
  * It is one number because that is the whole point - the same five controls
  * end every row in the app at the same size, so the one you want is where
@@ -88,6 +88,22 @@ val BarAnchor = 44.dp
  * which was the point of putting them in one place at all.
  */
 val BarIsland = 12.dp
+
+/**
+ * A pill carrying a word rather than a glyph.
+ *
+ * Wide enough for the longest label it will ever show and no wider - the
+ * arranger's loop button says "⟳ song" and "⟳ scene" and the wider of those
+ * measures 56.5dp with its padding. It used to take a weighted share, which
+ * meant it swallowed every spare dp on the screen and came out two hundred
+ * wide on a large phone, dwarfing everything beside it.
+ *
+ * Fixed, so the row now has a minimum: everything in it is a stated width,
+ * and below a screen of about 382dp the weighted spacer that holds the
+ * transport to the right edge runs out. That is narrower than any phone this
+ * has been built for, but it is the number to check if one turns up.
+ */
+val BarWord = 58.dp
 @Composable
 fun BottomBar(
     modifier: Modifier = Modifier,
@@ -123,6 +139,14 @@ fun BarButton(
     modifier: Modifier = Modifier,
     /** Unspecified keeps the button's own content colour. */
     colour: Color = Color.Unspecified,
+    /**
+     * Colours the outline instead of the label, for a state that is about
+     * the button rather than about what it says. Arming the transport is
+     * one: a red ring round the whole pill carries further than a red glyph
+     * inside it, and it leaves the glyph free to go on saying which state
+     * you are in rather than doubling as the alarm.
+     */
+    border: Color? = null,
     enabled: Boolean = true,
     fontFamily: FontFamily? = null,
     onClick: () -> Unit,
@@ -132,6 +156,7 @@ fun BarButton(
         onClick = onClick,
         enabled = enabled,
         contentPadding = PaddingValues(horizontal = 4.dp),
+        border = border?.let { BorderStroke(1.dp, it) },
     ) {
         Text(label, color = colour, fontSize = 12.sp, fontFamily = fontFamily, maxLines = 1)
     }
