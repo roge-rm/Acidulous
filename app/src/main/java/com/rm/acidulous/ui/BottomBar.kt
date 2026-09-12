@@ -58,6 +58,21 @@ import com.rm.acidulous.ui.theme.Acid
  * and when that happened the last child measured silently came out narrower
  * than the rest. A weighted middle cannot over-fill.
  */
+
+/**
+ * How wide an anchored pill is, on every screen.
+ *
+ * Material's own minimum is 58dp, and five anchors at that is 291dp of a
+ * phone's 377 - which leaves the arranger's loop button four. So the anchors
+ * state their own width instead. Forty-four is the floor: "● REC" is the
+ * widest label any of them carries, at 41.8dp measured, and four dp of
+ * padding a side is what the rest of the row uses.
+ *
+ * It is one number because that is the whole point - the same five controls
+ * end every row in the app at the same size, so the one you want is where
+ * you left it whichever screen you are on.
+ */
+val BarAnchor = 44.dp
 @Composable
 fun BottomBar(
     modifier: Modifier = Modifier,

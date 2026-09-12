@@ -136,18 +136,12 @@ fun MainScreen(
             spacing = 4.dp,
         ) {
             Text(song.name, color = Acid.colors.text, fontSize = 16.sp, modifier = Modifier.flexible(), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            HeaderButton("↶", enabled = editor.canUndoSong()) { editor.undoSong() }
-            // Mapping mode hangs off a long press of redo rather than a
-            // button of its own. It is a mode you step into for a minute,
-            // and the header has no room to spend on one: a sixth button
-            // here stopped the row fitting beside the camera hole, and
-            // CutoutRow dropped the whole thing underneath it.
-            HeaderButton(
-                "↷",
-                enabled = editor.canRedoSong(),
-                color = if (UiPrefs.mapMode) Acid.colors.accent else null,
-                modifier = Modifier.onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
-            ) { editor.redoSong() }
+            // The tempo, in the slot undo and redo used to have. Plain text
+            // rather than a pill, like save and the file menu beside it: it
+            // is a reading you tap to change, which is what everything else
+            // in this row is, and a bordered pill among them looked like a
+            // transport control that had wandered up from the bar.
+            HeaderTextButton("%.1f".format(bpm), color = Acid.colors.text) { dialog = Dialog.Tempo }
             HeaderTextButton("save", onClick = onSave)
             // Button and menu in one box on purpose: a Popup anchors to its
             // parent layout node, and left loose in the row that parent is
@@ -371,7 +365,7 @@ fun MainScreen(
             // is one tap and never behind a menu - but it is also the one
             // button here you must not hit by accident, so it keeps the
             // whole width of the row between itself and the transport.
-            PanicButton { NativeEngine.panic() }
+            PanicButton(Modifier.width(BarAnchor)) { NativeEngine.panic() }
             if (clipMode) {
                 // What a tap waits for. "end" is the musical default: the
                 // clip you are replacing finishes what it was doing.
@@ -384,23 +378,35 @@ fun MainScreen(
                     Modifier.weight(1f).mappable(MapTargets.action(Action.LoopScene.name)),
                 ) { onLoopScene(!loopScene) }
             }
+            // And the five that end every row in the app, in this order and
+            // at this width - see BarAnchor. Undo and redo are the song's
+            // here and the clip's in the editor, which is the same rule
+            // either way: the undo for whatever this screen edits.
             BarButton(
-                "%.1f".format(bpm), Modifier.weight(1f),
-                colour = Acid.colors.text, fontFamily = FontFamily.Monospace,
-            ) { dialog = Dialog.Tempo }
-            // And the three that end every row in the app, in this order.
+                "\u21B6", Modifier.width(BarAnchor), enabled = editor.canUndoSong(),
+            ) { editor.undoSong() }
+            // Mapping mode hangs off a long press of redo rather than a
+            // button of its own. It is a mode you step into for a minute and
+            // nothing here has a button's width to spend on one.
+            BarButton(
+                "\u21B7",
+                Modifier.width(BarAnchor).onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
+                colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
+                enabled = editor.canRedoSong(),
+            ) { editor.redoSong() }
             BarButton(
                 if (showMixer) "\u25BE mix" else "\u25B4 mix",
+                Modifier.width(BarAnchor),
                 colour = if (showMixer) Acid.colors.accent else Color.Unspecified,
             ) { showMixer = !showMixer }
             BarButton(
                 if (armed) "\u25CF REC" else "\u25CB rec",
-                Modifier.mappable(MapTargets.action(Action.RecordArm.name)),
+                Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name)),
                 colour = if (armed) Acid.colors.red else Color.Unspecified,
             ) { onArm(!armed) }
             BarButton(
                 if (playing) "\u25A0" else "\u25B6",
-                Modifier.mappable(MapTargets.action(Action.PlayStop.name)),
+                Modifier.width(BarAnchor).mappable(MapTargets.action(Action.PlayStop.name)),
                 colour = if (anyStopping) Acid.colors.red else Color.Unspecified,
             ) {
                 when {

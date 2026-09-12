@@ -249,24 +249,6 @@ fun EditScreen(
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
-            // Undo and redo, first after the title - the same place, the same
-            // glyphs and the same gesture as the arranger's. They were in the
-            // bottom bar, where they took a weighted share with five other
-            // buttons and came out twenty-six dp wide, and where they were on
-            // the opposite side of the screen from the arranger's pair.
-            //
-            // They cost the header nothing: they are two forty-two dp buttons
-            // standing exactly where the roll's two octave buttons stood, and
-            // those have gone to a drag on the roll's own name gutter.
-            HeaderButton("\u21B6", enabled = editor.canUndo(trackIndex)) {
-                selection = emptySet(); editor.undo(trackIndex)
-            }
-            HeaderButton(
-                "\u21B7",
-                enabled = editor.canRedo(trackIndex),
-                color = if (UiPrefs.mapMode) Acid.colors.accent else null,
-                modifier = Modifier.onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
-            ) { selection = emptySet(); editor.redo(trackIndex) }
             // Paging lives here rather than in a row of its own: a whole row of
             // chrome to show one number costs more height than a phone has to
             // spare, and the header already has the two buttons it belongs with.
@@ -514,11 +496,9 @@ fun EditScreen(
         // the order the arranger has them, so nothing you reach for moves
         // when you open a clip. See ui/BottomBar.kt.
         //
-        // Undo and redo used to be here, taking a weighted share alongside
-        // five other buttons; on a Subvert track that left every one of them
-        // twenty-six dp wide. They are in the header now, where the arranger
-        // has always kept its pair. What is left shares the same pool and
-        // gets forty-six dp each.
+        // Undo and redo are anchors here, not a weighted share: they were
+        // twenty-six dp wide when they took one, and they sit in the same
+        // place and at the same width as the arranger's - see BarAnchor.
         //
         // Sideways they stop being anchors and take a share like everything
         // else. Anchoring is a portrait rule: it works because both screens'
@@ -527,7 +507,7 @@ fun EditScreen(
         // column beside the roll and the arranger's is still full width -
         // they cannot line up whatever we do - and three fixed pills in 300dp
         // leave the five beside them seven dp each, which is no button at all.
-        val anchor = if (landscape) Modifier.weight(1f) else Modifier
+        val anchor = if (landscape) Modifier.weight(1f) else Modifier.width(BarAnchor)
         BottomBar {
             if (hasSteps) {
                 BarButton(if (steps) "\u25A6" else "\u25A4", Modifier.weight(1f)) { steps = !steps }
@@ -550,18 +530,30 @@ fun EditScreen(
                 softWrap = false, maxLines = 1, modifier = Modifier.width(40.dp),
             )
             BarButton(
+                "\u21B6", anchor, enabled = editor.canUndo(trackIndex),
+            ) { selection = emptySet(); editor.undo(trackIndex) }
+            // Mapping mode, on a long press of redo - the same gesture on the
+            // same control in the same place as the arranger's.
+            BarButton(
+                "\u21B7",
+                anchor.onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
+                colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
+                enabled = editor.canRedo(trackIndex),
+            ) { selection = emptySet(); editor.redo(trackIndex) }
+            BarButton(
                 // The arrow says which way the panel is, which is worth a
                 // pill's width in portrait and is not true sideways - there
                 // the panel is the column this bar is the foot of. It also
                 // does not fit: a share of the control column is 26dp.
-                if (landscape) "mix" else if (panel == 2) "\u25BE mix" else "\u25B4 mix", anchor,
+                if (landscape) "mix" else if (panel == 2) "\u25BE mix" else "\u25B4 mix",
+                anchor,
                 colour = if (panel == 2) Acid.colors.accent else Color.Unspecified,
             ) { panel = if (panel == 2) 0 else 2 }
             BarButton(
-                // The arranger's own words, so the pill is identical and not
-                // merely the same size. There is room for them now that undo
-                // and redo have gone to the header - sideways there is not,
-                // and the glyph alone says it.
+                // The arranger's own words, so the pill is identical and
+                // not merely the same size. Sideways the anchors take a
+                // weighted share of a 300dp column instead, and there the
+                // glyph has to speak for itself.
                 if (landscape) (if (armed) "\u25CF" else "\u25CB")
                 else (if (armed) "\u25CF REC" else "\u25CB rec"),
                 anchor.mappable(MapTargets.action(Action.RecordArm.name)),
