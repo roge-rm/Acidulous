@@ -258,12 +258,14 @@ fun EditScreen(
                 )
                 HeaderButton("▶") { page = (page + 1) % pages }
             }
-            LoadMeter()
             // Only the roll scrolls by octave; the step views have fixed rows.
             if (!steps) {
                 HeaderButton("▲") { lowestPitch = (lowestPitch + 12).coerceAtMost(127 - rows) }
                 HeaderButton("▼") { lowestPitch = (lowestPitch - 12).coerceAtLeast(0) }
             }
+            // Last, at the far edge, as it is on the patch editor: a reading
+            // rather than a control, so it sits past the things you press.
+            LoadMeter()
         }
         // The editor is one stack in portrait and two panes in landscape. The
         // pieces are the same either way; only the arrangement differs, so
