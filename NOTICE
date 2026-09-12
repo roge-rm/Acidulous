@@ -1,0 +1,26 @@
+Acidulous
+Copyright (C) 2026 Dan Hunke
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version. See LICENSE for the full text.
+
+
+Third-party components
+----------------------
+
+Oboe — Apache License 2.0
+  https://github.com/google/oboe
+  The audio driver's stream. Apache 2.0 is compatible with GPLv3 (and not
+  with GPLv2, which is why this project is GPLv3-or-later).
+
+Everything else in this repository is original work. The C++ engine, every
+machine and effect, the sequencer, the WAV, AIFF and FLAC writers and the
+MIDI file writer were all written for this project; no DSP, presets or
+samples are taken from anywhere else.
+
+Two documents in docs/ record the feature sets this project is an homage to
+— the reference app and the reference sequencer. They are notes on what
+those programs do, written from public documentation and cited as such. No
+code, preset or sample from either is used here.
