@@ -26,6 +26,9 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerId
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Note
@@ -95,6 +98,15 @@ fun PianoRoll(
      * hole, and the pitch axis already had a column of its own.
      */
     onScrollPitch: (delta: Int) -> Unit = {},
+    /** Two fingers sideways: the window moves by this many ticks. */
+    onScrollTime: (ticks: Float) -> Unit = {},
+    /**
+     * A pinch. Each axis is a multiplier on what is shown - under one is
+     * fewer rows or fewer ticks, which is closer in - and an axis the fingers
+     * are not spread along reports 1, so a sideways pinch zooms time and
+     * leaves the pitch alone.
+     */
+    onZoom: (pitchScale: Float, timeScale: Float) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     val textMeasurer = rememberTextMeasurer()
@@ -107,7 +119,7 @@ fun PianoRoll(
     val rowsState by rememberUpdatedState(rows)
     val cb by rememberUpdatedState(
         Callbacks(onTapEmpty, onTapNote, onSelectionChange, onGestureBegin, onMove, onResize, onDraw, onGestureEnd,
-            onAudition, onCycleScaleView, onScrollPitch),
+            onAudition, onCycleScaleView, onScrollPitch, onScrollTime, onZoom),
     )
     // Which pitch each row carries. Chromatic and Dim step by semitone; Fold
     // keeps only what the scale allows, so a row is always a playable note.
@@ -144,6 +156,17 @@ fun PianoRoll(
                     GutterWidth.toPx(), RulerHeight.toPx(), rowsState2, firstTick, visibleTicks,
                 )
                 val press = down.position
+
+                // Two fingers move the view and never the notes - and the
+                // check comes first, before the gutter, the ruler or a note,
+                // because a pinch puts its fingers down a few milliseconds
+                // apart and whatever the first one landed on must not act in
+                // the meantime.
+                if (currentEvent.changes.count { it.pressed } >= 2) {
+                    twoFingers(geo, cb)
+                    return@awaitEachGesture
+                }
+
                 // The gutter plays the row it names and scrolls the window;
                 // the ruler is a legend and takes no edits; the corner
                 // between them cycles the scale view. None of the three can
@@ -162,7 +185,12 @@ fun PianoRoll(
                     // The audition waits for the finger to lift rather than
                     // firing on the way down, or every scroll would begin
                     // with a note nobody asked for.
-                    val slop = awaitTouchSlopOrCancellation(down.id) { change, _ -> change.consume() }
+                    val gate = slopOrSecondFinger(down.id, viewConfiguration.touchSlop, press)
+                    if (gate.second) {
+                        twoFingers(geo, cb)
+                        return@awaitEachGesture
+                    }
+                    val slop = gate.past
                     if (slop == null) {
                         if (currentEvent.changes.none { it.pressed }) cb.onAudition(geo.pitchAt(press.y))
                         return@awaitEachGesture
@@ -190,7 +218,12 @@ fun PianoRoll(
                 }
                 val hit = geo.hitTest(press)
 
-                val slop = awaitTouchSlopOrCancellation(down.id) { change, _ -> change.consume() }
+                val gate = slopOrSecondFinger(down.id, viewConfiguration.touchSlop, press)
+                if (gate.second) {
+                    twoFingers(geo, cb)
+                    return@awaitEachGesture
+                }
+                val slop = gate.past
                 if (slop == null) {
                     // Released before moving: a tap.
                     val released = currentEvent.changes.none { it.pressed }
@@ -484,7 +517,99 @@ private class Callbacks(
     val onAudition: (Int) -> Unit,
     val onCycleScaleView: () -> Unit,
     val onScrollPitch: (Int) -> Unit,
+    val onScrollTime: (Float) -> Unit,
+    val onZoom: (Float, Float) -> Unit,
 )
+
+/** What two fingers are doing: where their middle is, and how far apart. */
+private class TwoFinger(val centre: Offset, val spreadX: Float, val spreadY: Float) {
+    companion object {
+        fun of(event: androidx.compose.ui.input.pointer.PointerEvent): TwoFinger? {
+            val down = event.changes.filter { it.pressed }
+            if (down.size < 2) return null
+            val a = down[0].position
+            val b = down[1].position
+            return TwoFinger(
+                Offset((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f),
+                abs(a.x - b.x), abs(a.y - b.y),
+            )
+        }
+    }
+}
+
+/**
+ * How far apart two fingers must be on an axis before a pinch along it is
+ * believed.
+ *
+ * A pinch is almost never square to the grid, so both axes report *some*
+ * change and zooming on both would wobble the one you did not mean. Below
+ * this the axis reports no change at all, which is what makes a sideways
+ * pinch zoom time and leave the pitch where it was.
+ */
+private const val MinSpread = 48f
+
+/** The result of waiting for a drag: past the slop, or outvoted by a second finger. */
+private class Gate(val past: PointerInputChange?, val second: Boolean)
+
+/**
+ * Touch slop, unless a second finger arrives first.
+ *
+ * `awaitTouchSlopOrCancellation` cannot say why it gave up, and here the
+ * difference matters: a cancelled gesture leaves the notes alone, a second
+ * finger starts moving the view. So this is the same loop with one more exit.
+ */
+private suspend fun AwaitPointerEventScope.slopOrSecondFinger(
+    pointer: PointerId,
+    touchSlop: Float,
+    start: Offset,
+): Gate {
+    while (true) {
+        val event = awaitPointerEvent()
+        if (event.changes.count { it.pressed } >= 2) return Gate(null, true)
+        val change = event.changes.firstOrNull { it.id == pointer } ?: return Gate(null, false)
+        if (!change.pressed) return Gate(null, false) // released: the caller decides if that was a tap
+        if ((change.position - start).getDistance() > touchSlop) {
+            change.consume()
+            return Gate(change, false)
+        }
+    }
+}
+
+/**
+ * Two fingers: the window moves and zooms, and nothing is edited.
+ *
+ * Panning follows the fingers, as the gutter's drag does - push the grid
+ * right and you are looking further back. Zoom is the ratio of how far apart
+ * they were to how far apart they are, taken per axis so that one gesture can
+ * do either or both without the two being tangled together.
+ */
+private suspend fun AwaitPointerEventScope.twoFingers(geo: Geometry, cb: Callbacks) {
+    var last = TwoFinger.of(currentEvent) ?: return
+    var rowCarry = 0f
+    while (true) {
+        val event = awaitPointerEvent()
+        event.changes.forEach { it.consume() }
+        val now = TwoFinger.of(event) ?: break
+
+        cb.onScrollTime(-(now.centre.x - last.centre.x) / geo.pxPerTick)
+        // Whole rows only, with the remainder carried, so a slow drag moves
+        // one row at a time rather than stalling.
+        rowCarry += (now.centre.y - last.centre.y) / geo.rowH
+        val rows = rowCarry.toInt()
+        if (rows != 0) {
+            cb.onScrollPitch(rows)
+            rowCarry -= rows.toFloat()
+        }
+
+        val wide = last.spreadX > MinSpread && now.spreadX > MinSpread
+        val tall = last.spreadY > MinSpread && now.spreadY > MinSpread
+        val timeScale = if (wide) last.spreadX / now.spreadX else 1.0f
+        val pitchScale = if (tall) last.spreadY / now.spreadY else 1.0f
+        if (wide || tall) cb.onZoom(pitchScale, timeScale)
+
+        last = now
+    }
+}
 
 private class Hit(val index: Int, val onEdge: Boolean)
 

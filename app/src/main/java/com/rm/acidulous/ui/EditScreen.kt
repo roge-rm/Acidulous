@@ -50,6 +50,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.rm.acidulous.model.Note
+import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.SongEditor
@@ -139,7 +140,13 @@ fun EditScreen(
     var scaleView by rememberSaveable { mutableStateOf(ScaleView.Dim) }
     // Long clips are paged two bars at a time, as the drum grid is paged one.
     // More than two bars across a phone leaves notes too narrow to grab.
-    var page by rememberSaveable(trackIndex, sceneId) { mutableStateOf(0) }
+    // Where the roll is looking and how close in, kept per track rather than
+    // per clip: it is how *you* like to work, not a property of the music.
+    // Nought means "whatever suits the screen", so a phone turning sideways
+    // still gets the sideways defaults until a pinch says otherwise.
+    var zoomRows by rememberSaveable(trackIndex) { mutableStateOf(0f) }
+    var zoomTicks by rememberSaveable(trackIndex) { mutableStateOf(0f) }
+    var scrollTick by rememberSaveable(trackIndex, sceneId) { mutableStateOf(0f) }
 
     // The scale lives in a Scale eventor; the chip and its dialog are only a
     // shortcut to the one eventor worth reaching while playing.
@@ -189,17 +196,26 @@ fun EditScreen(
     val landscape = windowSize.width > windowSize.height
     // Fewer rows sideways, because a row shorter than about 11dp loses its
     // name and a nameless roll is worth less than a shorter one.
-    val rows = if (landscape) ROWS_LAND else ROWS
-    val pageBars = if (steps) 1 else if (landscape) PAGE_BARS_LAND else PAGE_BARS
-    val pages = ((clip.bars + pageBars - 1) / pageBars).coerceAtLeast(1)
-    page = page.coerceIn(0, pages - 1)
-    val pageTicks = pageBars * ticksPerBar
-    val firstTick = page * pageTicks
+    val defaultRows = if (landscape) ROWS_LAND else ROWS
+    val rows = (if (zoomRows > 0f) zoomRows else defaultRows.toFloat())
+        .toInt().coerceIn(MinRows, MaxRows)
+    val defaultBars = if (steps) 1 else if (landscape) PAGE_BARS_LAND else PAGE_BARS
+    val defaultTicks = (defaultBars * ticksPerBar).toFloat()
+    // A pinch never shows less than a beat or more than the whole clip: below
+    // a beat there is nothing left to aim at, and beyond the clip there is
+    // nothing left to see.
+    val pageTicks = (if (zoomTicks > 0f) zoomTicks else defaultTicks)
+        .coerceIn(PPQN.toFloat(), clipLen.toFloat().coerceAtLeast(PPQN.toFloat()))
+    val maxScroll = (clipLen - pageTicks).coerceAtLeast(0f)
+    scrollTick = scrollTick.coerceIn(0f, maxScroll)
+    val firstTick = scrollTick.toInt()
+    val pages = kotlin.math.ceil(clipLen / pageTicks).toInt().coerceAtLeast(1)
+    val page = (scrollTick / pageTicks).toInt().coerceIn(0, pages - 1)
     // While playing, follow the playhead onto its own page rather than
     // leaving the editor staring at a bar that is not sounding.
-    val playheadPage = if (playhead != null && clipLen > 0) ((playhead % clipLen) / pageTicks).toInt() else -1
+    val playheadPage = if (playhead != null && clipLen > 0) (playhead / pageTicks).toInt() else -1
     LaunchedEffect(playheadPage, playing) {
-        if (playing && playheadPage in 0 until pages) page = playheadPage
+        if (playing && playheadPage in 0 until pages) scrollTick = playheadPage * pageTicks
     }
 
 
@@ -269,12 +285,12 @@ fun EditScreen(
             // chrome to show one number costs more height than a phone has to
             // spare, and the header already has the two buttons it belongs with.
             if (pages > 1) {
-                HeaderButton("◀") { page = (page - 1 + pages) % pages }
+                HeaderButton("◀") { scrollTick = ((page - 1 + pages) % pages) * pageTicks }
                 Text(
                     "${page + 1}/$pages", color = Acid.colors.accent, fontSize = 12.sp,
                     fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
                 )
-                HeaderButton("▶") { page = (page + 1) % pages }
+                HeaderButton("▶") { scrollTick = ((page + 1) % pages) * pageTicks }
             }
             // Last, at the far edge, as it is on the patch editor: a reading
             // rather than a control, so it sits past the things you press.
@@ -327,7 +343,7 @@ fun EditScreen(
             noteSpelling = Scales.spellingFor(track),
             scaleView = scaleView,
             firstTick = firstTick,
-            visibleTicks = pageTicks,
+            visibleTicks = pageTicks.toInt(),
             onCycleScaleView = {
                 // Dim and fit need a scale to dim or fit to, so before one is
                 // set the corner does the only useful thing: asks for one.
@@ -352,6 +368,31 @@ fun EditScreen(
             // The same clamp the octave buttons had, so the window can never
             // run off either end of the keyboard.
             onScrollPitch = { delta -> lowestPitch = (lowestPitch + delta).coerceIn(0, 127 - rows) },
+            onScrollTime = { ticks -> scrollTick = (scrollTick + ticks).coerceIn(0f, maxScroll) },
+            // Zoom compounds in the state itself, never in `rows` or
+            // `pageTicks`: those are worked out while composing, and a pinch
+            // sends a dozen events before the next frame - so multiplying
+            // them gives the same answer a dozen times and the roll moves one
+            // row for a gesture that asked for ten.
+            onZoom = { pitchScale, timeScale ->
+                if (pitchScale != 1f) {
+                    val was = if (zoomRows > 0f) zoomRows else defaultRows.toFloat()
+                    val want = (was * pitchScale).coerceIn(MinRows.toFloat(), MaxRows.toFloat())
+                    // About the middle of what is on screen, so the row you
+                    // were looking at stays put instead of sliding off.
+                    val centre = lowestPitch + was.toInt() / 2
+                    zoomRows = want
+                    lowestPitch = (centre - want.toInt() / 2).coerceIn(0, 127 - want.toInt())
+                }
+                if (timeScale != 1f) {
+                    val was = if (zoomTicks > 0f) zoomTicks else defaultTicks
+                    val span = clipLen.toFloat().coerceAtLeast(PPQN.toFloat())
+                    val centre = scrollTick + was / 2f
+                    val want = (was * timeScale).coerceIn(PPQN.toFloat(), span)
+                    zoomTicks = want
+                    scrollTick = (centre - want / 2f).coerceIn(0f, (clipLen - want).coerceAtLeast(0f))
+                }
+            },
             onGestureBegin = { editor.beginGesture(trackIndex) },
             onMove = { indices, dTick, dPitch ->
                 editor.updateGestureClip(sceneId) { base ->
@@ -382,7 +423,7 @@ fun EditScreen(
             ticksPerBar = ticksPerBar,
             playheadTick = playhead,
             firstTick = firstTick,
-            visibleTicks = pageTicks,
+            visibleTicks = pageTicks.toInt(),
             laneKeys = laneKeys,
             nameOf = { com.rm.acidulous.model.laneLabel(track, it) },
             shortOf = { com.rm.acidulous.model.laneShortLabel(track, it) },
@@ -652,6 +693,12 @@ fun EditScreen(
 private const val ROWS = 16
 private const val ROWS_LAND = 12
 private const val PAGE_BARS = 2
+
+// What a pinch may do to the roll. Six rows is half an octave, which is as
+// close as there is any point going; thirty-six is three octaves, at which a
+// row is about four dp on a phone and a note is a line rather than a block.
+private const val MinRows = 6
+private const val MaxRows = 36
 
 // Sideways the roll is about twice as wide, so it shows twice as much clip,
 // and the pieces that share the screen with it move into a column of their
