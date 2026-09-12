@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <sequencer/Clip.h>
+#include <engine/core/AudioSink.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -64,10 +65,30 @@ class EngineHost {
     int paramIndex(const std::string &machineType, const std::string &unit, const std::string &name) const;
 
     // --- Offline render ---------------------------------------------------------
+    /** One file of a render: the master mix, or one rack on its own. */
+    struct RenderTarget {
+        std::string path;
+        int32_t rack = -1; // -1 is the master mix
+    };
+
     // Blocks: renders the whole song from the top (song loop off, metronome
-    // off) plus `tailSeconds` of silence-driven tail into a 24-bit WAV, then
-    // hands the stream back to the device. Call from a worker thread.
-    bool renderSong(const std::string &path, float tailSeconds, std::string &error);
+    // off) plus `tailSeconds` of silence-driven tail, then hands the stream
+    // back to the device. Call from a worker thread.
+    bool renderSong(const std::string &path, float tailSeconds, AudioFormat format, int32_t bits,
+                    std::string &error);
+    /**
+     * The same single pass, written to several files at once.
+     *
+     * Stems are not the song rendered once per track: every rack renders
+     * every block anyway, and the master only sums what they already made.
+     * So this opens a sink per target and copies each rack's own buffer as
+     * it goes - post-fader, post-pan and post-mute, which is what that rack
+     * contributes to the mix. Solo is not applied, being a monitoring state
+     * rather than a mix decision, and the master bus - its sends, volume and
+     * limiter - is by definition not in any single track.
+     */
+    bool renderStems(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
+                     int32_t bits, std::string &error);
     void cancelRender() { renderCancel.store(true, std::memory_order_relaxed); }
     bool isRendering() const { return rendering.load(std::memory_order_relaxed); }
     float renderedSeconds() const { return renderSeconds.load(std::memory_order_relaxed); }
@@ -172,6 +193,11 @@ class EngineHost {
      * the loop joins. Returns "" on success and fills in what the playback
      * side needs to know; anything else is the reason it did not happen.
      */
+  private:
+    bool renderTargets(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
+                       int32_t bits, std::string &error);
+
+  public:
     std::string freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,
                            int32_t &framesOut, int32_t &ticksOut, float &bpmOut, float &peakOut);
 

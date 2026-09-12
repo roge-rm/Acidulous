@@ -58,7 +58,13 @@ object NativeEngine {
      * Renders the whole song to a 24-bit WAV at [path], blocking the calling
      * thread (use a worker). Returns "" on success or an error; "cancelled" after [cancelRender].
      */
-    fun renderSong(path: String, tailSeconds: Float = 2f): String = nativeRenderSong(path, tailSeconds)
+    /** [format] indexes AudioFormat in the engine: 0 wav, 1 aiff, 2 flac. */
+    fun renderSong(path: String, tailSeconds: Float = 2f, format: Int = 0, bits: Int = 24): String =
+        nativeRenderSong(path, tailSeconds, format, bits)
+
+    /** One pass, one file per entry; a rack of -1 is the master mix. */
+    fun renderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float = 2f, format: Int = 0, bits: Int = 24): String =
+        nativeRenderStems(paths, racks, tailSeconds, format, bits)
     fun cancelRender() = nativeCancelRender()
     val isRendering: Boolean get() = nativeIsRendering()
     val renderedSeconds: Float get() = nativeRenderedSeconds()
@@ -332,7 +338,10 @@ object NativeEngine {
     private external fun nativeIsRunning(): Boolean
     private external fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     private external fun nativeUnmountMachine(rackId: Int)
-    private external fun nativeRenderSong(path: String, tailSeconds: Float): String
+    private external fun nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int): String
+    private external fun nativeRenderStems(
+        paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int,
+    ): String
     private external fun nativeCancelRender()
     private external fun nativeIsRendering(): Boolean
     private external fun nativeRenderedSeconds(): Float

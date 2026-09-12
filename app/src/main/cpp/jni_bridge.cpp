@@ -407,9 +407,30 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeTransportPlay(JNIEnv *, jobject,
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeRenderSong(JNIEnv *env, jobject, jstring path, jfloat tailSeconds) {
+Java_com_rm_acidulous_engine_NativeEngine_nativeRenderSong(JNIEnv *env, jobject, jstring path, jfloat tailSeconds,
+                                                           jint format, jint bits) {
     std::string error;
-    const bool ok = host().renderSong(toStdString(env, path), tailSeconds, error);
+    const bool ok = host().renderSong(toStdString(env, path), tailSeconds, static_cast<acidulous::AudioFormat>(format), bits, error);
+    return env->NewStringUTF(ok ? "" : error.c_str());
+}
+
+/** Paths and the rack each belongs to, in step; a rack of -1 is the mix. */
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeRenderStems(JNIEnv *env, jobject, jobjectArray paths,
+                                                            jintArray racks, jfloat tailSeconds, jint format,
+                                                            jint bits) {
+    const jsize count = env->GetArrayLength(paths);
+    std::vector<acidulous::EngineHost::RenderTarget> targets;
+    targets.reserve(static_cast<size_t>(count));
+    jint *rackIds = env->GetIntArrayElements(racks, nullptr);
+    for (jsize i = 0; i < count; ++i) {
+        auto path = reinterpret_cast<jstring>(env->GetObjectArrayElement(paths, i));
+        targets.push_back({toStdString(env, path), rackIds[i]});
+        env->DeleteLocalRef(path);
+    }
+    env->ReleaseIntArrayElements(racks, rackIds, JNI_ABORT);
+    std::string error;
+    const bool ok = host().renderStems(targets, tailSeconds, static_cast<acidulous::AudioFormat>(format), bits, error);
     return env->NewStringUTF(ok ? "" : error.c_str());
 }
 

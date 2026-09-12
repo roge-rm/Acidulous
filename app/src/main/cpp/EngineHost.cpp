@@ -478,16 +478,47 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
 
 // --- Offline render -------------------------------------------------------------
 
-bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::string &error) {
+bool EngineHost::renderSong(const std::string &path, float tailSeconds, AudioFormat format, int32_t bits,
+                            std::string &error) {
+    return renderTargets({RenderTarget{path, -1}}, tailSeconds, format, bits, error);
+}
+
+bool EngineHost::renderStems(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
+                             int32_t bits, std::string &error) {
+    if (targets.empty()) {
+        error = "nothing to render";
+        return false;
+    }
+    return renderTargets(targets, tailSeconds, format, bits, error);
+}
+
+bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
+                               int32_t bits, std::string &error) {
     if (!running) { error = "engine not running"; return false; }
     if (rendering.exchange(true)) { error = "already rendering"; return false; }
     renderCancel.store(false, std::memory_order_relaxed);
     renderSeconds.store(0.0f, std::memory_order_relaxed);
     renderPeak.store(0.0f, std::memory_order_relaxed);
 
-    WavWriter wav;
-    const int32_t bits = EngineSettings::get().recordBits.load(std::memory_order_relaxed);
-    if (!wav.open(path, kSampleRate, bits, error)) { rendering.store(false); return false; }
+    // Every file is opened before a block is rendered: finding out on the
+    // ninth stem that the directory is not writable, having already taken
+    // the engine off the device, would be a poor way to learn it.
+    std::vector<std::unique_ptr<AudioSink>> sinks;
+    sinks.reserve(targets.size());
+    for (const RenderTarget &t : targets) {
+        std::unique_ptr<AudioSink> sink = makeSink(format);
+        if (!sink) { error = "no writer for that format"; rendering.store(false); return false; }
+        if (!sink->open(t.path, kSampleRate, bits, error)) {
+            for (auto &open : sinks) open->close();
+            for (const RenderTarget &done : targets) {
+                if (&done == &t) break;
+                std::remove(done.path.c_str());
+            }
+            rendering.store(false);
+            return false;
+        }
+        sinks.push_back(std::move(sink));
+    }
 
     // Take the engine off the device: from here every block is ours to pull.
     sAudio.stop();
@@ -509,6 +540,7 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     sEngine.transport.requestPlay(0);
 
     float block[kBlockFrames * 2];
+    float stem[kBlockFrames * 2];
     const int64_t maxBlocks = static_cast<int64_t>(kSampleRate) * 60 * 60 / kBlockFrames; // an hour, as a guard
     int64_t tailBlocks = static_cast<int64_t>(tailSeconds * kSampleRate / kBlockFrames);
     int64_t blocks = 0;
@@ -517,7 +549,20 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     for (;;) {
         if (renderCancel.load(std::memory_order_relaxed)) { cancelled = true; break; }
         sEngine.renderBlock(nullptr, block);
-        wav.write(block, kBlockFrames);
+        for (size_t i = 0; i < targets.size(); ++i) {
+            const int32_t rack = targets[i].rack;
+            if (rack < 0) {
+                sinks[i]->write(block, kBlockFrames);
+                continue;
+            }
+            // A rack's two buffers are separate; a file wants them laced.
+            const Rack &source = sEngine.racks[rack];
+            for (int32_t f = 0; f < kBlockFrames; ++f) {
+                stem[f * 2] = source.bufL[f];
+                stem[f * 2 + 1] = source.bufR[f];
+            }
+            sinks[i]->write(stem, kBlockFrames);
+        }
         for (float v : block) { const float a = v < 0 ? -v : v; if (a > peak) peak = a; }
         ++blocks;
         if (!ended && !sEngine.transport.isPlaying()) ended = true; // the song ran out
@@ -532,7 +577,10 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     renderPeak.store(peak, std::memory_order_relaxed);
     sEngine.transport.requestStop();
     sEngine.renderBlock(nullptr, silent);
-    const bool closed = wav.close();
+    bool closed = true;
+    for (auto &sink : sinks) {
+        if (!sink->close()) closed = false;
+    }
 
     // Hand the device back exactly as it was.
     sEngine.transport.setLoopSong(loopSongBefore);
@@ -542,9 +590,14 @@ bool EngineHost::renderSong(const std::string &path, float tailSeconds, std::str
     sEngine.pushParam(click);
     if (!sAudio.start()) LOGE("audio failed to restart after render");
     rendering.store(false);
-    LOGI("rendered %s: %lld blocks (%.2f s), peak %.3f%s", path.c_str(), static_cast<long long>(blocks),
+    LOGI("rendered %zu file(s) from %s: %lld blocks (%.2f s), peak %.3f%s", targets.size(),
+         targets.front().path.c_str(), static_cast<long long>(blocks),
          static_cast<float>(blocks) * kBlockFrames / kSampleRate, peak, cancelled ? ", cancelled" : "");
-    if (cancelled) { error = "cancelled"; std::remove(path.c_str()); return false; }
+    if (cancelled) {
+        error = "cancelled";
+        for (const RenderTarget &t : targets) std::remove(t.path.c_str());
+        return false;
+    }
     if (!closed) { error = "could not finish the file"; return false; }
     return true;
 }
