@@ -41,6 +41,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -169,7 +172,6 @@ fun MainScreen(
                     DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
                 }
             }
-            LoadMeter()
         }
 
         // --- Song section -----------------------------------------------------------------
@@ -384,12 +386,7 @@ fun MainScreen(
                 // but it is also the one button here you must not hit by
                 // accident, so it keeps its distance and its red.
                 Spacer(Modifier.weight(1f))
-                OutlinedButton(
-                    modifier = Modifier.mappable(MapTargets.action(Action.Panic.name)),
-                    onClick = { NativeEngine.panic() },
-                    contentPadding = PaddingValues(horizontal = 8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Acid.colors.red),
-                ) { Text("panic", color = Acid.colors.red, fontSize = 12.sp, maxLines = 1) }
+                PanicButton { NativeEngine.panic() }
             }
             Text(
                 if (clipMode) {
@@ -781,6 +778,59 @@ private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () ->
  * grid, it is not part of either axis, and it is nowhere near anything that
  * makes a sound.
  */
+/**
+ * Panic, and the load meter, in one control.
+ *
+ * The button fills from the bottom as the audio thread runs out of room -
+ * teal, amber, red - and floods when a block is actually dropped. The thing
+ * filling up is the thing you would press, which is the argument for it
+ * living here rather than as a number in the corner of a header.
+ *
+ * Built by hand rather than from an OutlinedButton, and that is the whole
+ * reason this is a function. Material expands a button's layout node to the
+ * 48dp touch target while drawing its outline at 40dp, so a fill clipped to
+ * the node is a bigger stadium than the border around it - visibly the
+ * wrong shape, sitting proud of the button at top and bottom. Here the
+ * shape is declared once and the fill, the border and the hit area all use
+ * it.
+ */
+@Composable
+private fun PanicButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val c = Acid.colors
+    val load = rememberEngineLoad()
+    val colour = loadColour(load)
+    val shape = RoundedCornerShape(50)
+    Box(
+        modifier
+            // Outermost, as on every other mappable control: inside the clip
+            // its highlight is cut to the stadium and cannot be seen.
+            .mappable(MapTargets.action(Action.Panic.name))
+            .height(40.dp)
+            .clip(shape)
+            .drawBehind {
+                // Translucent, and behind the label: panic is a thing you
+                // do, not a state the app is in, and a solid fill would
+                // read as "switched on".
+                val fill = if (load.dropped) 1f else load.level
+                if (fill > 0.001f) {
+                    val h = size.height * fill
+                    drawRect(
+                        colour.copy(alpha = if (load.dropped) 0.45f else 0.30f),
+                        topLeft = Offset(0f, size.height - h),
+                        size = Size(size.width, h),
+                    )
+                }
+            }
+            .border(1.dp, c.red, shape)
+            .clickable(onClick = onClick)
+            // The 8dp an OutlinedButton's contentPadding used: wider and the
+            // label is clipped, because the row ahead of it has already
+            // taken the width.
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) { Text("panic", color = c.red, fontSize = 12.sp, maxLines = 1, softWrap = false) }
+}
+
 @Composable
 private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
     Box(

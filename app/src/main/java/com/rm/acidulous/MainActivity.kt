@@ -655,7 +655,12 @@ private fun App(modifier: Modifier = Modifier) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    val diagnostics = "%s · peak %.3f · fade %.2f · load %.0f%% · xruns %d · on %d off %d".format(status, peak, fade, load, xruns, notesOn, notesOff)
+    // Load and xruns come first, after the stream's own description. They
+    // used to be fifth and sixth in a line that is one ellipsised row, so on
+    // a phone they were cut off the end - which mattered once the header
+    // stopped showing the number and this became the only place it lives.
+    val diagnostics = "%s · load %.0f%% · xruns %d · peak %.3f · fade %.2f · on %d off %d"
+        .format(status, load, xruns, peak, fade, notesOn, notesOff)
 
     if (exportAsk) {
         com.rm.acidulous.ui.ExportOptionsDialog(

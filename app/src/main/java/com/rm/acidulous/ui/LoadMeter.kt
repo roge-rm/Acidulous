@@ -1,45 +1,44 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.ui.theme.Acid
 import kotlinx.coroutines.delay
 
 /**
- * How hard the audio thread is working, in the corner of every header.
+ * How hard the audio thread is working, and whether it has just failed.
  *
- * The number is the engine's own measurement - the share of each block's
- * 1333 µs that rendering it actually took - so it answers the question that
- * matters when a patch gets heavy: how much room is left before the phone
- * starts dropping blocks. The bar is the same number for glancing at, and
- * the dot is a dropout: it lights when the xrun counter moves and stays lit
- * for a few seconds, because the sound of one is gone before you look up.
+ * [level] is the share of each block's 1333 µs that rendering it actually
+ * took, 0..1 - the figure that says how much room is left before the phone
+ * starts dropping blocks. [dropped] is a dropout: it lights when the xrun
+ * counter moves and stays lit for a few seconds, because the sound of one
+ * is gone before you look up.
  *
- * Teal to about half, amber past that, red past four fifths - which is
- * roughly where a phone with anything else running starts to miss.
+ * Shared rather than duplicated, because two things show it now: the
+ * panic button fills with it, and the editors carry a bar. The smoothing
+ * has to be the same in both or they disagree on screen.
  */
+@Immutable
+data class EngineLoad(val level: Float, val dropped: Boolean)
+
 @Composable
-fun LoadMeter(modifier: Modifier = Modifier) {
-    val c = Acid.colors
+fun rememberEngineLoad(): EngineLoad {
     var load by remember { mutableStateOf(0f) }
     var dropped by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -47,7 +46,7 @@ fun LoadMeter(modifier: Modifier = Modifier) {
         var lit = 0
         while (true) {
             // A slow follower upward and a slower one down: the raw figure
-            // flickers by several percent a block, and a number that will
+            // flickers by several percent a block, and a meter that will
             // not sit still cannot be read at all.
             val now = NativeEngine.loadAvg
             load += (now - load) * (if (now > load) 0.6f else 0.2f)
@@ -58,28 +57,43 @@ fun LoadMeter(modifier: Modifier = Modifier) {
             delay(200)
         }
     }
-    val level = (load / 100f).coerceIn(0f, 1f)
-    val colour = when {
-        dropped -> c.red
-        level > 0.8f -> c.red
-        level > 0.5f -> c.accent
+    return EngineLoad((load / 100f).coerceIn(0f, 1f), dropped)
+}
+
+/**
+ * Teal to about half, amber past that, red past four fifths - which is
+ * roughly where a phone with anything else running starts to miss. A
+ * dropout is red whatever the load, because it has already happened.
+ */
+@Composable
+fun loadColour(load: EngineLoad): Color {
+    val c = Acid.colors
+    return when {
+        load.dropped -> c.red
+        load.level > 0.8f -> c.red
+        load.level > 0.5f -> c.accent
         else -> c.teal
     }
-    Row(modifier.padding(start = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            // Three digits wide always, even at " 0%". The header packs its
-            // trailing controls as one run and flows the overflow around the
-            // camera hole, so a number that gains a glyph on its way past 99
-            // does not just get wider - it can push a button to the far side
-            // of the hole, a fifth of a second after the screen appears.
-            "%3.0f%%".format(load), color = colour, fontSize = 9.sp,
-            fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
-        )
-        Canvas(Modifier.padding(start = 3.dp).width(5.dp).height(22.dp)) {
-            val radius = CornerRadius(2.dp.toPx())
-            drawRoundRect(c.raised, Offset.Zero, size, radius)
-            val h = size.height * level
-            drawRoundRect(colour, Offset(0f, size.height - h), Size(size.width, h), radius)
-        }
+}
+
+/**
+ * The bar, for a header with no panic button in it.
+ *
+ * The number that used to sit beside this is gone. It was the widest thing
+ * in a run that the header packs around the camera hole, and it changed
+ * width as it ticked past 99, which moved the buttons; and what it answered
+ * - "how much room is left" - the status line answers too, without costing
+ * the header anything. What is left is the part you read at a glance.
+ */
+@Composable
+fun LoadMeter(modifier: Modifier = Modifier) {
+    val c = Acid.colors
+    val load = rememberEngineLoad()
+    val colour = loadColour(load)
+    Canvas(modifier.padding(horizontal = 3.dp).width(5.dp).height(22.dp)) {
+        val radius = CornerRadius(2.dp.toPx())
+        drawRoundRect(c.raised, Offset.Zero, size, radius)
+        val h = size.height * load.level
+        drawRoundRect(colour, Offset(0f, size.height - h), Size(size.width, h), radius)
     }
 }
