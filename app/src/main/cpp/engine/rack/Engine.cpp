@@ -37,6 +37,7 @@ void Engine::renderBlock(const float *in, float *out) {
         playing = false;
         startPending = false;
         scheduler.allNotesOff();
+        for (auto &n : mpeChannelNote) n = -1;
         for (int32_t r = 0; r < kRackCount; ++r) {
             racks[r].allNotesOff();
             // Parameters jump rather than glide. Every one of them is
@@ -417,6 +418,24 @@ void Engine::drainMidi() {
         uint8_t d2 = m.data2;
         if (status == 0x90 && d2 == 0) status = 0x80;
         if (!racks[rack].isActive()) continue;
+
+        // A member channel is one finger. Its note goes down the ordinary
+        // path, through the eventors like any other; its bend, pressure and
+        // slide belong to that note alone and go straight to the machine.
+        if (mpeMember(m.channel)) {
+            if (status == 0x90 && d2 > 0) {
+                mpeChannelNote[m.channel] = m.data1;
+            } else if (status == 0x80) {
+                mpeChannelNote[m.channel] = -1;
+            } else {
+                const int32_t held = mpeChannelNote[m.channel];
+                // Expression for a finger that is not down has nowhere to go.
+                if (held < 0) continue;
+                racks[rack].noteExpression(status, static_cast<uint8_t>(held), m.data1, d2,
+                                           mpeBendSemis);
+                continue;
+            }
+        }
         racks[rack].handleMidi(status, m.data1, d2);
         if (recordingNow()) {
             seq::RecordedEvent ev;

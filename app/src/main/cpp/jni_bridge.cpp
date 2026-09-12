@@ -258,9 +258,20 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureOverflowed(JNIEnv *, jobj
 
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeMidiEvent(JNIEnv *, jobject, jint rackId, jint status,
-                                                   jint d1, jint d2) {
+                                                   jint d1, jint d2, jint channel) {
     host().midiEvent(rackId, static_cast<uint8_t>(status), static_cast<uint8_t>(d1 & 0x7f),
-                     static_cast<uint8_t>(d2 & 0x7f));
+                     static_cast<uint8_t>(d2 & 0x7f), static_cast<uint8_t>(channel));
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetMpeZone(JNIEnv *, jobject, jint kind,
+                                                   jint members, jfloat bendSemis) {
+    host().setMpeZone(kind, members, bendSemis);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMpeHeldMask(JNIEnv *, jobject) {
+    return host().mpeHeldMask();
 }
 
 JNIEXPORT jboolean JNICALL

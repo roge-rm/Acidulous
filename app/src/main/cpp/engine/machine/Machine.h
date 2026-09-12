@@ -29,6 +29,27 @@ class Machine {
     virtual void channelPressure(uint8_t /*value*/) {}
     virtual void pitchBend(int16_t /*value14*/) {}
 
+    // --- Per-note expression (MPE) ---------------------------------------
+    //
+    // The same three gestures, but belonging to one note rather than to the
+    // channel. A controller that gives every finger its own channel can
+    // bend, press and slide them independently; the rack works out which
+    // note a member channel is holding and calls these.
+    //
+    // They default to the channel-wide versions, which is what makes this
+    // safe to add: a machine that has not been taught about voices still
+    // answers a bend by bending, as it always did. Only the sense of "which
+    // note" is lost, and it had none to begin with.
+    //
+    // [semitones] is signed and already scaled by the zone's bend range, so
+    // a machine adds it to the voice's pitch and asks nothing further.
+    virtual void noteBend(uint8_t /*note*/, float semitones) {
+        pitchBend(static_cast<int16_t>(semitones / 2.0f * 8192.0f));
+    }
+    virtual void notePressure(uint8_t /*note*/, uint8_t value) { channelPressure(value); }
+    /** Slide, CC 74. Nothing read it before MPE, so there is nothing to fall back to. */
+    virtual void noteTimbre(uint8_t /*note*/, uint8_t /*value*/) {}
+
     // Render `frames` samples. Return true if R was written (stereo), false if
     // the output is mono in L and the rack should copy it.
     virtual bool render(float *L, float *R, int32_t frames) = 0;

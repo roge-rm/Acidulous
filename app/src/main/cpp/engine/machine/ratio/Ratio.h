@@ -60,6 +60,8 @@ class Ratio final : public Machine {
         MatrixParams = 4,
         VoiceBase = MatrixBase + kMatrixSlots * MatrixParams,
         VoiceMode = VoiceBase, Glide, GlideMode, BendRange, Octave, Transpose, Volume, Pan, VelocityAmount,
+        // Appended, and safe: parameters are addressed by name.
+        MpeTimbre,
         Count
     };
     enum OpP { OWave = 0, OMode, ORatio, OFine, OFixed, OLevel, OFeedback, OAttack, ODecay, OSustain, ORelease, OVel, OKey, OPan };
@@ -81,6 +83,9 @@ class Ratio final : public Machine {
     void controlChange(uint8_t cc, uint8_t value) override;
     void channelPressure(uint8_t value) override;
     void pitchBend(int16_t value14) override;
+    void noteBend(uint8_t note, float semitones) override;
+    void notePressure(uint8_t note, uint8_t value) override;
+    void noteTimbre(uint8_t note, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
 
   private:
@@ -110,6 +115,12 @@ class Ratio final : public Machine {
         float mod[DestCount]{};
         static constexpr uint32_t kSeed = 0x7f4a7c15u;
         uint32_t rng = kSeed;
+        // Per-note expression (MPE). `bend` is in semitones and adds to
+        // whatever the channel is bending.
+        // `pressure` and `timbre` are -1 until this finger sends them, so
+        // a voice with none of its own falls back to the channel and a
+        // keyboard plays exactly as it did.
+        float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
     };
 
     /** The blended routing, rebuilt once per block rather than per voice. */

@@ -1,4 +1,5 @@
 #include "Brazen.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
@@ -56,6 +57,7 @@ const ParamDef *Brazen::paramDefs(int32_t &count) const {
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"mpetimbre", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -113,6 +115,8 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     v.used = true;
     v.gate = true;
     v.note = note;
+    v.bend = 0.0f;
+    v.pressure = v.timbre = -1.0f;
     v.velocity = static_cast<float>(velocity) / 127.0f;
     v.age = ++ageCounter;
     v.vibratoPhase = 0.0f;
@@ -262,15 +266,21 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
         // and the note does not change inside a block worth hearing.
         for (int32_t pi = 0; pi < players; ++pi) {
             Player &p = v.players[pi];
-            const float hz = v.freq * tune * bendMul * std::pow(2.0f, (p.offsetCents + vib) / 1200.0f);
-            const float push = mouth * env0 * vel * p.breath * (1.0f - growlNow * 0.5f) + pressure * 0.3f;
+            const float hz = v.freq * tune * bendMul * noteBendMul(v) *
+                             std::pow(2.0f, (p.offsetCents + vib) / 1200.0f);
+            const float prs = v.pressure >= 0.0f ? v.pressure : pressure;
+            const float push = mouth * env0 * vel * p.breath * (1.0f - growlNow * 0.5f) + prs * 0.3f;
             p.bore.setFrequency(hz);
             // Lips tighten as the player leans in, which is most of what an
             // attack is: the note arrives before the tone does.
             // The growl is a player humming against their own note: it
             // leans on the lips and on the air at once, which is why it
             // buzzes rather than simply wobbling.
-            p.bore.setLips(tension * (0.94f + env0 * bite * 0.12f) * (1.0f + growlNow * 0.06f), lipDamp);
+            // Slide leans on the lips, which is what a player's embouchure does.
+            const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
+            p.bore.setLips(tension * (0.94f + env0 * bite * 0.12f) * (1.0f + growlNow * 0.06f) *
+                               (1.0f + slide * paramOf(MpeTimbre) * 0.35f),
+                           lipDamp);
             p.bore.setLipGain(0.7f + bite * 0.6f);
             p.bore.setBell(reflect, bellCut);
             // Brassiness closes the lips as well as bending the line: a
@@ -331,6 +341,18 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
         R[i] = r * panR * 1.4142f;
     }
     return true;
+}
+
+void Brazen::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
+}
+
+void Brazen::notePressure(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->pressure = static_cast<float>(value) / 127.0f;
+}
+
+void Brazen::noteTimbre(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->timbre = static_cast<float>(value) / 127.0f;
 }
 
 } // namespace acidulous::machine

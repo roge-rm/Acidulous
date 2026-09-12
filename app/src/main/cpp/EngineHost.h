@@ -102,7 +102,12 @@ class EngineHost {
     void channelPressure(int rack, uint8_t value, bool record = true);
     // A channel message straight from a MIDI port. The rack is the channel:
     // whatever the message was addressed to on the wire is re-addressed here.
-    void midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2);
+    void midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2, uint8_t channel = kNoChannel);
+    /** The MPE zone: kind 0 off / 1 lower / 2 upper. One, for the input. */
+    void setMpeZone(int kind, int members, float bendSemis);
+    bool mpeMemberChannel(uint8_t channel) const;
+    /** Which member channels are holding a note, a bit per channel. */
+    int mpeHeldMask() const;
 
     // unit: "machine" | "effect1" | "effect2" | "eventor1" | "eventor2" | "channel".
     // value is normalised 0..1. Names are resolved here, on the UI thread.
@@ -273,6 +278,9 @@ class EngineHost {
     bool running = false;
     std::string mountedType[16];
     std::atomic<bool> rendering{false}, renderCancel{false};
+    // The zone, read on the MIDI thread and written from the UI.
+    std::atomic<int> mpeZoneKind{0};
+    std::atomic<int> mpeZoneMembers{15};
     std::atomic<float> renderSeconds{0.0f}, renderPeak{0.0f};
     std::string mountedEffectType[16][2];
     std::string mountedEventorType[16][2];

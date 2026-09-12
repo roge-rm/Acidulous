@@ -1,4 +1,5 @@
 #include "Filament.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -44,6 +45,7 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
 
         step(ExciterMode, "exciter", ExciterCount, 0.0f);
         lin(Position, "position", 0.02f, 0.5f, 0.22f);
+        lin(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.0f);
         lin(Hardness, "hardness", 0.0f, 1.0f, 0.4f);
         lin(Pressure, "pressure", 0.0f, 1.0f, 0.5f);
         lin(Speed, "speed", 0.0f, 1.0f, 0.4f);
@@ -186,6 +188,8 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     v->used = true;
     v->gate = true;
     v->note = note;
+    v->bend = 0.0f;
+    v->pressure = v->timbre = -1.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     v->target = noteToHz(static_cast<float>(note));
@@ -225,13 +229,26 @@ void Filament::channelPressure(uint8_t value) { pressure = static_cast<float>(va
 void Filament::pitchBend(int16_t value14) {
     bendSemis = (static_cast<float>(value14) / 8192.0f) * paramOf(BendRange);
 }
+
+void Filament::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
+}
+
+void Filament::notePressure(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->pressure = static_cast<float>(value) / 127.0f;
+}
+
+void Filament::noteTimbre(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->timbre = static_cast<float>(value) / 127.0f;
+}
 void Filament::onBlock(int64_t, int64_t, float tempo) { bpm = tempo > 1.0f ? tempo : 120.0f; }
 
 float Filament::sourceValue(int32_t src, const Voice &v) const {
     switch (src) {
     case SrcOn: return 1.0f;
     case SrcModWheel: return modWheel;
-    case SrcPressure: return pressure;
+    // A finger's own pressure if it sent any, the channel's otherwise.
+    case SrcPressure: return v.pressure >= 0.0f ? v.pressure : pressure;
     case SrcVelocity: return v.velocity;
     case SrcKeyTrack: return v.key01;
     case SrcRandom: return v.pan * 0.5f + 0.5f;
@@ -332,7 +349,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             const float loopGain = 0.9f + 0.0999f * sustain - v.damp * (1.0f - std::exp(-releaseCoeff)) * 0.0f;
             const float keyTone = 1.0f - paramOf(ToneKey) * v.key01 * 0.5f;
             const float tone = clampf((paramOf(Tone) + mod[DstTone]) * keyTone, 0.02f, 1.0f);
-            const float freq = v.freq * pitchScale * std::pow(2.0f, mod[DstPitch]);
+            const float freq = v.freq * pitchScale * noteBendMul(v) * std::pow(2.0f, mod[DstPitch]);
 
             // Letting go: the string is damped by shortening its loop gain
             // over the release time rather than by an envelope, because a
@@ -412,7 +429,12 @@ bool Filament::render(float *L, float *R, int32_t frames) {
 
             // Pick position: the same disturbance a little later, inverted,
             // which is a comb and is why a bridge pickup is thin.
-            const float pos = clampf(position + mod[DstPosition], 0.02f, 0.5f);
+            // Slide walks the pick up the string, which is the brightest
+            // thing a finger can do to one.
+            const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
+            const float pos = clampf(position + mod[DstPosition] +
+                                         slide * paramOf(MpeTimbre) * 0.28f,
+                                     0.02f, 0.5f);
             const float a = v.a.step(excite);
             const float b = v.b.step(excite * (1.0f - pos));
             const float coupled = (a + b) * 0.5f;

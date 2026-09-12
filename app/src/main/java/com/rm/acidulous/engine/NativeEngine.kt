@@ -96,8 +96,24 @@ object NativeEngine {
      * playing from hardware takes the same path as playing on the screen,
      * recording included.
      */
-    fun midiEvent(rackId: Int, status: Int, data1: Int, data2: Int) =
-        nativeMidiEvent(rackId, status, data1, data2)
+    fun midiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int = NO_CHANNEL) =
+        nativeMidiEvent(rackId, status, data1, data2, channel)
+
+    /**
+     * An MPE zone on one rack. [kind] is 0 off, 1 lower, 2 upper.
+     *
+     * The rack needs it to know which arriving channels are fingers rather
+     * than channels, and how far a per-note bend goes - 48 semitones by
+     * the specification, where an ordinary bend means 2.
+     */
+    fun setMpeZone(kind: Int, members: Int, bendSemis: Float) =
+        nativeSetMpeZone(kind, members, bendSemis)
+
+    /** Which member channels are holding a note, a bit per channel. */
+    val mpeHeldMask: Int get() = nativeMpeHeldMask()
+
+    /** What the app's own notes carry: no channel, because they came from no cable. */
+    const val NO_CHANNEL = 0xff
 
     /** Mod wheel is CC 1; pressure is channel aftertouch. Both 0..127. */
     /**
@@ -345,7 +361,9 @@ object NativeEngine {
     private external fun nativeCapturedSeconds(): Float
     private external fun nativeCapturedPeak(): Float
     private external fun nativeCaptureOverflowed(): Boolean
-    private external fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int)
+    private external fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int)
+    private external fun nativeSetMpeZone(kind: Int, members: Int, bendSemis: Float)
+    private external fun nativeMpeHeldMask(): Int
     private external fun nativeStart(): Boolean
     private external fun nativeStop()
     private external fun nativeIsRunning(): Boolean

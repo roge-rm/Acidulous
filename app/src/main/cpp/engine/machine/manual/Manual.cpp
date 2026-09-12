@@ -403,6 +403,7 @@ void Manual::pitchBend(int16_t value14) {
     bendSemis = (static_cast<float>(value14) / 8192.0f) * paramOf(BendRange);
 }
 
+
 void Manual::onBlock(int64_t, int64_t, float tempo) { bpm = tempo > 1.0f ? tempo : 120.0f; }
 
 float Manual::sourceValue(int32_t src, const Voice &v) const {

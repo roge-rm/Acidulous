@@ -1,4 +1,5 @@
 #include "Pollen.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
 #include <engine/core/InputBus.h>
@@ -171,6 +172,7 @@ void Pollen::noteOn(uint8_t note, uint8_t velocity) {
     v->used = true;
     v->gate = true;
     v->note = note;
+    v->bend = 0.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->age = ++ageCounter;
     v->timer = 0.0f; // the first grain lands at once, not a period later
@@ -215,6 +217,10 @@ float Pollen::windowAt(int32_t shape, float phase, float skew) const {
     const float f = x - static_cast<float>(i);
     const float *w = window[std::clamp(shape, 0, WindowCount - 1)].data();
     return w[i] + (w[i + 1] - w[i]) * f;
+}
+
+void Pollen::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
 }
 
 float Pollen::scatterSemis(float amount, uint32_t &state) const {
@@ -312,7 +318,7 @@ void Pollen::spawn(Voice &v, int32_t voiceIndex, const View &view, float env) {
     }
 
     const float semis = paramOf(Pitch) + paramOf(Fine) * 0.01f + paramOf(Transpose) + 12.0f * paramOf(Octave) +
-                        bend * paramOf(BendRange);
+                        bend * paramOf(BendRange) + v.bend;
     uint32_t state = rng;
     const float scatter = scatterSemis(paramOf(Spread), state);
     rng = state;

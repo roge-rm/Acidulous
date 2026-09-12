@@ -68,6 +68,7 @@ class Pollen final : public Machine {
     void allNotesOff() override;
     void controlChange(uint8_t cc, uint8_t value) override;
     void pitchBend(int16_t value14) override;
+    void noteBend(uint8_t note, float semitones) override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
 
@@ -101,6 +102,9 @@ class Pollen final : public Machine {
         int32_t living = 0;    // grains currently belonging to this voice
         dsp::Adsr amp;
         int64_t age = 0;
+        // Per-note expression (MPE). `bend` is in semitones and adds to
+        // whatever the channel is bending.
+        float bend = 0.0f;
     };
 
     float paramOf(int32_t p) const { return params_.get(p); }

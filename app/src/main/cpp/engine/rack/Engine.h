@@ -48,6 +48,33 @@ class Engine {
     seq::ClockFollower follower;
     MasterBus master;
     Rack racks[kRackCount];
+
+    // --- MPE ----------------------------------------------------------------
+    /**
+     * The channel zone. [kind] is 0 off, 1 lower (master channel 1, members
+     * climbing from 2), 2 upper (master 16, members descending from 15).
+     *
+     * One zone, here rather than on a rack, because a zone is a property of
+     * what is plugged in and not of a track: with notes following whichever
+     * track is open, the instrument it plays changes as you work.
+     */
+    void setMpeZone(int32_t kind, int32_t members, float bendSemis) {
+        mpeKind = kind < 0 ? 0 : (kind > 2 ? 2 : kind);
+        mpeMembers = members < 1 ? 1 : (members > 15 ? 15 : members);
+        mpeBendSemis = bendSemis < 1.0f ? 1.0f : (bendSemis > 96.0f ? 96.0f : bendSemis);
+        for (auto &n : mpeChannelNote) n = -1;
+    }
+    bool mpeMember(uint8_t channel) const {
+        if (mpeKind == 0 || channel > 15) return false;
+        if (mpeKind == 1) return channel >= 1 && channel <= mpeMembers;
+        return channel <= 14 && channel >= 15 - mpeMembers;
+    }
+    /** Which member channels are holding a note, as a bit per channel. */
+    int32_t mpeHeldMask() const {
+        int32_t mask = 0;
+        for (int32_t c = 0; c < 16; ++c) if (mpeChannelNote[c] >= 0) mask |= 1 << c;
+        return mask;
+    }
     Retirer retirer;
 
     float loadPercent() const { return load.load(std::memory_order_relaxed); }
@@ -86,6 +113,15 @@ class Engine {
     void applyMount(const Mount &m);
     static constexpr int32_t kMaxMountsPerBlock = 8;
     void drainMidi();
+
+    // Which note each member channel is holding, or -1. MPE puts one note
+    // on a channel at a time, so this is exact rather than a guess - it is
+    // how a bend arriving on channel 4 finds the finger that made it.
+    int32_t mpeChannelNote[16] = {-1, -1, -1, -1, -1, -1, -1, -1,
+                                  -1, -1, -1, -1, -1, -1, -1, -1};
+    int32_t mpeKind = 0;
+    int32_t mpeMembers = 15;
+    float mpeBendSemis = 48.0f;
     void drainParams();
 
     RtQueue<Mount, 64> mounts;

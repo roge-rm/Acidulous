@@ -61,6 +61,12 @@ class Trinity final : public Machine {
         VoiceBase = MatrixBase + kMatrixSlots * MatrixParams,
         VoiceMode = VoiceBase, UnisonCount, UnisonDetune, UnisonSpread,
         Glide, GlideMode, BendRange, Octave, Transpose, Volume, Pan, VelocityAmount,
+        // Appended, and appended is safe: the document addresses parameters
+        // by name and a name it has never seen takes its default. What is
+        // not safe is changing a stepped parameter's step *count*, because
+        // the stored value is normalised against it - which is why slide is
+        // a depth knob here and not another modulation source.
+        MpeTimbre,
         Count
     };
     // Offsets inside a block.
@@ -78,6 +84,9 @@ class Trinity final : public Machine {
 
     void prepare(int32_t sampleRate) override;
     void reset() override;
+    void noteBend(uint8_t note, float semitones) override;
+    void notePressure(uint8_t note, uint8_t value) override;
+    void noteTimbre(uint8_t note, uint8_t value) override;
     void noteOn(uint8_t note, uint8_t velocity) override;
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
@@ -101,6 +110,11 @@ class Trinity final : public Machine {
         uint32_t age = 0;
         float freq = 440.0f, glideFrom = 440.0f, glidePos = 1.0f;
         float random = 0.0f, detuneCents = 0.0f, panOffset = 0.0f;
+        // Per-note expression (MPE). `bend` is in semitones and adds to the
+        // machine's own; `pressure` and `timbre` are -1 until this finger
+        // sends them, so a voice with no expression of its own falls back to
+        // whatever the channel is doing and nothing changes for a keyboard.
+        float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
         OscState osc[kOscs];
         dsp::Adsr env[kEnvs];
         dsp::LfoGen lfo[kLfos];

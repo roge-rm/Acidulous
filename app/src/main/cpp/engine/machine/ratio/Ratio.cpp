@@ -1,4 +1,5 @@
 #include "Ratio.h"
+#include <engine/machine/Voices.h>
 
 #include <cstdio>
 
@@ -106,6 +107,7 @@ const ParamDef *Ratio::paramDefs(int32_t &count) const {
         putN(FilterType, "f_type", 0.0f, dsp::MultiFilter::TypeCount - 1.0f, 3.0f, Curve::Stepped,
              dsp::MultiFilter::TypeCount, "");
         putN(FilterFreq, "f_freq", 20.0f, 20000.0f, 18000.0f, Curve::Exponential, 0, "Hz");
+        putN(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         putN(FilterRes, "f_res", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         putN(FilterEnv, "f_env", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         putN(FilterKey, "f_key", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
@@ -235,6 +237,8 @@ void Ratio::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger)
     v.used = true;
     v.gate = true;
     v.note = note;
+    v.bend = 0.0f;
+    v.pressure = v.timbre = -1.0f;
     v.velocity = velocity;
     v.age = ageCounter++;
     v.random = rnd(v.rng) * 2.0f - 1.0f;
@@ -320,13 +324,26 @@ float Ratio::snapRatio(float r, int mode, float skew) const {
     return clampf(r, 0.02f, 96.0f);
 }
 
+void Ratio::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
+}
+
+void Ratio::notePressure(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->pressure = static_cast<float>(value) / 127.0f;
+}
+
+void Ratio::noteTimbre(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->timbre = static_cast<float>(value) / 127.0f;
+}
+
 // --- Modulation ------------------------------------------------------------------
 
 float Ratio::sourceValue(const Voice &v, int src) const {
     switch (src) {
     case SrcOn: return 1.0f;
     case SrcModWheel: return modWheel;
-    case SrcPressure: return pressure;
+    // A finger's own pressure if it sent any, the channel's otherwise.
+    case SrcPressure: return v.pressure >= 0.0f ? v.pressure : pressure;
     case SrcVelocity: return static_cast<float>(v.velocity) / 127.0f;
     case SrcKeyTrack: return (static_cast<float>(v.note) - 60.0f) / 48.0f;
     case SrcRandom: return v.random;
@@ -373,7 +390,7 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
         bool fixed;
     } cfg[kOps];
 
-    const float bendSemis = bend * paramOf(BendRange);
+    const float bendSemis = bend * paramOf(BendRange) + v.bend;
     const float globalSemis = paramOf(Transpose) + 12.0f * paramOf(Octave) + bendSemis + v.mod[DstPitch] * 24.0f;
     const float pitchMul = std::exp2(globalSemis / 12.0f);
     const int snapMode = stepOf(SnapMode);
@@ -400,8 +417,11 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
 
     const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f);
     const float velAmp = 1.0f - paramOf(VelocityAmount) * (1.0f - vel);
+    // Slide opens the filter, by however much the patch says it should.
+    const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
     const float filterBase = paramOf(FilterFreq) *
-        std::exp2(paramOf(FilterKey) * keyOffset / 12.0f + v.mod[DstFilterFreq] * 6.0f);
+        std::exp2(paramOf(FilterKey) * keyOffset / 12.0f + v.mod[DstFilterFreq] * 6.0f +
+                  slide * paramOf(MpeTimbre) * 4.0f);
     const float filterEnvAmt = paramOf(FilterEnv);
     const float filterRes = clampf(paramOf(FilterRes) + v.mod[DstFilterRes], 0.0f, 1.0f);
     const int filterType = stepOf(FilterType);

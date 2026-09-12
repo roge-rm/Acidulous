@@ -33,7 +33,18 @@ struct MidiMessage {
     uint8_t status = 0; // channel in the low nibble == rack
     uint8_t data1 = 0;
     uint8_t data2 = 0;
+    /**
+     * The channel it actually arrived on, 0-15, or [kNoChannel].
+     *
+     * The status nibble is spoken for - it carries the rack - and MPE is
+     * entirely about which channel a message came in on, so the channel
+     * needs a byte of its own. Everything the app generates itself has no
+     * channel and says so.
+     */
+    uint8_t channel = 0xff;
 };
+
+constexpr uint8_t kNoChannel = 0xff;
 
 // The ordinal crosses the queue and the JNI boundary but is never written
 // to a file - lanes are keyed by unit *name* - so inserting here is safe,

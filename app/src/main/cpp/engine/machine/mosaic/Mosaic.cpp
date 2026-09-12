@@ -1,4 +1,5 @@
 #include "Mosaic.h"
+#include <engine/machine/Voices.h>
 
 #include <cstdio>
 
@@ -186,6 +187,7 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
     v.used = true;
     v.gate = true;
     v.note = note;
+    v.bend = 0.0f;
     v.velocity = velocity;
     v.age = ageCounter++;
     v.random = rnd(v.rng) * 2.0f - 1.0f;
@@ -290,6 +292,10 @@ float Mosaic::sourceValue(const Voice &v, int src) const {
     }
 }
 
+void Mosaic::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
+}
+
 /**
  * The file's own modulators, evaluated for one voice. Their sources are the
  * note and the continuous controllers, so this has to run every block, not
@@ -366,7 +372,7 @@ float Mosaic::readSample(const SampleData &s, double pos) {
 }
 
 void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
-    const float bendSemis = bend * paramOf(BendRange);
+    const float bendSemis = bend * paramOf(BendRange) + v.bend;
     const float semis = paramOf(Coarse) + paramOf(Fine) * 0.01f + paramOf(Transpose) + 12.0f * paramOf(Octave) +
                         bendSemis + v.mod[DstPitch] * 24.0f;
     const float pitchMul = std::exp2(semis / 12.0f);

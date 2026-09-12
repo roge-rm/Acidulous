@@ -568,6 +568,7 @@ private fun TrinityPanel(b: ParamBinding) {
                         PanelKnob(b, "glide", "glide")
                         PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
                         PanelKnob(b, "bend", "bend")
+                        PanelKnob(b, "mpetimbre", "slide")
                     }
                     Group("unison") {
                         PanelKnob(b, "unison", "voices", PanelAmber)
@@ -703,6 +704,7 @@ private fun RatioPanel(b: ParamBinding) {
                         PanelKnob(b, "glide", "glide")
                         PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
                         PanelKnob(b, "bend", "bend")
+                        PanelKnob(b, "mpetimbre", "slide")
                     }
                     Group("tuning") { PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose") }
                     Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
@@ -2030,6 +2032,7 @@ private fun FilamentPanel(b: ParamBinding) {
                     Group("tuning") {
                         PanelKnob(b, "glide", "glide")
                         PanelKnob(b, "bend", "bend")
+                        PanelKnob(b, "mpetimbre", "slide")
                         PanelKnob(b, "octave", "octave")
                         PanelKnob(b, "transpose", "transpose")
                         PanelKnob(b, "fine", "fine")
@@ -2117,6 +2120,7 @@ private fun BrazenPanel(b: ParamBinding) {
                     Group("air") {
                         PanelKnob(b, "pressure", "pressure", PanelAmber)
                         PanelKnob(b, "breath", "breath")
+                        PanelKnob(b, "mpetimbre", "slide")
                         PanelKnob(b, "brass", "brassiness", PanelPink)
                     }
                     Group("growl") {
@@ -2211,6 +2215,7 @@ private fun TimberPanel(b: ParamBinding) {
                     Group("air") {
                         PanelKnob(b, "pressure", "pressure", PanelAmber)
                         PanelKnob(b, "breath", "breath")
+                        PanelKnob(b, "mpetimbre", "slide")
                     }
                     Group("jet") {
                         PanelKnob(b, "jet", "crossing", PanelPink)

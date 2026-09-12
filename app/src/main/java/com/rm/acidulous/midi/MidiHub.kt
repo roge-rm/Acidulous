@@ -435,13 +435,50 @@ object MidiHub {
      * Re-address a message and push it at the engine. Channel 10 is not
      * special here: a rack is whatever the routing says it is.
      */
+    /**
+     * An MPE zone: 0 off, 1 lower (master channel 1, members climbing from
+     * 2), 2 upper (master 16, members descending from 15).
+     *
+     * A zone is one instrument played with many channels, so while one is
+     * on, channel-to-track routing cannot also be true - the member
+     * channels are fingers, not tracks. Follow and pinned still choose
+     * which track the zone plays.
+     */
+    var mpeZone = 0
+        private set
+    var mpeMembers = 15
+        private set
+    var mpeBendSemis = 48f
+        private set
+    var mpeTimbre = true
+        private set
+
+    fun chooseMpe(zone: Int, members: Int, bendSemis: Float, timbre: Boolean) {
+        mpeZone = zone
+        mpeMembers = members
+        mpeBendSemis = bendSemis
+        mpeTimbre = timbre
+        NativeEngine.setMpeZone(zone, members, bendSemis)
+    }
+
+    /** Is this channel one of the zone's fingers? Channels are 0-based here. */
+    fun mpeMember(channel: Int): Boolean = when (mpeZone) {
+        1 -> channel in 1..mpeMembers
+        2 -> channel <= 14 && channel >= 15 - mpeMembers
+        else -> false
+    }
+
     private fun dispatch(status: Int, d1: Int, d2: Int) {
         val kind = status and 0xf0
         if (kind == 0xc0) return // program change: nothing to address it to yet
-        val rack = when (routing) {
-            Routing.SelectedTrack -> target()
-            Routing.FixedTrack -> fixedRack
-            Routing.ChannelToRack -> status and 0x0f
+        val channel = status and 0x0f
+        val member = mpeMember(channel)
+        val rack = when {
+            // Every finger plays the one instrument the zone is pointed at.
+            member -> if (routing == Routing.FixedTrack) fixedRack else target()
+            routing == Routing.FixedTrack -> fixedRack
+            routing == Routing.ChannelToRack -> channel
+            else -> target()
         }
         // A note whose note-on a mapping took must not have its note-off
         // delivered either, or the machine is left holding a note it was
@@ -453,7 +490,15 @@ object MidiHub {
             kind == 0x90 -> onMappable(null, d1, d2, rack).also { if (it) swallowed += d1 }
             else -> false
         }
-        if (!taken) NativeEngine.midiEvent(rack, kind, d1, d2)
+        // Slide is only slide if the zone says so; otherwise CC 74 is an
+        // ordinary controller and has whatever meaning a mapping gives it.
+        val expressive = member && !(kind == 0xb0 && d1 == 74 && !mpeTimbre)
+        if (!taken) {
+            NativeEngine.midiEvent(
+                rack, kind, d1, d2,
+                if (expressive) channel else NativeEngine.NO_CHANNEL,
+            )
+        }
         received += 1
         lastMessage = when (kind) {
             0x90 -> if (d2 == 0) "off $d1" else "on $d1 v$d2"

@@ -79,6 +79,7 @@ class Mosaic final : public Machine {
     void controlChange(uint8_t cc, uint8_t value) override;
     void channelPressure(uint8_t value) override;
     void pitchBend(int16_t value14) override;
+    void noteBend(uint8_t note, float semitones) override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
 
@@ -128,6 +129,9 @@ class Mosaic final : public Machine {
         bool fileDrivesLevel = false;
         static constexpr uint32_t kSeed = 0x31415926u;
         uint32_t rng = kSeed;
+        // Per-note expression (MPE). `bend` is in semitones and adds to
+        // whatever the channel is bending.
+        float bend = 0.0f;
     };
 
     Voice *allocate();

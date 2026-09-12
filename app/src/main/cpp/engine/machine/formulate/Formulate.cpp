@@ -1,4 +1,5 @@
 #include "Formulate.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
@@ -116,6 +117,7 @@ void Formulate::noteOn(uint8_t note, uint8_t velocity) {
     v->used = true;
     v->gate = true;
     v->note = note;
+    v->bend = 0.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->age = ++ageCounter;
     if (steppedOf(TableRetrigger) != 0 || !gliding) {
@@ -150,6 +152,10 @@ void Formulate::allNotesOff() {
 void Formulate::pitchBend(int16_t value14) { bend = static_cast<float>(value14) / 8192.0f; }
 void Formulate::controlChange(uint8_t cc, uint8_t value) {
     if (cc == 1) modWheel = static_cast<float>(value) / 127.0f;
+}
+
+void Formulate::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
 }
 void Formulate::onBlock(int64_t, int64_t, float tempo) { bpm = tempo; }
 
@@ -264,7 +270,8 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
             } else {
                 v.freq = mtof(static_cast<float>(v.note));
             }
-            const float freq = v.freq * tune * bendMul * std::pow(2.0f, static_cast<float>(arpSemis) / 12.0f);
+            const float freq = v.freq * tune * bendMul * noteBendMul(v) *
+                               std::pow(2.0f, static_cast<float>(arpSemis) / 12.0f);
 
             int32_t duty = dutyTable >= 0 ? dutyTable : static_cast<int32_t>((paramOf(Duty) + pwmDepth * pwmValue) * 255.0f);
             const int32_t oscValue = oscSample(v, wave, duty, dt, freq, subLevel);

@@ -1,4 +1,5 @@
 #include "Cumulus.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
@@ -175,6 +176,7 @@ void Cumulus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     v.used = true;
     v.gate = true;
     v.note = note;
+    v.bend = 0.0f;
     v.velocity = static_cast<float>(velocity) / 127.0f;
     v.key01 = std::clamp((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     v.zone = CloudSet::zoneFor(note);
@@ -245,6 +247,10 @@ float Cumulus::readTable(const CloudTable &t, float pos) const {
     return d[i] + (d[i + 1] - d[i]) * f;
 }
 
+void Cumulus::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
+}
+
 bool Cumulus::render(float *L, float *R, int32_t frames) {
     params_.tick();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
@@ -313,7 +319,7 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
             v.freq = mtof(static_cast<float>(v.note));
         }
         const float bendMul = std::pow(2.0f, bend * bendRange / 12.0f);
-        const float baseRate = v.freq * bendMul * tune * lfoPitch / ta.baseHz;
+        const float baseRate = v.freq * bendMul * noteBendMul(v) * tune * lfoPitch / ta.baseHz;
 
         const float widthOffset = width * static_cast<float>(size) * 0.25f;
         const float cutoffHz = std::clamp(

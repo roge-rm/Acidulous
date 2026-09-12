@@ -1,4 +1,5 @@
 #include "Cipher.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -193,6 +194,7 @@ void Cipher::noteOn(uint8_t note, uint8_t velocity) {
     v->used = true;
     v->gate = true;
     v->note = note;
+    v->bend = 0.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     v->target = noteToHz(static_cast<float>(note));
@@ -220,6 +222,10 @@ void Cipher::controlChange(uint8_t cc, uint8_t value) {
 void Cipher::channelPressure(uint8_t value) { pressure = static_cast<float>(value) / 127.0f; }
 void Cipher::pitchBend(int16_t value14) {
     bendSemis = (static_cast<float>(value14) / 8192.0f) * paramOf(BendRange);
+}
+
+void Cipher::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
 }
 void Cipher::onBlock(int64_t, int64_t, float tempo) { bpm = tempo > 1.0f ? tempo : 120.0f; }
 
@@ -280,7 +286,7 @@ float Cipher::carrierSample(Voice &v, float dt, float pitchScale, int32_t waveA,
     const float glide = paramOf(Glide);
     const float k = glide <= 0.002f ? 1.0f : clampf(dt / glide, 0.0f, 1.0f);
     v.freq += (v.target - v.freq) * k;
-    const float f = v.freq * pitchScale;
+    const float f = v.freq * pitchScale * noteBendMul(v);
     const float inc = f / sampleRate;
     v.phaseA += inc;
     if (v.phaseA >= 1.0f) v.phaseA -= 1.0f;

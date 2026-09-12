@@ -426,9 +426,34 @@ void EngineHost::channelPressure(int rack, uint8_t value, bool record) {
     pushPerformance(rack, kPerfPressure, value, record);
 }
 
-void EngineHost::midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2) {
+void EngineHost::setMpeZone(int kind, int members, float bendSemis) {
+    mpeZoneKind.store(kind, std::memory_order_relaxed);
+    mpeZoneMembers.store(members, std::memory_order_relaxed);
+    sEngine.setMpeZone(kind, members, bendSemis);
+}
+
+bool EngineHost::mpeMemberChannel(uint8_t channel) const {
+    if (channel > 15) return false;
+    const int kind = mpeZoneKind.load(std::memory_order_relaxed);
+    const int members = mpeZoneMembers.load(std::memory_order_relaxed);
+    if (kind == 1) return channel >= 1 && channel <= members;
+    if (kind == 2) return channel <= 14 && channel >= 15 - members;
+    return false;
+}
+
+int EngineHost::mpeHeldMask() const { return sEngine.mpeHeldMask(); }
+
+void EngineHost::midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2, uint8_t channel) {
     if (rack < 0 || rack >= kRackCount) return;
     const uint8_t kind = status & 0xf0;
+    // On a member channel the wheel and the pressure strip are not the
+    // channel's, they are one finger's - so they must not be diverted into
+    // the performance lane, which has no idea which note it belongs to.
+    // They go through as MIDI and the rack works out whose they are.
+    if (mpeMemberChannel(channel)) {
+        sEngine.pushMidi({static_cast<uint8_t>(kind | rack), d1, d2, channel});
+        return;
+    }
     // A wheel on a controller is the same gesture as the wheel on screen and
     // is recorded the same way - by going down the same path, not by a
     // parallel one that has to be kept in step with it. Everything else
@@ -442,7 +467,7 @@ void EngineHost::midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2) {
         channelPressure(rack, d1);
         return;
     }
-    sEngine.pushMidi({static_cast<uint8_t>(kind | rack), d1, d2});
+    sEngine.pushMidi({static_cast<uint8_t>(kind | rack), d1, d2, channel});
 }
 
 int EngineHost::paramIndex(const std::string &machineType, const std::string &unit, const std::string &name) const {

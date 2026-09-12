@@ -88,6 +88,7 @@ class Cipher final : public Machine {
     void controlChange(uint8_t cc, uint8_t value) override;
     void channelPressure(uint8_t value) override;
     void pitchBend(int16_t value14) override;
+    void noteBend(uint8_t note, float semitones) override;
     bool render(float *L, float *R, int32_t frames) override;
 
   private:
@@ -98,6 +99,9 @@ class Cipher final : public Machine {
         float phaseA = 0.0f, phaseB = 0.0f, phaseSub = 0.0f;
         float freq = 220.0f, target = 220.0f;
         dsp::Adsr amp;
+        // Per-note expression (MPE). `bend` is in semitones and adds to
+        // whatever the channel is bending.
+        float bend = 0.0f;
     };
     struct Band {
         dsp::Svf analysis1, analysis2;

@@ -1,4 +1,5 @@
 #include "Nexus.h"
+#include <engine/machine/Voices.h>
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -82,6 +83,7 @@ void Nexus::noteOn(uint8_t note, uint8_t velocity) {
     v->used = true;
     v->gate = true;
     v->note = note;
+    v->bend = 0.0f;
     v->age = ++counter;
     v->quiet = 0.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
@@ -118,6 +120,10 @@ void Nexus::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
     tickStep = static_cast<double>(tickEnd - tickStart);
 }
 
+void Nexus::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
+}
+
 void *Nexus::swapObject(int32_t slot, void *object) {
     if (slot != 0) return object;
     auto *next = static_cast<Graph *>(object);
@@ -150,7 +156,7 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
     int32_t activeCount = 0;
     for (int32_t i = 0; i < kVoices; ++i) {
         if (!voices[i].used) continue;
-        pitchOf[i] = static_cast<float>(voices[i].note) + shift;
+        pitchOf[i] = static_cast<float>(voices[i].note) + shift + voices[i].bend;
         active[activeCount++] = i;
     }
     ctx.tickInc = frames > 0 ? tickStep / static_cast<double>(frames) : 0.0;

@@ -59,6 +59,7 @@ class Formulate final : public Machine {
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
     void pitchBend(int16_t value14) override;
+    void noteBend(uint8_t note, float semitones) override;
     void controlChange(uint8_t cc, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
@@ -82,6 +83,9 @@ class Formulate final : public Machine {
         dsp::Adsr amp;
         dsp::MultiFilter filter;
         int64_t age = 0;
+        // Per-note expression (MPE). `bend` is in semitones and adds to
+        // whatever the channel is bending.
+        float bend = 0.0f;
     };
 
     float paramOf(int32_t p) const { return params_.get(p); }

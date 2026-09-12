@@ -37,6 +37,16 @@ class Rack {
     void handleMidi(uint8_t status, uint8_t d1, uint8_t d2);
     void allNotesOff();
 
+    /**
+     * Expression belonging to one note, straight to the machine.
+     *
+     * Straight, and not through the eventor chain, on purpose: an
+     * arpeggiator turns one note into a run of others and there is no
+     * honest answer to which of them a finger's pressure belongs to. The
+     * note is transformed; the expression follows the note that was played.
+     */
+    void noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, float bendSemis);
+
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm);
     void render(int32_t frames);
 
@@ -146,6 +156,7 @@ class Rack {
     Effect *effects[kEffectSlots]{};
     Eventor *eventors[kEventorSlots]{};
     Sink sinks[kEventorSlots + 1];
+
     ParamSet channel;
     bool stereo = false;
     std::atomic<float> peakHold{0.0f};

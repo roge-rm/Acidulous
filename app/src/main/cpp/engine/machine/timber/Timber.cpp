@@ -1,4 +1,5 @@
 #include "Timber.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
@@ -60,6 +61,7 @@ const ParamDef *Timber::paramDefs(int32_t &count) const {
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"mpetimbre", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -125,6 +127,8 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
     v.used = true;
     v.gate = true;
     v.note = note;
+    v.bend = 0.0f;
+    v.pressure = v.timbre = -1.0f;
     v.velocity = static_cast<float>(velocity) / 127.0f;
     v.age = ++ageCounter;
     v.vibratoPhase = 0.0f;
@@ -226,16 +230,19 @@ bool Timber::render(float *L, float *R, int32_t frames) {
 
         const float env0 = v.amp.value();
         const float vel = 1.0f - velAmount + velAmount * v.velocity;
-        const float push = mouth * env0 * vel * (1.0f + aftertouch * 0.3f);
+        const float at = v.pressure >= 0.0f ? v.pressure : aftertouch;
+        const float push = mouth * env0 * vel * (1.0f + at * 0.3f);
 
-        const float hz = v.freq * tuneMul * bendMul * std::pow(2.0f, vib / 1200.0f);
+        const float hz = v.freq * tuneMul * bendMul * noteBendMul(v) * std::pow(2.0f, vib / 1200.0f);
         v.pipe.setNote(hz);
         v.pipe.setShape(cylinder, mode);
         v.pipe.setTube(body);
         v.pipe.setLattice(lattice, fingering, holes);
         v.pipe.setBelow(below);
         v.pipe.setFork(answer);
-        v.pipe.setReed(family, reed, embouchure);
+        // Slide stiffens the reed, which is where a woodwind's brightness lives.
+        const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
+        v.pipe.setReed(family, reed * (1.0f + slide * paramOf(MpeTimbre) * 0.8f), embouchure);
         v.pipe.setJet(jet, aim);
         v.pipe.setBell(0.9f, bell);
         v.pipe.setLoss(loss);
@@ -282,6 +289,18 @@ bool Timber::render(float *L, float *R, int32_t frames) {
         R[i] = r * panR * 1.4142f;
     }
     return true;
+}
+
+void Timber::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
+}
+
+void Timber::notePressure(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->pressure = static_cast<float>(value) / 127.0f;
+}
+
+void Timber::noteTimbre(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->timbre = static_cast<float>(value) / 127.0f;
 }
 
 } // namespace acidulous::machine

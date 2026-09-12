@@ -1,4 +1,5 @@
 #include "Trinity.h"
+#include <engine/machine/Voices.h>
 
 #include <cstdio>
 #include <cstring>
@@ -155,6 +156,9 @@ const ParamDef *Trinity::paramDefs(int32_t &count) const {
         putN(Volume, "volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, "");
         putN(Pan, "pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         putN(VelocityAmount, "velamt", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, "");
+        // How far a finger's slide opens the filters. Zero by default,
+        // so every patch written before MPE sounds exactly as it did.
+        putN(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         built = true;
     }
     count = Count;
@@ -181,6 +185,8 @@ void Trinity::reset() {
         for (auto &o : v.osc) o = OscState();
         for (auto &m : v.mod) m = 0.0f;
         v.rng = Voice::kSeed;
+        v.bend = 0.0f;
+        v.pressure = v.timbre = -1.0f;
     }
     modWheel = aftertouch = bend = 0.0f;
     noiseZ = 0.0f;
@@ -211,6 +217,8 @@ void Trinity::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigge
     v.velocity = velocity;
     v.age = ageCounter++;
     v.random = rnd(v.rng) * 2.0f - 1.0f;
+    v.bend = 0.0f;
+    v.pressure = v.timbre = -1.0f;
     v.freq = v.glideFrom;
     if (retrigger) {
         for (int e = 0; e < kEnvs; ++e) {
@@ -284,6 +292,18 @@ void Trinity::controlChange(uint8_t cc, uint8_t value) {
 
 void Trinity::channelPressure(uint8_t value) { aftertouch = static_cast<float>(value) / 127.0f; }
 
+void Trinity::noteBend(uint8_t note, float semitones) {
+    if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
+}
+
+void Trinity::notePressure(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->pressure = static_cast<float>(value) / 127.0f;
+}
+
+void Trinity::noteTimbre(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->timbre = static_cast<float>(value) / 127.0f;
+}
+
 void Trinity::pitchBend(int16_t value14) { bend = static_cast<float>(value14) / 8192.0f; }
 
 void Trinity::onBlock(int64_t, int64_t, float bpmNow) { bpm = bpmNow; }
@@ -294,7 +314,8 @@ float Trinity::sourceValue(const Voice &v, int src) const {
     switch (src) {
     case SrcOn: return 1.0f;
     case SrcModWheel: return modWheel;
-    case SrcAftertouch: return aftertouch;
+    // A finger's own pressure if it sent any, the channel's otherwise.
+    case SrcAftertouch: return v.pressure >= 0.0f ? v.pressure : aftertouch;
     case SrcVelocity: return static_cast<float>(v.velocity) / 127.0f;
     case SrcKeyTrack: return (static_cast<float>(v.note) - 60.0f) / 48.0f;
     case SrcRandom: return v.random;
@@ -353,7 +374,7 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
     const float noiseLevel = clampf(paramOf(MixBase + MNoise) + v.mod[DstNoise], 0.0f, 1.0f);
     const float noiseK = clampf(0.02f + paramOf(MixBase + MNoiseColour) * 0.98f, 0.0f, 1.0f);
 
-    const float bendSemis = bend * paramOf(BendRange);
+    const float bendSemis = bend * paramOf(BendRange) + v.bend;
     const float globalSemis = paramOf(Transpose) + 12.0f * paramOf(Octave) + bendSemis +
                               v.mod[DstPitch] * 24.0f + v.detuneCents * 0.01f;
     for (int k = 0; k < kOscs; ++k) {
@@ -398,7 +419,10 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
         fDrive[f] = clampf(paramOf(b + FDrive) + v.mod[DstDrive], 0.0f, 1.0f);
         fRes[f] = clampf(paramOf(b + FRes) + v.mod[DstF1Res + f], 0.0f, 1.0f);
         fEnvAmt[f] = paramOf(b + FEnv);
-        fFreq[f] = paramOf(b + FFreq) * std::exp2(paramOf(b + FKey) * keyOffset / 12.0f + v.mod[DstF1Freq + f] * 6.0f);
+        const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
+        fFreq[f] = paramOf(b + FFreq) * std::exp2(paramOf(b + FKey) * keyOffset / 12.0f +
+                                                  v.mod[DstF1Freq + f] * 6.0f +
+                                                  slide * paramOf(MpeTimbre) * 4.0f);
     }
 
     const float velAmp = 1.0f - paramOf(VelocityAmount) * (1.0f - static_cast<float>(v.velocity) / 127.0f);

@@ -50,6 +50,7 @@ class Nexus final : public Machine {
     void controlChange(uint8_t cc, uint8_t value) override;
     void channelPressure(uint8_t value) override;
     void pitchBend(int16_t value14) override;
+    void noteBend(uint8_t note, float semitones) override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
 
@@ -63,6 +64,9 @@ class Nexus final : public Machine {
         float pitch = 60.0f, velocity = 1.0f, random = 0.5f, trigger = 0.0f;
         int64_t age = 0;
         float quiet = 0.0f;   // seconds below the floor, for the watchdog
+        // Per-note expression (MPE). `bend` is in semitones and adds to
+        // whatever the channel is bending.
+        float bend = 0.0f;
     };
 
     float paramOf(int32_t p) const { return params_.get(p); }

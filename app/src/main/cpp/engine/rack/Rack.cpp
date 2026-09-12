@@ -115,6 +115,20 @@ void Rack::forgetHeld(uint8_t note) {
 
 void Rack::handleMidi(uint8_t status, uint8_t d1, uint8_t d2) { deliver(0, status, d1, d2); }
 
+void Rack::noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, float bendSemis) {
+    if (machine == nullptr) return;
+    switch (kind) {
+    case 0xe0: {
+        const float bend14 = static_cast<float>((d2 << 7) | d1) - 8192.0f;
+        machine->noteBend(note, bend14 / 8192.0f * bendSemis);
+        break;
+    }
+    case 0xd0: machine->notePressure(note, d1); break;
+    case 0xb0: if (d1 == 74) machine->noteTimbre(note, d2); break;
+    default: break;
+    }
+}
+
 void Rack::allNotesOff() {
     for (int32_t s = 0; s < kEventorSlots; ++s) {
         if (eventors[s] != nullptr) eventors[s]->allNotesOff(sinks[s]);
