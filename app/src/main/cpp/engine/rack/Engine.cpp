@@ -223,6 +223,35 @@ void Engine::renderBlock(const float *in, float *out) {
         }
     }
 
+    // Scene fades: in over the first bar of the first pass, out over the last
+    // bar of the last pass. Stateless - derived from the position each block.
+    float fade = 1.0f;
+    if (playing && sceneBefore != nullptr && !scheduler.launcherActive()) {
+        const int64_t tpb = sceneBefore->ticksPerBar;
+        const int64_t iterLen = sceneBefore->iterationTicks();
+        if (sceneBefore->fadeIn && repeatBefore == 0 && tickStart < tpb) {
+            fade = static_cast<float>(tickStart) / static_cast<float>(tpb);
+        } else if (sceneBefore->fadeOut && repeatBefore == sceneBefore->repeat - 1 && tickStart >= iterLen - tpb) {
+            fade = static_cast<float>(iterLen - tickStart) / static_cast<float>(tpb);
+        }
+    }
+
+    // And the sound itself. This loop and the master call under it were
+    // deleted by an over-long slice edit in M35, which took the scene fade
+    // with them: `out` was then never written at all, so every block handed
+    // back whatever the caller's stack happened to hold.
+    for (int32_t r = 0; r < kRackCount; ++r) {
+        if (racks[r].isActive()) {
+            if (racks[r].frozenActive()) {
+                racks[r].syncFrozen(scheduler.rackTick(r), clock.bpm());
+            } else {
+                racks[r].onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
+            }
+            racks[r].render(kBlockFrames);
+        }
+    }
+    master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade);
+
     // Monitoring is after the master so it is heard at the master's level,
     // and deliberately not recorded when capturing the input: nobody wants
     // their own monitor path printed into the sample.
