@@ -64,6 +64,64 @@ android {
     }
 }
 
+/**
+ * The licence texts the About window shows, staged into the assets from
+ * wherever they actually live: the GPL the app is under is the repository's
+ * own LICENSE, and the LGPL is the one that came in LAME's tarball. Copies
+ * checked in beside the code would drift from them; this cannot.
+ *
+ * A task of its own rather than a `Copy`, because the assets are wired
+ * through the variant API - which needs an output `DirectoryProperty`, and a
+ * `Copy` has a plain `File`. See licences/README.md.
+ */
+abstract class StageLicences : DefaultTask() {
+    @get:InputFiles abstract val texts: ConfigurableFileCollection
+
+    /**
+     * What each input is called once it is in the app, keyed by the name it
+     * has on disk. Keyed rather than paired by position, because the first
+     * cut of this paired two lists by path order and quietly shipped the
+     * GPL under the LGPL's name.
+     */
+    @get:Input abstract val names: MapProperty<String, String>
+
+    @get:OutputDirectory abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun stage() {
+        val into = outputDir.get().asFile.resolve("licences")
+        into.deleteRecursively()
+        into.mkdirs()
+        val named = names.get()
+        for (from in texts.files) {
+            val name = named[from.name] ?: error("no name given for ${from.name}")
+            from.copyTo(into.resolve(name), overwrite = true)
+        }
+    }
+}
+
+val stageLicences = tasks.register<StageLicences>("stageLicences") {
+    texts.from(
+        file("src/main/cpp/third_party/lame/COPYING"),
+        rootProject.file("LICENSE"),
+        rootProject.file("licences/Apache-2.0.txt"),
+    )
+    names.set(
+        mapOf(
+            "COPYING" to "lgpl-2.0.txt",
+            "LICENSE" to "gpl-3.0.txt",
+            "Apache-2.0.txt" to "apache-2.0.txt",
+        ),
+    )
+    outputDir.set(layout.buildDirectory.dir("generated/licences"))
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(stageLicences, StageLicences::outputDir)
+    }
+}
+
 dependencies {
     implementation(libs.oboe)
     implementation(libs.kotlinx.serialization.json)

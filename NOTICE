@@ -14,8 +14,20 @@ Oboe — Apache License 2.0
   https://github.com/google/oboe
   The audio driver's stream. Apache 2.0 is compatible with GPLv3 (and not
   with GPLv2, which is why this project is GPLv3-or-later).
+  Licence text: licences/Apache-2.0.txt
+
+LAME 3.100 — GNU Library General Public License, version 2
+  https://lame.sourceforge.io/
+  MP3 encoding. Vendored under app/src/main/cpp/third_party/lame and built
+  as its own libmp3lame.so, linked against and never compiled in, which is
+  the relinking freedom the LGPL asks for; LGPLv2 §3 is what lets a copy be
+  taken under GPLv3-or-later. See that directory's PROVENANCE.md.
+  Licence text: app/src/main/cpp/third_party/lame/COPYING
 
 Everything else in this repository is original work. The C++ engine, every
 machine and effect, the sequencer, the WAV, AIFF and FLAC writers and the
 MIDI file writer were all written for this project; no DSP, presets or
 samples are taken from anywhere else.
+
+All three licence texts are shipped inside the app and can be read from
+its About window.

@@ -165,6 +165,7 @@ fun MainScreen(
                     DropdownMenuItem(text = { Text("MIDI…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
                     DropdownMenuItem(text = { Text("Record sample…") }, onClick = { fileMenu = false; dialog = Dialog.Sampler })
                     DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
+                    DropdownMenuItem(text = { Text("About…") }, onClick = { fileMenu = false; dialog = Dialog.About })
                 }
             }
         }
@@ -479,6 +480,7 @@ fun MainScreen(
         Dialog.Midi -> MidiDialog(song, onDismiss = { dialog = null })
         Dialog.Sampler -> SamplerDialog(onDismiss = { dialog = null })
         Dialog.Settings -> SettingsDialog(song.tracks.map { it.name }, onDismiss = { dialog = null })
+        Dialog.About -> AboutDialog(onDismiss = { dialog = null })
         Dialog.Quantise -> QuantiseDialog(
             current = UiPrefs.launchQuantise,
             onPick = { bars ->
@@ -511,6 +513,7 @@ private sealed class Dialog {
     object Midi : Dialog()
     object Sampler : Dialog()
     object Settings : Dialog()
+    object About : Dialog()
     object Quantise : Dialog()
 }
 
