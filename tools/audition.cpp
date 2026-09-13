@@ -26,6 +26,7 @@
 #include <cstring>
 #include <fstream>
 #include <memory>
+#include <sys/stat.h>
 #include <string>
 #include <vector>
 
@@ -475,10 +476,26 @@ std::string kotlinString(const std::string &in) {
     return out;
 }
 
+/**
+ * Where a unit's wavs go: one folder each.
+ *
+ * A hundred and fifty files in one directory is a directory nobody can find
+ * anything in, and these get copied to another machine to be listened to -
+ * one folder per machine is one thing to fetch.
+ */
+std::string folderFor(const std::string &unit);
+
 std::string safeName(const std::string &s) {
     std::string out;
     for (char c : s) out += (std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '-') ? c : '_';
     return out.empty() ? "patch" : out;
+}
+
+std::string folderFor(const std::string &unit) {
+    const std::string dir = gOutDir + "/" + safeName(unit);
+    ::mkdir(gOutDir.c_str(), 0777);
+    ::mkdir(dir.c_str(), 0777);
+    return dir;
 }
 
 /**
@@ -676,7 +693,6 @@ struct Options {
     int note = -1; // -1: whatever the patch or the phrase wants
     int velocity = 100;
     float bpm = 120.0f;
-    bool join = false;
     bool ladder = false;
     std::vector<std::pair<std::string, double>> sets;
 };
@@ -792,8 +808,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
 
     // An effect has no note to hold, so what it was given is what it is measured on.
     if (!measuredAlready) measured = measure(take.stereo, take.offAt, 0, take.offAt + static_cast<int64_t>(kSr * 0.05f));
-    const std::string path = gOutDir + "/" + safeName(bank.unit) + "-" + safeName(patch.name) + ".wav";
-    writeWav(path, take.stereo);
+    writeWav(folderFor(bank.unit) + "/" + safeName(patch.name) + ".wav", take.stereo);
     if (joined != nullptr) {
         joined->insert(joined->end(), take.stereo.begin(), take.stereo.end());
         joined->insert(joined->end(), static_cast<size_t>(kSr * 0.3f) * 2, 0.0f);
@@ -826,7 +841,7 @@ int cmdBank(const std::string &unit, const Options &opt) {
     std::vector<float> rms;
     for (const BankPatch &p : bank.patches) {
         Measured m;
-        if (!auditionOne(bank, p, opt, m, opt.join ? &joined : nullptr)) continue;
+        if (!auditionOne(bank, p, opt, m, &joined)) continue;
         if (m.rmsDb > -190.0f) rms.push_back(m.rmsDb);
     }
     if (rms.size() > 1) {
@@ -838,8 +853,10 @@ int cmdBank(const std::string &unit, const Options &opt) {
         std::printf("\n  loudness spread %.1f dB%s\n", static_cast<double>(hi - lo),
                     hi - lo > 12.0f ? "   <- wide; level these against each other" : "");
     }
-    if (opt.join && !joined.empty()) {
-        const std::string path = gOutDir + "/" + safeName(bank.unit) + "-bank.wav";
+    if (!joined.empty()) {
+        // Named for the unit rather than just "bank", so it still says what
+        // it is once it has been copied out of its folder.
+        const std::string path = folderFor(bank.unit) + "/" + safeName(bank.unit) + "-bank.wav";
         writeWav(path, joined);
         std::printf("  the whole bank, in order: %s\n", path.c_str());
     }
@@ -1118,7 +1135,7 @@ void usage() {
         "  --phrase note|tune|bass|chord|arp|hold|chromatic|velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"
-        "  --join    one wav with the whole bank in it\n"
+        "  --out DIR one folder per unit under it; the default is build/audition\n"
         "  --ladder  the first twelve harmonics, for machines a centroid cannot describe\n"
         "  --banks DIR  --out DIR\n");
 }
@@ -1141,7 +1158,7 @@ int main(int argc, char **argv) {
         else if (a == "--note") opt.note = std::atoi(next().c_str());
         else if (a == "--vel") opt.velocity = std::atoi(next().c_str());
         else if (a == "--bpm") opt.bpm = static_cast<float>(std::atof(next().c_str()));
-        else if (a == "--join") opt.join = true;
+        else if (a == "--join") { /* what `bank` does anyway; kept so old command lines run */ }
         else if (a == "--ladder") opt.ladder = true;
         else if (a == "--banks") gBankDir = next();
         else if (a == "--out") gOutDir = next();
