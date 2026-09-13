@@ -6,6 +6,15 @@
 
 namespace acidulous::machine {
 
+/**
+ * Below this a tube has stopped, and it is chosen against what was audible.
+ *
+ * A voice used to go when its envelope did, cutting the tail off at -56 dBFS
+ * - a step from -1.58e-3 straight to zero in one sample, mid-cycle. This is
+ * ninety decibels below full scale and a good forty below the tick.
+ */
+constexpr float kSilent = 3.0e-5f;
+
 namespace {
 constexpr float kTwoPi = 6.28318530718f;
 float mtof(float note) { return 440.0f * std::pow(2.0f, (note - 69.0f) / 12.0f); }
@@ -81,6 +90,7 @@ void Brazen::reset() {
         v.filterL.reset();
         v.filterR.reset();
         v.muteLpL = v.muteLpR = v.muteHpL = v.muteHpR = 0.0f;
+        v.ring = 0.0f;
         for (auto &p : v.players) { p.bore.clear(); p.rng = Player::kSeed; }
     }
     growlPhase = 0.0f;
@@ -97,10 +107,15 @@ void Brazen::allNotesOff() {
 
 Brazen::Voice *Brazen::allocate() {
     for (auto &v : voices) if (!v.used) return &v;
+    // Of the notes already let go, take the quietest rather than the oldest.
+    // Starting a note calls Bore::clear, which truncates whatever the tube
+    // was still ringing - so the one that costs least to interrupt is the
+    // one with least left in it, and an old note is not reliably that: a
+    // tuba's tube rings half a second after a trumpet's has gone.
     Voice *best = nullptr;
     for (auto &v : voices) {
         if (v.gate) continue;
-        if (best == nullptr || v.age < best->age) best = &v;
+        if (best == nullptr || v.ring < best->ring) best = &v;
     }
     if (best != nullptr) return best;
     for (auto &v : voices) if (best == nullptr || v.age < best->age) best = &v;
@@ -156,6 +171,7 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     // and a render after a panic that differed from one before it. reset_test
     // never caught it because the mutes are off in all but three patches.
     v.muteLpL = v.muteLpR = v.muteHpL = v.muteHpR = 0.0f;
+    v.ring = 0.0f;
     v.filterL.reset();
     v.filterR.reset();
     v.amp.retrigger();
@@ -234,6 +250,10 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
     const float panKnob = paramOf(Pan);
     const float panL = std::cos((panKnob + 1.0f) * 0.25f * 3.14159265f);
     const float panR = std::sin((panKnob + 1.0f) * 0.25f * 3.14159265f);
+
+    // Five milliseconds, so it follows a decaying tube rather than its
+    // waveform, and a voice is not held on by one stray sample.
+    const float ringCoeff = dsp::onePoleCoeff(0.005f, sampleRate);
 
     growlPhase += growlRate * dt * static_cast<float>(frames);
     while (growlPhase >= 1.0f) growlPhase -= 1.0f;
@@ -335,7 +355,9 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
 
         for (int32_t i = 0; i < frames; ++i) {
             const float env = v.amp.next();
-            if (env <= 0.0000005f && !v.gate) { v.used = false; break; }
+            // Gone when the player has stopped *and* the tube has, which are
+            // not the same instant. See Voice::ring.
+            if (env <= 0.0000005f && !v.gate && v.ring < kSilent) { v.used = false; break; }
             float l = 0.0f, r = 0.0f;
             for (int32_t pi = 0; pi < players; ++pi) {
                 Player &p = v.players[pi];
@@ -363,6 +385,7 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
                 l += s * std::cos(angle);
                 r += s * std::sin(angle);
             }
+            v.ring += (std::fabs(l) + std::fabs(r) - v.ring) * ringCoeff;
             // The mute. A cup over the bell is not a volume knob: it is a
             // box with its own resonance, letting a band through and
             // sending the rest back down the tube. Straight is bright and

@@ -92,6 +92,18 @@ class Brazen final : public Machine {
         dsp::Adsr amp;
         dsp::MultiFilter filterL, filterR;
         float vibratoPhase = 0.0f, vibratoLeft = 0.0f;
+        /**
+         * How loudly this voice is still ringing, which is not its envelope.
+         *
+         * The amplitude envelope here drives the *mouth pressure* and not
+         * the output - a player stops blowing and the instrument goes on
+         * sounding, which is the whole reason a tube is a tube. So a voice
+         * retired the moment its envelope finished was cut off mid-ring,
+         * and the tail was still at -56 dBFS when it went: an audible tick
+         * at the end of a note, and a tick in the *middle* of the music
+         * whenever a released note expired underneath a later one.
+         */
+        float ring = 0.0f;
         float muteLpL = 0.0f, muteLpR = 0.0f, muteHpL = 0.0f, muteHpR = 0.0f;
         int64_t age = 0;
         // Per-note expression (MPE). `bend` is in semitones and adds to
