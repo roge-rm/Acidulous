@@ -35,6 +35,29 @@ namespace acidulous::machine::brazen {
 
 using dsp::clampf;
 
+/**
+ * The DC blocker's pole, and it is not a free choice on this instrument.
+ *
+ * 0.997 is a corner at 22.9 Hz - one octave below a tuba's pedal F, so the
+ * filter meant to remove what cannot be heard is standing on the lowest thing
+ * the machine can play. Measured at F2, moving it to 3.8 Hz returns **18% of
+ * the tuba's fundamental** and 15% of its peak, and 12% to a bass trombone.
+ *
+ * And it is left where it is anyway, which is worth writing down so nobody
+ * finds the same 18% and takes it. The corner is not only removing the
+ * fundamental, it is holding the whole instrument's timbre where it is: moved
+ * down, the harmonic ladder runs Tuba 7, Trombone 12, Trumpet 12, Harmon 12
+ * where it ran 3, 4, 9, 12 - every instrument bright and none of them
+ * distinguishable, which is precisely the fault this bank was written to fix.
+ * Taking the 18% means re-voicing all fourteen against a different machine,
+ * and that is a decision rather than a tidy-up.
+ *
+ * Used twice on purpose: once as the filter and once in `tune`, where its
+ * phase is part of the loop the line length is solved against. Changing one
+ * without the other detunes the instrument.
+ */
+constexpr float kDcPole = 0.997f;
+
 class Bore {
   public:
     void prepare(float sampleRate) {
@@ -215,7 +238,17 @@ class Bore {
         }
         // The lips have to know something is happening too, or they sit at
         // rest and clamp the wave the tube just handed them.
-        lipEnv = amp * 0.5f;
+        //
+        // Three times the primed amplitude, and that is measured rather than
+        // reasoned: `lipEnv` is a one-pole with a 35 ms time constant that
+        // walks the valve's rest point, so seeding it wrong leaves the whole
+        // output drifting for a hundred milliseconds at a few hertz, which
+        // is heard as a thump on the front of the note. Against the 30 Hz in
+        // the onset, on a tuba: seed 0 gives 8.3x the settled level, 0.5x
+        // gives 6.8, 1.5x gives 4.7, 3x gives 3.8, and 5x and 8x climb back
+        // to 5.7 and 7.4. The bottom of that curve is where the smoother was
+        // going to end up anyway.
+        lipEnv = amp * 3.0f;
     }
 
     /**
@@ -286,7 +319,7 @@ class Bore {
 
         // The DC blocker: (1 - z^-1) / (1 - 0.997 z^-1).
         nr = 1.0f - c1; ni = s1;
-        dr = 1.0f - 0.997f * c1; di = 0.997f * s1;
+        dr = 1.0f - kDcPole * c1; di = kDcPole * s1;
         den = dr * dr + di * di + 1e-20f;
         const float br = (nr * dr + ni * di) / den, bi = (ni * dr - nr * di) / den;
 
@@ -411,7 +444,7 @@ class Bore {
         in = dsp::fastTanh(in);
 
         // A DC blocker, or the loop fills with the player's own lungs.
-        const float hp = in - dcIn + 0.997f * dcOut;
+        const float hp = in - dcIn + kDcPole * dcOut;
         dcIn = in;
         dcOut = hp;
 
