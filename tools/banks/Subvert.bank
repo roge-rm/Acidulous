@@ -1,45 +1,136 @@
-# Subvert - seeded from what shipped, and not yet voiced.
+# Subvert - the acid line, and the rest of what the filter can do.
 #
-# Values are in each parameter's own units; `audition params Subvert` lists
-# them. A patch names only what it changes.
+# Thirteen parameters, and eight of them are one idea: a resonant filter with
+# an envelope thrown at it. So this bank is not a tour of the panel, it is a
+# tour of that one idea - how far open, how much envelope, how fast it shuts -
+# and then the four controls that are not part of it: the sub, the pulse
+# width, the band-pass mode and the drive.
+#
+# Levelled to about -8 dB RMS against each other, so the bank does not change
+# volume as you walk down it. Two sit below that and both earn it: Band
+# Squelch is band-passed, so most of the spectrum is gone and its volume is
+# already at the top, and Doorstop is a thud - a high crest factor is what it
+# is for. Values are in each parameter's own units; `audition params Subvert`
+# lists them.
 
 machine Subvert
+role    bass
 
 patch Init
 
 patch Classic
-  accent         0.7
-  cutoff         520.912 Hz
-  drive          0.12
-  envmod         0.55
-  resonance      0.62
+  # The one everybody means. Open enough to hear the note, resonant enough to
+  # hear the filter, and a decay that shuts before the next eighth.
+  #
+  # Further from the machine's own defaults than it first was: at 520 Hz and
+  # 0.62 it measured the same as Init, and a bank whose first two entries are
+  # the same sound has nine patches in it, not ten.
+  cutoff         410 Hz
+  resonance      0.72
+  envmod         0.64
+  decay          280 ms
+  accent         0.75
   slide          50 ms
+  drive          0.16
+
+patch Squelch
+  # Further into the resonance and a much faster decay: the blip rather than
+  # the sweep. Accent nearly all the way up, because on a line like this the
+  # accented steps are the line.
+  cutoff         330 Hz
+  resonance      0.9
+  envmod         0.85
+  decay          130 ms
+  accent         0.92
+  slide          40 ms
+  drive          0.22
+  volume         0.72
 
 patch Rubber
-  accent         0.8
-  cutoff         294.478 Hz
-  decay          150.356 ms
-  drive          0.25
-  envmod         0.7
-  resonance      0.75
-  slide          79.2447 ms
+  # A pulse instead of a saw, wide slide, and enough drive to round the peak
+  # off. The one that bends between notes rather than stepping.
   wave           #1
+  pw             0.42
+  cutoff         295 Hz
+  resonance      0.75
+  envmod         0.7
+  decay          150 ms
+  accent         0.8
+  slide          130 ms
+  drive          0.25
+  volume         0.6
+
+patch "Long Sweep"
+  # A decay far longer than a step, so the filter never closes and the line
+  # rises across the bar instead of inside each note.
+  cutoff         180 Hz
+  resonance      0.72
+  envmod         0.95
+  decay          1600 ms
+  accent         0.45
+  slide          60 ms
+  drive          0.15
+  volume         0.72
 
 patch "Sub Hollow"
-  cutoff         221.41 Hz
-  decay          475.468 ms
-  drive          0.05
-  envmod         0.35
-  pw             0.275
-  resonance      0.4
-  sub            0.6
+  # The sub is the note and the pulse is the edge on it. Narrow width, filter
+  # low, very little envelope: a bass that stays where it is put.
   wave           #1
+  pw             0.24
+  sub            0.65
+  cutoff         220 Hz
+  resonance      0.38
+  envmod         0.3
+  decay          480 ms
+  accent         0.5
+  drive          0.08
+  volume         0.7
 
 patch "Band Squelch"
-  accent         0.9
-  cutoff         692.82 Hz
-  decay          119.432 ms
-  drive          0.4
-  envmod         0.8
+  # Band-pass: no bottom and no top, so what is left is the resonance itself.
+  # Volume at the top and drive doing the rest, and it is still the quietest
+  # thing here by two decibels - which is what taking the ends off a spectrum
+  # costs, not something to pretend away.
   mode           #1
+  cutoff         690 Hz
   resonance      0.85
+  envmod         0.8
+  decay          120 ms
+  accent         0.9
+  drive          0.55
+  volume         1
+
+patch Buzzsaw
+  # Filter nearly out of the way and the drive doing the work. Not acid at
+  # all - the machine's other end, and the reason drive is in the voice
+  # rather than in an insert.
+  cutoff         3200 Hz
+  resonance      0.25
+  envmod         0.25
+  decay          400 ms
+  accent         0.55
+  drive          0.85
+  volume         0.92
+
+patch "Thin Ice"
+  # Right at the top of the resonance with almost no envelope: it whistles on
+  # the note rather than under it. The one that shows resonance is a tone.
+  cutoff         1400 Hz
+  resonance      0.97
+  envmod         0.15
+  decay          220 ms
+  accent         0.4
+  drive          0.05
+  volume         0.85
+
+patch Doorstop
+  # Shut. Almost no cutoff, almost all envelope, and a decay short enough
+  # that each note is a thud with a pitch somewhere inside it.
+  cutoff         90 Hz
+  resonance      0.55
+  envmod         1
+  decay          90 ms
+  accent         0.85
+  slide          25 ms
+  drive          0.3
+  volume         0.85
