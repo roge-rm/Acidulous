@@ -77,6 +77,8 @@ class Brazen final : public Machine {
         float breath = 1.0f;       // nor blow equally hard
         float pan = 0.0f;
         float push = 0.0f;      // what they are blowing, this block
+        /** Set at note-on; acted on after the next tune, which needs the note. */
+        bool tongue = false;
         static constexpr uint32_t kSeed = 1u;
         uint32_t rng = kSeed;
     };

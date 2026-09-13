@@ -212,7 +212,7 @@ internal object FactoryBanks {
     private fun brazen0() = Patch("Brazen", "Init", emptyMap())
 
     private fun brazen1() = Patch("Brazen", "Tuba",
-        mapOf("size" to 0.03f, "bell" to 0.922222257f, "lipdamp" to 0.444444418f, "pressure" to 0.7f, "breath" to 0f, "bite" to 0.5f, "brass" to 0.25f, "release" to 0.622157753f, "vibrato" to 0.0333333351f, "cutoff" to 0.415973634f, "volume" to 1f))
+        mapOf("size" to 0.03f, "bell" to 0.922222257f, "lipdamp" to 0.444444418f, "pressure" to 0.7f, "breath" to 0f, "bite" to 0.5f, "brass" to 0.25f, "release" to 0.622157753f, "vibrato" to 0.0333333351f, "cutoff" to 0.321551144f, "volume" to 1f))
 
     private fun brazen2() = Patch("Brazen", "Bass Trombone",
         mapOf("size" to 0.16f, "bell" to 0.7888889f, "lipdamp" to 0.5f, "pressure" to 0.75f, "breath" to 0.03f, "bite" to 0.55f, "attack" to 0.43367663f, "vibrato" to 0.06666667f, "cutoff" to 0.511707246f, "glide" to 0.09f, "volume" to 0.9666667f))

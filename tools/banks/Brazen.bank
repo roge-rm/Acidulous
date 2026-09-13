@@ -65,18 +65,20 @@
 # in the bank is 2.5x unfiltered and 1.1x with, and neither is a click; what
 # the filter is doing is making a tuba dark, which is its job.
 #
-# **The onset used to be the machine's problem and now is not.** A loop whose
-# gain is just over one grows by the same factor every round trip, and a round
-# trip is a period - so Brazen took 47 ms to speak at 700 Hz and 758 at 44 Hz,
-# with the same loop gain of 1.2320 at both. The solve was right and the
-# consequence was not. An empty tube also returns its first reflection two
-# round trips in, long before there is a wave, so a low note was a pip and
-# then ninety milliseconds of nearly nothing and then the note.
+# **The onset was the machine's problem and is fixed in the machine.** A loop
+# whose gain is just over one grows by the same factor every round trip, and a
+# round trip is a period - so Brazen took 47 ms to speak at 700 Hz and 758 at
+# 44, with a loop gain of 1.2320 at both. `Bore::tongue` lifts the gain the
+# solve is asked for at the start of a note and relaxes it over a fixed
+# *time*, which is what a player's tongue does and what makes the onset the
+# same length at every pitch. Everything here now speaks between 30 and 190 ms
+# and the attack times below are musical rather than chosen to outrun a
+# buildup.
 #
-# `Bore::prime` fixes it at the source: the tube starts with air already in
-# it, the way a tongue release does, so the loop sustains a wave instead of
-# growing one. Every patch here now speaks between 0 and 70 ms and the attack
-# times below are musical rather than chosen to outrun a buildup.
+# What is left on the very lowest notes is the machine's own onset edge, and
+# it is not the lift: at a target so long that the lift does nothing, note 48
+# still measures 5.4x. The low-pass on the dark instruments is what tames it,
+# which is also what a bell does.
 #
 # Levelled to about -20 dB RMS. The harmon sits 6 dB under it at its volume's
 # maximum and no amount of knob will fetch it back, because most of the
@@ -113,7 +115,7 @@ patch Tuba  note=41
   breath         0
   volume         1.5
 
-  cutoff         1300 Hz
+  cutoff         850 Hz
 patch "Bass Trombone"  note=43
   # Still wide, but the bell lets more out than a tuba's and it is blown
   # harder, so the ladder reaches further before it gives up.

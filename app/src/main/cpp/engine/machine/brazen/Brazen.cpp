@@ -139,12 +139,14 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
         p.pan = pos;
         if (!gliding) {
             p.bore.clear();
-            // The tongue: the tube starts with air in it rather than empty.
-            // Without this the low register takes hundreds of milliseconds to
-            // grow a standing wave out of nothing, and what you hear first is
-            // the tube's own first reflection standing alone in the gap.
+            // The tongue. Not air poured into the tube - the tube grows its
+            // own wave, as it always did - but the lips leant on while it
+            // does, so a low note takes about as long to speak as a high one
+            // instead of sixteen times as long. Needs the note and a solved
+            // loop first, so the frequency goes in here and `tongue` is
+            // called after the tune in render.
             p.bore.setFrequency(mtof(static_cast<float>(note)));
-            p.bore.prime(targetOf(Pressure) * p.breath * v.velocity);
+            p.tongue = true;
         }
     }
     v.amp.retrigger();
@@ -302,6 +304,13 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
             p.bore.setPressure(push);
             p.bore.tune();
             p.push = push;
+            if (p.tongue) {
+                // After the loop has been solved for this note: `tongue`
+                // sizes the lift from the gain the solve arrived at.
+                p.bore.tune();
+                p.bore.tongue();
+                p.tongue = false;
+            }
         }
 
         for (int32_t i = 0; i < frames; ++i) {

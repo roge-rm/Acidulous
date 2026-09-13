@@ -100,6 +100,8 @@ class Bore {
         lastArrive = 0.0f;
         loopMag = 0.0f;
         delay = 0.0f;
+        onsetBoost = 1.0f;
+        onsetFall = 0.0f;
         dirty = true;
     }
 
@@ -149,111 +151,52 @@ class Bore {
     void setLoss(float amount) { loss = clampf(amount, 0.8f, 1.0f); }
 
     /**
-     * The tongue coming off the note: start the tube with air already moving.
+     * The tongue: lean on the note for its first few round trips.
      *
      * A loop whose gain is just over one grows by the same factor every round
-     * trip, so it takes the same number of *round trips* to speak whatever it
-     * is playing - and a round trip is a period. That is why this instrument
-     * was taking 47 ms to speak at 700 Hz and 758 at 44: identical certainty,
-     * sixteen times the wait, and nothing wrong with the solve. Measured, the
-     * two agreed to a percent.
+     * trip, and a round trip is a period - so this instrument took 47 ms to
+     * speak at 700 Hz and 758 at 44, with a loop gain of 1.2320 at both. The
+     * solve is right and the consequence is not: identical certainty, sixteen
+     * times the wait.
      *
-     * A player does not start from an empty tube. The tongue releases air
-     * that is already under pressure and the horn is sounding within a few
-     * cycles; the loop's job is then to sustain the wave, not to grow one out
-     * of nothing. So the line is filled with one period of the note at
-     * roughly the level it is going to settle at, and the loop takes it from
-     * there - which is a couple of round trips either way rather than thirty.
+     * A player does not wait either. The attack of a brass note is a harder
+     * push than the note that follows it - that is what tonguing is - and it
+     * is why a tuba speaks in about a tenth of a second rather than three
+     * quarters of one. So the lip drive is lifted at the start and relaxes to
+     * what the solve asked for, over a fixed *time* rather than a fixed
+     * number of cycles, which is what makes the onset the same length at
+     * every pitch instead of proportional to the period.
      *
-     * It also removes the click that was the real complaint. An empty tube
-     * returns its first reflection about two round trips in, long before the
-     * wave has grown into anything, so what came out was a pip and then
-     * ninety milliseconds of nearly silence and then the note. There is no
-     * gap to stand in now.
+     * How far it is lifted is arithmetic, not taste. To grow by a factor A in
+     * T seconds at frequency f the loop needs ln(A)/(f T) per round trip, so
+     * the boost is that over what the loop already has - which is 1 for
+     * anything above a few hundred hertz and climbs as the tube gets longer.
      *
-     * [level] is the mouth pressure the note is being blown with; the shape
-     * is a sine because the fundamental is most of the standing wave and the
-     * loop fills in the rest within a few cycles.
+     * This replaces filling the line with a synthetic wave, which worked and
+     * brought its own artefacts with it: whatever shape went in was not the
+     * shape the loop wanted, and the difference was audible on the front of
+     * every low note. Nothing is injected now. The tube still starts empty
+     * and still grows its own standing wave; it is only leant on while it
+     * does.
      */
-    void prime(float level) {
-        if (!(level > 0.0f)) return;
-        const int32_t size = static_cast<int32_t>(line.size());
-        const auto period = static_cast<int32_t>(sr / freq + 0.5f);
-        if (period < 4 || period > size) return;
-        // Only where it is needed, which is where the tube is long. A short
-        // one fills in a few cycles on its own - a piccolo trumpet speaks in
-        // 30 ms untouched - and priming it as hard overshoots by half again
-        // and has to be pulled back down, which is a blat on the front of
-        // every note. Full below 150 Hz, nothing above 300, measured.
-        const float need = clampf((300.0f - freq) / 150.0f, 0.0f, 1.0f);
-        if (need <= 0.0f) return;
-        // A quarter, and not more, because the curve is not symmetric.
-        // Measured on a tuba, against how loud the first ten milliseconds
-        // are and how far the loop's own settling wanders off zero:
-        //
-        // There are two artefacts and they pull opposite ways, so the
-        // number is where both are least. Measured on a tuba by subtracting
-        // the note's own settled waveform from its onset and looking at what
-        // is left: 30 Hz is the sub-fundamental thump, 175 Hz the octave-up
-        // blip the fade's own modulation puts there.
-        //
-        //   prime   30 Hz    175 Hz    speaks
-        //    0.00   8.63x   0.00009    500 ms      no priming at all
-        //    0.10   4.56x   0.00087    190 ms
-        //    0.18   1.98x   0.00168    140 ms      <- here
-        //    0.26   3.83x   0.00260    110 ms
-        //
-        // Priming harder buys speaking time and pays for it in both; priming
-        // less leaves the tube growing from nothing, which is its own thump.
-        // 0.18 is the floor of the one that is loudest and 140 ms is well
-        // inside any note somebody will play.
-        const float amp = level * 0.18f * need;
-        const float w = 6.28318530718f / static_cast<float>(period);
-        // Written backwards from the write head, because that is the order
-        // the read head takes it in: it is `delay` behind, so it meets what
-        // was written furthest back first and arrives at the newest sample
-        // one period later, by which time the loop is writing its own.
-        //
-        // And faded in across that period rather than written flat. The
-        // envelope in this machine drives the *mouth pressure* and not the
-        // output - a player leans harder, they do not turn a volume knob -
-        // so it cannot shape a wave that is already in the tube. A flat
-        // prime therefore arrived as a step from silence to nine tenths of
-        // the note in a single sample, which is a thump whatever the attack
-        // time says. A raised cosine over the one period that gets read
-        // costs nothing and is the tongue leaving the reed rather than a
-        // door slamming.
-        const auto reach = static_cast<int32_t>(delay > 4.0f ? delay : static_cast<float>(period));
-        double sum = 0.0;
-        for (int32_t i = 0; i < size; ++i) {
-            const size_t at = static_cast<size_t>((write - i + size) % size);
-            const float t = i < reach ? 1.0f - static_cast<float>(i) / static_cast<float>(reach) : 0.0f;
-            const float fade = 0.5f - 0.5f * std::cos(3.14159265359f * t);
-            line[at] = amp * fade * std::sin(w * static_cast<float>(i));
-            if (i < reach) sum += line[at];
-        }
-        // A faded sine is not a balanced one: the window weights the two
-        // halves of the cycle differently and what is left over is DC, which
-        // is the thump the fade was supposed to remove. Taking the mean of
-        // the part that actually gets read back out costs one pass and
-        // leaves the tube holding a wave rather than a wave and a step.
-        const auto mean = static_cast<float>(sum / (reach > 0 ? reach : 1));
-        for (int32_t i = 0; i < size; ++i) {
-            line[static_cast<size_t>((write - i + size) % size)] -= mean;
-        }
-        // The lips have to know something is happening too, or they sit at
-        // rest and clamp the wave the tube just handed them.
-        //
-        // Three times the primed amplitude, and that is measured rather than
-        // reasoned: `lipEnv` is a one-pole with a 35 ms time constant that
-        // walks the valve's rest point, so seeding it wrong leaves the whole
-        // output drifting for a hundred milliseconds at a few hertz, which
-        // is heard as a thump on the front of the note. Against the 30 Hz in
-        // the onset, on a tuba: seed 0 gives 8.3x the settled level, 0.5x
-        // gives 6.8, 1.5x gives 4.7, 3x gives 3.8, and 5x and 8x climb back
-        // to 5.7 and 7.4. The bottom of that curve is where the smoother was
-        // going to end up anyway.
-        lipEnv = amp * 3.0f;
+    void tongue(float seconds = 0.13f) {
+        if (!(freq > 0.0f)) return;
+        constexpr float kGrowth = 6.9f; // ln(1000): silence to a sounding note
+        // Against the gain the loop settles at rather than the one it has
+        // this instant. At note-on the envelope is still at zero, so the
+        // player is barely blowing and the solve returns a loop that does not
+        // sound at all - sizing the lift against that would be sizing it
+        // against silence. 1.23 is what `tune` arrives at once the note is
+        // under way, across the whole range: the solve asks for the same
+        // certainty at every pitch and gets it.
+        constexpr float kSettled = 1.23f;
+        const float want = std::exp(kGrowth / (freq * seconds));
+        onsetBoost = clampf(want / kSettled, 1.0f, 4.0f);
+        // Relaxed over the same window it was sized for, so what is left by
+        // the time the note has spoken is the loop the solve asked for. Per
+        // block, because that is how often the loop is solved.
+        onsetFall = std::exp(-64.0f / (seconds * sr));
+        dirty = true;
     }
 
     /**
@@ -269,6 +212,11 @@ class Bore {
      * whenever anything in that sentence changes, and never per sample.
      */
     void tune() {
+        if (onsetBoost > 1.001f) {
+            dirty = true; // the loop is changing under us while the lift lasts
+        } else {
+            onsetBoost = 1.0f;
+        }
         if (!dirty) return;
         dirty = false;
 
@@ -347,7 +295,13 @@ class Bore {
         const float a0 = 1.0f - open0 * open0;
         const float k = 2.0f * open0 * clampf(pressure, 0.0f, 2.0f) + 1e-6f;
         const float outside = std::sqrt((br * br + bi * bi) * (lr * lr + li * li)) * reflect * loss;
-        const float want = clampf(0.86f + 0.62f * pressure * lipGain, 0.0f, 1.9f);
+        // ...lifted, at the start of a note, by however much it takes to
+        // grow a standing wave in a fixed time rather than in a fixed number
+        // of round trips. See `tongue`. It has to go here and not on the lip
+        // drive the solve produces: the loop gain is not linear in that drive
+        // - G is a0 - k u H - so scaling u scales nothing predictable, while
+        // scaling what the solve is *asked* for is exact by construction.
+        const float want = clampf((0.86f + 0.62f * pressure * lipGain) * onsetBoost, 0.0f, 1.9f);
         const float t = want / (outside > 1e-6f ? outside : 1e-6f);
 
         // The returning wave moves the lips, the lips move the opening,
@@ -372,6 +326,7 @@ class Bore {
         while (phase <= -3.14159265359f) phase += twoPi;
         const float period = sr / freq;
         delay = clampf(period + phase / w, 4.0f, static_cast<float>(line.size() - 3));
+        onsetBoost = 1.0f + (onsetBoost - 1.0f) * onsetFall;
         loopMag = std::sqrt((gr * gr + gi * gi) * (br * br + bi * bi) * (lr * lr + li * li)) * reflect * loss;
     }
 
@@ -471,6 +426,7 @@ class Bore {
     float lipHz = 220.0f, lipGain = 1.0f, lipTension = 1.0f, lipDamp = 0.4f, pressure = 0.5f;
     bool dirty = true;
     float lipA1 = 0.0f, lipA2 = 0.0f, lipB0 = 0.0f;
+    float onsetBoost = 1.0f, onsetFall = 0.0f;
     float lipX1 = 0.0f, lipX2 = 0.0f, lipY1 = 0.0f, lipY2 = 0.0f;
     float reflect = 0.9f, bellCoeff = 0.3f, bellState = 0.0f;
     float brass = 0.3f, loss = 0.995f, rest = 0.35f, bite = 0.0f, lipEnv = 0.0f;
