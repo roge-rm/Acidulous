@@ -6,6 +6,9 @@
 
 namespace acidulous::machine {
 
+/** How long a pad takes to close, in seconds. */
+constexpr float kKeyClick = 0.004f;
+
 namespace {
 constexpr float kTwoPi = 6.28318530718f;
 float mtof(float note) { return 440.0f * std::pow(2.0f, (note - 69.0f) / 12.0f); }
@@ -135,9 +138,18 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
     v.vibratoLeft = paramOf(VibratoDelay);
     // The pads of the keys hitting the body: a real instrument's other
     // sound, and the one a sample library needs a separate layer for.
-    v.keyLeft = paramOf(Keys) > 0.001f ? 0.004f * sampleRate : 0.0f;
+    v.keyLeft = paramOf(Keys) > 0.001f ? kKeyClick * sampleRate : 0.0f;
+    v.keyState = 0.0f; // or a reused voice starts on the last pad's residue
     if (!slurred) {
         v.tongueLeft = paramOf(TongueTime) * sampleRate;
+        // retrigger, and the zero it writes is load bearing. The output here
+        // is the pipe times the envelope and this machine never clears the
+        // pipe between notes, so a re-used voice is retuned to the new note
+        // while the old one is still in the tube. Zeroing the envelope hides
+        // that; letting it run on (plain trigger) exposes it, and measured
+        // across the bank that is worse - Oboe 2.6 to 4.4, Flute 3.3 to 5.0.
+        // What is left at a note boundary is therefore the retune and not
+        // this, and it wants a declick fade rather than a different envelope.
         v.amp.retrigger();
     } else {
         v.tongueLeft = 0.0f;
@@ -207,6 +219,12 @@ bool Timber::render(float *L, float *R, int32_t frames) {
     while (flutterPhase >= 1.0f) flutterPhase -= 1.0f;
     const float flutterNow = flutter * 0.5f * (1.0f - std::cos(flutterPhase * kTwoPi));
 
+    // How long the tongue takes to leave the reed, and how long a pad is
+    // closing. Both are windows rather than gates; see the sample loop.
+    const float tongueOff = std::min(0.003f * sampleRate, paramOf(TongueTime) * sampleRate);
+    const float tongueOffInv = tongueOff > 1.0f ? 1.0f / tongueOff : 1.0f;
+    const float keyInv = 1.0f / (kKeyClick * sampleRate);
+
     lastLattice = lattice * (1.0f - fingering * 0.7f);
 
     for (auto &v : voices) {
@@ -256,8 +274,20 @@ bool Timber::render(float *L, float *R, int32_t frames) {
 
             // The tongue: on the reed at the start of a note, and back on
             // it however many times a second a flutter asks for.
+            //
+            // And it comes *off* the reed rather than vanishing off it. It
+            // used to be a rectangular gate - the reed fully damped for
+            // twenty milliseconds and fully free on the next sample - which
+            // is a step in the slope of the whole nonlinearity, and it was
+            // the loudest click in this machine: measured on the clarinet,
+            // a jump of 7.9e-2 against a level of 1.8e-2, once per note, at
+            // exactly tonguetime after each one started.
             float stop = flutterNow * tongueDepth;
-            if (v.tongueLeft > 0.0f) { stop = tongueDepth; v.tongueLeft -= 1.0f; }
+            if (v.tongueLeft > 0.0f) {
+                v.tongueLeft -= 1.0f;
+                const float r = v.tongueLeft < tongueOff ? v.tongueLeft * tongueOffInv : 1.0f;
+                stop = std::max(stop, tongueDepth * (0.5f - 0.5f * std::cos(dsp::kPi * r)));
+            }
             v.pipe.setTongue(stop);
 
             rng = rng * 1664525u + 1013904223u;
@@ -265,11 +295,17 @@ bool Timber::render(float *L, float *R, int32_t frames) {
             const float breath = push * env / (env0 > 0.0001f ? env0 : 1.0f);
             float s = v.pipe.step(breath, white * breathNoise * 0.35f * breath);
 
-            // A pad closing on the body: a click, not a note.
+            // A pad closing on the body: a click, not a note - but a click
+            // with two ends, and the second one used to be a cliff. The
+            // noise was cut off after four milliseconds with the filter
+            // still ringing, so the deliberate click was followed by an
+            // accidental one. Windowed now, the way Filament's hammer is:
+            // sin squared is zero in value *and* slope at both ends.
             if (v.keyLeft > 0.0f) {
                 v.keyLeft -= 1.0f;
                 v.keyState = v.keyState * 0.85f + white * 0.15f;
-                s += v.keyState * keys * 0.5f;
+                const float soft = std::sin(dsp::kPi * (1.0f - v.keyLeft * keyInv));
+                s += v.keyState * keys * soft * soft;
             }
 
             const float out = v.filter.process(s) * env;
