@@ -16,3 +16,6 @@ local.properties
 
 # Working design notes. Kept on disk, never committed.
 /docs/
+
+# Paths that belong to one machine, not to the project.
+/tools/local.env
