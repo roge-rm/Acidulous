@@ -226,11 +226,33 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         m.monoLossDb = dB(stereoRms) - dB(monoRms);
     }
 
-    const int32_t at = centroidFrom >= 0
-                           ? static_cast<int32_t>(std::min<size_t>(static_cast<size_t>(centroidFrom), frames))
-                           : static_cast<int32_t>(std::min<size_t>(frames > 8192 ? 4800 : 0, frames));
-    m.centroidHz = centroid(mono, at);
-    m.f0Hz = fundamental(mono, at);
+    // Brightness is averaged over the whole sounding part rather than read
+    // from one window, and that is not a refinement - it is the difference
+    // between a number and a wrong number. Read at a fixed point, a drum
+    // kit's brightness was its kick's, because the kit is played one voice at
+    // a time and the first one is the kick; every kit in the bank reported
+    // the same figure and they looked identical. Anything that evolves - a
+    // pad, a sweep, a slicer - had the same problem more quietly.
+    const int32_t start = centroidFrom >= 0
+                              ? static_cast<int32_t>(std::min<size_t>(static_cast<size_t>(centroidFrom), frames))
+                              : static_cast<int32_t>(std::min<size_t>(frames > 8192 ? 4800 : 0, frames));
+    double num = 0.0, den = 0.0;
+    const auto span = static_cast<int32_t>(frames) - start;
+    const int32_t windows = span > 8192 * 2 ? std::min(6, span / 8192) : 1;
+    for (int32_t w = 0; w < windows; ++w) {
+        const int32_t at = start + (windows > 1 ? w * (span - 8192) / (windows - 1) : 0);
+        // Weighted by how loud that window is, so silence between two hits
+        // does not drag the answer towards whatever noise is in it.
+        float loud = 0.0f;
+        for (int32_t i = at; i < at + 8192 && i < static_cast<int32_t>(frames); ++i) {
+            loud = std::max(loud, std::abs(mono[static_cast<size_t>(i)]));
+        }
+        if (loud < m.peak * 0.02f) continue;
+        num += static_cast<double>(loud) * centroid(mono, at);
+        den += loud;
+    }
+    m.centroidHz = den > 0.0 ? static_cast<float>(num / den) : centroid(mono, start);
+    m.f0Hz = fundamental(mono, start);
 
     // The tail: from the release to 60 dB below the peak, in 10 ms steps, and
     // it is the LAST step above the floor that counts rather than the first

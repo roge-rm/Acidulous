@@ -330,15 +330,36 @@ internal object FactoryBanks {
     private fun hexbeat0() = Patch("Hexbeat", "Init", emptyMap())
 
     private fun hexbeat1() = Patch("Hexbeat", "Tight",
-        mapOf("kick_decay" to 0.3500005f, "kick_punch" to 0.7f, "snare_decay" to 0.300000519f, "snare_snappy" to 0.7f, "hat_closed_decay" to 0.249999583f, "hat_open_decay" to 0.3500005f, "accent" to 0.7f))
+        mapOf("kick_tune" to 0.409931868f, "kick_decay" to 0.3317472f, "kick_punch" to 0.72f, "snare_decay" to 0.292238653f, "snare_snappy" to 0.72f, "tom_decay" to 0.3766126f, "hat_closed_decay" to 0.25292173f, "hat_open_decay" to 0.3436954f, "cym_decay" to 0.502073348f, "ride_decay" to 0.405683875f, "clap_decay" to 0.396240622f, "bell_decay" to 0.462756425f, "accent" to 0.7f))
 
     private fun hexbeat2() = Patch("Hexbeat", "Boomy",
-        mapOf("kick_tune" to 0.2999995f, "kick_decay" to 0.800000131f, "kick_punch" to 0.35f, "snare_decay" to 0.6000002f, "snare_snappy" to 0.4f, "tom_decay" to 0.7499997f, "hat_open_decay" to 0.6000002f))
+        mapOf("kick_tune" to 0.203965187f, "kick_decay" to 0.798193336f, "kick_punch" to 0.35f, "kick_level" to 0.95f, "snare_decay" to 0.598104f, "snare_snappy" to 0.4f, "tom_lo_tune" to 0.151433319f, "tom_mid_tune" to 0.181639671f, "tom_hi_tune" to 0.238944024f, "tom_decay" to 0.7495728f, "hat_open_decay" to 0.598104f))
 
     private fun hexbeat3() = Patch("Hexbeat", "Trashy",
-        mapOf("snare_snappy" to 0.9f, "snare_tone" to 0.7999999f, "hat_tune" to 0.8000016f, "hat_tone" to 0.300000548f, "cym_tone" to 0.299999267f, "clap_tone" to 0.70000124f, "accent" to 0.9f))
+        mapOf("snare_snappy" to 0.9f, "snare_tone" to 0.7987669f, "hat_tune" to 0.792481244f, "hat_closed_decay" to 0.5372436f, "hat_open_decay" to 0.7334516f, "hat_tone" to 0.8784545f, "hat_level" to 0.7f, "cym_decay" to 0.8562011f, "cym_tone" to 0.8516409f, "clap_tone" to 0.7039877f, "accent" to 0.9f))
 
-    private val hexbeat: List<Patch> by lazy { listOf(hexbeat0(), hexbeat1(), hexbeat2(), hexbeat3()) }
+    private fun hexbeat4() = Patch("Hexbeat", "Cardboard",
+        mapOf("kick_tune" to 0.5625539f, "kick_decay" to 0.259024829f, "kick_punch" to 0.85f, "snare_tune" to 0.6421988f, "snare_decay" to 0.196207985f, "snare_snappy" to 0.25f, "snare_tone" to 0.277738333f, "tom_decay" to 0.257400155f, "hat_closed_decay" to 0.0960306451f, "hat_open_decay" to 0.08757933f, "hat_tone" to 0.127216786f, "hat_level" to 0.42f, "cym_decay" to 0.231378213f, "cym_level" to 0.3f, "ride_decay" to 0.206648976f, "ride_level" to 0.35f, "rim_tune" to 0.341763f, "clave_tune" to 0.185339361f))
+
+    private fun hexbeat5() = Patch("Hexbeat", "Deep",
+        mapOf("kick_tune" to 0.06674396f, "kick_decay" to 0.634828448f, "snare_tune" to 0.128035f, "snare_decay" to 0.550335765f, "snare_tone" to 0.344010174f, "tom_lo_tune" to 0.0272346623f, "tom_mid_tune" to 0.044907365f, "tom_hi_tune" to 0.06648219f, "tom_decay" to 0.6885239f, "hat_tune" to 0.263034433f, "hat_tone" to 0.3062702f, "cym_tone" to 0.174435332f, "bell_tune" to 0.170518458f, "clave_tune" to 0.238944024f))
+
+    private fun hexbeat6() = Patch("Hexbeat", "Glassy",
+        mapOf("kick_decay" to 0.446926683f, "hat_tune" to 0.9437626f, "hat_closed_decay" to 0.32740885f, "hat_tone" to 0.738140464f, "hat_level" to 0.34f, "cym_decay" to 0.8294822f, "cym_tone" to 0.7304227f, "cym_level" to 0.28f, "ride_decay" to 0.8854693f, "ride_level" to 0.34f, "rim_tune" to 0.9571323f, "rim_level" to 0.85f, "bell_tune" to 0.969299734f, "bell_decay" to 0.9522318f, "bell_level" to 1f, "clave_tune" to 0.9573967f, "clave_level" to 0.95f))
+
+    private fun hexbeat7() = Patch("Hexbeat", "Clatter",
+        mapOf("kick_decay" to 0.279114425f, "kick_punch" to 0.9f, "snare_decay" to 0.156891063f, "snare_snappy" to 0.85f, "tom_decay" to 0.231817588f, "hat_closed_decay" to 0.0608604439f, "hat_open_decay" to 0.156891063f, "cym_decay" to 0.186804339f, "cym_level" to 0.35f, "ride_decay" to 0.149725839f, "clap_decay" to 0.211999208f, "rim_tune" to 0.8349093f, "rim_level" to 0.9f, "bell_tune" to 0.7762705f, "bell_decay" to 0.3667258f, "bell_level" to 0.8f, "clave_tune" to 0.7882907f, "clave_level" to 0.85f, "accent" to 0.85f))
+
+    private fun hexbeat8() = Patch("Hexbeat", "Handclap",
+        mapOf("kick_tune" to 0.289475143f, "kick_decay" to 0.5032146f, "kick_level" to 1f, "snare_decay" to 0.3436954f, "snare_snappy" to 0.3f, "snare_level" to 0.28f, "hat_closed_decay" to 0.2731587f, "hat_open_decay" to 0.292238653f, "hat_level" to 0.38f, "cym_level" to 0.25f, "ride_level" to 0.3f, "clap_decay" to 0.981499851f, "clap_tone" to 0.108723558f, "clap_level" to 1f, "rim_level" to 0.4f, "bell_level" to 0.35f))
+
+    private fun hexbeat9() = Patch("Hexbeat", "Wooden",
+        mapOf("kick_tune" to 0.489825249f, "kick_decay" to 0.3618988f, "kick_punch" to 0.8f, "snare_tune" to 0.5403673f, "snare_decay" to 0.263193548f, "snare_snappy" to 0.3f, "snare_tone" to 0.402466118f, "tom_decay" to 0.3230075f, "hat_closed_decay" to 0.183609977f, "hat_open_decay" to 0.196207985f, "hat_tone" to 0.398916781f, "cym_level" to 0.18f, "ride_level" to 0.28f, "rim_tune" to 0.52645576f, "rim_level" to 0.85f, "bell_level" to 0.3f, "clave_tune" to 0.464807659f, "clave_level" to 0.8f))
+
+    private fun hexbeat10() = Patch("Hexbeat", "Enormous",
+        mapOf("kick_tune" to 0.147971049f, "kick_decay" to 0.9395091f, "kick_punch" to 0.25f, "kick_level" to 1f, "snare_decay" to 0.8404277f, "snare_snappy" to 0.5f, "snare_level" to 0.95f, "tom_decay" to 0.934392631f, "tom_level" to 0.95f, "hat_open_decay" to 0.92551285f, "cym_decay" to 0.982877851f, "cym_level" to 0.7f, "ride_decay" to 0.9471572f, "ride_level" to 0.7f, "clap_decay" to 0.951838732f, "accent" to 0.5f))
+
+    private val hexbeat: List<Patch> by lazy { listOf(hexbeat0(), hexbeat1(), hexbeat2(), hexbeat3(), hexbeat4(), hexbeat5(), hexbeat6(), hexbeat7(), hexbeat8(), hexbeat9(), hexbeat10()) }
 
     private fun genesis0() = Patch("Genesis", "Init", emptyMap())
 

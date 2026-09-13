@@ -683,7 +683,27 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         measured = measure(measureTake.stereo, measureTake.offAt, kit != nullptr ? 0 : note);
         measuredNote = kit != nullptr ? 0 : note;
         measuredAlready = true;
-        if (kit != nullptr) voices = measureVoices(*kit, r.norm, bank.unit, material, opt.bpm, opt.velocity);
+        if (kit != nullptr) {
+            voices = measureVoices(*kit, r.norm, bank.unit, material, opt.bpm, opt.velocity);
+            // A kit's summary row cannot come from the render the way a
+            // synth's does: the measurement is taken a tenth of a second in,
+            // which for `voices` is inside the first voice, so every kit in
+            // the bank reported its kick's brightness and they all looked
+            // alike. Take the loudness-weighted mean across the voices for
+            // brightness, and the longest thing in the kit for the tail.
+            double num = 0.0, den = 0.0;
+            float longest = 0.0f;
+            for (const VoiceRow &v : voices) {
+                if (v.m.peakDb < -100.0f) continue;
+                const double w = std::pow(10.0, static_cast<double>(v.m.peakDb) / 20.0);
+                num += w * v.m.centroidHz;
+                den += w;
+                longest = std::max(longest, v.m.tailSeconds);
+                if (v.m.tailRanOut) measured.tailRanOut = true;
+            }
+            if (den > 0.0) measured.centroidHz = static_cast<float>(num / den);
+            measured.tailSeconds = longest;
+        }
 
         std::string listenKind = !opt.phrase.empty() ? opt.phrase
                                : !patch.role.empty() ? patch.role

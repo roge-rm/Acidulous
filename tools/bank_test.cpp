@@ -220,9 +220,14 @@ std::vector<float> renderMachine(const std::string &machine, const std::vector<f
     };
     std::vector<Fire> ons;
     if (kit != nullptr) {
-        for (int i = 0; i < 4; ++i) {
-            ons.push_back({static_cast<int64_t>(kSr * 0.25f) * i,
-                           kit->baseNote + static_cast<int>(i * kit->voices.size() / 4)});
+        // Six, spread across the whole kit rather than four across the front
+        // of it. Four reached the kick, the clap, a tom and a cymbal, and
+        // three kits that differ mostly in their rim, cowbell and clave
+        // measured as the same sound - which they are not.
+        const int n = 6;
+        for (int i = 0; i < n; ++i) {
+            ons.push_back({static_cast<int64_t>(kSr * 0.18f) * i,
+                           kit->baseNote + static_cast<int>(i * (kit->voices.size() - 1) / (n - 1))});
         }
     } else {
         ons.push_back({0, note});

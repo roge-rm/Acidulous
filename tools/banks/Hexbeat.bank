@@ -1,35 +1,226 @@
-# Hexbeat - seeded from what shipped, and not yet voiced.
+# Hexbeat - ten kits and an Init.
+#
+# A drum patch is not a sound, it is thirteen sounds and the balance between
+# them, so these are named for the room they belong in rather than for the
+# knob that made them. What separates them is mostly two things: how long
+# things ring, and where the metal sits.
+#
+# The internal balance is the part to read - `audition bank Hexbeat` prints
+# each voice against the loudest in its own kit. A kit whose hat is six
+# decibels under its kick is a kit you never hear the hats in.
+#
+# The loudness spread across the bank reads about 8 dB and that is mostly an
+# artefact: RMS over a kit is dominated by how long things ring, so Cardboard
+# and Wooden read low for being short. The peaks are within a tenth of a
+# decibel of each other, which is the number that matters for a kit.
+#
+# bank_test still says Glassy and the defaults measure alike. They do not
+# sound alike - Glassy's top is its bell, clave and rim, and those are not in
+# the six notes the floor plays. Left as it is, because tuning a kit to
+# satisfy a heuristic is worse than the heuristic firing.
 #
 # Values are in each parameter's own units; `audition params Hexbeat` lists
-# them. A patch names only what it changes.
+# them.
 
 machine Hexbeat
+role    beat
 
 patch Init
 
 patch Tight
+  # Everything short. The kit for a busy pattern, where anything that rings
+  # is in the way of the next hit.
+  kick_tune      58 Hz
+  kick_decay     170 ms
+  kick_punch     0.72
+  snare_decay    120 ms
+  snare_snappy   0.72
+  tom_decay      180 ms
+  hat_closed_decay 32 ms
+  hat_open_decay 280 ms
+  cym_decay      900 ms
+  ride_decay     600 ms
+  clap_decay     150 ms
+  bell_decay     120 ms
   accent         0.7
-  hat_closed_decay 31.7211 ms
-  hat_open_decay 285.339 ms
-  kick_decay     181.841 ms
-  kick_punch     0.7
-  snare_decay    122.823 ms
-  snare_snappy   0.7
 
 patch Boomy
-  hat_open_decay 603.418 ms
-  kick_decay     956.353 ms
+  # The other end: a long low kick and toms that carry. Snare damped a little
+  # so it does not fight the kick's tail.
+  kick_tune      45 Hz
+  kick_decay     950 ms
   kick_punch     0.35
-  kick_tune      50.6526 Hz
-  snare_decay    301.709 ms
+  snare_decay    300 ms
   snare_snappy   0.4
-  tom_decay      640.93 ms
+  tom_decay      640 ms
+  tom_lo_tune    72 Hz
+  tom_mid_tune   112 Hz
+  tom_hi_tune    160 Hz
+  hat_open_decay 600 ms
+  kick_level     0.95
 
 patch Trashy
-  accent         0.9
-  clap_tone      1938.72 Hz
-  cym_tone       3140.46 Hz
-  hat_tone       5561.56 Hz
-  hat_tune       1.51572 x
+  # Metal moved up and opened out: hats brighter and detuned, cymbal thinner,
+  # snare with the top on. The kit that sits over a loud mix.
+  hat_tune       1.5 x
+  hat_tone       10500 Hz
+  hat_closed_decay 75 ms
+  hat_open_decay 900 ms
+  cym_tone       7200 Hz
+  cym_decay      2600 ms
+  snare_tone     4000 Hz
   snare_snappy   0.9
-  snare_tone     4009.95 Hz
+  clap_tone      1950 Hz
+  accent         0.9
+  hat_level      0.7
+
+patch Cardboard
+  # Nothing metallic left to speak of: hats and cymbals right down and short,
+  # everything tuned into the middle. A kit made of boxes.
+  kick_tune      70 Hz
+  kick_decay     130 ms
+  kick_punch     0.85
+  snare_tune     260 Hz
+  snare_decay    90 ms
+  snare_snappy   0.25
+  snare_tone     1400 Hz
+  tom_decay      120 ms
+  hat_tone       4600 Hz
+  hat_closed_decay 20 ms
+  hat_open_decay 130 ms
+  hat_level      0.42
+  cym_decay      400 ms
+  cym_level      0.3
+  ride_decay     350 ms
+  ride_level     0.35
+  rim_tune       520 Hz
+  clave_tune     1500 Hz
+
+patch Deep
+  # Everything a fourth or so down, and given room. Not longer than Boomy -
+  # lower, which is a different thing and the reason both are here.
+  kick_tune      38 Hz
+  kick_decay     520 ms
+  kick_punch     0.5
+  snare_tune     140 Hz
+  snare_decay    260 ms
+  snare_tone     1600 Hz
+  tom_lo_tune    62 Hz
+  tom_mid_tune   95 Hz
+  tom_hi_tune    130 Hz
+  tom_decay      520 ms
+  hat_tune       0.72 x
+  hat_tone       5600 Hz
+  cym_tone       2600 Hz
+  bell_tune      380 Hz
+  clave_tune     1600 Hz
+
+patch Glassy
+  # Pitched metal rather than bright metal, which is what separates it from
+  # Trashy - the hats and cymbals come *down* and back, and the bell and the
+  # clave carry the top of the kit instead. Both measured the same until they
+  # were pulled apart, which is fair: they were the same idea twice.
+  hat_tune       1.85 x
+  hat_tone       9000 Hz
+  hat_closed_decay 40 ms
+  hat_level      0.34
+  cym_tone       6000 Hz
+  cym_decay      2400 ms
+  cym_level      0.28
+  ride_decay     2200 ms
+  ride_level     0.34
+  bell_tune      1150 Hz
+  bell_decay     520 ms
+  bell_level     1
+  clave_tune     3800 Hz
+  clave_level    0.95
+  rim_tune       1400 Hz
+  rim_level      0.85
+  kick_decay     260 ms
+
+patch Clatter
+  # Short and hard everywhere, and the rim, clave and bell brought up so the
+  # small voices carry the pattern instead of decorating it.
+  kick_decay     140 ms
+  kick_punch     0.9
+  snare_decay    80 ms
+  snare_snappy   0.85
+  tom_decay      110 ms
+  hat_closed_decay 18 ms
+  hat_open_decay 160 ms
+  cym_decay      350 ms
+  cym_level      0.35
+  ride_decay     300 ms
+  clap_decay     90 ms
+  rim_tune       1150 Hz
+  rim_level      0.9
+  clave_tune     3100 Hz
+  clave_level    0.85
+  bell_tune      880 Hz
+  bell_decay     90 ms
+  bell_level     0.8
+  accent         0.85
+
+patch Handclap
+  # Built around the clap and committed to it: long, dark and at the top, with
+  # the snare most of the way out so the two do not double each other, and the
+  # metal down so there is room. Half-hearted about it, it measured the same
+  # as the defaults.
+  clap_decay     760 ms
+  clap_tone      820 Hz
+  clap_level     1
+  snare_level    0.28
+  snare_decay    140 ms
+  snare_snappy   0.3
+  kick_tune      50 Hz
+  kick_decay     320 ms
+  kick_level     1
+  hat_closed_decay 34 ms
+  hat_open_decay 240 ms
+  hat_level      0.38
+  cym_level      0.25
+  ride_level     0.3
+  bell_level     0.35
+  rim_level      0.4
+
+patch Wooden
+  # The dry kit: no cymbals to speak of, the toms tight, and the clave and rim
+  # doing the work up top. Sits under something already busy.
+  kick_tune      64 Hz
+  kick_decay     190 ms
+  kick_punch     0.8
+  snare_tune     230 Hz
+  snare_decay    110 ms
+  snare_snappy   0.3
+  snare_tone     1800 Hz
+  tom_decay      150 ms
+  hat_tone       6200 Hz
+  hat_closed_decay 26 ms
+  hat_open_decay 180 ms
+  cym_level      0.18
+  ride_level     0.28
+  rim_tune       700 Hz
+  rim_level      0.85
+  clave_tune     2100 Hz
+  clave_level    0.8
+  bell_level     0.3
+
+patch Enormous
+  # Everything long, everything loud, nothing left for anything else in the
+  # song. One kit in a bank should go too far.
+  kick_tune      42 Hz
+  kick_decay     1600 ms
+  kick_punch     0.25
+  kick_level     1
+  snare_decay    620 ms
+  snare_snappy   0.5
+  snare_level    0.95
+  tom_decay      1200 ms
+  tom_level      0.95
+  hat_open_decay 1600 ms
+  cym_decay      3800 ms
+  cym_level      0.7
+  ride_decay     2600 ms
+  ride_level     0.7
+  clap_decay     700 ms
+  accent         0.5
