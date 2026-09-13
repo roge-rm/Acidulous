@@ -1,0 +1,132 @@
+# Ratio - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Ratio` lists
+# them. A patch names only what it changes.
+
+machine Ratio
+
+patch Init
+
+patch Tine
+  algoa          #6
+  o1_decay       2.5 s
+  o1_sustain     0.25
+  o2_decay       0.35 s
+  o2_level       0.55
+  o2_ratio       14
+  o2_sustain     0
+  o2_vel         0.9
+  o3_decay       2 s
+  o3_level       0.5
+  o3_sustain     0.2
+  o4_level       0.35
+  o4_ratio       3
+  o4_sustain     0
+
+patch Bell
+  algoa          #6
+  o1_decay       6 s
+  o1_release     6 s
+  o1_sustain     0
+  o2_decay       3 s
+  o2_level       0.6
+  o2_ratio       2.76
+  o2_release     3 s
+  o2_sustain     0
+  o3_decay       4 s
+  o3_level       0.45
+  o3_ratio       5.4
+  o3_release     4 s
+  o3_sustain     0
+  snap           #5
+
+patch "Grit Bass"
+  f_freq         2200 Hz
+  f_res          0.2
+  m01_depth      0.35
+  m01_dest       #5
+  m01_src        #4
+  o1_decay       0.5 s
+  o1_level       0.9
+  o1_sustain     0.6
+  o2_decay       0.25 s
+  o2_fb          0.55
+  o2_level       0.65
+  o2_sustain     0.15
+  o3_fb          0.4
+  o3_level       0.4
+  o3_mode        #7
+  voicemode      #1
+
+patch "Morph Sweep"
+  e1_attack      1.2 s
+  e1_decay       3 s
+  e1_sustain     0.4
+  m01_depth      0.7
+  m01_dest       #2
+  m01_src        #7
+  m02_depth      0.6
+  m02_dest       #2
+  m02_src        #2
+  o1_attack      0.4 s
+  o1_level       0.7
+  o1_release     1.5 s
+  o1_sustain     0.8
+  o2_level       0.6
+  o2_ratio       2
+  o2_sustain     0.7
+  o3_level       0.5
+  o3_ratio       3
+  o3_sustain     0.6
+  o4_level       0.45
+  o4_ratio       4
+  o5_level       0.4
+  o5_ratio       6
+  o6_level       0.35
+  o6_ratio       8
+
+patch "Fold Lead"
+  algoa          #3
+  glide          0.1 s
+  m01_depth      0.3
+  m01_dest       #3
+  m01_src        #3
+  o1_fb          0.45
+  o1_level       0.85
+  o1_mode        #4
+  o1_sustain     0.9
+  o2_level       0.8
+  o2_sustain     0.9
+  o2_wave        #7
+  voicemode      #2
+
+patch "Sync Stab"
+  algoa          #3
+  l1_rate        0.4 Hz
+  m01_depth      0.25
+  m01_dest       #10
+  m01_src        #11
+  o1_decay       0.6 s
+  o1_level       0.85
+  o1_mode        #5
+  o1_ratio       4.5
+  o1_sustain     0.3
+  o2_level       0.9
+  o2_sustain     1
+  o2_wave        #7
+  snap           #0
+
+patch Stretched
+  algoa          #6
+  m01_depth      0.5
+  m01_dest       #3
+  m01_src        #2
+  o1_decay       3 s
+  o1_level       0.75
+  o1_release     2 s
+  o1_sustain     0.3
+  o2_level       0.55
+  o2_ratio       3
+  o3_level       0.4
+  o3_ratio       7
+  skew           0.22

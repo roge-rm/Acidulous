@@ -1,0 +1,109 @@
+# Formulate - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Formulate` lists
+# them. A patch names only what it changes.
+
+machine Formulate
+
+patch Init
+
+patch "Pulse Lead"
+  ampattack      0.000999766 s
+  ampdecay       0.400145 s
+  amprelease     0.0799979 s
+  ampsustain     0.7
+  duty           0.25
+  framerate      49.9918 Hz
+  mono           #1
+  volume         0.70005
+  set arp "0 4 7"
+  set duty ""
+  set formula ""
+  set vol ""
+
+patch "Arcade Bass"
+  ampattack      0.000999766 s
+  ampdecay       0.249916 s
+  amprelease     0.0599954 s
+  ampsustain     0.5
+  framerate      39.9953 Hz
+  mono           #1
+  sub            0.6
+  volume         0.9
+  set arp "0 0 0 12"
+  set duty ""
+  set formula ""
+  set vol "255 200 | 160"
+
+patch "Noise Hit"
+  ampattack      0.0005 s
+  ampdecay       0.300094 s
+  amprelease     0.0500007 s
+  ampsustain     0
+  framerate      59.9951 Hz
+  noiseshort     #1
+  volume         0.79995
+  wave           #3
+  set arp ""
+  set duty ""
+  set formula ""
+  set vol "255 190 120 70 40 20 8 0 |"
+
+patch Buzzsaw
+  ampattack      0.00200086 s
+  ampdecay       0.999651 s
+  amprelease     0.2 s
+  bits           #2
+  crush          5.99932
+  cutoff         9001.24 Hz
+  volume         0.70005
+  wave           #2
+  set arp ""
+  set duty ""
+  set formula ""
+  set vol ""
+
+patch "Formula Buzz"
+  a              160.012
+  ampattack      0.00200086 s
+  ampdecay       0.599961 s
+  amprelease     0.149992 s
+  cutoff         11999.1 Hz
+  formula        1
+  volume         0.6
+  wave           #4
+  set arp ""
+  set duty ""
+  set formula "t * (t >> 5 & a >> 4)"
+  set vol ""
+
+patch "Ring Chip"
+  ampattack      0.00200086 s
+  ampdecay       0.799989 s
+  amprelease     0.2 s
+  ampsustain     0.6
+  formula        1
+  formulamode    #2
+  framerate      23.9972 Hz
+  timescale      2.00028
+  volume         0.70005
+  set arp "0 7"
+  set duty ""
+  set formula "x * sin(t) >> 7"
+  set vol ""
+
+patch "Gated Grit"
+  ampattack      0.000999766 s
+  ampdecay       0.500013 s
+  amprelease     0.0999638 s
+  ampsustain     0.7
+  bits           #5
+  duty           0.125
+  formula        1
+  formulamode    #3
+  framerate      96.0045 Hz
+  volume         0.70005
+  set arp "0 0 12 7"
+  set duty ""
+  set formula "t >> 9 & 1 ? 255 : 0"
+  set vol ""

@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,6 +34,8 @@
 #include <engine/core/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/machine/cumulus/Cloud.h>
+#include <engine/machine/cumulus/Cumulus.h>
 
 #include "audition_kit.h"
 #include "audition_material.h"
@@ -188,10 +191,28 @@ struct Material {
     std::unique_ptr<audio::Take> take;
     std::unique_ptr<audio::Utterance> utterance;
     std::unique_ptr<SampleMap> map;
+    std::unique_ptr<::acidulous::machine::cumulus::CloudSet> cloud;
     std::vector<float> input; // mono, published a block at a time
 };
 
+/**
+ * Cumulus renders silence until somebody hands it a table, and the table is
+ * built off the audio thread from the machine's own spectrum parameters -
+ * which is what EngineHost::buildCloud does when a knob moves. A harness that
+ * skipped this would report every Cumulus patch as silent and be wrong about
+ * all of them, so it does the same two calls.
+ */
+void buildCumulusCloud(Machine *m, Material &mat) {
+    auto *cum = static_cast<::acidulous::machine::Cumulus *>(m);
+    mat.cloud = ::acidulous::machine::cumulus::buildCloud(cum->spec(), static_cast<int32_t>(kSr));
+    m->swapObject(0, mat.cloud.get());
+}
+
 void mountMaterial(Machine *m, const std::string &machine, const std::string &kind, Material &mat) {
+    if (machine == "Cumulus") {
+        buildCumulusCloud(m, mat);
+        return;
+    }
     if (kind == "kit" || (kind.empty() && machine == "Forage")) {
         for (int i = 0; i < static_cast<int>(Piece::Count); ++i) {
             mat.samples.push_back(pieceSample(static_cast<Piece>(i)));
@@ -678,13 +699,143 @@ int cmdList(const std::string &unit) {
     return 0;
 }
 
+/**
+ * Turn the JVM dump of what ships today into bank files.
+ *
+ * The patches are normalised floats in Kotlin and the ranges that give them
+ * meaning are ParamDef tables here, so only this side can write them back out
+ * in units a person can read - and only the Kotlin side can enumerate them,
+ * which is why there is a throwaway unit test producing the dump.
+ *
+ * Every value is round-tripped as it is written and any that does not come
+ * back is reported, because the whole point of seeding rather than hand-
+ * porting is that a transcription error in a preset is invisible: it sounds
+ * exactly like a patch somebody voiced badly.
+ */
+int cmdSeed(const std::string &dumpPath) {
+    std::ifstream in(dumpPath);
+    if (!in) {
+        std::fprintf(stderr, "cannot open %s\n"
+                             "  ./gradlew :app:testDebugUnitTest --tests '*DumpFactoryPatches*'\n",
+                     dumpPath.c_str());
+        return 1;
+    }
+    struct Out {
+        std::string machine;
+        std::string text;
+        int patches = 0;
+    };
+    std::vector<Out> banks;
+    Out *bank = nullptr;
+    const ParamDef *defs = nullptr;
+    int32_t count = 0;
+    int drifted = 0, dropped = 0, values = 0;
+
+    std::string line;
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] == '#') continue;
+        const size_t t1 = line.find('\t');
+        if (t1 == std::string::npos) continue;
+        const std::string kind = line.substr(0, t1);
+        const size_t t2 = line.find('\t', t1 + 1);
+
+        if (kind == "patch") {
+            const std::string machine = line.substr(t1 + 1, t2 - t1 - 1);
+            const std::string name = line.substr(t2 + 1);
+            if (bank == nullptr || bank->machine != machine) {
+                banks.push_back({machine, "", 0});
+                bank = &banks.back();
+                defs = MachineRegistry::paramDefs(machine.c_str(), count);
+                bank->text = "machine " + machine + "\n";
+            }
+            ++bank->patches;
+            const bool quote = name.find(' ') != std::string::npos;
+            bank->text += "\npatch " + (quote ? "\"" + name + "\"" : name) + "\n";
+            continue;
+        }
+        if (bank == nullptr || defs == nullptr) continue;
+
+        if (kind == "set") {
+            bank->text += "  set " + line.substr(t1 + 1, t2 - t1 - 1) + " \"" + line.substr(t2 + 1) + "\"\n";
+            continue;
+        }
+        if (kind != "param") continue;
+        const std::string name = line.substr(t1 + 1, t2 - t1 - 1);
+        const auto v01 = static_cast<float>(std::atof(line.c_str() + t2 + 1));
+        int32_t index = -1;
+        for (int32_t i = 0; i < count; ++i) {
+            if (name == defs[i].name) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) {
+            // Already worth the exercise: a name that is not in the engine's
+            // table has never done anything in the app either, silently.
+            std::printf("  %s: no parameter named '%s' - dropped\n", bank->machine.c_str(), name.c_str());
+            ++dropped;
+            continue;
+        }
+        const ParamDef &d = defs[index];
+        // A patch lists only what it changes; anything sitting at the default
+        // is noise in the file and behaves identically when left out.
+        if (std::fabs(v01 - d.unmap(d.def)) < 1e-6f) continue;
+        ++values;
+
+        // Cipher has parameters called "wave a" and "wave b". A name with a
+        // space in it has to be quoted or the file says one thing and parses
+        // as another, so it is quoted here rather than the engine renamed:
+        // the name is the key a saved patch is written under.
+        const std::string key = name.find(' ') != std::string::npos ? "\"" + name + "\"" : name;
+        char buf[192];
+        if (d.curve == Curve::Stepped) {
+            const int step = static_cast<int>(v01 * static_cast<float>(d.steps - 1) + 0.5f);
+            std::snprintf(buf, sizeof(buf), "  %-14s #%d\n", key.c_str(), step);
+        } else {
+            const float value = d.map(v01);
+            // Written and read back as text, here and now, rather than hoped
+            // about: what is checked has to be the digits that reach the file.
+            char digits[48];
+            std::snprintf(digits, sizeof(digits), "%.6g", static_cast<double>(value));
+            const float back = d.unmap(static_cast<float>(std::atof(digits)));
+            if (std::fabs(back - v01) > 1e-4f) {
+                std::printf("  %s %s: %s does not come back (%g -> %g)\n", bank->machine.c_str(), name.c_str(),
+                            digits, static_cast<double>(v01), static_cast<double>(back));
+                ++drifted;
+            }
+            std::snprintf(buf, sizeof(buf), "  %-14s %s%s%s\n", key.c_str(), digits,
+                          d.unit != nullptr && d.unit[0] != '\0' ? " " : "", d.unit != nullptr ? d.unit : "");
+        }
+        bank->text += buf;
+    }
+
+    for (const Out &b : banks) {
+        const std::string path = gBankDir + "/" + b.machine + ".bank";
+        std::ofstream out(path);
+        if (!out) {
+            std::fprintf(stderr, "cannot write %s\n", path.c_str());
+            return 1;
+        }
+        out << "# " << b.machine << " - seeded from what shipped, and not yet voiced.\n"
+            << "#\n"
+            << "# Values are in each parameter's own units; `audition params " << b.machine << "` lists\n"
+            << "# them. A patch names only what it changes.\n\n"
+            << b.text;
+        std::printf("  %-12s %2d patches -> %s\n", b.machine.c_str(), b.patches, path.c_str());
+    }
+    std::printf("\n%zu banks, %d values, %d dropped, %d that did not round-trip\n", banks.size(), values,
+                dropped, drifted);
+    return 0;
+}
+
 void usage() {
     std::printf(
         "audition - play a factory patch on a desk and measure it\n\n"
         "  audition params <Machine|fx.Effect>       the parameter table\n"
         "  audition list   <Machine>                 what is in the bank\n"
         "  audition play   <Machine> <Patch>         one patch: a wav and a row\n"
-        "  audition bank   <Machine>                 every patch, and the spread\n\n"
+        "  audition bank   <Machine>                 every patch, and the spread\n"
+        "  audition seed   [dump.txt]                what ships today, as bank files\n\n"
         "  --phrase note|bass|chord|arp|hold|chromatic|velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"
@@ -733,6 +884,13 @@ int main(int argc, char **argv) {
     if (cmd == "list" && positional.size() >= 2) return cmdList(positional[1]);
     if (cmd == "play" && positional.size() >= 3) return cmdPlay(positional[1], positional[2], opt);
     if (cmd == "bank" && positional.size() >= 2) return cmdBank(positional[1], opt);
+    if (cmd == "seed") {
+        return cmdSeed(positional.size() >= 2 ? positional[1]
+                                              : std::string(std::getenv("ACIDULOUS_ROOT") != nullptr
+                                                                ? std::getenv("ACIDULOUS_ROOT")
+                                                                : ".") +
+                                                    "/app/build/factory-dump.txt");
+    }
     usage();
     return 1;
 }

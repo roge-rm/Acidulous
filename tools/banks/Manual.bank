@@ -1,0 +1,153 @@
+# Manual - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Manual` lists
+# them. A patch names only what it changes.
+
+machine Manual
+
+patch Init
+
+patch Gospel
+  drive          0.3
+  la_4           1
+  la_8           1
+  perclvl        0.7
+  rotspeed       #2
+  ua_4           0
+  ua_513         1
+  vibdepth       0.5
+  vibtype        #3
+
+patch Smoke
+  age            0.4
+  click          0.5
+  drive          0.45
+  la_16          1
+  la_4           0
+  la_513         1
+  la_8           1
+  leakage        0.3
+  perc           #0
+  rotspeed       #1
+  ua_4           1
+  ua_513         1
+
+patch Booker
+  drive          0.35
+  la_16          1
+  la_4           0
+  la_513         0.5
+  la_8           1
+  percfast       #0
+  percharm       #0
+  perclvl        0.5
+  rotspeed       #2
+  ua_1           1
+  ua_113         0.75
+  ua_135         1
+  ua_2           1
+  ua_223         0.75
+  ua_4           1
+  ua_513         0.75
+
+patch "Full Draw"
+  click          0.6
+  drive          0.55
+  la_1           1
+  la_113         1
+  la_135         1
+  la_16          1
+  la_2           1
+  la_223         1
+  la_4           1
+  la_513         1
+  la_8           1
+  perc           #0
+  rotspeed       #2
+  ua_1           1
+  ua_113         1
+  ua_135         1
+  ua_2           1
+  ua_223         1
+  ua_4           1
+  ua_513         1
+  vibdepth       0.8
+  vibtype        #5
+
+patch Combo
+  la_4           0
+  la_8           0
+  model          #1
+  reedy          0.6
+  rotary         #0
+  tab2r          0.5
+  ua_4           0
+  ua_8           0
+  vibdepth       0.7
+  vibrate        7.66732 Hz
+  vibtype        #1
+
+patch Cathedral
+  attack         0.00561009 s
+  chiff          0.45
+  flute          0.7
+  la_16          1
+  la_4           0
+  la_8           1
+  mixture        0.6
+  model          #2
+  perc           #0
+  reed           0.3
+  release        0.0158866 s
+  rotary         #0
+  string         0.45
+  tracker        0.3
+  ua_4           0
+  ua_513         1
+  windnoise      0.15
+  windsag        0.35
+
+patch Harmonium
+  buzz           0.45
+  la_16          1
+  la_4           0
+  la_8           0
+  model          #3
+  perc           #0
+  pressure       0.75
+  reedtrem       0.35
+  rotary         #0
+  tremrate       1.65723 Hz
+  ua_4           0
+  ua_513         1
+  ua_8           0
+  windsag        0.5
+
+patch Drift
+  drive          0.25
+  la_16          1
+  la_4           0
+  la_8           1
+  lfo1rate       0.0457305 Hz
+  m1_amt         0.5
+  m1_dst         #1
+  m1_src         #9
+  m2_amt         -0.4
+  m2_dst         #10
+  m2_src         #11
+  morphsrc       #9
+  rotspeed       #1
+  spray          0.45
+  sprayrate      0.229195 Hz
+  spraywide      0.8
+  ua_4           0
+  ua_513         1
+  ub_1           1
+  ub_113         1
+  ub_135         1
+  ub_16          0
+  ub_2           1
+  ub_223         0.75
+  ub_4           0.625
+  ub_513         0
+  ub_8           0.5

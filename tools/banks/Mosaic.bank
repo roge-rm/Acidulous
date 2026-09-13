@@ -1,0 +1,63 @@
+# Mosaic - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Mosaic` lists
+# them. A patch names only what it changes.
+
+machine Mosaic
+
+patch Init
+
+patch "Soft Pad"
+  a_attack       0.6 s
+  a_decay        3 s
+  a_release      1.8 s
+  a_sustain      0.9
+  f_env          0.2
+  f_freq         3500 Hz
+  keyfade        6 st
+  loop           #2
+  velfade        20
+
+patch Cloud
+  a_attack       0.35 s
+  a_release      2.5 s
+  gdensity       18
+  gpitch         0.2 st
+  grain          #1
+  grate          0.15
+  gsize          180 ms
+  gspray         0.25
+  m01_depth      0.6
+  m01_dest       #4
+  m01_src        #2
+
+patch Shimmer
+  a_attack       0.2 s
+  a_release      3 s
+  gdensity       70
+  gpitch         12 st
+  grain          #1
+  grate          0.05
+  gsize          35 ms
+  gspray         0.5
+  l1_rate        0.2 Hz
+  m01_depth      0.25
+  m01_dest       #4
+  m01_src        #11
+  m02_depth      0.5
+  m02_dest       #9
+  m02_src        #3
+
+patch "Scan Layers"
+  a_release      0.5 s
+  m01_depth      0.8
+  m01_dest       #2
+  m01_src        #2
+  scan           0.2
+  scanamt        1
+  velfade        30
+
+patch Backwards
+  a_attack       0.15 s
+  reverse        #1
+  start          0.99

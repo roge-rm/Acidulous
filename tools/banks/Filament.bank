@@ -1,0 +1,112 @@
+# Filament - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Filament` lists
+# them. A patch names only what it changes.
+
+machine Filament
+
+patch Init
+
+patch Nylon
+  bodymix        0.45
+  couple         0.3
+  detune         5 c
+  grit           0.6
+  length         0.00102617 s
+  position       0.188
+  size           0.55
+  sustain        0.78
+  tone           0.4
+
+patch Steel
+  bodymix        0.4
+  couple         0.4
+  detune         6 c
+  drive          0.12
+  exciter        #1
+  position       0.0776
+  size           0.4
+  stiffness      0.18
+  sustain        0.88
+  tone           0.62
+
+patch Hammered
+  bodymix        0.3
+  couple         0.5
+  exciter        #2
+  hardness       0.55
+  length         0.000674641 s
+  size           0.3
+  stages         #4
+  stiffness      0.55
+  sustain        0.93
+  symlevel       0.25
+  sympathy       #1
+  symtune        #5
+  tension        0.3
+  tone           0.5
+
+patch Bowed
+  bodymix        0.4
+  exciter        #3
+  grit           0.35
+  position       0.1064
+  pressure       0.55
+  speed          0.45
+  sustain        0.9
+  tone           0.4
+  velocity       0.4
+
+patch Blown
+  bodymix        0.5
+  exciter        #4
+  grit           0.7
+  pressure       0.6
+  size           0.7
+  stiffness      0.1
+  sustain        0.86
+  tone           0.3
+
+patch Sympathy
+  "on release"   #0
+  symlevel       0.7
+  sympathy       #1
+  symsustain     0.97
+  symtune        #4
+  symwide        0.8
+  tone           0.5
+
+patch Prepared
+  damper         0.4
+  "damper at"    0.33
+  drive          0.2
+  exciter        #2
+  rattle         0.55
+  "rattle at"    0.208
+  stages         #3
+  stiffness      0.3
+  sustain        0.9
+  tone           0.6
+
+patch "Spoken To"
+  bodymix        0.3
+  exciter        #5
+  "in gain"      2
+  sustain        0.92
+  symlevel       0.4
+  sympathy       #1
+  symtune        #2
+  tone           0.55
+
+patch Wire
+  couple         0.8
+  detune         30 c
+  drive          0.3
+  exciter        #1
+  position       0.044
+  rattle         0.3
+  stages         #4
+  stiffness      0.85
+  sustain        0.99
+  tension        0.8
+  tone           0.85

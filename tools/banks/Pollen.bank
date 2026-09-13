@@ -1,0 +1,84 @@
+# Pollen - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Pollen` lists
+# them. A patch names only what it changes.
+
+machine Pollen
+
+patch Init
+
+patch Drift
+  ampattack      0.600094 s
+  amprelease     2.50074 s
+  density        17.9996 /s
+  jitter         0.35
+  panspread      0.7
+  scan           0.02
+  size           140.03 ms
+  spray          0.25
+  volume         0.79995
+
+patch Pollinate
+  ampattack      0.300117 s
+  amprelease     3.00031 s
+  bloom          1
+  density        8.00209 /s
+  drift          0.35
+  mutate         0.35
+  panspread      0.9
+  size           90.0169 ms
+  volume         0.79995
+
+patch "Chord Dust"
+  ampattack      0.0500052 s
+  amprelease     1.49965 s
+  density        44.9901 /s
+  panspread      0.8
+  scatter        #2
+  size           59.9904 ms
+  spray          0.4
+  spread         12
+  volume         0.70005
+
+patch Slicer
+  ampattack      0.00199953 s
+  ampdecay       0.999651 s
+  amprelease     0.299889 s
+  density        14.0035 /s
+  jitter         0.2
+  keytrack       0
+  size           110.027 ms
+  snap           1
+  spray          0.8
+  volume         0.9
+  window         #2
+
+patch "Live Hold"
+  ampattack      0.199927 s
+  amprelease     1.20037 s
+  density        22.0004 /s
+  dry            0.3
+  keytrack       0
+  position       0.1
+  size           179.995 ms
+  source         #1
+  spray          0.15
+  volume         0.79995
+
+patch "Eat Itself"
+  ampattack      0.500019 s
+  amprelease     3.00031 s
+  bits           #9
+  bloom          0.5
+  buffer         2 s
+  density        30.0067 /s
+  feedback       0.69996
+  generations    #1
+  keytrack       0
+  mutate         0.5
+  scan           0.5
+  size           220.007 ms
+  source         #1
+  spray          0.5
+  volume         0.70005
+  wobble         12 cents

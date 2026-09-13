@@ -1,0 +1,57 @@
+# Dice - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Dice` lists
+# them. A patch names only what it changes.
+
+machine Dice
+
+patch Init
+
+patch Straight
+  slices         #6
+
+patch Nudge
+  gate           0.9
+  reverse        0.08
+  slices         #6
+  swap           0.1
+
+patch Broken
+  drop           0.08
+  gate           0.7
+  reverse        0.3
+  slices         #10
+  stutter        0.15
+  stutterdiv     #2
+  swap           0.5
+
+patch Fill
+  cut            #1
+  drive          0.2
+  gate           0.5
+  jump           0.35
+  slices         #14
+  stutter        0.6
+  stutterdiv     #4
+  swap           0.3
+  volume         0.85005
+
+patch Held
+  gate           0.85
+  hold           #1
+  reverse        0.25
+  seed           #11
+  slices         #6
+  stutter        0.2
+  swap           0.4
+
+patch Dust
+  cut            #1
+  cutoff         2199.39 Hz
+  drop           0.3
+  gate           0.25
+  resonance      0.15
+  reverse        0.2
+  slices         #14
+  swap           0.35
+  volume         0.79995

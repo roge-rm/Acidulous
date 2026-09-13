@@ -1,0 +1,35 @@
+# Hexbeat - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Hexbeat` lists
+# them. A patch names only what it changes.
+
+machine Hexbeat
+
+patch Init
+
+patch Tight
+  accent         0.7
+  hat_closed_decay 31.7211 ms
+  hat_open_decay 285.339 ms
+  kick_decay     181.841 ms
+  kick_punch     0.7
+  snare_decay    122.823 ms
+  snare_snappy   0.7
+
+patch Boomy
+  hat_open_decay 603.418 ms
+  kick_decay     956.353 ms
+  kick_punch     0.35
+  kick_tune      50.6526 Hz
+  snare_decay    301.709 ms
+  snare_snappy   0.4
+  tom_decay      640.93 ms
+
+patch Trashy
+  accent         0.9
+  clap_tone      1938.72 Hz
+  cym_tone       3140.46 Hz
+  hat_tone       5561.56 Hz
+  hat_tune       1.51572 x
+  snare_snappy   0.9
+  snare_tone     4009.95 Hz

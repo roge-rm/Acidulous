@@ -1,0 +1,150 @@
+# Trinity - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Trinity` lists
+# them. A patch names only what it changes.
+
+machine Trinity
+
+patch Init
+
+patch "Wide Saws"
+  a_attack       0.02 s
+  a_decay        1.2 s
+  a_release      0.5 s
+  a_sustain      0.8
+  f1_env         0.25
+  f1_freq        6000 Hz
+  f1_res         0.1
+  m01_depth      0.4
+  m01_dest       #23
+  m01_src        #2
+  m02_depth      0.4
+  m02_dest       #17
+  m02_src        #3
+  o1_density     #5
+  o1_detune      0.45
+  o1_drift       0.3
+  o1_level       0.7
+  o2_density     #3
+  o2_detune      0.6
+  o2_drift       0.3
+  o2_fine        -9
+  o2_level       0.6
+  o3_coarse      #12
+  o3_density     #1
+  o3_drift       0.2
+  o3_level       0.4
+
+patch "Glass Pad"
+  a_attack       0.8 s
+  a_decay        2 s
+  a_release      2.5 s
+  a_sustain      0.75
+  f1_freq        4000 Hz
+  f1_res         0.2
+  f1_type        #1
+  l1_rate        0.15 Hz
+  l2_rate        0.07 Hz
+  m01_depth      0.4
+  m01_dest       #5
+  m01_src        #13
+  m02_depth      0.15
+  m02_dest       #23
+  m02_src        #14
+  m03_depth      0.5
+  m03_dest       #5
+  m03_src        #2
+  m04_depth      0.45
+  m04_dest       #23
+  m04_src        #3
+  o1_level       0.75
+  o1_pos         0.2
+  o1_wave        #5
+  o2_fine        6
+  o2_pos         0.6
+  o2_wave        #4
+
+patch "Bell Keys"
+  a_attack       0.002 s
+  a_decay        1.6 s
+  a_release      1.2 s
+  a_sustain      0.05
+  f1_env         0.5
+  f1_freq        9000 Hz
+  f_sustain      0
+  o1_pos         0.7
+  o1_wave        #7
+  o2_coarse      #36
+  o2_level       0.35
+  o2_wave        #3
+  ring12         0.35
+
+patch "FM Bass"
+  a_attack       0.002 s
+  a_decay        0.35 s
+  a_release      0.15 s
+  a_sustain      0.35
+  e3_decay       0.25 s
+  e3_sustain     0
+  f1_env         0.55
+  f1_freq        900 Hz
+  f1_res         0.25
+  f_decay        0.2 s
+  f_sustain      0
+  fm21           0.55
+  glide          0.08 s
+  m01_depth      0.3
+  m01_dest       #21
+  m01_src        #9
+  o1_level       0.9
+  o1_wave        #3
+  o2_coarse      #36
+  o2_level       0
+  o2_wave        #3
+  voicemode      #1
+
+patch "Sync Lead"
+  a_attack       0.01 s
+  a_decay        0.5 s
+  a_release      0.2 s
+  a_sustain      0.85
+  f1_freq        7000 Hz
+  glide          0.12 s
+  m01_depth      0.7
+  m01_dest       #14
+  m01_src        #2
+  m02_depth      0.3
+  m02_dest       #23
+  m02_src        #4
+  o1_level       0.85
+  o1_sync        0.25
+  o2_fine        5
+  o2_level       0.3
+  o2_wave        #1
+  voicemode      #2
+
+patch "Drift Strings"
+  a_attack       0.35 s
+  a_decay        2 s
+  a_release      1.4 s
+  a_sustain      0.85
+  f1_freq        3500 Hz
+  f1_res         0.05
+  f1_type        #2
+  l1_delay       2 s
+  l1_rate        4.5 Hz
+  m01_depth      0.02
+  m01_dest       #1
+  m01_src        #13
+  m01_src2       #2
+  o1_density     #2
+  o1_detune      0.3
+  o1_drift       0.8
+  o1_level       0.6
+  o2_drift       0.9
+  o2_fine        -7
+  o2_level       0.55
+  o3_coarse      #36
+  o3_drift       0.7
+  o3_level       0.35
+  o3_wave        #2

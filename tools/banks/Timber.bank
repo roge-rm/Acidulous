@@ -1,0 +1,106 @@
+# Timber - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Timber` lists
+# them. A patch names only what it changes.
+
+machine Timber
+
+patch Init
+
+patch Clarinet
+  attack         0.02 s
+  breath         0.1
+  keys           0.2
+
+patch "Bass Clarinet"
+  body           73.4 Hz
+  breath         0.16
+  embouchure     0.5
+  keys           0.35
+  lattice        1000 Hz
+  pressure       0.9
+  tongue         0.6
+
+patch "Alto Sax"
+  attack         0.015 s
+  body           138.6 Hz
+  bore           #1
+  breath         0.2
+  embouchure     0.5
+  keys           0.3
+  lattice        900 Hz
+  pressure       0.95
+  tongue         0.75
+  vibrato        9 cents
+
+patch Oboe
+  attack         0.012 s
+  body           233.1 Hz
+  bore           #1
+  breath         0.08
+  embouchure     0.7
+  family         #1
+  keys           0.2
+  lattice        1600 Hz
+  pressure       0.95
+  tongue         0.8
+  vibrato        12 cents
+
+patch Bassoon
+  attack         0.025 s
+  body           58.3 Hz
+  bore           #1
+  embouchure     0.6
+  family         #1
+  keys           0.4
+  lattice        700 Hz
+  pressure       0.9
+
+patch Flute
+  attack         0.04 s
+  body           261.6 Hz
+  bore           #1
+  breath         0.45
+  family         #2
+  keys           0.15
+  lattice        1400 Hz
+  pressure       0.8
+  tongue         0.35
+  vibrato        10.8 cents
+
+patch "Pan Pipe"
+  aim            0.1
+  attack         0.06 s
+  body           196 Hz
+  breath         0.6
+  family         #2
+  jet            0.55
+  lattice        2200 Hz
+  pressure       0.7
+  tongue         0.2
+
+patch "Stopped Wood"
+  answer         0.385
+  attack         0.05 s
+  body           110 Hz
+  breath         0.3
+  drive          0.2
+  embouchure     0.45
+  holes          0.9
+  lattice        420 Hz
+  pressure       1
+  tongue         0.5
+
+patch Forked
+  answer         0.4675
+  attack         0.04 s
+  below          1.74
+  bore           #1
+  breath         0.25
+  embouchure     0.5
+  family         #1
+  fingering      0.8
+  flutter        0.35
+  lattice        1200 Hz
+  pressure       1
+  tongue         0.6

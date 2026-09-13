@@ -1,0 +1,89 @@
+# Genesis - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Genesis` lists
+# them. A patch names only what it changes.
+
+machine Genesis
+
+patch Init
+
+patch "Eighty Eight"
+  comp           0.4
+  drift          0.15
+  duck           0.45
+  hatclosed      0.050001 s
+  hatopen        0.599954 s
+  hattune        539.957 Hz
+  kickclick      0.25
+  kickdecay      1.6002 s
+  kickdrive      0.15
+  kickpunch      0.45
+  kicksweep      0.0599954 s
+  kicktune       45.0015 Hz
+  snaredecay     0.249982 s
+  snaresnap      0.55
+  snaretune      180.006 Hz
+
+patch "Nine O Nine"
+  comp           0.5
+  drive          0.25
+  hatclosed      0.0349993 s
+  hatopen        0.279983 s
+  hattone        8999.33 Hz
+  hattune        679.997 Hz
+  kickclick      0.7
+  kickdecay      0.44991 s
+  kickdrive      0.35
+  kickpunch      0.7
+  kicksweep      0.0199997 s
+  kicktune       58.0018 Hz
+  snaredecay     0.160003 s
+  snaresnap      0.85
+  snaretone      0.7
+  snaretune      230.009 Hz
+
+patch Deep
+  comp           0.55
+  drift          0.1
+  duck           0.7
+  kickclick      0.1
+  kickdecay      2.4 s
+  kickdrive      0.1
+  kickpunch      0.3
+  kicksweep      0.0899879 s
+  kicktune       33.0016 Hz
+  snaredecay     0.300008 s
+  snaresnap      0.4
+  snaretune      149.993 Hz
+  tomdecay       0.899879 s
+  tomlotune      65.0014 Hz
+  volume         0.85005
+
+patch Slammed
+  clapdecay      0.500013 s
+  claplevel      1.00005
+  comp           0.9
+  compattack     0.00199949 s
+  comprelease    0.119994 s
+  drift          0.35
+  drive          0.5
+  duck           0.9
+  kickclick      0.6
+  kickdecay      0.70011 s
+  kickdrive      0.6
+  kickpunch      0.8
+  kicktune       52.0015 Hz
+  snaredecay     0.199995 s
+  snaresnap      0.9
+  volume         0.79995
+
+patch Loose
+  comp           0.3
+  drift          0.85
+  duck           0.35
+  hatclosed      0.0599958 s
+  hatopen        0.549932 s
+  kickdecay      1.0001 s
+  kickpunch      0.5
+  kicktune       47.9992 Hz
+  snaredecay     0.240017 s

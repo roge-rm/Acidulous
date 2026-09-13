@@ -1,0 +1,109 @@
+# Brazen - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Brazen` lists
+# them. A patch names only what it changes.
+
+machine Brazen
+
+patch Init
+
+patch Tuba
+  attack         0.0893367 s
+  bell           0.8
+  bite           0.3
+  brass          0.6
+  lipdamp        0.55
+  octave         #2
+  pressure       0.75
+  release        0.275946 s
+  size           0.1
+  vibrato        3 cents
+  volume         0.9
+
+patch Trombone
+  attack         0.0447744 s
+  bell           0.6
+  brass          0.6
+  glide          0.1 s
+  pressure       0.8
+  size           0.45
+  vibrato        6 cents
+  volume         0.825
+
+patch Horn
+  attack         0.144887 s
+  bell           0.3
+  brass          0.3
+  lipdamp        0.45
+  lock           0.6
+  players        #1
+  pressure       0.7
+  release        0.385459 s
+  size           0.5
+  spread         7.2 cents
+  vibrato        7.2 cents
+  volume         0.825
+
+patch Trumpet
+  attack         0.0158866 s
+  bell           0.65
+  bite           0.5
+  brass          0.55
+  lipdamp        0.65
+  pressure       0.85
+  size           0.9
+  vibrato        9 cents
+  volume         0.75
+
+patch Harmon
+  attack         0.0224404 s
+  bell           0.6
+  brass          0.4
+  mute           #3
+  mutetone       0.6
+  pressure       0.8
+  size           0.9
+  vibrato        12 cents
+  volume         0.675
+
+patch Section
+  attack         0.0447744 s
+  bell           0.6
+  brass          0.5
+  drift          10 cents
+  lock           0.85
+  players        #3
+  pressure       0.8
+  scatter        30 ms
+  size           0.7
+  spread         18 cents
+  volume         0.675
+  width          0.85
+
+patch Shambles
+  attack         0.0632456 s
+  bell           0.6
+  brass          0.5
+  drift          35 cents
+  lock           0.05
+  players        #3
+  pressure       0.8
+  scatter        80.4 ms
+  size           0.7
+  spread         45 cents
+  volume         0.675
+  width          1
+
+patch Growl
+  attack         0.0158866 s
+  bell           0.7
+  bite           0.6
+  brass          0.8
+  drive          0.25
+  growl          0.7
+  growlrate      44.4129 Hz
+  lipdamp        0.7
+  pressure       0.9
+  size           0.85
+  tension        1.05
+  volume         0.675

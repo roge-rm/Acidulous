@@ -1,0 +1,76 @@
+# Cipher - seeded from what shipped, and not yet voiced.
+#
+# Values are in each parameter's own units; `audition params Cipher` lists
+# them. A patch names only what it changes.
+
+machine Cipher
+
+patch Init
+
+patch Classic
+  detune         12.5 c
+  mix            0.4
+  sibilance      0.5
+  sub            0.25
+
+patch Choir
+  attack         0.00407091 s
+  bands          #24
+  detune         25 c
+  mix            0.5
+  release        0.1 s
+  smear          0.24
+  "wave a"       #2
+
+patch Backwards
+  bands          #20
+  mix            0.5
+  remap          #1
+  sibilance      0.2
+  "wave b"       #1
+
+patch Shuffled
+  bands          #16
+  release        0.054928 s
+  remap          #4
+  remapamt       0.8
+  seed           #7
+  smear          0.4
+
+patch "Held Vowel"
+  bands          #24
+  detune         20 c
+  freeze         #1
+  frzdecay       15.8236 s
+  mix            0.3
+  "wave a"       #2
+
+patch Talkbox
+  bands          #16
+  pw             0.32
+  sibilance      0.45
+  sub            0.35
+  track          #1
+  trackglide     0.00472871 s
+  "wave a"       #1
+
+patch Inverted
+  attack         0.000910282 s
+  bands          #20
+  mix            0
+  release        0.0102617 s
+  role           #1
+  "wave a"       #1
+
+patch Runaway
+  drive          0.35
+  fbtone         0.35
+  feedback       0.589
+  gate           0.15
+  # Was -1, and not on purpose. The Kotlin said `"smear" to -0.5f` in a list
+  # where every other value was normalised 0..1 - so the author was thinking
+  # of smear as the bipolar -1..1 knob it is and wrote the knob's own value,
+  # and the app clamped -0.5 to 0 and played it fully smeared instead. It has
+  # been more extreme than anybody asked for since it was written, silently,
+  # which is what a normalised number in a source file costs.
+  smear          -0.5
