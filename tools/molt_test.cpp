@@ -9,8 +9,13 @@
 // noise burst is not called pitched; and - the point of the machine - pitch
 // and formant move independently, each leaving the other where it was.
 #include <engine/core/Utterance.h>
-#include <engine/dsp/Fft.h>
 #include <engine/machine/molt/Molt.h>
+
+// The vowel, the noise and the two FFT measurements were written here first
+// and live next door now, because the audition harness wants exactly the same
+// four things and two copies of a spectral centroid is one too many.
+#include "audition_material.h"
+#include "audition_measure.h"
 
 #include <algorithm>
 #include <cmath>
@@ -23,8 +28,17 @@ using namespace acidulous::audio;
 
 namespace {
 
-constexpr float kSr = 48000.0f;
+constexpr float kSr = audition::kSr;
 int failures = 0;
+
+using audition::magnitudeAt;
+using audition::noise;
+using audition::vowel;
+
+/** A voice lives in a narrower band than the shared default assumes. */
+float centroid(const std::vector<float> &x, int32_t from) {
+    return audition::centroid(x, from, 200.0f, 5000.0f);
+}
 
 void check(bool ok, const char *what, const char *detail = "") {
     std::printf("  %-52s %s %s\n", what, ok ? "ok" : "FAIL", detail);
@@ -32,49 +46,6 @@ void check(bool ok, const char *what, const char *detail = "") {
 }
 
 float cents(float a, float b) { return 1200.0f * std::log2(a / b); }
-
-/** A two-pole resonator, which is all a formant is. */
-void resonate(const std::vector<float> &in, std::vector<float> &out, float hz, float q, float gain) {
-    const float w = 2.0f * static_cast<float>(M_PI) * hz / kSr;
-    const float r = std::exp(-w / (2.0f * q));
-    const float a1 = 2.0f * r * std::cos(w), a2 = -r * r;
-    float y1 = 0.0f, y2 = 0.0f;
-    for (size_t i = 0; i < in.size(); ++i) {
-        const float y = in[i] + a1 * y1 + a2 * y2;
-        y2 = y1;
-        y1 = y;
-        out[i] += gain * y;
-    }
-}
-
-/** A sung vowel: pulses at [f0], shaped by two formants. */
-std::vector<float> vowel(float f0, float seconds, float f1 = 700.0f, float f2 = 1220.0f) {
-    const int32_t n = static_cast<int32_t>(kSr * seconds);
-    std::vector<float> pulses(static_cast<size_t>(n), 0.0f);
-    const float period = kSr / f0;
-    for (float p = 0.0f; p < static_cast<float>(n); p += period) {
-        pulses[static_cast<size_t>(p)] = 1.0f;
-    }
-    std::vector<float> out(static_cast<size_t>(n), 0.0f);
-    resonate(pulses, out, f1, 12.0f, 1.0f);
-    resonate(pulses, out, f2, 12.0f, 0.5f);
-    float peak = 1e-9f;
-    for (float v : out) peak = std::max(peak, std::abs(v));
-    for (float &v : out) v *= 0.7f / peak;
-    return out;
-}
-
-std::vector<float> noise(float seconds) {
-    const int32_t n = static_cast<int32_t>(kSr * seconds);
-    std::vector<float> out(static_cast<size_t>(n), 0.0f);
-    uint32_t rng = 0x1234567u;
-    for (auto &v : out) {
-        rng = rng * 1664525u + 1013904223u;
-        v = static_cast<float>(rng >> 8) * (1.0f / 8388608.0f) - 1.0f;
-        v *= 0.5f;
-    }
-    return out;
-}
 
 /** The median of the voiced part of a pitch track - what the take "is". */
 float medianVoiced(const PitchTrack &t) {
@@ -92,57 +63,6 @@ float voicedShare(const PitchTrack &t) {
     return static_cast<float>(n) / static_cast<float>(t.hz.size());
 }
 
-
-/**
- * Where the energy sits, in Hz: the magnitude-weighted mean over the band a
- * voice lives in. Moving the formants moves this; moving the pitch under a
- * fixed set of formants barely does, which is exactly the difference the
- * machine exists to make and so is exactly what to measure.
- */
-float centroid(const std::vector<float> &x, int32_t from) {
-    constexpr int32_t kN = 8192;
-    dsp::Fft fft(kN);
-    std::vector<float> re(static_cast<size_t>(kN), 0.0f), im(static_cast<size_t>(kN), 0.0f);
-    for (int32_t i = 0; i < kN; ++i) {
-        const size_t at = static_cast<size_t>(from + i);
-        const float w = 0.5f - 0.5f * std::cos(2.0f * static_cast<float>(M_PI) *
-                                               static_cast<float>(i) / static_cast<float>(kN - 1));
-        re[static_cast<size_t>(i)] = (at < x.size() ? x[at] : 0.0f) * w;
-    }
-    fft.transform(re.data(), im.data(), false);
-    double num = 0.0, den = 0.0;
-    for (int32_t k = 1; k < kN / 2; ++k) {
-        const float hz = static_cast<float>(k) * kSr / static_cast<float>(kN);
-        if (hz < 200.0f || hz > 5000.0f) continue;
-        const double m = std::sqrt(static_cast<double>(re[static_cast<size_t>(k)] * re[static_cast<size_t>(k)] +
-                                                      im[static_cast<size_t>(k)] * im[static_cast<size_t>(k)]));
-        num += m * hz;
-        den += m;
-    }
-    return den > 0.0 ? static_cast<float>(num / den) : 0.0f;
-}
-
-/** How much of [hz] is in there, for asking whether a chord has both notes. */
-float magnitudeAt(const std::vector<float> &x, int32_t from, float hz) {
-    constexpr int32_t kN = 8192;
-    dsp::Fft fft(kN);
-    std::vector<float> re(static_cast<size_t>(kN), 0.0f), im(static_cast<size_t>(kN), 0.0f);
-    for (int32_t i = 0; i < kN; ++i) {
-        const size_t at = static_cast<size_t>(from + i);
-        const float w = 0.5f - 0.5f * std::cos(2.0f * static_cast<float>(M_PI) *
-                                               static_cast<float>(i) / static_cast<float>(kN - 1));
-        re[static_cast<size_t>(i)] = (at < x.size() ? x[at] : 0.0f) * w;
-    }
-    fft.transform(re.data(), im.data(), false);
-    const int32_t k = static_cast<int32_t>(hz * static_cast<float>(kN) / kSr + 0.5f);
-    float best = 0.0f;
-    for (int32_t j = k - 2; j <= k + 2; ++j) {
-        if (j < 1 || j >= kN / 2) continue;
-        best = std::max(best, std::sqrt(re[static_cast<size_t>(j)] * re[static_cast<size_t>(j)] +
-                                        im[static_cast<size_t>(j)] * im[static_cast<size_t>(j)]));
-    }
-    return best;
-}
 
 /** Play a take through a Molt and hand back what came out, in mono. */
 std::vector<float> play(audio::Utterance &u, float seconds, const std::vector<int> &notes,

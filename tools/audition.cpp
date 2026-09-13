@@ -1,0 +1,738 @@
+// Play a factory patch on a desk, write a wav, and print what it measures.
+//
+// Every factory bank in this app was written on paper. The plan says so in
+// almost every machine's section - "voiced on paper; tuned by ear from the
+// debug build" - and the tuning pass never happened, because tuning by ear
+// meant a build, an install, a track, a machine, a patch and a held note, per
+// patch, of which there are a hundred and twenty-four.
+//
+// This is the other half. It mounts a machine exactly as the app does, plays
+// it a phrase appropriate to what it is, writes a file to listen to and
+// prints eight numbers about what came out. It is an instrument, not a test:
+// nothing here passes or fails, and tools/all_tests.sh does not run it. The
+// assertions live next door in bank_test.
+//
+//   audition params  <Machine|fx.Effect>
+//   audition list    [<Machine>]
+//   audition play    <Machine> <Patch> [options]
+//   audition bank    <Machine> [options]
+//
+// See tools/patchbank.h for the bank format and tools/audition_material.h for
+// what gets mounted into the machines that need something to chew on.
+
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <engine/core/Constants.h>
+#include <engine/core/InputBus.h>
+#include <engine/core/WavWriter.h>
+#include <engine/effect/EffectRegistry.h>
+#include <engine/machine/MachineRegistry.h>
+
+#include "audition_kit.h"
+#include "audition_material.h"
+#include "audition_measure.h"
+#include "patchbank.h"
+
+using namespace acidulous;
+using namespace acidulous::audition;
+
+namespace {
+
+constexpr int32_t kBlock = kBlockFrames;
+std::string gBankDir;
+std::string gOutDir = "build/audition";
+
+// --- Phrases -----------------------------------------------------------------
+
+struct NoteEvent {
+    int64_t frame;
+    uint8_t note;
+    uint8_t velocity; // 0 = note off
+};
+
+struct Phrase {
+    std::vector<NoteEvent> events;
+    int64_t frames = 0;   // how long to render, including the tail
+    int64_t lastOff = 0;  // where the tail starts, for measuring it
+    int measuredNote = 0; // what the pitch reading should be compared against
+};
+
+int64_t secondsToFrames(float s) { return static_cast<int64_t>(kSr * s); }
+
+/** How long each voice of a kit gets to itself, in the `voices` phrase. */
+constexpr float kVoiceWindow = 1.0f;
+
+/** Adds a note and its release; returns the release frame. */
+int64_t hit(Phrase &p, float atSeconds, float forSeconds, int note, int vel) {
+    const int64_t on = secondsToFrames(atSeconds);
+    const int64_t off = secondsToFrames(atSeconds + forSeconds);
+    p.events.push_back({on, static_cast<uint8_t>(note), static_cast<uint8_t>(vel)});
+    p.events.push_back({off, static_cast<uint8_t>(note), 0});
+    return off;
+}
+
+/**
+ * The phrases, and why there are nine of them.
+ *
+ * A pad and a bass cannot be judged on the same thing: one wants eight
+ * seconds of a held note and the other wants eighths with a couple of them
+ * overlapping so the glide and the voice stealing show up. The bank file says
+ * which a patch wants, so `audition bank Trinity` plays each of its patches
+ * the way that patch is meant to be played.
+ *
+ * `note` is special: it is always rendered whatever else is, because it is
+ * the phrase the measurements are taken from. Comparing the brightness of a
+ * chord against the brightness of a bass line says nothing at all.
+ */
+Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, const Kit *kit) {
+    Phrase p;
+    p.measuredNote = note;
+    const float beat = 60.0f / bpm;
+
+    if (kind == "hold") {
+        p.lastOff = hit(p, 0.0f, 8.0f, note, velocity);
+        p.frames = p.lastOff + secondsToFrames(4.0f);
+    } else if (kind == "bass") {
+        // Two bars of eighths. Two of them overlap, which is the only way to
+        // see a glide or a mono machine stealing from itself, and two are at
+        // 120 so accent has something to do.
+        static const int kSteps[] = {0, 0, 12, 0, 7, 0, 3, 5, 0, 0, 12, 10, 7, 0, 3, 0};
+        float t = 0.0f;
+        for (int i = 0; i < 16; ++i) {
+            const bool tie = i == 4 || i == 11;                 // overlaps the next
+            const bool accent = i == 0 || i == 6 || i == 8;
+            p.lastOff = hit(p, t, beat * 0.5f * (tie ? 1.4f : 0.85f), note + kSteps[i], accent ? 120 : 90);
+            t += beat * 0.5f;
+        }
+        p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "chord") {
+        static const int kMaj7[] = {0, 4, 7, 11};
+        static const int kMin7[] = {-3, 0, 4, 7};
+        for (int i = 0; i < 4; ++i) {
+            // Staggered, because four note-ons in one block is not how hands work.
+            p.lastOff = hit(p, 0.0f + 0.02f * static_cast<float>(i), 3.0f, note + 12 + kMaj7[i], velocity);
+        }
+        for (int i = 0; i < 4; ++i) {
+            p.lastOff = hit(p, 3.4f + 0.02f * static_cast<float>(i), 3.0f, note + 12 + kMin7[i], velocity);
+        }
+        p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "arp") {
+        static const int kTriad[] = {0, 4, 7};
+        float t = 0.0f;
+        for (int i = 0; i < 32; ++i) {
+            const int step = kTriad[i % 3] + 12 * ((i / 3) % 3);
+            p.lastOff = hit(p, t, beat * 0.25f * 0.5f, note + step, velocity);
+            t += beat * 0.25f;
+        }
+        p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "chromatic") {
+        for (int i = 0; i < 13; ++i) {
+            p.lastOff = hit(p, 0.5f * static_cast<float>(i), 0.4f, 24 + i * 6, velocity);
+        }
+        p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "velocity") {
+        static const int kVels[] = {20, 50, 80, 110, 127};
+        for (int i = 0; i < 5; ++i) {
+            p.lastOff = hit(p, 0.7f * static_cast<float>(i), 0.55f, note, kVels[i]);
+        }
+        p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "voices" && kit != nullptr) {
+        // A second apart, which is longer than it needs to be for most of a
+        // kit and is set by the ones it is not: a crash or an open hat has to
+        // have room to decay inside its own window or the tail column reads
+        // the window rather than the sound.
+        for (size_t i = 0; i < kit->voices.size(); ++i) {
+            p.lastOff = hit(p, kVoiceWindow * static_cast<float>(i), 0.1f, kit->baseNote + static_cast<int>(i),
+                            velocity);
+        }
+        p.frames = secondsToFrames(kVoiceWindow * static_cast<float>(kit->voices.size()));
+    } else if (kind == "beat" && kit != nullptr) {
+        // Two bars. Voices past what the kit has simply do not fire.
+        const int n = static_cast<int>(kit->voices.size());
+        struct Step { int voice; int sixteenth; int vel; };
+        static const Step kPattern[] = {
+            {0, 0, 120}, {7, 2, 70},  {2, 4, 110}, {7, 6, 70},  {0, 8, 100}, {0, 10, 80},
+            {2, 12, 110}, {8, 14, 80}, {0, 16, 120}, {7, 18, 70}, {2, 20, 110}, {3, 20, 70},
+            {7, 22, 70}, {0, 24, 100}, {5, 26, 85}, {2, 28, 110}, {9, 30, 65},
+        };
+        for (const Step &s : kPattern) {
+            if (s.voice >= n) continue;
+            p.lastOff = std::max(p.lastOff, hit(p, beat * static_cast<float>(s.sixteenth) / 4.0f, 0.08f,
+                                                kit->baseNote + s.voice, s.vel));
+        }
+        p.frames = secondsToFrames(beat * 8.0f) + secondsToFrames(2.0f);
+    } else { // "note", and anything unrecognised
+        p.lastOff = hit(p, 0.0f, 2.0f, note, velocity);
+        p.frames = p.lastOff + secondsToFrames(2.0f);
+    }
+    std::stable_sort(p.events.begin(), p.events.end(),
+                     [](const NoteEvent &a, const NoteEvent &b) { return a.frame < b.frame; });
+    return p;
+}
+
+// --- What gets mounted -------------------------------------------------------
+
+/**
+ * The material a machine needs before it makes any sound, and the audio put
+ * on the input bus. Held here for as long as the render runs, because
+ * swapObject takes a borrowed pointer and the machine keeps reading it.
+ */
+struct Material {
+    std::vector<std::unique_ptr<SampleData>> samples;
+    std::unique_ptr<audio::Take> take;
+    std::unique_ptr<audio::Utterance> utterance;
+    std::unique_ptr<SampleMap> map;
+    std::vector<float> input; // mono, published a block at a time
+};
+
+void mountMaterial(Machine *m, const std::string &machine, const std::string &kind, Material &mat) {
+    if (kind == "kit" || (kind.empty() && machine == "Forage")) {
+        for (int i = 0; i < static_cast<int>(Piece::Count); ++i) {
+            mat.samples.push_back(pieceSample(static_cast<Piece>(i)));
+            m->swapObject(i, mat.samples.back().get());
+        }
+    } else if (kind == "break") {
+        mat.take = breakLoop();
+        m->swapObject(0, mat.take.get());
+    } else if (kind == "voicetake") {
+        mat.take = voiceTake();
+        m->swapObject(0, mat.take.get());
+    } else if (kind == "voice") {
+        mat.utterance = voiceUtterance();
+        m->swapObject(0, mat.utterance.get());
+    } else if (kind == "map") {
+        mat.map = zoneMap();
+        m->swapObject(0, mat.map.get());
+    }
+}
+
+void loadInput(const std::string &kind, Material &mat) {
+    if (kind == "voice") {
+        mat.input = voicePhrase();
+    } else if (kind == "noise") {
+        mat.input = noise(4.0f, 0.4f);
+    } else if (kind == "break") {
+        const std::unique_ptr<audio::Take> t = breakLoop();
+        mat.input = t->left;
+    }
+}
+
+/** What a machine wants mounted when its bank does not say. */
+std::string defaultMaterial(const std::string &machine) {
+    if (machine == "Forage") return "kit";
+    if (machine == "Dice") return "break";
+    if (machine == "Pollen") return "break";
+    if (machine == "Mosaic") return "map";
+    if (machine == "Molt") return "voice";
+    return "none";
+}
+
+std::string defaultInput(const std::string &machine) {
+    // A vocoder on a steady vowel tells you nothing: the band map only shows
+    // what it does when what goes through it moves.
+    if (machine == "Cipher") return "voice";
+    return "none";
+}
+
+// --- Applying a patch --------------------------------------------------------
+
+/**
+ * Exactly what the app does, in the same order.
+ *
+ * Every index in the table is written, not just the ones the patch names -
+ * ParamBinding.applyAll pushes each machine parameter's default for anything
+ * a patch leaves out, and that is what makes "a patch lists only what it
+ * changes" true. Do less here and a patch will measure well only because the
+ * one before it left something behind.
+ */
+void applyTo(ParamSet &params, const std::vector<float> &norm) {
+    for (size_t i = 0; i < norm.size(); ++i) params.set(static_cast<int32_t>(i), norm[i]);
+    params.jumpAll();
+}
+
+// --- Rendering ---------------------------------------------------------------
+
+struct Take {
+    std::vector<float> stereo;
+    int64_t offAt = 0;
+};
+
+/**
+ * Play a machine a phrase and collect what comes out.
+ *
+ * The tick clock is the part to get right. reset_test advances four ticks a
+ * block, which at 240 PPQN and 64 frames is about 750 bpm - harmless there,
+ * because it only asks whether two renders match, but fatal here: every
+ * tempo-synced LFO, Manual's rotary and Nexus's clock would run six times too
+ * fast and every patch would be voiced against a lie. So it is accumulated in
+ * double from the frame count, which at 120 bpm is 0.64 ticks a block.
+ */
+Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
+    Take out;
+    out.stereo.reserve(static_cast<size_t>(phrase.frames) * 2);
+    out.offAt = phrase.lastOff;
+
+    float L[kBlock], R[kBlock];
+    std::vector<float> inBlock(static_cast<size_t>(kBlock) * 2, 0.0f);
+    size_t next = 0;
+    const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(kSr));
+
+    for (int64_t at = 0; at < phrase.frames; at += kBlock) {
+        while (next < phrase.events.size() && phrase.events[next].frame < at + kBlock) {
+            const NoteEvent &e = phrase.events[next];
+            if (e.velocity > 0) m->noteOn(e.note, e.velocity);
+            else m->noteOff(e.note);
+            ++next;
+        }
+        if (!mat.input.empty()) {
+            for (int32_t i = 0; i < kBlock; ++i) {
+                const size_t src = static_cast<size_t>(at) + static_cast<size_t>(i);
+                const float v = src < mat.input.size() ? mat.input[src] : 0.0f;
+                inBlock[static_cast<size_t>(i) * 2] = v;
+                inBlock[static_cast<size_t>(i) * 2 + 1] = v;
+            }
+            InputBus::get().publish(inBlock.data(), kBlock);
+        }
+        const auto t0 = static_cast<int64_t>(static_cast<double>(at) * ticksPerFrame);
+        const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
+        m->onBlock(t0, t1, bpm);
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        const bool stereo = m->render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) {
+            out.stereo.push_back(L[i]);
+            out.stereo.push_back(stereo ? R[i] : L[i]);
+        }
+    }
+    InputBus::get().publish(nullptr, 0);
+    return out;
+}
+
+/** An effect gets a source rather than notes: a tone, a transient and noise. */
+std::vector<float> effectSource(float seconds) {
+    const auto n = static_cast<size_t>(kSr * seconds);
+    std::vector<float> out(n * 2, 0.0f);
+    Rng rng(0xeffec7u);
+    for (size_t i = 0; i < n; ++i) {
+        const float t = static_cast<float>(i) / kSr;
+        // A note every half second so a delay, a gate and a compressor all
+        // have an edge to work on, over a bed of noise for the filters.
+        const float phase = std::fmod(t, 0.5f);
+        const float env = std::exp(-phase / 0.12f);
+        const float tone = (std::sin(2.0f * static_cast<float>(M_PI) * 220.0f * t) +
+                            0.5f * std::sin(2.0f * static_cast<float>(M_PI) * 331.0f * t)) * 0.35f;
+        const float v = tone * env + rng.next() * 0.04f;
+        out[i * 2] = v;
+        out[i * 2 + 1] = v * 0.97f + rng.next() * 0.01f;
+    }
+    return out;
+}
+
+Take renderEffect(Effect *fx, float bpm, float seconds) {
+    Take out;
+    std::vector<float> src = effectSource(seconds);
+    const auto frames = static_cast<int64_t>(src.size() / 2);
+    out.offAt = frames;
+    out.stereo.reserve(src.size());
+    float L[kBlock], R[kBlock];
+    const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(kSr));
+    for (int64_t at = 0; at < frames; at += kBlock) {
+        const int32_t n = static_cast<int32_t>(std::min<int64_t>(kBlock, frames - at));
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        for (int32_t i = 0; i < n; ++i) {
+            L[i] = src[static_cast<size_t>(at + i) * 2];
+            R[i] = src[static_cast<size_t>(at + i) * 2 + 1];
+        }
+        const auto t0 = static_cast<int64_t>(static_cast<double>(at) * ticksPerFrame);
+        const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
+        fx->onBlock(t0, t1, bpm);
+        fx->run(L, R, n, true);
+        for (int32_t i = 0; i < n; ++i) {
+            out.stereo.push_back(L[i]);
+            out.stereo.push_back(R[i]);
+        }
+    }
+    return out;
+}
+
+// --- Output ------------------------------------------------------------------
+
+std::string safeName(const std::string &s) {
+    std::string out;
+    for (char c : s) out += (std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '-') ? c : '_';
+    return out.empty() ? "patch" : out;
+}
+
+/**
+ * Float, always.
+ *
+ * WavWriter clamps to +/-1 for PCM and says so - "the point of float is that
+ * it does not need one" - and a tool whose job includes finding the patches
+ * that clip must not be the thing that hides them.
+ */
+bool writeWav(const std::string &path, const std::vector<float> &stereo) {
+    WavWriter w;
+    std::string error;
+    if (!w.open(path, static_cast<int32_t>(kSr), 32, error)) {
+        std::fprintf(stderr, "  cannot write %s: %s\n", path.c_str(), error.c_str());
+        return false;
+    }
+    w.write(stereo.data(), static_cast<int32_t>(stereo.size() / 2));
+    return w.close();
+}
+
+/**
+ * A kit's voices, measured one at a time out of a `voices` render.
+ *
+ * A drum patch is not one sound, so one row for it says nothing. What a kit
+ * is judged on is the balance between its pieces - is the hat too loud - and
+ * that is the `rel` column: each voice against the loudest in the same patch.
+ */
+struct VoiceRow {
+    std::string name;
+    Measured m;
+};
+
+/**
+ * Each voice on its own, with the machine reset in between.
+ *
+ * Not by slicing one render into windows, which is what this did first and
+ * what it measured was wrong: a Hexbeat kick at its default settings is still
+ * at a fifth of its peak a second later, so every row after the first was
+ * reading its own hit sitting on the previous one's tail - and changing the
+ * *kick's* decay moved the *rim's* numbers. Thirteen short renders cost
+ * nothing and each one measures only what it is for.
+ */
+std::vector<VoiceRow> measureVoices(const Kit &kit, const std::vector<float> &norm, const std::string &machine,
+                                    const std::string &material, float bpm, int velocity) {
+    std::vector<VoiceRow> rows;
+    for (size_t v = 0; v < kit.voices.size(); ++v) {
+        std::unique_ptr<Machine> m(MachineRegistry::create(machine.c_str()));
+        if (!m) break;
+        m->prepare(static_cast<int32_t>(kSr));
+        m->allNotesOff();
+        m->reset();
+        applyTo(m->params(), norm);
+        Material mat;
+        mountMaterial(m.get(), machine, material, mat);
+
+        Phrase one;
+        one.lastOff = hit(one, 0.0f, 0.1f, kit.baseNote + static_cast<int>(v), velocity);
+        one.frames = secondsToFrames(kVoiceWindow);
+        const Take take = render(m.get(), one, bpm, mat);
+        rows.push_back({kit.voices[v], measure(take.stereo, 0, 0)});
+    }
+    return rows;
+}
+
+void printVoices(const std::vector<VoiceRow> &rows) {
+    float loudest = -200.0f;
+    for (const VoiceRow &r : rows) loudest = std::max(loudest, r.m.peakDb);
+    float quietest = 200.0f;
+    std::printf("    %-13s %7s %8s %7s %9s\n", "voice", "peak", "rel", "tail", "centroid");
+    for (const VoiceRow &r : rows) {
+        const bool silent = r.m.peakDb < -100.0f;
+        if (!silent) quietest = std::min(quietest, r.m.peakDb);
+        // A tail that fills its window has not been measured, only bounded.
+        const bool clipped = r.m.tailSeconds >= kVoiceWindow - 0.02f;
+        std::printf("    %-13s %+6.1f %+7.1f %5.2f%ss %8.0fHz%s\n", r.name.c_str(),
+                    static_cast<double>(r.m.peakDb), static_cast<double>(r.m.peakDb - loudest),
+                    static_cast<double>(r.m.tailSeconds), clipped ? "+" : " ",
+                    static_cast<double>(r.m.centroidHz), silent ? "   silent" : "");
+    }
+    if (quietest < 200.0f) {
+        std::printf("    %-13s %s%.1f dB between the loudest and the quietest\n", "",
+                    loudest - quietest > 24.0f ? "wide: " : "", static_cast<double>(loudest - quietest));
+    }
+}
+
+void printHeader() {
+    std::printf("  %-24s %7s %7s %6s %8s %9s %6s %6s %6s\n", "patch", "peak", "rms", "crest", "centroid",
+                "pitch", "tail", "mono", "dc");
+}
+
+void printRow(const std::string &name, const Measured &m, int note) {
+    char pitch[16] = "-";
+    if (m.f0Hz > 0.0f && note > 0) {
+        std::snprintf(pitch, sizeof(pitch), "%+.0fc", static_cast<double>(cents(m.f0Hz, midiToHz(note))));
+    }
+    std::printf("  %-24s %+6.1f %+6.1f %5.1f %7.0fHz %8s %5.2fs %+5.1f %+6.0f%s\n", name.c_str(),
+                static_cast<double>(m.peakDb), static_cast<double>(m.rmsDb), static_cast<double>(m.crestDb),
+                static_cast<double>(m.centroidHz), pitch, static_cast<double>(m.tailSeconds),
+                static_cast<double>(m.monoLossDb), static_cast<double>(m.dcDb), m.finite ? "" : "  NOT FINITE");
+}
+
+// --- Banks -------------------------------------------------------------------
+
+std::string bankPath(const std::string &unit) {
+    std::string name = unit;
+    if (name.rfind("fx.", 0) == 0) name = "fx." + name.substr(3);
+    return gBankDir + "/" + name + ".bank";
+}
+
+bool loadBank(const std::string &unit, Bank &bank) {
+    std::string error;
+    if (!readBank(bankPath(unit), bank, error)) {
+        std::fprintf(stderr, "%s\n", error.c_str());
+        return false;
+    }
+    return true;
+}
+
+const ParamDef *defsFor(const std::string &unit, int32_t &count) {
+    if (unit.rfind("fx.", 0) == 0) return EffectRegistry::paramDefs(unit.substr(3).c_str(), count);
+    return MachineRegistry::paramDefs(unit.c_str(), count);
+}
+
+// --- Commands ----------------------------------------------------------------
+
+int cmdParams(const std::string &unit) {
+    int32_t count = 0;
+    const ParamDef *defs = defsFor(unit, count);
+    if (defs == nullptr || count == 0) {
+        std::fprintf(stderr, "no unit called '%s'\n", unit.c_str());
+        return 1;
+    }
+    std::printf("%s - %d parameters\n\n", unit.c_str(), count);
+    std::printf("  %3s %-18s %12s %12s %12s  %s\n", "idx", "name", "min", "max", "default", "curve");
+    for (int32_t i = 0; i < count; ++i) {
+        const ParamDef &d = defs[i];
+        const char *curve = d.curve == Curve::Exponential ? "exponential"
+                          : d.curve == Curve::Stepped     ? "stepped"
+                                                          : "linear";
+        char steps[24] = "";
+        if (d.curve == Curve::Stepped) std::snprintf(steps, sizeof(steps), " (%d steps)", d.steps);
+        std::printf("  %3d %-18s %12g %12g %12g  %s%s%s%s\n", i, d.name, static_cast<double>(d.min),
+                    static_cast<double>(d.max), static_cast<double>(d.def), curve, steps,
+                    d.unit != nullptr && d.unit[0] != '\0' ? "  " : "", d.unit != nullptr ? d.unit : "");
+    }
+    return 0;
+}
+
+struct Options {
+    std::string phrase;
+    std::string material;
+    std::string input;
+    int note = 48;
+    int velocity = 100;
+    float bpm = 120.0f;
+    bool join = false;
+    std::vector<std::pair<std::string, double>> sets;
+};
+
+/** Renders one patch, writes its wav, and returns what it measured. */
+bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, Measured &measured,
+                 std::vector<float> *joined) {
+    int32_t count = 0;
+    const ParamDef *defs = defsFor(bank.unit, count);
+    if (defs == nullptr || count == 0) {
+        std::fprintf(stderr, "no unit called '%s'\n", bank.unit.c_str());
+        return false;
+    }
+    Resolved r = resolve(patch, defs, count);
+    for (const std::string &p : r.problems) {
+        std::fprintf(stderr, "  %s: %s\n", patch.name.c_str(), p.c_str());
+    }
+    for (const auto &s : opt.sets) {
+        for (int32_t i = 0; i < count; ++i) {
+            if (s.first == defs[i].name) r.norm[static_cast<size_t>(i)] = defs[i].unmap(static_cast<float>(s.second));
+        }
+    }
+
+    Take take;
+    int measuredNote = 0;
+    bool measuredAlready = false;
+    std::vector<VoiceRow> voices;
+
+    if (bank.isEffect()) {
+        std::unique_ptr<Effect> fx(EffectRegistry::create(bank.typeName().c_str()));
+        if (!fx) return false;
+        fx->prepare(static_cast<int32_t>(kSr));
+        fx->reset();
+        applyTo(fx->params(), r.norm);
+        take = renderEffect(fx.get(), opt.bpm, 4.0f);
+    } else {
+        std::unique_ptr<Machine> m(MachineRegistry::create(bank.unit.c_str()));
+        if (!m) {
+            std::fprintf(stderr, "no machine called '%s'\n", bank.unit.c_str());
+            return false;
+        }
+        m->prepare(static_cast<int32_t>(kSr));
+        m->allNotesOff();
+        m->reset();
+        applyTo(m->params(), r.norm);
+
+        Material mat;
+        std::string material = !patch.material.empty() ? patch.material
+                             : bank.material != "none" ? bank.material
+                                                       : defaultMaterial(bank.unit);
+        std::string input = !patch.input.empty() ? patch.input
+                          : bank.input != "none" ? bank.input
+                                                 : defaultInput(bank.unit);
+        if (!opt.material.empty()) material = opt.material;
+        if (!opt.input.empty()) input = opt.input;
+        mountMaterial(m.get(), bank.unit, material, mat);
+        loadInput(input, mat);
+
+        const Kit *kit = kitFor(bank.unit);
+        const int note = patch.note > 0 ? patch.note : opt.note;
+
+        // What is *measured* and what is *listened to* are two different
+        // phrases on purpose. A bank holds a bass and a pad side by side, and
+        // comparing the brightness of eighths against the brightness of a
+        // held chord says nothing - so every patch is also played one plain
+        // note, and that is the render the numbers come from. A kit gets its
+        // voices one at a time instead, for the same reason.
+        const std::string measureKind = kit != nullptr ? "voices" : "note";
+        const Phrase measurePhrase = buildPhrase(measureKind, note, opt.velocity, opt.bpm, kit);
+        const Take measureTake = render(m.get(), measurePhrase, opt.bpm, mat);
+        measured = measure(measureTake.stereo, measureTake.offAt, kit != nullptr ? 0 : note);
+        measuredNote = kit != nullptr ? 0 : note;
+        measuredAlready = true;
+        if (kit != nullptr) voices = measureVoices(*kit, r.norm, bank.unit, material, opt.bpm, opt.velocity);
+
+        std::string listenKind = !opt.phrase.empty() ? opt.phrase
+                               : !patch.role.empty() ? patch.role
+                                                     : bank.role;
+        if (kit != nullptr && (listenKind == "note" || listenKind.empty())) listenKind = "beat";
+        if (listenKind == measureKind) {
+            take = measureTake;
+        } else {
+            m->allNotesOff();
+            m->reset();
+            applyTo(m->params(), r.norm);
+            take = render(m.get(), buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit), opt.bpm, mat);
+        }
+    }
+
+    // An effect has no note to hold, so what it was given is what it is measured on.
+    if (!measuredAlready) measured = measure(take.stereo, take.offAt, 0);
+    const std::string path = gOutDir + "/" + safeName(bank.unit) + "-" + safeName(patch.name) + ".wav";
+    writeWav(path, take.stereo);
+    if (joined != nullptr) {
+        joined->insert(joined->end(), take.stereo.begin(), take.stereo.end());
+        joined->insert(joined->end(), static_cast<size_t>(kSr * 0.3f) * 2, 0.0f);
+    }
+    printRow(patch.name, measured, measuredNote);
+    if (!voices.empty()) printVoices(voices);
+    return true;
+}
+
+int cmdPlay(const std::string &unit, const std::string &patchName, const Options &opt) {
+    Bank bank;
+    if (!loadBank(unit, bank)) return 1;
+    for (const BankPatch &p : bank.patches) {
+        if (p.name != patchName) continue;
+        printHeader();
+        Measured m;
+        return auditionOne(bank, p, opt, m, nullptr) ? 0 : 1;
+    }
+    std::fprintf(stderr, "no patch called '%s' in %s\n", patchName.c_str(), bank.path.c_str());
+    return 1;
+}
+
+int cmdBank(const std::string &unit, const Options &opt) {
+    Bank bank;
+    if (!loadBank(unit, bank)) return 1;
+    std::printf("%s - %zu patches\n\n", bank.unit.c_str(), bank.patches.size());
+    printHeader();
+    std::vector<float> joined;
+    std::vector<float> rms;
+    for (const BankPatch &p : bank.patches) {
+        Measured m;
+        if (!auditionOne(bank, p, opt, m, opt.join ? &joined : nullptr)) continue;
+        if (m.rmsDb > -190.0f) rms.push_back(m.rmsDb);
+    }
+    if (rms.size() > 1) {
+        const float lo = *std::min_element(rms.begin(), rms.end());
+        const float hi = *std::max_element(rms.begin(), rms.end());
+        // The column to flatten. A bank whose patches are twelve decibels
+        // apart is the commonest factory-bank fault there is, and the one the
+        // ear is worst at catching patch by patch.
+        std::printf("\n  loudness spread %.1f dB%s\n", static_cast<double>(hi - lo),
+                    hi - lo > 12.0f ? "   <- wide; level these against each other" : "");
+    }
+    if (opt.join && !joined.empty()) {
+        const std::string path = gOutDir + "/" + safeName(bank.unit) + "-bank.wav";
+        writeWav(path, joined);
+        std::printf("  the whole bank, in order: %s\n", path.c_str());
+    }
+    return 0;
+}
+
+int cmdList(const std::string &unit) {
+    Bank bank;
+    if (!loadBank(unit, bank)) return 1;
+    std::printf("%s (%s, role %s)\n", bank.unit.c_str(), bank.path.c_str(), bank.role.c_str());
+    for (const BankPatch &p : bank.patches) {
+        std::printf("  %-26s %2zu values%s\n", p.name.c_str(), p.values.size(),
+                    p.settings.empty() ? "" : ", with settings");
+    }
+    return 0;
+}
+
+void usage() {
+    std::printf(
+        "audition - play a factory patch on a desk and measure it\n\n"
+        "  audition params <Machine|fx.Effect>       the parameter table\n"
+        "  audition list   <Machine>                 what is in the bank\n"
+        "  audition play   <Machine> <Patch>         one patch: a wav and a row\n"
+        "  audition bank   <Machine>                 every patch, and the spread\n\n"
+        "  --phrase note|bass|chord|arp|hold|chromatic|velocity|beat|voices\n"
+        "  --note N  --vel N  --bpm N  --set name=value\n"
+        "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"
+        "  --join    one wav with the whole bank in it\n"
+        "  --banks DIR  --out DIR\n");
+}
+
+} // namespace
+
+int main(int argc, char **argv) {
+    const char *root = std::getenv("ACIDULOUS_ROOT");
+    gBankDir = std::string(root != nullptr ? root : ".") + "/tools/banks";
+    if (root != nullptr) gOutDir = std::string(root) + "/build/audition";
+
+    std::vector<std::string> positional;
+    Options opt;
+    for (int i = 1; i < argc; ++i) {
+        const std::string a = argv[i];
+        auto next = [&]() -> std::string { return i + 1 < argc ? argv[++i] : ""; };
+        if (a == "--phrase") opt.phrase = next();
+        else if (a == "--material") opt.material = next();
+        else if (a == "--input") opt.input = next();
+        else if (a == "--note") opt.note = std::atoi(next().c_str());
+        else if (a == "--vel") opt.velocity = std::atoi(next().c_str());
+        else if (a == "--bpm") opt.bpm = static_cast<float>(std::atof(next().c_str()));
+        else if (a == "--join") opt.join = true;
+        else if (a == "--banks") gBankDir = next();
+        else if (a == "--out") gOutDir = next();
+        else if (a == "--set") {
+            const std::string kv = next();
+            const size_t eq = kv.find('=');
+            if (eq != std::string::npos) opt.sets.emplace_back(kv.substr(0, eq), std::atof(kv.c_str() + eq + 1));
+        } else if (a == "-h" || a == "--help") {
+            usage();
+            return 0;
+        } else {
+            positional.push_back(a);
+        }
+    }
+    if (positional.empty()) {
+        usage();
+        return 1;
+    }
+    const std::string &cmd = positional[0];
+    if (cmd == "params" && positional.size() >= 2) return cmdParams(positional[1]);
+    if (cmd == "list" && positional.size() >= 2) return cmdList(positional[1]);
+    if (cmd == "play" && positional.size() >= 3) return cmdPlay(positional[1], positional[2], opt);
+    if (cmd == "bank" && positional.size() >= 2) return cmdBank(positional[1], opt);
+    usage();
+    return 1;
+}

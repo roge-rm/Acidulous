@@ -1,0 +1,298 @@
+#pragma once
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <engine/core/Params.h>
+
+// A machine's factory patches, as text.
+//
+// The banks used to be Kotlin literals holding *normalised* numbers, which
+// meant every presets object carried its own copy of the engine's parameter
+// ranges to convert with - `lin(620f, 40f, 12000f)` and so on - and those
+// copies could drift from the engine without anything noticing. Here a patch
+// says `cutoff 620 Hz` and the number is resolved through the engine's own
+// ParamDef, so there is nothing to drift.
+//
+// It is also what lets the audition harness and the app share a source. The
+// harness reads these files; tools/gen_patches.sh turns the same files into
+// the Kotlin that ships. What was heard is what is in the app.
+//
+// The format, in full:
+//
+//     # comments run to the end of the line
+//     machine  Subvert          # or `effect Delay`
+//     role     bass             # the phrase these patches are auditioned with
+//     material none             # what to mount; see audition_material.h
+//     input    none             # what to put on the input bus
+//
+//     patch Init                # the first patch, always, and always empty
+//
+//     patch "Classic Acid"  role=bass
+//       wave       0            # a stepped parameter by value...
+//       mode       #1           # ...or by step index
+//       cutoff     620 Hz       # the unit is checked against the engine's
+//       decay      320 ms
+//       resonance  0.62         # a 0..1 parameter's range is 0..1
+//       set formula "t * (t >> 5)"
+//
+// Values are always in the parameter's own units. That is the one rule, and
+// the optional unit suffix is how it is enforced: writing `620` into a
+// parameter measured in ms is a typo nobody would ever see, and writing
+// `620 Hz` into it is a parse error.
+
+namespace acidulous::audition {
+
+struct BankValue {
+    std::string name;
+    double number = 0.0;
+    std::string unit;   // as written, checked against ParamDef::unit
+    int stepIndex = -1; // >= 0 when written as #N
+    int line = 0;
+};
+
+struct BankPatch {
+    std::string name;
+    std::string role;     // overrides the bank's
+    std::string material; // overrides the bank's
+    std::string input;    // overrides the bank's
+    int note = -1;        // overrides the phrase's default
+    std::vector<BankValue> values;
+    std::vector<std::pair<std::string, std::string>> settings;
+    int line = 0;
+};
+
+struct Bank {
+    std::string unit;     // "Subvert", or "fx.Delay"
+    std::string role = "note";
+    std::string material = "none";
+    std::string input = "none";
+    std::vector<BankPatch> patches;
+    std::string path;
+
+    bool isEffect() const { return unit.rfind("fx.", 0) == 0; }
+    /** The engine's type name: "Delay" for "fx.Delay". */
+    std::string typeName() const { return isEffect() ? unit.substr(3) : unit; }
+};
+
+namespace detail {
+
+inline std::string trim(const std::string &s) {
+    size_t a = 0, b = s.size();
+    while (a < b && std::isspace(static_cast<unsigned char>(s[a]))) ++a;
+    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;
+    return s.substr(a, b - a);
+}
+
+/** Strips a trailing comment, honouring quotes so a `#` inside a string survives. */
+inline std::string stripComment(const std::string &s) {
+    bool inQuote = false;
+    for (size_t i = 0; i < s.size(); ++i) {
+        if (s[i] == '"') inQuote = !inQuote;
+        else if (s[i] == '#' && !inQuote) {
+            // A `#` that opens a step index is not a comment: `mode #1`.
+            if (i + 1 < s.size() && std::isdigit(static_cast<unsigned char>(s[i + 1]))) continue;
+            return s.substr(0, i);
+        }
+    }
+    return s;
+}
+
+/** The next token, honouring double quotes. Advances [at]. */
+inline bool token(const std::string &s, size_t &at, std::string &out) {
+    while (at < s.size() && std::isspace(static_cast<unsigned char>(s[at]))) ++at;
+    if (at >= s.size()) return false;
+    if (s[at] == '"') {
+        const size_t end = s.find('"', at + 1);
+        if (end == std::string::npos) {
+            out = s.substr(at + 1);
+            at = s.size();
+        } else {
+            out = s.substr(at + 1, end - at - 1);
+            at = end + 1;
+        }
+        return true;
+    }
+    const size_t start = at;
+    while (at < s.size() && !std::isspace(static_cast<unsigned char>(s[at]))) ++at;
+    out = s.substr(start, at - start);
+    return true;
+}
+
+} // namespace detail
+
+/** Reads one bank file. Returns false and fills [error] on a malformed line. */
+inline bool readBank(const std::string &path, Bank &bank, std::string &error) {
+    std::ifstream in(path);
+    if (!in) {
+        error = "cannot open " + path;
+        return false;
+    }
+    bank = Bank();
+    bank.path = path;
+    std::string raw;
+    int lineNo = 0;
+    auto fail = [&](const std::string &why) {
+        error = path + ":" + std::to_string(lineNo) + ": " + why;
+        return false;
+    };
+    while (std::getline(in, raw)) {
+        ++lineNo;
+        const std::string line = detail::trim(detail::stripComment(raw));
+        if (line.empty()) continue;
+        size_t at = 0;
+        std::string head;
+        detail::token(line, at, head);
+
+        if (head == "machine" || head == "effect") {
+            std::string name;
+            if (!detail::token(line, at, name)) return fail("a name is wanted after " + head);
+            bank.unit = (head == "effect" ? "fx." : "") + name;
+            continue;
+        }
+        if (head == "role" && bank.patches.empty()) {
+            if (!detail::token(line, at, bank.role)) return fail("a phrase is wanted after role");
+            continue;
+        }
+        if (head == "material" && bank.patches.empty()) {
+            if (!detail::token(line, at, bank.material)) return fail("a kind is wanted after material");
+            continue;
+        }
+        if (head == "input" && bank.patches.empty()) {
+            if (!detail::token(line, at, bank.input)) return fail("a kind is wanted after input");
+            continue;
+        }
+        if (head == "patch") {
+            BankPatch p;
+            p.line = lineNo;
+            if (!detail::token(line, at, p.name)) return fail("a name is wanted after patch");
+            std::string attr;
+            while (detail::token(line, at, attr)) {
+                const size_t eq = attr.find('=');
+                if (eq == std::string::npos) return fail("expected key=value, got '" + attr + "'");
+                const std::string k = attr.substr(0, eq), v = attr.substr(eq + 1);
+                if (k == "role") p.role = v;
+                else if (k == "material") p.material = v;
+                else if (k == "input") p.input = v;
+                else if (k == "note") p.note = std::atoi(v.c_str());
+                else return fail("unknown attribute '" + k + "'");
+            }
+            bank.patches.push_back(std::move(p));
+            continue;
+        }
+        if (bank.patches.empty()) return fail("'" + head + "' before any patch");
+        BankPatch &p = bank.patches.back();
+
+        if (head == "set") {
+            std::string key, value;
+            if (!detail::token(line, at, key)) return fail("a key is wanted after set");
+            detail::token(line, at, value); // an empty string is legal: it clears
+            p.settings.emplace_back(key, value);
+            continue;
+        }
+
+        BankValue v;
+        v.name = head;
+        v.line = lineNo;
+        std::string num;
+        if (!detail::token(line, at, num)) return fail("no value for '" + head + "'");
+        if (num[0] == '#') {
+            v.stepIndex = std::atoi(num.c_str() + 1);
+        } else {
+            char *end = nullptr;
+            v.number = std::strtod(num.c_str(), &end);
+            if (end == num.c_str()) return fail("'" + num + "' is not a number");
+            // A unit written without a space, as in `620Hz`.
+            if (end != nullptr && *end != '\0') v.unit = end;
+        }
+        if (v.unit.empty()) detail::token(line, at, v.unit);
+        p.values.push_back(std::move(v));
+    }
+    if (bank.unit.empty()) {
+        error = path + ": no `machine` or `effect` line";
+        return false;
+    }
+    return true;
+}
+
+/**
+ * One patch resolved against the engine's own parameter table: normalised
+ * values by index, with everything the patch left out at its default.
+ *
+ * That last part is not a detail. It is exactly what ParamBinding.applyAll
+ * does in the app, and it is what makes "a patch lists only what it changes"
+ * true. Resolve without it and a patch will sound right in the harness only
+ * because the patch before it left something behind.
+ */
+struct Resolved {
+    std::vector<float> norm;                 // one per parameter, all of them
+    std::vector<std::pair<std::string, std::string>> settings;
+    std::vector<std::string> problems;       // named parameters that do not exist, values out of range
+};
+
+inline Resolved resolve(const BankPatch &patch, const ParamDef *defs, int32_t count) {
+    Resolved r;
+    r.norm.resize(static_cast<size_t>(count));
+    for (int32_t i = 0; i < count; ++i) r.norm[static_cast<size_t>(i)] = defs[i].unmap(defs[i].def);
+    r.settings = patch.settings;
+
+    for (const BankValue &v : patch.values) {
+        int32_t index = -1;
+        for (int32_t i = 0; i < count; ++i) {
+            if (std::strcmp(defs[i].name, v.name.c_str()) == 0) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) {
+            // The check that matters most. A name that does not exist does
+            // nothing at all in the app - applyAll fills the default and moves
+            // on - so a typo in a hand-written patch has always been silent.
+            r.problems.push_back("line " + std::to_string(v.line) + ": no parameter named '" + v.name + "'");
+            continue;
+        }
+        const ParamDef &d = defs[index];
+        float v01;
+        if (v.stepIndex >= 0) {
+            if (d.curve != Curve::Stepped) {
+                r.problems.push_back("line " + std::to_string(v.line) + ": '" + v.name +
+                                     "' is not stepped, so #" + std::to_string(v.stepIndex) + " means nothing");
+                continue;
+            }
+            if (v.stepIndex >= d.steps) {
+                r.problems.push_back("line " + std::to_string(v.line) + ": '" + v.name + "' has " +
+                                     std::to_string(d.steps) + " steps, not #" + std::to_string(v.stepIndex));
+                continue;
+            }
+            v01 = d.steps > 1 ? static_cast<float>(v.stepIndex) / static_cast<float>(d.steps - 1) : 0.0f;
+        } else {
+            if (!v.unit.empty() && d.unit != nullptr && d.unit[0] != '\0' && v.unit != d.unit) {
+                r.problems.push_back("line " + std::to_string(v.line) + ": '" + v.name + "' is in " + d.unit +
+                                     ", not " + v.unit);
+                continue;
+            }
+            const auto value = static_cast<float>(v.number);
+            const float lo = d.min < d.max ? d.min : d.max, hi = d.min < d.max ? d.max : d.min;
+            if (value < lo - 1e-4f || value > hi + 1e-4f) {
+                char buf[192];
+                std::snprintf(buf, sizeof(buf), "line %d: '%s' is %g, outside %g..%g%s%s", v.line,
+                              v.name.c_str(), v.number, static_cast<double>(d.min), static_cast<double>(d.max),
+                              d.unit != nullptr && d.unit[0] != '\0' ? " " : "", d.unit != nullptr ? d.unit : "");
+                r.problems.emplace_back(buf);
+                continue;
+            }
+            v01 = d.unmap(value);
+        }
+        if (v01 < 0.0f) v01 = 0.0f;
+        if (v01 > 1.0f) v01 = 1.0f;
+        r.norm[static_cast<size_t>(index)] = v01;
+    }
+    return r;
+}
+
+} // namespace acidulous::audition

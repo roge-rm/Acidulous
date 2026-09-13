@@ -1,0 +1,62 @@
+# Subvert - the acid line, and what else the filter can do.
+#
+# Values are in each parameter's own units; `audition params Subvert` lists
+# them. A patch names only what it changes; everything else takes the
+# engine's default, exactly as it does in the app.
+
+machine Subvert
+role    bass
+
+patch Init
+
+patch Classic
+  wave       0
+  cutoff     620 Hz
+  resonance  0.62
+  envmod     0.55
+  decay      320 ms
+  accent     0.70
+  slide      60 ms
+  drive      0.12
+
+patch Squelch
+  wave       0
+  cutoff     380 Hz
+  resonance  0.88
+  envmod     0.82
+  decay      180 ms
+  accent     0.85
+  slide      45 ms
+  drive      0.28
+
+patch "Long Sweep"
+  wave       1
+  pw         0.42
+  cutoff     240 Hz
+  resonance  0.74
+  envmod     0.95
+  decay      1400 ms
+  accent     0.50
+  drive      0.18
+
+patch "Rubber Sub"
+  wave       1
+  pw         0.5
+  sub        0.75
+  cutoff     180 Hz
+  resonance  0.35
+  envmod     0.40
+  decay      260 ms
+  accent     0.55
+  drive      0.30
+  volume     0.75
+
+patch "Hollow Band"
+  mode       #1
+  wave       0
+  cutoff     900 Hz
+  resonance  0.80
+  envmod     0.60
+  decay      420 ms
+  accent     0.65
+  drive      0.15
