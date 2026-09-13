@@ -126,6 +126,23 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             p.lastOff = hit(p, 3.4f + 0.02f * static_cast<float>(i), 3.0f, note + 12 + kMin7[i], velocity);
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "tune") {
+        // Eight notes, because one held note is not what an instrument sounds
+        // like - it is what one note on it sounds like, and every instrument
+        // in a bank can pass that and still be indistinguishable in a phrase.
+        // A leap, a step down, and a legato pair at the end where the next
+        // note starts before the last has finished, so a glide and a mono
+        // voice have somewhere to show.
+        struct Step { float at; float len; int step; int vel; };
+        static const Step kTune[] = {
+            {0.0f, 0.95f, 0, 100}, {1.0f, 0.95f, 7, 92},   {2.0f, 1.45f, 12, 110},
+            {3.5f, 0.45f, 10, 88}, {4.0f, 0.95f, 9, 96},   {5.0f, 0.95f, 5, 90},
+            {6.0f, 0.75f, 7, 104}, {6.5f, 2.2f, 0, 100},
+        };
+        for (const Step &st : kTune) {
+            p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, note + st.step, st.vel));
+        }
+        p.frames = p.lastOff + secondsToFrames(2.5f);
     } else if (kind == "arp") {
         static const int kTriad[] = {0, 4, 7};
         float t = 0.0f;
@@ -314,6 +331,15 @@ struct Take {
     std::vector<float> stereo;
     int64_t offAt = 0;
 };
+
+/**
+ * The single held note every patch is also given, whatever else it is played.
+ *
+ * Measurements come from here rather than from the phrase, so a bass and a pad
+ * in the same bank can be compared at all - and so can the harmonic ladder,
+ * which on a melody would be read halfway through a note change.
+ */
+Take gMeasureTake;
 
 /**
  * Play a machine a phrase and collect what comes out.
@@ -538,6 +564,47 @@ void printVoices(const std::vector<VoiceRow> &rows) {
     }
 }
 
+/**
+ * The first twelve harmonics, in decibels against the strongest.
+ *
+ * Because for some machines the centroid is the wrong question, and Brazen's
+ * own section of the plan says so: "the centroid moves only 614 to 645 Hz,
+ * because the fundamental grows with everything else; the ladder is the
+ * evidence, not the centroid". It is also the difference between one brass
+ * instrument and another - a tuba is a fundamental and a few partials over
+ * it, a trumpet is a long even rolloff - which a single number for
+ * brightness cannot tell you and cannot be voiced against.
+ */
+void printLadder(const std::vector<float> &stereo, float f0) {
+    if (f0 <= 0.0f) {
+        std::printf("    no pitch found, so no ladder\n");
+        return;
+    }
+    const size_t frames = stereo.size() / 2;
+    std::vector<float> mono(frames, 0.0f);
+    for (size_t i = 0; i < frames; ++i) mono[i] = 0.5f * (stereo[i * 2] + stereo[i * 2 + 1]);
+    // Half a second in, past the attack and into the steady part.
+    const auto at = static_cast<int32_t>(std::min<size_t>(static_cast<size_t>(kSr * 0.5f), frames));
+
+    float mags[12];
+    float loudest = 1e-9f;
+    for (int h = 0; h < 12; ++h) {
+        mags[h] = magnitudeAt(mono, at, f0 * static_cast<float>(h + 1));
+        loudest = std::max(loudest, mags[h]);
+    }
+    std::printf("    harmonics at %.0f Hz, dB against the strongest\n     ", static_cast<double>(f0));
+    for (int h = 0; h < 12; ++h) std::printf(" %5.0f", static_cast<double>(dB(mags[h] / loudest)));
+    std::printf("\n      ");
+    for (int h = 0; h < 12; ++h) std::printf(" %5d", h + 1);
+    // How far up the series there is still something worth hearing, and how
+    // evenly it falls away: a tuba runs out early, a trumpet does not.
+    int reach = 1;
+    for (int h = 0; h < 12; ++h) {
+        if (dB(mags[h] / loudest) > -30.0f) reach = h + 1;
+    }
+    std::printf("\n    reaches harmonic %d above -30 dB\n", reach);
+}
+
 void printHeader() {
     std::printf("  %-24s %7s %7s %6s %8s %9s %6s %6s %6s\n", "patch", "peak", "rms", "crest", "centroid",
                 "pitch", "tail", "mono", "dc");
@@ -606,10 +673,11 @@ struct Options {
     std::string phrase;
     std::string material;
     std::string input;
-    int note = 48;
+    int note = -1; // -1: whatever the patch or the phrase wants
     int velocity = 100;
     float bpm = 120.0f;
     bool join = false;
+    bool ladder = false;
     std::vector<std::pair<std::string, double>> sets;
 };
 
@@ -669,7 +737,9 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         loadInput(input, mat);
 
         const Kit *kit = kitFor(bank.unit);
-        const int note = patch.note > 0 ? patch.note : opt.note;
+        // An explicit --note wins over the bank's, which wins over the
+        // default: the flag is how you ask what a patch does somewhere else.
+        const int note = opt.note > 0 ? opt.note : (patch.note > 0 ? patch.note : 48);
 
         // What is *measured* and what is *listened to* are two different
         // phrases on purpose. A bank holds a bass and a pad side by side, and
@@ -680,6 +750,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         const std::string measureKind = kit != nullptr ? "voices" : "note";
         const Phrase measurePhrase = buildPhrase(measureKind, note, opt.velocity, opt.bpm, kit);
         const Take measureTake = render(m.get(), measurePhrase, opt.bpm, mat);
+        gMeasureTake = measureTake;
         measured = measure(measureTake.stereo, measureTake.offAt, kit != nullptr ? 0 : note);
         measuredNote = kit != nullptr ? 0 : note;
         measuredAlready = true;
@@ -729,6 +800,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
     }
     printRow(patch.name, measured, measuredNote);
     if (!voices.empty()) printVoices(voices);
+    if (opt.ladder) printLadder(bank.isEffect() ? take.stereo : gMeasureTake.stereo, measured.f0Hz);
     return true;
 }
 
@@ -1043,10 +1115,11 @@ void usage() {
         "  audition bank   <Machine>                 every patch, and the spread\n"
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n\n"
-        "  --phrase note|bass|chord|arp|hold|chromatic|velocity|beat|voices\n"
+        "  --phrase note|tune|bass|chord|arp|hold|chromatic|velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"
         "  --join    one wav with the whole bank in it\n"
+        "  --ladder  the first twelve harmonics, for machines a centroid cannot describe\n"
         "  --banks DIR  --out DIR\n");
 }
 
@@ -1069,6 +1142,7 @@ int main(int argc, char **argv) {
         else if (a == "--vel") opt.velocity = std::atoi(next().c_str());
         else if (a == "--bpm") opt.bpm = static_cast<float>(std::atof(next().c_str()));
         else if (a == "--join") opt.join = true;
+        else if (a == "--ladder") opt.ladder = true;
         else if (a == "--banks") gBankDir = next();
         else if (a == "--out") gOutDir = next();
         else if (a == "--set") {

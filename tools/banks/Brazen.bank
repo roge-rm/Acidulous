@@ -1,109 +1,291 @@
-# Brazen - seeded from what shipped, and not yet voiced.
+# Brazen - fourteen instruments, and they are meant to be telling apart.
 #
-# Values are in each parameter's own units; `audition params Brazen` lists
-# them. A patch names only what it changes.
+# The bank this replaces had nine patches whose spectral centroids were 2427,
+# 2423 and 2422 Hz for Trombone, Trumpet and Growl - three names on one sound,
+# and seven of the nine between 2420 and 2800. Dan heard it before the harness
+# was asked the right question.
+#
+# The right question, for this machine, is the harmonic ladder and not the
+# centroid, and Brazen's own section of the plan says so: "the centroid moves
+# only 614 to 645 Hz, because the fundamental grows with everything else; the
+# ladder is the evidence". `audition play Brazen Trumpet --ladder` prints it.
+# A tuba is a fundamental with two partials over it; a trumpet is an even
+# rolloff eight harmonics deep. That is the difference, and it is measurable.
+#
+# Three things move it, and the old bank varied none of them enough:
+#
+#   size      the bore, 0 a tuba's wide slow one and 1 a trumpet's narrow one
+#   bell      how much of the wave comes back - and it is not a brightness
+#             slider. The ladder peaks around 0.6 and falls away on both
+#             sides: too open and nothing reflects to build a standing wave,
+#             too closed and the top of it is absorbed. The first draft of
+#             this bank put every bright instrument at 0.14 to 0.35, off the
+#             far edge, and made them all thin instead of bright
+#   brass     the shock front - and it only bites in the upper register, which
+#             is why a bank played at one pitch could not hear it at all
+#
+# And the fourth is register. These do not transpose: a preset that silently
+# moves the keyboard is a preset that surprises you later. Each says the note
+# it is meant for instead, which is where `audition bank Brazen` plays it.
+#
+# One thing not to touch: `tension` is not a tone control. It is how tight the
+# lips are, and on a brass instrument that decides *which partial of the tube
+# you are playing* - which is how a bugle works. Moved off 1 it detunes:
+# measured at F4, tension 0.7 plays 97 cents sharp, 1.2 plays 55 flat and 1.35
+# plays 997 cents sharp, and the harmonic ladder collapses from twelve
+# harmonics to three or four every time, because the lips are fighting the
+# tube instead of driving it. Three patches here had it set for brightness and
+# all three were playing the wrong note. Use it to pick a partial deliberately
+# or leave it alone.
+#
+# Levelled to about -20.5 dB RMS. The two mutes sit below it at their volume's
+# maximum, which is what a mute is: the harmon is 6 dB down and no amount of
+# knob will fetch it back, because most of the instrument is not coming out of
+# the bell any more.
+#
+# And they are auditioned with a melody rather than one held note - `role
+# tune` - because one note is what one note sounds like. Every patch in the
+# bank this replaces passed a held note and they were still indistinguishable
+# in a phrase.
+#
+# Values are in each parameter's own units; `audition params Brazen` lists them.
 
 machine Brazen
+role    tune
 
 patch Init
 
-patch Tuba
-  attack         0.0893367 s
-  bell           0.8
-  bite           0.3
-  brass          0.6
-  lipdamp        0.55
-  octave         #2
+patch Tuba  note=41
+  # The widest bore and the dullest bell, blown gently. Two partials over the
+  # fundamental and nothing above them.
+  size           0.03
+  bell           0.88
+  brass          0.25
   pressure       0.75
-  release        0.275946 s
-  size           0.1
-  vibrato        3 cents
-  volume         0.9
+  lipdamp        0.45
+  bite           0.15
+  attack         0.09 s
+  release        0.32 s
+  vibrato        2 cents
+  # Breath right off. At the default 0.15 the noise sat *above* the tone in
+  # the band brightness is measured over and the tuba read 3795 Hz - brighter
+  # than the piccolo. A big instrument blown gently is nearly all fundamental
+  # and the hiss has nowhere to hide behind.
+  breath         0
+  volume         1.5
 
-patch Trombone
-  attack         0.0447744 s
+patch "Bass Trombone"  note=43
+  # Still wide, but the bell lets more out than a tuba's and it is blown
+  # harder, so the ladder reaches further before it gives up.
+  size           0.16
+  bell           0.76
+  brass          0.45
+  pressure       0.72
+  lipdamp        0.5
+  bite           0.3
+  attack         0.055 s
+  glide          0.09 s
+  vibrato        4 cents
+  breath         0.03
+  volume         1.45
+
+patch Trombone  note=48
+  # The slide is the glide, and it is the only thing here that has one worth
+  # hearing: a trombone gets between two notes rather than stepping.
+  size           0.3
+  bell           0.66
+  brass          0.58
+  pressure       0.78
+  lipdamp        0.55
+  bite           0.4
+  attack         0.04 s
+  glide          0.12 s
+  vibrato        5 cents
+  breath         0.04
+  volume         1.3
+
+patch Horn  note=53
+  # Bell high and pressure low: a horn is played into its own bell and that is
+  # why it is the mellow one. Slow on the front of the note, and two players
+  # locked tight, because one horn on its own is a rare thing.
+  size           0.34
+  bell           0.8
+  brass          0.28
+  pressure       0.6
+  lipdamp        0.42
+  bite           0.12
+  attack         0.13 s
+  release        0.4 s
+  players        #1
+  lock           0.75
+  spread         6 cents
+  vibrato        6 cents
+  width          0.5
+  breath         0.05
+  volume         1.0
+
+patch Flugel  note=58
+  # A trumpet's pitch through a horn's bore. The one that shows size and
+  # register are separate things.
+  size           0.55
+  bell           0.72
+  brass          0.32
+  pressure       0.66
+  lipdamp        0.45
+  bite           0.2
+  attack         0.05 s
+  vibrato        5 cents
+  breath         0.05
+  volume         1.35
+
+patch Cornet  note=60
+  # Between the flugel and the trumpet, which is exactly what it is.
+  size           0.72
+  bell           0.62
+  brass          0.5
+  pressure       0.76
+  bite           0.4
+  attack         0.03 s
+  vibrato        7 cents
+  breath         0.06
+  volume         1.25
+
+patch Trumpet  note=62
+  # Narrow bore, open bell, leant on. Eight harmonics and an even rolloff -
+  # the thing the tuba is not.
+  size           0.95
+  bell           0.58
+  brass          0.78
+  pressure       0.9
+  lipdamp        0.62
+  bite           0.6
+  attack         0.014 s
+  vibrato        8 cents
+  vibratodelay   0.5 s
+  breath         0.08
+  volume         1.2
+
+patch Piccolo  note=70
+  # The same instrument again, shorter and harder, up where it screams. The
+  # top of the machine's range and the top of the bank's.
+  size           1
+  bell           0.64
+  brass          0.9
+  pressure       0.98
+  lipdamp        0.7
+  bite           0.75
+  attack         0.008 s
+  vibrato        6 cents
+  breath         0.1
+  volume         1.25
+
+patch "Straight Mute"  note=62
+  # A mute is a filter here and not a volume knob. The straight one takes the
+  # body out and leaves the edge.
+  mute           #1
+  mutetone       0.7
+  size           0.9
+  bell           0.54
+  brass          0.7
+  pressure       0.85
+  bite           0.6
+  attack         0.016 s
+  breath         0.09
+  volume         1.5
+
+patch "Cup Mute"  note=58
+  # And the cup one takes the edge out and leaves the body: the same
+  # instrument, the opposite half of it.
+  mute           #2
+  mutetone       0.3
+  size           0.82
+  bell           0.74
+  brass          0.42
+  pressure       0.7
+  bite           0.3
+  attack         0.028 s
+  breath         0.06
+  volume         1.15
+
+patch Harmon  note=62
+  # The one everybody knows, and the reason the mutes are filters: it is all
+  # upper partials and no fundamental to speak of.
+  mute           #3
+  mutetone       0.65
+  size           0.95
+  bell           0.5
+  brass          0.62
+  pressure       0.86
+  bite           0.55
+  attack         0.02 s
+  vibrato        10 cents
+  breath         0.12
+  volume         1.5
+
+patch Section  note=55
+  # Four players, each a whole instrument with its own tube and its own idea
+  # of the note, pulled tight together. Not one player detuned four times.
+  players        #3
+  lock           0.88
+  spread         14 cents
+  scatter        22 ms
+  drift          8 cents
+  width          0.85
+  size           0.55
   bell           0.6
   brass          0.6
-  glide          0.1 s
   pressure       0.8
-  size           0.45
-  vibrato        6 cents
-  volume         0.825
+  attack         0.045 s
+  breath         0.05
+  volume         0.62
 
-patch Horn
-  attack         0.144887 s
-  bell           0.3
-  brass          0.3
-  lipdamp        0.45
-  lock           0.6
-  players        #1
-  pressure       0.7
-  release        0.385459 s
-  size           0.5
-  spread         7.2 cents
-  vibrato        7.2 cents
-  volume         0.825
-
-patch Trumpet
-  attack         0.0158866 s
-  bell           0.65
-  bite           0.5
-  brass          0.55
-  lipdamp        0.65
-  pressure       0.85
-  size           0.9
-  vibrato        9 cents
-  volume         0.75
-
-patch Harmon
-  attack         0.0224404 s
-  bell           0.6
-  brass          0.4
-  mute           #3
-  mutetone       0.6
-  pressure       0.8
-  size           0.9
-  vibrato        12 cents
-  volume         0.675
-
-patch Section
-  attack         0.0447744 s
-  bell           0.6
-  brass          0.5
-  drift          10 cents
-  lock           0.85
+patch Shambles  note=55
+  # The same four with nobody listening to anybody. The `lock` knob is the one
+  # control here a sampled library cannot have, and this is the far end of it.
   players        #3
-  pressure       0.8
-  scatter        30 ms
-  size           0.7
-  spread         18 cents
-  volume         0.675
-  width          0.85
-
-patch Shambles
-  attack         0.0632456 s
-  bell           0.6
-  brass          0.5
-  drift          35 cents
-  lock           0.05
-  players        #3
-  pressure       0.8
-  scatter        80.4 ms
-  size           0.7
-  spread         45 cents
-  volume         0.675
+  lock           0.03
+  spread         48 cents
+  scatter        85 ms
+  drift          38 cents
   width          1
+  size           0.55
+  bell           0.6
+  brass          0.6
+  pressure       0.8
+  attack         0.07 s
+  breath         0.06
+  volume         0.6
 
-patch Growl
-  attack         0.0158866 s
-  bell           0.7
-  bite           0.6
-  brass          0.8
-  drive          0.25
-  growl          0.7
-  growlrate      44.4129 Hz
-  lipdamp        0.7
-  pressure       0.9
-  size           0.85
-  tension        1.05
-  volume         0.675
+patch Growl  note=58
+  # The player humming against their own note: sidebands on the air and on the
+  # lips at once, which is not a tremolo and does not sound like one.
+  growl          0.75
+  growlrate      42 Hz
+  size           0.86
+  bell           0.56
+  brass          0.85
+  pressure       0.92
+  lipdamp        0.68
+  bite           0.65
+  drive          0.28
+  attack         0.018 s
+  breath         0.07
+  volume         1.0
+
+patch Fanfare  note=65
+  # Everything leant on at once. Brass at the top is the shock front, which is
+  # a rolloff eight deep rather than a bag of partials - and the reason it is
+  # a delay in the model and not a distortion.
+  size           1
+  bell           0.62
+  brass          1
+  pressure       0.93
+  lipdamp        0.68
+  bite           0.8
+  attack         0.01 s
+  players        #1
+  lock           0.9
+  spread         9 cents
+  vibrato        4 cents
+  breath         0.07
+  volume         1.1

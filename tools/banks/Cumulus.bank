@@ -4,6 +4,10 @@
 # them. A patch names only what it changes.
 
 machine Cumulus
+# A melody rather than one held note: one note is what one note sounds
+# like, and a bank can pass that patch by patch and still be the same
+# sound all the way down.
+role    tune
 
 patch Init
 

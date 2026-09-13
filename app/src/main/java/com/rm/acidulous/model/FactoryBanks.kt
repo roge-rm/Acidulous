@@ -212,30 +212,51 @@ internal object FactoryBanks {
     private fun brazen0() = Patch("Brazen", "Init", emptyMap())
 
     private fun brazen1() = Patch("Brazen", "Tuba",
-        mapOf("size" to 0.1f, "bell" to 0.8333334f, "lipdamp" to 0.5555556f, "pressure" to 0.75f, "bite" to 0.3f, "brass" to 0.6f, "attack" to 0.549999952f, "release" to 0.6000001f, "vibrato" to 0.05f, "octave" to 0.333333343f, "volume" to 0.599999964f))
+        mapOf("size" to 0.03f, "bell" to 0.922222257f, "lipdamp" to 0.444444418f, "pressure" to 0.75f, "breath" to 0f, "bite" to 0.15f, "brass" to 0.25f, "attack" to 0.551070869f, "release" to 0.622157753f, "vibrato" to 0.0333333351f, "volume" to 1f))
 
-    private fun brazen2() = Patch("Brazen", "Trombone",
-        mapOf("size" to 0.45f, "bell" to 0.611111164f, "pressure" to 0.8f, "brass" to 0.6f, "attack" to 0.4499999f, "vibrato" to 0.1f, "glide" to 0.1f, "volume" to 0.55f))
+    private fun brazen2() = Patch("Brazen", "Bass Trombone",
+        mapOf("size" to 0.16f, "bell" to 0.7888889f, "lipdamp" to 0.5f, "pressure" to 0.72f, "breath" to 0.03f, "bite" to 0.3f, "attack" to 0.479777545f, "vibrato" to 0.06666667f, "glide" to 0.09f, "volume" to 0.9666667f))
 
-    private fun brazen3() = Patch("Brazen", "Horn",
-        mapOf("size" to 0.5f, "bell" to 0.2777778f, "lipdamp" to 0.444444418f, "pressure" to 0.7f, "brass" to 0.3f, "players" to 0.333333343f, "spread" to 0.12f, "lock" to 0.6f, "attack" to 0.619999766f, "release" to 0.6499999f, "vibrato" to 0.12f, "volume" to 0.55f))
+    private fun brazen3() = Patch("Brazen", "Trombone",
+        mapOf("size" to 0.3f, "bell" to 0.6777778f, "lipdamp" to 0.5555556f, "pressure" to 0.78f, "breath" to 0.04f, "brass" to 0.58f, "attack" to 0.43367663f, "vibrato" to 0.0833333358f, "glide" to 0.12f, "volume" to 0.8666666f))
 
-    private fun brazen4() = Patch("Brazen", "Trumpet",
-        mapOf("size" to 0.9f, "bell" to 0.6666666f, "lipdamp" to 0.6666666f, "pressure" to 0.85f, "bite" to 0.5f, "brass" to 0.55f, "attack" to 0.3000003f, "vibrato" to 0.15f, "volume" to 0.5f))
+    private fun brazen4() = Patch("Brazen", "Horn",
+        mapOf("size" to 0.34f, "bell" to 0.8333334f, "lipdamp" to 0.4111111f, "breath" to 0.05f, "bite" to 0.12f, "brass" to 0.28f, "players" to 0.333333343f, "spread" to 0.1f, "lock" to 0.75f, "width" to 0.5f, "attack" to 0.6043044f, "release" to 0.655539453f, "vibrato" to 0.1f, "volume" to 0.6666667f))
 
-    private fun brazen5() = Patch("Brazen", "Harmon",
-        mapOf("size" to 0.9f, "bell" to 0.611111164f, "mute" to 1f, "mutetone" to 0.6f, "pressure" to 0.8f, "brass" to 0.4f, "attack" to 0.3500002f, "vibrato" to 0.2f, "volume" to 0.450000018f))
+    private fun brazen5() = Patch("Brazen", "Flugel",
+        mapOf("size" to 0.55f, "bell" to 0.7444445f, "lipdamp" to 0.444444418f, "pressure" to 0.66f, "breath" to 0.05f, "bite" to 0.2f, "brass" to 0.32f, "vibrato" to 0.0833333358f, "volume" to 0.900000036f))
 
-    private fun brazen6() = Patch("Brazen", "Section",
-        mapOf("size" to 0.7f, "bell" to 0.611111164f, "pressure" to 0.8f, "brass" to 0.5f, "players" to 1f, "spread" to 0.3f, "scatter" to 0.25f, "lock" to 0.85f, "drift" to 0.2f, "width" to 0.85f, "attack" to 0.4499999f, "volume" to 0.450000018f))
+    private fun brazen6() = Patch("Brazen", "Cornet",
+        mapOf("size" to 0.72f, "bell" to 0.6333333f, "pressure" to 0.76f, "breath" to 0.06f, "brass" to 0.5f, "attack" to 0.392030418f, "vibrato" to 0.116666667f, "volume" to 0.8333333f))
 
-    private fun brazen7() = Patch("Brazen", "Shambles",
-        mapOf("size" to 0.7f, "bell" to 0.611111164f, "pressure" to 0.8f, "brass" to 0.5f, "players" to 1f, "spread" to 0.75f, "scatter" to 0.67f, "lock" to 0.05f, "drift" to 0.7f, "width" to 1f, "attack" to 0.5000001f, "volume" to 0.450000018f))
+    private fun brazen7() = Patch("Brazen", "Trumpet",
+        mapOf("size" to 0.95f, "bell" to 0.5888889f, "lipdamp" to 0.6333333f, "pressure" to 0.9f, "breath" to 0.08f, "bite" to 0.6f, "brass" to 0.78f, "attack" to 0.28169933f, "vibrato" to 0.13333334f, "vibratodelay" to 0.25f, "volume" to 0.8f))
 
-    private fun brazen8() = Patch("Brazen", "Growl",
-        mapOf("size" to 0.85f, "bell" to 0.7222222f, "tension" to 0.6666666f, "lipdamp" to 0.7222222f, "pressure" to 0.9f, "bite" to 0.6f, "brass" to 0.8f, "growl" to 0.7f, "growlrate" to 0.6000003f, "attack" to 0.3000003f, "drive" to 0.25f, "volume" to 0.450000018f))
+    private fun brazen8() = Patch("Brazen", "Piccolo",
+        mapOf("size" to 1f, "bell" to 0.655555546f, "lipdamp" to 0.7222222f, "pressure" to 0.98f, "breath" to 0.1f, "bite" to 0.75f, "brass" to 0.9f, "attack" to 0.200686663f, "vibrato" to 0.1f, "volume" to 0.8333333f))
 
-    private val brazen: List<Patch> by lazy { listOf(brazen0(), brazen1(), brazen2(), brazen3(), brazen4(), brazen5(), brazen6(), brazen7(), brazen8()) }
+    private fun brazen9() = Patch("Brazen", "Straight Mute",
+        mapOf("size" to 0.9f, "bell" to 0.544444442f, "mute" to 0.333333343f, "mutetone" to 0.7f, "pressure" to 0.85f, "breath" to 0.09f, "bite" to 0.6f, "brass" to 0.7f, "attack" to 0.30102998f, "volume" to 1f))
+
+    private fun brazen10() = Patch("Brazen", "Cup Mute",
+        mapOf("size" to 0.82f, "bell" to 0.7666667f, "mute" to 0.6666667f, "mutetone" to 0.3f, "pressure" to 0.7f, "breath" to 0.06f, "bite" to 0.3f, "brass" to 0.42f, "attack" to 0.382042676f, "volume" to 0.766666651f))
+
+    private fun brazen11() = Patch("Brazen", "Harmon",
+        mapOf("size" to 0.95f, "bell" to 0.5f, "mute" to 1f, "mutetone" to 0.65f, "pressure" to 0.86f, "breath" to 0.12f, "bite" to 0.55f, "brass" to 0.62f, "attack" to 0.3333333f, "volume" to 1f))
+
+    private fun brazen12() = Patch("Brazen", "Section",
+        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.8f, "breath" to 0.05f, "brass" to 0.6f, "players" to 1f, "spread" to 0.233333334f, "scatter" to 0.183333337f, "lock" to 0.88f, "drift" to 0.16f, "width" to 0.85f, "attack" to 0.450727522f, "volume" to 0.413333327f))
+
+    private fun brazen13() = Patch("Brazen", "Shambles",
+        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.8f, "breath" to 0.06f, "brass" to 0.6f, "players" to 1f, "spread" to 0.8f, "scatter" to 0.7083333f, "lock" to 0.03f, "drift" to 0.76f, "width" to 1f, "attack" to 0.5146893f, "volume" to 0.4f))
+
+    private fun brazen14() = Patch("Brazen", "Growl",
+        mapOf("size" to 0.86f, "bell" to 0.566666663f, "lipdamp" to 0.7f, "pressure" to 0.92f, "breath" to 0.07f, "bite" to 0.65f, "brass" to 0.85f, "growl" to 0.75f, "growlrate" to 0.5775205f, "attack" to 0.3180808f, "drive" to 0.28f, "volume" to 0.6666667f))
+
+    private fun brazen15() = Patch("Brazen", "Fanfare",
+        mapOf("size" to 1f, "bell" to 0.6333333f, "lipdamp" to 0.7f, "pressure" to 0.93f, "breath" to 0.07f, "bite" to 0.8f, "brass" to 1f, "players" to 0.333333343f, "spread" to 0.15f, "lock" to 0.9f, "attack" to 0.232989982f, "vibrato" to 0.06666667f, "volume" to 0.733333349f))
+
+    private val brazen: List<Patch> by lazy { listOf(brazen0(), brazen1(), brazen2(), brazen3(), brazen4(), brazen5(), brazen6(), brazen7(), brazen8(), brazen9(), brazen10(), brazen11(), brazen12(), brazen13(), brazen14(), brazen15()) }
 
     private fun timber0() = Patch("Timber", "Init", emptyMap())
 

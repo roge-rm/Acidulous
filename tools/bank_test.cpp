@@ -388,8 +388,12 @@ void checkBank(const Bank &bank) {
         }
 
         Rendered out;
+        // The note the patch says it is for. A piccolo trumpet's preset
+        // played at C3 is not the preset, and comparing it with a tuba's at
+        // the same pitch says nothing about either.
+        const int note = patch.note > 0 ? patch.note : 48;
         out.audio = bank.isEffect() ? renderEffect(bank.typeName(), r.norm)
-                                    : renderMachine(bank.unit, r.norm, 48, r.settings);
+                                    : renderMachine(bank.unit, r.norm, note, r.settings);
         if (out.audio.empty()) {
             fail(who, "nothing rendered at all");
             continue;
@@ -418,7 +422,7 @@ void checkBank(const Bank &bank) {
         // state that a reset does not reach. reset_test asks this of every
         // machine at its *defaults*; a patch can hide state behind a value.
         const std::vector<float> again = bank.isEffect() ? renderEffect(bank.typeName(), r.norm)
-                                                         : renderMachine(bank.unit, r.norm, 48, r.settings);
+                                                         : renderMachine(bank.unit, r.norm, note, r.settings);
         if (again != out.audio) fail(who, "played differently the second time");
 
         if (out.m.dcDb > -40.0f) warn(who, "carries a DC offset");
