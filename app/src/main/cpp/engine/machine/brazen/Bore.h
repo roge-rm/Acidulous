@@ -58,6 +58,13 @@ class Bore {
      * every block - so this can take the lot back, and `dirty` makes sure the
      * loop is solved again rather than reusing a delay worked out for a note
      * that is over.
+     *
+     * `delay` has to go with it and not merely be recomputed later, because
+     * `prime` runs before the next `tune` does and reads it. Left behind, the
+     * fade was cut to the length of the *previous* note's tube and a render
+     * that followed a panic differed from one that did not, at the very
+     * first sample. Twice now the answer here has been that a reset takes
+     * back everything or it takes back nothing useful.
      */
     void clear() {
         for (auto &v : line) v = 0.0f;
@@ -69,6 +76,7 @@ class Bore {
         radiated = 0.0f;
         lastArrive = 0.0f;
         loopMag = 0.0f;
+        delay = 0.0f;
         dirty = true;
     }
 
@@ -156,17 +164,54 @@ class Bore {
         // every note. Full below 150 Hz, nothing above 300, measured.
         const float need = clampf((300.0f - freq) / 150.0f, 0.0f, 1.0f);
         if (need <= 0.0f) return;
-        // Two thirds, because a loop that starts a little under its mark
-        // grows into it and one that starts over it has to be pulled back
-        // down by the nonlinearity, which is audible and the other is not.
-        const float amp = level * 0.66f * need;
+        // A quarter, and not more, because the curve is not symmetric.
+        // Measured on a tuba, against how loud the first ten milliseconds
+        // are and how far the loop's own settling wanders off zero:
+        //
+        //   prime  starts at   worst DC   speaks
+        //    0.00      0.0%       4.8%     500 ms
+        //    0.22     16.2%       5.1%     110 ms
+        //    0.44     32.5%       7.5%      50 ms
+        //    0.66     48.7%       8.7%      10 ms
+        //
+        // The whole of the gain is bought by the first quarter: from nothing
+        // to 0.22 takes 500 ms down to 110 for three tenths of a percent
+        // more wander, and everything past that buys tens of milliseconds
+        // for a note that starts halfway up - which is heard as a thump, and
+        // was. 4.8% is the loop settling on its own and is the floor.
+        const float amp = level * 0.26f * need;
         const float w = 6.28318530718f / static_cast<float>(period);
+        // Written backwards from the write head, because that is the order
+        // the read head takes it in: it is `delay` behind, so it meets what
+        // was written furthest back first and arrives at the newest sample
+        // one period later, by which time the loop is writing its own.
+        //
+        // And faded in across that period rather than written flat. The
+        // envelope in this machine drives the *mouth pressure* and not the
+        // output - a player leans harder, they do not turn a volume knob -
+        // so it cannot shape a wave that is already in the tube. A flat
+        // prime therefore arrived as a step from silence to nine tenths of
+        // the note in a single sample, which is a thump whatever the attack
+        // time says. A raised cosine over the one period that gets read
+        // costs nothing and is the tongue leaving the reed rather than a
+        // door slamming.
+        const auto reach = static_cast<int32_t>(delay > 4.0f ? delay : static_cast<float>(period));
+        double sum = 0.0;
         for (int32_t i = 0; i < size; ++i) {
-            // Written backwards from the write head so the wave arrives at
-            // the bell in phase rather than starting from wherever the
-            // buffer happens to begin.
             const size_t at = static_cast<size_t>((write - i + size) % size);
-            line[at] = amp * std::sin(w * static_cast<float>(i));
+            const float t = i < reach ? 1.0f - static_cast<float>(i) / static_cast<float>(reach) : 0.0f;
+            const float fade = 0.5f - 0.5f * std::cos(3.14159265359f * t);
+            line[at] = amp * fade * std::sin(w * static_cast<float>(i));
+            if (i < reach) sum += line[at];
+        }
+        // A faded sine is not a balanced one: the window weights the two
+        // halves of the cycle differently and what is left over is DC, which
+        // is the thump the fade was supposed to remove. Taking the mean of
+        // the part that actually gets read back out costs one pass and
+        // leaves the tube holding a wave rather than a wave and a step.
+        const auto mean = static_cast<float>(sum / (reach > 0 ? reach : 1));
+        for (int32_t i = 0; i < size; ++i) {
+            line[static_cast<size_t>((write - i + size) % size)] -= mean;
         }
         // The lips have to know something is happening too, or they sit at
         // rest and clamp the wave the tube just handed them.
