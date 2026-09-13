@@ -58,6 +58,18 @@ using dsp::clampf;
  */
 constexpr float kDcPole = 0.997f;
 
+/**
+ * The corner of the airstream, as a one-pole coefficient at 48 kHz.
+ *
+ * Turbulent noise in a wind instrument is broadband and tilted, not white.
+ * Chosen by sweep against the first pass down the tube: the horn's excess
+ * above 1.5 kHz reads 5.1x white, 3.5x at 4 kHz and 2.4x at 2 kHz, and below
+ * about 2 kHz the patches that use `breath` as a *tone* - the harmon, the
+ * piccolo, the straight mute - start losing the air that is the point of
+ * them. 2 kHz is where those two stop arguing.
+ */
+constexpr float kAirPole = 0.2298f; // 1 - exp(-2 pi 2000 / 48000)
+
 class Bore {
   public:
     void prepare(float sampleRate) {
@@ -101,6 +113,7 @@ class Bore {
         radiated = 0.0f;
         lastArrive = 0.0f;
         delayTarget = 0.0f;
+        noiseLp = 0.0f;
         loopMag = 0.0f;
         delay = 0.0f;
         onsetBoost = 1.0f;
@@ -181,6 +194,22 @@ class Bore {
      * every low note. Nothing is injected now. The tube still starts empty
      * and still grows its own standing wave; it is only leant on while it
      * does.
+     */
+    /**
+     * ...and not by starting the lips already tensioned, which is the
+     * obvious idea and is wrong.
+     *
+     * The valve sits at its full resting width for the first pass of a note
+     * because the follower is a *measurement* and there is nothing yet to
+     * measure. Seating it - pre-tensioning the lips the way a player does
+     * before the air arrives - looks like the fix and makes the instrument
+     * worse: every e-fold by which the injection is reduced costs 1/g of a
+     * second, and g is the growth the lift asks for, so the note simply
+     * takes longer to build and a long slow build is itself broadband
+     * against a tone that is nearly a sine. Measured on the tuba, seating
+     * the valve at 20% of its resting width moved the first-pass excess
+     * above 1.5 kHz from 3.6x to 23.1x and the speak time from 70 ms to 180.
+     * The horn improved slightly and paid 70 ms for it. Left as it is.
      */
     void tongue(float seconds = 0.13f) {
         if (!(freq > 0.0f)) return;
@@ -410,7 +439,15 @@ class Bore {
 
         // The pressure across the lips: the player behind them, the tube in
         // front. This is the quantity the whole instrument is about.
-        const float breath = mouth + noise;
+        // Air moving past a pair of lips is turbulence, and turbulence is
+        // not flat to Nyquist - it is broadband with the top falling away.
+        // The hiss arrived here white, and at the start of a note the valve
+        // is at its resting width and puts an eighth of it straight into a
+        // tube that has nothing in it yet, so the first thing out of the
+        // bell was full-band noise lifted thirteen decibels by the bell's
+        // own tilt. Half of what was left on the horn was this.
+        noiseLp += (noise - noiseLp) * kAirPole;
+        const float breath = mouth + noiseLp;
         const float delta = breath - bore;
 
         const float lip = lipB0 * (delta - lipX2) + lipA1 * lipY1 + lipA2 * lipY2;
@@ -475,6 +512,8 @@ class Bore {
     /** How hard the lips are working, and how fast they find out. See tune(). */
     float lipRise = 0.0006f, lipFall = 0.0006f;
     float dcIn = 0.0f, dcOut = 0.0f, radiated = 0.0f, loopMag = 0.0f, lastArrive = 0.0f;
+    /** The airstream, tilted. See kAirPole. */
+    float noiseLp = 0.0f;
 };
 
 } // namespace acidulous::machine::brazen
