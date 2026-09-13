@@ -183,6 +183,31 @@ void Resonance::noteOn(uint8_t note, uint8_t velocity) {
     p.ringing = true;
 }
 
+namespace {
+/**
+ * Where the modal bank actually lands.
+ *
+ * A mode's `b0` is normalised for its frequency but not for its gain, and
+ * eight objects of up to twenty-four resonators each, panned twice at 1.4142,
+ * came out at **+34.5 dBFS** with nothing but defaults - fifty times full
+ * scale, against -24 to 0 for every other machine in the app. `reset_test`
+ * had been printing `peak 51.5` in its own output since this machine was
+ * written; nobody reads that column.
+ *
+ * Measured rather than derived, because the peak is set by the strike
+ * transient and not by the resonators' steady state: it sits between +33.2
+ * and +34.9 dBFS across every mode count from 4 to 24 and every decay from
+ * 50 ms to 8 seconds. One constant is therefore the whole of it, and it
+ * leaves the balance between objects and the shape of every sound exactly
+ * where they were.
+ *
+ * It is applied after the coupling bus rather than to the modal sum, because
+ * the bus goes through a tanh: scaling before it would change how hard the
+ * objects drive each other, which is a sound and not a level.
+ */
+constexpr float kOutputTrim = 1.0f / 96.0f; // -39.6 dB
+} // namespace
+
 bool Resonance::render(float *L, float *R, int32_t frames) {
     params_.tick();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
@@ -273,8 +298,8 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
         if (!std::isfinite(bus)) bus = 0.0f;
 
         const float angle = (masterPan + 1.0f) * 0.25f * 3.14159265f;
-        L[i] = mixL * volume * std::cos(angle) * 1.4142f;
-        R[i] = mixR * volume * std::sin(angle) * 1.4142f;
+        L[i] = mixL * volume * std::cos(angle) * 1.4142f * kOutputTrim;
+        R[i] = mixR * volume * std::sin(angle) * 1.4142f * kOutputTrim;
     }
     return true;
 }

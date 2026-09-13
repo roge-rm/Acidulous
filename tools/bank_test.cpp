@@ -81,11 +81,6 @@ const Known kKnown[] = {
     {"fx.Bitcrusher", "", "no bank yet - effects have never had presets"},
     {"fx.Phaser", "", "no bank yet - effects have never had presets"},
     {"fx.Flanger", "", "no bank yet - effects have never had presets"},
-    // The machine, not the bank: every patch including Init is thirty-odd
-    // decibels over, the eight objects are balanced within 4 dB of each
-    // other, and reset_test has been printing peak 51.5 for it since it was
-    // written. Nothing can be voiced on it until the modal sum is scaled.
-    {"Resonance", "", "the machine runs about +34 dBFS; see the M45 notes"},
     // A patch whose every value is the default: it is Init under another
     // name. Goes when Dice's bank is written.
     {"Dice", "Straight", "sets nothing at all - identical to Init"},
