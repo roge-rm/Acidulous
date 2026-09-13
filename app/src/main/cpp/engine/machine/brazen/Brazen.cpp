@@ -80,6 +80,7 @@ void Brazen::reset() {
         v.amp.kill();
         v.filterL.reset();
         v.filterR.reset();
+        v.muteLpL = v.muteLpR = v.muteHpL = v.muteHpR = 0.0f;
         for (auto &p : v.players) { p.bore.clear(); p.rng = Player::kSeed; }
     }
     growlPhase = 0.0f;
@@ -149,6 +150,13 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
             p.tongue = true;
         }
     }
+    // The mutes are two one-poles a voice carries, and a stolen voice used to
+    // start a note holding the last one's - a step on the front of the note,
+    // and a render after a panic that differed from one before it. reset_test
+    // never caught it because the mutes are off in all but three patches.
+    v.muteLpL = v.muteLpR = v.muteHpL = v.muteHpR = 0.0f;
+    v.filterL.reset();
+    v.filterR.reset();
     v.amp.retrigger();
 }
 
@@ -212,8 +220,15 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
     const float muteHpHz = (mute == Straight ? 700.0f : mute == Cup ? 220.0f : 1100.0f) * muteShift;
     const float muteLpHz = (mute == Straight ? 6000.0f : mute == Cup ? 2000.0f : 3600.0f) * muteShift;
     const float muteGain = mute == Straight ? 1.6f : mute == Cup ? 1.3f : 1.9f;
-    const float muteHp = std::min(1.0f, kTwoPi * muteHpHz / sampleRate);
-    const float muteLp = std::min(1.0f, kTwoPi * muteLpHz / sampleRate);
+    // One-poles, and the coefficient is the exponential rather than the
+    // radians. `min(1, 2 pi f / sr)` is the small-angle version of it and it
+    // stops being small a long way below Nyquist: at mutetone 1 the straight
+    // mute asks for 12 kHz, 2 pi f / sr is 1.571, the clamp makes it exactly
+    // one, and a one-pole with a coefficient of one is a piece of wire. The
+    // mute then did nothing at all but multiply by 1.6 - no band, no
+    // swallowing, which is the whole of what a mute is.
+    const float muteHp = dsp::onePoleCoeff(1.0f / (kTwoPi * muteHpHz), sampleRate);
+    const float muteLp = dsp::onePoleCoeff(1.0f / (kTwoPi * muteLpHz), sampleRate);
     const float drive = paramOf(Drive), volume = paramOf(Volume);
     const float panKnob = paramOf(Pan);
     const float panL = std::cos((panKnob + 1.0f) * 0.25f * 3.14159265f);
