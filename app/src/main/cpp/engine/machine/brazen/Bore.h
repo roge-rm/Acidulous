@@ -191,18 +191,23 @@ class Bore {
         // Measured on a tuba, against how loud the first ten milliseconds
         // are and how far the loop's own settling wanders off zero:
         //
-        //   prime  starts at   worst DC   speaks
-        //    0.00      0.0%       4.8%     500 ms
-        //    0.22     16.2%       5.1%     110 ms
-        //    0.44     32.5%       7.5%      50 ms
-        //    0.66     48.7%       8.7%      10 ms
+        // There are two artefacts and they pull opposite ways, so the
+        // number is where both are least. Measured on a tuba by subtracting
+        // the note's own settled waveform from its onset and looking at what
+        // is left: 30 Hz is the sub-fundamental thump, 175 Hz the octave-up
+        // blip the fade's own modulation puts there.
         //
-        // The whole of the gain is bought by the first quarter: from nothing
-        // to 0.22 takes 500 ms down to 110 for three tenths of a percent
-        // more wander, and everything past that buys tens of milliseconds
-        // for a note that starts halfway up - which is heard as a thump, and
-        // was. 4.8% is the loop settling on its own and is the floor.
-        const float amp = level * 0.26f * need;
+        //   prime   30 Hz    175 Hz    speaks
+        //    0.00   8.63x   0.00009    500 ms      no priming at all
+        //    0.10   4.56x   0.00087    190 ms
+        //    0.18   1.98x   0.00168    140 ms      <- here
+        //    0.26   3.83x   0.00260    110 ms
+        //
+        // Priming harder buys speaking time and pays for it in both; priming
+        // less leaves the tube growing from nothing, which is its own thump.
+        // 0.18 is the floor of the one that is loudest and 140 ms is well
+        // inside any note somebody will play.
+        const float amp = level * 0.18f * need;
         const float w = 6.28318530718f / static_cast<float>(period);
         // Written backwards from the write head, because that is the order
         // the read head takes it in: it is `delay` behind, so it meets what
