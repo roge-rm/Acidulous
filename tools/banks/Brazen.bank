@@ -38,6 +38,21 @@
 # all three were playing the wrong note. Use it to pick a partial deliberately
 # or leave it alone.
 #
+# The other thing that had to be voiced, and could not be seen at all until
+# there was a column for it, is **how long a patch takes to speak**. A
+# waveguide builds a standing wave over hundreds of milliseconds at low
+# pitches, so a big instrument can be perfectly good on a held note and
+# produce almost nothing in a phrase. Measured against the level the note
+# settles at, the first draft read: Tuba 740 ms, Bass Trombone 550, Horn 520,
+# Trombone 310 - against notes 475 ms long. Three of them never reached half
+# volume before they were released, and what you heard was a burst of
+# excitation with no tube behind it, which is the "clicky, missing notes" Dan
+# reported. A shorter attack, more pressure and more bite bring them all
+# under 210 ms, and the ladder holds its gradient.
+#
+# The machine's own defaults still take 480 ms, which is worth knowing before
+# anybody writes a low patch from Init.
+#
 # Levelled to about -20.5 dB RMS. The two mutes sit below it at their volume's
 # maximum, which is what a mute is: the harmon is 6 dB down and no amount of
 # knob will fetch it back, because most of the instrument is not coming out of
@@ -61,10 +76,10 @@ patch Tuba  note=41
   size           0.03
   bell           0.88
   brass          0.25
-  pressure       0.75
+  pressure       0.9
   lipdamp        0.45
-  bite           0.15
-  attack         0.09 s
+  bite           0.5
+  attack         0.012 s
   release        0.32 s
   vibrato        2 cents
   # Breath right off. At the default 0.15 the noise sat *above* the tone in
@@ -80,10 +95,10 @@ patch "Bass Trombone"  note=43
   size           0.16
   bell           0.76
   brass          0.45
-  pressure       0.72
+  pressure       0.85
   lipdamp        0.5
-  bite           0.3
-  attack         0.055 s
+  bite           0.55
+  attack         0.014 s
   glide          0.09 s
   vibrato        4 cents
   breath         0.03
@@ -95,30 +110,32 @@ patch Trombone  note=48
   size           0.3
   bell           0.66
   brass          0.58
-  pressure       0.78
+  pressure       0.85
   lipdamp        0.55
-  bite           0.4
-  attack         0.04 s
+  bite           0.6
+  attack         0.016 s
   glide          0.12 s
   vibrato        5 cents
   breath         0.04
   volume         1.3
 
 patch Horn  note=53
-  # Bell high and pressure low: a horn is played into its own bell and that is
-  # why it is the mellow one. Slow on the front of the note, and two players
-  # locked tight, because one horn on its own is a rare thing.
+  # Bell high and the bore wide: a horn is played into its own bell and that
+  # is why it is the mellow one.
+  #
+  # One player, and that was not the first answer. Two locked tight cancelled
+  # each other on some intervals and left a hole in the middle of the phrase -
+  # which is the model working, since the players really do listen to one
+  # another, but a preset should not have a hole in it. Section and Shambles
+  # are where the ensemble lives.
   size           0.34
   bell           0.8
   brass          0.28
-  pressure       0.6
+  pressure       0.8
   lipdamp        0.42
-  bite           0.12
-  attack         0.13 s
+  bite           0.42
+  attack         0.02 s
   release        0.4 s
-  players        #1
-  lock           0.75
-  spread         6 cents
   vibrato        6 cents
   width          0.5
   breath         0.05
@@ -130,10 +147,10 @@ patch Flugel  note=58
   size           0.55
   bell           0.72
   brass          0.32
-  pressure       0.66
+  pressure       0.76
   lipdamp        0.45
-  bite           0.2
-  attack         0.05 s
+  bite           0.4
+  attack         0.022 s
   vibrato        5 cents
   breath         0.05
   volume         1.35
@@ -201,9 +218,9 @@ patch "Cup Mute"  note=58
   size           0.82
   bell           0.74
   brass          0.42
-  pressure       0.7
-  bite           0.3
-  attack         0.028 s
+  pressure       0.78
+  bite           0.45
+  attack         0.02 s
   breath         0.06
   volume         1.15
 

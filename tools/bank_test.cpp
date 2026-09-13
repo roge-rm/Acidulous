@@ -428,6 +428,15 @@ void checkBank(const Bank &bank) {
         if (out.m.dcDb > -40.0f) warn(who, "carries a DC offset");
         if (out.m.monoLossDb > 6.0f) warn(who, "loses more than 6 dB summed to mono");
         if (out.m.tailSeconds > 6.0f) warn(who, "rings for more than six seconds");
+        // A quarter of a second is an eighth note at 120. A patch slower than
+        // that is fine held and produces almost nothing in a phrase - which
+        // is how Brazen's low brass shipped: excitation with no tube behind
+        // it, heard as a click and a missing note.
+        if (out.m.speaksMs > 250.0f) {
+            char buf[80];
+            std::snprintf(buf, sizeof(buf), "takes %.0f ms to speak", static_cast<double>(out.m.speaksMs));
+            warn(who, buf);
+        }
         rendered.push_back(std::move(out));
     }
 

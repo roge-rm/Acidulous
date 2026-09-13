@@ -156,6 +156,7 @@ struct Measured {
     float crestDb = 0.0f;   // peak - rms: transients, or a wall
     float centroidHz = 0.0f;
     float f0Hz = 0.0f;
+    float speaksMs = 0.0f;    // note-on to half the level it settles at
     float tailSeconds = 0.0f; // note-off to -60 dB
     bool tailRanOut = false;  // it was still going when the render stopped
     float monoLossDb = 0.0f;  // how much is lost by summing to mono
@@ -253,6 +254,41 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
     }
     m.centroidHz = den > 0.0 ? static_cast<float>(num / den) : centroid(mono, start);
     m.f0Hz = fundamental(mono, start);
+
+    // How long before you hear it.
+    //
+    // Measured against the level the note *settles* at, not against its peak,
+    // because a sharp onset transient is the peak and would report every
+    // patch as instant. A waveguide is the reason this is worth a column: a
+    // big tube takes hundreds of milliseconds to build a standing wave, so a
+    // patch can be perfectly good on a held note and produce almost nothing
+    // in a phrase - which is exactly what Brazen's low brass was doing, and
+    // what no other number here could see.
+    {
+        const size_t off = std::min(static_cast<size_t>(std::max<int64_t>(0, offAt)), frames);
+        const size_t step10 = static_cast<size_t>(kSr) / 100;
+        std::vector<float> env;
+        for (size_t i = 0; i + step10 <= off; i += step10) {
+            float loud = 0.0f;
+            for (size_t j = i; j < i + step10; ++j) loud = std::max(loud, std::abs(mono[j]));
+            env.push_back(loud);
+        }
+        if (env.size() > 4) {
+            // The settled level: the mean of the last third before the release.
+            const size_t from = env.size() * 2 / 3;
+            double sum = 0.0;
+            for (size_t i = from; i < env.size(); ++i) sum += env[i];
+            const auto settled = static_cast<float>(sum / static_cast<double>(env.size() - from));
+            if (settled > 0.0f) {
+                for (size_t i = 0; i < env.size(); ++i) {
+                    if (env[i] >= 0.5f * settled) {
+                        m.speaksMs = static_cast<float>(i) * 10.0f;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
     // The tail: from the release to 60 dB below the peak, in 10 ms steps, and
     // it is the LAST step above the floor that counts rather than the first
