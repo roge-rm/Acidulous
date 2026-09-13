@@ -349,6 +349,7 @@ fun PianoRoll(
                 Offset(rect.left + 2f, rect.bottom - 2f - velH),
                 Size(max(0f, rect.width - 4f), velH),
             )
+            drawBend(note, rect, c)
             drawRect(c.bg, rect.topLeft, rect.size, style = Stroke(1.5f))
         }
 
@@ -369,6 +370,40 @@ fun PianoRoll(
         drawPitchPosition(geo, c)
         drawBarRuler(geo, size, textMeasurer, playheadTick, c)
         drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView, c)
+    }
+}
+
+/**
+ * A recorded bend, drawn inside the note it belongs to.
+ *
+ * Inside, and not in a lane of its own, because the roll's height is the
+ * thing the editor is short of and a note is already exactly as wide as the
+ * time its curve covers. Full deflection is the note's own row: a bend that
+ * fills the box is a semitone, which is the reading a player wants at a
+ * glance, and anything wider simply pins to the edge rather than drawing over
+ * the neighbours.
+ *
+ * Only bend is drawn. Pressure and slide are recorded and played, but three
+ * lines in a box sixteen pixels tall is not a readout, it is a smudge - and
+ * pitch is the one of the three that has a direction on this screen already.
+ */
+private fun DrawScope.drawBend(note: Note, rect: Rect, c: AcidColors) {
+    val bend = note.bend ?: return
+    if (bend.points.size < 2 || rect.width < 4f) return
+    val len = max(1, note.length)
+    val mid = rect.center.y
+    val half = (rect.height - 3f) / 2f
+    // One sample per pixel of the note's own width, capped: a two-point glide
+    // needs two and a vibrato needs the note.
+    val steps = rect.width.toInt().coerceIn(2, 96)
+    var prev: Offset? = null
+    for (i in 0..steps) {
+        val t = len * i / steps
+        val semis = Note.bendFrom01(bend.valueAt(t))
+        val y = mid - (semis.coerceIn(-1f, 1f)) * half
+        val p = Offset(rect.left + rect.width * i / steps, y)
+        prev?.let { drawLine(c.accent, it, p, 2f) }
+        prev = p
     }
 }
 

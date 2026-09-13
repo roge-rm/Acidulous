@@ -28,6 +28,8 @@ object EngineSync {
 
     private const val TAG = "Acidulous.Sync"
     private const val RACKS = 16
+    /** Most clips carry no per-note expression; they can all share this. */
+    private val EMPTY_FLOATS = FloatArray(0)
 
     private val mounted = arrayOfNulls<String>(RACKS)
     private val mountedEffects = Array(RACKS) { arrayOfNulls<String>(EFFECT_SLOTS) }
@@ -351,18 +353,34 @@ object EngineSync {
                     return@forEachIndexedInner
                 }
                 marshalled++
-                val flat = IntArray(clip.notes.size * 4)
+                val flat = IntArray(clip.notes.size * 5)
+                // The curves of every note end to end, each note saying how
+                // many of them are its own. One array rather than a call per
+                // curve: a clip of expressive chords would otherwise be
+                // hundreds of JNI crossings where it is now one.
+                val expr = ArrayList<Float>()
                 clip.notes.forEachIndexed { i, n ->
-                    flat[i * 4] = n.tick
-                    flat[i * 4 + 1] = n.length
-                    flat[i * 4 + 2] = n.pitch
-                    flat[i * 4 + 3] = n.velocity
+                    flat[i * 5] = n.tick
+                    flat[i * 5 + 1] = n.length
+                    flat[i * 5 + 2] = n.pitch
+                    flat[i * 5 + 3] = n.velocity
+                    var count = 0
+                    if (n.hasExpression) {
+                        n.curves.forEachIndexed { kind, curve ->
+                            curve?.points?.forEach { p ->
+                                expr.add(kind.toFloat()); expr.add(p.tick.toFloat()); expr.add(p.value)
+                                count++
+                            }
+                        }
+                    }
+                    flat[i * 5 + 4] = count
                 }
                 NativeEngine.snapshotSetClip(
                     handle, rack, sceneIdx, clip.rev, clip.bars,
                     playMode = if (clip.playMode == PlayMode.OneShot) 1 else 0,
                     mute = clip.mute,
                     notes = flat,
+                    expr = if (expr.isEmpty()) EMPTY_FLOATS else expr.toFloatArray(),
                 )
                 for ((key, lane) in clip.automation) {
                     val pts = FloatArray(lane.points.size * 2)

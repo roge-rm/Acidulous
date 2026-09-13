@@ -240,9 +240,15 @@ object NativeEngine {
     /** True if the engine still has this clip rev and reused it; false means marshal it. */
     fun snapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean =
         nativeSnapshotSetClipCached(handle, rack, scene, rev)
+    /**
+     * @param notes flat [tick, length, pitch, velocity, curvePointCount] x count
+     * @param expr flat [kind, tick, value] x point, in note order; each note
+     * takes the number of points it declared
+     */
     fun snapshotSetClip(
         handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, notes: IntArray,
-    ): Boolean = nativeSnapshotSetClip(handle, rack, scene, rev, bars, playMode, mute, notes)
+        expr: FloatArray,
+    ): Boolean = nativeSnapshotSetClip(handle, rack, scene, rev, bars, playMode, mute, notes, expr)
     fun snapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean =
         nativeSnapshotSetLane(handle, rack, scene, machineType, unit, name, linear, points)
     fun snapshotCommit(handle: Long): Boolean = nativeSnapshotCommit(handle)
@@ -491,6 +497,7 @@ object NativeEngine {
     private external fun nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean
     private external fun nativeSnapshotSetClip(
         handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, notes: IntArray,
+        expr: FloatArray,
     ): Boolean
     private external fun nativeSnapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean
     private external fun nativeSnapshotCommit(handle: Long): Boolean

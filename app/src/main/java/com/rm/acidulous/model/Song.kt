@@ -1,5 +1,6 @@
 package com.rm.acidulous.model
 
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import java.util.concurrent.atomic.AtomicLong
@@ -32,7 +33,38 @@ data class Note(
     val velocity: Int,
     /** Where it was actually played, if it was quantised on the way in. */
     val rawTick: Int? = null,
-)
+    /**
+     * What a finger did to this note while it was held: bend, pressure and
+     * slide, each a sparse curve or absent.
+     *
+     * Their ticks are the note's own, counted from its start rather than the
+     * clip's, which is what lets a note be dragged, quantised, copied into
+     * another clip or resized without its expression coming loose. Values are
+     * the normalised 0..1 an automation [Lane] uses; bend is signed semitones
+     * scaled to +/-[BEND_SEMIS] with the centre at a half, so what is written
+     * down is the music and not the fourteen bits some controller happened to
+     * send for it.
+     *
+     * `@EncodeDefault(NEVER)` because the document writes defaults: without it
+     * every note in every song gains three lines saying nothing.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val bend: Lane? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val pressure: Lane? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val timbre: Lane? = null,
+) {
+    val hasExpression: Boolean get() = bend != null || pressure != null || timbre != null
+
+    /** The three in the order the engine indexes them; see `Expr` in Expression.h. */
+    val curves: List<Lane?> get() = listOf(bend, pressure, timbre)
+
+    companion object {
+        /** Full-scale bend either way: MPE's default range, and its widest. */
+        const val BEND_SEMIS = 48f
+        /** Signed semitones to the stored 0..1, and back. */
+        fun bendTo01(semitones: Float): Float = (0.5f + semitones / (2f * BEND_SEMIS)).coerceIn(0f, 1f)
+        fun bendFrom01(v: Float): Float = (v - 0.5f) * 2f * BEND_SEMIS
+    }
+}
 
 @Serializable
 data class LanePoint(val tick: Int, val value: Float)
@@ -63,6 +95,23 @@ data class Lane(val points: List<LanePoint> = emptyList(), val linear: Boolean =
         if (!linear || b.tick == a.tick) return a.value
         return a.value + (b.value - a.value) * (tick - a.tick).toFloat() / (b.tick - a.tick)
     }
+}
+
+/**
+ * A note's curve cut to the note's own length.
+ *
+ * A finger goes on moving for a few milliseconds after the key is released,
+ * and a curve that ran past the note would be read by nothing - the player
+ * stops asking when the note ends. Anything past the end becomes one point
+ * *at* the end, holding the value the curve had got to, so the shape is not
+ * cut off mid-glide.
+ */
+fun Lane.trimmedTo(length: Int): Lane? {
+    if (points.isEmpty()) return null
+    val end = length.coerceAtLeast(1)
+    if (points.last().tick <= end) return this
+    val inside = points.filter { it.tick < end }
+    return Lane(points = inside + LanePoint(end, valueAt(end)), linear = linear)
 }
 
 fun laneKey(unit: String, name: String): String = "$unit:$name"

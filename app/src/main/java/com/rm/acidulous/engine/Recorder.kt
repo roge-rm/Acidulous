@@ -1,8 +1,10 @@
 package com.rm.acidulous.engine
 
 import android.util.Log
+import com.rm.acidulous.model.CurveBuilder
 import com.rm.acidulous.model.Lane
 import com.rm.acidulous.model.Note
+import com.rm.acidulous.model.trimmedTo
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.laneKey
 import com.rm.acidulous.model.updateClip
@@ -39,7 +41,22 @@ class Recorder {
     var notesRecorded: Int = 0
         private set
 
-    private class OpenNote(val absTick: Long, val sceneId: Long, val tickInIteration: Long, val velocity: Int)
+    /**
+     * A note being held, and what the finger holding it is doing.
+     *
+     * The three builders are made up front rather than on first use: an MPE
+     * controller sends a note's pressure before its note-on in some
+     * firmwares, and a curve that only exists once something has moved would
+     * lose the value the note started at.
+     */
+    private class OpenNote(val absTick: Long, val sceneId: Long, val tickInIteration: Long, val velocity: Int) {
+        val curves = listOf(
+            CurveBuilder(neutral = 0.5f), // bend, centred
+            CurveBuilder(neutral = 0f),   // pressure
+            CurveBuilder(neutral = 0f),   // slide
+        )
+        var moved = false
+    }
 
     /**
      * @param song the current document
@@ -61,7 +78,20 @@ class Recorder {
             val p1 = ((packed shr 8) and 0xff).toInt()
             val p2 = (packed and 0xff).toInt()
 
-            if (cmd == 0xf0) {
+            if (cmd == CMD_EXPRESSION) {
+                // A curve point for a note already down. One that is not -
+                // a finger's tail after its note-off, or the count-in - has
+                // nowhere to go, and is dropped rather than guessed at.
+                val on = open[(rack shl 8) or p1] ?: continue
+                val kind = p2
+                if (kind in on.curves.indices) {
+                    val value = java.lang.Float.intBitsToFloat((extra and 0xffffffffL).toInt())
+                    on.curves[kind].add((absTick - on.absTick).toInt(), value)
+                    on.moved = true
+                }
+                continue
+            }
+            if (cmd == CMD_PARAM) {
                 val index = (extra shr 32).toInt()
                 val value = java.lang.Float.intBitsToFloat((extra and 0xffffffffL).toInt())
                 doc = commitParam(doc, rack, p1, index, value, sceneId, tickInIteration, sceneIdOf) ?: doc
@@ -119,10 +149,20 @@ class Recorder {
         } else raw
         val length = (offAbsTick - on.absTick).toInt().coerceAtLeast(1)
 
+        // Curves are the note's own, so trimming them to its length is the
+        // last thing done and needs no reference to where the note ended up.
+        val curves = if (on.moved) on.curves.map { it.build()?.trimmedTo(length) } else NO_CURVES
         notesRecorded++
         dirty = true
-        Log.d(TAG, "recorded pitch $pitch at $tick (raw $raw) len $length into $sceneId")
-        return song.addNote(rack, sceneId, Note(tick = tick, length = length, pitch = pitch, velocity = on.velocity, rawTick = raw))
+        Log.d(TAG, "recorded pitch $pitch at $tick (raw $raw) len $length into $sceneId" +
+            if (on.moved) " with ${curves.count { it != null }} curves" else "")
+        return song.addNote(
+            rack, sceneId,
+            Note(
+                tick = tick, length = length, pitch = pitch, velocity = on.velocity, rawTick = raw,
+                bend = curves[0], pressure = curves[1], timbre = curves[2],
+            ),
+        )
     }
 
     /** A knob move becomes a lane point at the quantised tick; same tick replaces. */
@@ -169,6 +209,10 @@ class Recorder {
 
     private companion object {
         const val TAG = "Acidulous.Rec"
+        /** Mirrors seq::kRecParam and seq::kRecNoteExpression. */
+        const val CMD_PARAM = 0xf0
+        const val CMD_EXPRESSION = 0xf1
+        val NO_CURVES = listOf<Lane?>(null, null, null)
         // Mirrors acidulous::Unit
         // Order matters: this is the Unit enum's ordinal, read off events the
         // audio thread stamped. Keep it in step with Messages.h.

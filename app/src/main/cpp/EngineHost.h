@@ -172,7 +172,7 @@ class EngineHost {
                           bool smooth, bool fadeIn, bool fadeOut);
     bool snapshotSetClipCached(int64_t handle, int rack, int scene, int64_t rev);
     bool snapshotSetClip(int64_t handle, int rack, int scene, int64_t rev, int bars, int playMode, bool mute,
-                         const int32_t *notes, int noteCount);
+                         const int32_t *notes, int noteCount, const float *expr, int exprCount);
     // points: flat [tick, value] × count, any order. unit/name resolve against
     // `machineType`'s table (for "machine") or the channel table.
     bool snapshotSetLane(int64_t handle, int rack, int scene, const std::string &machineType,

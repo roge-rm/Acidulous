@@ -689,21 +689,29 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetClipCached(JNIEnv *, 
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetClip(JNIEnv *env, jobject, jlong handle, jint rack,
                                                                 jint scene, jlong rev, jint bars, jint playMode,
-                                                                jboolean mute, jintArray notes) {
+                                                                jboolean mute, jintArray notes, jfloatArray expr) {
     const jsize len = notes != nullptr ? env->GetArrayLength(notes) : 0;
-    const int noteCount = static_cast<int>(len / 4);
-    bool ok;
-    if (noteCount > 0) {
-        jint *data = env->GetIntArrayElements(notes, nullptr);
-        if (data == nullptr) {
-            return JNI_FALSE;
-        }
-        ok = host().snapshotSetClip(handle, rack, scene, rev, bars, playMode, mute == JNI_TRUE,
-                                    reinterpret_cast<const int32_t *>(data), noteCount);
-        env->ReleaseIntArrayElements(notes, data, JNI_ABORT); // read only; don't copy back
-    } else {
-        ok = host().snapshotSetClip(handle, rack, scene, rev, bars, playMode, mute == JNI_TRUE, nullptr, 0);
+    const int noteCount = static_cast<int>(len / 5);
+    if (noteCount <= 0) {
+        return host().snapshotSetClip(handle, rack, scene, rev, bars, playMode, mute == JNI_TRUE, nullptr, 0, nullptr,
+                                      0)
+                   ? JNI_TRUE
+                   : JNI_FALSE;
     }
+    jint *data = env->GetIntArrayElements(notes, nullptr);
+    if (data == nullptr) {
+        return JNI_FALSE;
+    }
+    const jsize elen = expr != nullptr ? env->GetArrayLength(expr) : 0;
+    const int exprCount = static_cast<int>(elen / 3);
+    jfloat *edata = exprCount > 0 ? env->GetFloatArrayElements(expr, nullptr) : nullptr;
+    const bool ok = host().snapshotSetClip(handle, rack, scene, rev, bars, playMode, mute == JNI_TRUE,
+                                           reinterpret_cast<const int32_t *>(data), noteCount,
+                                           reinterpret_cast<const float *>(edata), edata != nullptr ? exprCount : 0);
+    if (edata != nullptr) {
+        env->ReleaseFloatArrayElements(expr, edata, JNI_ABORT);
+    }
+    env->ReleaseIntArrayElements(notes, data, JNI_ABORT); // read only; don't copy back
     return ok ? JNI_TRUE : JNI_FALSE;
 }
 

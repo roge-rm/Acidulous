@@ -4,6 +4,7 @@
 #include <atomic>
 #include <chrono>
 #include <engine/core/Capture.h>
+#include <engine/core/Expression.h>
 #include <engine/core/InputBus.h>
 #include <engine/core/Handover.h>
 #include <engine/core/Messages.h>
@@ -73,6 +74,7 @@ class Engine {
         mpeMembers = members < 1 ? 1 : (members > 15 ? 15 : members);
         mpeBendSemis = bendSemis < 1.0f ? 1.0f : (bendSemis > 96.0f ? 96.0f : bendSemis);
         for (auto &n : mpeChannelNote) n = -1;
+        for (auto &ch : lastExprSent) for (float &v : ch) v = -1.0f;
     }
     bool mpeMember(uint8_t channel) const {
         if (mpeKind == 0 || channel > 15) return false;
@@ -123,6 +125,10 @@ class Engine {
     void applyMount(const Mount &m);
     static constexpr int32_t kMaxMountsPerBlock = 8;
     void drainMidi();
+    /** A member channel's expression, filed against the note it belongs to. */
+    void recordExpression(int32_t rack, uint8_t channel, uint8_t note, uint8_t status, uint8_t d1, uint8_t d2);
+    /** The last value each member channel filed, per curve; -1 for none yet. */
+    float lastExprSent[16][3] = {};
 
     // Which note each member channel is holding, or -1. MPE puts one note
     // on a channel at a time, so this is exact rather than a guess - it is

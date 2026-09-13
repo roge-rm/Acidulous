@@ -47,6 +47,14 @@ class Rack {
      */
     void noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, float bendSemis);
 
+    /**
+     * The same three, arriving from a clip rather than from a finger, in the
+     * document's normalised domain rather than as MIDI. [kind] is an
+     * acidulous::Expr. Down the same road as the live one, for the same
+     * reason: it is the note's, not the chain's.
+     */
+    void noteExpressionValue(int32_t kind, uint8_t note, float v01);
+
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm);
     void render(int32_t frames);
 

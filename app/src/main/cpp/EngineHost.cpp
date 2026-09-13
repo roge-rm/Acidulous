@@ -872,7 +872,7 @@ bool EngineHost::snapshotSetClipCached(int64_t handle, int rack, int scene, int6
 }
 
 bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t rev, int bars, int playMode, bool mute,
-                                 const int32_t *notes, int noteCount) {
+                                 const int32_t *notes, int noteCount, const float *expr, int exprCount) {
     using namespace seq;
     auto *snap = fromHandle(handle);
     if (snap == nullptr || scene < 0 || scene >= static_cast<int>(snap->scenes.size())) return false;
@@ -883,13 +883,37 @@ bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t re
     clip->playMode = playMode == 1 ? PlayMode::OneShot : PlayMode::Loop;
     clip->mute = mute;
     clip->notes.reserve(static_cast<size_t>(std::max(0, noteCount)));
+    clip->expr.reserve(static_cast<size_t>(std::max(0, exprCount)));
+    // The expression array is consumed in step with the notes: each note says
+    // how many of the points that follow are its own. Ranges are recorded
+    // before the sort, and travel with the note through it, because the flat
+    // array is never reordered - only pointed into.
+    int taken = 0;
     for (int n = 0; n < noteCount; ++n) {
-        const int32_t *rec = notes + n * 4;
+        const int32_t *rec = notes + n * 5;
         ClipNote note;
         note.tick = std::max<int32_t>(0, rec[0]);
         note.length = std::max<int32_t>(1, rec[1]);
         note.pitch = static_cast<uint8_t>(std::clamp<int32_t>(rec[2], 0, 127));
         note.velocity = static_cast<uint8_t>(std::clamp<int32_t>(rec[3], 1, 127));
+        const int want = std::clamp<int32_t>(rec[4], 0, exprCount - taken);
+        note.exprFirst = static_cast<int32_t>(clip->expr.size());
+        note.exprCount = want;
+        for (int i = 0; i < want; ++i) {
+            const float *pt = expr + (taken + i) * 3;
+            ExprPoint p;
+            p.kind = std::clamp<int32_t>(static_cast<int32_t>(pt[0]), 0, static_cast<int32_t>(Expr::Count) - 1);
+            p.tick = std::max<int32_t>(0, static_cast<int32_t>(pt[1]));
+            p.value = std::clamp(pt[2], 0.0f, 1.0f);
+            clip->expr.push_back(p);
+        }
+        // By kind, then by tick: the player takes one contiguous range per
+        // curve out of this and never searches again.
+        std::stable_sort(clip->expr.begin() + note.exprFirst, clip->expr.end(),
+                         [](const ExprPoint &a, const ExprPoint &b) {
+                             return a.kind != b.kind ? a.kind < b.kind : a.tick < b.tick;
+                         });
+        taken += want;
         clip->notes.push_back(note);
     }
     std::stable_sort(clip->notes.begin(), clip->notes.end(),

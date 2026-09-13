@@ -2,6 +2,7 @@
 #include "Clip.h"
 #include <atomic>
 #include <cstdint>
+#include <limits>
 
 // Plays one rack's clip. Lives inside the Rack and emits into
 // Rack::handleMidi(), ahead of the eventors, so sequenced and live notes are
@@ -19,6 +20,7 @@ namespace acidulous::seq {
 class ClipPlayer {
   public:
     static constexpr int kMaxPending = 64;
+    static constexpr int kExprKinds = static_cast<int>(acidulous::Expr::Count);
 
     // Audio thread, at a block boundary (ObjectManager does this). Pending
     // note-offs are deliberately kept: they belong to notes already sounding.
@@ -71,7 +73,7 @@ class ClipPlayer {
                 releaseIfSounding(note.pitch, sink);
                 sink(0x90, note.pitch, note.velocity);
                 onCount.fetch_add(1, std::memory_order_relaxed);
-                schedule(note.pitch, t + (note.length > 0 ? note.length : 1), sink);
+                schedule(note, t, t + (note.length > 0 ? note.length : 1), sink);
             }
         }
     }
@@ -102,6 +104,37 @@ class ClipPlayer {
     }
     bool originChanged(int64_t origin) const { return origin != lastOrigin; }
 
+    /**
+     * Per-note expression: for every note still sounding, where its curves
+     * have got to by the end of this block.
+     *
+     * Read at the block's end position like a lane, and sent only when the
+     * value has moved, so a curve that is flat between two distant points
+     * costs one call and a glide costs one call a block - which at 64 frames
+     * is finer than any controller sends in the first place.
+     *
+     * Sink signature: void(uint8_t note, int32_t kind, float value01).
+     */
+    template <class Sink>
+    void processExpression(int64_t end, Sink &&sink) {
+        if (clip_ == nullptr) return;
+        for (PendingOff &p : pending) {
+            // A clip swapped underneath a sounding note takes its curves with
+            // it - the old Clip is on its way to the destructor queue, and the
+            // points were never ours. The note keeps sounding and holds the
+            // last value it was given, which is the quiet answer.
+            if (!p.active || !p.hasExpr || p.exprRev != clip_->rev) continue;
+            const auto rel = static_cast<int32_t>(end > p.startTick ? end - p.startTick : 0);
+            for (int32_t k = 0; k < kExprKinds; ++k) {
+                if (p.exprCount[k] == 0) continue;
+                const float v = exprValueAt(clip_->expr.data() + p.exprFirst[k], p.exprCount[k], rel);
+                if (v == p.exprLast[k]) continue;
+                p.exprLast[k] = v;
+                sink(p.pitch, k, v);
+            }
+        }
+    }
+
     // Stop: release everything that is sounding.
     template <class Sink>
     void allNotesOff(Sink &&sink) {
@@ -123,6 +156,17 @@ class ClipPlayer {
         int64_t tick = 0;
         uint8_t pitch = 0;
         bool active = false;
+        // The note's expression, resolved once when it fires: where it
+        // started, which clip it came from, and each curve's own range
+        // within that clip's expr array. Resolved here and not per block
+        // because the ranges never change while the note sounds, and this
+        // is the one moment we are already looking at the ClipNote.
+        int64_t startTick = 0;
+        int64_t exprRev = 0;
+        int32_t exprFirst[kExprKinds] = {};
+        int32_t exprCount[kExprKinds] = {};
+        float exprLast[kExprKinds] = {};
+        bool hasExpr = false;
     };
 
     // Same pitch already sounding: end it before restarting it, so a voice is
@@ -139,19 +183,47 @@ class ClipPlayer {
     }
 
     template <class Sink>
-    void schedule(uint8_t pitch, int64_t offTick, Sink &sink) {
+    void schedule(const ClipNote &note, int64_t onTick, int64_t offTick, Sink &sink) {
         for (PendingOff &p : pending) {
             if (!p.active) {
                 p.tick = offTick;
-                p.pitch = pitch;
+                p.pitch = note.pitch;
                 p.active = true;
+                bindExpression(p, note, onTick);
                 return;
             }
         }
         // Table full - more than kMaxPending notes sounding at once. Degrade to
         // a zero-length note rather than a stuck one.
-        sink(0x80, pitch, 0);
+        sink(0x80, note.pitch, 0);
         offCount.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    // Split the note's slice of the clip's expr array into one range per
+    // kind. The slice is sorted by kind and then by tick, so this is one walk
+    // of the note's own points - typically none, and never many.
+    void bindExpression(PendingOff &p, const ClipNote &note, int64_t onTick) {
+        p.startTick = onTick;
+        p.exprRev = clip_ != nullptr ? clip_->rev : 0;
+        p.hasExpr = false;
+        for (int32_t k = 0; k < kExprKinds; ++k) {
+            p.exprFirst[k] = 0;
+            p.exprCount[k] = 0;
+            // Nothing has been sent for this note yet, and a NaN differs from
+            // every value there is, so the first read always reaches the
+            // machine even when it happens to be the neutral one.
+            p.exprLast[k] = std::numeric_limits<float>::quiet_NaN();
+        }
+        if (clip_ == nullptr || note.exprCount <= 0) return;
+        const auto total = static_cast<int32_t>(clip_->expr.size());
+        if (note.exprFirst < 0 || note.exprFirst + note.exprCount > total) return; // malformed; ignore it
+        for (int32_t i = 0; i < note.exprCount; ++i) {
+            const int32_t kind = clip_->expr[static_cast<size_t>(note.exprFirst + i)].kind;
+            if (kind < 0 || kind >= kExprKinds) continue;
+            if (p.exprCount[kind] == 0) p.exprFirst[kind] = note.exprFirst + i;
+            ++p.exprCount[kind];
+            p.hasExpr = true;
+        }
     }
 
     static constexpr size_t kMaxLanes = 32;

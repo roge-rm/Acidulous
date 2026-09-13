@@ -21,6 +21,48 @@ class SongStoreTest {
         assertEquals(2, song.barsOf(song.scenes[1]))
     }
 
+    /**
+     * The M38b promise: a note with no expression must cost the file nothing.
+     * The document writes defaults, so without `@EncodeDefault(NEVER)` every
+     * note in every song gains three lines saying null.
+     */
+    @Test
+    fun `a note without expression writes no expression`() {
+        val text = SongStore.encode(DemoSong.build())
+        assertTrue(text.contains("\"pitch\""))
+        assertTrue("bend appears in a song that has none", !text.contains("\"bend\""))
+        assertTrue(!text.contains("\"pressure\""))
+        assertTrue(!text.contains("\"timbre\""))
+    }
+
+    @Test
+    fun `a note with expression survives the round trip`() {
+        val song = DemoSong.build()
+        val curved = Note(
+            tick = 0, length = 480, pitch = 60, velocity = 100,
+            bend = Lane(points = listOf(LanePoint(0, 0.5f), LanePoint(240, 0.75f))),
+            pressure = Lane(points = listOf(LanePoint(0, 0.2f))),
+        )
+        val scene = song.scenes[0].id
+        val with = song.addNote(0, scene, curved)
+        val back = SongStore.decode(SongStore.encode(with))
+        val note = back.tracks[0].clips[scene]!!.notes.first { it.hasExpression }
+        assertEquals(2, note.bend!!.points.size)
+        assertEquals(0.75f, note.bend!!.points[1].value, 1e-6f)
+        assertEquals(1, note.pressure!!.points.size)
+        assertEquals(null, note.timbre)
+        // A quarter of the way up the +/-48 domain either side of centre.
+        assertEquals(24f, Note.bendFrom01(note.bend!!.points[1].value), 1e-3f)
+    }
+
+    @Test
+    fun `a song written before expression still opens`() {
+        // Exactly what an older build wrote: no curve fields at all.
+        val text = SongStore.encode(DemoSong.build())
+        val back = SongStore.decode(text)
+        assertTrue(back.tracks.flatMap { it.clips.values }.flatMap { it.notes }.none { it.hasExpression })
+    }
+
     @Test
     fun unknownKeysAreTolerated() {
         val text = SongStore.encode(DemoSong.build()).replaceFirst("\"name\"", "\"futureField\": 42, \"name\"")

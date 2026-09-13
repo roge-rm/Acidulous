@@ -524,6 +524,9 @@ void Engine::drainMidi() {
         if (mpeMember(m.channel)) {
             if (status == 0x90 && d2 > 0) {
                 mpeChannelNote[m.channel] = m.data1;
+                // A new finger on the channel starts a new curve: whatever the
+                // last one left behind must not be mistaken for a repeat.
+                for (float &v : lastExprSent[m.channel]) v = -1.0f;
             } else if (status == 0x80) {
                 mpeChannelNote[m.channel] = -1;
             } else {
@@ -532,6 +535,7 @@ void Engine::drainMidi() {
                 if (held < 0) continue;
                 racks[rack].noteExpression(status, static_cast<uint8_t>(held), m.data1, d2,
                                            mpeBendSemis);
+                recordExpression(rack, m.channel, static_cast<uint8_t>(held), status, m.data1, d2);
                 continue;
             }
         }
@@ -552,6 +556,61 @@ void Engine::drainMidi() {
     }
 }
 
+/**
+ * A finger's bend, press or slide, on its way to the clip the note is being
+ * recorded into.
+ *
+ * Filed against the note and not the channel, because the channel is an
+ * accident of the controller and the note is the music. The value is
+ * normalised the way the document stores it - bend in semitones scaled to
+ * MPE's own maximum, and not the fourteen bits that arrived - so a take
+ * recorded with a 24-semitone controller plays back as the notes it was
+ * played as, on any desk.
+ */
+void Engine::recordExpression(int32_t rack, uint8_t channel, uint8_t note, uint8_t status, uint8_t d1,
+                              uint8_t d2) {
+    if (!recordingNow()) return;
+    Expr kind;
+    float value;
+    switch (status) {
+    case 0xe0: {
+        const float bend14 = static_cast<float>((d2 << 7) | d1) - 8192.0f;
+        kind = Expr::Bend;
+        value = exprBendTo01(bend14 / 8192.0f * mpeBendSemis);
+        break;
+    }
+    case 0xd0:
+        kind = Expr::Pressure;
+        value = expr7To01(d1);
+        break;
+    case 0xb0:
+        if (d1 != 74) return; // the only CC that is slide; the rest are not a note's
+        kind = Expr::Timbre;
+        value = expr7To01(d2);
+        break;
+    default: return;
+    }
+    // A finger that is holding still sends the same value over and over -
+    // a seven-bit pressure especially, where a whole gesture is 127 distinct
+    // values and thousands of messages. Dropping the repeats here rather
+    // than at the far end is what keeps five fingers inside the queue.
+    if (channel < 16) {
+        float &last = lastExprSent[channel][static_cast<int32_t>(kind)];
+        if (last == value) return;
+        last = value;
+    }
+    seq::RecordedEvent ev;
+    ev.absTick = clock.position();
+    ev.sceneId = scheduler.rackSceneId(rack);
+    ev.tickInIteration = scheduler.rackTick(rack);
+    ev.rack = rack;
+    ev.cmd = seq::kRecNoteExpression;
+    ev.p1 = note;
+    ev.p2 = static_cast<uint8_t>(kind);
+    ev.value = value;
+    recordQueue.push(ev);
+}
+
 void Engine::drainParams() {
     ParamMessage p;
     while (paramsIn.pop(p)) {
@@ -566,7 +625,7 @@ void Engine::drainParams() {
                 ev.sceneId = scheduler.rackSceneId(p.rack);
                 ev.tickInIteration = scheduler.rackTick(p.rack);
                 ev.rack = p.rack;
-                ev.cmd = 0xf0;
+                ev.cmd = seq::kRecParam;
                 ev.p1 = static_cast<uint8_t>(p.unit);
                 ev.p2 = 0;
                 ev.paramIndex = p.index;

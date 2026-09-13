@@ -421,6 +421,8 @@ class SceneScheduler {
             }
             rack.clipPlayer.process(from, to, origin,
                                     [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.handleMidi(c, a, b); });
+            rack.clipPlayer.processExpression(
+                to, [&rack](uint8_t n, int32_t k, float v) { rack.noteExpressionValue(k, n, v); });
             if (launcher.playing(r)) {
                 rack.clipPlayer.processLanes(
                     to, origin,
@@ -481,6 +483,8 @@ class SceneScheduler {
                 if (rack.clipPlayer.originChanged(iterationOrigin)) rack.clearTouched();
                 rack.clipPlayer.process(from, to, iterationOrigin,
                                         [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.handleMidi(c, a, b); });
+                rack.clipPlayer.processExpression(
+                    to, [&rack](uint8_t n, int32_t k, float v) { rack.noteExpressionValue(k, n, v); });
                 rack.clipPlayer.processLanes(
                     to, iterationOrigin,
                     [&rack](Unit u, int32_t i, float v) { rack.setParam(u, i, v); },

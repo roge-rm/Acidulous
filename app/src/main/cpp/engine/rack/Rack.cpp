@@ -129,6 +129,16 @@ void Rack::noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, fl
     }
 }
 
+void Rack::noteExpressionValue(int32_t kind, uint8_t note, float v01) {
+    if (machine == nullptr) return;
+    switch (static_cast<Expr>(kind)) {
+    case Expr::Bend: machine->noteBend(note, exprBendFrom01(v01)); break;
+    case Expr::Pressure: machine->notePressure(note, expr7From01(v01)); break;
+    case Expr::Timbre: machine->noteTimbre(note, expr7From01(v01)); break;
+    default: break;
+    }
+}
+
 void Rack::allNotesOff() {
     for (int32_t s = 0; s < kEventorSlots; ++s) {
         if (eventors[s] != nullptr) eventors[s]->allNotesOff(sinks[s]);
