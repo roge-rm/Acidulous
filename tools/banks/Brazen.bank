@@ -67,6 +67,25 @@
 # untouched, and it is what the instrument does anyway: a bell does not
 # radiate a broadband click either.
 #
+# **What is left on the front of a low note is the machine, not the patch.**
+# The tube's first reflection comes back after about two round trips - 20 ms
+# at a bass trombone's pitch - and the standing wave does not arrive until
+# 120. So there is a pip, then ninety milliseconds of nearly nothing, then the
+# note; and a transient standing on its own in silence is heard as a click
+# however quiet it is. It is not the excitation: `bite` and `breath` do not
+# move it at all, `loss` barely, and the glide not at all, because a glide
+# only applies to the second note of a pair.
+#
+# The only thing that scales it is the amplitude envelope, which holds the
+# output near zero while the reflection goes past - and that delays the note
+# by the same amount. So it is a trade, and these are set where the pip sits
+# 24 to 28 dB under the note rather than the 18 it was, at the cost of a
+# bass trombone that speaks in 340 ms. Which is what a bass trombone does.
+#
+# If it is still audible the fix is in the machine and not here: below about
+# note 55 at ordinary pressure Brazen produces nothing at all for 300 ms, at
+# any bore, and that is what makes the gap the pip stands in.
+#
 # Levelled to about -20 dB RMS. The harmon sits 6 dB under it at its volume's
 # maximum and no amount of knob will fetch it back, because most of the
 # instrument is not coming out of the bell any more - which is what a mute is.
@@ -89,10 +108,10 @@ patch Tuba  note=41
   size           0.03
   bell           0.88
   brass          0.25
-  pressure       0.9
+  pressure       0.95
   lipdamp        0.45
   bite           0.5
-  attack         0.012 s
+  attack         0.095 s
   release        0.32 s
   vibrato        2 cents
   # Breath right off. At the default 0.15 the noise sat *above* the tone in
@@ -109,10 +128,10 @@ patch "Bass Trombone"  note=43
   size           0.16
   bell           0.76
   brass          0.45
-  pressure       0.85
+  pressure       0.92
   lipdamp        0.5
   bite           0.55
-  attack         0.014 s
+  attack         0.085 s
   glide          0.09 s
   vibrato        4 cents
   breath         0.03
@@ -125,10 +144,10 @@ patch Trombone  note=48
   size           0.3
   bell           0.66
   brass          0.58
-  pressure       0.85
+  pressure       0.88
   lipdamp        0.55
   bite           0.6
-  attack         0.016 s
+  attack         0.06 s
   glide          0.12 s
   vibrato        5 cents
   breath         0.04
@@ -147,10 +166,10 @@ patch Horn  note=53
   size           0.34
   bell           0.8
   brass          0.28
-  pressure       0.8
+  pressure       0.82
   lipdamp        0.42
   bite           0.42
-  attack         0.02 s
+  attack         0.055 s
   release        0.4 s
   vibrato        6 cents
   width          0.5
@@ -167,7 +186,7 @@ patch Flugel  note=58
   pressure       0.76
   lipdamp        0.45
   bite           0.4
-  attack         0.022 s
+  attack         0.04 s
   vibrato        5 cents
   breath         0.05
   volume         1.35
@@ -238,7 +257,7 @@ patch "Cup Mute"  note=58
   brass          0.42
   pressure       0.78
   bite           0.45
-  attack         0.02 s
+  attack         0.038 s
   breath         0.06
   volume         1.3
 
