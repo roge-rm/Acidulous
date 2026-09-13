@@ -151,6 +151,7 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
         p.offsetCents = p.home;
         p.walk = 0.0f;
         p.delayLeft = i == 0 ? 0.0f : nextRandom() * scatter;
+        p.entry = p.delayLeft > 0.0f ? 0.0f : 1.0f;
         p.breath = 1.0f - nextRandom() * 0.2f;
         p.pan = pos;
         p.pushScale = p.pushBias = 0.0f;
@@ -254,8 +255,13 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
     // Five milliseconds, so it follows a decaying tube rather than its
     // waveform, and a voice is not held on by one stray sample.
     const float ringCoeff = dsp::onePoleCoeff(0.005f, sampleRate);
+    // The same shape the amplitude envelope's own attack has, so a scattered
+    // player arrives the way the first one did rather than being faded in.
+    const float entryCoeff = dsp::onePoleCoeff(paramOf(Attack) * 0.4f, sampleRate);
 
-    growlPhase += growlRate * dt * static_cast<float>(frames);
+    const float growlStart = growlPhase;
+    const float growlStep = growlRate * dt;
+    growlPhase += growlStep * static_cast<float>(frames);
     while (growlPhase >= 1.0f) growlPhase -= 1.0f;
 
     for (auto &v : voices) {
@@ -305,7 +311,6 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
 
         const float vel = 1.0f - velAmount + velAmount * v.velocity;
         const float growlNow = growl * (0.5f + 0.5f * std::sin(growlPhase * kTwoPi));
-        const float growlAm = 1.0f - growlNow * 0.35f;
         const float env0 = v.amp.value();
 
         // Everything the horn is made of, once a block. tune() is trigonometry
@@ -358,6 +363,15 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
             // Gone when the player has stopped *and* the tube has, which are
             // not the same instant. See Voice::ring.
             if (env <= 0.0000005f && !v.gate && v.ring < kSilent) { v.used = false; break; }
+            // The growl is a tremolo on the output, so it is the one thing
+            // here that has to be per sample rather than per block: held for
+            // sixty-four frames it is a staircase on the audio itself, and
+            // at 42 Hz and 0.75 deep that is a step every 1.3 ms. It is the
+            // last of the block-rate edges in this machine.
+            const float growlAmNow =
+                growl > 0.0001f
+                    ? 1.0f - growl * (0.5f + 0.5f * std::sin((growlStart + growlStep * static_cast<float>(i)) * kTwoPi)) * 0.35f
+                    : 1.0f;
             float l = 0.0f, r = 0.0f;
             for (int32_t pi = 0; pi < players; ++pi) {
                 Player &p = v.players[pi];
@@ -378,8 +392,11 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
                 // The block value still feeds setPressure, setBrass and the
                 // solve, so the loop is linearised about exactly what it was
                 // before and the instrument plays the same note.
-                const float pushNow = p.pushScale * env + p.pushBias;
-                const float s = p.bore.step(pushNow, hiss * pushNow) * growlAm;
+                // ...and a late player gets the front of the note it missed,
+                // over its own attack. See Player::entry.
+                p.entry += (1.0f - p.entry) * entryCoeff;
+                const float pushNow = (p.pushScale * env + p.pushBias) * p.entry;
+                const float s = p.bore.step(pushNow, hiss * pushNow) * growlAmNow;
                 const float pan = std::clamp(p.pan * width, -1.0f, 1.0f);
                 const float angle = (pan + 1.0f) * 0.25f * 3.14159265f;
                 l += s * std::cos(angle);

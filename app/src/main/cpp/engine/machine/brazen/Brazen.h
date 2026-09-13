@@ -78,6 +78,18 @@ class Brazen final : public Machine {
         float pan = 0.0f;      // what they are blowing, this block
         /** The block's mouth pressure, split so the sample loop can ramp it. */
         float pushScale = 0.0f, pushBias = 0.0f;
+        /**
+         * A late player's own way in, which is not the one it was given.
+         *
+         * `scatter` is meant to be the players not coming in together, and
+         * it was done by not stepping a player's tube until its turn - so
+         * when its turn came it was handed a mouth pressure that had been
+         * rising for twenty milliseconds without it. Full envelope, into an
+         * empty tube, in one sample, and straight through a DC blocker that
+         * passes a step at full height. A player arriving late plays the
+         * front of a note late; it does not appear halfway through one.
+         */
+        float entry = 1.0f;
         /** Set at note-on; acted on after the next tune, which needs the note. */
         bool tongue = false;
         static constexpr uint32_t kSeed = 1u;

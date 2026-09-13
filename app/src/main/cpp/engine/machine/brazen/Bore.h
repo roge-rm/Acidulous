@@ -70,6 +70,8 @@ constexpr float kDcPole = 0.997f;
  */
 constexpr float kAirPole = 0.2298f; // 1 - exp(-2 pi 2000 / 48000)
 
+constexpr float kRiseP = 3.0f, kFallP = 12.0f;
+
 class Bore {
   public:
     void prepare(float sampleRate) {
@@ -375,8 +377,8 @@ class Bore {
         //
         // Fast up and slow down is also what lips do. They tighten against
         // the pressure within a few cycles and let go over a breath.
-        lipRise = 1.0f - std::exp(-1.0f / (3.0f * period));
-        lipFall = 1.0f - std::exp(-1.0f / (12.0f * period));
+        lipRise = 1.0f - std::exp(-1.0f / (kRiseP * period));
+        lipFall = 1.0f - std::exp(-1.0f / (kFallP * period));
         delayTarget = clampf(period + phase / w, 4.0f, static_cast<float>(line.size() - 3));
         // A note-on has no tube to glide from, so it starts where it belongs.
         if (delay < 4.0f) delay = delayTarget;
