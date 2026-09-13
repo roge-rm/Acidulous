@@ -109,18 +109,6 @@ object MachineUi {
     }
 }
 
-object HexbeatPresets {
-    private fun p(name: String, vararg kv: Pair<String, Float>) = Patch("Hexbeat", name, kv.toMap())
-    val all: List<Patch> = listOf(
-        p("Init"),
-        p("Tight", "kick_decay" to 0.35f, "kick_punch" to 0.7f, "snare_decay" to 0.3f, "snare_snappy" to 0.7f,
-            "hat_closed_decay" to 0.25f, "hat_open_decay" to 0.35f, "accent" to 0.7f),
-        p("Boomy", "kick_tune" to 0.3f, "kick_decay" to 0.8f, "kick_punch" to 0.35f, "tom_decay" to 0.75f,
-            "snare_decay" to 0.6f, "snare_snappy" to 0.4f, "hat_open_decay" to 0.6f),
-        p("Trashy", "snare_tone" to 0.8f, "snare_snappy" to 0.9f, "hat_tune" to 0.8f, "hat_tone" to 0.3f,
-            "cym_tone" to 0.3f, "clap_tone" to 0.7f, "accent" to 0.9f),
-    )
-}
 
 /**
  * One entry of a Mosaic map, as the document stores it. Zones live in

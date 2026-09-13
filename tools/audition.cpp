@@ -416,6 +416,35 @@ Take renderEffect(Effect *fx, float bpm, float seconds) {
 
 // --- Output ------------------------------------------------------------------
 
+/**
+ * The shortest decimal that reads back as exactly this float.
+ *
+ * Seven significant figures is enough for a value nobody can hear the last
+ * digit of, and not enough for a render to repeat bit for bit - which this
+ * app does care about, and proves in two harnesses. So the short form is
+ * tried first and kept when it survives the trip, and nine figures are used
+ * when it does not: most values come out as `0.62f` and only the ones that
+ * need it are long.
+ */
+std::string floatLiteral(float v) {
+    char buf[48];
+    for (int digits : {7, 9}) {
+        std::snprintf(buf, sizeof(buf), "%.*g", digits, static_cast<double>(v));
+        if (static_cast<float>(std::atof(buf)) == v) return buf;
+    }
+    return buf;
+}
+
+/** A Kotlin string literal's insides. `$` opens a template, so it escapes too. */
+std::string kotlinString(const std::string &in) {
+    std::string out;
+    for (char c : in) {
+        if (c == '\\' || c == '"' || c == '$') out += '\\';
+        out += c;
+    }
+    return out;
+}
+
 std::string safeName(const std::string &s) {
     std::string out;
     for (char c : s) out += (std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '-') ? c : '_';
@@ -874,6 +903,112 @@ int cmdSeed(const std::string &dumpPath) {
     return 0;
 }
 
+/**
+ * The banks as the Kotlin that ships.
+ *
+ * The generated file is what the app reads; the bank files are what a person
+ * edits and what the harness auditions. That is the whole point of the
+ * arrangement - the thing that was listened to and the thing that plays are
+ * the same numbers, converted once, here, by the engine's own ParamDef rather
+ * than by a table hand-copied into Kotlin beside every preset object.
+ *
+ * One small function per patch and a lazy list, rather than one enormous
+ * `listOf(...)`. A patch costs about 1,356 bytes of bytecode - Resonance's
+ * spell out all eight objects - and a class initialiser is capped at 65,535,
+ * so the old shape would have hit `Method too large` somewhere around the
+ * forty-eighth Resonance patch. Split like this it is thousands.
+ */
+int cmdEmit(const std::string &outPath) {
+    std::vector<std::string> units;
+    for (int32_t i = 0; i < MachineRegistry::count(); ++i) units.emplace_back(MachineRegistry::name(i));
+    for (int32_t i = 0; i < EffectRegistry::count(); ++i) {
+        units.emplace_back(std::string("fx.") + EffectRegistry::name(i));
+    }
+
+    std::string body, dispatch;
+    int emitted = 0, patches = 0;
+    for (const std::string &unit : units) {
+        Bank bank;
+        std::string error;
+        if (!readBank(bankPath(unit), bank, error)) continue; // not written yet
+        int32_t count = 0;
+        const ParamDef *defs = defsFor(unit, count);
+        if (defs == nullptr || count == 0) {
+            std::fprintf(stderr, "%s: the engine has no unit by that name\n", unit.c_str());
+            return 1;
+        }
+        // A Kotlin identifier, and unique: "fx.Delay" cannot be one as it is.
+        std::string tag;
+        for (char c : unit) tag += (c == '.' ? '_' : static_cast<char>(std::tolower(c)));
+
+        std::string list;
+        int n = 0;
+        for (const BankPatch &patch : bank.patches) {
+            const Resolved r = resolve(patch, defs, count);
+            for (const std::string &p : r.problems) {
+                std::fprintf(stderr, "%s / %s: %s\n", unit.c_str(), patch.name.c_str(), p.c_str());
+                return 1;
+            }
+            char fn[64];
+            std::snprintf(fn, sizeof(fn), "%s%d", tag.c_str(), n);
+            list += (n > 0 ? ", " : "") + std::string(fn) + "()";
+
+            body += "\n    private fun " + std::string(fn) + "() = Patch(\"" + unit + "\", \"" +
+                    kotlinString(patch.name) + "\",";
+            // Only what differs from the default, in the table's own order:
+            // the app fills in the rest, and a file that repeats every
+            // default is a file nobody can read a diff of.
+            std::string params;
+            int written = 0;
+            for (int32_t i = 0; i < count; ++i) {
+                if (std::fabs(r.norm[static_cast<size_t>(i)] - defs[i].unmap(defs[i].def)) < 1e-7f) continue;
+                char kv[160];
+                std::snprintf(kv, sizeof(kv), "%s\"%s\" to %sf", written == 0 ? "" : ", ", defs[i].name,
+                              floatLiteral(r.norm[static_cast<size_t>(i)]).c_str());
+                params += kv;
+                ++written;
+            }
+            body += written == 0 ? " emptyMap()" : "\n        mapOf(" + params + ")";
+            if (!r.settings.empty()) {
+                std::string sets;
+                for (size_t k = 0; k < r.settings.size(); ++k) {
+                    sets += (k > 0 ? ", " : "") + std::string("\"") + r.settings[k].first + "\" to \"" +
+                            kotlinString(r.settings[k].second) + "\"";
+                }
+                body += ",\n        mapOf(" + sets + ")";
+            }
+            body += ")\n";
+            ++n;
+            ++patches;
+        }
+        body += "\n    private val " + tag + ": List<Patch> by lazy { listOf(" + list + ") }\n";
+        dispatch += "        \"" + unit + "\" -> " + tag + "\n";
+        ++emitted;
+    }
+
+    std::ofstream out(outPath);
+    if (!out) {
+        std::fprintf(stderr, "cannot write %s\n", outPath.c_str());
+        return 1;
+    }
+    out << "// GENERATED by tools/gen_patches.sh from tools/banks/*.bank - do not edit.\n"
+        << "//\n"
+        << "// Edit the bank file and run the script. A value there is written in the\n"
+        << "// parameter's own units and converted here by the engine's own ParamDef, so\n"
+        << "// what the audition harness played is what the app plays.\n"
+        << "package com.rm.acidulous.model\n"
+        << "\n"
+        << "internal object FactoryBanks {\n"
+        << "    fun of(unit: String): List<Patch> = when (unit) {\n"
+        << dispatch
+        << "        else -> emptyList()\n"
+        << "    }\n"
+        << body
+        << "}\n";
+    std::printf("%d units, %d patches -> %s\n", emitted, patches, outPath.c_str());
+    return 0;
+}
+
 void usage() {
     std::printf(
         "audition - play a factory patch on a desk and measure it\n\n"
@@ -881,7 +1016,8 @@ void usage() {
         "  audition list   <Machine>                 what is in the bank\n"
         "  audition play   <Machine> <Patch>         one patch: a wav and a row\n"
         "  audition bank   <Machine>                 every patch, and the spread\n"
-        "  audition seed   [dump.txt]                what ships today, as bank files\n\n"
+        "  audition seed   [dump.txt]                what ships today, as bank files\n"
+        "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n\n"
         "  --phrase note|bass|chord|arp|hold|chromatic|velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"
@@ -930,6 +1066,13 @@ int main(int argc, char **argv) {
     if (cmd == "list" && positional.size() >= 2) return cmdList(positional[1]);
     if (cmd == "play" && positional.size() >= 3) return cmdPlay(positional[1], positional[2], opt);
     if (cmd == "bank" && positional.size() >= 2) return cmdBank(positional[1], opt);
+    if (cmd == "emit") {
+        return cmdEmit(positional.size() >= 2
+                           ? positional[1]
+                           : std::string(std::getenv("ACIDULOUS_ROOT") != nullptr ? std::getenv("ACIDULOUS_ROOT")
+                                                                                  : ".") +
+                                 "/app/src/main/java/com/rm/acidulous/model/FactoryBanks.kt");
+    }
     if (cmd == "seed") {
         return cmdSeed(positional.size() >= 2 ? positional[1]
                                               : std::string(std::getenv("ACIDULOUS_ROOT") != nullptr
