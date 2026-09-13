@@ -738,7 +738,15 @@ private fun App(modifier: Modifier = Modifier) {
             onBack = { screen = Screen.Main },
             onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
             patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
-            onSavePatch = { name -> PatchStore.save(context, Patch(song.tracks[s.track].machine.type, name, song.tracks[s.track].machine.params)) },
+            // The settings and not only the knobs: a Nexus patch without its
+            // graph, a Mosaic without its zones or a Formulate without its
+            // formula is a bag of numbers wired to whatever happened to be
+            // loaded. Factory patches have always carried them; user ones
+            // never could, and nothing said so - it just came back wrong.
+            onSavePatch = { name ->
+                val m = song.tracks[s.track].machine
+                PatchStore.save(context, Patch(m.type, name, m.params, m.settings))
+            },
             onLoadPatch = { name -> PatchStore.load(context, song.tracks[s.track].machine.type, name) },
             factoryPatchNames = { PatchStore.factoryNames(song.tracks[s.track].machine.type) },
             userPatchNames = { PatchStore.userList(context, song.tracks[s.track].machine.type) },
