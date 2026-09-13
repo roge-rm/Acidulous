@@ -331,7 +331,7 @@ internal fun SliderSection(
 
 private val CLICK_VOICES = listOf("blip", "stick", "cowbell")
 private val CLICK_DIVISIONS = listOf("bar", "beat", "1/8", "1/16", "1/8T")
-private val TEMPO_TABS = listOf("tempo", "click")
+private val TEMPO_TABS = listOf("tempo", "click", "link")
 
 /**
  * Tempo, and everything that counts against it.
@@ -364,8 +364,71 @@ fun TempoDialog(tempo: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit)
         onConfirm = { onConfirm(bpm) },
         spacing = 16.dp,
         chips = { SectionChips(TEMPO_TABS, tab) { tab = it } },
-        pages = listOf({ TempoPage(bpm) { bpm = it } }, { ClickPage() }),
+        pages = listOf({ TempoPage(bpm) { bpm = it } }, { ClickPage() }, { LinkPage() }),
     )
+}
+
+/**
+ * Ableton Link: everybody on this Wi-Fi at one tempo, with one bar line.
+ *
+ * Here, behind the tempo, rather than with the MIDI clock in the MIDI
+ * window - because this is the other answer to "who decides the tempo", and
+ * the two are alternatives. Following a clock down a cable and following a
+ * session over the air at the same time is two masters; switching this on
+ * stands the other down, in the engine and on the screen.
+ */
+@Composable
+private fun LinkPage() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val hub = com.rm.acidulous.engine.LinkHub
+    Section(
+        "link",
+        if (hub.enabled) {
+            "The tempo is the session's, and play waits for its next downbeat. Scene tempo overrides and Smooth ramps do nothing while it does; changing the tempo here offers it to everybody."
+        } else {
+            "Off. The song keeps its own tempo."
+        },
+    ) {
+        Choice("on", hub.enabled) {
+            UiPrefs.chooseLink(true)
+            hub.setEnabled(context, true)
+            // One master at a time; the engine enforces it and the screen
+            // should not go on claiming otherwise.
+            if (com.rm.acidulous.midi.MidiHub.clockIn) UiPrefs.chooseExternalSync(false)
+        }
+        Choice("off", !hub.enabled) {
+            UiPrefs.chooseLink(false)
+            hub.setEnabled(context, false)
+        }
+    }
+    Section(
+        "start and stop",
+        if (hub.startStop) "A peer pressing play starts us, and stopping stops us."
+        else "Only the tempo and the bar line are shared. Starting is ours alone.",
+    ) {
+        Choice("shared", hub.startStop) { UiPrefs.chooseLinkStartStop(true) }
+        Choice("ours", !hub.startStop) { UiPrefs.chooseLinkStartStop(false) }
+    }
+    if (hub.enabled) {
+        ListSection(
+            "the session",
+            if (hub.multicast) {
+                ""
+            } else {
+                "Without a multicast lock the Wi-Fi chip drops the packets that find peers, and nothing will ever appear here."
+            },
+        ) {
+            Readout(
+                "%d peer%s · %s · phase %+.2f ms · multicast %s".format(
+                    hub.peers, if (hub.peers == 1) "" else "s",
+                    if (hub.sessionTempo > 0f) "%.2f bpm".format(hub.sessionTempo) else "no tempo yet",
+                    hub.phaseMs,
+                    if (hub.multicast) "held" else "NOT held",
+                ),
+                good = hub.multicast && hub.peers > 0,
+            )
+        }
+    }
 }
 
 @Composable

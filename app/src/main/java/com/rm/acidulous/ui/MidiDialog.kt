@@ -67,7 +67,7 @@ fun MidiDialog(song: Song, onDismiss: () -> Unit) {
             { InTab(trackNames, mpeHeld) },
             { OutTab() },
             { MapTab(song) },
-            { SyncTab() },
+            { SyncTab(context) },
         ),
     )
 }
@@ -223,7 +223,7 @@ private fun OutTab() {
 
 /** Who keeps time: this app, or something else. */
 @Composable
-private fun SyncTab() {
+private fun SyncTab(context: android.content.Context) {
     Section(
         "clock out",
         if (MidiHub.clockOut) "Twenty-four pulses a beat go to every open destination, with start, stop and position."
@@ -235,14 +235,23 @@ private fun SyncTab() {
 
     Section(
         "follow",
-        if (MidiHub.clockIn) {
-            "The song runs at whatever clock arrives. Scene tempo overrides and Smooth ramps do nothing while it does."
-        } else {
-            "The song keeps its own tempo and ignores an incoming clock."
+        when {
+            com.rm.acidulous.engine.LinkHub.enabled ->
+                "Link has the tempo. Only one thing can: switching this on turns Link off. Link lives behind the tempo in the header."
+            MidiHub.clockIn ->
+                "The song runs at whatever clock arrives. Scene tempo overrides and Smooth ramps do nothing while it does."
+            else -> "The song keeps its own tempo and ignores an incoming clock."
         },
     ) {
-        Choice("follow clock", MidiHub.clockIn) { UiPrefs.chooseExternalSync(true) }
-        Choice("off", !MidiHub.clockIn) { UiPrefs.chooseExternalSync(false) }
+        Choice("follow clock", MidiHub.clockIn && !com.rm.acidulous.engine.LinkHub.enabled) {
+            // One master at a time, on screen as well as in the engine.
+            if (com.rm.acidulous.engine.LinkHub.enabled) {
+                UiPrefs.chooseLink(false)
+                com.rm.acidulous.engine.LinkHub.setEnabled(context, false)
+            }
+            UiPrefs.chooseExternalSync(true)
+        }
+        Choice("off", !MidiHub.clockIn || com.rm.acidulous.engine.LinkHub.enabled) { UiPrefs.chooseExternalSync(false) }
     }
 
     // A tempo can look right while the phase wanders, so the second number

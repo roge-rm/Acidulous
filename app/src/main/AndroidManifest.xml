@@ -12,6 +12,15 @@
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
 
+    <!--
+      Ableton Link: a tempo shared over the local network. Peers are found by
+      multicast, which a Wi-Fi chip drops unless the app holds a
+      MulticastLock - hence the third of these. None is a runtime permission.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+
     <!-- Sampling and the vocoder both listen to what is coming in. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />

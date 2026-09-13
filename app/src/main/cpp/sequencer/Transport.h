@@ -68,9 +68,28 @@ class Transport {
     // exchanges at a boundary. Sixteen slots instead of one, because in clip
     // mode every rack has its own idea of what happens next.
 
-    /** Follow an incoming clock rather than the song's own tempo. */
-    void setExternalSync(bool on) { externalFlag.store(on, std::memory_order_relaxed); }
-    bool externalSync() const { return externalFlag.load(std::memory_order_relaxed); }
+    /**
+     * Who owns the tempo. There can only be one: following a MIDI clock and
+     * following a Link session at the same time is two masters, and what it
+     * sounds like is a fight.
+     *
+     * Everything that sets a tempo asks `externalSync()` first - the four
+     * sites in the scheduler included - so a new source only has to set this
+     * and they all stand down.
+     */
+    enum Sync : int32_t { SyncOff = 0, SyncMidi = 1, SyncLink = 2 };
+    void setSyncSource(int32_t s) {
+        syncFlag.store(s < 0 || s > SyncLink ? SyncOff : s, std::memory_order_relaxed);
+    }
+    int32_t syncSource() const { return syncFlag.load(std::memory_order_relaxed); }
+    bool externalSync() const { return syncSource() != SyncOff; }
+    bool followingMidi() const { return syncSource() == SyncMidi; }
+    bool followingLink() const { return syncSource() == SyncLink; }
+    /** The MIDI clock's own switch, from when it was the only one. */
+    void setExternalSync(bool on) {
+        if (on) setSyncSource(SyncMidi);
+        else if (followingMidi()) setSyncSource(SyncOff);
+    }
 
     // What the follower is doing, for the readout: packed bpm and error.
     void publishSync(int64_t packed) { syncForUi.store(packed, std::memory_order_relaxed); }
@@ -213,7 +232,7 @@ class Transport {
     std::atomic<bool> recordArmed{false};
     std::atomic<bool> launcherFlag{false};
     std::atomic<bool> clockOutFlag{false};
-    std::atomic<bool> externalFlag{false};
+    std::atomic<int32_t> syncFlag{SyncOff};
     std::atomic<bool> continued{false};
     std::atomic<int64_t> syncForUi{0};
     std::atomic<int32_t> launchQ{0};

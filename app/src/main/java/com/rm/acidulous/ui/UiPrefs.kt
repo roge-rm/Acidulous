@@ -88,6 +88,8 @@ object UiPrefs {
     // --- Screen ----------------------------------------------------------
     /** Keep the screen awake while the transport is running. */
     var keepAwake by mutableStateOf(true)
+    /** Was Link on last time? Acted on by MainActivity, which has a Context. */
+    var linkWanted by mutableStateOf(false)
         private set
 
     // --- Controller mappings ---------------------------------------------
@@ -155,6 +157,8 @@ object UiPrefs {
         fullQuality = p.getBoolean(KEY_QUALITY, true)
         recordBits = p.getInt(KEY_BITS, 24)
         keepAwake = p.getBoolean(KEY_AWAKE, true)
+        linkWanted = p.getBoolean(KEY_LINK, false)
+        com.rm.acidulous.engine.LinkHub.chooseStartStop(p.getBoolean(KEY_LINK_STARTSTOP, true))
         mappings = runCatching {
             kotlinx.serialization.json.Json.decodeFromString<List<com.rm.acidulous.model.Mapping>>(
                 p.getString(KEY_MAPPINGS, null) ?: "[]",
@@ -333,6 +337,21 @@ object UiPrefs {
         store?.edit()?.putBoolean(KEY_MIDI_FOLLOW, on)?.apply()
     }
 
+    /**
+     * Link is remembered but **not** switched on by `applyToEngine`: it needs
+     * a Context for the multicast lock, so MainActivity turns it on once the
+     * stream is up. What is stored here is only the wish.
+     */
+    fun chooseLink(on: Boolean) {
+        linkWanted = on
+        store?.edit()?.putBoolean(KEY_LINK, on)?.apply()
+    }
+
+    fun chooseLinkStartStop(on: Boolean) {
+        com.rm.acidulous.engine.LinkHub.chooseStartStop(on)
+        store?.edit()?.putBoolean(KEY_LINK_STARTSTOP, on)?.apply()
+    }
+
     fun chooseClockOut(on: Boolean) {
         MidiHub.chooseClockOut(on)
         store?.edit()?.putBoolean(KEY_MIDI_CLOCK_OUT, on)?.apply()
@@ -400,6 +419,8 @@ object UiPrefs {
     private const val KEY_MIDI_CLOCK_OUT = "midi_clock_out"
     private const val KEY_MIDI_FOLLOW = "midi_follow"
     private const val KEY_MIDI_AHEAD = "midi_ahead_ms"
+    private const val KEY_LINK = "link_on"
+    private const val KEY_LINK_STARTSTOP = "link_startstop"
 
     // --- What a new song and a new track start as ------------------------
 

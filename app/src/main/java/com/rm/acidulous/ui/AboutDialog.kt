@@ -60,8 +60,10 @@ private val TABS = listOf("app", "licence", "components")
 /** The three texts the app ships, and where the build staged each one. */
 private enum class Licence(val title: String, val asset: String) {
     Gpl3("GNU General Public License v3", "licences/gpl-3.0.txt"),
+    Gpl2("GNU General Public License v2", "licences/gpl-2.0.txt"),
     Lgpl2("GNU Library General Public License v2", "licences/lgpl-2.0.txt"),
     Apache2("Apache License 2.0", "licences/apache-2.0.txt"),
+    Bsl1("Boost Software License 1.0", "licences/bsl-1.0.txt"),
 }
 
 @Composable
@@ -120,6 +122,8 @@ private fun ComponentsTab(onRead: (Licence) -> Unit) {
     ) {
         LicenceRow(Licence.Apache2, "Oboe 1.10.0 · the audio stream", onRead)
         LicenceRow(Licence.Lgpl2, "LAME 3.100 · MP3 encoding, as its own library", onRead)
+        LicenceRow(Licence.Gpl2, "Ableton Link 4.0 · a tempo shared over Wi-Fi", onRead)
+        LicenceRow(Licence.Bsl1, "asio 1.36.0 · the network, underneath Link", onRead)
     }
 }
 

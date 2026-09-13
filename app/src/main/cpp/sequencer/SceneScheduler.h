@@ -295,6 +295,15 @@ class SceneScheduler {
         return launcher.playing(rack) ? launcherNow - launcher.origin(rack) : 0;
     }
 
+    /** The bar a phase is measured against: the scene's, or the song's. */
+    int32_t barTicks() const {
+        if (snap == nullptr || snap->scenes.empty() || launcherActive() ||
+            sceneIdx >= static_cast<int32_t>(snap->scenes.size())) {
+            return songTicksPerBar();
+        }
+        return snap->scenes[sceneIdx].ticksPerBar;
+    }
+
     /** Clip mode has no one scene to take a signature from, so the song's. */
     int32_t songTicksPerBar() const {
         return (snap != nullptr && !snap->scenes.empty()) ? snap->scenes[0].ticksPerBar : 4 * kPPQN;

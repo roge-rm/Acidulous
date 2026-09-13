@@ -42,6 +42,30 @@ class Delay {
         pingPong = pingPongOn;
     }
 
+    /**
+     * Where to read, for a write head at [wr] and a delay of [samples].
+     *
+     * Its own function because of the second line. The wrap can land *on*
+     * the buffer's length rather than under it: at 48 kHz the buffer is
+     * 96000 samples, floats there are 0.0078 apart, and a position a
+     * hundredth of a sample below zero plus 96000.0f rounds to exactly
+     * 96000 - one past the end, and at a page boundary, a crash.
+     *
+     * It took Link to find it. A tempo nudged every single block keeps the
+     * read position gliding, and a gliding position eventually lands on that
+     * value; a tempo sitting still almost never does.
+     */
+    static int readIndex(int32_t wr, float samples, int32_t size, float &frac) {
+        float rpos = static_cast<float>(wr) - samples;
+        while (rpos < 0.0f) rpos += static_cast<float>(size);
+        // Written as a *failed* less-than so that a position that is not a
+        // number goes here too rather than indexing with it.
+        if (!(rpos < static_cast<float>(size))) rpos = 0.0f;
+        const int r0 = static_cast<int>(rpos);
+        frac = rpos - static_cast<float>(r0);
+        return r0;
+    }
+
     // In: a mono send. Out: added to L/R (100% wet).
     void process(const float *in, float *outL, float *outR, int32_t frames) {
         // Glide the read position over the block: at most ~1% per block, so a
@@ -53,10 +77,8 @@ class Delay {
 
         for (int32_t i = 0; i < frames; ++i) {
             readSamples += perSample;
-            float rpos = static_cast<float>(wr) - readSamples;
-            while (rpos < 0.0f) rpos += static_cast<float>(maxSamples);
-            const int r0 = static_cast<int>(rpos);
-            const float frac = rpos - static_cast<float>(r0);
+            float frac = 0.0f;
+            const int r0 = readIndex(wr, readSamples, maxSamples, frac);
             const int r1 = (r0 + 1) % maxSamples;
             const float dl = buf[0][static_cast<size_t>(r0)] * (1.0f - frac) + buf[0][static_cast<size_t>(r1)] * frac;
             const float dr = buf[1][static_cast<size_t>(r0)] * (1.0f - frac) + buf[1][static_cast<size_t>(r1)] * frac;

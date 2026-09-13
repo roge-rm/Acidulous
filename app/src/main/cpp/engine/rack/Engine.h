@@ -8,6 +8,7 @@
 #include <engine/core/Handover.h>
 #include <engine/core/Messages.h>
 #include <engine/core/RtQueue.h>
+#include <engine/core/Timebase.h>
 #include <sequencer/RecordQueue.h>
 #include <sequencer/SceneScheduler.h>
 #include <sequencer/TickClock.h>
@@ -46,6 +47,15 @@ class Engine {
     /** Realtime bytes from a master, stamped with when they were heard. */
     MidiClockQueue clockIn;
     seq::ClockFollower follower;
+
+    /**
+     * A network timebase - Link - or null. Set from the host before it is
+     * switched on and cleared after; the audio thread only ever reads it,
+     * and only calls it when the transport says Link owns the tempo.
+     */
+    std::atomic<Timebase *> timebase{nullptr};
+    /** Does a peer starting or stopping start and stop us too? */
+    std::atomic<bool> syncStartStop{true};
     MasterBus master;
     Rack racks[kRackCount];
 
@@ -131,10 +141,18 @@ class Engine {
     void emitClock(int64_t blockStartTick, int64_t blockEndTick);
     void drainClockIn();
     void followExternal();
+    void followTimebase();
     void emitTransport(bool nowPlaying);
 
     bool playing = false;
     bool startPending = false;
+    /** Playing was asked for, and we are waiting for the session's downbeat. */
+    bool linkWaiting = false;
+    /** What we last told the session we were doing, for the edge. */
+    bool linkToldPlaying = false;
+    /** What the session was last seen doing, and whether we have looked yet. */
+    bool linkSawPlaying = false;
+    bool linkSeen = false;
     /** Frames the engine has produced since the stream started - the same
      *  timeline the audio stream presents on, which is what lets a MIDI
      *  event's frame become a wall-clock time on the far side. */

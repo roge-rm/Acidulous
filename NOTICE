@@ -24,10 +24,25 @@ LAME 3.100 — GNU Library General Public License, version 2
   taken under GPLv3-or-later. See that directory's PROVENANCE.md.
   Licence text: app/src/main/cpp/third_party/lame/COPYING
 
+Ableton Link 4.0 — GNU General Public License, version 2 or later
+  https://github.com/Ableton/link
+  A tempo, a beat and a bar line shared with other machines on the same
+  network. Dual-licensed: the GPL, or a proprietary licence from Ableton.
+  This app takes the GPL, which is what GPLv3-or-later may do with
+  GPLv2-or-later code. Vendored under app/src/main/cpp/third_party/link;
+  header-only, so it is compiled into libacidulous.so.
+  Licence text: licences/GPL-2.0.txt
+
+asio 1.36.0 — Boost Software License 1.0
+  https://github.com/chriskohlhoff/asio
+  The sockets and timers Link is built on; it comes with Link and is used
+  header-only. Vendored under app/src/main/cpp/third_party/asio.
+  Licence text: app/src/main/cpp/third_party/asio/LICENSE_1_0.txt
+
 Everything else in this repository is original work. The C++ engine, every
 machine and effect, the sequencer, the WAV, AIFF and FLAC writers and the
 MIDI file writer were all written for this project; no DSP, presets or
 samples are taken from anywhere else.
 
-All three licence texts are shipped inside the app and can be read from
-its About window.
+Every one of these licence texts is shipped inside the app and can be read
+from its About window.

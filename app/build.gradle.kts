@@ -103,14 +103,18 @@ abstract class StageLicences : DefaultTask() {
 val stageLicences = tasks.register<StageLicences>("stageLicences") {
     texts.from(
         file("src/main/cpp/third_party/lame/COPYING"),
+        file("src/main/cpp/third_party/asio/LICENSE_1_0.txt"),
         rootProject.file("LICENSE"),
         rootProject.file("licences/Apache-2.0.txt"),
+        rootProject.file("licences/GPL-2.0.txt"),
     )
     names.set(
         mapOf(
             "COPYING" to "lgpl-2.0.txt",
+            "LICENSE_1_0.txt" to "bsl-1.0.txt",
             "LICENSE" to "gpl-3.0.txt",
             "Apache-2.0.txt" to "apache-2.0.txt",
+            "GPL-2.0.txt" to "gpl-2.0.txt",
         ),
     )
     outputDir.set(layout.buildDirectory.dir("generated/licences"))

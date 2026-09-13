@@ -1,6 +1,8 @@
 #include "Engine.h"
 #include <sequencer/ClockFollower.h>
+#include <sequencer/LinkFollower.h>
 #include <sequencer/Song.h>
+#include <cmath>
 
 namespace acidulous {
 
@@ -88,10 +90,19 @@ void Engine::renderBlock(const float *in, float *out) {
             countInFrames = static_cast<double>(ticks) * clock.samplesPerTickNow();
             countInPerTick = clock.samplesPerTickNow();
             startPending = countInFrames <= 0.0;
+            // Under Link, a plain play waits for the session's next downbeat
+            // instead of starting where the finger landed - which is the
+            // whole point of a shared phase. A count-in is its own bar line
+            // and keeps its meaning, so the two do not both apply; the pull
+            // brings the count-in's bar into line over the following one.
+            linkWaiting = startPending && transport.followingLink() &&
+                          timebase.load(std::memory_order_acquire) != nullptr;
+            if (linkWaiting) startPending = false;
         } else {
             scheduler.allNotesOff();
             scheduler.stopLauncher();
             transport.clearLaunchRequests();
+            linkWaiting = false;
         }
         playing = transport.isPlaying();
         emitTransport(playing);
@@ -120,6 +131,7 @@ void Engine::renderBlock(const float *in, float *out) {
 
     drainClockIn();
     followExternal();
+    followTimebase();
 
     if (racks[0].midiOutBound() == false) {
         for (int32_t r = 0; r < kRackCount; ++r) racks[r].bindMidiOut(&midiOut, r);
@@ -343,18 +355,18 @@ void Engine::drainClockIn() {
             break;
         case 0xfa: // start: from the top
             follower.relocate(0);
-            if (transport.externalSync()) {
+            if (transport.followingMidi()) {
                 scheduler.locateTo(0);
                 transport.requestPlay(0);
             }
             break;
         case 0xfb: // continue: from wherever the locate left us
-            if (transport.externalSync()) {
+            if (transport.followingMidi()) {
                 transport.requestContinue();
             }
             break;
         case 0xfc:
-            if (transport.externalSync()) {
+            if (transport.followingMidi()) {
                 transport.requestStop();
             }
             break;
@@ -362,7 +374,7 @@ void Engine::drainClockIn() {
             const int64_t beats = static_cast<int64_t>(e.data1) | (static_cast<int64_t>(e.data2) << 7);
             const int64_t songTick = beats * (kPPQN / 4);
             follower.relocate(songTick);
-            if (transport.externalSync()) {
+            if (transport.followingMidi()) {
                 scheduler.locateTo(songTick);
             }
             break;
@@ -383,7 +395,7 @@ void Engine::drainClockIn() {
  * line rather than as a tempo that wavers.
  */
 void Engine::followExternal() {
-    if (!transport.externalSync() || !follower.running()) {
+    if (!transport.followingMidi() || !follower.running()) {
         return;
     }
     const double perTick = follower.framesPerTick();
@@ -408,6 +420,93 @@ void Engine::followExternal() {
                               (static_cast<int64_t>(bpmMilli & 0xffffff) << 32) |
                               (static_cast<int64_t>(errMicro) & 0xffffffffLL));
     }
+}
+
+/**
+ * Following a Link session: the tempo is theirs, and the bar line is theirs.
+ *
+ * The shape is the MIDI follower's, one floor up. What arrives is not a
+ * stream of pulses to be smoothed but a session state that is already
+ * smooth - Link does that work - so there is no loop here, only the two
+ * things that have to happen every block: run at their tempo, and lean
+ * gently until our bar line sits on theirs.
+ *
+ * Phase, not position. A Link session has no idea what a song is, so there
+ * is nothing to locate to; what is shared is *where in the bar* everyone is.
+ * Two machines playing different songs at the same tempo are in time with
+ * each other, which is the whole idea.
+ */
+void Engine::followTimebase() {
+    Timebase *tb = timebase.load(std::memory_order_acquire);
+    if (tb == nullptr || !transport.followingLink()) {
+        linkWaiting = false;
+        linkSeen = false;
+        linkToldPlaying = false;
+        return;
+    }
+    // Our bar, in beats, before anything is asked of the session: a phase is
+    // only meaningful against a bar both sides agree on.
+    const double barTicks = static_cast<double>(scheduler.barTicks());
+    if (barTicks > 0.0) tb->setQuantum(barTicks / static_cast<double>(kPPQN));
+
+    const Timebase::State s = tb->capture(framesRendered);
+    if (!s.valid || s.bpm < 1.0) return;
+
+    const double perTick = clock.framesPerTickAt(s.bpm);
+    const seq::LinkFollower::Advice advice = seq::LinkFollower::advise(
+        s, static_cast<double>(scheduler.currentTickInIteration()), barTicks, perTick,
+        playing && !linkWaiting);
+    clock.setExternalFramesPerTick(advice.framesPerTick);
+
+    // The downbeat we were waiting for.
+    if (linkWaiting && advice.downbeat) {
+        startPending = true;
+        linkWaiting = false;
+    }
+
+    // Start and stop travel both ways, when the setting says so - and both
+    // ways on the **edge**, not on the level.
+    //
+    // On the level it cannot work, and the way it fails is instructive: a
+    // session nobody has started yet reads as stopped, so the moment we
+    // press play we are told to stop, thirteen hundred times a second, and
+    // the transport sits there saying it is playing while the playhead never
+    // leaves the first tick. On the edge, only somebody actually pressing
+    // something moves anybody.
+    //
+    // Waiting for the downbeat is not playing yet, so it is not announced as
+    // such: a peer that followed it would start a bar before we did.
+    const bool reallyPlaying = playing && !linkWaiting;
+    if (!linkSeen) {
+        linkSawPlaying = s.playing;
+        linkToldPlaying = reallyPlaying;
+        linkSeen = true;
+    }
+    if (syncStartStop.load(std::memory_order_relaxed)) {
+        if (reallyPlaying != linkToldPlaying) {
+            tb->proposePlaying(reallyPlaying);
+            linkToldPlaying = reallyPlaying;
+        }
+        if (s.playing != linkSawPlaying) {
+            if (s.playing && !playing) {
+                transport.requestPlay(seq::Transport::kCurrentScene);
+            } else if (!s.playing && playing) {
+                transport.requestStop();
+            }
+        }
+    } else {
+        linkToldPlaying = reallyPlaying;
+    }
+    linkSawPlaying = s.playing;
+
+    // The same packing the MIDI follower publishes, so one readout reads
+    // both: locked, the tempo in hundredths, and the error in microseconds.
+    const int32_t bpmMilli = static_cast<int32_t>(s.bpm * 100.0);
+    const double errMs = advice.errorTicks * perTick * 1000.0 / static_cast<double>(clock.rate());
+    const int32_t errMicro = static_cast<int32_t>(errMs * 1000.0);
+    transport.publishSync((static_cast<int64_t>(1) << 56) |
+                          (static_cast<int64_t>(bpmMilli & 0xffffff) << 32) |
+                          (static_cast<int64_t>(errMicro) & 0xffffffffLL));
 }
 
 void Engine::drainMidi() {

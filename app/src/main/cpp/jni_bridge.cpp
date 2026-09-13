@@ -543,6 +543,26 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSetExternalSync(JNIEnv *, jobjec
 }
 
 JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetLink(JNIEnv *, jobject, jboolean on) {
+    host().setLinkEnabled(on == JNI_TRUE);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLinkEnabled(JNIEnv *, jobject) {
+    return host().linkEnabled() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetLinkStartStop(JNIEnv *, jobject, jboolean on) {
+    host().setLinkStartStop(on == JNI_TRUE);
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLinkStatus(JNIEnv *, jobject) {
+    return static_cast<jlong>(host().linkStatus());
+}
+
+JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeMidiClockIn(JNIEnv *, jobject, jlong frame, jint status, jint d1, jint d2) {
     host().midiClockIn(frame, static_cast<uint8_t>(status), static_cast<uint8_t>(d1), static_cast<uint8_t>(d2));
 }

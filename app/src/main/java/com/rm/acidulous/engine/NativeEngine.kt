@@ -211,6 +211,13 @@ object NativeEngine {
     /** Follow an incoming clock rather than the song's own tempo. */
     fun setExternalSync(on: Boolean) = nativeSetExternalSync(on)
 
+    // --- Ableton Link -------------------------------------------------------
+    fun setLink(on: Boolean) = nativeSetLink(on)
+    fun linkEnabled(): Boolean = nativeLinkEnabled()
+    fun setLinkStartStop(on: Boolean) = nativeSetLinkStartStop(on)
+    /** Peers in the top word, the session tempo in hundredths in the bottom. */
+    fun linkStatus(): Long = nativeLinkStatus()
+
     /** A realtime byte, on the frame it was heard. */
     fun midiClockIn(frame: Long, status: Int, d1: Int, d2: Int) = nativeMidiClockIn(frame, status, d1, d2)
 
@@ -456,6 +463,10 @@ object NativeEngine {
     private external fun nativeDrainMidiOut(out: LongArray): Int
     private external fun nativeAudioAnchor(out: LongArray)
     private external fun nativeSetExternalSync(on: Boolean)
+    private external fun nativeSetLink(on: Boolean)
+    private external fun nativeLinkEnabled(): Boolean
+    private external fun nativeSetLinkStartStop(on: Boolean)
+    private external fun nativeLinkStatus(): Long
     private external fun nativeMidiClockIn(frame: Long, status: Int, d1: Int, d2: Int)
     private external fun nativeSyncState(): Long
     private external fun nativeLaunchStates(out: LongArray)

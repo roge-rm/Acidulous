@@ -475,6 +475,12 @@ private fun App(modifier: Modifier = Modifier) {
             // quality and record format have to be pushed once the stream is
             // up, and again whenever one of them changes.
             com.rm.acidulous.ui.UiPrefs.applyToEngine()
+            // Link needs a Context for the multicast lock, so it cannot go
+            // in applyToEngine with the rest; it is switched on here if it
+            // was on when the app was last closed.
+            if (com.rm.acidulous.ui.UiPrefs.linkWanted) {
+                com.rm.acidulous.engine.LinkHub.setEnabled(context, true)
+            }
             // Come back to whatever was open. Only a first run falls through
             // to the demo - reloading it every launch used to overwrite
             // Demo.json and throw away the session.
@@ -631,6 +637,7 @@ private fun App(modifier: Modifier = Modifier) {
             stopAtEnd = NativeEngine.stopAtEnd
             queuedScene = NativeEngine.queuedScene
             com.rm.acidulous.midi.MidiHub.readSync()
+            com.rm.acidulous.engine.LinkHub.poll()
             if (com.rm.acidulous.ui.UiPrefs.clipMode) {
                 NativeEngine.launchStates(launchPacked)
                 launchStates = launchPacked.map { LaunchState.unpack(it) }
@@ -664,8 +671,17 @@ private fun App(modifier: Modifier = Modifier) {
     // used to be fifth and sixth in a line that is one ellipsised row, so on
     // a phone they were cut off the end - which mattered once the header
     // stopped showing the number and this became the only place it lives.
-    val diagnostics = "%s · load %.0f%% · xruns %d · peak %.3f · fade %.2f · on %d off %d"
-        .format(status, load, xruns, peak, fade, notesOn, notesOff)
+    val diagnostics = "%s · load %.0f%% · xruns %d · peak %.3f · fade %.2f · on %d off %d%s"
+        .format(
+            status, load, xruns, peak, fade, notesOn, notesOff,
+            // Only while Link is on, and only the number that matters when
+            // it is: how many machines are keeping this time.
+            if (com.rm.acidulous.engine.LinkHub.enabled) {
+                " · link %d".format(com.rm.acidulous.engine.LinkHub.peers)
+            } else {
+                ""
+            },
+        )
 
     if (exportAsk) {
         com.rm.acidulous.ui.ExportOptionsDialog(

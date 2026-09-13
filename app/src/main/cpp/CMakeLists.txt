@@ -35,11 +35,24 @@ target_compile_options(acidulous PRIVATE -Wall -Wextra -Wno-unused-parameter)
 # third_party/lame/PROVENANCE.md.
 add_subdirectory(third_party/lame)
 
+# Ableton Link, as headers. GPLv2-or-later, which our GPLv3 may take, so
+# unlike LAME it is compiled straight in - there is no relinking freedom to
+# preserve and a header-only library has no other way to be used. See
+# third_party/link/PROVENANCE.md.
+add_subdirectory(third_party/link)
+
+# Link's own headers are somebody else's and are warned about on their terms.
+set_source_files_properties(
+    ${CMAKE_CURRENT_SOURCE_DIR}/platform/link/LinkTimebase.cpp
+    PROPERTIES COMPILE_OPTIONS "-Wno-multichar;-Wno-unused-parameter"
+)
+
 find_package(oboe REQUIRED CONFIG)
 
 target_link_libraries(acidulous
     oboe::oboe
     mp3lame
+    ableton_link
     android
     log
 )

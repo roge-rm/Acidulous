@@ -144,6 +144,19 @@ class EngineHost {
     int drainMidiOut(int64_t *out, int maxEvents);
     bool audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate) const;
     void setExternalSync(bool on);
+
+    // --- Ableton Link -------------------------------------------------------
+    /** On opens the discovery sockets and hands the tempo to the session. */
+    void setLinkEnabled(bool on);
+    bool linkEnabled() const;
+    /** Does a peer starting or stopping start and stop us too? */
+    void setLinkStartStop(bool on);
+    /**
+     * Peers and the session tempo, for the readout - and, on the way past,
+     * the stream's current anchor handed to Link. Poll it.
+     * Packed: peers in the top word, tempo in hundredths in the bottom.
+     */
+    int64_t linkStatus();
     void midiClockIn(int64_t frame, uint8_t status, uint8_t d1, uint8_t d2);
     int64_t syncState() const;
 

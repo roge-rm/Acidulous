@@ -96,6 +96,13 @@ class TickClock {
 
     double samplesPerTickNow() const { return samplesPerTick; }
 
+    /** How long a tick would be at [bpm], without setting anything. */
+    double framesPerTickAt(double bpm) const {
+        if (bpm < 1.0) return samplesPerTick;
+        return static_cast<double>(sampleRate) * 60.0 / (bpm * static_cast<double>(kPPQN));
+    }
+    int32_t rate() const { return sampleRate; }
+
     /**
      * How many frames into the block just advanced the tick boundary [t]
      * falls. Exact, because `sampleRemainder` is the true sub-tick phase at

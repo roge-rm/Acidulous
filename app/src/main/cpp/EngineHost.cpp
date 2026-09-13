@@ -8,6 +8,7 @@
 #include <cstring>
 #include <chrono>
 #include <drivers/AudioDriver.h>
+#include <link/LinkTimebase.h>
 #include <engine/core/Constants.h>
 #include <engine/core/Frozen.h>
 #include <engine/core/WavReader.h>
@@ -38,6 +39,8 @@ namespace acidulous {
 namespace {
 Engine sEngine;
 AudioDriver sAudio;
+/** Link, made once and kept: the audio thread holds a pointer to it. */
+LinkTimebase sLink;
 
 Unit unitFromName(const std::string &u) {
     if (u == "effect1") return Unit::Effect1;
@@ -716,7 +719,15 @@ bool EngineHost::isStopAtEndArmed() const { return sEngine.transport.stopAtEndAr
 void EngineHost::queueScene(int idx) { sEngine.transport.queueScene(idx); }
 int EngineHost::queuedScene() const { return sEngine.transport.queuedSceneIndex(); }
 bool EngineHost::isRecordArmed() const { return sEngine.transport.isRecordArmed(); }
-void EngineHost::setTempo(float bpm) { sEngine.clock.requestSongTempo(bpm); }
+void EngineHost::setTempo(float bpm) {
+    sEngine.clock.requestSongTempo(bpm);
+    // Somebody *asking* for a tempo is the one thing worth telling a Link
+    // session about. Everything else the song does to its own tempo - a
+    // scene override, a smooth ramp - stands down while Link owns it, the
+    // same way it does under a MIDI clock, so that opening a song cannot
+    // quietly re-tempo everybody else in the room.
+    if (sEngine.transport.followingLink()) sLink.tempoFromApp(static_cast<double>(bpm));
+}
 float EngineHost::tempo() const { return sEngine.clock.bpm(); }
 int64_t EngineHost::positionPacked() const { return sEngine.transport.position(); }
 
@@ -749,6 +760,55 @@ bool EngineHost::audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate
 }
 
 void EngineHost::setExternalSync(bool on) { sEngine.transport.setExternalSync(on); }
+
+// --- Ableton Link -----------------------------------------------------------
+//
+// The timebase is handed to the engine once and never taken back: it lives
+// as long as the host does, so the audio thread can read the pointer without
+// wondering whether the object under it is still there. What switches is the
+// transport's sync *source*, which every tempo-setting site already asks
+// about - so turning Link on stands the song's own tempo down, and turning
+// it off gives it back, without either of them knowing Link exists.
+void EngineHost::setLinkEnabled(bool on) {
+    sLink.setEnabled(on);
+    if (on) {
+        sEngine.timebase.store(&sLink, std::memory_order_release);
+        // A burst of silence at the head of the buffer is the only latency
+        // guess available until the stream has presented enough frames to
+        // have a real anchor.
+        const int32_t rate = sAudio.getSampleRate() > 0 ? sAudio.getSampleRate() : kSampleRate;
+        sLink.setFallbackLatency(static_cast<int64_t>(sAudio.getBufferFrames()) * 1000000LL / rate);
+        sLink.setBlockFrames(kBlockFrames, rate);
+        // Switching on alone means *our* tempo becomes the session's. It is
+        // only when a session is already out there that the tempo is theirs,
+        // and Link settles that itself the moment discovery finds one: the
+        // peer that joins adopts. Without this, turning Link on at the start
+        // of the day dropped a 140 bpm song to Link's own default of 120.
+        sLink.tempoFromApp(static_cast<double>(sEngine.clock.bpm()));
+        sEngine.transport.setSyncSource(seq::Transport::SyncLink);
+    } else if (sEngine.transport.followingLink()) {
+        sEngine.transport.setSyncSource(seq::Transport::SyncOff);
+    }
+}
+
+bool EngineHost::linkEnabled() const { return sLink.enabled(); }
+
+void EngineHost::setLinkStartStop(bool on) {
+    sEngine.syncStartStop.store(on, std::memory_order_relaxed);
+}
+
+int64_t EngineHost::linkStatus() {
+    // The anchor goes down the same call that fetches the readout: it needs
+    // refreshing while Link is on, the UI polls this once a second anyway,
+    // and one caller is one thing to forget rather than two.
+    int64_t frame = 0, nanos = 0;
+    if (sAudio.presentationAnchor(frame, nanos)) {
+        sLink.setAnchor(frame, nanos, sAudio.getSampleRate() > 0 ? sAudio.getSampleRate() : kSampleRate);
+    }
+    const int64_t peers = sLink.peers();
+    const int64_t tempo = static_cast<int64_t>(sLink.sessionTempo() * 100.0);
+    return (peers << 32) | (tempo & 0xffffffffLL);
+}
 void EngineHost::midiClockIn(int64_t frame, uint8_t status, uint8_t d1, uint8_t d2) {
     sEngine.pushClock({frame, status, d1, d2});
 }
