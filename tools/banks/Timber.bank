@@ -1,4 +1,46 @@
-# Timber - seeded from what shipped, and not yet voiced.
+# Timber - ten woodwinds, levelled but not yet voiced by ear.
+#
+# What has been done here is the *machine* and the *balance*. What has not is
+# whether each of these sounds like the instrument on the label; that is Dan's
+# ear against the debug build.
+#
+# **Levelled to about -23 dB RMS.** The spread was 15.0 dB and is 3.8: every
+# patch carried the default volume, so Stopped Wood sat 15 dB over the Oboe.
+# Init is the only one left outside, 3 dB under, and it has to be - an Init
+# sets nothing by rule, so it is the machine's own default and not a choice.
+# Oboe is at 1.49 of a maximum 1.5 and has nothing left; if it ever needs more
+# it has to come from pressure or reed rather than from the fader.
+#
+# **Two hard gates were fixed in the machine** (see the commit): the tongue
+# came off the reed in one sample, and the key click stopped dead with its
+# filter still ringing. Worst second-difference score against the local level:
+# Init 4.93 to 2.30, Clarinet 4.95 to 2.36, Bass Clarinet 4.53 to 2.80, Oboe
+# 4.00 to 2.56, Bassoon 4.48 to 2.65.
+#
+# **This machine does not have the brass one's fault.** Measured as the first
+# pass down the tube against the settled tone - the thing that found four
+# faults in Brazen - the clarinet reads 0.4x, 0.6x and 1.0x across the bands
+# where the tuba read 24.7x. Timber's tube is short and its output is gated by
+# the envelope, so there is no unfiltered first pass to hear.
+#
+# **The `edge` column stays high, 5x to 14x, and it is the breath.** Not the
+# key click, which was the obvious guess and is wrong: Stopped Wood reads
+# 14.3x with `keys` at 0.45 and 14.3x with it at zero. With `breath` at zero
+# it reads 7.2x. Breath noise is broadband and the settled tone is not, so any
+# patch with air in it measures an onset brighter than its body - which is
+# what a woodwind is. Left alone deliberately. The noise is white to Nyquist,
+# which no airstream is, and tilting it the way the brass's was tilted would
+# halve this number; it would also take the air out of the flute and the pan
+# pipe, which is most of what they are. That is a tone decision and wants an
+# ear, not a measurement.
+#
+# **They play flat**, -3 to -17 cents, worst on the bass clarinet. That is the
+# machine and it predates this work - the plan's own section records the
+# clarinet at -10.4 cents as measured. Not addressed here.
+#
+# Forked's pitch column reads about -4100 cents. That is the measurement, not
+# the patch: a fork fingering deliberately sits between two modes and the F0
+# finder cannot follow it.
 #
 # Values are in each parameter's own units; `audition params Timber` lists
 # them. A patch names only what it changes.
@@ -16,6 +58,7 @@ patch Clarinet
   breath         0.1
   keys           0.2
 
+  volume         1.17
 patch "Bass Clarinet"
   body           73.4 Hz
   breath         0.16
@@ -25,6 +68,7 @@ patch "Bass Clarinet"
   pressure       0.9
   tongue         0.6
 
+  volume         0.95
 patch "Alto Sax"
   attack         0.015 s
   body           138.6 Hz
@@ -37,6 +81,7 @@ patch "Alto Sax"
   tongue         0.75
   vibrato        9 cents
 
+  volume         0.93
 patch Oboe
   attack         0.012 s
   body           233.1 Hz
@@ -50,6 +95,7 @@ patch Oboe
   tongue         0.8
   vibrato        12 cents
 
+  volume         1.49
 patch Bassoon
   attack         0.025 s
   body           58.3 Hz
@@ -60,6 +106,7 @@ patch Bassoon
   lattice        700 Hz
   pressure       0.9
 
+  volume         0.93
 patch Flute
   attack         0.04 s
   body           261.6 Hz
@@ -72,6 +119,7 @@ patch Flute
   tongue         0.35
   vibrato        10.8 cents
 
+  volume         0.67
 patch "Pan Pipe"
   aim            0.1
   attack         0.06 s
@@ -83,6 +131,7 @@ patch "Pan Pipe"
   pressure       0.7
   tongue         0.2
 
+  volume         0.86
 patch "Stopped Wood"
   answer         0.385
   attack         0.05 s
@@ -95,6 +144,7 @@ patch "Stopped Wood"
   pressure       1
   tongue         0.5
 
+  volume         0.26
 patch Forked
   answer         0.4675
   attack         0.04 s
@@ -108,3 +158,5 @@ patch Forked
   lattice        1200 Hz
   pressure       1
   tongue         0.6
+
+  volume         0.83

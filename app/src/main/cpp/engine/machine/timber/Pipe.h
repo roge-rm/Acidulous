@@ -52,6 +52,18 @@ class Pipe {
         holeLp = holeLp2 = bellLp = inertia = breathLp = ventLp = 0.0f;
         dcIn = dcOut = 0.0f;
         radiated = 0.0f;
+        // The tube length goes back with the rest of it. tune() rewrites it
+        // before step() ever reads it, so nothing depends on this today -
+        // but a cleared pipe holding the last note's length is exactly the
+        // omission that broke reset_test twice on the brass, and it costs a
+        // line to not find out again.
+        //
+        // Gliding the read toward the solved length, which is what the brass
+        // needed, was tried here and does not earn its place: it helps the
+        // reeds a little (Bass Clarinet 2.8 to 2.3, Alto Sax 3.8 to 3.0) and
+        // hurts the jets more (Flute 3.3 to 4.6), because the jet line is
+        // read against this length and a moving one detunes it.
+        upperDelay = 0.0f;
     }
 
     // --- what the player and the instrument are ------------------------------
