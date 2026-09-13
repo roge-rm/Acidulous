@@ -10,10 +10,8 @@ patch Init
 patch "Pulse Lead"
   ampattack      0.000999766 s
   ampdecay       0.400145 s
-  amprelease     0.0799979 s
   ampsustain     0.7
   duty           0.25
-  framerate      49.9918 Hz
   mono           #1
   volume         0.70005
   set arp "0 4 7"
@@ -42,7 +40,6 @@ patch "Noise Hit"
   ampsustain     0
   framerate      59.9951 Hz
   noiseshort     #1
-  volume         0.79995
   wave           #3
   set arp ""
   set duty ""
@@ -50,7 +47,6 @@ patch "Noise Hit"
   set vol "255 190 120 70 40 20 8 0 |"
 
 patch Buzzsaw
-  ampattack      0.00200086 s
   ampdecay       0.999651 s
   amprelease     0.2 s
   bits           #2
@@ -65,7 +61,6 @@ patch Buzzsaw
 
 patch "Formula Buzz"
   a              160.012
-  ampattack      0.00200086 s
   ampdecay       0.599961 s
   amprelease     0.149992 s
   cutoff         11999.1 Hz
@@ -78,7 +73,6 @@ patch "Formula Buzz"
   set vol ""
 
 patch "Ring Chip"
-  ampattack      0.00200086 s
   ampdecay       0.799989 s
   amprelease     0.2 s
   ampsustain     0.6

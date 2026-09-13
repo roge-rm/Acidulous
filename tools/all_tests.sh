@@ -32,6 +32,9 @@ fi
 # And the two that bring their own runner.
 echo "--- reset"; "$ROOT/tools/reset_test.sh" | tail -3 || fail=1
 echo "--- mpe";   "$ROOT/tools/mpe_test.sh"   | tail -2 || fail=1
+# The banks: every factory patch names real parameters, makes a sound, does
+# not clip fifty times over, and plays the same twice.
+echo "--- bank";  "$ROOT/tools/bank_test.sh"  | tail -2 || fail=1
 echo "--- sink";  "$ROOT/tools/sink_test.sh"  | tail -2 || fail=1
 echo "--- molt";  "$ROOT/tools/molt_test.sh"  | tail -2 || fail=1
 # Link takes half a minute: most of it is two sessions finding each other

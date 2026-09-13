@@ -36,6 +36,7 @@
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
+#include <engine/machine/formulate/Program.h>
 
 #include "audition_kit.h"
 #include "audition_material.h"
@@ -192,6 +193,7 @@ struct Material {
     std::unique_ptr<audio::Utterance> utterance;
     std::unique_ptr<SampleMap> map;
     std::unique_ptr<::acidulous::machine::cumulus::CloudSet> cloud;
+    std::unique_ptr<::acidulous::machine::formulate::Program> program;
     std::vector<float> input; // mono, published a block at a time
 };
 
@@ -231,6 +233,35 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
         mat.map = zoneMap();
         m->swapObject(0, mat.map.get());
     }
+}
+
+/**
+ * The half of a patch that is not knobs.
+ *
+ * Formulate's sound is a string, not a number: without its formula compiled
+ * and mounted it plays its plain oscillator, which is why "Formula Buzz"
+ * measured as silence. Cumulus's table is the same shape of problem and is
+ * built from the machine's own parameters above. Both are what EngineHost
+ * does when the setting changes, done here for the same reason.
+ */
+void applySettings(Machine *m, const std::string &machine,
+                   const std::vector<std::pair<std::string, std::string>> &settings, Material &mat) {
+    if (machine != "Formulate") return;
+    std::string formula, arp, duty, vol;
+    for (const auto &kv : settings) {
+        if (kv.first == "formula") formula = kv.second;
+        else if (kv.first == "arp") arp = kv.second;
+        else if (kv.first == "duty") duty = kv.second;
+        else if (kv.first == "vol") vol = kv.second;
+    }
+    if (formula.empty() && arp.empty() && duty.empty() && vol.empty()) return;
+    std::string error;
+    mat.program = ::acidulous::machine::formulate::compile(formula, arp, duty, vol, error);
+    if (!mat.program) {
+        std::fprintf(stderr, "  the formula did not compile: %s\n", error.c_str());
+        return;
+    }
+    m->swapObject(0, mat.program.get());
 }
 
 void loadInput(const std::string &kind, Material &mat) {
@@ -600,6 +631,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         if (!opt.material.empty()) material = opt.material;
         if (!opt.input.empty()) input = opt.input;
         mountMaterial(m.get(), bank.unit, material, mat);
+        applySettings(m.get(), bank.unit, r.settings, mat);
         loadInput(input, mat);
 
         const Kit *kit = kitFor(bank.unit);
@@ -779,7 +811,21 @@ int cmdSeed(const std::string &dumpPath) {
         const ParamDef &d = defs[index];
         // A patch lists only what it changes; anything sitting at the default
         // is noise in the file and behaves identically when left out.
-        if (std::fabs(v01 - d.unmap(d.def)) < 1e-6f) continue;
+        //
+        // "Sitting at the default" needs care. A stepped parameter has to be
+        // compared as a step, because the Kotlin literals are rounded to four
+        // places - Dice's `"slices" to 0.4286f` is step 6 exactly as the
+        // default is, and comparing the numbers keeps a line that changes
+        // nothing. And a continuous one is compared at the precision those
+        // literals actually carry, not at the precision a float can hold.
+        bool isDefault;
+        if (d.curve == Curve::Stepped) {
+            const auto step = [&](float v) { return static_cast<int>(v * static_cast<float>(d.steps - 1) + 0.5f); };
+            isDefault = step(v01) == step(d.unmap(d.def));
+        } else {
+            isDefault = std::fabs(v01 - d.unmap(d.def)) < 5e-5f;
+        }
+        if (isDefault) continue;
         ++values;
 
         // Cipher has parameters called "wave a" and "wave b". A name with a

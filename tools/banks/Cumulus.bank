@@ -12,13 +12,10 @@ patch Cirrus
   amprelease     2.19935 s
   bandwidth      34.9985 cents
   bbandwidth     89.98 cents
-  btilt          6.0012 dB/oct
   bwscale        1.1
-  combperiod     2.9998
   cutoff         10999 Hz
   detune         7 cents
   partials       56.0037
-  seed           #1
   tilt           -9.999 dB/oct
   width          0.7
 
@@ -27,16 +24,13 @@ patch Choir
   amprelease     2.00012 s
   bandwidth      21.9994 cents
   bbandwidth     40 cents
-  btilt          6.0012 dB/oct
   bvowel         0.55
-  combperiod     2.9998
   cutoff         7998.4 Hz
   detune         9 cents
   drift          9 cents
   driftrate      0.0999935 Hz
   morphkey       0.3
   partials       44.0022
-  seed           #1
   spread         #2
   tilt           -8.001 dB/oct
   vowel          0.25
@@ -51,13 +45,11 @@ patch "Bell Cloud"
   bandwidth      10.0017 cents
   bbandwidth     119.98 cents
   bstretch       0.02
-  btilt          6.0012 dB/oct
   comb           0.35
   combperiod     3.9997
   cutoff         13998.8 Hz
   filterenv      0.3
   partials       28.0002
-  seed           #1
   shimmer        0.2
   spread         #0
   stretch        0.032
@@ -70,13 +62,11 @@ patch "Deep Wash"
   bbandwidth     -120.02 cents
   btilt          -6.0012 dB/oct
   bwscale        1.4
-  combperiod     2.9998
   cutoff         6001.56 Hz
   detune         14 cents
   drift          14 cents
   driftrate      0.0700082 Hz
   partials       64.0047
-  seed           #1
   spread         #2
   tilt           -15.999 dB/oct
   width          1
@@ -88,14 +78,11 @@ patch "Glass Rain"
   bbandwidth     149.98 cents
   bodd           -0.5
   btilt          7.9992 dB/oct
-  combperiod     2.9998
   cutoff         16001.3 Hz
   detune         6 cents
   lfo1morph      0.8
   lfo1rate       0.0800132 Hz
   odd            0.75
-  partials       48.0027
-  seed           #1
   shimmer        0.55
   shimmerint     #3
   tilt           -12 dB/oct
@@ -108,12 +95,9 @@ patch Hollow
   bbandwidth     70 cents
   bcomb          -0.5
   bodd           -0.6
-  btilt          6.0012 dB/oct
   comb           0.55
-  combperiod     2.9998
   cutoff         7001.92 Hz
   detune         5 cents
   odd            1
   partials       40.0017
-  seed           #1
   tilt           -11.001 dB/oct

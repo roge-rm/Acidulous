@@ -13,7 +13,6 @@ patch "Eighty Eight"
   duck           0.45
   hatclosed      0.050001 s
   hatopen        0.599954 s
-  hattune        539.957 Hz
   kickclick      0.25
   kickdecay      1.6002 s
   kickdrive      0.15
@@ -81,9 +80,7 @@ patch Loose
   comp           0.3
   drift          0.85
   duck           0.35
-  hatclosed      0.0599958 s
   hatopen        0.549932 s
   kickdecay      1.0001 s
   kickpunch      0.5
-  kicktune       47.9992 Hz
   snaredecay     0.240017 s

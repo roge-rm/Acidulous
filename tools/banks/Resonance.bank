@@ -11,7 +11,6 @@ patch Skins
   coupling       0.35
   humanise       0.2
   p00_bend       7.9992
-  p00_bendtime   0.0299976 s
   p00_couple     0.2
   p00_damp       0.55
   p00_decay      0.450112 s
@@ -20,7 +19,6 @@ patch Skins
   p00_level      1.00005
   p00_noise      0.35
   p00_tune       62.0119 Hz
-  p01_bendtime   0.0299976 s
   p01_damp       0.6
   p01_decay      0.349973 s
   p01_hard       0.6
@@ -29,27 +27,18 @@ patch Skins
   p01_noise      0.6
   p01_pan        -0.1
   p01_tune       189.989 Hz
-  p02_bendtime   0.0299976 s
   p02_damp       0.45
-  p02_decay      0.600094 s
   p02_hit        0.3
-  p02_level      0.79995
   p02_pan        -0.35
-  p02_tune       120.003 Hz
-  p03_bendtime   0.0299976 s
   p03_damp       0.45
   p03_decay      0.550161 s
   p03_hit        0.3
-  p03_level      0.79995
   p03_tune       160.004 Hz
-  p04_bendtime   0.0299976 s
   p04_damp       0.45
   p04_decay      0.499869 s
   p04_hit        0.3
-  p04_level      0.79995
   p04_pan        0.35
   p04_tune       209.961 Hz
-  p05_bendtime   0.0299976 s
   p05_couple     0.6
   p05_damp       0.85
   p05_decay      0.120035 s
@@ -60,7 +49,6 @@ patch Skins
   p05_noise      0.5
   p05_pan        0.25
   p05_tune       900.129 Hz
-  p06_bendtime   0.0299976 s
   p06_couple     0.7
   p06_damp       0.5
   p06_decay      1.60021 s
@@ -71,7 +59,6 @@ patch Skins
   p06_noise      0.4
   p06_pan        -0.25
   p06_tune       820.001 Hz
-  p07_bendtime   0.0299976 s
   p07_couple     0.8
   p07_damp       0.35
   p07_decay      3.4995 s
@@ -87,7 +74,6 @@ patch Woodshop
   coupling       0.2
   humanise       0.25
   modes          #1
-  p00_bendtime   0.0299976 s
   p00_damp       0.25
   p00_decay      1.20027 s
   p00_hard       0.6
@@ -96,27 +82,22 @@ patch Woodshop
   p00_level      1.00005
   p00_noise      0.05
   p00_tune       90.0027 Hz
-  p01_bendtime   0.0299976 s
   p01_damp       0.3
   p01_decay      0.899743 s
   p01_hard       0.7
   p01_hit        0.28
   p01_kind       #1
-  p01_level      0.79995
   p01_noise      0.05
   p01_pan        -0.2
   p01_tune       179.97 Hz
-  p02_bendtime   0.0299976 s
   p02_damp       0.35
   p02_decay      0.699991 s
   p02_hard       0.75
   p02_hit        0.28
   p02_kind       #1
-  p02_level      0.79995
   p02_noise      0.05
   p02_pan        0.2
   p02_tune       270.016 Hz
-  p03_bendtime   0.0299976 s
   p03_damp       0.5
   p03_decay      0.250068 s
   p03_hard       0.9
@@ -125,36 +106,29 @@ patch Woodshop
   p03_level      0.9
   p03_noise      0.1
   p03_tune       420.016 Hz
-  p04_bendtime   0.0299976 s
   p04_decay      0.300028 s
   p04_hard       0.95
   p04_hit        0.3
   p04_kind       #1
-  p04_level      0.79995
   p04_noise      0.05
   p04_pan        -0.35
   p04_tune       699.927 Hz
-  p05_bendtime   0.0299976 s
   p05_damp       0.45
   p05_decay      0.250068 s
   p05_hard       0.95
   p05_hit        0.3
   p05_kind       #1
-  p05_level      0.79995
   p05_noise      0.05
   p05_pan        0.35
   p05_tune       1050.13 Hz
-  p06_bendtime   0.0299976 s
   p06_damp       0.7
   p06_decay      0.300028 s
   p06_hit        0.4
   p06_level      0.70005
   p06_noise      0.5
   p06_tune       149.983 Hz
-  p07_bendtime   0.0299976 s
   p07_couple     0.5
   p07_damp       0.3
-  p07_decay      0.600094 s
   p07_hard       0.8
   p07_hit        0.5
   p07_kind       #3
@@ -165,7 +139,6 @@ patch Woodshop
 patch Foundry
   coupling       0.75
   modes          #4
-  p00_bendtime   0.0299976 s
   p00_damp       0.25
   p00_decay      2.50052 s
   p00_drive      0.25
@@ -175,28 +148,23 @@ patch Foundry
   p00_level      1.00005
   p00_noise      0.15
   p00_tune       140.001 Hz
-  p01_bendtime   0.0299976 s
   p01_couple     0.8
   p01_damp       0.2
   p01_decay      3.00008 s
   p01_hard       0.9
   p01_hit        0.4
   p01_kind       #5
-  p01_level      0.79995
   p01_noise      0.1
   p01_pan        -0.3
   p01_tune       319.946 Hz
-  p02_bendtime   0.0299976 s
   p02_couple     0.9
   p02_damp       0.15
   p02_decay      4.50083 s
   p02_hard       0.8
   p02_hit        0.45
   p02_kind       #2
-  p02_level      0.79995
   p02_pan        0.3
   p02_tune       260.001 Hz
-  p03_bendtime   0.0299976 s
   p03_couple     0.9
   p03_damp       0.1
   p03_decay      6.00055 s
@@ -206,25 +174,20 @@ patch Foundry
   p03_level      0.70005
   p03_noise      0.1
   p03_tune       179.97 Hz
-  p04_bendtime   0.0299976 s
   p04_damp       0.3
   p04_decay      1.99974 s
   p04_hard       0.9
   p04_hit        0.5
   p04_kind       #3
-  p04_level      0.79995
   p04_noise      0.1
   p04_pan        -0.15
   p04_tune       239.96 Hz
-  p05_bendtime   0.0299976 s
   p05_damp       0.35
   p05_decay      1.20027 s
   p05_hard       0.95
   p05_kind       #5
-  p05_level      0.79995
   p05_pan        0.15
   p05_tune       640.035 Hz
-  p06_bendtime   0.0299976 s
   p06_damp       0.3
   p06_decay      2.19961 s
   p06_hard       0.9
@@ -234,7 +197,6 @@ patch Foundry
   p06_noise      0.25
   p06_pan        0.45
   p06_tune       900.129 Hz
-  p07_bendtime   0.0299976 s
   p07_couple     1
   p07_damp       0.08
   p07_decay      6.99945 s
@@ -250,7 +212,6 @@ patch Glassware
   coupling       0.9
   humanise       0.1
   modes          #5
-  p00_bendtime   0.0299976 s
   p00_couple     0.8
   p00_damp       0.1
   p00_decay      5.00136 s
@@ -260,51 +221,42 @@ patch Glassware
   p00_level      0.9
   p00_noise      0.05
   p00_tune       219.98 Hz
-  p01_bendtime   0.0299976 s
   p01_couple     0.8
   p01_damp       0.12
   p01_decay      4.50083 s
   p01_hard       0.65
   p01_hit        0.5
   p01_kind       #4
-  p01_level      0.79995
   p01_noise      0.05
   p01_pan        -0.25
   p01_tune       330.045 Hz
-  p02_bendtime   0.0299976 s
   p02_couple     0.8
   p02_damp       0.14
   p02_decay      3.99974 s
   p02_hard       0.7
   p02_hit        0.5
   p02_kind       #4
-  p02_level      0.79995
   p02_noise      0.05
   p02_pan        0.25
   p02_tune       440.059 Hz
-  p03_bendtime   0.0299976 s
   p03_couple     0.7
   p03_damp       0.2
   p03_decay      2.50052 s
   p03_hard       0.8
   p03_hit        0.5
   p03_kind       #3
-  p03_level      0.79995
   p03_noise      0.1
   p03_pan        -0.4
   p03_tune       589.956 Hz
-  p04_bendtime   0.0299976 s
   p04_couple     0.7
   p04_damp       0.22
   p04_decay      2.19961 s
   p04_hard       0.85
   p04_hit        0.5
   p04_kind       #3
-  p04_level      0.79995
   p04_noise      0.1
   p04_pan        0.4
   p04_tune       789.917 Hz
-  p05_bendtime   0.0299976 s
   p05_couple     0.6
   p05_damp       0.3
   p05_decay      1.7996 s
@@ -314,15 +266,12 @@ patch Glassware
   p05_level      0.6
   p05_noise      0.15
   p05_tune       1099.78 Hz
-  p06_bendtime   0.0299976 s
   p06_damp       0.6
   p06_decay      0.499869 s
   p06_hard       0.4
   p06_hit        0.25
-  p06_level      0.79995
   p06_noise      0.4
   p06_tune       95.0133 Hz
-  p07_bendtime   0.0299976 s
   p07_couple     0.9
   p07_decay      0.999804 s
   p07_hard       0.95

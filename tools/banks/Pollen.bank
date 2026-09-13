@@ -16,7 +16,6 @@ patch Drift
   scan           0.02
   size           140.03 ms
   spray          0.25
-  volume         0.79995
 
 patch Pollinate
   ampattack      0.300117 s
@@ -26,11 +25,8 @@ patch Pollinate
   drift          0.35
   mutate         0.35
   panspread      0.9
-  size           90.0169 ms
-  volume         0.79995
 
 patch "Chord Dust"
-  ampattack      0.0500052 s
   amprelease     1.49965 s
   density        44.9901 /s
   panspread      0.8
@@ -63,7 +59,6 @@ patch "Live Hold"
   size           179.995 ms
   source         #1
   spray          0.15
-  volume         0.79995
 
 patch "Eat Itself"
   ampattack      0.500019 s

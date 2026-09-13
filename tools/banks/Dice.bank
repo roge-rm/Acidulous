@@ -8,12 +8,10 @@ machine Dice
 patch Init
 
 patch Straight
-  slices         #6
 
 patch Nudge
   gate           0.9
   reverse        0.08
-  slices         #6
   swap           0.1
 
 patch Broken
@@ -22,7 +20,6 @@ patch Broken
   reverse        0.3
   slices         #10
   stutter        0.15
-  stutterdiv     #2
   swap           0.5
 
 patch Fill
@@ -41,7 +38,6 @@ patch Held
   hold           #1
   reverse        0.25
   seed           #11
-  slices         #6
   stutter        0.2
   swap           0.4
 

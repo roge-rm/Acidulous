@@ -9,17 +9,14 @@ CPP="$ROOT/app/src/main/cpp"
 OUT="$ROOT/build/audition"
 BIN="$ROOT/build/audition-bin"
 mkdir -p "$OUT" "$BIN"
+LIB=$("$ROOT/tools/host_engine.sh") || exit 1
 
-# Rebuilt only when something is newer than the binary. The inner loop here is
-# edit a bank file and listen, and it must not pay for a compile.
-newest=$(find "$ROOT/tools" "$CPP" \( -name '*.cpp' -o -name '*.h' \) -newer "$BIN/audition" 2>/dev/null | head -1)
-if [ ! -x "$BIN/audition" ] || [ -n "$newest" ]; then
-    SRC=$(find "$CPP/engine/machine" "$CPP/engine/dsp" "$CPP/engine/effect" -name '*.cpp')
-    # Molt's analyser, Dice's and Pollen's onsets, and our own output. No
-    # AudioSink.cpp: it includes all four writers and would drag in host LAME.
-    SRC="$SRC $CPP/engine/core/Utterance.cpp $CPP/engine/core/Take.cpp"
-    SRC="$SRC $CPP/engine/core/WavWriter.cpp $CPP/engine/core/WavReader.cpp"
-    g++ -O2 -std=c++17 -I "$CPP" "$ROOT/tools/audition.cpp" $SRC -o "$BIN/audition" || exit 1
+# Relinked only when something changed: the inner loop here is edit a bank
+# file and listen, and it must not pay for a compile.
+if [ ! -x "$BIN/audition" ] || [ "$ROOT/tools/audition.cpp" -nt "$BIN/audition" ] ||
+   [ "$LIB" -nt "$BIN/audition" ] ||
+   [ -n "$(find "$ROOT/tools" -name '*.h' -newer "$BIN/audition" 2>/dev/null | head -1)" ]; then
+    g++ -O2 -std=c++17 -I "$CPP" "$ROOT/tools/audition.cpp" "$LIB" -o "$BIN/audition" || exit 1
 fi
 
 ACIDULOUS_ROOT="$ROOT" "$BIN/audition" "$@"
