@@ -1,86 +1,212 @@
-# Genesis - seeded from what shipped, and not yet voiced.
+# Genesis - twelve kits and an Init.
+#
+# The difference between this and Hexbeat's bank is the last six parameters.
+# Genesis has a bus - a compressor, a duck the kick drives, drive and drift -
+# so a kit here is not only thirteen sounds and their balance, it is what
+# happens to them together. Half of these are named for the bus rather than
+# for the drums.
 #
 # Values are in each parameter's own units; `audition params Genesis` lists
-# them. A patch names only what it changes.
+# them.
 
 machine Genesis
+role    beat
 
 patch Init
 
-patch "Eighty Eight"
-  comp           0.4
-  drift          0.15
-  duck           0.45
-  hatclosed      0.050001 s
-  hatopen        0.599954 s
-  kickclick      0.25
-  kickdecay      1.6002 s
-  kickdrive      0.15
-  kickpunch      0.45
-  kicksweep      0.0599954 s
-  kicktune       45.0015 Hz
-  snaredecay     0.249982 s
-  snaresnap      0.55
-  snaretune      180.006 Hz
+patch Boom
+  # The long swept kick this box is for, with the bus barely doing anything so
+  # you can hear how long it actually is.
+  kicktune       36 Hz
+  kickdecay      1.6 s
+  kicksweep      0.09 s
+  kickpunch      0.4
+  kickclick      0.2
+  kicklevel      1.15
+  snaredecay     0.18 s
+  hatclosed      0.05 s
+  comp           0.15
+  duck           0.1
 
-patch "Nine O Nine"
-  comp           0.5
-  drive          0.25
-  hatclosed      0.0349993 s
-  hatopen        0.279983 s
-  hattone        8999.33 Hz
-  hattune        679.997 Hz
-  kickclick      0.7
-  kickdecay      0.44991 s
-  kickdrive      0.35
+patch Pump
+  # The other thing it is for: the compressor hard and the duck deep, so the
+  # whole kit breathes on the kick. Turn the duck off and this is an ordinary
+  # kit; that is the point of it being here.
+  kicktune       44 Hz
+  kickdecay      0.7 s
   kickpunch      0.7
-  kicksweep      0.0199997 s
-  kicktune       58.0018 Hz
-  snaredecay     0.160003 s
+  comp           0.9
+  compattack     0.002 s
+  comprelease    0.12 s
+  duck           0.9
+  drive          0.3
+  hatopen        0.7 s
+  crashdecay     3 s
+
+patch Tight
+  # Everything short and the bus quick, for a pattern with no room in it.
+  kickdecay      0.28 s
+  kicksweep      0.02 s
+  kickpunch      0.85
+  kickclick      0.6
+  snaredecay     0.1 s
+  snaresnap      0.75
+  tomdecay       0.2 s
+  hatclosed      0.025 s
+  hatopen        0.22 s
+  crashdecay     0.9 s
+  ridedecay      0.7 s
+  clapdecay      0.16 s
+  comp           0.5
+  compattack     0.001 s
+  comprelease    0.06 s
+  accent         0.7
+
+patch Clicky
+  # All beater and no body: the click right up, the sweep almost instant, the
+  # decay short. What is left of a kick when you take the boom out.
+  kicktune       58 Hz
+  kickdecay      0.18 s
+  kicksweep      0.007 s
+  kickclick      1
+  kickpunch      0.95
+  kickdrive      0.45
+  snaretune      240 Hz
+  snaredecay     0.09 s
   snaresnap      0.85
+  rimdecay       0.02 s
+  hatclosed      0.02 s
+  drive          0.3
+
+patch Dirty
+  # Drive on the bus and on the kick, and the compressor holding it together.
+  # Everything a little further forward than it should be.
+  kickdrive      0.75
+  kickdecay      0.6 s
+  drive          0.7
+  comp           0.65
+  snaresnap      0.7
   snaretone      0.7
-  snaretune      230.009 Hz
+  hattone        9000 Hz
+  crashtone      6000 Hz
+  volume         1.35
 
 patch Deep
-  comp           0.55
-  drift          0.1
-  duck           0.7
-  kickclick      0.1
-  kickdecay      2.4 s
-  kickdrive      0.1
-  kickpunch      0.3
-  kicksweep      0.0899879 s
-  kicktune       33.0016 Hz
-  snaredecay     0.300008 s
-  snaresnap      0.4
-  snaretune      149.993 Hz
-  tomdecay       0.899879 s
-  tomlotune      65.0014 Hz
-  volume         0.85005
+  # Tuned right down across the kit, the bus slow, nothing hurried.
+  kicktune       31 Hz
+  kickdecay      1.1 s
+  kicksweep      0.12 s
+  snaretune      135 Hz
+  snaredecay     0.3 s
+  snaretone      0.3
+  tomlotune      66 Hz
+  tommidtune     92 Hz
+  tomhitune      124 Hz
+  tomdecay       0.9 s
+  tombend        0.6
+  hattune        340 Hz
+  hattone        4200 Hz
+  crashtone      2400 Hz
+  belltune       500 Hz
+  comp           0.45
+  comprelease    0.5 s
+  duck           0.55
 
-patch Slammed
-  clapdecay      0.500013 s
-  claplevel      1.00005
-  comp           0.9
-  compattack     0.00199949 s
-  comprelease    0.119994 s
-  drift          0.35
-  drive          0.5
-  duck           0.9
-  kickclick      0.6
-  kickdecay      0.70011 s
-  kickdrive      0.6
-  kickpunch      0.8
-  kicktune       52.0015 Hz
-  snaredecay     0.199995 s
+patch Cymbals
+  # Metal long and forward, drums back. The bus off it, because a compressor
+  # on a kit like this only pulls the cymbals down again.
+  crashdecay     5.5 s
+  crashtone      7500 Hz
+  crashlevel     1
+  ridedecay      5 s
+  ridetone       9000 Hz
+  ridebell       0.85
+  ridelevel      1
+  hatopen        1.4 s
+  hattone        10000 Hz
+  hatlevel       0.95
+  kicklevel      0.75
+  snarelevel     0.6
+  comp           0.1
+  duck           0
+
+patch Rimshot
+  # Built on the two smallest voices: rim and bell up and tuned apart, snare
+  # snappy and short behind them.
+  rimtune        2300 Hz
+  rimdecay       0.09 s
+  rimlevel       1.3
+  belltune       1050 Hz
+  belldecay      0.55 s
+  belllevel      1.1
+  snaredecay     0.12 s
   snaresnap      0.9
-  volume         0.79995
+  snarelevel     0.7
+  kickdecay      0.45 s
+  hatlevel       0.5
+  crashlevel     0.35
+  comp           0.75
+  compattack     0.0015 s
+  comprelease    0.09 s
+  duck           0.12
 
-patch Loose
+patch Toms
+  # The tom bend right up, which is the head tightening, and the rest of the
+  # kit out of the way of it.
+  tomdecay       1.5 s
+  tombend        1
+  tomlevel       1.25
+  tomlotune      70 Hz
+  tommidtune     105 Hz
+  tomhitune      150 Hz
+  kickdecay      0.5 s
+  snarelevel     0.6
+  hatlevel       0.45
+  crashlevel     0.4
+  ridelevel      0.4
+  duck           0.15
+
+patch Drifting
+  # The circuit drift right up: nothing hits twice the same way. Slow bus so
+  # the drift is not squashed flat.
+  drift          1
+  kickdecay      0.75 s
+  snaredecay     0.26 s
+  tomdecay       0.7 s
+  comp           0.15
+  compattack     0.03 s
+  comprelease    0.5 s
+  accent         0.8
+  hatclosed      0.08 s
+
+patch Handclap
+  # Clap wide and long - the spread is how far apart the hands are - with the
+  # snare pulled well back so they do not double.
+  clapspread     0.042 s
+  clapdecay      1.1 s
+  claptone       780 Hz
+  claplevel      1.3
+  snarelevel     0.35
+  snaredecay     0.14 s
+  kickdecay      0.5 s
+  hatlevel       0.5
+  crashlevel     0.35
+  ridelevel      0.35
   comp           0.3
-  drift          0.85
-  duck           0.35
-  hatopen        0.549932 s
-  kickdecay      1.0001 s
-  kickpunch      0.5
-  snaredecay     0.240017 s
+  duck           0.65
+  comprelease    0.25 s
+
+patch Flattened
+  # The compressor as far as it goes, fast both ways, with the duck off: the
+  # kit as one solid block. The one to reach for when nothing else will sit
+  # in a mix, and the one to avoid when anything else has to.
+  comp           1
+  compattack     0.0006 s
+  comprelease    0.03 s
+  duck           0
+  drive          0.45
+  kickdecay      0.4 s
+  kickpunch      0.8
+  snaredecay     0.16 s
+  hatclosed      0.04 s
+  volume         1.3

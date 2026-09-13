@@ -363,22 +363,43 @@ internal object FactoryBanks {
 
     private fun genesis0() = Patch("Genesis", "Init", emptyMap())
 
-    private fun genesis1() = Patch("Genesis", "Eighty Eight",
-        mapOf("kicktune" to 0.369100571f, "kickdecay" to 0.846499562f, "kickpunch" to 0.45f, "kicksweep" to 0.673600256f, "kickclick" to 0.25f, "kickdrive" to 0.15f, "snaretune" to 0.3368003f, "snaredecay" to 0.5063998f, "snaresnap" to 0.55f, "hatclosed" to 0.43629995f, "hatopen" to 0.6736002f, "drift" to 0.15f, "comp" to 0.4f, "duck" to 0.45f))
+    private fun genesis1() = Patch("Genesis", "Boom",
+        mapOf("kicktune" to 0.165956259f, "kickdecay" to 0.846469045f, "kickpunch" to 0.4f, "kicksweep" to 0.7835365f, "kickclick" to 0.2f, "kicklevel" to 0.766666651f, "snaredecay" to 0.403056055f, "hatclosed" to 0.436294526f, "comp" to 0.15f, "duck" to 0.1f))
 
-    private fun genesis2() = Patch("Genesis", "Nine O Nine",
-        mapOf("kicktune" to 0.600099444f, "kickdecay" to 0.5365998f, "kickpunch" to 0.7f, "kicksweep" to 0.375799567f, "kickclick" to 0.7f, "kickdrive" to 0.35f, "snaretune" to 0.540399849f, "snaredecay" to 0.3660006f, "snaresnap" to 0.85f, "snaretone" to 0.7f, "hattune" to 0.6829997f, "hatclosed" to 0.339599878f, "hatopen" to 0.4669998f, "hattone" to 0.839400053f, "comp" to 0.5f, "drive" to 0.25f))
+    private fun genesis2() = Patch("Genesis", "Pump",
+        mapOf("kicktune" to 0.348614573f, "kickdecay" to 0.644561648f, "kickpunch" to 0.7f, "hatopen" to 0.7154089f, "crashdecay" to 0.796205f, "comp" to 0.9f, "compattack" to 0.261648029f, "comprelease" to 0.458013535f, "duck" to 0.9f, "drive" to 0.3f))
 
-    private fun genesis3() = Patch("Genesis", "Deep",
-        mapOf("kicktune" to 0.0867991745f, "kickdecay" to 0.945499539f, "kickpunch" to 0.3f, "kicksweep" to 0.7835001f, "kickclick" to 0.1f, "kickdrive" to 0.1f, "snaretune" to 0.185300544f, "snaredecay" to 0.5637998f, "snaresnap" to 0.4f, "tomlotune" to 0.0665001f, "tomdecay" to 0.7835001f, "drift" to 0.1f, "comp" to 0.55f, "duck" to 0.7f, "volume" to 0.5667f))
+    private fun genesis3() = Patch("Genesis", "Tight",
+        mapOf("kickdecay" to 0.420767367f, "kickpunch" to 0.85f, "kicksweep" to 0.375803649f, "kickclick" to 0.6f, "snaredecay" to 0.218104288f, "snaresnap" to 0.75f, "clapdecay" to 0.341982722f, "tomdecay" to 0.375803649f, "hatclosed" to 0.2483927f, "hatopen" to 0.401640832f, "crashdecay" to 0.442219973f, "ridedecay" to 0.368329972f, "accent" to 0.7f, "comp" to 0.5f, "compattack" to 0.130824015f, "comprelease" to 0.2808297f))
 
-    private fun genesis4() = Patch("Genesis", "Slammed",
-        mapOf("kicktune" to 0.5007f, "kickdecay" to 0.6446f, "kickpunch" to 0.8f, "kickclick" to 0.6f, "kickdrive" to 0.6f, "snaredecay" to 0.4362007f, "snaresnap" to 0.9f, "clapdecay" to 0.6770001f, "claplevel" to 0.666699946f, "drift" to 0.35f, "comp" to 0.9f, "compattack" to 0.2615999f, "comprelease" to 0.45800072f, "duck" to 0.9f, "drive" to 0.5f, "volume" to 0.5333f))
+    private fun genesis4() = Patch("Genesis", "Clicky",
+        mapOf("kicktune" to 0.6000712f, "kickdecay" to 0.312854439f, "kickpunch" to 0.95f, "kicksweep" to 0.0912126f, "kickclick" to 1f, "kickdrive" to 0.45f, "snaretune" to 0.5757166f, "snaredecay" to 0.184951782f, "snaresnap" to 0.85f, "rimdecay" to 0.203795046f, "hatclosed" to 0.187901825f, "drive" to 0.3f))
 
-    private fun genesis5() = Patch("Genesis", "Loose",
-        mapOf("kickdecay" to 0.731700063f, "kickpunch" to 0.5f, "snaredecay" to 0.4935998f, "hatopen" to 0.65f, "drift" to 0.85f, "comp" to 0.3f, "duck" to 0.35f))
+    private fun genesis5() = Patch("Genesis", "Dirty",
+        mapOf("kickdecay" to 0.606911957f, "kickdrive" to 0.75f, "snaresnap" to 0.7f, "snaretone" to 0.7f, "hattone" to 0.8394416f, "crashtone" to 0.7737056f, "comp" to 0.65f, "drive" to 0.7f, "volume" to 0.900000036f))
 
-    private val genesis: List<Patch> by lazy { listOf(genesis0(), genesis1(), genesis2(), genesis3(), genesis4(), genesis5()) }
+    private fun genesis6() = Patch("Genesis", "Deep",
+        mapOf("kicktune" to 0.0298465546f, "kickdecay" to 0.754954159f, "kicksweep" to 0.8615228f, "snaretune" to 0.09782865f, "snaredecay" to 0.5637914f, "snaretone" to 0.3f, "tomlotune" to 0.07916309f, "tommidtune" to 0.105739586f, "tomhitune" to 0.155170068f, "tomdecay" to 0.7835365f, "tombend" to 0.6f, "hattune" to 0.296149284f, "hattone" to 0.414083064f, "crashtone" to 0.262314022f, "belltune" to 0.203114f, "comp" to 0.45f, "comprelease" to 0.8228162f, "duck" to 0.55f))
+
+    private fun genesis7() = Patch("Genesis", "Cymbals",
+        mapOf("kicklevel" to 0.5f, "snarelevel" to 0.4f, "hatopen" to 0.9033108f, "hattone" to 0.8982444f, "hatlevel" to 0.6333333f, "crashdecay" to 0.974417448f, "crashtone" to 0.8982444f, "crashlevel" to 0.6666667f, "ridedecay" to 0.9463949f, "ridetone" to 0.8394416f, "ridebell" to 0.85f, "ridelevel" to 0.6666667f, "comp" to 0.1f, "duck" to 0f))
+
+    private fun genesis8() = Patch("Genesis", "Rimshot",
+        mapOf("kickdecay" to 0.5366487f, "snaredecay" to 0.2754732f, "snaresnap" to 0.9f, "snarelevel" to 0.466666669f, "rimtune" to 0.9268219f, "rimdecay" to 0.646015f, "rimlevel" to 0.8666666f, "hatlevel" to 0.333333343f, "crashlevel" to 0.233333334f, "belltune" to 0.8784545f, "belldecay" to 0.8004371f, "belllevel" to 0.733333349f, "comp" to 0.75f, "compattack" to 0.207351163f, "comprelease" to 0.384475648f, "duck" to 0.12f))
+
+    private fun genesis9() = Patch("Genesis", "Toms",
+        mapOf("kickdecay" to 0.562381864f, "snarelevel" to 0.4f, "tomlotune" to 0.128035f, "tommidtune" to 0.205736712f, "tomhitune" to 0.292481244f, "tomdecay" to 0.9220137f, "tombend" to 1f, "tomlevel" to 0.8333333f, "hatlevel" to 0.299999982f, "crashlevel" to 0.266666681f, "ridelevel" to 0.266666681f, "duck" to 0.15f))
+
+    private fun genesis10() = Patch("Genesis", "Drifting",
+        mapOf("kickdecay" to 0.6614124f, "snaredecay" to 0.5187636f, "tomdecay" to 0.7154089f, "hatclosed" to 0.563705444f, "drift" to 1f, "accent" to 0.8f, "comp" to 0.15f, "compattack" to 0.7727632f, "comprelease" to 0.8228162f))
+
+    private fun genesis11() = Patch("Genesis", "Handclap",
+        mapOf("kickdecay" to 0.562381864f, "snaredecay" to 0.323977977f, "snarelevel" to 0.233333334f, "clapspread" to 0.9242793f, "clapdecay" to 0.9088101f, "claptone" to 0.331444919f, "claplevel" to 0.8666666f, "hatlevel" to 0.333333343f, "crashlevel" to 0.233333334f, "ridelevel" to 0.233333334f, "comp" to 0.3f, "comprelease" to 0.6456324f, "duck" to 0.65f))
+
+    private fun genesis12() = Patch("Genesis", "Flattened",
+        mapOf("kickdecay" to 0.5078814f, "kickpunch" to 0.8f, "snaredecay" to 0.365994662f, "hatclosed" to 0.375803649f, "comp" to 1f, "compattack" to 0.0344112255f, "comprelease" to 0.103645884f, "duck" to 0f, "drive" to 0.45f, "volume" to 0.8666666f))
+
+    private val genesis: List<Patch> by lazy { listOf(genesis0(), genesis1(), genesis2(), genesis3(), genesis4(), genesis5(), genesis6(), genesis7(), genesis8(), genesis9(), genesis10(), genesis11(), genesis12()) }
 
     private fun resonance0() = Patch("Resonance", "Init", emptyMap())
 
