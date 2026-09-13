@@ -75,8 +75,9 @@ class Brazen final : public Machine {
         float walk = 0.0f;         // and how far they have wandered from it
         float delayLeft = 0.0f;    // they do not all come in together
         float breath = 1.0f;       // nor blow equally hard
-        float pan = 0.0f;
-        float push = 0.0f;      // what they are blowing, this block
+        float pan = 0.0f;      // what they are blowing, this block
+        /** The block's mouth pressure, split so the sample loop can ramp it. */
+        float pushScale = 0.0f, pushBias = 0.0f;
         /** Set at note-on; acted on after the next tune, which needs the note. */
         bool tongue = false;
         static constexpr uint32_t kSeed = 1u;

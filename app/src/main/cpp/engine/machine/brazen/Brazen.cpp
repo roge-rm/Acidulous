@@ -138,6 +138,7 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
         p.delayLeft = i == 0 ? 0.0f : nextRandom() * scatter;
         p.breath = 1.0f - nextRandom() * 0.2f;
         p.pan = pos;
+        p.pushScale = p.pushBias = 0.0f;
         if (!gliding) {
             p.bore.clear();
             // The tongue. Not air poured into the tube - the tube grows its
@@ -318,7 +319,11 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
             p.bore.setLoss(loss);
             p.bore.setPressure(push);
             p.bore.tune();
-            p.push = push;
+            // Everything in `push` that does not change inside the block, so
+            // the sample loop can put the envelope back on per sample rather
+            // than in sixty-four-frame treads. See the step() call below.
+            p.pushScale = mouth * vel * p.breath * (1.0f - growlNow * 0.5f);
+            p.pushBias = prs * 0.3f;
             if (p.tongue) {
                 // After the loop has been solved for this note: `tongue`
                 // sizes the lift from the gain the solve arrived at.
@@ -337,7 +342,22 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
                 if (p.delayLeft > 0.0f) { p.delayLeft -= 1.0f; continue; }
                 rng = rng * 1664525u + 1013904223u;
                 const float hiss = (static_cast<float>(rng >> 8) * (1.0f / 16777216.0f) * 2.0f - 1.0f) * breathNoise * 0.25f;
-                const float s = p.bore.step(p.push, hiss * p.push) * growlAm;
+                // A player's breath is a ramp and not a staircase. The mouth
+                // pressure was worked out once a block and held for all
+                // sixty-four frames, so a fifty-millisecond attack went into
+                // the tube as thirty-seven treads of four per cent each - a
+                // 750 Hz sawtooth on the front of every note, straight
+                // through a DC blocker that passes a step at full height,
+                // down a tube with nothing in it yet, and out of a bell that
+                // lifts the top of it by thirteen decibels. The per-sample
+                // envelope was already being computed here and used only to
+                // decide when the voice had finished.
+                //
+                // The block value still feeds setPressure, setBrass and the
+                // solve, so the loop is linearised about exactly what it was
+                // before and the instrument plays the same note.
+                const float pushNow = p.pushScale * env + p.pushBias;
+                const float s = p.bore.step(pushNow, hiss * pushNow) * growlAm;
                 const float pan = std::clamp(p.pan * width, -1.0f, 1.0f);
                 const float angle = (pan + 1.0f) * 0.25f * 3.14159265f;
                 l += s * std::cos(angle);
