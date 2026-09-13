@@ -62,6 +62,7 @@ class Bore {
   public:
     void prepare(float sampleRate) {
         sr = sampleRate;
+        delayGlide = dsp::onePoleCoeff(0.006f, sampleRate);
         // A tuba's pedal, and room for the read to wrap.
         line.assign(static_cast<size_t>(sampleRate / 18.0f) + 8, 0.0f);
         clear();
@@ -95,9 +96,11 @@ class Bore {
         bellState = 0.0f;
         lipX1 = lipX2 = lipY1 = lipY2 = 0.0f;
         lipEnv = 0.0f;
+        lipRise = lipFall = 0.0006f;
         dcIn = dcOut = 0.0f;
         radiated = 0.0f;
         lastArrive = 0.0f;
+        delayTarget = 0.0f;
         loopMag = 0.0f;
         delay = 0.0f;
         onsetBoost = 1.0f;
@@ -325,7 +328,29 @@ class Bore {
         while (phase > 3.14159265359f) phase -= twoPi;
         while (phase <= -3.14159265359f) phase += twoPi;
         const float period = sr / freq;
-        delay = clampf(period + phase / w, 4.0f, static_cast<float>(line.size() - 3));
+        // How quickly the lips find their working tension, and it is counted
+        // in cycles of the note rather than in milliseconds.
+        //
+        // It was one symmetric pole at a fixed 34.7 ms, which is two things
+        // wrong at once. A fixed time is a different filter at each end of
+        // the range - one and a half periods at a tuba's F2 and forty-five
+        // at a piccolo trumpet's, so it rippled at the bottom and slept
+        // through the top. And symmetric, it cannot keep up with a note that
+        // is still growing: a one-pole fed an input rising at g nepers a
+        // second settles at 1/(1+g*tau) of it, and for the growth this loop
+        // is asked for that is about a third. The valve therefore spent
+        // every onset some three times further open than the note it was
+        // playing, passing raw airstream into a tube that had nothing in it
+        // yet - which is the burst of high frequency on the front of a low
+        // note, and the reason `bite` was the loudest thing in it.
+        //
+        // Fast up and slow down is also what lips do. They tighten against
+        // the pressure within a few cycles and let go over a breath.
+        lipRise = 1.0f - std::exp(-1.0f / (3.0f * period));
+        lipFall = 1.0f - std::exp(-1.0f / (12.0f * period));
+        delayTarget = clampf(period + phase / w, 4.0f, static_cast<float>(line.size() - 3));
+        // A note-on has no tube to glide from, so it starts where it belongs.
+        if (delay < 4.0f) delay = delayTarget;
         onsetBoost = 1.0f + (onsetBoost - 1.0f) * onsetFall;
         loopMag = std::sqrt((gr * gr + gi * gi) * (br * br + bi * bi) * (lr * lr + li * li)) * reflect * loss;
     }
@@ -351,6 +376,16 @@ class Bore {
         // In fractions of the wave's own length, not in samples: the tube
         // is the same tube whichever note is in it, and a fixed number of
         // samples would steepen a trumpet and leave a tuba alone.
+        // The line length is solved once a block and it moves while a note is
+        // starting: the lip tension rises 6% across the attack and the lift
+        // decays under it, so `arg(G)` walks and the read pointer walks with
+        // it - about seventeen samples on a tuba's F1, delivered as a
+        // hundred discrete jumps at 750 Hz. A jump in where the tube is read
+        // is a step in the output, which is the same block-rate buzz the
+        // breath staircase was, arriving by a different road. The target is
+        // untouched; only the path to it is smoothed, so the note the solve
+        // asked for is still the note that comes out.
+        delay += (delayTarget - delay) * delayGlide;
         float read = delay - brass * delay * 0.06f * lastArrive;
         if (read < 4.0f) read = 4.0f;
         else if (read > static_cast<float>(size - 3)) read = static_cast<float>(size - 3);
@@ -394,7 +429,12 @@ class Bore {
         // the rest point walks down with how hard the lips are working: at
         // a whisper the valve is a sine, leaned on it is a narrow pulse,
         // and the harmonics arrive with the effort rather than with a knob.
-        lipEnv += (std::fabs(lip) - lipEnv) * 0.0006f;
+        // Two thirds of the swing, because the rest point was voiced against
+        // the *mean* of the drive and a follower that rises faster than it
+        // falls settles at the peak instead. Without the 2/pi every patch in
+        // the bank would quietly get half again as much bite as it asks for.
+        const float working = std::fabs(lip) * 0.63661977f;
+        lipEnv += (working - lipEnv) * (working > lipEnv ? lipRise : lipFall);
         float open = rest - bite * lipEnv + lip;
         if (open < 0.0f) open = 0.0f;
         else if (open > 1.0f) open = 1.0f;
@@ -422,7 +462,9 @@ class Bore {
   private:
     std::vector<float> line;
     int32_t write = 0;
-    float sr = 48000.0f, freq = 220.0f, delay = 434.0f;
+    float sr = 48000.0f, freq = 220.0f, delay = 434.0f, delayTarget = 434.0f;
+    /** How fast the read chases the length the solve asked for. See step(). */
+    float delayGlide = 1.0f;
     float lipHz = 220.0f, lipGain = 1.0f, lipTension = 1.0f, lipDamp = 0.4f, pressure = 0.5f;
     bool dirty = true;
     float lipA1 = 0.0f, lipA2 = 0.0f, lipB0 = 0.0f;
@@ -430,6 +472,8 @@ class Bore {
     float lipX1 = 0.0f, lipX2 = 0.0f, lipY1 = 0.0f, lipY2 = 0.0f;
     float reflect = 0.9f, bellCoeff = 0.3f, bellState = 0.0f;
     float brass = 0.3f, loss = 0.995f, rest = 0.35f, bite = 0.0f, lipEnv = 0.0f;
+    /** How hard the lips are working, and how fast they find out. See tune(). */
+    float lipRise = 0.0006f, lipFall = 0.0006f;
     float dcIn = 0.0f, dcOut = 0.0f, radiated = 0.0f, loopMag = 0.0f, lastArrive = 0.0f;
 };
 
