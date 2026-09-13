@@ -432,6 +432,15 @@ void checkBank(const Bank &bank) {
         // that is fine held and produces almost nothing in a phrase - which
         // is how Brazen's low brass shipped: excitation with no tube behind
         // it, heard as a click and a missing note.
+        // A click on the front of a note. Not an overshoot - these measure
+        // under the tone they settle into - but a burst of high frequency the
+        // body of the sound never has.
+        if (out.m.onsetEdge > 4.0f) {
+            char buf[80];
+            std::snprintf(buf, sizeof(buf), "the attack is %.0fx the edge of its own tone",
+                          static_cast<double>(out.m.onsetEdge));
+            warn(who, buf);
+        }
         if (out.m.speaksMs > 250.0f) {
             char buf[80];
             std::snprintf(buf, sizeof(buf), "takes %.0f ms to speak", static_cast<double>(out.m.speaksMs));

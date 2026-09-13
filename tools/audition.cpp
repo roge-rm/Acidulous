@@ -623,8 +623,8 @@ void printLadder(const std::vector<float> &stereo, float f0) {
 }
 
 void printHeader() {
-    std::printf("  %-24s %7s %7s %6s %8s %9s %7s %6s %6s %6s\n", "patch", "peak", "rms", "crest", "centroid",
-                "pitch", "speaks", "tail", "mono", "dc");
+    std::printf("  %-24s %7s %7s %6s %8s %9s %7s %5s %6s %6s %6s\n", "patch", "peak", "rms", "crest", "centroid",
+                "pitch", "speaks", "edge", "tail", "mono", "dc");
 }
 
 void printRow(const std::string &name, const Measured &m, int note) {
@@ -632,9 +632,10 @@ void printRow(const std::string &name, const Measured &m, int note) {
     if (m.f0Hz > 0.0f && note > 0) {
         std::snprintf(pitch, sizeof(pitch), "%+.0fc", static_cast<double>(cents(m.f0Hz, midiToHz(note))));
     }
-    std::printf("  %-24s %+6.1f %+6.1f %5.1f %7.0fHz %8s %6.0fms %4.2f%s %+5.1f %+6.0f%s\n", name.c_str(),
+    std::printf("  %-24s %+6.1f %+6.1f %5.1f %7.0fHz %8s %6.0fms %4.1fx %4.2f%s %+5.1f %+6.0f%s\n", name.c_str(),
                 static_cast<double>(m.peakDb), static_cast<double>(m.rmsDb), static_cast<double>(m.crestDb),
                 static_cast<double>(m.centroidHz), pitch, static_cast<double>(m.speaksMs),
+                static_cast<double>(m.onsetEdge),
                 static_cast<double>(m.tailSeconds), m.tailRanOut ? "+s" : "s ",
                 static_cast<double>(m.monoLossDb), static_cast<double>(m.dcDb),
                 m.finite ? "" : "  NOT FINITE");

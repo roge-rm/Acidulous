@@ -157,6 +157,7 @@ struct Measured {
     float centroidHz = 0.0f;
     float f0Hz = 0.0f;
     float speaksMs = 0.0f;    // note-on to half the level it settles at
+    float onsetEdge = 1.0f;   // how much brighter the attack is than the tone
     float tailSeconds = 0.0f; // note-off to -60 dB
     bool tailRanOut = false;  // it was still going when the render stopped
     float monoLossDb = 0.0f;  // how much is lost by summing to mono
@@ -287,6 +288,45 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
                     }
                 }
             }
+        }
+    }
+
+    // How much brighter the attack is than the note it turns into.
+    //
+    // A click is not an overshoot - it does not have to be louder than the
+    // tone, and Brazen's low brass clicked while measuring well under it. It
+    // is a burst of high frequency the body of the sound never has, so what
+    // separates the two is a *ratio of edge to level*, onset against settled.
+    // Around 1 is a note; above 2 or 3 there is a click on the front of it,
+    // and the darker the instrument the more it sticks out.
+    //
+    // The first difference is a +6 dB/octave tilt, which is enough of a
+    // high-pass to ask this question and costs nothing.
+    {
+        auto edge = [&](size_t from, size_t to) {
+            if (to <= from + 1 || to > frames) return 0.0f;
+            double d2 = 0.0, s2 = 0.0;
+            for (size_t i = from + 1; i < to; ++i) {
+                const double d = static_cast<double>(mono[i]) - mono[i - 1];
+                d2 += d * d;
+                s2 += static_cast<double>(mono[i]) * mono[i];
+            }
+            const auto n = static_cast<double>(to - from - 1);
+            const double lvl = std::sqrt(s2 / n);
+            return lvl > 1e-9 ? static_cast<float>(std::sqrt(d2 / n) / lvl) : 0.0f;
+        };
+        const auto twenty = static_cast<size_t>(kSr * 0.02f);
+        const size_t off = std::min(static_cast<size_t>(std::max<int64_t>(0, offAt)), frames);
+        // Only where there is a tone to compare the attack with. A plucked or
+        // struck sound has decayed to nothing by the end of a two-second note,
+        // and dividing by that reports every short patch as a click - which
+        // is not a fault, it is what percussive means.
+        float late = 0.0f;
+        for (size_t i = off - off / 4; i < off && i < frames; ++i) late = std::max(late, std::abs(mono[i]));
+        if (off > twenty * 4 && late > m.peak * 0.05f) {
+            const float onset = edge(0, twenty);
+            const float tone = edge(off - off / 4, off);
+            if (tone > 1e-9f) m.onsetEdge = onset / tone;
         }
     }
 

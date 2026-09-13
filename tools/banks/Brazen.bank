@@ -53,10 +53,23 @@
 # The machine's own defaults still take 480 ms, which is worth knowing before
 # anybody writes a low patch from Init.
 #
-# Levelled to about -20.5 dB RMS. The two mutes sit below it at their volume's
-# maximum, which is what a mute is: the harmon is 6 dB down and no amount of
-# knob will fetch it back, because most of the instrument is not coming out of
-# the bell any more.
+# **The click on the front of a note** is the third thing that had to be
+# voiced and the third that no existing number could see. It is not an
+# overshoot - these measured well *under* the tone they settle into - it is a
+# burst of high frequency the body of the sound never has, and the darker the
+# instrument the more it sticks out: the tuba's onset was 15 times the edge of
+# its own tone, the bass trombone's 10, the trumpet's 1.2.
+#
+# The fix is the filter, which was off. Softening the attack instead does
+# almost nothing to it - bite from 0.55 down to 0.1 moved the bass trombone
+# from 9.6 to 8.5 - and costs 140 ms of speaking time, which is the fault that
+# was just fixed. A low-pass takes it to 1.5 with the tone and the timing
+# untouched, and it is what the instrument does anyway: a bell does not
+# radiate a broadband click either.
+#
+# Levelled to about -20 dB RMS. The harmon sits 6 dB under it at its volume's
+# maximum and no amount of knob will fetch it back, because most of the
+# instrument is not coming out of the bell any more - which is what a mute is.
 #
 # And they are auditioned with a melody rather than one held note - `role
 # tune` - because one note is what one note sounds like. Every patch in the
@@ -89,6 +102,7 @@ patch Tuba  note=41
   breath         0
   volume         1.5
 
+  cutoff         900 Hz
 patch "Bass Trombone"  note=43
   # Still wide, but the bell lets more out than a tuba's and it is blown
   # harder, so the ladder reaches further before it gives up.
@@ -104,6 +118,7 @@ patch "Bass Trombone"  note=43
   breath         0.03
   volume         1.45
 
+  cutoff         1400 Hz
 patch Trombone  note=48
   # The slide is the glide, and it is the only thing here that has one worth
   # hearing: a trombone gets between two notes rather than stepping.
@@ -119,6 +134,7 @@ patch Trombone  note=48
   breath         0.04
   volume         1.3
 
+  cutoff         2200 Hz
 patch Horn  note=53
   # Bell high and the bore wide: a horn is played into its own bell and that
   # is why it is the mellow one.
@@ -139,8 +155,9 @@ patch Horn  note=53
   vibrato        6 cents
   width          0.5
   breath         0.05
-  volume         1.0
+  volume         1.3
 
+  cutoff         2600 Hz
 patch Flugel  note=58
   # A trumpet's pitch through a horn's bore. The one that shows size and
   # register are separate things.
@@ -210,6 +227,7 @@ patch "Straight Mute"  note=62
   breath         0.09
   volume         1.5
 
+  cutoff         3600 Hz
 patch "Cup Mute"  note=58
   # And the cup one takes the edge out and leaves the body: the same
   # instrument, the opposite half of it.
@@ -222,8 +240,9 @@ patch "Cup Mute"  note=58
   bite           0.45
   attack         0.02 s
   breath         0.06
-  volume         1.15
+  volume         1.3
 
+  cutoff         2000 Hz
 patch Harmon  note=62
   # The one everybody knows, and the reason the mutes are filters: it is all
   # upper partials and no fundamental to speak of.
@@ -239,6 +258,7 @@ patch Harmon  note=62
   breath         0.12
   volume         1.5
 
+  cutoff         4200 Hz
 patch Section  note=55
   # Four players, each a whole instrument with its own tube and its own idea
   # of the note, pulled tight together. Not one player detuned four times.
@@ -256,6 +276,7 @@ patch Section  note=55
   breath         0.05
   volume         0.62
 
+  cutoff         3200 Hz
 patch Shambles  note=55
   # The same four with nobody listening to anybody. The `lock` knob is the one
   # control here a sampled library cannot have, and this is the far end of it.
@@ -273,6 +294,7 @@ patch Shambles  note=55
   breath         0.06
   volume         0.6
 
+  cutoff         3600 Hz
 patch Growl  note=58
   # The player humming against their own note: sidebands on the air and on the
   # lips at once, which is not a tremolo and does not sound like one.
