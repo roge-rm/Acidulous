@@ -137,7 +137,15 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
         p.delayLeft = i == 0 ? 0.0f : nextRandom() * scatter;
         p.breath = 1.0f - nextRandom() * 0.2f;
         p.pan = pos;
-        if (!gliding) p.bore.clear();
+        if (!gliding) {
+            p.bore.clear();
+            // The tongue: the tube starts with air in it rather than empty.
+            // Without this the low register takes hundreds of milliseconds to
+            // grow a standing wave out of nothing, and what you hear first is
+            // the tube's own first reflection standing alone in the gap.
+            p.bore.setFrequency(mtof(static_cast<float>(note)));
+            p.bore.prime(targetOf(Pressure) * p.breath * v.velocity);
+        }
     }
     v.amp.retrigger();
 }

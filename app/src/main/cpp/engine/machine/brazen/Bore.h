@@ -44,6 +44,21 @@ class Bore {
         clear();
     }
 
+    /**
+     * Everything the tube is holding, and not a chosen subset of it.
+     *
+     * `lastArrive` was missing, which is the wave that was at the bell one
+     * sample ago and which sets where the *next* sample is read from - the
+     * brass steepening bends the read by a fraction of it. So a cleared tube
+     * carried one number of the note before it into the note after, and it
+     * survived reset_test only because the difference used to decay to
+     * nothing before the comparison; priming the line made it audible.
+     *
+     * Nothing here is configuration - the machine sets every parameter on
+     * every block - so this can take the lot back, and `dirty` makes sure the
+     * loop is solved again rather than reusing a delay worked out for a note
+     * that is over.
+     */
     void clear() {
         for (auto &v : line) v = 0.0f;
         write = 0;
@@ -52,6 +67,9 @@ class Bore {
         lipEnv = 0.0f;
         dcIn = dcOut = 0.0f;
         radiated = 0.0f;
+        lastArrive = 0.0f;
+        loopMag = 0.0f;
+        dirty = true;
     }
 
     /** The note. tune() works out how long the line has to be for it. */
@@ -98,6 +116,62 @@ class Bore {
         if (v != rest) { rest = v; dirty = true; }
     }
     void setLoss(float amount) { loss = clampf(amount, 0.8f, 1.0f); }
+
+    /**
+     * The tongue coming off the note: start the tube with air already moving.
+     *
+     * A loop whose gain is just over one grows by the same factor every round
+     * trip, so it takes the same number of *round trips* to speak whatever it
+     * is playing - and a round trip is a period. That is why this instrument
+     * was taking 47 ms to speak at 700 Hz and 758 at 44: identical certainty,
+     * sixteen times the wait, and nothing wrong with the solve. Measured, the
+     * two agreed to a percent.
+     *
+     * A player does not start from an empty tube. The tongue releases air
+     * that is already under pressure and the horn is sounding within a few
+     * cycles; the loop's job is then to sustain the wave, not to grow one out
+     * of nothing. So the line is filled with one period of the note at
+     * roughly the level it is going to settle at, and the loop takes it from
+     * there - which is a couple of round trips either way rather than thirty.
+     *
+     * It also removes the click that was the real complaint. An empty tube
+     * returns its first reflection about two round trips in, long before the
+     * wave has grown into anything, so what came out was a pip and then
+     * ninety milliseconds of nearly silence and then the note. There is no
+     * gap to stand in now.
+     *
+     * [level] is the mouth pressure the note is being blown with; the shape
+     * is a sine because the fundamental is most of the standing wave and the
+     * loop fills in the rest within a few cycles.
+     */
+    void prime(float level) {
+        if (!(level > 0.0f)) return;
+        const int32_t size = static_cast<int32_t>(line.size());
+        const auto period = static_cast<int32_t>(sr / freq + 0.5f);
+        if (period < 4 || period > size) return;
+        // Only where it is needed, which is where the tube is long. A short
+        // one fills in a few cycles on its own - a piccolo trumpet speaks in
+        // 30 ms untouched - and priming it as hard overshoots by half again
+        // and has to be pulled back down, which is a blat on the front of
+        // every note. Full below 150 Hz, nothing above 300, measured.
+        const float need = clampf((300.0f - freq) / 150.0f, 0.0f, 1.0f);
+        if (need <= 0.0f) return;
+        // Two thirds, because a loop that starts a little under its mark
+        // grows into it and one that starts over it has to be pulled back
+        // down by the nonlinearity, which is audible and the other is not.
+        const float amp = level * 0.66f * need;
+        const float w = 6.28318530718f / static_cast<float>(period);
+        for (int32_t i = 0; i < size; ++i) {
+            // Written backwards from the write head so the wave arrives at
+            // the bell in phase rather than starting from wherever the
+            // buffer happens to begin.
+            const size_t at = static_cast<size_t>((write - i + size) % size);
+            line[at] = amp * std::sin(w * static_cast<float>(i));
+        }
+        // The lips have to know something is happening too, or they sit at
+        // rest and clamp the wave the tube just handed them.
+        lipEnv = amp * 0.5f;
+    }
 
     /**
      * Work out how long the line has to be for the loop to come round in
