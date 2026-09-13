@@ -29,8 +29,22 @@ data class Patch(
 object PatchStore {
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
+    /**
+     * The prefix that says a patch belongs to an effect rather than a machine.
+     *
+     * `Patch.machine` is only a string, and none of the nine effect names
+     * collides with any of the nineteen machine names today - `Filter` is not
+     * `Filament`. But the folder is built from that string, so a future
+     * machine sharing a name with an effect would silently share its user
+     * patches. One prefix now costs nothing and makes that impossible.
+     */
+    const val FX = "fx."
+
     fun directory(context: Context, machine: String): File =
-        File(EngineAssets.userRoot(context), "patches/$machine").apply { mkdirs() }
+        File(EngineAssets.userRoot(context), path(machine)).apply { mkdirs() }
+
+    private fun path(machine: String): String =
+        if (machine.startsWith(FX)) "patches/fx/${machine.removePrefix(FX)}" else "patches/$machine"
 
     fun save(context: Context, patch: Patch): File =
         File(directory(context, patch.machine), "${safe(patch.name)}.json").also { it.writeText(json.encodeToString(Patch.serializer(), patch)) }
@@ -68,6 +82,9 @@ object PatchStore {
      */
     fun factory(machine: String): List<Patch> =
         if (machine == "Nexus") NexusPresets.all else FactoryBanks.of(machine)
+
+    /** An effect type as a patch key: "Delay" becomes "fx.Delay". */
+    fun effectKey(type: String): String = FX + type
 
     private fun safe(name: String) = name.trim().replace(Regex("[^A-Za-z0-9 _-]"), "_").ifEmpty { "patch" }
 }

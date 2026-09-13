@@ -1,0 +1,70 @@
+# Delay - the classic, and the two it has that a delay usually does not.
+#
+# `time` is a note value, so it is written as a step index: #0 1/16, #1 1/8T,
+# #2 1/8, #3 1/8., #4 1/4, #5 1/4., #6 1/2, #7 free.
+#
+# Values are in each parameter's own units; `audition params fx.Delay` lists
+# them. A patch names only what it changes.
+
+effect Delay
+
+patch Init
+
+patch Slapback
+  time           #0
+  feedback       0.12
+  tone           4500 Hz
+  pingpong       #0
+  mix            0.28
+
+patch "Eighth Sync"
+  time           #2
+  feedback       0.38
+  tone           7000 Hz
+  pingpong       #0
+  mix            0.32
+
+patch "Ping Pong"
+  time           #3
+  feedback       0.5
+  tone           8000 Hz
+  pingpong       #1
+  mix            0.38
+
+patch Dub
+  # Long, dark and nearly self-sustaining: the feedback is most of the sound
+  # and the tone control is what stops it turning into noise.
+  time           #5
+  feedback       0.82
+  tone           2200 Hz
+  pingpong       #1
+  mix            0.45
+
+patch Ducked
+  # The extra: echoes sit under the dry signal and swell in the gaps, so a
+  # long delay can sit behind a busy part without smearing it.
+  time           #4
+  feedback       0.55
+  tone           5200 Hz
+  pingpong       #1
+  mix            0.5
+  duck           0.8
+
+patch Tape
+  # The other extra: two sines on the read head. Slow and shallow is a tape
+  # machine; further up it is a machine that needs servicing.
+  time           #4
+  feedback       0.55
+  tone           3200 Hz
+  pingpong       #0
+  mix            0.36
+  wobble         0.35
+
+patch Seasick
+  time           #6
+  feedback       0.7
+  tone           2800 Hz
+  pingpong       #1
+  mix            0.5
+  wobble         0.85
+  duck           0.3

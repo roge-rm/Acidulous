@@ -60,6 +60,28 @@ class FactoryBanksTest {
         }
     }
 
+    /**
+     * The generated file is only as current as the last run of the script.
+     *
+     * Forgetting to run it is silent - the app simply has fewer patches than
+     * the bank files say, which is exactly what happened the first time an
+     * effect bank was written. Counting `patch` lines is a crude comparison
+     * and it catches the whole of that.
+     */
+    @Test
+    fun `the generated banks are as new as the bank files`() {
+        val dir = java.io.File("../tools/banks")
+        assertTrue("no bank files at ${dir.absolutePath}", dir.isDirectory)
+        val stale = mutableListOf<String>()
+        for (file in dir.listFiles { f -> f.extension == "bank" }.orEmpty().sortedBy { it.name }) {
+            val unit = file.nameWithoutExtension
+            val inFile = file.readLines().count { it.trimStart().startsWith("patch ") }
+            val generated = PatchStore.factory(unit).size
+            if (inFile != generated) stale += "$unit: $inFile in the bank, $generated generated"
+        }
+        assertEquals("run tools/gen_patches.sh", emptyList<String>(), stale)
+    }
+
     @Test
     fun `a factory patch survives being saved and read back`() {
         val patch = PatchStore.factory("Subvert").first { it.params.isNotEmpty() }

@@ -371,7 +371,11 @@ std::vector<float> effectSource(float seconds) {
     const auto n = static_cast<size_t>(kSr * seconds);
     std::vector<float> out(n * 2, 0.0f);
     Rng rng(0xeffec7u);
-    for (size_t i = 0; i < n; ++i) {
+    // The source stops at two thirds, and the rest is silence: a delay's
+    // tail and a reverb's are most of what there is to judge about them, and
+    // fed a signal to the last sample there is nowhere for either to show.
+    const size_t stop = n * 2 / 3;
+    for (size_t i = 0; i < stop; ++i) {
         const float t = static_cast<float>(i) / kSr;
         // A note every half second so a delay, a gate and a compressor all
         // have an edge to work on, over a bed of noise for the filters.
@@ -390,7 +394,7 @@ Take renderEffect(Effect *fx, float bpm, float seconds) {
     Take out;
     std::vector<float> src = effectSource(seconds);
     const auto frames = static_cast<int64_t>(src.size() / 2);
-    out.offAt = frames;
+    out.offAt = frames * 2 / 3; // where effectSource falls silent
     out.stereo.reserve(src.size());
     float L[kBlock], R[kBlock];
     const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(kSr));
@@ -544,10 +548,11 @@ void printRow(const std::string &name, const Measured &m, int note) {
     if (m.f0Hz > 0.0f && note > 0) {
         std::snprintf(pitch, sizeof(pitch), "%+.0fc", static_cast<double>(cents(m.f0Hz, midiToHz(note))));
     }
-    std::printf("  %-24s %+6.1f %+6.1f %5.1f %7.0fHz %8s %5.2fs %+5.1f %+6.0f%s\n", name.c_str(),
+    std::printf("  %-24s %+6.1f %+6.1f %5.1f %7.0fHz %8s %4.2f%s %+5.1f %+6.0f%s\n", name.c_str(),
                 static_cast<double>(m.peakDb), static_cast<double>(m.rmsDb), static_cast<double>(m.crestDb),
                 static_cast<double>(m.centroidHz), pitch, static_cast<double>(m.tailSeconds),
-                static_cast<double>(m.monoLossDb), static_cast<double>(m.dcDb), m.finite ? "" : "  NOT FINITE");
+                m.tailRanOut ? "+s" : "s ", static_cast<double>(m.monoLossDb), static_cast<double>(m.dcDb),
+                m.finite ? "" : "  NOT FINITE");
 }
 
 // --- Banks -------------------------------------------------------------------
@@ -695,7 +700,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
     }
 
     // An effect has no note to hold, so what it was given is what it is measured on.
-    if (!measuredAlready) measured = measure(take.stereo, take.offAt, 0);
+    if (!measuredAlready) measured = measure(take.stereo, take.offAt, 0, take.offAt + static_cast<int64_t>(kSr * 0.05f));
     const std::string path = gOutDir + "/" + safeName(bank.unit) + "-" + safeName(patch.name) + ".wav";
     writeWav(path, take.stereo);
     if (joined != nullptr) {

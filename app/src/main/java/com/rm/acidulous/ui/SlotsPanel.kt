@@ -29,7 +29,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
+import androidx.compose.ui.platform.LocalContext
 import com.rm.acidulous.model.EFFECT_SLOTS
+import com.rm.acidulous.model.Patch
+import com.rm.acidulous.model.PatchStore
+import com.rm.acidulous.model.withEffectPatch
 import com.rm.acidulous.model.withEventorParam
 import com.rm.acidulous.model.withEventorBypass
 import com.rm.acidulous.model.withEventor
@@ -50,9 +54,18 @@ enum class SlotKind(
     val types: () -> List<String>, val paramInfo: (String) -> List<com.rm.acidulous.engine.ParamInfo>,
     val unit: (Int) -> String, val at: (Track, Int) -> UnitSlot,
     val withType: (Track, Int, String) -> Track, val withParam: (Track, Int, String, Float) -> Track, val withBypass: (Track, Int, Boolean) -> Track,
+    /**
+     * How a unit of this kind is keyed in the patch store, or null when it
+     * has no presets. Eventors would take them for almost nothing - an arp
+     * pattern is exactly the sort of thing to keep - but that is a different
+     * milestone, and this is the seam it will use.
+     */
+    val patchKey: ((String) -> String)? = null,
+    val loadPatch: ((Track, Int, Map<String, Float>) -> Track)? = null,
 ) {
     Effects("FX", EFFECT_SLOTS, { NativeEngine.effectTypes }, { NativeEngine.effectParamInfo(it) }, ::effectUnit, { t, s -> t.effectAt(s) },
-        { t, s, ty -> t.withEffect(s, ty) }, { t, s, n, v -> t.withEffectParam(s, n, v) }, { t, s, b -> t.withEffectBypass(s, b) }),
+        { t, s, ty -> t.withEffect(s, ty) }, { t, s, n, v -> t.withEffectParam(s, n, v) }, { t, s, b -> t.withEffectBypass(s, b) },
+        patchKey = PatchStore::effectKey, loadPatch = { t, s, p -> t.withEffectPatch(s, p) }),
     Eventors("EV", EVENTOR_SLOTS, { NativeEngine.eventorTypes }, { NativeEngine.eventorParamInfo(it) }, ::eventorUnit, { t, s -> t.eventorAt(s) },
         { t, s, ty -> t.withEventor(s, ty) }, { t, s, n, v -> t.withEventorParam(s, n, v) }, { t, s, b -> t.withEventorBypass(s, b) }),
 }
@@ -152,6 +165,30 @@ private fun SlotFace(kind: SlotKind, type: String, trackIndex: Int, slot: Int, e
     // The panel follows the engine; on first show the engine holds whatever the
     // document pushed, so nothing to seed here.
     Column {
+        // The same three words a machine panel has, over the same store. An
+        // effect preset needed no mechanism of its own, only somewhere to put
+        // the picker and a key that cannot collide with a machine's.
+        val key = kind.patchKey?.invoke(type)
+        val load = kind.loadPatch
+        if (key != null && load != null) {
+            val context = LocalContext.current
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                PatchPicker(
+                    title = type,
+                    patchNames = { PatchStore.list(context, key) },
+                    onSave = { name -> PatchStore.save(context, Patch(key, name, kind.at(editor.song.tracks[trackIndex], slot).params)) },
+                    onLoad = { name ->
+                        PatchStore.load(context, key, name)?.let { patch ->
+                            editor.edit(trackIndex) { t -> load(t, slot, patch.params) }
+                            b.applyAll(patch.params)
+                        }
+                    },
+                    factoryNames = { PatchStore.factoryNames(key) },
+                    userNames = { PatchStore.userList(context, key) },
+                    onDelete = { name -> PatchStore.delete(context, key, name) },
+                )
+            }
+        }
         Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
             for (p in info) {
                 if (type == "Arp" && p.name.length == 3 && p.name[0] == 's' && p.name[1].isDigit()) continue // the step row below

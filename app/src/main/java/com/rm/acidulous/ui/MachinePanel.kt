@@ -210,31 +210,47 @@ private fun PatchBar(
     factoryNames: () -> List<String>, userNames: () -> List<String>, onDelete: (String) -> Unit,
     minimized: Boolean, onToggleMinimized: () -> Unit,
 ) {
-    var menu by remember { mutableStateOf(false) }
-    var saving by remember { mutableStateOf(false) }
-    var browsing by remember { mutableStateOf(false) }
-    var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(type, color = Acid.colors.text, fontSize = 13.sp)
-        TextButton(onClick = { menu = true }) { Text("patch ▾", color = Acid.colors.accent, fontSize = 11.sp) }
-        TextButton(onClick = { saving = true }) { Text("save as…", color = Acid.colors.textMid, fontSize = 11.sp) }
-        TextButton(onClick = { browsing = true }) { Text("browse…", color = Acid.colors.textMid, fontSize = 11.sp) }
+        PatchPicker(type, patchNames, onSave, onLoad, factoryNames, userNames, onDelete)
         // Pushed to the far edge: the title row stays, everything under it goes.
         Spacer(Modifier.weight(1f))
         TextButton(onClick = onToggleMinimized, contentPadding = PaddingValues(horizontal = 8.dp)) {
             Text(if (minimized) "▴" else "▾", color = Acid.colors.textMid, fontSize = 13.sp)
         }
-        val menuScroll = rememberScrollState()
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
-            for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
-        }
+    }
+}
+
+/**
+ * The three words that choose a patch: pick one, save this, look through them.
+ *
+ * Extracted from the machine panel's title row so an effect slot can have the
+ * same one. Nothing about it is machine-shaped - [title] is only the word the
+ * browser puts at the top of its window - which is the whole reason effects
+ * did not need a preset mechanism of their own, only a place to put this.
+ */
+@Composable
+internal fun PatchPicker(
+    title: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit,
+    factoryNames: () -> List<String>, userNames: () -> List<String>, onDelete: (String) -> Unit,
+) {
+    var menu by remember { mutableStateOf(false) }
+    var saving by remember { mutableStateOf(false) }
+    var browsing by remember { mutableStateOf(false) }
+    var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
+    TextButton(onClick = { menu = true }) { Text("patch ▾", color = Acid.colors.accent, fontSize = 11.sp) }
+    TextButton(onClick = { saving = true }) { Text("save as…", color = Acid.colors.textMid, fontSize = 11.sp) }
+    TextButton(onClick = { browsing = true }) { Text("browse…", color = Acid.colors.textMid, fontSize = 11.sp) }
+    val menuScroll = rememberScrollState()
+    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
+        for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
     }
     if (saving) TextInputDialog("Patch name", "", onDismiss = { saving = false }) { name -> onSave(name); saving = false }
     if (browsing) {
-        val factory = remember(type) { factoryNames() }
-        val user = remember(type, listRev) { userNames() }
+        val factory = remember(title) { factoryNames() }
+        val user = remember(title, listRev) { userNames() }
         PatchBrowserDialog(
-            machine = type, factory = factory, user = user,
+            machine = title, factory = factory, user = user,
             onLoad = { n -> onLoad(n); browsing = false },
             onDelete = { n -> onDelete(n); listRev++ },
             onDismiss = { browsing = false },

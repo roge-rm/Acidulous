@@ -275,7 +275,11 @@ std::vector<float> effectSource() {
     const auto n = static_cast<size_t>(kSr * (kHold + kTail));
     std::vector<float> out(n * 2, 0.0f);
     Rng rng(0xeffec7u);
-    for (size_t i = 0; i < n; ++i) {
+    // The source stops at two thirds, and the rest is silence: a delay's
+    // tail and a reverb's are most of what there is to judge about them, and
+    // fed a signal to the last sample there is nowhere for either to show.
+    const size_t stop = n * 2 / 3;
+    for (size_t i = 0; i < stop; ++i) {
         const float t = static_cast<float>(i) / kSr;
         const float env = std::exp(-std::fmod(t, 0.5f) / 0.12f);
         const float tone = (std::sin(2.0f * static_cast<float>(M_PI) * 220.0f * t) +
@@ -385,7 +389,12 @@ void checkBank(const Bank &bank) {
             fail(who, "nothing rendered at all");
             continue;
         }
-        out.m = measure(out.audio, static_cast<int64_t>(kSr * kHold), 0);
+        // An effect's tail starts where its source stops, a machine's where
+        // the note is released.
+        const int64_t offAt = bank.isEffect() ? static_cast<int64_t>(out.audio.size() / 2) * 2 / 3
+                                              : static_cast<int64_t>(kSr * kHold);
+        out.m = measure(out.audio, offAt, 0,
+                        bank.isEffect() ? offAt + static_cast<int64_t>(kSr * 0.05f) : -1);
 
         if (!out.m.finite) fail(who, "the output is not a number");
         if (out.m.peakDb < -60.0f) fail(who, "silent, with its material mounted");

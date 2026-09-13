@@ -23,6 +23,7 @@ internal object FactoryBanks {
         "Resonance" -> resonance
         "Dice" -> dice
         "Mosaic" -> mosaic
+        "fx.Delay" -> fx_delay
         else -> emptyList()
     }
 
@@ -398,4 +399,29 @@ internal object FactoryBanks {
         mapOf("start" to 0.99f, "reverse" to 1f, "a_attack" to 0.5440228f))
 
     private val mosaic: List<Patch> by lazy { listOf(mosaic0(), mosaic1(), mosaic2(), mosaic3(), mosaic4(), mosaic5()) }
+
+    private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap())
+
+    private fun fx_delay1() = Patch("fx.Delay", "Slapback",
+        mapOf("time" to 0f, "feedback" to 0.126315787f, "tone" to 0.6614124f, "pingpong" to 0f, "mix" to 0.28f))
+
+    private fun fx_delay2() = Patch("fx.Delay", "Eighth Sync",
+        mapOf("time" to 0.2857143f, "feedback" to 0.4f, "tone" to 0.7693253f, "pingpong" to 0f, "mix" to 0.32f))
+
+    private fun fx_delay3() = Patch("fx.Delay", "Ping Pong",
+        mapOf("feedback" to 0.5263158f, "tone" to 0.801938951f, "mix" to 0.38f))
+
+    private fun fx_delay4() = Patch("fx.Delay", "Dub",
+        mapOf("time" to 0.714285731f, "feedback" to 0.863157868f, "tone" to 0.4866298f, "mix" to 0.45f))
+
+    private fun fx_delay5() = Patch("fx.Delay", "Ducked",
+        mapOf("time" to 0.5714286f, "feedback" to 0.578947365f, "tone" to 0.696724832f, "mix" to 0.5f, "duck" to 0.8f))
+
+    private fun fx_delay6() = Patch("fx.Delay", "Tape",
+        mapOf("time" to 0.5714286f, "feedback" to 0.578947365f, "tone" to 0.57814467f, "pingpong" to 0f, "mix" to 0.36f, "wobble" to 0.35f))
+
+    private fun fx_delay7() = Patch("fx.Delay", "Seasick",
+        mapOf("time" to 0.857142866f, "feedback" to 0.7368421f, "tone" to 0.5455311f, "mix" to 0.5f, "duck" to 0.3f, "wobble" to 0.85f))
+
+    private val fx_delay: List<Patch> by lazy { listOf(fx_delay0(), fx_delay1(), fx_delay2(), fx_delay3(), fx_delay4(), fx_delay5(), fx_delay6(), fx_delay7()) }
 }

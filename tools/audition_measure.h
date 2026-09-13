@@ -157,6 +157,7 @@ struct Measured {
     float centroidHz = 0.0f;
     float f0Hz = 0.0f;
     float tailSeconds = 0.0f; // note-off to -60 dB
+    bool tailRanOut = false;  // it was still going when the render stopped
     float monoLossDb = 0.0f;  // how much is lost by summing to mono
     float dcDb = -200.0f;
     bool finite = true;
@@ -167,7 +168,16 @@ struct Measured {
  * which is where the tail is measured from; pass the end for a phrase that
  * never lets go.
  */
-inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int noteForF0) {
+/**
+ * [offAt] is the frame the last note was released - or, for an effect, the
+ * frame its source fell silent - which is where the tail is measured from.
+ * [centroidFrom] is where the brightness is taken; the default is a tenth of
+ * a second in, past the attack, which is where a machine's tone lives. An
+ * effect wants it in the tail instead, where the sound is all wet and the
+ * difference between one preset and the next is actually visible.
+ */
+inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int noteForF0,
+                        int64_t centroidFrom = -1) {
     Measured m;
     const size_t frames = stereo.size() / 2;
     if (frames == 0) return m;
@@ -216,8 +226,9 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         m.monoLossDb = dB(stereoRms) - dB(monoRms);
     }
 
-    // Measured a tenth of a second in, past the attack, where the tone is.
-    const int32_t at = static_cast<int32_t>(std::min<size_t>(frames > 8192 ? 4800 : 0, frames));
+    const int32_t at = centroidFrom >= 0
+                           ? static_cast<int32_t>(std::min<size_t>(static_cast<size_t>(centroidFrom), frames))
+                           : static_cast<int32_t>(std::min<size_t>(frames > 8192 ? 4800 : 0, frames));
     m.centroidHz = centroid(mono, at);
     m.f0Hz = fundamental(mono, at);
 
@@ -234,6 +245,7 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         if (loudest >= floorAt) last = i + step;
     }
     m.tailSeconds = static_cast<float>(last - off) / kSr;
+    m.tailRanOut = last + step > frames;
     (void)noteForF0;
     return m;
 }

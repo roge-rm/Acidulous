@@ -166,6 +166,16 @@ fun Track.withEffectParam(slot: Int, name: String, v01: Float): Track =
 
 fun Track.withEffectBypass(slot: Int, bypass: Boolean): Track = withEffectSlot(slot) { it.copy(bypass = bypass) }
 
+/**
+ * A whole preset onto one slot, replacing what was there.
+ *
+ * The same shape as [withPatch] for a machine, and replacing rather than
+ * merging for the same reason: what a preset does not mention it wants at the
+ * effect's own default, and the panel pushes those defaults itself.
+ */
+fun Track.withEffectPatch(slot: Int, params: Map<String, Float>): Track =
+    withEffectSlot(slot) { it.copy(params = params) }
+
 /** The unit name the engine addresses a slot by: "effect1", "effect2". */
 fun effectUnit(slot: Int): String = "effect${slot + 1}"
 fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -> 1; else -> null }
