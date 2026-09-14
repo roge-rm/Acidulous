@@ -8,6 +8,17 @@ namespace acidulous::machine {
 
 /** How long a pad takes to close, in seconds. */
 constexpr float kKeyClick = 0.004f;
+/**
+ * How loud a pad is at `keys` 1. A tenth, because the noise it is made
+ * from peaks near half scale and the bank sets `keys` at 0.2 to 0.4: that
+ * put a four-millisecond burst at -25 dB on the front of notes that take
+ * fifty to two hundred and fifty milliseconds to get there themselves,
+ * and Dan heard it as a click on every note of every instrument. Measured
+ * as the largest second difference at a note-on against the level of the
+ * fifty milliseconds after it: 5 to 13 times with the pads, 0.5 without.
+ * A pad closing is a thing you notice under a note, not instead of one.
+ */
+constexpr float kKeyLevel = 0.1f;
 
 namespace {
 constexpr float kTwoPi = 6.28318530718f;
@@ -88,6 +99,9 @@ void Timber::reset() {
         v.pipe.clear();
         v.tongueLeft = v.keyLeft = v.keyState = 0.0f;
         v.lift = false;
+        v.fadeLeft = 0;
+        v.pendingNote = -1;
+        v.pendingOff = false;
     }
     flutterPhase = 0.0f;
     rng = kRngSeed; // the breath noise, from the top
@@ -113,6 +127,9 @@ Timber::Voice *Timber::allocate() {
     return best;
 }
 
+/** How long a voice that is still sounding takes to go before it restarts. */
+constexpr int32_t kFadeFrames = 96;
+
 void Timber::noteOn(uint8_t note, uint8_t velocity) {
     const bool mono = steppedOf(Mono) != 0;
     Voice *vp = mono ? &voices[0] : allocate();
@@ -124,7 +141,27 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
     // instrument being restarted; a tongued note is stopped and started
     // again. On a wind instrument that is the difference between two
     // articulations, not two envelopes.
-    const bool slurred = glide > 0.001f && v.used && v.gate;
+    const bool slurred = glide > 0.001f && v.used && v.gate && v.pendingNote < 0;
+    if (!slurred && v.used && v.amp.value() > 0.0001f) {
+        // Still sounding - most often its own release, since every patch
+        // here is mono and the phrase's notes land inside it. Starting now
+        // would cut it to nothing in one sample, which was the click on the
+        // front of every note that followed another. Fade it for two
+        // milliseconds and start at the block after; the note is that
+        // much late, and nobody can hear two milliseconds.
+        // Nothing else changes yet - not even v.note, because render
+        // retunes the pipe from it and a full tube read at a new length is
+        // a step of its own. noteOff looks at pendingNote first.
+        v.pendingNote = note;
+        v.pendingVel = velocity;
+        v.pendingOff = false;
+        v.fadeLeft = kFadeFrames;
+        return;
+    }
+    startVoice(v, note, velocity, slurred);
+}
+
+void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) {
     v.glideFrom = slurred ? v.freq : mtof(static_cast<float>(note));
     v.glidePos = slurred ? 0.0f : 1.0f;
     v.freq = v.glideFrom;
@@ -164,10 +201,14 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
 
 void Timber::noteOff(uint8_t note) {
     for (auto &v : voices) {
-        if (v.used && v.gate && v.note == note) {
-            v.gate = false;
-            v.amp.release();
+        if (!v.used) continue;
+        if (v.pendingNote == note) {
+            v.pendingOff = true; // released before it even started: start it, then let go
+            continue;
         }
+        if (!v.gate || v.note != note) continue;
+        v.gate = false;
+        v.amp.release();
     }
 }
 
@@ -235,6 +276,17 @@ bool Timber::render(float *L, float *R, int32_t frames) {
 
     for (auto &v : voices) {
         if (!v.used) continue;
+        if (v.pendingNote >= 0 && v.fadeLeft <= 0) {
+            // The fade is done: start the note that was waiting, at a block
+            // boundary so the solve below sees it before a sample is made.
+            startVoice(v, static_cast<uint8_t>(v.pendingNote), v.pendingVel, false);
+            v.pendingNote = -1;
+            if (v.pendingOff) {
+                v.pendingOff = false;
+                v.gate = false;
+                v.amp.release();
+            }
+        }
         v.amp.set(0.0f, paramOf(Attack), paramOf(Decay), paramOf(Sustain), paramOf(Release), false);
         v.filter.set(paramOf(Cutoff), paramOf(Resonance), steppedOf(FilterType),
                      dsp::MultiFilter::Clean, 0.0f);
@@ -318,10 +370,17 @@ bool Timber::render(float *L, float *R, int32_t frames) {
                 v.keyLeft -= 1.0f;
                 v.keyState = v.keyState * 0.85f + white * 0.15f;
                 const float soft = std::sin(dsp::kPi * (1.0f - v.keyLeft * keyInv));
-                s += v.keyState * keys * soft * soft;
+                s += v.keyState * keys * kKeyLevel * soft * soft;
             }
 
-            const float out = v.filter.process(s) * env;
+            float out = v.filter.process(s) * env;
+            if (v.pendingNote >= 0) {
+                // Fading, or faded and waiting for the block boundary: the
+                // rest of this block stays silent, or the old note comes
+                // back for thirty samples at full level and that is a click.
+                out *= v.fadeLeft > 0 ? static_cast<float>(v.fadeLeft) / static_cast<float>(kFadeFrames) : 0.0f;
+                if (v.fadeLeft > 0) --v.fadeLeft;
+            }
             L[i] += out;
             R[i] += out;
         }

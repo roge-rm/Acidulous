@@ -39,10 +39,26 @@
 # And a reused voice no longer starts with the last note in its tube: the
 # envelope is zeroed at note-on anyway, so clearing the pipe there is free.
 #
+# **The click on the front of every note was the pads.** Dan heard it on
+# every instrument; measured as the largest second difference at a note-on
+# against the fifty milliseconds after it, it was 5x to 13x, and with
+# `keys` at zero 0.5x. The pad noise was a tenth of full scale at these
+# settings - a four-millisecond burst at -25 dB on notes that take fifty to
+# two hundred milliseconds to get there - so the engine scales it by a
+# tenth (Timber.cpp, kKeyLevel) and the bank's values stand. Under that were
+# two more: a note struck while the last one was still releasing cut it to
+# nothing in one sample (it fades for two milliseconds now and starts at
+# the next block), and the reed's rest was worked from each sample's breath
+# against a slope solved once a block, which for the first block of a note
+# swept it from the embouchure to shut and sent half the breath down the
+# tube as a pulse (the rest is the solved one now). All nine patches read
+# under 2x.
+#
 # Pitch at each centre now: Clarinet -0c, Bass Clarinet -2c, Alto Sax +2c,
-# Oboe +2c, Bassoon +3c, Flute +2c, Pan Pipe +1c, Stopped Wood +7c, Forked
+# Oboe +2c, Bassoon +3c, Flute +2c, Pan Pipe +1c, Stopped Wood -4c, Forked
 # +1c; the clarinet reads -1 / 0 / +5 at the bottom, middle and top of its
-# range. Levelled to -23 dB RMS, spread 2.4 dB without Init.
+# range, and Stopped Wood is within five cents from 46 to 68. Levelled to
+# -23 dB RMS, spread 2.6 dB without Init.
 #
 # **What is still wrong, in the order it matters.** The reeds are slow to
 # speak on the big instruments - Bassoon 250 ms to -31 dB, Alto Sax and
@@ -154,14 +170,21 @@ patch "Stopped Wood"  note=55 range=46..68
   attack         0.05 s
   body           110 Hz
   breath         0.3
+  # Dark from the filter now, not from the lattice. A lattice at 420 Hz on
+  # a 110 Hz tube is under four times its bottom note - no real woodwind is
+  # under six - and with the deep holes it made no note at all from 58 to
+  # 64: measured, +18 and +222 cents at -37 dB, breath and nothing else,
+  # which is what Dan heard in the top of the phrase. At 700 Hz with plain
+  # holes it plays every note from 46 to 68 within five cents.
+  cutoff         4000 Hz
   drive          0.2
   embouchure     0.45
-  holes          0.9
-  lattice        420 Hz
+  holes          0.5
+  lattice        700 Hz
   pressure       1
   tongue         0.5
 
-  volume         0.27
+  volume         0.5
 patch Forked  note=62 range=52..74
   # 0.4675, seeded from what shipped, is past the point where the fork
   # stops being a colour and becomes a note the tube cannot hold: it read

@@ -72,7 +72,7 @@ class Pipe {
         for (auto &v : lower) v = 0.0f;
         for (auto &v : jetLine) v = 0.0f;
         wUpper = wLower = wJet = 0;
-        holeLp = holeLp2 = bellLp = inertia = breathLp = ventLp = wallLp = 0.0f;
+        holeLp = holeLp2 = bellLp = inertia = mouthLag = breathLp = ventLp = wallLp = 0.0f;
         dcIn = dcOut = 0.0f;
         radiated = 0.0f;
         // The tube length goes back with the rest of it. tune() rewrites it
@@ -410,6 +410,7 @@ class Pipe {
             // is why a tight embouchure chokes a real one too.
             const float steepest = 0.9f * (1.0f - offset) / mouth;
             slope = clampf(slope, -steepest, -0.0005f);
+            rRest = offset - slope * mouth;
             fr = offset + slope * bre;
             fi = slope * bim;
         }
@@ -522,22 +523,29 @@ class Pipe {
             // like.
             const float pd = bore - breath;
             inertia += (pd - inertia) * reedCoeff;
+            mouthLag += (mouth - mouthLag) * reedCoeff;
+            // The reed sits where the solve put it, and moves with what the
+            // tube sends back: `inertia` carries the breath's own DC through
+            // the same one-pole, so adding the lagged breath leaves the
+            // wave alone. Its rest is the solved one, not offset minus
+            // slope times *this sample's* breath - the slope is solved once
+            // a block against the block's pressure, floored at 0.05, and
+            // for the first block of a note that is a slope of eight; the
+            // breath then ramps past the floor within the block and a rest
+            // worked from it swept from the embouchure to fully shut in a
+            // millisecond, sending half the breath down the tube as a
+            // pulse. That pulse was the click on the front of every note.
+            //
             // The tongue holds the reed *shut*: the reflection goes to one
             // and the flow to nothing, and the reed's answer to the wave is
             // damped in proportion. Released, the flow steps up by the
             // little it was held back by - which is what a tongued attack
-            // is, and it is what starts the note.
-            //
-            // It used to scale the whole table, rest and all, which *opened*
-            // the reed while the tongue was on - a third of the mouth
-            // pressure flowing into the tube for twenty milliseconds - and
-            // then shut it by a quarter at the release. Every note started
-            // from that thump, backwards: measured on the clarinet, fifty
-            // cents sharp at thirty milliseconds and gone by sixty; on the
-            // bassoon, a pulse circulating the whole bore for a tenth of a
-            // second.
-            float r = offset - slope * mouth;
-            r += (1.0f - r) * tongue + slope * (inertia + mouth) * (1.0f - tongue);
+            // is, and it is what starts the note. It used to scale the
+            // whole table, rest and all, which *opened* the reed while the
+            // tongue was on and shut it by a quarter at the release: fifty
+            // cents sharp at thirty milliseconds on the clarinet, a pulse
+            // circulating the bassoon's whole bore.
+            float r = rRest + (1.0f - rRest) * tongue + slope * (inertia + mouthLag) * (1.0f - tongue);
             if (r > 1.0f) r = 1.0f;
             else if (r < -1.0f) r = -1.0f;
             in = breath + pd * r;
@@ -676,6 +684,7 @@ class Pipe {
     float bellGain = 0.9f, bellCoeff = 0.4f;
 
     float reedStiff = 0.5f, offset = 0.7f, slope = -1.0f, reedCoeff = 0.2f, inertia = 0.0f;
+    float rRest = 0.7f, mouthLag = 0.0f; // where the solve put the reed, and the breath as the reed feels it
     float jetRatio = 0.5f, jetAim = 0.0f, jetDelay = 48.0f, jetGain = 1.0f, jetSlope = 1.0f, jetRest = 0.0f;
 
     float pressure = 0.5f, drive = 1.0f, loss = 0.999f, tongue = 0.0f;

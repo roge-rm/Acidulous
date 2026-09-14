@@ -304,7 +304,7 @@ internal object FactoryBanks {
         low = 57, high = 79)
 
     private fun timber8() = Patch("Timber", "Stopped Wood",
-        mapOf("body" to 0.461817741f, "lattice" to 0.112317182f, "holes" to 0.9f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "drive" to 0.2f, "volume" to 0.18f),
+        mapOf("body" to 0.461817741f, "lattice" to 0.282834977f, "holes" to 0.5f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "cutoff" to 0.66574645f, "drive" to 0.2f, "volume" to 0.333333343f),
         low = 46, high = 68)
 
     private fun timber9() = Patch("Timber", "Forked",

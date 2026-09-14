@@ -79,6 +79,12 @@ class Timber final : public Machine {
         dsp::MultiFilter filter;
         float vibratoPhase = 0.0f, vibratoLeft = 0.0f;
         bool lift = false;         // acted on after the next tune, which needs the note
+        // A note struck on a voice that is still sounding fades it out for
+        // two milliseconds first, then starts. See noteOn.
+        int32_t fadeLeft = 0;
+        int pendingNote = -1;
+        uint8_t pendingVel = 0;
+        bool pendingOff = false;
         float tongueLeft = 0.0f;   // the tongue is still on the reed
         float keyLeft = 0.0f;      // a pad is still closing
         float keyState = 0.0f;
@@ -94,6 +100,7 @@ class Timber final : public Machine {
     float paramOf(int32_t p) const { return params_.get(p); }
     int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
     Voice *allocate();
+    void startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred);
 
     float sampleRate = 48000.0f;
     Voice voices[kVoices];
