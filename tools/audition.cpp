@@ -140,8 +140,18 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             {3.5f, 0.45f, 10, 88}, {4.0f, 0.95f, 9, 96},   {5.0f, 0.95f, 5, 90},
             {6.0f, 0.75f, 7, 104}, {6.5f, 2.2f, 0, 100},
         };
-        for (const Step &st : kTune) {
-            p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, note + st.step, st.vel));
+        // Twice, an octave apart, because almost everything that has been
+        // wrong with these machines has been wrong at one end of the range
+        // and not the other: how long a note takes to speak, how much of the
+        // fundamental the DC blocker eats, whether the tuning holds. One
+        // octave of one phrase hides all of it.
+        for (int oct = -1; oct <= 1; oct += 2) {
+            const float from = oct < 0 ? 0.0f : beat * 9.5f;
+            for (const Step &st : kTune) {
+                p.lastOff = std::max(p.lastOff,
+                                     hit(p, from + beat * st.at, beat * st.len,
+                                         note + 12 * oct + st.step, st.vel));
+            }
         }
         p.frames = p.lastOff + secondsToFrames(2.5f);
     } else if (kind == "arp") {
