@@ -50,6 +50,8 @@ namespace acidulous::machine::timber {
 constexpr float kWantSlope = 0.4f, kWantMax = 1.9f, kLiftCeiling = 2.6f;
 /** What the loop settles at once the note is under way, for sizing the lift. */
 constexpr float kSettled = 1.15f;
+/** How much of the top the walls take, per round trip. See tune(). */
+constexpr float kWallDepth = 0.2f;
 
 using dsp::clampf;
 
@@ -70,7 +72,7 @@ class Pipe {
         for (auto &v : lower) v = 0.0f;
         for (auto &v : jetLine) v = 0.0f;
         wUpper = wLower = wJet = 0;
-        holeLp = holeLp2 = bellLp = inertia = breathLp = ventLp = 0.0f;
+        holeLp = holeLp2 = bellLp = inertia = breathLp = ventLp = wallLp = 0.0f;
         dcIn = dcOut = 0.0f;
         radiated = 0.0f;
         // The tube length goes back with the rest of it. tune() rewrites it
@@ -87,6 +89,11 @@ class Pipe {
         upperDelay = 0.0f;
         onsetBoost = 1.0f;
         onsetFall = 0.0f;
+        // ...and having taken the length back, ask for it again. Without
+        // this a cleared pipe given the *same* note is not dirty, and reads
+        // its line at a length of nothing. It happened to be saved by the
+        // pressure being different at note-on, which is not a reason.
+        dirty = true;
     }
 
     // --- what the player and the instrument are ------------------------------
@@ -288,12 +295,23 @@ class Pipe {
         // near the top of the bore is a high-pass on the loop, so that is
         // what this is, cornered between the tube's fundamental and the
         // note being asked for.
-        if (useMode > 1) {
-            const float ventHz = (freq / static_cast<float>(useMode)) * 1.5f;
-            ventCoeff = 1.0f - std::exp(-6.28318530718f * ventHz / sr);
-        } else {
-            ventCoeff = 0.0f;
-        }
+        //
+        // And when no vent is open, the same high-pass stands in for a
+        // fact about the tube: it has no mode below its own lowest note.
+        // A cone's loop closes a whole turn at DC - that is what makes its
+        // series complete - and the DC blocker's phase lead then closes one
+        // again a little way above its corner, where the reed's static gain
+        // is still over one. The oboe measured that mode at 40 Hz with a
+        // gain of 1.03 at its centre note and 1.06 four semitones up, at
+        // which point it wins and the note is not a pitch at all; and every
+        // cone in the bank rang it for the first tenth of a second of every
+        // note. A high-pass under the instrument's bottom note starves it:
+        // the turn now closes where this filter passes half, and the mode
+        // reads 0.5 instead of 1.0. Cylinders have half a turn at DC and
+        // never had the mode, and lose a few degrees the solve puts back.
+        float ventHz = lowest * 0.3f;
+        if (useMode > 1) ventHz = std::max(ventHz, (freq / static_cast<float>(useMode)) * 1.5f);
+        ventCoeff = 1.0f - std::exp(-6.28318530718f * ventHz / sr);
         float below = (whole - nominal) * (1.0f + finger * 0.4f) * belowScale;
         lowerDelay = clampf(below, 1.0f, static_cast<float>(lower.size() - 3));
 
@@ -309,6 +327,30 @@ class Pipe {
             float vr, vi;
             ventAt(w, vr, vi);
             const float nr2 = br * vr - bi * vi, ni2 = br * vi + bi * vr;
+            br = nr2; bi = ni2;
+        }
+        // The walls. A real bore loses more of a wave the higher it is -
+        // the boundary layer goes as the root of the frequency - and that
+        // is what puts a tube's fundamental ahead of its own partials: at
+        // a clarinet's bottom note the third mode is four percent lossier
+        // than the first. Without it every mode here sat within a few
+        // percent of the same gain, the bottom note of the bank's default
+        // instrument lost the race to its own third partial, and a bassoon
+        // had four modes over unity fighting through its attack.
+        //
+        // A shelf, not a low-pass: a fifth off above four times the
+        // instrument's bottom note, which is the root law to within a
+        // percent or two from the third partial to the twentieth. A plain
+        // one-pole there was tried first and halved every centroid in the
+        // bank, because a partial whose loop gain sits at 0.95 is amplified
+        // twenty times by the tube and one at 0.75 four times - the tube's
+        // resonance is most of a woodwind's brightness, and a loss that
+        // looks small on paper is a loss of that.
+        wallCoeff = 1.0f - std::exp(-6.28318530718f * clampf(lowest * 4.0f, 100.0f, sr * 0.45f) / sr);
+        {
+            float wr, wi;
+            wallAt(w, wr, wi);
+            const float nr2 = br * wr - bi * wi, ni2 = br * wi + bi * wr;
             br = nr2; bi = ni2;
         }
 
@@ -393,13 +435,14 @@ class Pipe {
      */
     float loopAt(float hz) const {
         const float w = 6.28318530718f * clampf(hz, 1.0f, sr * 0.49f) / sr;
-        float jr, ji, br, bi, fr, fi, vr, vi;
+        float jr, ji, br, bi, fr, fi, vr, vi, wr, wi;
         junction(w, jr, ji);
         dcBlock(w, br, bi);
         ventAt(w, vr, vi);
+        wallAt(w, wr, wi);
         mouthpiece(w, fr, fi);
         return std::sqrt((fr * fr + fi * fi) * (br * br + bi * bi) * (jr * jr + ji * ji) *
-                         (vr * vr + vi * vi)) * loss;
+                         (vr * vr + vi * vi) * (wr * wr + wi * wi)) * loss;
     }
 
     /**
@@ -413,10 +456,11 @@ class Pipe {
         junction(w, jr, ji);
         dcBlock(w, br, bi);
         mouthpiece(w, fr, fi);
-        float vr, vi;
+        float vr, vi, wr, wi;
         ventAt(w, vr, vi);
+        wallAt(w, wr, wi);
         const float phase = std::atan2(fi, fr) + std::atan2(bi, br) + std::atan2(ji, jr) +
-                            std::atan2(vi, vr) - w * upperDelay;
+                            std::atan2(vi, vr) + std::atan2(wi, wr) - w * upperDelay;
         return phase / 6.28318530718f;
     }
 
@@ -478,7 +522,22 @@ class Pipe {
             // like.
             const float pd = bore - breath;
             inertia += (pd - inertia) * reedCoeff;
-            float r = offset + slope * inertia * (1.0f - tongue);
+            // The tongue holds the reed *shut*: the reflection goes to one
+            // and the flow to nothing, and the reed's answer to the wave is
+            // damped in proportion. Released, the flow steps up by the
+            // little it was held back by - which is what a tongued attack
+            // is, and it is what starts the note.
+            //
+            // It used to scale the whole table, rest and all, which *opened*
+            // the reed while the tongue was on - a third of the mouth
+            // pressure flowing into the tube for twenty milliseconds - and
+            // then shut it by a quarter at the release. Every note started
+            // from that thump, backwards: measured on the clarinet, fifty
+            // cents sharp at thirty milliseconds and gone by sixty; on the
+            // bassoon, a pulse circulating the whole bore for a tenth of a
+            // second.
+            float r = offset - slope * mouth;
+            r += (1.0f - r) * tongue + slope * (inertia + mouth) * (1.0f - tongue);
             if (r > 1.0f) r = 1.0f;
             else if (r < -1.0f) r = -1.0f;
             in = breath + pd * r;
@@ -492,7 +551,8 @@ class Pipe {
             ventLp += (hp - ventLp) * ventCoeff;
             hp -= ventLp;
         }
-        write(upper, wUpper, hp * loss);
+        wallLp += (hp - wallLp) * wallCoeff;
+        write(upper, wUpper, (hp - kWallDepth * (hp - wallLp)) * loss);
 
         radiated = fromHoles * 0.7f + fromBell * 0.5f;
         return radiated;
@@ -545,6 +605,14 @@ class Pipe {
         // this to find out how much phase is left for that tube, so putting
         // it in would be counting it twice - and the pipe would solve for a
         // length it had already spent. It cost an afternoon once.
+    }
+
+    /** The walls' loss, as the loop sees it: 1 - depth x (1 - onepole). */
+    void wallAt(float w, float &re, float &im) const {
+        float lr, li;
+        onePole(wallCoeff, std::cos(w), std::sin(w), lr, li);
+        re = 1.0f - kWallDepth * (1.0f - lr);
+        im = kWallDepth * li;
     }
 
     /** The register vent: 1 - onepole, or nothing at all when it is shut. */
@@ -613,6 +681,7 @@ class Pipe {
     float pressure = 0.5f, drive = 1.0f, loss = 0.999f, tongue = 0.0f;
     float holeLp = 0.0f, holeLp2 = 0.0f, bellLp = 0.0f, breathLp = 0.0f;
     float ventCoeff = 0.0f, ventLp = 0.0f;
+    float wallCoeff = 1.0f, wallLp = 0.0f;
     float dcIn = 0.0f, dcOut = 0.0f;
     float radiated = 0.0f, loopMag = 0.0f;
     /** The attack's lift and how fast it lets go. See lift(). */

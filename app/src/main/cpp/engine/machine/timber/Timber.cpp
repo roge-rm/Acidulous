@@ -143,15 +143,15 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
     v.keyState = 0.0f; // or a reused voice starts on the last pad's residue
     if (!slurred) {
         v.tongueLeft = paramOf(TongueTime) * sampleRate;
-        // retrigger, and the zero it writes is load bearing. The output here
-        // is the pipe times the envelope and this machine never clears the
-        // pipe between notes, so a re-used voice is retuned to the new note
-        // while the old one is still in the tube. Zeroing the envelope hides
-        // that; letting it run on (plain trigger) exposes it, and measured
-        // across the bank that is worse - Oboe 2.6 to 4.4, Flute 3.3 to 5.0.
-        // What is left at a note boundary is therefore the retune and not
-        // this, and it wants a declick fade rather than a different envelope.
+        // retrigger zeroes the envelope, and the output is the pipe times
+        // the envelope - so at this instant the voice is silent whatever
+        // its tube holds, and emptying the tube costs nothing audible. It
+        // buys a note that starts from its own breath rather than from the
+        // last note retuned: a reused voice used to carry the old pitch in
+        // its line for a round trip after the new length was set, and every
+        // patch here is mono, so that was every note but the first.
         v.amp.retrigger();
+        v.pipe.clear();
         // The loop gain this instrument asks for came down so the reed would
         // stay off its stops and the thing would play in tune; a lower gain
         // is a slower note, and this is what pays for it. Needs the note and
