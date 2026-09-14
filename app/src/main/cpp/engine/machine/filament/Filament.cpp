@@ -135,6 +135,10 @@ void Filament::prepare(int32_t sr) {
     for (auto &v : voices) {
         v.a.prepare(sampleRate);
         v.b.prepare(sampleRate);
+        // Half of the longest string this machine can hold, which is as far
+        // back as a pick can be from the bridge.
+        v.pick.assign(static_cast<size_t>(sampleRate / 36.0f) + 4, 0.0f);
+        v.pickWrite = 0;
     }
     for (auto &s : sympathetic) s.prepare(sampleRate);
     for (auto &e : eg) e.setSampleRate(sampleRate);
@@ -150,6 +154,8 @@ void Filament::reset() {
         v.b.clear();
         v.exciteLeft = 0;
         v.exciteDc = v.lastPick = 0.0f;
+        std::fill(v.pick.begin(), v.pick.end(), 0.0f);
+        v.pickWrite = 0;
     }
     for (auto &s : sympathetic) s.clear();
     for (auto &bq : body) bq.reset();
@@ -528,16 +534,49 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             excite -= v.exciteDc;
             exciterOut += excite;
 
-            // Pick position: the same disturbance a little later, inverted,
-            // which is a comb and is why a bridge pickup is thin.
+            // **Pick position.** A string plucked a fraction b along its
+            // length gets harmonic n in proportion to sin(n.pi.b): every
+            // harmonic with a node under the pick is missing, which is why
+            // playing by the bridge is thin and nasal and over the hole is
+            // round. In a waveguide that is one comb on the excitation,
+            // `1 - z^-bL` over a string L samples long - its nulls fall
+            // exactly where sin(n.pi.b) does, and at the middle of the
+            // string it takes out the even harmonics and leaves the
+            // fundamental at its loudest, which is what plucking there does.
+            //
+            // This comment described that and the code underneath it did
+            // something else: it handed the *second string of the course* a
+            // fraction less excitation. That is a level difference between
+            // two strings, not a pick position, and it was measurably
+            // nothing - moving `position` from 0.08 to 0.3 on the steel
+            // patch changed no column at all. Four patches set it expecting
+            // the comb.
+            //
             // Slide walks the pick up the string, which is the brightest
             // thing a finger can do to one.
             const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
             const float pos = clampf(position + mod[DstPosition] +
                                          slide * paramOf(MpeTimbre) * 0.28f,
                                      0.02f, 0.5f);
+            // A pluck, a pick and a hammer all act at one point and leave,
+            // so all three get the comb - a piano's strike point at a
+            // seventh of the string, chosen to lose the seventh harmonic, is
+            // the same fact. A bow or a jet is a force held against the
+            // string for the whole note and does not comb it this way.
+            const bool atAPoint = mode == Pluck || mode == Pick || mode == Hammer;
+            if (atAPoint && !v.pick.empty()) {
+                const auto size = static_cast<int32_t>(v.pick.size());
+                const int32_t back = std::clamp(
+                    static_cast<int32_t>(pos * sampleRate / std::max(20.0f, freq)), 1, size - 1);
+                const int32_t at = (v.pickWrite - back + size) % size;
+                const float earlier = v.pick[static_cast<size_t>(at)];
+                v.pick[static_cast<size_t>(v.pickWrite)] = excite;
+                v.pickWrite = (v.pickWrite + 1) % size;
+                // Halved, because a comb peaks at twice what goes into it.
+                excite = (excite - earlier) * 0.5f;
+            }
             const float a = v.a.step(excite);
-            const float b = v.b.step(excite * (1.0f - pos));
+            const float b = v.b.step(excite);
             const float coupled = (a + b) * 0.5f;
             // A course is two strings over one bridge, and a bridge *shares*
             // energy rather than making it. Each string is given a fraction

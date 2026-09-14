@@ -113,15 +113,27 @@
 #
 # **What is still wrong.** `Spoken To` is played by the audio input and so
 # measures as silence here, which is correct and means it cannot be
-# auditioned without one. `position` does not do what its comment says: it is
-# supposed to be the same disturbance a little later and inverted, which is
-# the comb that makes a bridge pickup thin, and it is actually a level
-# difference between the two strings of the course. Setting it from 0.08 to
-# 0.3 moves nothing measurable. Steel is four decibels under the rest of the
-# bank at full volume, because its energy sits in high partials rather than
-# at the note. And `chiff` reads 1.0 whenever a patch's tail is under a
-# twentieth of its peak, which means "not measured" rather than "no chiff" -
-# do not read the plucked patches' 1.0 as a result. The harness's `pitch` is unreliable for a string
+# auditioned without one. Steel is three decibels under the rest of the bank
+# at full volume, because its energy sits in high partials rather than at the
+# note. And `chiff` reads 1.0 whenever a patch's tail is under a twentieth of
+# its peak, which means "not measured" rather than "no chiff" - do not read
+# the plucked patches' 1.0 as a result.
+#
+# **`position` is a pick position now.** A string plucked a fraction b along
+# its length gets harmonic n in proportion to sin(n.pi.b): every harmonic
+# with a node under the pick is missing, which is why playing by the bridge
+# is thin and nasal and over the hole is round. That is one comb on the
+# excitation, `1 - z^-bL` over a string L samples long. The comment had said
+# so all along and the code underneath handed the *second string of the
+# course* a fraction less excitation instead - a level difference between two
+# strings, and measurably nothing: moving `position` from 0.08 to 0.3 changed
+# no column at all. It now moves the steel patch's loudest partial from its
+# eighth harmonic to its third, and at the middle of the string it reads -21
+# on `hollow`, which is the even harmonics gone and is exactly what plucking
+# there does. A bow and a jet do not get it: they hold a force against the
+# string for the whole note rather than acting at a point and leaving.
+# The four patches that set it had values chosen while it did nothing, so
+# they are chosen again. The harness's `pitch` is unreliable for a string
 # picked near its bridge - Steel's fundamental sits eleven decibels under its
 # own fifth harmonic, and a direct look at the spectrum says the note is
 # eight cents flat where the column says a hundred and ninety-six. Scoring a
@@ -147,11 +159,14 @@ patch Nylon  note=52 range=40..76
   detune         5 c
   grit           0.6
   length         0.00102617 s
-  position       0.188
+  # Over the soundhole, about a quarter along, where the fundamental is
+  # strongest. These four numbers were chosen when the parameter did
+  # nothing, so they are chosen again now that it does.
+  position       0.28
   size           0.55
   sustain        0.727
   tone           0.4
-  volume         1.00
+  volume         0.98
 
 patch Steel  note=52 range=40..79
   bodymix        0.4
@@ -159,7 +174,8 @@ patch Steel  note=52 range=40..79
   detune         6 c
   drive          0.12
   exciter        #1
-  position       0.0776
+  # Nearer the bridge than the nylon, which is the pick sound.
+  position       0.14
   size           0.4
   stiffness      0.18
   sustain        0.807
@@ -183,7 +199,7 @@ patch Hammered  note=60 range=36..84
   symtune        #5
   tension        0.3
   tone           0.5
-  volume         0.35
+  volume         0.27
 
 patch Bowed  note=55 range=36..76
   bodymix        0.4
@@ -199,7 +215,7 @@ patch Bowed  note=55 range=36..76
   sustain        0.454
   tone           0.4
   velocity       0.4
-  volume         0.19
+  volume         0.13
 
 # 48..82 rather than 84: at a kilohertz a string blown at rather than
 # struck is nine parts jet noise to one part note, and 84 measured 0.11 on
@@ -213,7 +229,7 @@ patch Blown  note=67 range=48..82
   stiffness      0.1
   sustain        0.41
   tone           0.3
-  volume         0.79
+  volume         0.48
 
 patch Sympathy  note=60 range=45..81
   "on release"   #0
@@ -223,7 +239,7 @@ patch Sympathy  note=60 range=45..81
   symtune        #4
   symwide        0.8
   tone           0.5
-  volume         0.76
+  volume         0.60
 
 patch Prepared  note=55 range=36..76
   damper         0.4
@@ -243,7 +259,7 @@ patch Prepared  note=55 range=36..76
   stiffness      0.3
   sustain        0.727
   tone           0.6
-  volume         0.18
+  volume         0.13
 
 patch "Spoken To"  note=55 range=36..72
   bodymix        0.3
@@ -267,4 +283,4 @@ patch Wire  note=64 range=52..88
   sustain        0.907
   tension        0.8
   tone           0.85
-  volume         0.60
+  volume         0.56

@@ -6,6 +6,7 @@
 #include <engine/dsp/LfoGen.h>
 #include <engine/machine/Machine.h>
 #include <engine/machine/filament/Waveguide.h>
+#include <vector>
 
 // Filament - strings, by modelling rather than by recording.
 //
@@ -106,6 +107,9 @@ class Filament final : public Machine {
         float exciteGain = 0.0f;
         float exciteDc = 0.0f;   // the slow part of the drive, kept out of the string
         float lastPick = 0.0f;   // a pick differentiates what a finger does not
+        // The excitation as it was a moment ago, for the pick-position comb.
+        std::vector<float> pick;
+        int32_t pickWrite = 0;
         float bowPhase = 0.0f;
         float pan = 0.0f;
         float damp = 0.0f;       // release damping, 0 while held
