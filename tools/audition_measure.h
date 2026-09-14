@@ -466,21 +466,54 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
     }
     m.tailSeconds = static_cast<float>(last - off) / kSr;
     m.tailRanOut = last + step > frames;
-    // --- the loudest four hundred milliseconds, which is the level a player
-    //     would call this note ------------------------------------------------
+    // --- the loudest four hundred milliseconds, weighted for the ear --------
+    //
+    // Unweighted, this counted sixty-five hertz at its full size, and sixty-
+    // five hertz is not heard at its full size by anybody or reproduced at it
+    // by most speakers. Six FM basses that measured within eight tenths of a
+    // decibel of each other spanned four once the weighting was on, and the
+    // one Dan reported as "too quiet to really hear" was the quietest of the
+    // six - which the flat number had no way to say.
+    //
+    // The two stages are the broadcast loudness ones: a high shelf that lifts
+    // everything above about a kilohertz, standing in for the head and the
+    // outer ear, and a high-pass near forty hertz for what is felt rather
+    // than heard. They are the standard's coefficients at this sample rate,
+    // which is the whole reason to use them - a weighting invented here would
+    // be a preference, and this is a measurement.
     {
+        static_assert(static_cast<int>(kSr) == 48000, "the weighting coefficients are 48 kHz ones");
+        const double b1[3] = {1.53512485958697, -2.69169618940638, 1.19839281085285};
+        const double a1[3] = {1.0, -1.69065929318241, 0.73248077421585};
+        const double b2[3] = {1.0, -2.0, 1.0};
+        const double a2[3] = {1.0, -1.99004745483398, 0.99007225036621};
+        std::vector<float> k(frames, 0.0f);
+        double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+        for (size_t i = 0; i < frames; ++i) {
+            const double x = mono[i];
+            const double y = b1[0] * x + b1[1] * x1 + b1[2] * x2 - a1[1] * y1 - a1[2] * y2;
+            x2 = x1; x1 = x; y2 = y1; y1 = y;
+            k[i] = static_cast<float>(y);
+        }
+        x1 = x2 = y1 = y2 = 0;
+        for (size_t i = 0; i < frames; ++i) {
+            const double x = k[i];
+            const double y = b2[0] * x + b2[1] * x1 + b2[2] * x2 - a2[1] * y1 - a2[2] * y2;
+            x2 = x1; x1 = x; y2 = y1; y1 = y;
+            k[i] = static_cast<float>(y);
+        }
         const auto win = static_cast<size_t>(kSr * 0.4f);
         const auto hop = static_cast<size_t>(kSr * 0.05f);
         double best = 0.0;
         if (frames >= win) {
             for (size_t at = 0; at + win <= frames; at += hop) {
                 double sq = 0.0;
-                for (size_t i = at; i < at + win; ++i) sq += static_cast<double>(mono[i]) * mono[i];
+                for (size_t i = at; i < at + win; ++i) sq += static_cast<double>(k[i]) * k[i];
                 best = std::max(best, sq / static_cast<double>(win));
             }
         } else {
             double sq = 0.0;
-            for (size_t i = 0; i < frames; ++i) sq += static_cast<double>(mono[i]) * mono[i];
+            for (size_t i = 0; i < frames; ++i) sq += static_cast<double>(k[i]) * k[i];
             best = frames > 0 ? sq / static_cast<double>(frames) : 0.0;
         }
         m.loudnessDb = dB(static_cast<float>(std::sqrt(best)));

@@ -52,7 +52,7 @@ patch "Bell Keys"  note=60 range=36..84 role=keys
   o2_level       0.57
   o2_wave        #3
   ring12         0.35
-  volume         0.80
+  volume         0.79
 
 patch "Wide Saws"  note=55 range=36..79 role=pad
   a_attack       0.02 s
@@ -111,7 +111,7 @@ patch "Glass Pad"  note=55 range=36..79 role=pad
   o2_fine        6
   o2_pos         0.6
   o2_wave        #4
-  volume         1.00
+  volume         0.96
 
 patch "Drift Strings"  note=55 range=36..79 role=pad
   a_attack       0.35 s
@@ -159,7 +159,7 @@ patch "Sync Lead"  note=67 range=48..91 role=lead
   o2_level       0.49
   o2_wave        #1
   voicemode      #2
-  volume         0.48
+  volume         0.45
 
 patch "FM Bass"  note=36 range=24..55 role=bass
   a_attack       0.002 s
@@ -184,7 +184,7 @@ patch "FM Bass"  note=36 range=24..55 role=bass
   o2_level       0.00
   o2_wave        #3
   voicemode      #1
-  volume         0.92
+  volume         1.00
 
 patch "Electric Piano"  note=60 range=36..84 role=keys
   # Two sines a fifth apart with a little FM between them and a hard decay:
@@ -228,7 +228,7 @@ patch Clav  note=60 range=36..84 role=keys
   a_release      0.18 s
   f_decay        0.2 s
   f_sustain      0.0
-  volume         0.50
+  volume         0.71
 
 patch Mallet  note=60 range=36..84 role=keys
   # The bell table struck and let go. Short, wooden, and pitched enough to
@@ -268,7 +268,7 @@ patch "Music Box"  note=60 range=36..84 role=keys
   a_decay        1.1 s
   a_sustain      0.0
   a_release      0.6 s
-  volume         0.86
+  volume         0.84
 
 patch Harpsi  note=60 range=36..84 role=keys
   # Two saws a tiny way apart, plucked and filtered high: the jack and the
@@ -290,7 +290,7 @@ patch Harpsi  note=60 range=36..84 role=keys
   a_decay        0.7 s
   a_sustain      0.0
   a_release      0.25 s
-  volume         0.84
+  volume         0.79
 
 patch Kalimba  note=60 range=36..84 role=keys
   # Almost a sine with a knock on the front of it. The comb table gives the
@@ -334,7 +334,7 @@ patch "Toy Piano"  note=60 range=36..84 role=keys
   a_decay        0.8 s
   a_sustain      0.0
   a_release      0.3 s
-  volume         0.85
+  volume         0.83
 
 patch "Pluck Wide"  note=55 range=40..79 role=arp
   # Eight voices of unison detuned hard, plucked. Density is the thing this
@@ -359,7 +359,7 @@ patch "Pluck Wide"  note=55 range=40..79 role=arp
   a_release      0.4 s
   f_decay        0.35 s
   f_sustain      0.0
-  volume         1.00
+  volume         0.98
 
 patch "Warm Pad"  note=55 range=36..79 role=pad
   # Three saws, gently detuned, a long way open and slow at both ends. The
@@ -384,7 +384,7 @@ patch "Warm Pad"  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.75
   a_release      2.2 s
-  volume         0.38
+  volume         0.39
 
 patch Choir  note=55 range=36..79 role=pad
   # The vowel table on two oscillators a fifth apart, drifting. Not a sample
@@ -453,7 +453,7 @@ patch "Dark Pad"  note=55 range=36..79 role=pad
   a_decay        4 s
   a_sustain      0.7
   a_release      3 s
-  volume         0.49
+  volume         0.53
 
 patch Shimmer  note=55 range=36..79 role=pad
   # The glass table an octave and a fifth up over a root that stays the
@@ -488,7 +488,7 @@ patch Shimmer  note=55 range=36..79 role=pad
   a_decay        4 s
   a_sustain      0.85
   a_release      3.5 s
-  volume         0.77
+  volume         0.73
 
 patch "Breath Pad"  note=55 range=36..79 role=pad
   # Mostly noise, with just enough oscillator under it to give the noise a
@@ -553,7 +553,7 @@ patch "Glass Ice"  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.8
   a_release      2.2 s
-  volume         0.83
+  volume         0.82
 
 patch Wash  note=55 range=36..79 role=pad
   # Eight-voice unison on two oscillators with the detune wide and the
@@ -574,7 +574,7 @@ patch Wash  note=55 range=36..79 role=pad
   a_decay        5 s
   a_sustain      0.8
   a_release      4 s
-  volume         0.50
+  volume         0.51
 
 patch "Solo String"  note=60 range=48..84 role=lead
   # One voice, a slow bow on the attack and a little drift. Deliberately not
@@ -645,7 +645,7 @@ patch "Brass Section"  note=55 range=40..79 role=keys
   a_decay        1.5 s
   a_sustain      0.85
   a_release      0.3 s
-  volume         0.38
+  volume         0.40
 
 patch "Soft Horn"  note=55 range=36..79 role=pad
   # The same idea with the envelope taken off and the filter left low: round
@@ -667,7 +667,7 @@ patch "Soft Horn"  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.8
   a_release      0.8 s
-  volume         0.34
+  volume         0.35
 
 patch "Analog Strings"  note=55 range=36..79 role=pad
   # Saw and square a shade apart with the drift up, filtered gently and with
@@ -715,7 +715,7 @@ patch Swell  note=55 range=36..69 role=pad
   f1_type        #1
   f1_freq        2600 Hz
   f1_env         0.4
-  volume         0.79
+  volume         0.81
 
 patch "Sub Bass"  note=36 range=24..55 role=bass
   # A sine and nothing else, with a square an octave up at a tenth of its
@@ -731,7 +731,7 @@ patch "Sub Bass"  note=36 range=24..55 role=bass
   a_decay        1.2 s
   a_sustain      0.6
   a_release      0.15 s
-  volume         0.54
+  volume         0.70
 
 patch Reese  note=36 range=24..55 role=bass
   # Two saws far enough apart to beat rather than to thicken, low-passed
@@ -750,7 +750,7 @@ patch Reese  note=36 range=24..55 role=bass
   a_decay        1.5 s
   a_sustain      0.85
   a_release      0.25 s
-  volume         0.38
+  volume         0.48
 
 patch "Pluck Bass"  note=36 range=24..55 role=bass
   # Short, filtered, and with the filter envelope faster than the amplitude
@@ -771,7 +771,7 @@ patch "Pluck Bass"  note=36 range=24..55 role=bass
   a_decay        0.5 s
   a_sustain      0.15
   a_release      0.2 s
-  volume         0.84
+  volume         0.99
 
 patch "Growl Bass"  note=36 range=24..55 role=bass
   # The grit table through a driven filter. Where Subvert's drive is a pedal
@@ -812,7 +812,7 @@ patch "Wide Bass"  note=36 range=24..55 role=bass
   a_decay        1.2 s
   a_sustain      0.75
   a_release      0.2 s
-  volume         0.48
+  volume         0.62
 
 patch "Square Bass"  note=36 range=24..55 role=bass
   # A hollow square with the pulse width just off centre and no resonance at
@@ -832,7 +832,7 @@ patch "Square Bass"  note=36 range=24..55 role=bass
   a_decay        1 s
   a_sustain      0.7
   a_release      0.15 s
-  volume         0.33
+  volume         0.46
 
 patch "Ring Bass"  note=36 range=24..55 role=bass
   # Ring modulation between the first two oscillators, which is metal rather
@@ -851,7 +851,7 @@ patch "Ring Bass"  note=36 range=24..55 role=bass
   a_decay        0.9 s
   a_sustain      0.5
   a_release      0.2 s
-  volume         0.40
+  volume         0.58
 
 patch "Square Lead"  note=67 range=48..91 role=lead
   # One square, one filter, one envelope, played high. If a synth cannot do
@@ -914,7 +914,7 @@ patch "Fifth Lead"  note=67 range=48..91 role=lead
   a_decay        1 s
   a_sustain      0.85
   a_release      0.2 s
-  volume         0.26
+  volume         0.24
 
 patch "Soft Lead"  note=67 range=48..91 role=lead
   # A triangle with the corners taken off and a slow glide. For playing over
@@ -953,7 +953,7 @@ patch "Hard Sync"  note=67 range=48..91 role=lead
   a_decay        1 s
   a_sustain      0.8
   a_release      0.2 s
-  volume         0.66
+  volume         0.52
 
 patch "PWM Lead"  note=67 range=48..91 role=lead
   # The pulse width moving under a slow LFO, which is the oldest trick there
@@ -1061,7 +1061,7 @@ patch "Ring Bells"  note=55 range=36..79 role=keys
   a_decay        2.5 s
   a_sustain      0.0
   a_release      1.2 s
-  volume         0.38
+  volume         0.39
 
 patch Drone  note=55 range=36..79 role=pad
   # Three oscillators on the organ table at the octave and the fifth, no
@@ -1083,7 +1083,7 @@ patch Drone  note=55 range=36..79 role=pad
   a_decay        8 s
   a_sustain      0.9
   a_release      3 s
-  volume         0.57
+  volume         0.56
 
 patch Metallic  note=55 range=36..79 role=pad
   # The fold table warped hard through a peaking filter. Inharmonic on
@@ -1103,7 +1103,7 @@ patch Metallic  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.3
   a_release      1.5 s
-  volume         0.42
+  volume         0.33
 
 patch "Sweep Down"  note=55 range=36..79 role=pad
   # A filter falling from the top of its range to the bottom over four
@@ -1127,7 +1127,7 @@ patch "Sweep Down"  note=55 range=36..79 role=pad
   a_decay        5 s
   a_sustain      0.6
   a_release      1.5 s
-  volume         0.41
+  volume         0.42
 
 patch Air  note=55 range=36..79 role=pad
   # A high-pass at four kilohertz on almost nothing: what is left is the top
@@ -1154,4 +1154,4 @@ patch Air  note=55 range=36..79 role=pad
   a_decay        4 s
   a_sustain      0.85
   a_release      3 s
-  volume         1.00
+  volume         0.95

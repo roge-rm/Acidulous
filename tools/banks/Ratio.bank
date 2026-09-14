@@ -57,7 +57,7 @@ patch Tine  note=60 range=36..84 role=keys
   o4_level       0.35
   o4_ratio       3
   o4_sustain     0
-  volume         0.87
+  volume         0.76
 
 patch "Sync Stab"  note=60 range=36..84 role=keys
   algoa          #3
@@ -74,7 +74,7 @@ patch "Sync Stab"  note=60 range=36..84 role=keys
   o2_sustain     1
   o2_wave        #7
   snap           #0
-  volume         1.00
+  volume         0.90
 
 patch Bell  note=60 range=36..84 role=bell
   algoa          #6
@@ -92,7 +92,7 @@ patch Bell  note=60 range=36..84 role=bell
   o3_release     4 s
   o3_sustain     0
   snap           #5
-  volume         1.00
+  volume         0.79
 
 patch Stretched  note=60 range=36..84 role=bell
   algoa          #6
@@ -108,7 +108,7 @@ patch Stretched  note=60 range=36..84 role=bell
   o3_level       0.45
   o3_ratio       7
   skew           0.22
-  volume         1.00
+  volume         0.72
 
 patch "Grit Bass"  note=36 range=24..55 role=bass
   f_freq         2200 Hz
@@ -127,7 +127,7 @@ patch "Grit Bass"  note=36 range=24..55 role=bass
   o3_level       0.4
   o3_mode        #7
   voicemode      #1
-  volume         0.81
+  volume         0.95
 
 patch "Fold Lead"  note=67 range=48..91 role=lead
   algoa          #3
@@ -143,7 +143,7 @@ patch "Fold Lead"  note=67 range=48..91 role=lead
   o2_sustain     0.9
   o2_wave        #7
   voicemode      #2
-  volume         1.00
+  volume         0.99
 
 patch "Morph Sweep"  note=55 range=36..79 role=pad
   e1_attack      1.2 s
@@ -171,7 +171,7 @@ patch "Morph Sweep"  note=55 range=36..79 role=pad
   o5_ratio       6
   o6_level       0.35
   o6_ratio       8
-  volume         0.82
+  volume         0.60
 
 patch Rhodes  note=60 range=36..84 role=keys
   # Two pairs, the modulator a fourth above its carrier and decaying
@@ -197,7 +197,7 @@ patch Rhodes  note=60 range=36..84 role=keys
   o4_sustain     0.0
   o5_level       0
   o6_level       0
-  volume         0.74
+  volume         0.72
 
 patch Wurly  note=60 range=36..84 role=keys
   # Harder and hollower than the tine: the modulator is a square, which
@@ -273,7 +273,7 @@ patch "Glass Keys"  note=60 range=36..84 role=keys
   o4_sustain     0.0
   o5_level       0
   o6_level       0
-  volume         0.82
+  volume         0.76
 
 patch Hammer  note=60 range=36..84 role=keys
   # The attack is a burst of noise from operator six and nothing else;
@@ -297,7 +297,7 @@ patch Hammer  note=60 range=36..84 role=keys
   o6_sustain     0.0
   o4_level       0
   o5_level       0
-  volume         0.64
+  volume         0.63
 
 patch "Soft Keys"  note=60 range=36..84 role=keys
   # Almost no modulation at all: two carriers a fifth apart, which is a
@@ -343,7 +343,7 @@ patch "Toy Box"  note=60 range=36..84 role=keys
   o4_level       0.00
   o5_level       0.00
   o6_level       0.00
-  volume         1.00
+  volume         0.84
 
 patch "Struck Glass"  note=60 range=36..84 role=bell
   # Two modulators at a seventh and a thirteenth of the carrier, so every
@@ -370,7 +370,7 @@ patch "Struck Glass"  note=60 range=36..84 role=bell
   o5_level       0
   o6_level       0
   snap           #0
-  volume         0.86
+  volume         0.69
 
 patch Plucked  note=55 range=40..79 role=arp
   # Everything short. The point is the envelope rather than the spectrum:
@@ -423,7 +423,7 @@ patch Tubular  note=60 range=36..84 role=bell
   o5_sustain     0.0
   o6_level       0
   snap           #0
-  volume         0.67
+  volume         0.54
 
 patch Gamelan  note=60 range=36..84 role=bell
   # Two carriers a fraction apart, each with its own modulator, so the two
@@ -448,7 +448,7 @@ patch Gamelan  note=60 range=36..84 role=bell
   o5_level       0
   o6_level       0
   snap           #0
-  volume         0.85
+  volume         0.77
 
 patch Church  note=60 range=36..84 role=bell
   # The hum an octave below the strike, which is where a real bell's two
@@ -476,7 +476,7 @@ patch Church  note=60 range=36..84 role=bell
   o5_level       0
   o6_level       0
   snap           #0
-  volume         0.89
+  volume         0.86
 
 patch Ice  note=67 range=48..88 role=bell
   # Thin, very high, and almost no low end - but on the note. The carrier
@@ -506,7 +506,7 @@ patch Ice  note=67 range=48..88 role=bell
   f_type         #5
   f_freq         500 Hz
   f_key          0.8
-  volume         1.00
+  volume         0.73
 
 patch Anvil  note=60 range=36..84 role=bell
   # The ring mode rather than frequency modulation: two operators
@@ -534,7 +534,7 @@ patch Anvil  note=60 range=36..84 role=bell
   o5_level       0
   o6_level       0
   snap           #0
-  volume         0.84
+  volume         0.86
 
 patch Bowl  note=60 range=36..84 role=bell
   # Long, low and slow, with the modulation fading before the carrier
@@ -558,7 +558,7 @@ patch Bowl  note=60 range=36..84 role=bell
   o5_level       0
   o6_level       0
   snap           #0
-  volume         0.84
+  volume         0.82
 
 patch "Kalimba FM"  note=60 range=36..84 role=bell
   # A short bright strike over a sine that keeps going: two operators, one
@@ -597,7 +597,7 @@ patch "Deep Sine"  note=36 range=24..55 role=bass
   o4_level       0
   o5_level       0
   o6_level       0
-  volume         0.84
+  volume         1.00
 
 patch Slap  note=36 range=24..55 role=bass
   # The modulator is loud for sixty milliseconds and then gone, which is
@@ -619,52 +619,77 @@ patch Slap  note=36 range=24..55 role=bass
   o4_level       0
   o5_level       0
   o6_level       0
-  volume         0.89
+  volume         1.00
 
 patch "Growl FM"  note=36 range=24..55 role=bass
-  # Feedback on the carrier itself, which is the one way to get a saw out
-  # of a sine without a second operator. Dirty and entirely harmonic.
-  algoa          #22
+  # Feedback on a *modulator*, which is the one way to get a saw out of a
+  # sine, driven hard into a carrier on the same note. Dirty and entirely
+  # harmonic - every sideband of a unison modulator lands on a harmonic.
+  #
+  # Written first on the algorithm where all six operators are carriers,
+  # which means nothing modulates anything: it was two sines an octave apart
+  # with a low-pass on them, it had no growl in it at all, and Dan reported
+  # it as too quiet to really hear. It was not quiet, it was empty.
+  algoa          #6
   o1_ratio       1
-  o1_fb          0.7
-  o1_level       0.9
+  o1_level       0.95
   o1_decay       1.5 s
-  o1_sustain     0.7
-  o2_ratio       0.5
-  o2_level       0.35
-  o2_decay       1.5 s
-  o2_sustain     0.6
-  o3_level       0
-  o4_level       0
+  o1_sustain     0.75
+  o2_ratio       1
+  o2_fb          0.85
+  o2_level       0.6
+  o2_decay       1.2 s
+  o2_sustain     0.55
+  o3_ratio       0.5
+  o3_level       0.5
+  o3_decay       1.5 s
+  o3_sustain     0.6
+  o4_ratio       2
+  o4_level       0.3
+  o4_decay       0.6 s
+  o4_sustain     0.25
   o5_level       0
   o6_level       0
   f_type         #3
-  f_freq         900 Hz
+  f_freq         1600 Hz
   f_res          0.2
   volume         1.00
 
 # Starts at 30: below that the fixed modulator is *above* the note and its
 # sidebands stop being harmonics of anything, which reads a hundred cents
 # out even though the note is still the loudest thing there.
+  volume         1.00
 patch "Sub Drop FM"  note=36 range=30..55 role=bass
-  # A modulator fixed at fifty hertz rather than following the keyboard, so
-  # every note gets the same rumble under it however high it is played.
-  # Written with the *carrier* fixed instead, the patch played fifty hertz
-  # whatever key you pressed, which is not an instrument.
-  algoa          #6
+  # A second carrier fixed at fifty hertz under one that tracks the keyboard,
+  # so every note has the same rumble beneath it however high it is played.
+  # Fixed ratios are the other half of what this machine can do.
+  #
+  # **A fixed operator's ratio is in units of 55 Hz, not hertz.** Written as
+  # 50 it was not fifty hertz, it was two thousand seven hundred and fifty,
+  # and the patch called Sub Drop had a centroid of nearly three kilohertz.
+  # 0.91 is fifty. It was wrong twice before that as well - once with the
+  # fixed operator as the carrier, so it played the same pitch whatever key
+  # was held, and once with it modulating a carrier a tone below it, which
+  # throws sidebands everywhere.
+  algoa          #22
   o1_ratio       1
-  o1_level       0.95
+  o1_level       0.9
   o1_decay       2 s
-  o1_sustain     0.5
+  o1_sustain     0.55
   o2_fixed       1
-  o2_ratio       50
-  o2_level       0.3
-  o2_decay       0.8 s
-  o2_sustain     0.2
-  o3_level       0
+  o2_ratio       0.91
+  o2_level       0.5
+  o2_decay       2 s
+  o2_sustain     0.5
+  o3_ratio       2
+  o3_level       0.12
+  o3_decay       0.6 s
+  o3_sustain     0.15
   o4_level       0
   o5_level       0
   o6_level       0
+  f_type         #3
+  f_freq         600 Hz
   volume         1.00
 
 patch "Metal Bass"  note=36 range=24..55 role=bass
@@ -687,7 +712,7 @@ patch "Metal Bass"  note=36 range=24..55 role=bass
   o5_level       0
   o6_level       0
   snap           #0
-  volume         0.86
+  volume         1.00
 
 patch "Pluck Bass FM"  note=36 range=24..55 role=bass
   # Short, with the filter closing faster than the amplitude so the note
@@ -719,6 +744,12 @@ patch "Wide Bass FM"  note=36 range=24..55 role=bass
   # Two carriers a few cents apart panned hard, which on a bass is usually
   # a mistake and here is not, because the filter keeps the beating under
   # the note.
+  #
+  # Both modulators were at a fifth of their carriers, which is barely any
+  # index at all: the patch was two detuned sines with four per cent of its
+  # energy above a hundred and fifty hertz, so on anything without real bass
+  # extension there was nothing to hear. Dan reported it as quiet and it was
+  # not quiet, it was empty.
   algoa          #6
   o1_ratio       1
   o1_fine        -7
@@ -727,7 +758,7 @@ patch "Wide Bass FM"  note=36 range=24..55 role=bass
   o1_decay       1.4 s
   o1_sustain     0.6
   o2_ratio       2
-  o2_level       0.2
+  o2_level       0.5
   o2_decay       0.5 s
   o2_sustain     0.1
   o3_ratio       1
@@ -737,14 +768,14 @@ patch "Wide Bass FM"  note=36 range=24..55 role=bass
   o3_decay       1.4 s
   o3_sustain     0.6
   o4_ratio       2
-  o4_level       0.2
+  o4_level       0.5
   o4_decay       0.5 s
   o4_sustain     0.1
   o5_level       0
   o6_level       0
   f_type         #3
-  f_freq         800 Hz
-  volume         0.53
+  f_freq         1500 Hz
+  volume         0.72
 
 patch "Brass FM"  note=67 range=48..91 role=lead
   # The modulator rises with the amplitude rather than falling, which is
@@ -768,7 +799,7 @@ patch "Brass FM"  note=67 range=48..91 role=lead
   o4_level       0
   o5_level       0
   o6_level       0
-  volume         0.80
+  volume         0.72
 
 patch "Square Lead FM"  note=67 range=48..91 role=lead
   # A square modulator at the unison, which is how to get a hollow pulse
@@ -788,7 +819,7 @@ patch "Square Lead FM"  note=67 range=48..91 role=lead
   o5_level       0
   o6_level       0
   glide          0.03 s
-  volume         0.98
+  volume         0.89
 
 patch "Reed Lead"  note=67 range=48..91 role=lead
   # An odd-harmonic modulator at three times the note, which is a clarinet
@@ -809,7 +840,7 @@ patch "Reed Lead"  note=67 range=48..91 role=lead
   o4_level       0
   o5_level       0
   o6_level       0
-  volume         0.98
+  volume         0.87
 
 patch Scream  note=67 range=48..91 role=lead
   # Feedback almost all the way up on a stack of three. Past about 0.8 the
@@ -836,7 +867,7 @@ patch Scream  note=67 range=48..91 role=lead
   f_type         #3
   f_freq         4000 Hz
   f_res          0.2
-  volume         1.00
+  volume         0.86
 
 patch "Whistle FM"  note=67 range=48..91 role=lead
   # One operator, one sine, nothing else on at all. Proof that the machine
@@ -877,7 +908,7 @@ patch "Fifth Stack"  note=67 range=48..91 role=lead
   o6_level       0.3
   o6_decay       1.5 s
   o6_sustain     0.5
-  volume         1.00
+  volume         0.90
 
 patch Drawbars  note=60 range=36..84 role=keys
   # All six operators as carriers at the octave, the fifth, the double
@@ -909,7 +940,7 @@ patch Drawbars  note=60 range=36..84 role=keys
   o6_sustain     1
   o6_decay       8 s
   o1_attack      0.01 s
-  volume         1.00
+  volume         0.99
 
 patch "Percussive Organ"  note=60 range=36..84 role=keys
   # The same drawbars with the top two given a fast decay, which is the
@@ -962,7 +993,7 @@ patch Harmonica  note=60 range=36..84 role=keys
   o5_level       0
   o6_level       0
   l1_rate        5.5 Hz
-  volume         0.86
+  volume         0.87
 
 patch "Oboe FM"  note=67 range=48..91 role=lead
   # A rectified sine as the modulator, which is all even harmonics, at
@@ -983,7 +1014,7 @@ patch "Oboe FM"  note=67 range=48..91 role=lead
   o4_level       0.00
   o5_level       0.00
   o6_level       0.00
-  volume         0.92
+  volume         0.87
 
 patch Accordion  note=60 range=36..84 role=keys
   # Three carriers, two of them a few cents out, which is the beating a
@@ -1010,7 +1041,7 @@ patch Accordion  note=60 range=36..84 role=keys
   o4_decay       6 s
   o5_level       0
   o6_level       0
-  volume         0.92
+  volume         0.93
 
 patch Pipe  note=55 range=36..79 role=pad
   # A quarter sine as the carrier, which has a hole in every cycle and
@@ -1091,7 +1122,7 @@ patch "Choir FM"  note=55 range=36..79 role=pad
   o6_level       0
   f_type         #2
   f_freq         3000 Hz
-  volume         0.86
+  volume         0.89
 
 patch "Morph Pad"  note=55 range=36..79 role=pad
   # Built to be moved: algorithm A is three pairs and algorithm B is all
@@ -1123,7 +1154,7 @@ patch "Morph Pad"  note=55 range=36..79 role=pad
   o4_sustain     0.5
   o5_level       0
   o6_level       0
-  volume         0.95
+  volume         0.96
 
 patch "Skewed Pad"  note=55 range=36..79 role=pad
   # The skew control pulls every ratio off its whole number by the same
@@ -1190,7 +1221,7 @@ patch "Drone FM"  note=55 range=36..79 role=pad
   o5_decay       10 s
   o5_sustain     0.9
   o6_level       0
-  volume         0.99
+  volume         1.00
 
 patch Wood  note=60 range=36..84 role=bell
   # A noise operator lasting eight milliseconds into a carrier that lasts

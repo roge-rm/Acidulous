@@ -166,7 +166,7 @@ patch Nylon  note=52 range=40..76
   size           0.55
   sustain        0.727
   tone           0.4
-  volume         0.98
+  volume         1.00
 
 patch Steel  note=52 range=40..79
   bodymix        0.4
@@ -199,7 +199,7 @@ patch Hammered  note=60 range=36..84
   symtune        #5
   tension        0.3
   tone           0.5
-  volume         0.27
+  volume         0.41
 
 patch Bowed  note=55 range=36..76
   bodymix        0.4
@@ -215,7 +215,7 @@ patch Bowed  note=55 range=36..76
   sustain        0.454
   tone           0.4
   velocity       0.4
-  volume         0.13
+  volume         0.20
 
 # 48..82 rather than 84: at a kilohertz a string blown at rather than
 # struck is nine parts jet noise to one part note, and 84 measured 0.11 on
@@ -229,7 +229,7 @@ patch Blown  note=67 range=48..82
   stiffness      0.1
   sustain        0.41
   tone           0.3
-  volume         0.48
+  volume         0.64
 
 patch Sympathy  note=60 range=45..81
   "on release"   #0
@@ -239,7 +239,7 @@ patch Sympathy  note=60 range=45..81
   symtune        #4
   symwide        0.8
   tone           0.5
-  volume         0.60
+  volume         0.81
 
 patch Prepared  note=55 range=36..76
   damper         0.4
@@ -259,7 +259,7 @@ patch Prepared  note=55 range=36..76
   stiffness      0.3
   sustain        0.727
   tone           0.6
-  volume         0.13
+  volume         0.22
 
 patch "Spoken To"  note=55 range=36..72
   bodymix        0.3
@@ -270,6 +270,7 @@ patch "Spoken To"  note=55 range=36..72
   sympathy       #1
   symtune        #2
   tone           0.55
+  volume         1.00
 
 patch Wire  note=64 range=52..88
   couple         0.8
@@ -283,4 +284,4 @@ patch Wire  note=64 range=52..88
   sustain        0.907
   tension        0.8
   tone           0.85
-  volume         0.56
+  volume         0.58
