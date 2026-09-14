@@ -344,11 +344,11 @@ internal object FactoryBanks {
     private fun filament0() = Patch("Filament", "Init", emptyMap())
 
     private fun filament1() = Patch("Filament", "Nylon",
-        mapOf("position" to 0.35f, "grit" to 0.6f, "length" to 0.120000787f, "sustain" to 0.727f, "tone" to 0.4f, "detune" to 0.1f, "couple" to 0.3f, "size" to 0.55f, "bodymix" to 0.45f, "volume" to 0.74f),
+        mapOf("position" to 0.35f, "grit" to 0.6f, "length" to 0.120000787f, "sustain" to 0.727f, "tone" to 0.4f, "detune" to 0.1f, "couple" to 0.3f, "size" to 0.55f, "bodymix" to 0.45f, "volume" to 0.72f),
         low = 40, high = 76)
 
     private fun filament2() = Patch("Filament", "Steel",
-        mapOf("exciter" to 0.2f, "position" to 0.120000005f, "sustain" to 0.807f, "tone" to 0.62f, "stiffness" to 0.18f, "detune" to 0.12f, "couple" to 0.4f, "size" to 0.4f, "bodymix" to 0.4f, "drive" to 0.12f, "volume" to 0.58f),
+        mapOf("exciter" to 0.2f, "position" to 0.120000005f, "sustain" to 0.807f, "tone" to 0.62f, "stiffness" to 0.18f, "detune" to 0.12f, "couple" to 0.4f, "size" to 0.4f, "bodymix" to 0.4f, "drive" to 0.12f, "volume" to 0.65f),
         low = 40, high = 79)
 
     private fun filament3() = Patch("Filament", "Hammered",
@@ -356,19 +356,19 @@ internal object FactoryBanks {
         low = 36, high = 84)
 
     private fun filament4() = Patch("Filament", "Bowed",
-        mapOf("exciter" to 0.6f, "position" to 0.18f, "pressure" to 0.85f, "speed" to 0.8f, "grit" to 0.7f, "sustain" to 0.454f, "tone" to 0.4f, "bodymix" to 0.4f, "volume" to 0.32f, "velocity" to 0.4f),
+        mapOf("exciter" to 0.6f, "position" to 0.18f, "pressure" to 0.85f, "speed" to 0.8f, "grit" to 0.3f, "sustain" to 0.454f, "tone" to 0.4f, "bodymix" to 0.4f, "volume" to 0.27f, "velocity" to 0.4f),
         low = 36, high = 76)
 
     private fun filament5() = Patch("Filament", "Blown",
-        mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 0.16f),
+        mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 1f),
         low = 48, high = 84)
 
     private fun filament6() = Patch("Filament", "Sympathy",
-        mapOf("tone" to 0.5f, "sympathy" to 1f, "symtune" to 0.8f, "symlevel" to 0.7f, "symsustain" to 0.786f, "symwide" to 0.8f, "volume" to 0.55f, "on release" to 0f),
+        mapOf("tone" to 0.5f, "sympathy" to 1f, "symtune" to 0.8f, "symlevel" to 0.7f, "symsustain" to 0.786f, "symwide" to 0.8f, "volume" to 0.59f, "on release" to 0f),
         low = 45, high = 81)
 
     private fun filament7() = Patch("Filament", "Prepared",
-        mapOf("exciter" to 0.4f, "sustain" to 0.727f, "tone" to 0.6f, "stiffness" to 0.3f, "stages" to 0.75f, "damper at" to 0.33f, "damper" to 0.4f, "rattle" to 0.55f, "rattle at" to 0.2f, "drive" to 0.2f, "volume" to 0.16f),
+        mapOf("exciter" to 0.4f, "sustain" to 0.727f, "tone" to 0.6f, "stiffness" to 0.3f, "stages" to 0.75f, "damper at" to 0.33f, "damper" to 0.4f, "rattle" to 0.55f, "rattle at" to 0.2f, "drive" to 0.2f, "volume" to 0.57f),
         low = 36, high = 76)
 
     private fun filament8() = Patch("Filament", "Spoken To",
@@ -376,7 +376,7 @@ internal object FactoryBanks {
         low = 36, high = 72)
 
     private fun filament9() = Patch("Filament", "Wire",
-        mapOf("exciter" to 0.2f, "position" to 0.05f, "sustain" to 0.907f, "tone" to 0.85f, "stiffness" to 0.85f, "stages" to 1f, "tension" to 0.8f, "rattle" to 0.3f, "detune" to 0.6f, "couple" to 0.8f, "drive" to 0.3f, "volume" to 0.51f),
+        mapOf("exciter" to 0.2f, "position" to 0.05f, "sustain" to 0.907f, "tone" to 0.85f, "stiffness" to 0.85f, "stages" to 1f, "tension" to 0.8f, "rattle" to 0.3f, "detune" to 0.6f, "couple" to 0.8f, "drive" to 0.3f, "volume" to 0.52f),
         low = 52, high = 88)
 
     private val filament: List<Patch> by lazy { listOf(filament0(), filament1(), filament2(), filament3(), filament4(), filament5(), filament6(), filament7(), filament8(), filament9()) }

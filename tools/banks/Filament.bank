@@ -50,14 +50,48 @@
 # the "loudness spread" line is reading the two against each other and should
 # be ignored here.
 #
-# **What is still wrong.** The bow plays a note two and a half octaves under
-# the one it was asked for: it needed far more pressure once its own offset
-# was blocked, and at that pressure the friction curve is period-doubling.
-# Steel and Wire still start fifteen times brighter than they continue.
-# `Spoken To` is played by the audio input and so measures as silence here,
-# which is correct and means it cannot be auditioned without one. And the
-# timbres past this are a first pass: the ring times are chosen numbers
-# rather than heard ones.
+# **The second pass took the three that were left.**
+#
+#   - **The bow played two and a half octaves under the note.** Not
+#     period-doubling: a waveguide's loop gain well below its own note is the
+#     loop filter's, near one, and a bow adds negative resistance on top of
+#     that. The total went over one and turned the corner of the loop's own
+#     DC blocker into a relaxation oscillator - an eleven-hertz wander with
+#     the note underneath it. The blocker sits at a tenth of whatever note is
+#     playing now (`kDcBelow`), which a string can say for itself: it has no
+#     motion below its own fundamental. The bow reads +4 cents.
+#   - **A pick was noise times an alternating plus and minus one** - a square
+#     wave at Nyquist, which does not brighten a spectrum, it inverts it, and
+#     puts the whole burst where no string has a partial. Wire started twelve
+#     times brighter than it continued and nothing on the string could reach
+#     it, because none of it was on the string. A pick is a harder, narrower
+#     contact, so it is a first-order tilt now.
+#   - **`sustain` did not mean seconds.** Asked for two it rang for three
+#     quarters of one, because the tone filter and the DC blocker take their
+#     own share every turn and nothing counted it. The string works out what
+#     to ask its feedback for so that a whole turn comes to what the caller
+#     said - the same reason the brass and the woodwinds solve their loops.
+#     Measured on the fundamental alone: Nylon 1.72 s against 2 asked, Wire
+#     4.2 against 5. A stiff or tension-modulated string comes in shorter
+#     still, which is what dispersion and a bending pitch do.
+#
+# And one the bank test caught on the way past: **a damper was a comb with
+# peaks.** Subtracting a delayed tap returns `1 + k` where the tap comes back
+# inverted, so a damper of 0.4 handed the loop a gain of 1.36 and the
+# prepared patch grew a partial until it ended louder than it started. A
+# finger can only take away; divided by that peak it still nulls the note at
+# a node, which is the whole point of putting one there.
+#
+# **What is still wrong.** `Spoken To` is played by the audio input and so
+# measures as silence here, which is correct and means it cannot be
+# auditioned without one. The harness's `pitch` is unreliable for a string
+# picked near its bridge - Steel's fundamental sits eleven decibels under its
+# own fifth harmonic, and a direct look at the spectrum says the note is
+# eight cents flat where the column says a hundred and ninety-six. Scoring a
+# whole harmonic series instead of walking down from the loudest peak was
+# tried and is worse; the column is wrong for Steel and Wire and the machine
+# is not. And `edge` says a plucked string is twenty times brighter at its
+# attack than in its tail, which is true and is not a click.
 #
 # Values are in each parameter's own units; `audition params Filament` lists
 # them. A patch names only what it changes.
@@ -80,7 +114,7 @@ patch Nylon  note=52 range=40..76
   size           0.55
   sustain        0.727
   tone           0.4
-  volume         0.74
+  volume         0.72
 
 patch Steel  note=52 range=40..79
   bodymix        0.4
@@ -93,7 +127,7 @@ patch Steel  note=52 range=40..79
   stiffness      0.18
   sustain        0.807
   tone           0.62
-  volume         0.58
+  volume         0.65
 
 patch Hammered  note=60 range=36..84
   bodymix        0.3
@@ -115,7 +149,7 @@ patch Hammered  note=60 range=36..84
 patch Bowed  note=55 range=36..76
   bodymix        0.4
   exciter        #3
-  grit           0.7
+  grit           0.3
   position       0.1064
   # The bow leans harder than it did. With the string's own offset blocked
   # the friction curve has to do all the work, and at 0.55 it did not start
@@ -126,7 +160,7 @@ patch Bowed  note=55 range=36..76
   sustain        0.454
   tone           0.4
   velocity       0.4
-  volume         0.32
+  volume         0.27
 
 patch Blown  note=67 range=48..84
   bodymix        0.5
@@ -137,7 +171,7 @@ patch Blown  note=67 range=48..84
   stiffness      0.1
   sustain        0.41
   tone           0.3
-  volume         0.16
+  volume         1.00
 
 patch Sympathy  note=60 range=45..81
   "on release"   #0
@@ -147,7 +181,7 @@ patch Sympathy  note=60 range=45..81
   symtune        #4
   symwide        0.8
   tone           0.5
-  volume         0.55
+  volume         0.59
 
 patch Prepared  note=55 range=36..76
   damper         0.4
@@ -160,7 +194,7 @@ patch Prepared  note=55 range=36..76
   stiffness      0.3
   sustain        0.727
   tone           0.6
-  volume         0.16
+  volume         0.57
 
 patch "Spoken To"  note=55 range=36..72
   bodymix        0.3
@@ -184,4 +218,4 @@ patch Wire  note=64 range=52..88
   sustain        0.907
   tension        0.8
   tone           0.85
-  volume         0.51
+  volume         0.52

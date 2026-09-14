@@ -149,6 +149,7 @@ void Filament::reset() {
         v.a.clear();
         v.b.clear();
         v.exciteLeft = 0;
+        v.exciteDc = v.lastPick = 0.0f;
     }
     for (auto &s : sympathetic) s.clear();
     for (auto &bq : body) bq.reset();
@@ -308,6 +309,9 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     const float volume = paramOf(Volume);
     const float panBase = paramOf(Pan);
     const float dry = paramOf(Dry);
+    // Thirty hertz: under every note this machine plays and over everything
+    // a player's arm does.
+    const float exciteDcCoeff = 1.0f - std::exp(-2.0f * kPiF * 30.0f / sampleRate);
     const float pitchScale = std::pow(2.0f, (bendSemis + paramOf(Octave) * 12.0f + paramOf(Transpose) +
                                              paramOf(Fine) * 0.01f) / 12.0f);
     const float releaseCoeff = 1.0f - std::exp(-1.0f / std::fmax(1.0f, paramOf(AmpRelease) * sampleRate));
@@ -400,8 +404,22 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             case Pluck:
             case Pick:
                 if (v.exciteLeft > 0) {
-                    const float shape = mode == Pick ? (v.exciteLeft % 2 ? 1.0f : -1.0f) : 1.0f;
-                    excite = noise * (0.3f + 0.7f * grit) * shape * v.exciteGain;
+                    // A pick is a harder, narrower contact than a finger, so
+                    // what it puts in is the same disturbance with more of
+                    // its top: a first difference, which is six decibels an
+                    // octave of tilt and nothing else.
+                    //
+                    // It used to be the noise multiplied by an alternating
+                    // plus and minus one - a square wave at Nyquist, which
+                    // does not brighten a spectrum, it *inverts* it, and
+                    // puts the whole burst up against the sample rate where
+                    // no string has a partial. The Wire patch started twelve
+                    // times brighter than it continued and no setting on the
+                    // string could reach it, because none of it was on the
+                    // string.
+                    const float raw = noise * (0.3f + 0.7f * grit);
+                    excite = (mode == Pick ? (raw - v.lastPick * 0.7f) * 1.25f : raw) * v.exciteGain;
+                    v.lastPick = raw;
                     --v.exciteLeft;
                 }
                 break;
@@ -447,6 +465,19 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 break;
             default: break;
             }
+            // **Nothing slow goes into a string.**
+            //
+            // A bow leans on a string with a steady force and a jet blows
+            // at it with a steady pressure, and neither is a wave: a steady
+            // force is a static deflection that the two ends take. So the
+            // slow part of the drive does not go in. (On its own this was
+            // not what cured the bow's wander - that was the loop's own
+            // high-pass, which now sits under the note; see kDcBelow. This
+            // is here because it is true, and it keeps a hammer's blow,
+            // which is a squared sine and never negative, from leaning on
+            // the string after it has left.)
+            v.exciteDc += (excite - v.exciteDc) * exciteDcCoeff;
+            excite -= v.exciteDc;
             exciterOut += excite;
 
             // Pick position: the same disturbance a little later, inverted,

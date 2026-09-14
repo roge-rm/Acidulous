@@ -104,6 +104,8 @@ class Filament final : public Machine {
         Waveguide a, b;          // a course: two strings, slightly apart
         int32_t exciteLeft = 0;  // samples of excitation remaining
         float exciteGain = 0.0f;
+        float exciteDc = 0.0f;   // the slow part of the drive, kept out of the string
+        float lastPick = 0.0f;   // a pick differentiates what a finger does not
         float bowPhase = 0.0f;
         float pan = 0.0f;
         float damp = 0.0f;       // release damping, 0 while held

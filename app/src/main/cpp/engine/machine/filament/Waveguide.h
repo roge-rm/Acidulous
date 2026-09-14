@@ -47,11 +47,24 @@ class Waveguide {
         refreshLoop();
     }
 
-    /** 0 = dead, 1 = rings for ever. */
+    /**
+     * [loopGain] is what one whole turn should come to, and the string works
+     * out what to ask its own feedback for to get it.
+     *
+     * The other things in the loop are not free: the tone filter takes a
+     * little at the note and the DC blocker takes four parts in a thousand,
+     * which at a hundred and sixty-five turns a second is most of the loss
+     * on a long-ringing string. Asked for two seconds, the first version
+     * rang for three quarters of one. The caller says the number it means
+     * and this divides out what the rest of the loop already costs - the
+     * same reason the brass and the woodwinds solve their loops instead of
+     * setting a coefficient and hoping.
+     */
     void setDamping(float loopGain, float toneCutoff01) {
         gain = clampf(loopGain, 0.0f, 1.02f);
         const float t = clampf(toneCutoff01, 0.02f, 1.0f);
         if (t != tone) { tone = t; refreshLoop(); }
+        else effGain = clampf(gain / loopKeeps, 0.0f, 1.05f);
     }
     void setDispersion(float amount01, int stages) {
         dispersion = clampf(amount01, 0.0f, 1.0f);
@@ -104,12 +117,21 @@ class Waveguide {
         const float delay = clampf(wanted, 2.0f, static_cast<float>(buffer.size() - 2));
         float out = read(delay);
         if (damperPressure > 0.0f) {
+            // A finger on a string can only take away. Subtracting a delayed
+            // tap on its own is a comb, and a comb has peaks: where the tap
+            // comes back inverted this read `1 + k`, so a damper set to 0.4
+            // handed the loop a gain of 1.36 at every other null and the
+            // prepared patch grew a partial until it was louder at the end of
+            // its tail than the start. Divided by the peak it still nulls the
+            // note at a node - which is the whole point of putting a finger
+            // there - and never returns more than it was given.
+            const float k = damperPressure * 0.9f;
             const float tapped = read(clampf(delay * damperPos, 1.0f, delay - 1.0f));
-            out -= tapped * damperPressure * 0.9f;
+            out = (out - tapped * k) / (1.0f + k);
         }
         // Loop filter: one pole, so the top goes first.
         loopState += (out - loopState) * tone;
-        float fed = loopState * gain;
+        float fed = loopState * effGain;
         for (int i = 0; i < allpassStages; ++i) {
             const float y = disperse * fed + allpassState[i];
             allpassState[i] = fed - disperse * y;
@@ -126,7 +148,7 @@ class Waveguide {
         // scale on the sympathetic patch: headroom spent on nothing, a thump
         // at every note, and enough of a pedestal that the harness could not
         // find a pitch in six of these ten patches at all.
-        const float hp = next - dcIn + kDcPole * dcOut;
+        const float hp = next - dcIn + dcPole * dcOut;
         dcIn = next;
         dcOut = hp;
         next = hp;
@@ -146,8 +168,24 @@ class Waveguide {
     static constexpr int kAllpass = 4;
     /** How much of the string's own length full stiffness may bend. */
     static constexpr float kStiffBudget = 0.085f;
-    /** The DC blocker's pole: low enough to leave the lowest string alone. */
-    static constexpr float kDcPole = 0.9995f;
+    /**
+     * Where the loop's high-pass sits, as a fraction of the note.
+     *
+     * A fixed eight hertz is not low enough to be out of the way and not high
+     * enough to be any use. A waveguide's loop gain at frequencies well under
+     * its own note is the loop filter's gain, near one - and a bow adds its
+     * own negative resistance on top of that, which took the total over one
+     * and turned the corner of this very filter into a relaxation oscillator:
+     * the bowed patch grew an eleven-hertz wander that the harness read as a
+     * note two and a half octaves under the one asked for.
+     *
+     * A tenth of the note leaves the fundamental four parts in a thousand
+     * lighter per turn and takes eleven hertz down to a half, which is under
+     * one once the bow is added. A string has no motion below its own
+     * fundamental, so tying this to the note is what the instrument says
+     * anyway.
+     */
+    static constexpr float kDcBelow = 0.1f;
 
     // How much extra delay each allpass adds at the bottom of the range,
     // and therefore where its dispersion happens. A coefficient chosen
@@ -194,11 +232,12 @@ class Waveguide {
         const float sw = std::sin(w), cw = std::cos(w);
         // The loop filter, one pole at `tone`.
         float phase = -std::atan2((1.0f - tone) * sw, 1.0f - (1.0f - tone) * cw);
-        // The DC blocker, which leads rather than lags. Small at a note and
-        // not small at all on the bottom string of a bass.
+        // The DC blocker, which leads rather than lags, and which sits at a
+        // tenth of whatever note this is.
+        dcPole = std::exp(-6.28318530718f * kDcBelow / baseDelay);
         {
             const float nr = 1.0f - cw, ni = sw;
-            const float dr = 1.0f - kDcPole * cw, di = kDcPole * sw;
+            const float dr = 1.0f - dcPole * cw, di = dcPole * sw;
             phase += std::atan2(ni, nr) - std::atan2(di, dr);
         }
         // The stiffness chain. Counted even when the string is not stiff at
@@ -225,6 +264,18 @@ class Waveguide {
             }
         }
         loopTrim = clampf(baseDelay - d, -baseDelay * 0.5f, baseDelay - 2.0f);
+
+        // ...and what the same three things do to the *size* of a partial at
+        // the note, which is what the feedback has to make up if `sustain` is
+        // to mean seconds. The allpass chain is not in here: it is an
+        // allpass, and takes nothing.
+        const float toneMag = tone / std::sqrt((1.0f - (1.0f - tone) * cw) * (1.0f - (1.0f - tone) * cw) +
+                                               ((1.0f - tone) * sw) * ((1.0f - tone) * sw));
+        const float dcMag = std::sqrt((1.0f - cw) * (1.0f - cw) + sw * sw) /
+                            std::sqrt((1.0f - dcPole * cw) * (1.0f - dcPole * cw) +
+                                      (dcPole * sw) * (dcPole * sw));
+        loopKeeps = clampf(toneMag * dcMag, 0.05f, 1.0f);
+        effGain = clampf(gain / loopKeeps, 0.0f, 1.05f);
     }
 
     float read(float delay) const {
@@ -249,7 +300,10 @@ class Waveguide {
     int allpassStages = 0;
     float allpassState[kAllpass] = {};
     float loopTrim = 0.0f; // what the rest of the loop already costs, in samples
-    float dcIn = 0.0f, dcOut = 0.0f;
+    float dcIn = 0.0f, dcOut = 0.0f, dcPole = 0.999f;
+    // What one turn keeps of a partial at the note, and the feedback that
+    // makes the asked-for gain come out the other side of it.
+    float loopKeeps = 1.0f, effGain = 0.995f;
     float tension = 0.0f;
     float damperPos = 0.5f;
     float damperPressure = 0.0f;
