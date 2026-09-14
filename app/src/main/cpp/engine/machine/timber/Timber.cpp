@@ -87,6 +87,7 @@ void Timber::reset() {
         v.filter.reset();
         v.pipe.clear();
         v.tongueLeft = v.keyLeft = v.keyState = 0.0f;
+        v.lift = false;
     }
     flutterPhase = 0.0f;
     rng = kRngSeed; // the breath noise, from the top
@@ -151,6 +152,11 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
         // What is left at a note boundary is therefore the retune and not
         // this, and it wants a declick fade rather than a different envelope.
         v.amp.retrigger();
+        // The loop gain this instrument asks for came down so the reed would
+        // stay off its stops and the thing would play in tune; a lower gain
+        // is a slower note, and this is what pays for it. Needs the note and
+        // a solved loop first, so it is acted on in render.
+        v.lift = true;
     } else {
         v.tongueLeft = 0.0f;
     }
@@ -267,6 +273,13 @@ bool Timber::render(float *L, float *R, int32_t frames) {
         v.pipe.setPressure(push);
         v.pipe.setDrive(1.0f);
         v.pipe.tune();
+        if (v.lift) {
+            // After the solve, so the lift is sized against the gain the
+            // loop actually arrived at.
+            v.pipe.tune();
+            v.pipe.lift();
+            v.lift = false;
+        }
 
         for (int32_t i = 0; i < frames; ++i) {
             const float env = v.amp.next();

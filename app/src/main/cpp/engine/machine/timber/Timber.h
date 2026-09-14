@@ -78,6 +78,7 @@ class Timber final : public Machine {
         dsp::Adsr amp;
         dsp::MultiFilter filter;
         float vibratoPhase = 0.0f, vibratoLeft = 0.0f;
+        bool lift = false;         // acted on after the next tune, which needs the note
         float tongueLeft = 0.0f;   // the tongue is still on the reed
         float keyLeft = 0.0f;      // a pad is still closing
         float keyState = 0.0f;

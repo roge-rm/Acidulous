@@ -30,6 +30,27 @@
 // and sound a chord.
 namespace acidulous::machine::timber {
 
+/**
+ * What the loop is asked for, and how far a breath attack may lean past it.
+ *
+ * 1.9 is what keeps a held note in bounds. An attack is not a held note, so
+ * the lift has its own ceiling - the same argument, and the same fault, as
+ * the brass: growth per round trip is fixed and a round trip is a period, so
+ * without a lift the time to speak is one over the frequency.
+ *
+ * Lowering the steady target was tried here first, because the reed's clamp
+ * is what puts this instrument flat and a gentler loop keeps the reed off
+ * its stops. On a bare pipe it works - at F3 the error goes from -18.6 cents
+ * to -3.0 at pressure 0.7. On the bank it does nothing at all, because
+ * 0.9 + 0.4 p d never reaches even 1.4 at the pressures these patches use,
+ * and pulling the slope down instead made some patches better and others
+ * worse: every patch has its own embouchure and its own reed, so where the
+ * clamp bites is not a function of loop gain alone. Left at 1.9.
+ */
+constexpr float kWantSlope = 0.4f, kWantMax = 1.9f, kLiftCeiling = 2.6f;
+/** What the loop settles at once the note is under way, for sizing the lift. */
+constexpr float kSettled = 1.15f;
+
 using dsp::clampf;
 
 class Pipe {
@@ -64,6 +85,8 @@ class Pipe {
         // hurts the jets more (Flute 3.3 to 4.6), because the jet line is
         // read against this length and a moving one detunes it.
         upperDelay = 0.0f;
+        onsetBoost = 1.0f;
+        onsetFall = 0.0f;
     }
 
     // --- what the player and the instrument are ------------------------------
@@ -189,7 +212,37 @@ class Pipe {
      * junction is evaluated as a single complex number with both paths in
      * it, and the upper tube takes whatever phase is left over.
      */
+    /**
+     * Lean on the note for its first few round trips, then let go.
+     *
+     * The same arithmetic as the brass: to grow by a factor A in T seconds
+     * at frequency f the loop needs ln(A)/(fT) per round trip, and a round
+     * trip is a period. Over a fixed *time*, so a low note takes as long to
+     * speak as a high one instead of proportionally longer.
+     */
+    void lift(float seconds = 0.08f) {
+        if (!(freq > 0.0f)) return;
+        // Not the jet. Its gain solve is steep - g = cos(ph) + sqrt(cos^2(ph)
+        // - 1 + t^2) - so a modest lift on the target drives it a long way,
+        // and the flute came out five decibels louder, half again as peaky
+        // and nineteen cents flat. Solving the tube at the steady gain does
+        // not rescue it either, because what moves is the jet's own comb and
+        // not the tube. A jet is also the one exciter here that is *started*
+        // by the turbulence in the airstream rather than by the loop alone,
+        // so it has least need of a lift and most to lose from one.
+        if (excite == Jet) return;
+        constexpr float kGrowth = 6.9f; // ln(1000): silence to a sounding note
+        onsetBoost = clampf(std::exp(kGrowth / (freq * seconds)) / kSettled, 1.0f, 4.0f);
+        onsetFall = std::exp(-64.0f / (seconds * sr));
+        dirty = true;
+    }
+
     void tune() {
+        if (onsetBoost > 1.001f) {
+            dirty = true; // the loop is changing under us while the lift lasts
+        } else {
+            onsetBoost = 1.0f;
+        }
         if (!dirty) return;
         dirty = false;
 
@@ -261,7 +314,9 @@ class Pipe {
 
         // Everything outside the mouthpiece, which is what it has to beat.
         const float outside = std::sqrt((br * br + bi * bi) * (jr * jr + ji * ji)) * loss;
-        const float want = clampf(0.9f + 0.4f * pressure * drive, 0.0f, 1.9f);
+        const float steady = clampf(0.9f + kWantSlope * pressure * drive, 0.0f, kWantMax);
+        const float ceiling = onsetBoost > 1.001f ? kLiftCeiling : kWantMax;
+        const float want = clampf(steady * onsetBoost, 0.0f, ceiling);
         const float t = want / (outside > 1e-6f ? outside : 1e-6f);
         const float mouth = clampf(pressure, 0.05f, 2.0f);
 
@@ -326,6 +381,7 @@ class Pipe {
         while (extra > period * 0.5f) extra -= period;
         while (extra <= -period * 0.5f) extra += period;
         upperDelay = clampf(nominal + extra, 4.0f, static_cast<float>(upper.size() - 3));
+        onsetBoost = 1.0f + (onsetBoost - 1.0f) * onsetFall;
         loopMag = std::sqrt((fr * fr + fi * fi) * (br * br + bi * bi) * (jr * jr + ji * ji)) * loss;
     }
 
@@ -559,6 +615,8 @@ class Pipe {
     float ventCoeff = 0.0f, ventLp = 0.0f;
     float dcIn = 0.0f, dcOut = 0.0f;
     float radiated = 0.0f, loopMag = 0.0f;
+    /** The attack's lift and how fast it lets go. See lift(). */
+    float onsetBoost = 1.0f, onsetFall = 0.0f;
 };
 
 } // namespace acidulous::machine::timber
