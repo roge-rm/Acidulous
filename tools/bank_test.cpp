@@ -435,10 +435,16 @@ void checkBank(const Bank &bank) {
         // A click on the front of a note. Not an overshoot - these measure
         // under the tone they settle into - but a burst of high frequency the
         // body of the sound never has.
-        if (out.m.onsetEdge > 4.0f) {
+        // A click is a corner in the waveform, which is what the second
+        // difference sees. It used to be this line reading `onsetEdge` -
+        // brightness, attack against tone - which says a flute has a chiff
+        // and a plucked string has a bright attack and a long dull tail.
+        // Both are true and neither is a fault, and the column read twenty
+        // on a perfectly clean string.
+        if (out.m.clickRatio > 4.0f) {
             char buf[80];
-            std::snprintf(buf, sizeof(buf), "the attack is %.0fx the edge of its own tone",
-                          static_cast<double>(out.m.onsetEdge));
+            std::snprintf(buf, sizeof(buf), "starts with a click, %.0fx the corner of its own tone",
+                          static_cast<double>(out.m.clickRatio));
             warn(who, buf);
         }
         if (out.m.speaksMs > 250.0f) {
@@ -468,7 +474,7 @@ void checkBank(const Bank &bank) {
             // and a centroid cannot tell a clarinet from a saxophone: the
             // two read within a percent of each other with thirteen
             // decibels between their second harmonics.
-            if (std::fabs(x.rmsDb - y.rmsDb) < 1.0f && x.centroidHz > 0.0f &&
+            if (std::fabs(x.loudnessDb - y.loudnessDb) < 1.0f && x.centroidHz > 0.0f &&
                 std::fabs(x.centroidHz - y.centroidHz) < 0.05f * x.centroidHz &&
                 std::fabs(x.evenOddDb - y.evenOddDb) < 2.0f &&
                 std::fabs(x.tailSeconds - y.tailSeconds) < 0.1f * std::max(0.1f, x.tailSeconds)) {
@@ -479,9 +485,9 @@ void checkBank(const Bank &bank) {
 
     float lo = 200.0f, hi = -200.0f;
     for (const Rendered &r : rendered) {
-        if (r.m.rmsDb < -190.0f) continue;
-        lo = std::min(lo, r.m.rmsDb);
-        hi = std::max(hi, r.m.rmsDb);
+        if (r.m.loudnessDb < -190.0f) continue;
+        lo = std::min(lo, r.m.loudnessDb);
+        hi = std::max(hi, r.m.loudnessDb);
     }
     if (hi > lo && hi - lo > 12.0f) {
         char buf[80];

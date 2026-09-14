@@ -83,6 +83,77 @@ inline float magnitudeAt(const std::vector<float> &mono, int32_t from, float hz)
 }
 
 /**
+ * One windowed spectrum, kept so the measures that ask about a *known* note
+ * can share a transform and a vocabulary.
+ *
+ * Everything below it is anchored: the harness always knows which note it
+ * asked for, so it never has to guess one. A blind detector has to choose an
+ * octave and can choose wrong - it did, on every string picked near its
+ * bridge, where the fundamental sits eleven decibels under the fifth
+ * harmonic. Anchored, there is no choice to get wrong.
+ */
+struct Spectrum {
+    static constexpr int32_t kBins = 4096; // 8192-point transform
+    std::vector<float> mag;
+    float binHz = 1.0f;
+    double totalSq = 0.0;
+
+    /** The strongest peak within [cents] of [hz], placed between bins, and
+     *  how big it is. Returns 0 Hz when there is nothing there. */
+    void peakNear(float hz, float cents, float &atHz, float &size) const {
+        atHz = 0.0f;
+        size = 0.0f;
+        if (!(hz > 0.0f)) return;
+        const float span = hz * (std::pow(2.0f, cents / 1200.0f) - 1.0f);
+        const int32_t lo = std::max(1, static_cast<int32_t>((hz - span) / binHz));
+        const int32_t hi = std::min(kBins - 2, static_cast<int32_t>((hz + span) / binHz) + 1);
+        int32_t best = -1;
+        for (int32_t k = lo; k <= hi; ++k) {
+            if (best < 0 || mag[static_cast<size_t>(k)] > mag[static_cast<size_t>(best)]) best = k;
+        }
+        if (best < 1) return;
+        const float a = mag[static_cast<size_t>(best - 1)], b = mag[static_cast<size_t>(best)],
+                    c = mag[static_cast<size_t>(best + 1)];
+        const float den = a - 2.0f * b + c;
+        const float shift = den != 0.0f ? 0.5f * (a - c) / den : 0.0f;
+        atHz = (static_cast<float>(best) + shift) * binHz;
+        size = b;
+    }
+
+    /** The energy under [hz], as a fraction of all of it. */
+    float fractionBelow(float hz) const {
+        if (totalSq <= 0.0) return 0.0f;
+        double sum = 0.0;
+        const int32_t to = std::min(kBins, static_cast<int32_t>(hz / binHz) + 1);
+        for (int32_t k = 1; k < to; ++k) sum += static_cast<double>(mag[static_cast<size_t>(k)]) * mag[static_cast<size_t>(k)];
+        return static_cast<float>(sum / totalSq);
+    }
+};
+
+inline Spectrum spectrumAt(const std::vector<float> &mono, int32_t from) {
+    constexpr int32_t kN = Spectrum::kBins * 2;
+    static const dsp::Fft fft(kN);
+    std::vector<float> re(static_cast<size_t>(kN), 0.0f), im(static_cast<size_t>(kN), 0.0f);
+    for (int32_t i = 0; i < kN; ++i) {
+        const size_t at = static_cast<size_t>(from) + static_cast<size_t>(i);
+        const float w = 0.5f - 0.5f * std::cos(2.0f * static_cast<float>(M_PI) *
+                                               static_cast<float>(i) / static_cast<float>(kN - 1));
+        re[static_cast<size_t>(i)] = (at < mono.size() ? mono[at] : 0.0f) * w;
+    }
+    fft.transform(re.data(), im.data(), false);
+    Spectrum sp;
+    sp.binHz = kSr / static_cast<float>(kN);
+    sp.mag.assign(static_cast<size_t>(Spectrum::kBins), 0.0f);
+    for (int32_t k = 0; k < Spectrum::kBins; ++k) {
+        const float m = std::sqrt(re[static_cast<size_t>(k)] * re[static_cast<size_t>(k)] +
+                                  im[static_cast<size_t>(k)] * im[static_cast<size_t>(k)]);
+        sp.mag[static_cast<size_t>(k)] = m;
+        if (k >= 1) sp.totalSq += static_cast<double>(m) * m;
+    }
+    return sp;
+}
+
+/**
  * The fundamental, by the loudest spectral peak with its neighbours used to
  * put it between bins.
  *
@@ -164,7 +235,35 @@ struct Measured {
     // single fact about a wind instrument. Negative is hollow.
     float evenOddDb = 0.0f;
     float speaksMs = 0.0f;    // note-on to half the level it settles at
-    float onsetEdge = 1.0f;   // how much brighter the attack is than the tone
+    // How much brighter the attack is than the tone. A chiff, not a click: a
+    // flute has one on purpose and so does a plucked string, whose attack
+    // really is twenty times the edge of its own tail. See clickRatio for
+    // the fault this column was being read as.
+    float onsetEdge = 1.0f;
+    // --- anchored to the note the harness asked for ------------------------
+    //
+    // A blind pitch detector has to choose an octave and can choose wrong.
+    // These never choose: they look where the note should be.
+    float tuneCents = 0.0f;   // the note's own deviation, from its low partials
+    bool tuned = false;       // ...and whether there was enough there to say
+    float partialRatio = 0.0f;// the loudest partial over the note: 2.0 is an octave up
+    // The note's own fundamental against the loudest partial, in decibels.
+    // The difference between a string whose fundamental is merely quiet -
+    // which is what picking near a bridge does, and is a tone colour - and a
+    // saxophone that is sounding its octave and has nothing at the note at
+    // all, which is a fault. `partialRatio` alone cannot tell those apart.
+    float fundamentalDb = -200.0f;
+    float harmonicity = 0.0f; // how much of the energy stands on the note's series
+    float lowDb = -200.0f;    // energy under half the note, against all of it
+    float ringSeconds = 0.0f; // the fundamental's own fall to -60 dB; 0 if it holds
+    // A click is a *discontinuity*, which is what the second difference sees,
+    // against the largest the sound makes for itself just afterwards. Scale
+    // free and frequency free, so a bright attack does not read as a fault.
+    float clickRatio = 0.0f;
+    // What the ear would call the level of one note: the loudest four hundred
+    // milliseconds of it. Neither peak nor rms levels a bank holding both a
+    // pluck and a bowed note; this does.
+    float loudnessDb = -200.0f;
     float tailSeconds = 0.0f; // note-off to -60 dB
     bool tailRanOut = false;  // it was still going when the render stopped
     float monoLossDb = 0.0f;  // how much is lost by summing to mono
@@ -361,7 +460,152 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
     }
     m.tailSeconds = static_cast<float>(last - off) / kSr;
     m.tailRanOut = last + step > frames;
-    (void)noteForF0;
+    // --- the loudest four hundred milliseconds, which is the level a player
+    //     would call this note ------------------------------------------------
+    {
+        const auto win = static_cast<size_t>(kSr * 0.4f);
+        const auto hop = static_cast<size_t>(kSr * 0.05f);
+        double best = 0.0;
+        if (frames >= win) {
+            for (size_t at = 0; at + win <= frames; at += hop) {
+                double sq = 0.0;
+                for (size_t i = at; i < at + win; ++i) sq += static_cast<double>(mono[i]) * mono[i];
+                best = std::max(best, sq / static_cast<double>(win));
+            }
+        } else {
+            double sq = 0.0;
+            for (size_t i = 0; i < frames; ++i) sq += static_cast<double>(mono[i]) * mono[i];
+            best = frames > 0 ? sq / static_cast<double>(frames) : 0.0;
+        }
+        m.loudnessDb = dB(static_cast<float>(std::sqrt(best)));
+    }
+
+    // --- a click, which is a corner in the waveform and not a bright attack --
+    {
+        const auto twoMs = static_cast<size_t>(kSr * 0.002f);
+        const auto fifty = static_cast<size_t>(kSr * 0.05f);
+        auto worstBend = [&](size_t from, size_t to) {
+            float worst = 0.0f;
+            for (size_t i = std::max<size_t>(from, 2); i < to && i < frames; ++i) {
+                worst = std::max(worst, std::abs(mono[i] - 2.0f * mono[i - 1] + mono[i - 2]));
+            }
+            return worst;
+        };
+        // Where the note actually starts, rather than where the buffer does.
+        // A render has a block or two of lead-in and some machines take a
+        // moment; measured from frame zero this read nothing at all for every
+        // patch in a bank, which is the shape a broken measure has.
+        size_t onset = 0;
+        while (onset < frames && std::abs(mono[onset]) < m.peak * 0.01f) ++onset;
+        if (onset < frames) {
+            const float at = worstBend(onset, onset + twoMs);
+            const float after = worstBend(onset + twoMs, onset + twoMs + fifty);
+            m.clickRatio = after > 1e-9f ? at / after : 0.0f;
+        }
+    }
+
+    // --- everything that needs to know which note was asked for -------------
+    if (noteForF0 > 0) {
+        const float want = midiToHz(noteForF0);
+        const Spectrum sp = spectrumAt(mono, start);
+        // Tuning, from the low partials. If the note is flat by x cents then
+        // so is every partial of it; a stiff string's partials run sharper as
+        // they go up, so the low ones are weighted most and the top ones are
+        // there only to speak for a fundamental too quiet to be heard from.
+        double num = 0.0, den = 0.0;
+        for (int h = 1; h <= 6; ++h) {
+            const float target = want * static_cast<float>(h);
+            if (target > kSr * 0.45f) break;
+            float atHz = 0.0f, size = 0.0f;
+            sp.peakNear(target, 60.0f, atHz, size);
+            if (atHz <= 0.0f) continue;
+            const double weight = static_cast<double>(size) / h;
+            num += weight * 1200.0 * std::log2(static_cast<double>(atHz) / target);
+            den += weight;
+        }
+        if (den > 0.0) {
+            m.tuneCents = static_cast<float>(num / den);
+            m.tuned = true;
+        }
+        // Which partial is actually the loudest. This is the column that says
+        // a saxophone is overblowing: "2.0" rather than "+1200 cents".
+        int32_t loudest = 1;
+        const int32_t kLo = std::max(1, static_cast<int32_t>(20.0f / sp.binHz));
+        const int32_t kHi = std::min(Spectrum::kBins - 2, static_cast<int32_t>(6000.0f / sp.binHz));
+        for (int32_t k = kLo; k <= kHi; ++k) {
+            if (sp.mag[static_cast<size_t>(k)] > sp.mag[static_cast<size_t>(loudest)]) loudest = k;
+        }
+        m.partialRatio = static_cast<float>(loudest) * sp.binHz / want;
+        {
+            float atHz = 0.0f, size = 0.0f;
+            sp.peakNear(want, 60.0f, atHz, size);
+            const float loudMag = sp.mag[static_cast<size_t>(loudest)];
+            m.fundamentalDb = loudMag > 1e-12f ? dB(size / loudMag) : -200.0f;
+        }
+        // How much of the sound stands on the note's own harmonic series. One
+        // number that tells a note on the wrong partial (harmonic, but not
+        // this note's) from a note that is not a note at all.
+        double onSeries = 0.0;
+        for (int h = 1; h <= 20; ++h) {
+            const float target = want * static_cast<float>(h);
+            if (target > kSr * 0.45f) break;
+            float atHz = 0.0f, size = 0.0f;
+            sp.peakNear(target, 45.0f, atHz, size);
+            onSeries += static_cast<double>(size) * size;
+        }
+        m.harmonicity = sp.totalSq > 0.0 ? static_cast<float>(std::min(1.0, onSeries / sp.totalSq)) : 0.0f;
+        // Anything under half the note has no business being there, and one
+        // number for it finds a DC pedestal and a sub-audio wander alike.
+        m.lowDb = dB(std::sqrt(sp.fractionBelow(want * 0.5f)));
+
+        // --- how long the note's own fundamental takes to go --------------
+        //
+        // Beat the note down to nothing and watch what is left: what remains
+        // is that partial's own envelope and nothing else's. Fitted over the
+        // first twenty decibels it falls, while the note is still held.
+        {
+            const double w = 2.0 * M_PI * static_cast<double>(want) / kSr;
+            double cr = 1.0, ci = 0.0;
+            const double rot = std::cos(w), rots = -std::sin(w);
+            const auto smooth = static_cast<size_t>(kSr * 0.02f);
+            std::vector<float> env;
+            env.reserve(frames / smooth + 2);
+            double sr2 = 0.0, si2 = 0.0;
+            size_t n = 0;
+            const size_t until = std::min(frames, static_cast<size_t>(std::max<int64_t>(0, offAt)));
+            for (size_t i = 0; i < until; ++i) {
+                sr2 += static_cast<double>(mono[i]) * cr;
+                si2 += static_cast<double>(mono[i]) * ci;
+                const double nr = cr * rot - ci * rots, ni = cr * rots + ci * rot;
+                cr = nr; ci = ni;
+                if (++n == smooth) {
+                    env.push_back(static_cast<float>(std::sqrt(sr2 * sr2 + si2 * si2) / smooth));
+                    sr2 = si2 = 0.0;
+                    n = 0;
+                }
+            }
+            if (env.size() > 6) {
+                size_t pk = 0;
+                for (size_t i = 0; i < env.size(); ++i) if (env[i] > env[pk]) pk = i;
+                const float top = dB(env[pk]);
+                size_t end = pk;
+                while (end < env.size() && dB(env[end]) > top - 20.0f) ++end;
+                if (end - pk >= 4) {
+                    // Least squares on the decibels against time.
+                    double sx = 0, sy = 0, sxx = 0, sxy = 0;
+                    const double dt = static_cast<double>(smooth) / kSr;
+                    for (size_t i = pk; i < end; ++i) {
+                        const double x = static_cast<double>(i - pk) * dt, y = dB(env[i]);
+                        sx += x; sy += y; sxx += x * x; sxy += x * y;
+                    }
+                    const auto cnt = static_cast<double>(end - pk);
+                    const double denom = cnt * sxx - sx * sx;
+                    const double slope = denom != 0.0 ? (cnt * sxy - sx * sy) / denom : 0.0;
+                    if (slope < -1.0) m.ringSeconds = static_cast<float>(-60.0 / slope);
+                }
+            }
+        }
+    }
     return m;
 }
 

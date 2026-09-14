@@ -690,22 +690,25 @@ void printTrack(const std::vector<float> &stereo, float f0, int note) {
 }
 
 void printHeader() {
-    std::printf("  %-24s %7s %7s %6s %8s %7s %9s %7s %5s %6s %6s %6s\n", "patch", "peak", "rms", "crest",
-                "centroid", "hollow", "pitch", "speaks", "edge", "tail", "mono", "dc");
+    std::printf("  %-22s %6s %6s %8s %6s %7s %5s %5s %6s %7s %6s %6s %6s %5s %6s\n",
+                "patch", "loud", "peak", "centroid", "hollow", "tune", "part", "harm", "ring",
+                "speaks", "click", "chiff", "tail", "mono", "low");
 }
 
 void printRow(const std::string &name, const Measured &m, int note) {
-    char pitch[16] = "-";
-    if (m.f0Hz > 0.0f && note > 0) {
-        std::snprintf(pitch, sizeof(pitch), "%+.0fc", static_cast<double>(cents(m.f0Hz, midiToHz(note))));
-    }
-    std::printf("  %-24s %+6.1f %+6.1f %5.1f %7.0fHz %+6.0f %8s %6.0fms %4.1fx %4.2f%s %+5.1f %+6.0f%s\n", name.c_str(),
-                static_cast<double>(m.peakDb), static_cast<double>(m.rmsDb), static_cast<double>(m.crestDb),
+    char tune[16] = "-", part[16] = "-", ring[16] = "-";
+    if (m.tuned) std::snprintf(tune, sizeof(tune), "%+.0fc", static_cast<double>(m.tuneCents));
+    if (m.partialRatio > 0.0f) std::snprintf(part, sizeof(part), "%.2f", static_cast<double>(m.partialRatio));
+    if (m.ringSeconds > 0.0f) std::snprintf(ring, sizeof(ring), "%.2fs", static_cast<double>(m.ringSeconds));
+    std::printf("  %-22s %+6.1f %+6.1f %6.0fHz %+6.0f %7s %5s %5.2f %6s %5.0fms %5.1fx %5.1fx %4.2f%s %+5.1f %+6.0f%s\n",
+                name.c_str(),
+                static_cast<double>(m.loudnessDb), static_cast<double>(m.peakDb),
                 static_cast<double>(m.centroidHz), static_cast<double>(m.evenOddDb),
-                pitch, static_cast<double>(m.speaksMs),
-                static_cast<double>(m.onsetEdge),
+                tune, part, static_cast<double>(m.harmonicity), ring,
+                static_cast<double>(m.speaksMs),
+                static_cast<double>(m.clickRatio), static_cast<double>(m.onsetEdge),
                 static_cast<double>(m.tailSeconds), m.tailRanOut ? "+s" : "s ",
-                static_cast<double>(m.monoLossDb), static_cast<double>(m.dcDb),
+                static_cast<double>(m.monoLossDb), static_cast<double>(m.lowDb),
                 m.finite ? "" : "  NOT FINITE");
 }
 
@@ -930,7 +933,7 @@ int cmdBank(const std::string &unit, const Options &opt) {
     for (const BankPatch &p : bank.patches) {
         Measured m;
         if (!auditionOne(bank, p, opt, m, &joined)) continue;
-        if (m.rmsDb > -190.0f) rms.push_back(m.rmsDb);
+        if (m.loudnessDb > -190.0f) rms.push_back(m.loudnessDb);
     }
     if (rms.size() > 1) {
         const float lo = *std::min_element(rms.begin(), rms.end());
@@ -980,19 +983,25 @@ int cmdSweep(const std::string &unit, const std::string &patchName, const Option
         if (!patchName.empty() && p.name != patchName) continue;
         if (p.low < 0 || p.high <= p.low) continue;
         std::printf("\n%s  %s  notes %d..%d\n", bank.unit.c_str(), p.name.c_str(), p.low, p.high);
-        std::printf("   note   cents      rms   speaks\n");
+        std::printf("   note   cents     loud  harm   part   root   speaks\n");
         std::vector<float> rmsAt;
         std::vector<float> centsAt;
         std::vector<float> speakAt;
+        std::vector<float> partAt;
+        std::vector<float> harmAt;
+        std::vector<float> rootAt;
         for (int n = p.low; n <= p.high; ++n) {
             one.note = n;
             Measured m;
             if (!auditionOne(bank, p, one, m, nullptr)) break;
-            const float wanted = 440.0f * std::pow(2.0f, static_cast<float>(n - 69) / 12.0f);
-            const float cents = m.f0Hz > 1.0f ? 1200.0f * std::log2(m.f0Hz / wanted) : -9999.0f;
-            rmsAt.push_back(m.rmsDb);
-            centsAt.push_back(cents);
+            // Anchored: the note is known, so "how far out" and "which
+            // partial" are separate questions and neither needs a guess.
+            rmsAt.push_back(m.loudnessDb);
+            centsAt.push_back(m.tuned && m.harmonicity > 0.15f ? m.tuneCents : -9999.0f);
             speakAt.push_back(m.speaksMs);
+            partAt.push_back(m.partialRatio);
+            harmAt.push_back(m.harmonicity);
+            rootAt.push_back(m.fundamentalDb);
         }
         if (rmsAt.empty()) continue;
         const float loudest = *std::max_element(rmsAt.begin(), rmsAt.end());
@@ -1002,14 +1011,20 @@ int cmdSweep(const std::string &unit, const std::string &patchName, const Option
             const int n = p.low + static_cast<int>(i);
             const bool none = centsAt[i] < -9000.0f;
             const bool dead = rmsAt[i] < loudest - 20.0f;
-            const bool mode = !none && std::fabs(centsAt[i]) > 60.0f;
+            // Another partial is loudest *and* the note itself is not there:
+            // a saxophone sounding its octave. A plucked string whose fourth
+            // harmonic is the loudest is not this - it still has a
+            // fundamental, and that is a tone colour rather than a fault.
+            const bool mode = partAt[i] > 1.5f && rootAt[i] < -30.0f;
             if (none) ++atonal;
             if (dead || mode || none) ++bad;
             char cents[16];
             if (none) std::snprintf(cents, sizeof(cents), "    -");
             else std::snprintf(cents, sizeof(cents), "%+7.0f", static_cast<double>(centsAt[i]));
-            std::printf("   %4d %s  %7.1f  %5.0fms%s%s%s\n", n, cents,
-                        static_cast<double>(rmsAt[i]), static_cast<double>(speakAt[i]),
+            std::printf("   %4d %s  %7.1f  %4.2f  %5.2fx  %+5.0f  %5.0fms%s%s%s\n", n, cents,
+                        static_cast<double>(rmsAt[i]), static_cast<double>(harmAt[i]),
+                        static_cast<double>(partAt[i]), static_cast<double>(rootAt[i]),
+                        static_cast<double>(speakAt[i]),
                         dead ? "  <- dead" : "", mode ? "  <- wrong partial" : "",
                         none && !dead ? "  <- atonal" : "");
         }
@@ -1310,6 +1325,23 @@ void usage() {
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"
         "  --out DIR one folder per unit under it; the default is build/audition\n"
         "  --ladder  the first twelve harmonics, for machines a centroid cannot describe\n"
+        "\n"
+        "  The columns, in the order they are printed:\n"
+        "    loud      the loudest four hundred milliseconds - the level a player would\n"
+        "              call this note, and the one to flatten across a bank. Peak and rms\n"
+        "              each level half a bank that holds both plucks and held notes\n"
+        "    centroid  brightness; hollow  even harmonics over odd, in dB, so a cylinder\n"
+        "              reads about -20 and a cone about -5\n"
+        "    tune      how far out, from the note's own low partials. Anchored: the\n"
+        "              harness knows which note it asked for and never has to guess one\n"
+        "    part      which partial is loudest, over the note. 2.00 is an octave up\n"
+        "    harm      how much of the energy stands on the note's harmonic series\n"
+        "    ring      the fundamental's own fall to -60 dB, or - if it holds\n"
+        "    click     the corner at the note-on against the sound's own, just after it.\n"
+        "              A discontinuity, which is what a click is; over about 4 is a fault\n"
+        "    chiff     how much brighter the attack is than the tone. A flute has one on\n"
+        "              purpose and so does a pluck; this is not the click column\n"
+        "    low       energy under half the note, against all of it\n"
         "  --track   pitch and level against time over the front of the note\n"
         "  --banks DIR  --out DIR\n");
 }
