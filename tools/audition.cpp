@@ -128,30 +128,26 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "tune") {
-        // Eight notes, because one held note is not what an instrument sounds
-        // like - it is what one note on it sounds like, and every instrument
-        // in a bank can pass that and still be indistinguishable in a phrase.
-        // A leap, a step down, and a legato pair at the end where the next
-        // note starts before the last has finished, so a glide and a mono
-        // voice have somewhere to show.
+        // One melody with a low half and a high half, rather than one figure
+        // played twice. Almost everything that has been wrong with these
+        // machines has been wrong at one end of a range and not the other -
+        // how long a note takes to speak, how much of the fundamental the DC
+        // blocker eats, whether the tuning holds, whether the thing makes a
+        // note at all - and a phrase that stays in one octave hides all of
+        // it. Two octaves, low statement and high answer, ending where it
+        // started so the two can be compared by ear.
+        //
+        // The last two overlap: the next note starts before the one before
+        // it has finished, which is where a glide and a mono voice show.
         struct Step { float at; float len; int step; int vel; };
         static const Step kTune[] = {
-            {0.0f, 0.95f, 0, 100}, {1.0f, 0.95f, 7, 92},   {2.0f, 1.45f, 12, 110},
-            {3.5f, 0.45f, 10, 88}, {4.0f, 0.95f, 9, 96},   {5.0f, 0.95f, 5, 90},
-            {6.0f, 0.75f, 7, 104}, {6.5f, 2.2f, 0, 100},
+            {0.0f, 0.95f, -12, 100}, {1.0f, 0.95f,  -5,  92}, {2.0f, 0.95f,  -8,  98},
+            {3.0f, 1.45f, -12, 106}, {4.5f, 0.45f,   0,  88}, {5.0f, 0.95f, +12, 104},
+            {6.0f, 0.95f,  +7,  94}, {7.0f, 0.95f, +12, 100}, {8.0f, 0.75f,  +9, 108},
+            {8.5f, 2.20f,   0, 100},
         };
-        // Twice, an octave apart, because almost everything that has been
-        // wrong with these machines has been wrong at one end of the range
-        // and not the other: how long a note takes to speak, how much of the
-        // fundamental the DC blocker eats, whether the tuning holds. One
-        // octave of one phrase hides all of it.
-        for (int oct = -1; oct <= 1; oct += 2) {
-            const float from = oct < 0 ? 0.0f : beat * 9.5f;
-            for (const Step &st : kTune) {
-                p.lastOff = std::max(p.lastOff,
-                                     hit(p, from + beat * st.at, beat * st.len,
-                                         note + 12 * oct + st.step, st.vel));
-            }
+        for (const Step &st : kTune) {
+            p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, note + st.step, st.vel));
         }
         p.frames = p.lastOff + secondsToFrames(2.5f);
     } else if (kind == "arp") {
