@@ -83,6 +83,20 @@ class FactoryBanksTest {
     }
 
     @Test
+    fun `a patch with a range has a bottom below its top, on the keyboard`() {
+        var ranged = 0
+        for (machine in machines) {
+            for (p in PatchStore.factory(machine)) {
+                if (p.low < 0 && p.high < 0) continue
+                ++ranged
+                assertTrue("${machine}/${p.name}: range ${p.low}..${p.high}",
+                    p.low in 0..127 && p.high in 0..127 && p.low < p.high)
+            }
+        }
+        assertTrue("no patch carries a range - the generator dropped range=", ranged > 0)
+    }
+
+    @Test
     fun `a factory patch survives being saved and read back`() {
         val patch = PatchStore.factory("Subvert").first { it.params.isNotEmpty() }
         val text = SongStore.json.encodeToString(Patch.serializer(), patch)

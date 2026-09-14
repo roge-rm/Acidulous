@@ -95,7 +95,14 @@ int64_t hit(Phrase &p, float atSeconds, float forSeconds, int note, int vel) {
  * the phrase the measurements are taken from. Comparing the brightness of a
  * chord against the brightness of a bass line says nothing at all.
  */
-Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, const Kit *kit) {
+/** The notes a patch is played in, from the bank's `range=`; -1 for none. */
+struct Range {
+    int low = -1, high = -1;
+    bool set() const { return low >= 0 && high > low; }
+};
+
+Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, const Kit *kit,
+                   Range range = Range()) {
     Phrase p;
     p.measuredNote = note;
     const float beat = 60.0f / bpm;
@@ -128,26 +135,48 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "tune") {
-        // One melody with a low half and a high half, rather than one figure
-        // played twice. Almost everything that has been wrong with these
-        // machines has been wrong at one end of a range and not the other -
-        // how long a note takes to speak, how much of the fundamental the DC
-        // blocker eats, whether the tuning holds, whether the thing makes a
-        // note at all - and a phrase that stays in one octave hides all of
-        // it. Two octaves, low statement and high answer, ending where it
-        // started so the two can be compared by ear.
+        // One melody, an octave and a fifth wide, placed inside the range
+        // the instrument is played in. Almost everything that has been wrong
+        // with these machines has been wrong at one end of a range and not
+        // the other - how long a note takes to speak, how much of the
+        // fundamental the DC blocker eats, whether the tuning holds, whether
+        // the thing makes a note at all - and a phrase that stays in one
+        // octave hides all of it. But a phrase that wanders *out* of the
+        // range hides worse: the woodwinds were auditioned two octaves
+        // around centres that were themselves below the instruments' lowest
+        // notes, and what was heard down there was the model with its tube
+        // clamped to nothing, reported as the model.
         //
-        // The last two overlap: the next note starts before the one before
-        // it has finished, which is where a glide and a mono voice show.
+        // So: a statement low, an answer high, in Dorian so it reads as a
+        // tune rather than an exercise. The bottom, the top and the end are
+        // held, so each register is heard sustained; two repeated notes
+        // expose the tonguing on its own; one pair overlaps, which is where
+        // a slur and a mono voice show. It ends where it started.
         struct Step { float at; float len; int step; int vel; };
         static const Step kTune[] = {
-            {0.0f, 0.95f, -12, 100}, {1.0f, 0.95f,  -5,  92}, {2.0f, 0.95f,  -8,  98},
-            {3.0f, 1.45f, -12, 106}, {4.5f, 0.45f,   0,  88}, {5.0f, 0.95f, +12, 104},
-            {6.0f, 0.95f,  +7,  94}, {7.0f, 0.95f, +12, 100}, {8.0f, 0.75f,  +9, 108},
-            {8.5f, 2.20f,   0, 100},
+            { 0.0f, 0.90f,  0,  96}, { 1.0f, 0.45f,  3,  90}, { 1.5f, 0.45f,  5,  92},
+            { 2.0f, 0.90f,  7, 100}, { 3.0f, 0.90f,  5,  94}, { 4.0f, 1.90f,  3,  98},
+            { 6.0f, 0.45f,  7,  96}, { 6.5f, 0.45f, 10, 100}, { 7.0f, 0.90f, 12, 104},
+            { 8.0f, 0.45f, 15, 100}, { 8.5f, 0.45f, 17, 104}, { 9.0f, 1.40f, 19, 110},
+            {10.5f, 0.45f, 17, 100}, {11.0f, 0.90f, 15,  98}, {12.0f, 0.40f, 12,  92},
+            {12.5f, 0.40f, 12,  92}, {13.0f, 1.20f, 10,  96}, {14.0f, 0.90f,  7,  94},
+            {15.0f, 2.50f,  0, 100},
         };
+        constexpr int kSpan = 19;
+        // Where the window sits. With a range, inside it - and centred on the
+        // note when there is room, so --note still moves it. Without one,
+        // where the old two-octave phrase had its middle.
+        int bottom = note - 10;
+        if (range.set()) {
+            bottom = range.high - range.low >= kSpan ? std::clamp(note - 10, range.low, range.high - kSpan)
+                                                     : range.low;
+        }
         for (const Step &st : kTune) {
-            p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, note + st.step, st.vel));
+            int n = bottom + st.step;
+            // A range narrower than the tune folds its top back down an
+            // octave rather than leaving the range.
+            if (range.set()) while (n > range.high) n -= 12;
+            p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, n, st.vel));
         }
         p.frames = p.lastOff + secondsToFrames(2.5f);
     } else if (kind == "arp") {
@@ -628,6 +657,38 @@ void printLadder(const std::vector<float> &stereo, float f0) {
     std::printf("\n    reaches harmonic %d above -30 dB\n", reach);
 }
 
+/**
+ * Pitch against time over the front of the measured note: the attack, in
+ * numbers. Dense over the first hundred milliseconds, where a glide or a
+ * mode fight lives, and sparse after. `?` marks a reading whose three
+ * periods disagreed by more than a tenth - noise, or a note not yet decided.
+ */
+void printTrack(const std::vector<float> &stereo, float f0, int note) {
+    if (f0 <= 0.0f) {
+        std::printf("    no pitch found, so no track\n");
+        return;
+    }
+    const size_t frames = stereo.size() / 2;
+    std::vector<float> mono(frames, 0.0f);
+    for (size_t i = 0; i < frames; ++i) mono[i] = 0.5f * (stereo[i * 2] + stereo[i * 2 + 1]);
+    std::vector<float> at;
+    for (float ms = 5.0f; ms <= 100.0f; ms += 5.0f) at.push_back(ms);
+    for (float ms = 120.0f; ms <= 200.0f; ms += 20.0f) at.push_back(ms);
+    for (float ms : {250.0f, 300.0f, 400.0f, 500.0f}) at.push_back(ms);
+    const float want = note > 0 ? midiToHz(note) : f0;
+    std::printf("    pitch against time, cents against %s %.1f Hz\n", note > 0 ? "note" : "settled",
+                static_cast<double>(want));
+    std::printf("    %6s %8s %7s %7s\n", "ms", "Hz", "cents", "dB");
+    for (const TrackPoint &p : pitchTrack(mono, f0, at)) {
+        if (p.hz > 0.0f) {
+            std::printf("    %6.0f %8.1f %+7.0f %7.1f%s\n", static_cast<double>(p.ms), static_cast<double>(p.hz),
+                        static_cast<double>(cents(p.hz, want)), static_cast<double>(p.db), p.sure ? "" : "  ?");
+        } else {
+            std::printf("    %6.0f %8s %7s %7.1f\n", static_cast<double>(p.ms), "-", "-", static_cast<double>(p.db));
+        }
+    }
+}
+
 void printHeader() {
     std::printf("  %-24s %7s %7s %6s %8s %9s %7s %5s %6s %6s %6s\n", "patch", "peak", "rms", "crest", "centroid",
                 "pitch", "speaks", "edge", "tail", "mono", "dc");
@@ -702,6 +763,7 @@ struct Options {
     int velocity = 100;
     float bpm = 120.0f;
     bool ladder = false;
+    bool track = false;
     std::vector<std::pair<std::string, double>> sets;
 };
 
@@ -761,9 +823,14 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         loadInput(input, mat);
 
         const Kit *kit = kitFor(bank.unit);
-        // An explicit --note wins over the bank's, which wins over the
-        // default: the flag is how you ask what a patch does somewhere else.
-        const int note = opt.note > 0 ? opt.note : (patch.note > 0 ? patch.note : 48);
+        // An explicit --note wins over the bank's, which wins over the middle
+        // of the bank's range, which wins over the default: the flag is how
+        // you ask what a patch does somewhere else.
+        const Range range{patch.low, patch.high};
+        const int note = opt.note > 0    ? opt.note
+                         : patch.note > 0 ? patch.note
+                         : range.set()    ? (range.low + range.high) / 2
+                                          : 48;
 
         // What is *measured* and what is *listened to* are two different
         // phrases on purpose. A bank holds a bass and a pad side by side, and
@@ -810,7 +877,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
             m->allNotesOff();
             m->reset();
             applyTo(m->params(), r.norm);
-            take = render(m.get(), buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit), opt.bpm, mat);
+            take = render(m.get(), buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range), opt.bpm, mat);
         }
     }
 
@@ -824,6 +891,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
     printRow(patch.name, measured, measuredNote);
     if (!voices.empty()) printVoices(voices);
     if (opt.ladder) printLadder(bank.isEffect() ? take.stereo : gMeasureTake.stereo, measured.f0Hz);
+    if (opt.track && !bank.isEffect()) printTrack(gMeasureTake.stereo, measured.f0Hz, measuredNote);
     return true;
 }
 
@@ -1099,6 +1167,13 @@ int cmdEmit(const std::string &outPath) {
                 }
                 body += ",\n        mapOf(" + sets + ")";
             }
+            // The range, named so it reads the same whether or not there
+            // were settings before it. The app puts the keyboard here.
+            if (patch.low >= 0) {
+                char range[64];
+                std::snprintf(range, sizeof(range), ",\n        low = %d, high = %d", patch.low, patch.high);
+                body += range;
+            }
             body += ")\n";
             ++n;
             ++patches;
@@ -1139,12 +1214,14 @@ void usage() {
         "  audition play   <Machine> <Patch>         one patch: a wav and a row\n"
         "  audition bank   <Machine>                 every patch, and the spread\n"
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
-        "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n\n"
+        "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
+        "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|chord|arp|hold|chromatic|velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"
         "  --out DIR one folder per unit under it; the default is build/audition\n"
         "  --ladder  the first twelve harmonics, for machines a centroid cannot describe\n"
+        "  --track   pitch and level against time over the front of the note\n"
         "  --banks DIR  --out DIR\n");
 }
 
@@ -1168,6 +1245,7 @@ int main(int argc, char **argv) {
         else if (a == "--bpm") opt.bpm = static_cast<float>(std::atof(next().c_str()));
         else if (a == "--join") { /* what `bank` does anyway; kept so old command lines run */ }
         else if (a == "--ladder") opt.ladder = true;
+        else if (a == "--track") opt.track = true;
         else if (a == "--banks") gBankDir = next();
         else if (a == "--out") gOutDir = next();
         else if (a == "--set") {
@@ -1190,6 +1268,14 @@ int main(int argc, char **argv) {
     if (cmd == "list" && positional.size() >= 2) return cmdList(positional[1]);
     if (cmd == "play" && positional.size() >= 3) return cmdPlay(positional[1], positional[2], opt);
     if (cmd == "bank" && positional.size() >= 2) return cmdBank(positional[1], opt);
+    if (cmd == "selftest") {
+        // Before the tracker is believed about an instrument it is asked
+        // about a tone whose pitch is known. Two cents is the bar; a real
+        // fault in these machines has never been under ten.
+        const float worst = trackSelfTest(true);
+        std::printf("  worst error %.2f cents: %s\n", static_cast<double>(worst), worst < 2.0f ? "ok" : "FAILED");
+        return worst < 2.0f ? 0 : 1;
+    }
     if (cmd == "emit") {
         return cmdEmit(positional.size() >= 2
                            ? positional[1]

@@ -743,9 +743,9 @@ private fun App(modifier: Modifier = Modifier) {
             // formula is a bag of numbers wired to whatever happened to be
             // loaded. Factory patches have always carried them; user ones
             // never could, and nothing said so - it just came back wrong.
-            onSavePatch = { name ->
+            onSavePatch = { name, low, high ->
                 val m = song.tracks[s.track].machine
-                PatchStore.save(context, Patch(m.type, name, m.params, m.settings))
+                PatchStore.save(context, Patch(m.type, name, m.params, m.settings, low, high))
             },
             onLoadPatch = { name -> PatchStore.load(context, song.tracks[s.track].machine.type, name) },
             factoryPatchNames = { PatchStore.factoryNames(song.tracks[s.track].machine.type) },

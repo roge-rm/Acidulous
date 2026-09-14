@@ -212,80 +212,104 @@ internal object FactoryBanks {
     private fun brazen0() = Patch("Brazen", "Init", emptyMap())
 
     private fun brazen1() = Patch("Brazen", "Tuba",
-        mapOf("size" to 0.03f, "bell" to 0.922222257f, "lipdamp" to 0.444444418f, "pressure" to 0.7f, "breath" to 0f, "bite" to 0.5f, "brass" to 0.25f, "release" to 0.622157753f, "vibrato" to 0.0333333351f, "cutoff" to 0.462117672f, "volume" to 1f))
+        mapOf("size" to 0.03f, "bell" to 0.922222257f, "lipdamp" to 0.444444418f, "pressure" to 0.7f, "breath" to 0f, "bite" to 0.5f, "brass" to 0.25f, "release" to 0.622157753f, "vibrato" to 0.0333333351f, "cutoff" to 0.462117672f, "volume" to 1f),
+        low = 29, high = 53)
 
     private fun brazen2() = Patch("Brazen", "Bass Trombone",
-        mapOf("size" to 0.16f, "bell" to 0.7888889f, "lipdamp" to 0.5f, "pressure" to 0.75f, "breath" to 0.03f, "bite" to 0.55f, "attack" to 0.43367663f, "vibrato" to 0.06666667f, "cutoff" to 0.6161569f, "glide" to 0.09f, "volume" to 0.9666667f))
+        mapOf("size" to 0.16f, "bell" to 0.7888889f, "lipdamp" to 0.5f, "pressure" to 0.75f, "breath" to 0.03f, "bite" to 0.55f, "attack" to 0.43367663f, "vibrato" to 0.06666667f, "cutoff" to 0.6161569f, "glide" to 0.09f, "volume" to 0.9666667f),
+        low = 34, high = 58)
 
     private fun brazen3() = Patch("Brazen", "Trombone",
-        mapOf("size" to 0.3f, "bell" to 0.6777778f, "lipdamp" to 0.5555556f, "pressure" to 0.8f, "breath" to 0.04f, "bite" to 0.6f, "brass" to 0.58f, "attack" to 0.382042676f, "vibrato" to 0.0833333358f, "cutoff" to 0.715336f, "glide" to 0.12f, "volume" to 0.8666666f))
+        mapOf("size" to 0.3f, "bell" to 0.6777778f, "lipdamp" to 0.5555556f, "pressure" to 0.8f, "breath" to 0.04f, "bite" to 0.6f, "brass" to 0.58f, "attack" to 0.382042676f, "vibrato" to 0.0833333358f, "cutoff" to 0.715336f, "glide" to 0.12f, "volume" to 0.8666666f),
+        low = 40, high = 67)
 
     private fun brazen4() = Patch("Brazen", "Horn",
-        mapOf("size" to 0.34f, "bell" to 0.8333334f, "lipdamp" to 0.4111111f, "pressure" to 0.65f, "breath" to 0.05f, "bite" to 0.42f, "brass" to 0.28f, "width" to 0.5f, "attack" to 0.450727522f, "release" to 0.655539453f, "vibrato" to 0.1f, "cutoff" to 0.7062641f, "volume" to 0.8666666f))
+        mapOf("size" to 0.34f, "bell" to 0.8333334f, "lipdamp" to 0.4111111f, "pressure" to 0.65f, "breath" to 0.05f, "bite" to 0.42f, "brass" to 0.28f, "width" to 0.5f, "attack" to 0.450727522f, "release" to 0.655539453f, "vibrato" to 0.1f, "cutoff" to 0.7062641f, "volume" to 0.8666666f),
+        low = 41, high = 72)
 
     private fun brazen5() = Patch("Brazen", "Flugel",
-        mapOf("size" to 0.55f, "bell" to 0.7444445f, "lipdamp" to 0.444444418f, "pressure" to 0.68f, "breath" to 0.05f, "brass" to 0.32f, "attack" to 0.392030418f, "vibrato" to 0.0833333358f, "volume" to 0.900000036f))
+        mapOf("size" to 0.55f, "bell" to 0.7444445f, "lipdamp" to 0.444444418f, "pressure" to 0.68f, "breath" to 0.05f, "brass" to 0.32f, "attack" to 0.392030418f, "vibrato" to 0.0833333358f, "volume" to 0.900000036f),
+        low = 52, high = 77)
 
     private fun brazen6() = Patch("Brazen", "Cornet",
-        mapOf("size" to 0.72f, "bell" to 0.6333333f, "pressure" to 0.76f, "breath" to 0.06f, "brass" to 0.5f, "attack" to 0.347130865f, "vibrato" to 0.116666667f, "volume" to 0.8333333f))
+        mapOf("size" to 0.72f, "bell" to 0.6333333f, "pressure" to 0.76f, "breath" to 0.06f, "brass" to 0.5f, "attack" to 0.347130865f, "vibrato" to 0.116666667f, "volume" to 0.8333333f),
+        low = 52, high = 77)
 
     private fun brazen7() = Patch("Brazen", "Trumpet",
-        mapOf("size" to 0.95f, "bell" to 0.5888889f, "lipdamp" to 0.6333333f, "pressure" to 0.9f, "breath" to 0.08f, "bite" to 0.6f, "brass" to 0.78f, "attack" to 0.28169933f, "vibrato" to 0.13333334f, "vibratodelay" to 0.25f, "volume" to 0.8f))
+        mapOf("size" to 0.95f, "bell" to 0.5888889f, "lipdamp" to 0.6333333f, "pressure" to 0.9f, "breath" to 0.08f, "bite" to 0.6f, "brass" to 0.78f, "attack" to 0.28169933f, "vibrato" to 0.13333334f, "vibratodelay" to 0.25f, "volume" to 0.8f),
+        low = 52, high = 82)
 
     private fun brazen8() = Patch("Brazen", "Piccolo",
-        mapOf("size" to 1f, "bell" to 0.655555546f, "lipdamp" to 0.7222222f, "pressure" to 0.98f, "breath" to 0.1f, "bite" to 0.75f, "brass" to 0.9f, "attack" to 0.200686663f, "vibrato" to 0.1f, "volume" to 0.8333333f))
+        mapOf("size" to 1f, "bell" to 0.655555546f, "lipdamp" to 0.7222222f, "pressure" to 0.98f, "breath" to 0.1f, "bite" to 0.75f, "brass" to 0.9f, "attack" to 0.200686663f, "vibrato" to 0.1f, "volume" to 0.8333333f),
+        low = 64, high = 91)
 
     private fun brazen9() = Patch("Brazen", "Straight Mute",
-        mapOf("size" to 0.9f, "bell" to 0.544444442f, "mute" to 0.333333343f, "mutetone" to 0.7f, "pressure" to 0.85f, "breath" to 0.09f, "bite" to 0.6f, "brass" to 0.7f, "attack" to 0.30102998f, "cutoff" to 0.6765892f, "volume" to 1f))
+        mapOf("size" to 0.9f, "bell" to 0.544444442f, "mute" to 0.333333343f, "mutetone" to 0.7f, "pressure" to 0.85f, "breath" to 0.09f, "bite" to 0.6f, "brass" to 0.7f, "attack" to 0.30102998f, "cutoff" to 0.6765892f, "volume" to 1f),
+        low = 52, high = 82)
 
     private fun brazen10() = Patch("Brazen", "Cup Mute",
-        mapOf("size" to 0.82f, "bell" to 0.7666667f, "mute" to 0.6666667f, "mutetone" to 0.3f, "pressure" to 0.72f, "breath" to 0.06f, "bite" to 0.45f, "brass" to 0.42f, "attack" to 0.371314436f, "cutoff" to 0.6161569f, "volume" to 0.8666666f))
+        mapOf("size" to 0.82f, "bell" to 0.7666667f, "mute" to 0.6666667f, "mutetone" to 0.3f, "pressure" to 0.72f, "breath" to 0.06f, "bite" to 0.45f, "brass" to 0.42f, "attack" to 0.371314436f, "cutoff" to 0.6161569f, "volume" to 0.8666666f),
+        low = 52, high = 82)
 
     private fun brazen11() = Patch("Brazen", "Harmon",
-        mapOf("size" to 0.95f, "bell" to 0.5f, "mute" to 1f, "mutetone" to 0.65f, "pressure" to 0.86f, "breath" to 0.12f, "bite" to 0.55f, "brass" to 0.62f, "attack" to 0.3333333f, "cutoff" to 0.715336f, "volume" to 1f))
+        mapOf("size" to 0.95f, "bell" to 0.5f, "mute" to 1f, "mutetone" to 0.65f, "pressure" to 0.86f, "breath" to 0.12f, "bite" to 0.55f, "brass" to 0.62f, "attack" to 0.3333333f, "cutoff" to 0.715336f, "volume" to 1f),
+        low = 52, high = 82)
 
     private fun brazen12() = Patch("Brazen", "Section",
-        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.8f, "breath" to 0.05f, "brass" to 0.6f, "players" to 1f, "spread" to 0.233333334f, "scatter" to 0.183333337f, "lock" to 0.88f, "drift" to 0.16f, "width" to 0.85f, "attack" to 0.450727522f, "cutoff" to 0.66574645f, "volume" to 0.413333327f))
+        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.8f, "breath" to 0.05f, "brass" to 0.6f, "players" to 1f, "spread" to 0.233333334f, "scatter" to 0.183333337f, "lock" to 0.88f, "drift" to 0.16f, "width" to 0.85f, "attack" to 0.450727522f, "cutoff" to 0.66574645f, "volume" to 0.413333327f),
+        low = 55, high = 79)
 
     private fun brazen13() = Patch("Brazen", "Shambles",
-        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.8f, "breath" to 0.06f, "brass" to 0.6f, "players" to 1f, "spread" to 0.8f, "scatter" to 0.7083333f, "lock" to 0.03f, "drift" to 0.76f, "width" to 1f, "attack" to 0.5146893f, "cutoff" to 0.6869274f, "volume" to 0.4f))
+        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.8f, "breath" to 0.06f, "brass" to 0.6f, "players" to 1f, "spread" to 0.8f, "scatter" to 0.7083333f, "lock" to 0.03f, "drift" to 0.76f, "width" to 1f, "attack" to 0.5146893f, "cutoff" to 0.6869274f, "volume" to 0.4f),
+        low = 55, high = 79)
 
     private fun brazen14() = Patch("Brazen", "Growl",
-        mapOf("size" to 0.86f, "bell" to 0.566666663f, "lipdamp" to 0.7f, "pressure" to 0.92f, "breath" to 0.07f, "bite" to 0.65f, "brass" to 0.85f, "growl" to 0.75f, "growlrate" to 0.5775205f, "attack" to 0.3180808f, "drive" to 0.28f, "volume" to 0.6666667f))
+        mapOf("size" to 0.86f, "bell" to 0.566666663f, "lipdamp" to 0.7f, "pressure" to 0.92f, "breath" to 0.07f, "bite" to 0.65f, "brass" to 0.85f, "growl" to 0.75f, "growlrate" to 0.5775205f, "attack" to 0.3180808f, "drive" to 0.28f, "volume" to 0.6666667f),
+        low = 55, high = 77)
 
     private fun brazen15() = Patch("Brazen", "Fanfare",
-        mapOf("size" to 1f, "bell" to 0.6333333f, "lipdamp" to 0.7f, "pressure" to 0.93f, "breath" to 0.07f, "bite" to 0.8f, "brass" to 1f, "players" to 0.333333343f, "spread" to 0.15f, "lock" to 0.9f, "attack" to 0.232989982f, "vibrato" to 0.06666667f, "volume" to 0.733333349f))
+        mapOf("size" to 1f, "bell" to 0.6333333f, "lipdamp" to 0.7f, "pressure" to 0.93f, "breath" to 0.07f, "bite" to 0.8f, "brass" to 1f, "players" to 0.333333343f, "spread" to 0.15f, "lock" to 0.9f, "attack" to 0.232989982f, "vibrato" to 0.06666667f, "volume" to 0.733333349f),
+        low = 55, high = 79)
 
     private val brazen: List<Patch> by lazy { listOf(brazen0(), brazen1(), brazen2(), brazen3(), brazen4(), brazen5(), brazen6(), brazen7(), brazen8(), brazen9(), brazen10(), brazen11(), brazen12(), brazen13(), brazen14(), brazen15()) }
 
     private fun timber0() = Patch("Timber", "Init", emptyMap())
 
     private fun timber1() = Patch("Timber", "Clarinet",
-        mapOf("breath" to 0.1f, "keys" to 0.2f, "attack" to 0.3333333f, "volume" to 0.7f))
+        mapOf("breath" to 0.1f, "keys" to 0.2f, "attack" to 0.3333333f, "volume" to 0.7f),
+        low = 52, high = 76)
 
     private fun timber2() = Patch("Timber", "Bass Clarinet",
-        mapOf("body" to 0.318022f, "lattice" to 0.401896f, "embouchure" to 0.3846154f, "pressure" to 0.6923077f, "breath" to 0.16f, "tongue" to 0.6f, "keys" to 0.35f, "volume" to 0.74666667f))
+        mapOf("body" to 0.318022f, "lattice" to 0.401896f, "embouchure" to 0.3846154f, "pressure" to 0.6923077f, "breath" to 0.16f, "tongue" to 0.6f, "keys" to 0.35f, "volume" to 0.74666667f),
+        low = 40, high = 62)
 
     private fun timber3() = Patch("Timber", "Alto Sax",
-        mapOf("bore" to 1f, "body" to 0.5439642f, "lattice" to 0.3667258f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to 0.2916871f, "vibrato" to 0.15f, "volume" to 0.686666667f))
+        mapOf("bore" to 1f, "body" to 0.5439642f, "lattice" to 0.3667258f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to 0.2916871f, "vibrato" to 0.15f, "volume" to 0.686666667f),
+        low = 50, high = 74)
 
     private fun timber4() = Patch("Timber", "Oboe",
-        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.7287489f, "lattice" to 0.558787048f, "embouchure" to 0.6923077f, "pressure" to 0.7307693f, "breath" to 0.08f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0.2f, "volume" to 0.8733333f))
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.7287489f, "lattice" to 0.558787048f, "embouchure" to 0.6923077f, "pressure" to 0.7307693f, "breath" to 0.08f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0.2f, "volume" to 0.8733333f),
+        low = 60, high = 84)
 
     private fun timber5() = Patch("Timber", "Bassoon",
-        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.2361563f, "lattice" to 0.282834977f, "embouchure" to 0.538461566f, "pressure" to 0.6923077f, "keys" to 0.4f, "attack" to 0.365636677f, "volume" to 0.826666653f))
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.2361563f, "lattice" to 0.282834977f, "embouchure" to 0.538461566f, "pressure" to 0.6923077f, "keys" to 0.4f, "attack" to 0.365636677f, "volume" to 0.826666653f),
+        low = 36, high = 60)
 
     private fun timber6() = Patch("Timber", "Flute",
-        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.615384638f, "breath" to 0.45f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to 0.43367663f, "vibrato" to 0.18f, "volume" to 0.293333322f))
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.615384638f, "breath" to 0.45f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to 0.43367663f, "vibrato" to 0.18f, "volume" to 0.233333334f),
+        low = 62, high = 86)
 
     private fun timber7() = Patch("Timber", "Pan Pipe",
-        mapOf("family" to 1f, "body" to 0.6671323f, "lattice" to 0.665089548f, "pressure" to 0.538461566f, "breath" to 0.6f, "jet" to 0.350000024f, "aim" to 0.5625f, "tongue" to 0.2f, "attack" to 0.492373765f, "volume" to 0.473333329f))
+        mapOf("family" to 1f, "body" to 0.6671323f, "lattice" to 0.665089548f, "pressure" to 0.538461566f, "breath" to 0.6f, "jet" to 0.350000024f, "aim" to 0.5625f, "tongue" to 0.2f, "attack" to 0.492373765f, "volume" to 0.473333329f),
+        low = 57, high = 79)
 
     private fun timber8() = Patch("Timber", "Stopped Wood",
-        mapOf("body" to 0.461817741f, "lattice" to 0.112317182f, "holes" to 0.9f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "drive" to 0.2f, "volume" to 0.25333333f))
+        mapOf("body" to 0.461817741f, "lattice" to 0.112317182f, "holes" to 0.9f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "drive" to 0.2f, "volume" to 0.18f),
+        low = 46, high = 68)
 
     private fun timber9() = Patch("Timber", "Forked",
-        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.581818163f, "embouchure" to 0.3846154f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "volume" to 0.5133333f))
+        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.581818163f, "embouchure" to 0.3846154f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "volume" to 0.5133333f),
+        low = 52, high = 74)
 
     private val timber: List<Patch> by lazy { listOf(timber0(), timber1(), timber2(), timber3(), timber4(), timber5(), timber6(), timber7(), timber8(), timber9()) }
 

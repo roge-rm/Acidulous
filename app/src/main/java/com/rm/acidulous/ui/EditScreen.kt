@@ -84,7 +84,8 @@ fun EditScreen(
     onBack: () -> Unit,
     onOpenPatch: () -> Unit = {},
     patchNames: () -> List<String>,
-    onSavePatch: (String) -> Unit,
+    /** The name, and the notes the keyboard was showing - the range a saved patch remembers. */
+    onSavePatch: (name: String, low: Int, high: Int) -> Unit,
     onLoadPatch: (String) -> com.rm.acidulous.model.Patch?,
     factoryPatchNames: () -> List<String> = { emptyList() },
     userPatchNames: () -> List<String> = { emptyList() },
@@ -460,7 +461,20 @@ fun EditScreen(
         if (panel == 1) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
         else if (panel == 2) MixerPanel(song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth().padding(top = 4.dp))
         else MachinePanel(
-            track, trackIndex, editor, patchNames, onSavePatch, onLoadPatch,
+            track, trackIndex, editor, patchNames,
+            // A patch knows the notes it is for. Loading one puts the
+            // keyboard's bottom C at or under the bottom of its range and
+            // scrolls the roll to match, so the first key pressed is a note
+            // the instrument has; saving one keeps where the keyboard was.
+            onSavePatch = { name -> onSavePatch(name, 12 * (octave + 1), 12 * (octave + 3)) },
+            onLoadPatch = { name ->
+                onLoadPatch(name)?.also { p ->
+                    if (p.low >= 0) {
+                        octave = (p.low / 12 - 1).coerceIn(0, 8)
+                        lowestPitch = (p.low - 2).coerceIn(0, 127 - rows)
+                    }
+                }
+            },
             factoryPatchNames = factoryPatchNames, userPatchNames = userPatchNames, onDeletePatch = onDeletePatch,
             onImportSoundFont = { onImportSoundFont(trackIndex) },
             onPickPreset = { onPickPreset(trackIndex) },

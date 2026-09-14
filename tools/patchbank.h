@@ -34,6 +34,7 @@
 //     patch Init                # the first patch, always, and always empty
 //
 //     patch "Classic Acid"  role=bass
+//     patch Oboe  note=70 range=60..84   # measured at 70; played 60..84
 //       wave       0            # a stepped parameter by value...
 //       mode       #1           # ...or by step index
 //       cutoff     620 Hz       # the unit is checked against the engine's
@@ -62,6 +63,11 @@ struct BankPatch {
     std::string material; // overrides the bank's
     std::string input;    // overrides the bank's
     int note = -1;        // overrides the phrase's default
+    // The range the instrument is played in, as MIDI notes, or -1 for none.
+    // The audition phrase stays inside it, and the app puts the keyboard at
+    // its bottom when the patch is loaded - so a bassoon is heard, and
+    // played, where a bassoon is.
+    int low = -1, high = -1;
     std::vector<BankValue> values;
     std::vector<std::pair<std::string, std::string>> settings;
     int line = 0;
@@ -180,7 +186,15 @@ inline bool readBank(const std::string &path, Bank &bank, std::string &error) {
                 else if (k == "material") p.material = v;
                 else if (k == "input") p.input = v;
                 else if (k == "note") p.note = std::atoi(v.c_str());
-                else return fail("unknown attribute '" + k + "'");
+                else if (k == "range") {
+                    const size_t dots = v.find("..");
+                    if (dots == std::string::npos) return fail("range wants lo..hi, got '" + v + "'");
+                    p.low = std::atoi(v.c_str());
+                    p.high = std::atoi(v.c_str() + dots + 2);
+                    if (p.low < 0 || p.high > 127 || p.low >= p.high) {
+                        return fail("range " + v + " is not a range of notes");
+                    }
+                } else return fail("unknown attribute '" + k + "'");
             }
             bank.patches.push_back(std::move(p));
             continue;

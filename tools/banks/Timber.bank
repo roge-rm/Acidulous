@@ -1,55 +1,63 @@
-# Timber - ten woodwinds. Registers and tuning are done; the timbres are not.
+# Timber - ten woodwinds, each in its own range. The reed is honest now; the
+# timbres are still as seeded.
 #
-# **Every patch says the note it is meant for, and that was most of what was
-# wrong with it.** There were no `note=` lines at all, so the harness played
-# a bassoon and a piccolo-register oboe at the same middle C - and a woodwind
-# does not transpose. Each patch has a `body`, which is the tube it is built
-# on, and playing a long way off it gets you the wrong partial or no partial:
-# measured, the bassoon (body 58.3 Hz) makes no pitch above note 60 and the
-# flute (261.6 Hz) makes none below 48, both of which are correct and are
-# what a real one does.
+# **Every patch says the range it is played in, and that was most of what
+# was wrong with it.** `body` is the instrument's lowest note, and the bodies
+# here are the real instruments' bottom notes - the seeds had that right. But
+# the `note=` centres had been placed by sweeping for "where it makes a
+# pitch", and four of them (Alto Sax, Oboe, Stopped Wood, Forked) were
+# *below* the instrument's own bottom note, with the audition phrase then
+# going another octave down. Below the body the tube under the fingers
+# clamps to nothing and what is left is a bare line and a reed - which is
+# what was being heard as "breath and no note" and "the low ones are way
+# out". So every patch now carries `range=lo..hi`, from the instrument and
+# not from the model, the phrase stays inside it, and the app puts the
+# keyboard there when the patch is loaded.
 #
-# So the registers were measured rather than guessed - a sweep of every patch
-# from note 30 to 78, looking for where it actually produces a pitch - and
-# each `note=` is the middle of what came back. In their own registers they
-# read, before and after:
+# **Three faults in the reed, all measured with `--track` (pitch against
+# time, which the old scratch measurement could not do within forty cents):**
 #
-#   Bass Clarinet  -15c -> +1c      Alto Sax      -7c -> +1c
-#   Stopped Wood    -8c -> +2c      Oboe          -5c -> -0c
-#   Bassoon         -5c -> +3c      Flute         -5c -> -2c
+#   - The tongue was *opening* the reed. It scaled the whole table, rest and
+#     all, so for twenty milliseconds a third of the mouth pressure flowed
+#     into the tube, and the release shut it by a quarter: a thump into the
+#     bore that every note started from. Clarinet read +50 cents at 30 ms
+#     and settled by 60; now it is within 8 cents from 35 ms, before the
+#     note is a tenth of its level. The tongue now holds the reed shut.
+#   - Every cone had a mode under its bottom note. A cone's loop closes a
+#     turn at DC, and the DC blocker's phase lead closed one again at ~40 Hz
+#     with the reed's static gain still over one: 1.03 at the oboe's centre,
+#     1.06 four semitones up, at which point it won and the oboe made no
+#     pitch at all above note 64. A high-pass at a third of the bottom note
+#     starves it (0.83 at the centre) and the oboe plays to 78.
+#   - Nothing in the tube lost more at the top than the bottom, so every
+#     mode sat within a few percent of the same gain: the bottom note of the
+#     default instrument lost the race to its own third partial and the
+#     bassoon had four modes over unity fighting through its attack. A wall
+#     loss - a fifth off above four times the bottom note, the root law -
+#     puts the fundamental ahead by the few percent a real bore does.
 #
-# Across the two octaves the audition phrase now plays, everything is inside
-# ten cents and most of it inside three.
+# And a reused voice no longer starts with the last note in its tube: the
+# envelope is zeroed at note-on anyway, so clearing the pipe there is free.
 #
-# **Forked was not playing a note at all.** `answer` was 0.4675 of a maximum
-# 0.55, which is past the point where a fork fingering stops being a colour
-# and becomes a note the tube cannot hold - it measured -4137 cents, which is
-# no pitch. At 0.32 it plays, and it is still veiled, which is the point.
+# Pitch at each centre now: Clarinet -0c, Bass Clarinet -2c, Alto Sax +2c,
+# Oboe +2c, Bassoon +3c, Flute +2c, Pan Pipe +1c, Stopped Wood +7c, Forked
+# +1c; the clarinet reads -1 / 0 / +5 at the bottom, middle and top of its
+# range. Levelled to -23 dB RMS, spread 2.4 dB without Init.
 #
-# **Levelled to -23 dB RMS**, spread 3.3 dB. Init is the only one outside it
-# and has to be: an Init sets nothing by rule.
-#
-# **What is still wrong, and it is the part that needs an ear.** These do not
-# yet sound like the instruments on the labels. The register is right and the
-# tuning is right and the balance is right, and none of that is timbre - the
-# reed, the embouchure, the lattice and the hole depth are all still as they
-# were seeded. That is the next pass and it cannot be done from a table.
-#
-# Three measured holes, all inside a patch's own range rather than at its
-# edge, so they are faults and not limits: the alto sax jumps a partial at
-# eight semitones below its centre (+346 cents), the oboe makes no pitch an
-# octave above its centre, and the clarinet reads -9c at its own note while
-# reading +2 and +1 an octave either side.
-#
-# And the jets still speak at a speed that depends on pitch - the flute runs
-# 350 ms at note 40 against 50 at note 70 - because the onset lift the reeds
-# got drives a jet's gain solve far too hard and detunes it by nineteen
-# cents. See Pipe::lift.
-#
-# The `edge` column is high, 5x to 12x, and it is the breath: measured,
-# Stopped Wood reads the same with `keys` at 0.45 and at zero, and 7.2x with
-# `breath` at zero. Broadband noise against a harmonic tone will always
-# measure an onset brighter than its body, which is what a woodwind is.
+# **What is still wrong, in the order it matters.** The reeds are slow to
+# speak on the big instruments - Bassoon 250 ms to -31 dB, Alto Sax and
+# Oboe ~110 - because the loop gain is capped by the reed's own closure:
+# `F = 2 r_rest - offset`, so at these embouchures the reed sits at 95 %
+# closed for a gain of only 1.16-1.22, and Pipe::lift cannot raise it. That
+# is also why `pressure` does nothing to the gain once at the cap. The fix
+# is structural - the slope should be the reed's and the gain should follow
+# from the pressure - and it is the next pass. The oboe still makes no
+# pitch from note 80, its gain there 0.91, because the first-order lattice
+# loses 11 % at half its cutoff where a real lattice loses nothing. The
+# radiated fundamental sits 14 dB under its partials by construction
+# (`arrive - 0.8 low`). And none of these yet sound like the instruments on
+# the labels: the reed, embouchure, lattice and hole depth are all still as
+# seeded, and that cannot be done from a table.
 #
 # Values are in each parameter's own units; `audition params Timber` lists
 # them. A patch names only what it changes.
@@ -62,13 +70,13 @@ role    tune
 
 patch Init
 
-patch Clarinet  note=52
+patch Clarinet  note=62 range=52..76
   attack         0.02 s
   breath         0.1
   keys           0.2
 
   volume         1.05
-patch "Bass Clarinet"  note=42
+patch "Bass Clarinet"  note=50 range=40..62
   body           73.4 Hz
   breath         0.16
   embouchure     0.5
@@ -78,7 +86,7 @@ patch "Bass Clarinet"  note=42
   tongue         0.6
 
   volume         1.12
-patch "Alto Sax"  note=45
+patch "Alto Sax"  note=60 range=50..74
   attack         0.015 s
   body           138.6 Hz
   bore           #1
@@ -91,7 +99,7 @@ patch "Alto Sax"  note=45
   vibrato        9 cents
 
   volume         1.03
-patch Oboe  note=54
+patch Oboe  note=70 range=60..84
   attack         0.012 s
   body           233.1 Hz
   bore           #1
@@ -105,7 +113,7 @@ patch Oboe  note=54
   vibrato        12 cents
 
   volume         1.31
-patch Bassoon  note=45
+patch Bassoon  note=46 range=36..60
   attack         0.025 s
   body           58.3 Hz
   bore           #1
@@ -116,7 +124,7 @@ patch Bassoon  note=45
   pressure       0.9
 
   volume         1.24
-patch Flute  note=63
+patch Flute  note=72 range=62..86
   attack         0.04 s
   body           261.6 Hz
   bore           #1
@@ -128,8 +136,8 @@ patch Flute  note=63
   tongue         0.35
   vibrato        10.8 cents
 
-  volume         0.44
-patch "Pan Pipe"  note=60
+  volume         0.35
+patch "Pan Pipe"  note=67 range=57..79
   aim            0.1
   attack         0.06 s
   body           196 Hz
@@ -141,7 +149,7 @@ patch "Pan Pipe"  note=60
   tongue         0.2
 
   volume         0.71
-patch "Stopped Wood"  note=42
+patch "Stopped Wood"  note=55 range=46..68
   answer         0.385
   attack         0.05 s
   body           110 Hz
@@ -153,8 +161,8 @@ patch "Stopped Wood"  note=42
   pressure       1
   tongue         0.5
 
-  volume         0.38
-patch Forked  note=48
+  volume         0.27
+patch Forked  note=62 range=52..74
   # 0.4675, seeded from what shipped, is past the point where the fork
   # stops being a colour and becomes a note the tube cannot hold: it read
   # -4137 cents, which is no pitch at all. It plays at 0.32.

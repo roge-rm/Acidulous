@@ -18,6 +18,16 @@ data class Patch(
     val name: String,
     val params: Map<String, Float>,
     val settings: Map<String, String> = emptyMap(),
+    /**
+     * The notes the patch is played in, or -1 for no opinion. A bassoon
+     * has a bottom and an oboe has a top, and a patch that knows its range
+     * can put the keyboard there when it is loaded - so the first note
+     * pressed is a note the instrument has, rather than middle C on a
+     * tuba. Factory patches carry the bank's `range=`; a saved patch
+     * carries where the keyboard was.
+     */
+    val low: Int = -1,
+    val high: Int = -1,
 )
 
 /**

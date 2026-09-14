@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <vector>
 
 #include <engine/dsp/Fft.h>
@@ -346,6 +347,222 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
     m.tailRanOut = last + step > frames;
     (void)noteForF0;
     return m;
+}
+
+// --- Pitch against time ------------------------------------------------------
+
+/** One reading of the tracker: when, what pitch, how loud, and whether the
+ *  three periods it was taken from agreed with each other. */
+struct TrackPoint {
+    float ms = 0.0f;
+    float hz = 0.0f;   // 0: nothing periodic there yet
+    float db = -200.0f;
+    bool sure = false; // the periods either side agreed within a tenth
+};
+
+/**
+ * A two-pole low-pass run forward and then backward, so it has no phase at
+ * all - the crossings of what comes out are where the crossings of the
+ * fundamental are, not where a filter's lag put them. Three times over,
+ * which is twelve poles: fifty decibels down an octave up, so a second
+ * harmonic louder than the note - which is what a clarinet radiates - does
+ * not put crossings of its own between the real ones.
+ */
+inline void isolateFundamental(std::vector<float> &x, float hz) {
+    const double w0 = 2.0 * M_PI * static_cast<double>(hz) / kSr;
+    const double alpha = std::sin(w0) / (2.0 * 0.70710678);
+    const double c = std::cos(w0);
+    const double a0 = 1.0 + alpha;
+    const double b0 = (1.0 - c) * 0.5 / a0, b1 = (1.0 - c) / a0, b2 = b0;
+    const double a1 = -2.0 * c / a0, a2 = (1.0 - alpha) / a0;
+    auto run = [&](bool forward) {
+        double x1 = 0.0, x2 = 0.0, y1 = 0.0, y2 = 0.0;
+        const auto n = static_cast<int64_t>(x.size());
+        for (int64_t k = 0; k < n; ++k) {
+            const auto i = static_cast<size_t>(forward ? k : n - 1 - k);
+            const double in = x[i];
+            const double out = b0 * in + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+            x2 = x1; x1 = in;
+            y2 = y1; y1 = out;
+            x[i] = static_cast<float>(out);
+        }
+    };
+    for (int pass = 0; pass < 3; ++pass) { run(true); run(false); }
+}
+
+/**
+ * Pitch and level at each of [atMs], from the start of [mono].
+ *
+ * Period by period rather than by any window: the fundamental is isolated
+ * (see above), every positive-going crossing is placed between its two
+ * samples by a straight line, and the pitch at a moment is the median of
+ * the period it is in and the two beside it. A window of any length
+ * averages over the very thing an onset measurement is looking at - the
+ * scratch script this replaces autocorrelated twenty-five milliseconds,
+ * which at a bassoon's pitch is under three cycles, and it disagreed with
+ * the settled measurement by forty cents. This one is checked against a
+ * tone of known pitch (trackSelfTest) before it is believed about anything.
+ *
+ * [hz] is the pitch the note settles at, from fundamental(): the isolation
+ * is cut a third above it. Level is RMS over one settled period of the
+ * *unfiltered* signal, so it is the note's level and not the fundamental's.
+ */
+inline std::vector<TrackPoint> pitchTrack(const std::vector<float> &mono, float hz,
+                                          const std::vector<float> &atMs) {
+    std::vector<TrackPoint> out;
+    if (hz <= 0.0f || mono.empty()) return out;
+    float lastMs = 0.0f;
+    for (float ms : atMs) lastMs = std::max(lastMs, ms);
+    const size_t span = std::min(mono.size(), static_cast<size_t>(kSr * (lastMs / 1000.0f + 0.1f)));
+    const auto period = static_cast<size_t>(kSr / hz + 0.5f);
+
+    // The level, as RMS over one period centred on each sample, from a
+    // running sum. It is the dB column, and it is also divided out of the
+    // signal before the filter sees it: a filter whose corner is near the
+    // note reads a *growing* note flat - the sidebands the growth puts
+    // above the note are cut and the ones below are not, and the crossings
+    // drift late. Measured on a thirty-millisecond ramp, eleven cents. The
+    // shape of the envelope is the last thing an onset measurement can
+    // afford to have in its pitch, so it is taken out first.
+    std::vector<double> sum2(span + 1, 0.0);
+    for (size_t i = 0; i < span; ++i) sum2[i + 1] = sum2[i] + static_cast<double>(mono[i]) * mono[i];
+    auto levelAt = [&](double at) {
+        const auto lo = static_cast<size_t>(std::max(0.0, at - static_cast<double>(period) / 2.0));
+        const size_t hi = std::min(span, lo + period);
+        return hi > lo ? std::sqrt((sum2[hi] - sum2[lo]) / static_cast<double>(hi - lo)) : 0.0;
+    };
+    float peak = 0.0f;
+    for (size_t i = 0; i < span; ++i) peak = std::max(peak, std::abs(mono[i]));
+    const double floor = static_cast<double>(peak) * 1e-4;
+    std::vector<float> x(span, 0.0f);
+    for (size_t i = 0; i < span; ++i) {
+        const double lvl = levelAt(static_cast<double>(i));
+        x[i] = lvl > floor ? static_cast<float>(mono[i] / lvl) : 0.0f;
+    }
+    isolateFundamental(x, hz * 1.3f);
+
+    std::vector<double> cross; // sample positions, fractional
+    for (size_t i = 0; i + 1 < x.size(); ++i) {
+        if (x[i] <= 0.0f && x[i + 1] > 0.0f) {
+            const double d = static_cast<double>(x[i + 1]) - x[i];
+            cross.push_back(static_cast<double>(i) + (d > 0.0 ? -static_cast<double>(x[i]) / d : 0.0));
+        }
+    }
+    // Each reading is three cycles: the time between crossings three apart,
+    // over three. One cycle on its own is placed by two crossings and the
+    // hiss on a real note moves each by a fraction of a sample, which at
+    // two hundred hertz is three cents of jitter; three cycles is a third
+    // of that, and for a note on its way somewhere the mean of three is
+    // exactly the pitch at their middle. So the earliest a reading exists
+    // is three cycles in, and the front of a note reads '-' before that.
+    struct Span { double centre, period; bool sure; };
+    std::vector<Span> spans;
+    for (size_t a = 0; a + 3 < cross.size(); ++a) {
+        Span s;
+        s.centre = 0.5 * (cross[a] + cross[a + 3]);
+        s.period = (cross[a + 3] - cross[a]) / 3.0;
+        double lo = s.period, hi = s.period;
+        for (size_t j = a; j < a + 3; ++j) {
+            lo = std::min(lo, cross[j + 1] - cross[j]);
+            hi = std::max(hi, cross[j + 1] - cross[j]);
+        }
+        s.sure = hi - lo < 0.1 * s.period;
+        spans.push_back(s);
+    }
+    for (float ms : atMs) {
+        TrackPoint p;
+        p.ms = ms;
+        const double at = static_cast<double>(ms) * kSr / 1000.0;
+        p.db = dB(static_cast<float>(levelAt(at)));
+        // Read between the two spans whose centres bracket the moment, so a
+        // glide reads where it is and not where the nearest whole reading
+        // happened to be - at a slow glide those differ by cents.
+        if (!spans.empty() && p.db > -90.0f && at >= spans.front().centre &&
+            at <= spans.back().centre + spans.back().period) {
+            size_t k = 0;
+            while (k + 1 < spans.size() && spans[k + 1].centre <= at) ++k;
+            double per = spans[k].period;
+            bool sure = spans[k].sure;
+            if (k + 1 < spans.size()) {
+                const double t = (at - spans[k].centre) / (spans[k + 1].centre - spans[k].centre);
+                per += (spans[k + 1].period - per) * std::min(1.0, std::max(0.0, t));
+                sure = sure && spans[k + 1].sure;
+            }
+            if (per > 0.0) {
+                p.hz = static_cast<float>(kSr / per);
+                p.sure = sure;
+            }
+        }
+        out.push_back(p);
+    }
+    return out;
+}
+
+/**
+ * The tracker against tones whose pitch is known, in cents of worst error.
+ *
+ * Two tones. One steps from 200 to 210 Hz at a tenth of a second, with a
+ * second harmonic six decibels *louder* than the fundamental - the reading
+ * has to be right within two periods of the step. The other climbs from 50
+ * to 55 Hz over a second, which at the bottom of the bassoon is where the
+ * old measurement was forty cents out. Both carry a hiss at -30 dB and a
+ * thirty-millisecond fade in, because a real note has those.
+ *
+ * A tool that cannot pass this says nothing about an instrument. Returns
+ * the worst error past the first two periods, in cents; the caller decides
+ * what is close enough.
+ */
+inline float trackSelfTest(bool verbose = false) {
+    float worst = 0.0f;
+    uint32_t rng = 0x9e3779b9u;
+    auto noise = [&]() {
+        rng = rng * 1664525u + 1013904223u;
+        return static_cast<float>(rng >> 8) * (1.0f / 16777216.0f) * 2.0f - 1.0f;
+    };
+    struct Tone { const char *name; float f0, f1; float switchAt, glideOver; float second; };
+    const Tone tones[] = {
+        {"200 -> 210 Hz step, second harmonic +6 dB", 200.0f, 210.0f, 0.1f, 0.0f, 2.0f},
+        {"50 -> 55 Hz over a second", 50.0f, 55.0f, 0.0f, 1.0f, 0.5f},
+    };
+    for (const Tone &t : tones) {
+        const auto frames = static_cast<size_t>(kSr * 1.3f);
+        std::vector<float> mono(frames, 0.0f);
+        std::vector<float> want(frames, 0.0f);
+        double phase = 0.0;
+        for (size_t i = 0; i < frames; ++i) {
+            const float s = static_cast<float>(i) / kSr;
+            float hz;
+            if (t.glideOver > 0.0f) hz = t.f0 + (t.f1 - t.f0) * std::min(1.0f, s / t.glideOver);
+            else hz = s < t.switchAt ? t.f0 : t.f1;
+            want[i] = hz;
+            phase += hz / kSr;
+            const float fade = std::min(1.0f, s / 0.03f);
+            mono[i] = fade * (0.5f * static_cast<float>(std::sin(2.0 * M_PI * phase)) +
+                              0.5f * t.second * static_cast<float>(std::sin(4.0 * M_PI * phase + 0.7)) +
+                              0.016f * noise());
+        }
+        std::vector<float> at;
+        for (float ms = 5.0f; ms <= 1200.0f; ms += 5.0f) at.push_back(ms);
+        const float settled = t.f1;
+        const std::vector<TrackPoint> got = pitchTrack(mono, settled, at);
+        if (verbose) std::printf("  %s\n", t.name);
+        for (const TrackPoint &p : got) {
+            const auto i = static_cast<size_t>(p.ms * kSr / 1000.0f);
+            // Judged once the fade is over and three cycles are in, and not
+            // across the step: a reading that straddles it is a mean of both.
+            const float threePeriods = 3000.0f / t.f0;
+            const bool judged = p.ms > 30.0f + threePeriods &&
+                                (t.glideOver > 0.0f || std::fabs(p.ms - t.switchAt * 1000.0f) > threePeriods);
+            const float err = p.hz > 0.0f ? cents(p.hz, want[i]) : 1200.0f;
+            if (judged) worst = std::max(worst, std::fabs(err));
+            if (verbose && (static_cast<int>(p.ms) % 25 == 0 || (judged && std::fabs(err) > 2.0f))) {
+                std::printf("    %6.0f ms  want %7.2f  got %7.2f  %+6.1f cents%s%s\n", static_cast<double>(p.ms),
+                            static_cast<double>(want[i]), static_cast<double>(p.hz), static_cast<double>(err),
+                            p.sure ? "" : "  ?", judged ? "" : "  (not judged)");
+            }
+        }
+    }
+    return worst;
 }
 
 } // namespace acidulous::audition
