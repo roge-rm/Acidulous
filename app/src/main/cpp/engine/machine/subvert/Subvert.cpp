@@ -4,6 +4,23 @@
 namespace acidulous::machine {
 
 namespace {
+
+/**
+ * What this machine puts out at the volume knob's default, against the rest
+ * of the app.
+ *
+ * Every machine here was levelled against its own bank and none against the
+ * others, and the factory came to span twenty-five decibels: a kit was
+ * twenty-two louder than a modelled string, so changing machine changed the
+ * volume of the song. A bass is meant to sit forward in a mix and this one
+ * was doing it by fourteen decibels, which is not forward, it is a different
+ * gain structure. The house figure is about -21 dB on the harness's loudness
+ * column - the loudest four hundred milliseconds of one note - and every
+ * machine's output is scaled so its own default lands there. The knob then
+ * means the same thing wherever you are.
+ */
+constexpr float kHouse = 0.2f;
+
 const ParamDef kDefs[Subvert::Count] = {
     {"wave", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},          // 0 saw, 1 pulse
     {"tune", -12.0f, 12.0f, 0.0f, Curve::Linear, 0, "st"},
@@ -54,7 +71,7 @@ void Subvert::reset() {
     svf2.reset();
     // The oscillators too, and the pitch they were gliding toward.
     //
-    // These free-run: nothing restarts them on a note, because a 303's
+    // These free-run: nothing restarts them on a note, because an acid box's
     // oscillator does not restart either, and that continuity is part of
     // the sound. But it means a reset that leaves them alone is not a
     // reset - the next note begins part way through a cycle, at whatever
@@ -117,7 +134,7 @@ void Subvert::noteOff(uint8_t note) {
     if (stackSize == 0) {
         ampEnv.gate(false);
     } else if (wasTop) {
-        // Fall back to the previous held note, sliding, as a 303 does.
+        // Fall back to the previous held note, sliding, as those boxes do.
         startNote(stack[stackSize - 1], true, false);
     }
 }
@@ -177,7 +194,8 @@ bool Subvert::render(float *L, float * /*R*/, int32_t frames) {
         s = svf2.lowpass(s);
         s = dsp::fastTanh(s * driveGain) * driveComp;
 
-        const float amp = ampEnv.next() * volume * (1.0f + (accented ? accentAmt * aenv * 0.6f : 0.0f));
+        const float amp = ampEnv.next() * volume * kHouse *
+                          (1.0f + (accented ? accentAmt * aenv * 0.6f : 0.0f));
         L[i] = s * amp;
     }
     return false;

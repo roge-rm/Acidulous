@@ -452,7 +452,7 @@ private fun ClickPage() {
         "sound",
         when (UiPrefs.clickVoice) {
             1 -> "Filtered noise. It sits away from anything tuned, so it stays audible over a busy mix without being loud."
-            2 -> "The 808's two detuned squares. For when the drums are loud enough to hide the other two."
+            2 -> "Two detuned squares. For when the drums are loud enough to hide the other two."
             else -> "A short decaying sine, higher on the downbeat. The plain one."
         },
     ) {

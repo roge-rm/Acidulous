@@ -30,33 +30,74 @@ internal object FactoryBanks {
     private fun subvert0() = Patch("Subvert", "Init", emptyMap())
 
     private fun subvert1() = Patch("Subvert", "Classic",
-        mapOf("cutoff" to 0.408023566f, "resonance" to 0.72f, "envmod" to 0.64f, "decay" to 0.4850184f, "accent" to 0.75f, "slide" to 0.5f, "drive" to 0.16f))
+        mapOf("cutoff" to 0.408023566f, "resonance" to 0.72f, "envmod" to 0.64f, "decay" to 0.4850184f, "accent" to 0.75f, "slide" to 0.5f, "drive" to 0.16f, "volume" to 0.7f),
+        low = 24, high = 55)
 
     private fun subvert2() = Patch("Subvert", "Squelch",
-        mapOf("cutoff" to 0.369967341f, "resonance" to 0.9f, "envmod" to 0.85f, "decay" to 0.318411052f, "accent" to 0.92f, "slide" to 0.451545f, "drive" to 0.22f, "volume" to 0.72f))
+        mapOf("cutoff" to 0.369967341f, "resonance" to 0.9f, "envmod" to 0.85f, "decay" to 0.318411052f, "accent" to 0.92f, "slide" to 0.451545f, "drive" to 0.22f, "volume" to 0.7f),
+        low = 24, high = 55)
 
     private fun subvert3() = Patch("Subvert", "Rubber",
-        mapOf("wave" to 1f, "cutoff" to 0.350310653f, "resonance" to 0.75f, "envmod" to 0.7f, "decay" to 0.349485f, "accent" to 0.8f, "slide" to 0.7074866f, "drive" to 0.25f, "volume" to 0.6f, "pw" to 0.4111111f))
+        mapOf("wave" to 1f, "cutoff" to 0.350310653f, "resonance" to 0.75f, "envmod" to 0.7f, "decay" to 0.349485f, "accent" to 0.8f, "slide" to 0.7074866f, "drive" to 0.25f, "volume" to 0.56f, "pw" to 0.4111111f),
+        low = 24, high = 55)
 
     private fun subvert4() = Patch("Subvert", "Long Sweep",
-        mapOf("cutoff" to 0.26369825f, "resonance" to 0.72f, "envmod" to 0.95f, "decay" to 0.863499343f, "accent" to 0.45f, "drive" to 0.15f, "volume" to 0.72f))
+        mapOf("cutoff" to 0.26369825f, "resonance" to 0.72f, "envmod" to 0.95f, "decay" to 0.863499343f, "accent" to 0.45f, "drive" to 0.15f, "volume" to 0.74f),
+        low = 24, high = 55)
 
-    private fun subvert5() = Patch("Subvert", "Sub Hollow",
-        mapOf("wave" to 1f, "cutoff" to 0.298880249f, "resonance" to 0.38f, "envmod" to 0.3f, "decay" to 0.60205996f, "accent" to 0.5f, "drive" to 0.08f, "volume" to 0.7f, "pw" to 0.211111113f, "sub" to 0.65f))
+    private fun subvert5() = Patch("Subvert", "Slide Line",
+        mapOf("cutoff" to 0.39470154f, "resonance" to 0.68f, "envmod" to 0.6f, "decay" to 0.468926072f, "accent" to 0.7f, "slide" to 0.9621396f, "drive" to 0.14f, "volume" to 0.72f),
+        low = 24, high = 55)
 
-    private fun subvert6() = Patch("Subvert", "Band Squelch",
-        mapOf("cutoff" to 0.499284834f, "resonance" to 0.85f, "envmod" to 0.8f, "decay" to 0.30102998f, "accent" to 0.9f, "drive" to 0.55f, "volume" to 1f, "mode" to 1f))
+    private fun subvert6() = Patch("Subvert", "Doorstop",
+        mapOf("cutoff" to 0.14217411f, "envmod" to 1f, "decay" to 0.238560632f, "accent" to 0.85f, "slide" to 0.349485f, "drive" to 0.3f, "volume" to 0.72f),
+        low = 24, high = 55)
 
-    private fun subvert7() = Patch("Subvert", "Buzzsaw",
-        mapOf("cutoff" to 0.7682668f, "resonance" to 0.25f, "envmod" to 0.25f, "decay" to 0.562469363f, "accent" to 0.55f, "drive" to 0.85f, "volume" to 0.92f))
+    private fun subvert7() = Patch("Subvert", "Round",
+        mapOf("cutoff" to 0.4496927f, "resonance" to 0f, "envmod" to 0f, "accent" to 0.35f, "slide" to 0.477121264f, "drive" to 0.05f, "volume" to 0.92f),
+        low = 24, high = 55)
 
-    private fun subvert8() = Patch("Subvert", "Thin Ice",
-        mapOf("cutoff" to 0.623331666f, "resonance" to 0.97f, "envmod" to 0.15f, "decay" to 0.432650715f, "accent" to 0.4f, "drive" to 0.05f, "volume" to 0.85f))
+    private fun subvert8() = Patch("Subvert", "Open Saw",
+        mapOf("cutoff" to 0.9495629f, "resonance" to 0.05f, "envmod" to 0f, "decay" to 0.610924363f, "accent" to 0.3f, "drive" to 0f, "volume" to 1f),
+        low = 24, high = 55)
 
-    private fun subvert9() = Patch("Subvert", "Doorstop",
-        mapOf("cutoff" to 0.14217411f, "envmod" to 1f, "decay" to 0.238560632f, "accent" to 0.85f, "slide" to 0.349485f, "drive" to 0.3f, "volume" to 0.85f))
+    private fun subvert9() = Patch("Subvert", "Sub Hollow",
+        mapOf("wave" to 1f, "cutoff" to 0.298880249f, "resonance" to 0.38f, "envmod" to 0.3f, "decay" to 0.60205996f, "accent" to 0.5f, "drive" to 0.08f, "volume" to 0.69f, "pw" to 0.211111113f, "sub" to 0.65f),
+        low = 24, high = 55)
 
-    private val subvert: List<Patch> by lazy { listOf(subvert0(), subvert1(), subvert2(), subvert3(), subvert4(), subvert5(), subvert6(), subvert7(), subvert8(), subvert9()) }
+    private fun subvert10() = Patch("Subvert", "Sub Drop",
+        mapOf("wave" to 1f, "cutoff" to 0.0981131f, "resonance" to 0.2f, "envmod" to 0.1f, "decay" to 0.7385606f, "accent" to 0.3f, "drive" to 0f, "volume" to 1f, "sub" to 1f),
+        low = 24, high = 45)
+
+    private fun subvert11() = Patch("Subvert", "Band Squelch",
+        mapOf("cutoff" to 0.499284834f, "resonance" to 0.85f, "envmod" to 0.8f, "decay" to 0.30102998f, "accent" to 0.9f, "drive" to 0.55f, "volume" to 1f, "mode" to 1f),
+        low = 24, high = 55)
+
+    private fun subvert12() = Patch("Subvert", "Band Lead",
+        mapOf("cutoff" to 0.588843942f, "resonance" to 0.93f, "envmod" to 0.45f, "decay" to 0.411954373f, "slide" to 0.627636254f, "drive" to 0.35f, "volume" to 1f, "mode" to 1f),
+        low = 36, high = 67)
+
+    private fun subvert13() = Patch("Subvert", "Thin Ice",
+        mapOf("cutoff" to 0.623331666f, "resonance" to 0.97f, "envmod" to 0.15f, "decay" to 0.432650715f, "accent" to 0.4f, "drive" to 0.05f, "volume" to 0.91f),
+        low = 36, high = 67)
+
+    private fun subvert14() = Patch("Subvert", "Buzzsaw",
+        mapOf("cutoff" to 0.7682668f, "resonance" to 0.25f, "envmod" to 0.25f, "decay" to 0.562469363f, "accent" to 0.55f, "drive" to 0.85f, "volume" to 1f),
+        low = 24, high = 55)
+
+    private fun subvert15() = Patch("Subvert", "Hollow Pulse",
+        mapOf("wave" to 1f, "decay" to 0.432650715f, "slide" to 0.520696342f, "drive" to 0.12f, "volume" to 0.55f, "pw" to 0.03333333f),
+        low = 24, high = 55)
+
+    private fun subvert16() = Patch("Subvert", "Screamer",
+        mapOf("cutoff" to 0.480530232f, "resonance" to 0.8f, "envmod" to 0.75f, "decay" to 0.451545f, "accent" to 0.8f, "slide" to 0.477121264f, "drive" to 1f, "volume" to 1f),
+        low = 24, high = 55)
+
+    private fun subvert17() = Patch("Subvert", "Ghost",
+        mapOf("cutoff" to 0.39470154f, "resonance" to 0.5f, "envmod" to 0.25f, "decay" to 0.8345034f, "accent" to 0.3f, "slide" to 0.7781513f, "volume" to 1f, "mode" to 1f),
+        low = 36, high = 67)
+
+    private val subvert: List<Patch> by lazy { listOf(subvert0(), subvert1(), subvert2(), subvert3(), subvert4(), subvert5(), subvert6(), subvert7(), subvert8(), subvert9(), subvert10(), subvert11(), subvert12(), subvert13(), subvert14(), subvert15(), subvert16(), subvert17()) }
 
     private fun trinity0() = Patch("Trinity", "Init", emptyMap())
 

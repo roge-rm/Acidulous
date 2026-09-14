@@ -6,8 +6,9 @@
 #include <string>
 #include <vector>
 
-// Forage - the sample drum machine, taken past a sampler the way the TB-3
-// took the 303. Thirteen pads on C2..C3, each with its own sample and, on top
+// Forage - the sample drum machine, taken past a plain sampler the same way
+// Subvert is taken past a plain bass. Thirteen pads on C2..C3, each with its
+// own sample and, on top
 // of the expected start / end / pitch / decay / level / pan / reverse / choke,
 // a resonant filter, a crusher and a pitch envelope. Samples are decoded
 // elsewhere and mounted as objects; nothing is shipped - users bring their own.

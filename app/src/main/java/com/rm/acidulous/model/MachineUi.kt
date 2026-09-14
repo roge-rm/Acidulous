@@ -47,7 +47,7 @@ object MachineUi {
         "Ratio" -> "six-operator FM, with the algorithm itself on a knob"
         "Cumulus" -> "pads by spectrum - bands of partials, morphed"
         "Formulate" -> "the chip, and an equation you can type into it"
-        "Hexbeat" -> "drums by synthesis, in the 606's vocabulary"
+        "Hexbeat" -> "drums by synthesis, in the small-box vocabulary"
         "Genesis" -> "the big box: a kick you feel, and a bus the kick ducks"
         "Resonance" -> "eight struck objects that ring, and hear each other"
         "Dice" -> "a loop cut into slices, and rolled: swap, stutter, drop"

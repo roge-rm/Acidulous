@@ -3,7 +3,7 @@
 
 namespace acidulous::dsp {
 
-// Attack then exponential decay to zero. The 303's filter envelope shape.
+// Attack then exponential decay to zero: the shape an acid filter wants.
 class DecayEnv {
   public:
     void setSampleRate(float sr) { sampleRate = sr; }

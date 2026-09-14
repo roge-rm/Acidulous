@@ -42,7 +42,7 @@ const ParamDef kDefs[Hexbeat::Count] = {
     {"clave_level", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
     {"accent", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
 };
-// The 808's famous six, as ratios of the lowest.
+// The classic six, as ratios of the lowest.
 const float kMetalRatios[6] = {1.0f, 1.483f, 1.800f, 2.546f, 2.634f, 3.902f};
 constexpr float kMetalBase = 205.0f;
 } // namespace

@@ -4,10 +4,11 @@
 #include <engine/dsp/Osc.h>
 #include <engine/machine/Machine.h>
 
-// Subvert - the signature machine, in its first form. Not a 303: the brief is
-// to do to the 303 what the TB-3 did. This is the classic layer only - saw or
-// pulse, a resonant lowpass with envelope-modulated cutoff, decay, accent and
-// slide - voiced by ear, tuned later.
+// Subvert - the signature machine, in its first form. Not a copy of the
+// classic acid box: the brief is to take it where its own modern descendants
+// went. This is the classic layer only - saw or pulse, a resonant lowpass
+// with envelope-modulated cutoff, decay, accent and slide - voiced by ear,
+// tuned later.
 //
 // Monophonic with last-note priority. Slide is legato: a note-on while one is
 // held glides the pitch and leaves the envelopes alone. Accent is velocity at

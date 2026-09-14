@@ -123,6 +123,37 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             t += beat * 0.5f;
         }
         p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "acid") {
+        // **Two bars of sixteenths, which is what this machine is for.**
+        //
+        // A bass line of eighths shows a bass machine works. It does not show
+        // an acid machine at all: the sound is made by what the filter does
+        // *between* notes, and that needs the rests, the slides that tie one
+        // step into the next so the filter never re-triggers, and the accents
+        // that open it further on the steps that carry the line. A demo has
+        // to be the thing the instrument is for.
+        //
+        // -1 is a rest. A step that slides runs 1.6 sixteenths, so it is still
+        // sounding when the next one starts, which is how a slide is played.
+        static const int kNote[32] = {0,  -1, 0,  12, -1, 0,  -1, 3,
+                                      -1, 0,  0,  -1, 7,  -1, 10, 12,
+                                      0,  -1, 0,  12, -1, 0,  -1, 3,
+                                      -1, 5,  -1, 3,  0,  -1, 0,  -1};
+        static const bool kSlide[32] = {false, false, false, true,  false, false, false, true,
+                                        false, false, false, false, true,  false, false, false,
+                                        false, false, false, true,  false, false, false, true,
+                                        false, true,  false, false, false, false, false, false};
+        static const bool kAccent[32] = {true,  false, false, false, false, true,  false, false,
+                                         false, false, true,  false, false, false, false, true,
+                                         true,  false, false, false, false, true,  false, false,
+                                         false, false, false, false, true,  false, false, false};
+        const float step = beat * 0.25f;
+        for (int i = 0; i < 32; ++i) {
+            if (kNote[i] < 0) continue;
+            p.lastOff = hit(p, static_cast<float>(i) * step, step * (kSlide[i] ? 1.6f : 0.8f),
+                            note + kNote[i], kAccent[i] ? 122 : 88);
+        }
+        p.frames = p.lastOff + secondsToFrames(2.0f);
     } else if (kind == "chord") {
         static const int kMaj7[] = {0, 4, 7, 11};
         static const int kMin7[] = {-3, 0, 4, 7};
@@ -997,7 +1028,14 @@ int cmdSweep(const std::string &unit, const std::string &patchName, const Option
             // Anchored: the note is known, so "how far out" and "which
             // partial" are separate questions and neither needs a guess.
             rmsAt.push_back(m.loudnessDb);
-            centsAt.push_back(m.tuned && m.harmonicity > 0.15f ? m.tuneCents : -9999.0f);
+            // Either the note's series is there, or its own fundamental is -
+            // a sub-octave patch puts most of its energy an octave below the
+            // note, so it scores almost nothing on the note's harmonics while
+            // being perfectly pitched. Asking for the series alone called
+            // fifteen notes of a sub bass atonal.
+            centsAt.push_back(m.tuned && (m.harmonicity > 0.15f || m.fundamentalDb > -12.0f)
+                                  ? m.tuneCents
+                                  : -9999.0f);
             speakAt.push_back(m.speaksMs);
             partAt.push_back(m.partialRatio);
             harmAt.push_back(m.harmonicity);

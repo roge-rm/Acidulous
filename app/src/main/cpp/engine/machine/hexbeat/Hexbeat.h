@@ -3,8 +3,8 @@
 #include <engine/dsp/Filter.h>
 #include <engine/machine/Machine.h>
 
-// Hexbeat - a drum synthesizer in the 606 vocabulary, expanded to the kit the
-// 606 never had. Nothing is sampled: kick and toms are resonant bursts with a
+// Hexbeat - a drum synthesizer in the small-box vocabulary, expanded to the
+// kit those boxes never had. Nothing is sampled: kick and toms are resonant bursts with a
 // pitch sweep, the snare a tonal pair over filtered noise, hats and cymbals a
 // stack of inharmonic squares through band-pass, the cowbell two squares, the
 // clap a burst of noise pulses. Thirteen voices on C2..C3; accent from

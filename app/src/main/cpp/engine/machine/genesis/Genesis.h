@@ -7,7 +7,7 @@
 
 // Genesis - the big box.
 //
-// Hexbeat is the 606: small, dry, short, and it was built to be. Genesis is
+// Hexbeat is the small one: dry, short, and it was built to be. Genesis is
 // the pair of machines that came after it and never left - the long
 // pitch-swept kick you feel before you hear, a snare that is two tones and a
 // cloud of noise, six detuned squares through a high-pass for everything

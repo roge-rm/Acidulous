@@ -13,7 +13,7 @@
 //   Stick   - filtered noise, short. It sits in a different part of the
 //             spectrum from anything tuned, so it stays audible against a
 //             busy mix without being loud.
-//   Cowbell - two detuned squares through a band-pass, the 808's trick. For
+//   Cowbell - two detuned squares through a band-pass, the old trick. For
 //             when the kit is loud enough to hide the other two.
 //
 // Three accents rather than two: the bar, the beat, and the subdivision
@@ -111,7 +111,7 @@ class Click {
             bandHz = accent == Bar ? 2600.0f : (accent == Beat ? 2000.0f : 1700.0f);
             break;
         case Cowbell:
-            // The 808's two squares, a minor third apart and detuned.
+            // Two squares, a minor third apart and detuned.
             inc[0] = (accent == Bar ? 840.0f : 620.0f) / sampleRate;
             inc[1] = inc[0] * 1.4983f;
             break;
