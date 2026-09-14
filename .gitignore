@@ -19,3 +19,6 @@ local.properties
 
 # Paths that belong to one machine, not to the project.
 /tools/local.env
+
+# The IDE's own state, all of it.
+/.idea/

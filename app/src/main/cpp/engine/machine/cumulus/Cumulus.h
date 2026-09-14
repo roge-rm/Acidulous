@@ -7,7 +7,7 @@
 
 // Cumulus - pads by spectrum.
 //
-// The spectral-pad idea is the one nothing else sounds quite like: harmonics
+// Spectral pads are the thing nothing else sounds quite like: harmonics
 // smeared into bands, inverse transformed into one enormous table, and the
 // result is a chorus of hundreds of oscillators for the price of reading an
 // array. This is our own implementation of that idea, and then the part

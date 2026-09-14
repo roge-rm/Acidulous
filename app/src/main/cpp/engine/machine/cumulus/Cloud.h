@@ -6,13 +6,13 @@
 // Cumulus's clouds: the tables a voice reads, and the recipe they are built
 // from.
 //
-// The spectral-pad idea in one paragraph: put each harmonic into the spectrum not
-// as a single line but as a *band* of lines with random phases, then inverse
-// transform the whole thing into one very long table. What comes out loops
-// seamlessly, never repeats audibly, and sounds like twenty detuned
-// oscillators for the cost of reading an array. Paul Nasca published it; this
-// is our own implementation of the idea, and what it does with it afterwards
-// is where the instrument is.
+// The idea in one paragraph, as Paul Nasca published it: put each harmonic
+// into the spectrum not as a single line but as a *band* of lines with random
+// phases, then inverse transform the whole thing into one very long table.
+// What comes out loops seamlessly, never repeats audibly, and sounds like
+// twenty detuned oscillators for the cost of reading an array. This is our
+// own implementation of it, and what it does with it afterwards is where the
+// instrument is.
 namespace acidulous::machine::cumulus {
 
 /** What the tables are made of. Everything here is a build-time choice. */
