@@ -354,27 +354,206 @@ internal object FactoryBanks {
     private fun ratio0() = Patch("Ratio", "Init", emptyMap())
 
     private fun ratio1() = Patch("Ratio", "Tine",
-        mapOf("o1_decay" to 0.79919f, "o1_sustain" to 0.25f, "o2_ratio" to 0.7259193f, "o2_level" to 0.55f, "o2_decay" to 0.578839362f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.5f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.2f, "o4_ratio" to 0.448120326f, "o4_level" to 0.35f, "o4_sustain" to 0f, "algoa" to 0.193548381f))
+        mapOf("o1_decay" to 0.79919f, "o1_sustain" to 0.25f, "o2_ratio" to 0.7259193f, "o2_level" to 0.55f, "o2_decay" to 0.578839362f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.5f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.2f, "o4_ratio" to 0.448120326f, "o4_level" to 0.35f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.87f),
+        low = 36, high = 84)
 
-    private fun ratio2() = Patch("Ratio", "Bell",
-        mapOf("o1_decay" to 0.897307456f, "o1_sustain" to 0f, "o1_release" to 0.897307456f, "o2_ratio" to 0.433083534f, "o2_level" to 0.6f, "o2_decay" to 0.81962353f, "o2_sustain" to 0f, "o2_release" to 0.81962353f, "o3_ratio" to 0.554119945f, "o3_level" to 0.45f, "o3_decay" to 0.8518653f, "o3_sustain" to 0f, "o3_release" to 0.8518653f, "algoa" to 0.193548381f, "snap" to 1f))
+    private fun ratio2() = Patch("Ratio", "Sync Stab",
+        mapOf("o1_mode" to 0.714285731f, "o1_ratio" to 0.521240652f, "o1_level" to 1f, "o1_decay" to 0.639247f, "o1_sustain" to 0.3f, "o2_wave" to 0.466666669f, "o2_level" to 1f, "o2_sustain" to 1f, "algoa" to 0.09677419f, "snap" to 0f, "l1_rate" to 0.4447622f, "m01_src" to 0.846153855f, "m01_dest" to 0.4347826f, "m01_depth" to 0.625f, "volume" to 1f),
+        low = 36, high = 84)
 
-    private fun ratio3() = Patch("Ratio", "Grit Bass",
-        mapOf("o1_level" to 0.9f, "o1_decay" to 0.618813455f, "o1_sustain" to 0.6f, "o2_level" to 0.65f, "o2_fb" to 0.55f, "o2_decay" to 0.5411295f, "o2_sustain" to 0.15f, "o3_mode" to 1f, "o3_level" to 0.4f, "o3_fb" to 0.4f, "f_freq" to 0.6804642f, "f_res" to 0.2f, "m01_src" to 0.307692319f, "m01_dest" to 0.2173913f, "m01_depth" to 0.675f, "voicemode" to 0.5f))
+    private fun ratio3() = Patch("Ratio", "Bell",
+        mapOf("o1_decay" to 0.897307456f, "o1_sustain" to 0f, "o1_release" to 0.897307456f, "o2_ratio" to 0.433083534f, "o2_level" to 0.6f, "o2_decay" to 0.81962353f, "o2_sustain" to 0f, "o2_release" to 0.81962353f, "o3_ratio" to 0.554119945f, "o3_level" to 0.45f, "o3_decay" to 0.8518653f, "o3_sustain" to 0f, "o3_release" to 0.8518653f, "algoa" to 0.193548381f, "snap" to 1f, "volume" to 1f),
+        low = 36, high = 84)
 
-    private fun ratio4() = Patch("Ratio", "Morph Sweep",
-        mapOf("o1_level" to 0.7f, "o1_attack" to 0.650515f, "o1_sustain" to 0.8f, "o1_release" to 0.7419396f, "o2_ratio" to 0.375f, "o2_level" to 0.6f, "o2_sustain" to 0.7f, "o3_ratio" to 0.448120326f, "o3_level" to 0.5f, "o3_sustain" to 0.6f, "o4_ratio" to 0.5f, "o4_level" to 0.45f, "o5_ratio" to 0.5731203f, "o5_level" to 0.4f, "o6_ratio" to 0.625f, "o6_level" to 0.35f, "e1_attack" to 0.7697953f, "e1_decay" to 0.81962353f, "e1_sustain" to 0.4f, "m01_src" to 0.538461566f, "m01_dest" to 0.08695652f, "m01_depth" to 0.85f, "m02_src" to 0.15384616f, "m02_dest" to 0.08695652f, "m02_depth" to 0.8f))
+    private fun ratio4() = Patch("Ratio", "Stretched",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.3f, "o1_release" to 0.774181366f, "o2_ratio" to 0.448120326f, "o2_level" to 0.62f, "o3_ratio" to 0.600919366f, "o3_level" to 0.45f, "algoa" to 0.193548381f, "skew" to 0.72f, "m01_src" to 0.15384616f, "m01_dest" to 0.130434781f, "m01_depth" to 0.75f, "volume" to 1f),
+        low = 36, high = 84)
 
-    private fun ratio5() = Patch("Ratio", "Fold Lead",
-        mapOf("o1_mode" to 0.5714286f, "o1_level" to 0.85f, "o1_fb" to 0.45f, "o1_sustain" to 0.9f, "o2_wave" to 0.466666669f, "o2_level" to 0.8f, "o2_sustain" to 0.9f, "algoa" to 0.09677419f, "m01_src" to 0.230769232f, "m01_dest" to 0.130434781f, "m01_depth" to 0.65f, "voicemode" to 1f, "glide" to 0.05f))
+    private fun ratio5() = Patch("Ratio", "Grit Bass",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.618813455f, "o1_sustain" to 0.6f, "o2_level" to 0.65f, "o2_fb" to 0.55f, "o2_decay" to 0.5411295f, "o2_sustain" to 0.15f, "o3_mode" to 1f, "o3_level" to 0.4f, "o3_fb" to 0.4f, "f_freq" to 0.6804642f, "f_res" to 0.2f, "m01_src" to 0.307692319f, "m01_dest" to 0.2173913f, "m01_depth" to 0.675f, "voicemode" to 0.5f, "volume" to 0.81f),
+        low = 24, high = 55)
 
-    private fun ratio6() = Patch("Ratio", "Sync Stab",
-        mapOf("o1_mode" to 0.714285731f, "o1_ratio" to 0.521240652f, "o1_level" to 0.85f, "o1_decay" to 0.639247f, "o1_sustain" to 0.3f, "o2_wave" to 0.466666669f, "o2_level" to 0.9f, "o2_sustain" to 1f, "algoa" to 0.09677419f, "snap" to 0f, "l1_rate" to 0.4447622f, "m01_src" to 0.846153855f, "m01_dest" to 0.4347826f, "m01_depth" to 0.625f))
+    private fun ratio6() = Patch("Ratio", "Fold Lead",
+        mapOf("o1_mode" to 0.5714286f, "o1_level" to 0.85f, "o1_fb" to 0.45f, "o1_sustain" to 0.9f, "o2_wave" to 0.466666669f, "o2_level" to 0.8f, "o2_sustain" to 0.9f, "algoa" to 0.09677419f, "m01_src" to 0.230769232f, "m01_dest" to 0.130434781f, "m01_depth" to 0.65f, "voicemode" to 1f, "glide" to 0.05f, "volume" to 1f),
+        low = 48, high = 91)
 
-    private fun ratio7() = Patch("Ratio", "Stretched",
-        mapOf("o1_level" to 0.75f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.3f, "o1_release" to 0.774181366f, "o2_ratio" to 0.448120326f, "o2_level" to 0.55f, "o3_ratio" to 0.600919366f, "o3_level" to 0.4f, "algoa" to 0.193548381f, "skew" to 0.72f, "m01_src" to 0.15384616f, "m01_dest" to 0.130434781f, "m01_depth" to 0.75f))
+    private fun ratio7() = Patch("Ratio", "Morph Sweep",
+        mapOf("o1_level" to 0.7f, "o1_attack" to 0.650515f, "o1_sustain" to 0.8f, "o1_release" to 0.7419396f, "o2_ratio" to 0.375f, "o2_level" to 0.6f, "o2_sustain" to 0.7f, "o3_ratio" to 0.448120326f, "o3_level" to 0.5f, "o3_sustain" to 0.6f, "o4_ratio" to 0.5f, "o4_level" to 0.45f, "o5_ratio" to 0.5731203f, "o5_level" to 0.4f, "o6_ratio" to 0.625f, "o6_level" to 0.35f, "e1_attack" to 0.7697953f, "e1_decay" to 0.81962353f, "e1_sustain" to 0.4f, "m01_src" to 0.538461566f, "m01_dest" to 0.08695652f, "m01_depth" to 0.85f, "m02_src" to 0.15384616f, "m02_dest" to 0.08695652f, "m02_depth" to 0.8f, "volume" to 0.82f),
+        low = 36, high = 79)
 
-    private val ratio: List<Patch> by lazy { listOf(ratio0(), ratio1(), ratio2(), ratio3(), ratio4(), ratio5(), ratio6(), ratio7()) }
+    private fun ratio8() = Patch("Ratio", "Rhodes",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.2f, "o1_release" to 0.656523347f, "o2_ratio" to 0.5f, "o2_level" to 0.42f, "o2_decay" to 0.618813455f, "o2_sustain" to 0f, "o2_vel" to 0.8f, "o3_level" to 0.5f, "o3_decay" to 0.79919f, "o3_sustain" to 0.15f, "o4_ratio" to 0.600919366f, "o4_level" to 0.22f, "o4_decay" to 0.5615631f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.74f),
+        low = 36, high = 84)
+
+    private fun ratio9() = Patch("Ratio", "Wurly",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7848632f, "o1_sustain" to 0.18f, "o2_wave" to 0.533333361f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_decay" to 0.578839362f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.4f, "o3_decay" to 0.762373149f, "o3_sustain" to 0.1f, "o4_ratio" to 0.448120326f, "o4_level" to 0.3f, "o4_decay" to 0.5161209f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.77f),
+        low = 36, high = 84)
+
+    private fun ratio10() = Patch("Ratio", "Clavi",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.656523347f, "o1_sustain" to 0.05f, "o1_release" to 0.5161209f, "o2_ratio" to 0.448120326f, "o2_level" to 1f, "o2_decay" to 0.5411295f, "o2_sustain" to 0f, "o3_level" to 1f, "o3_fb" to 0.45f, "o3_decay" to 0.5161209f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "f_type" to 0.181818187f, "f_freq" to 0.76701f, "f_key" to 0.6f, "volume" to 1f),
+        low = 36, high = 84)
+
+    private fun ratio11() = Patch("Ratio", "Glass Keys",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.79919f, "o1_sustain" to 0.12f, "o2_ratio" to 0.600919366f, "o2_level" to 0.2f, "o2_decay" to 0.716931f, "o2_sustain" to 0f, "o3_level" to 0.45f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.1f, "o4_ratio" to 0.682428956f, "o4_level" to 0.14f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.82f),
+        low = 36, high = 84)
+
+    private fun ratio12() = Patch("Ratio", "Hammer",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7491727f, "o1_sustain" to 0.1f, "o2_ratio" to 0.375f, "o2_level" to 0.3f, "o2_decay" to 0.618813455f, "o2_sustain" to 0f, "o3_ratio" to 0.448120326f, "o3_level" to 0.2f, "o3_decay" to 0.5615631f, "o3_sustain" to 0f, "o6_wave" to 1f, "o6_level" to 0.35f, "o6_decay" to 0.335744351f, "o6_sustain" to 0f, "algoa" to 0.4516129f, "volume" to 0.64f),
+        low = 36, high = 84)
+
+    private fun ratio13() = Patch("Ratio", "Soft Keys",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.79919f, "o1_sustain" to 0.35f, "o2_ratio" to 0.375f, "o2_level" to 0.59f, "o2_decay" to 0.774181366f, "o2_sustain" to 0.25f, "o3_ratio" to 0.448120326f, "o3_level" to 0.23f, "o3_decay" to 0.7419396f, "o3_sustain" to 0.1f, "algoa" to 0.7096774f, "f_type" to 0.181818187f, "f_freq" to 0.725363731f, "volume" to 1f),
+        low = 36, high = 84)
+
+    private fun ratio14() = Patch("Ratio", "Toy Box",
+        mapOf("o1_wave" to 0.13333334f, "o1_level" to 1f, "o1_decay" to 0.7342073f, "o1_sustain" to 0f, "o2_ratio" to 0.646240652f, "o2_level" to 0.39f, "o2_decay" to 0.656523347f, "o2_sustain" to 0f, "o3_ratio" to 0.375f, "o3_level" to 0.45f, "o3_decay" to 0.69649744f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 1f),
+        low = 36, high = 84)
+
+    private fun ratio15() = Patch("Ratio", "Struck Glass",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.897307456f, "o1_sustain" to 0f, "o1_release" to 0.81962353f, "o2_ratio" to 0.600919366f, "o2_level" to 0.3f, "o2_decay" to 0.81962353f, "o2_sustain" to 0f, "o3_level" to 0.4f, "o3_decay" to 0.8768739f, "o3_sustain" to 0f, "o4_ratio" to 0.712554932f, "o4_level" to 0.18f, "o4_decay" to 0.774181366f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.86f),
+        low = 36, high = 84)
+
+    private fun ratio16() = Patch("Ratio", "Plucked",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.6846892f, "o1_sustain" to 0f, "o1_release" to 0.5615631f, "o2_ratio" to 0.375f, "o2_level" to 0.52f, "o2_decay" to 0.5411295f, "o2_sustain" to 0f, "o3_ratio" to 0.540241f, "o3_level" to 0.34f, "o3_decay" to 0.4588705f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "volume" to 1f),
+        low = 40, high = 79)
+
+    private fun ratio17() = Patch("Ratio", "Tubular",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.929549158f, "o1_sustain" to 0f, "o1_release" to 0.8518653f, "o2_ratio" to 0.475919366f, "o2_level" to 0.22f, "o2_decay" to 0.8518653f, "o2_sustain" to 0f, "o3_ratio" to 0.540241f, "o3_level" to 0.16f, "o3_decay" to 0.81962353f, "o3_sustain" to 0f, "o4_ratio" to 0.600919366f, "o4_level" to 0.12f, "o4_decay" to 0.774181366f, "o4_sustain" to 0f, "o5_ratio" to 0.682428956f, "o5_level" to 0.08f, "o5_decay" to 0.716931f, "o5_sustain" to 0f, "algoa" to 0.4516129f, "snap" to 0f, "volume" to 0.67f),
+        low = 36, high = 84)
+
+    private fun ratio18() = Patch("Ratio", "Gamelan",
+        mapOf("o1_decay" to 0.8768739f, "o1_sustain" to 0f, "o2_ratio" to 0.433083534f, "o2_level" to 0.35f, "o2_decay" to 0.774181366f, "o2_sustain" to 0f, "o3_ratio" to 0.2517944f, "o3_level" to 0.7f, "o3_decay" to 0.8768739f, "o3_sustain" to 0f, "o4_ratio" to 0.554119945f, "o4_level" to 0.25f, "o4_decay" to 0.7419396f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.85f),
+        low = 36, high = 84)
+
+    private fun ratio19() = Patch("Ratio", "Church",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.9427497f, "o1_sustain" to 0f, "o1_release" to 0.8768739f, "o2_ratio" to 0.448120326f, "o2_level" to 0.24f, "o2_decay" to 0.8768739f, "o2_sustain" to 0f, "o3_ratio" to 0.125f, "o3_level" to 0.5f, "o3_decay" to 0.9145838f, "o3_sustain" to 0f, "o4_ratio" to 0.508798659f, "o4_level" to 0.14f, "o4_decay" to 0.81962353f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.89f),
+        low = 36, high = 84)
+
+    private fun ratio20() = Patch("Ratio", "Ice",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.8518653f, "o1_sustain" to 0f, "o2_ratio" to 0.646240652f, "o2_level" to 0.26f, "o2_decay" to 0.774181366f, "o2_sustain" to 0f, "o3_ratio" to 0.5f, "o3_level" to 0.46f, "o3_decay" to 0.81962353f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "f_type" to 0.454545468f, "f_freq" to 0.46598f, "f_key" to 0.8f, "volume" to 1f),
+        low = 48, high = 88)
+
+    private fun ratio21() = Patch("Ratio", "Anvil",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.79919f, "o1_sustain" to 0f, "o2_mode" to 0.142857149f, "o2_ratio" to 0.485940665f, "o2_level" to 0.8f, "o2_decay" to 0.774181366f, "o2_sustain" to 0f, "o3_level" to 0.4f, "o3_decay" to 0.7419396f, "o3_sustain" to 0f, "o4_mode" to 0.142857149f, "o4_ratio" to 0.581919f, "o4_level" to 0.5f, "o4_decay" to 0.69649744f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.84f),
+        low = 36, high = 84)
+
+    private fun ratio22() = Patch("Ratio", "Bowl",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.954557836f, "o1_sustain" to 0f, "o1_release" to 0.897307456f, "o2_ratio" to 0.4078793f, "o2_level" to 0.3f, "o2_decay" to 0.7419396f, "o2_sustain" to 0f, "o3_fine" to 0.56f, "o3_level" to 0.5f, "o3_decay" to 0.9427497f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.84f),
+        low = 36, high = 84)
+
+    private fun ratio23() = Patch("Ratio", "Kalimba FM",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.762373149f, "o1_sustain" to 0f, "o2_ratio" to 0.504453f, "o2_level" to 0.36f, "o2_decay" to 0.4588705f, "o2_sustain" to 0f, "o3_ratio" to 0.375f, "o3_level" to 0.3f, "o3_decay" to 0.6846892f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 1f),
+        low = 36, high = 84)
+
+    private fun ratio24() = Patch("Ratio", "Deep Sine",
+        mapOf("o1_level" to 0.95f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.65f, "o2_ratio" to 0.375f, "o2_level" to 0.18f, "o2_decay" to 0.593804836f, "o2_sustain" to 0.05f, "algoa" to 0.193548381f, "volume" to 0.84f),
+        low = 24, high = 55)
+
+    private fun ratio25() = Patch("Ratio", "Slap",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.716931f, "o1_sustain" to 0.3f, "o2_ratio" to 0.540241f, "o2_level" to 0.7f, "o2_decay" to 0.381186575f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.4f, "o3_decay" to 0.6846892f, "o3_sustain" to 0.2f, "algoa" to 0.193548381f, "volume" to 0.89f),
+        low = 24, high = 55)
+
+    private fun ratio26() = Patch("Ratio", "Growl FM",
+        mapOf("o1_level" to 0.9f, "o1_fb" to 0.7f, "o1_decay" to 0.7419396f, "o2_ratio" to 0.125f, "o2_level" to 0.35f, "o2_decay" to 0.7419396f, "o2_sustain" to 0.6f, "algoa" to 0.7096774f, "f_freq" to 0.551070869f, "f_res" to 0.2f, "volume" to 1f),
+        low = 24, high = 55)
+
+    private fun ratio27() = Patch("Ratio", "Sub Drop FM",
+        mapOf("o1_level" to 0.95f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.5f, "o2_ratio" to 0.955482f, "o2_fixed" to 1f, "o2_level" to 0.3f, "o2_sustain" to 0.2f, "algoa" to 0.193548381f, "volume" to 1f),
+        low = 30, high = 55)
+
+    private fun ratio28() = Patch("Ratio", "Metal Bass",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.716931f, "o1_sustain" to 0.5f, "o2_ratio" to 0.475919366f, "o2_level" to 0.28f, "o2_decay" to 0.618813455f, "o2_sustain" to 0.1f, "o3_level" to 0.35f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.4f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.86f),
+        low = 24, high = 55)
+
+    private fun ratio29() = Patch("Ratio", "Pluck Bass FM",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.639247f, "o1_sustain" to 0.1f, "o2_ratio" to 0.375f, "o2_level" to 0.86f, "o2_decay" to 0.483879149f, "o2_sustain" to 0f, "o3_ratio" to 0.5f, "o3_level" to 0.52f, "o3_decay" to 0.4134283f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "f_freq" to 0.5146893f, "f_env" to 0.8f, "f_decay" to 0.483879149f, "f_sustain" to 0f, "volume" to 1f),
+        low = 24, high = 55)
+
+    private fun ratio30() = Patch("Ratio", "Wide Bass FM",
+        mapOf("o1_fine" to 0.43f, "o1_decay" to 0.7342073f, "o1_sustain" to 0.6f, "o1_pan" to 0.199999988f, "o2_ratio" to 0.375f, "o2_level" to 0.2f, "o2_decay" to 0.618813455f, "o2_sustain" to 0.1f, "o3_fine" to 0.57f, "o3_level" to 0.8f, "o3_decay" to 0.7342073f, "o3_sustain" to 0.6f, "o3_pan" to 0.8f, "o4_ratio" to 0.375f, "o4_level" to 0.2f, "o4_decay" to 0.618813455f, "o4_sustain" to 0.1f, "algoa" to 0.193548381f, "f_freq" to 0.53402f, "volume" to 0.53f),
+        low = 24, high = 55)
+
+    private fun ratio31() = Patch("Ratio", "Brass FM",
+        mapOf("o1_level" to 0.9f, "o1_attack" to 0.40051496f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_level" to 0.45f, "o2_attack" to 0.5197953f, "o2_decay" to 0.7419396f, "o2_sustain" to 0.55f, "o3_ratio" to 0.375f, "o3_level" to 0.25f, "o3_attack" to 0.5638181f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.35f, "algoa" to 0.161290318f, "volume" to 0.8f),
+        low = 48, high = 91)
+
+    private fun ratio32() = Patch("Ratio", "Square Lead FM",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.85f, "o2_wave" to 0.533333361f, "o2_level" to 0.4f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.6f, "algoa" to 0.193548381f, "glide" to 0.015f, "volume" to 0.98f),
+        low = 48, high = 91)
+
+    private fun ratio33() = Patch("Ratio", "Reed Lead",
+        mapOf("o1_level" to 0.9f, "o1_attack" to 0.3692803f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_wave" to 0.8666667f, "o2_ratio" to 0.448120326f, "o2_level" to 0.32f, "o2_attack" to 0.4247425f, "o2_decay" to 0.69649744f, "algoa" to 0.193548381f, "volume" to 0.98f),
+        low = 48, high = 91)
+
+    private fun ratio34() = Patch("Ratio", "Scream",
+        mapOf("o1_level" to 0.9f, "o1_fb" to 0.55f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.8f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_fb" to 0.75f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.6f, "o3_level" to 0.4f, "o3_decay" to 0.69649744f, "algoa" to 0.161290318f, "f_freq" to 0.76701f, "f_res" to 0.2f, "volume" to 1f),
+        low = 48, high = 91)
+
+    private fun ratio35() = Patch("Ratio", "Whistle FM",
+        mapOf("o1_level" to 1f, "o1_attack" to 0.40051496f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.9f, "algoa" to 0.7096774f, "glide" to 0.05f, "volume" to 1f),
+        low = 48, high = 91)
+
+    private fun ratio36() = Patch("Ratio", "Fifth Stack",
+        mapOf("o1_level" to 0.7f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_ratio" to 0.323120326f, "o2_level" to 0.55f, "o2_decay" to 0.774181366f, "o2_sustain" to 0.8f, "o3_ratio" to 0.375f, "o3_level" to 0.4f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.8f, "o6_ratio" to 0.375f, "o6_level" to 0.3f, "o6_decay" to 0.7419396f, "algoa" to 0.322580636f, "volume" to 1f),
+        low = 48, high = 91)
+
+    private fun ratio37() = Patch("Ratio", "Drawbars",
+        mapOf("o1_attack" to 0.24999997f, "o1_decay" to 0.929549158f, "o1_sustain" to 1f, "o2_ratio" to 0.375f, "o2_level" to 0.55f, "o2_decay" to 0.929549158f, "o2_sustain" to 1f, "o3_ratio" to 0.448120326f, "o3_level" to 0.4f, "o3_decay" to 0.929549158f, "o3_sustain" to 1f, "o4_ratio" to 0.5f, "o4_level" to 0.3f, "o4_decay" to 0.929549158f, "o4_sustain" to 1f, "o5_ratio" to 0.5731203f, "o5_level" to 0.2f, "o5_decay" to 0.929549158f, "o5_sustain" to 1f, "o6_ratio" to 0.625f, "o6_level" to 0.15f, "o6_decay" to 0.929549158f, "o6_sustain" to 1f, "algoa" to 0.7096774f, "volume" to 1f),
+        low = 36, high = 84)
+
+    private fun ratio38() = Patch("Ratio", "Percussive Organ",
+        mapOf("o1_level" to 0.96f, "o1_decay" to 0.929549158f, "o1_sustain" to 1f, "o2_ratio" to 0.375f, "o2_level" to 0.6f, "o2_decay" to 0.929549158f, "o2_sustain" to 1f, "o3_ratio" to 0.448120326f, "o3_level" to 0.54f, "o3_decay" to 0.5411295f, "o3_sustain" to 0f, "o4_ratio" to 0.5f, "o4_level" to 0.42f, "o4_decay" to 0.5043127f, "o4_sustain" to 0f, "algoa" to 0.7096774f, "volume" to 1f),
+        low = 36, high = 84)
+
+    private fun ratio39() = Patch("Ratio", "Harmonica",
+        mapOf("o1_level" to 0.85f, "o1_attack" to 0.4247425f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_wave" to 0.4f, "o2_ratio" to 0.375f, "o2_level" to 0.22f, "o2_decay" to 0.69649744f, "o3_ratio" to 0.323120326f, "o3_level" to 0.4f, "o3_attack" to 0.461274475f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.75f, "o4_ratio" to 0.448120326f, "o4_level" to 0.15f, "o4_decay" to 0.69649744f, "o4_sustain" to 0.4f, "algoa" to 0.193548381f, "l1_rate" to 0.7607766f, "volume" to 0.86f),
+        low = 36, high = 84)
+
+    private fun ratio40() = Patch("Ratio", "Oboe FM",
+        mapOf("o1_level" to 1f, "o1_attack" to 0.40051496f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.8f, "o2_wave" to 0.266666681f, "o2_ratio" to 0.375f, "o2_level" to 0.45f, "o2_attack" to 0.444537818f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.55f, "algoa" to 0.193548381f, "volume" to 0.92f),
+        low = 48, high = 91)
+
+    private fun ratio41() = Patch("Ratio", "Accordion",
+        mapOf("o1_level" to 0.7f, "o1_attack" to 0.32525748f, "o1_decay" to 0.897307456f, "o1_sustain" to 0.95f, "o2_fine" to 0.59f, "o2_level" to 0.6f, "o2_decay" to 0.897307456f, "o2_sustain" to 0.95f, "o3_ratio" to 0.375f, "o3_fine" to 0.44f, "o3_level" to 0.45f, "o3_decay" to 0.897307456f, "o3_sustain" to 0.95f, "o4_ratio" to 0.448120326f, "o4_level" to 0.25f, "o4_decay" to 0.897307456f, "o4_sustain" to 0.9f, "algoa" to 0.7096774f, "volume" to 0.92f),
+        low = 36, high = 84)
+
+    private fun ratio42() = Patch("Ratio", "Pipe",
+        mapOf("o1_wave" to 0.333333343f, "o1_level" to 1f, "o1_attack" to 0.5197953f, "o1_decay" to 0.8518653f, "o1_sustain" to 0.9f, "o2_wave" to 0.2f, "o2_ratio" to 0.375f, "o2_level" to 0.82f, "o2_attack" to 0.5752575f, "o2_decay" to 0.8518653f, "o2_sustain" to 0.85f, "algoa" to 0.7096774f, "volume" to 1f),
+        low = 36, high = 79)
+
+    private fun ratio43() = Patch("Ratio", "String Pad FM",
+        mapOf("o1_attack" to 0.7257725f, "o1_decay" to 0.8518653f, "o1_sustain" to 0.85f, "o1_release" to 0.762373149f, "o2_ratio" to 0.448120326f, "o2_level" to 0.22f, "o2_attack" to 0.786532f, "o2_decay" to 0.81962353f, "o2_sustain" to 0.6f, "o3_fine" to 0.58f, "o3_level" to 0.55f, "o3_attack" to 0.75f, "o3_decay" to 0.8518653f, "o3_sustain" to 0.8f, "o4_ratio" to 0.375f, "o4_level" to 0.15f, "o4_attack" to 0.7697953f, "o4_decay" to 0.81962353f, "algoa" to 0.193548381f, "volume" to 0.71f),
+        low = 36, high = 79)
+
+    private fun ratio44() = Patch("Ratio", "Choir FM",
+        mapOf("o1_attack" to 0.6945378f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.85f, "o1_release" to 0.7419396f, "o2_wave" to 0.266666681f, "o2_level" to 0.25f, "o2_attack" to 0.75f, "o2_decay" to 0.81962353f, "o2_sustain" to 0.6f, "o3_ratio" to 0.323120326f, "o3_level" to 0.5f, "o3_attack" to 0.7112745f, "o3_decay" to 0.81962353f, "o3_sustain" to 0.8f, "algoa" to 0.193548381f, "f_type" to 0.181818187f, "f_freq" to 0.725363731f, "volume" to 0.86f),
+        low = 36, high = 79)
+
+    private fun ratio45() = Patch("Ratio", "Morph Pad",
+        mapOf("o1_level" to 0.75f, "o1_attack" to 0.7112745f, "o1_decay" to 0.8518653f, "o1_sustain" to 0.85f, "o1_release" to 0.774181366f, "o2_ratio" to 0.375f, "o2_level" to 0.4f, "o2_attack" to 0.75f, "o2_decay" to 0.8518653f, "o2_sustain" to 0.7f, "o3_ratio" to 0.448120326f, "o3_level" to 0.3f, "o3_attack" to 0.7697953f, "o3_decay" to 0.8518653f, "o3_sustain" to 0.6f, "o4_ratio" to 0.5f, "o4_level" to 0.2f, "o4_attack" to 0.786532f, "o4_decay" to 0.8518653f, "algoa" to 0.193548381f, "morph" to 0.35f, "volume" to 0.95f),
+        low = 36, high = 79)
+
+    private fun ratio46() = Patch("Ratio", "Skewed Pad",
+        mapOf("o1_level" to 0.94f, "o1_attack" to 0.7385606f, "o1_decay" to 0.8768739f, "o1_sustain" to 0.85f, "o1_release" to 0.79919f, "o2_ratio" to 0.375f, "o2_level" to 0.57f, "o2_attack" to 0.7603482f, "o2_decay" to 0.8768739f, "o2_sustain" to 0.8f, "o3_ratio" to 0.448120326f, "o3_level" to 0.38f, "o3_attack" to 0.7784858f, "o3_decay" to 0.8768739f, "o3_sustain" to 0.7f, "o4_ratio" to 0.540241f, "o4_level" to 0.23f, "o4_attack" to 0.7940228f, "o4_decay" to 0.8768739f, "o4_sustain" to 0.6f, "algoa" to 0.7096774f, "snap" to 0f, "skew" to 0.78f, "volume" to 1f),
+        low = 36, high = 79)
+
+    private fun ratio47() = Patch("Ratio", "Drone FM",
+        mapOf("o1_level" to 0.7f, "o1_attack" to 0.8252575f, "o1_decay" to 0.954557836f, "o1_sustain" to 0.9f, "o1_release" to 0.8518653f, "o2_fine" to 0.61f, "o2_level" to 0.5f, "o2_attack" to 0.8450528f, "o2_decay" to 0.954557836f, "o2_sustain" to 0.9f, "o3_ratio" to 0.375f, "o3_level" to 0.4f, "o3_attack" to 0.861789465f, "o3_decay" to 0.954557836f, "o3_sustain" to 0.9f, "o4_ratio" to 0.448120326f, "o4_fine" to 0.42f, "o4_level" to 0.25f, "o4_attack" to 0.869280338f, "o4_decay" to 0.954557836f, "o4_sustain" to 0.9f, "o5_ratio" to 0.540241f, "o5_level" to 0.15f, "o5_attack" to 0.8828697f, "o5_decay" to 0.954557836f, "o5_sustain" to 0.9f, "algoa" to 0.7096774f, "volume" to 0.99f),
+        low = 36, high = 79)
+
+    private fun ratio48() = Patch("Ratio", "Wood",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.5268027f, "o1_sustain" to 0f, "o1_release" to 0.438436955f, "o2_wave" to 1f, "o2_ratio" to 0.625f, "o2_level" to 1f, "o2_decay" to 0.155367866f, "o2_sustain" to 0f, "o3_ratio" to 0.465308249f, "o3_level" to 1f, "o3_decay" to 0.483879149f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 1f),
+        low = 36, high = 84)
+
+    private fun ratio49() = Patch("Ratio", "Crush",
+        mapOf("o1_wave" to 0.13333334f, "o1_level" to 0.85f, "o1_decay" to 0.7419396f, "o2_mode" to 1f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.6f, "o3_mode" to 1f, "o3_ratio" to 0.448120326f, "o3_level" to 0.35f, "o3_sustain" to 0.4f, "algoa" to 0.161290318f, "volume" to 0.88f),
+        low = 48, high = 91)
+
+    private fun ratio50() = Patch("Ratio", "Riser",
+        mapOf("o1_level" to 0.92f, "o1_attack" to 0.869280338f, "o1_decay" to 0.897307456f, "o1_sustain" to 0.9f, "o1_release" to 0.69649744f, "o2_wave" to 0.933333337f, "o2_ratio" to 0.6981203f, "o2_fixed" to 1f, "o2_level" to 0.63f, "o2_attack" to 0.869280338f, "o2_decay" to 0.897307456f, "o2_sustain" to 0.8f, "algoa" to 0.193548381f, "f_freq" to 0.492373765f, "f_env" to 0.925f, "f_attack" to 0.886017f, "f_sustain" to 0.9f, "volume" to 1f),
+        low = 36, high = 79)
+
+    private val ratio: List<Patch> by lazy { listOf(ratio0(), ratio1(), ratio2(), ratio3(), ratio4(), ratio5(), ratio6(), ratio7(), ratio8(), ratio9(), ratio10(), ratio11(), ratio12(), ratio13(), ratio14(), ratio15(), ratio16(), ratio17(), ratio18(), ratio19(), ratio20(), ratio21(), ratio22(), ratio23(), ratio24(), ratio25(), ratio26(), ratio27(), ratio28(), ratio29(), ratio30(), ratio31(), ratio32(), ratio33(), ratio34(), ratio35(), ratio36(), ratio37(), ratio38(), ratio39(), ratio40(), ratio41(), ratio42(), ratio43(), ratio44(), ratio45(), ratio46(), ratio47(), ratio48(), ratio49(), ratio50()) }
 
     private fun manual0() = Patch("Manual", "Init", emptyMap())
 

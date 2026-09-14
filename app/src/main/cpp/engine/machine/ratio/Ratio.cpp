@@ -415,7 +415,10 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
         c.feedback = clampf(paramOf(b + OFeedback) + v.mod[DstFeedback], 0.0f, 1.0f);
     }
 
-    const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f);
+    // The app's house level, so this machine's default lands where every
+    // other machine's does. See Subvert's kHouse for why.
+    constexpr float kHouse = 0.55f;
+    const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * kHouse;
     const float velAmp = 1.0f - paramOf(VelocityAmount) * (1.0f - vel);
     // Slide opens the filter, by however much the patch says it should.
     const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;

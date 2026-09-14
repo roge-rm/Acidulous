@@ -278,6 +278,19 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             }
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "bell") {
+        // A bell is its tail. Every other phrase here starts the next note
+        // before the last one has finished, which is exactly the part of a
+        // struck sound that matters - so this one leaves room: five strikes
+        // with a second and a half between them, a pair together to hear two
+        // tails beat, and the last one left to ring on its own.
+        struct Hit { float at; int step; int vel; };
+        static const Hit kHits[] = {
+            {0.0f, 0, 110}, {1.6f, 7, 96}, {3.2f, 12, 104}, {4.8f, 4, 92},
+            {6.4f, 0, 100}, {6.55f, 7, 88}, {8.4f, 16, 112},
+        };
+        for (const Hit &h : kHits) p.lastOff = hit(p, h.at, 0.25f, note + h.step, h.vel);
+        p.frames = p.lastOff + secondsToFrames(5.0f);
     } else if (kind == "chromatic") {
         for (int i = 0; i < 13; ++i) {
             p.lastOff = hit(p, 0.5f * static_cast<float>(i), 0.4f, 24 + i * 6, velocity);
