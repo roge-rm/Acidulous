@@ -361,14 +361,14 @@ internal object FactoryBanks {
 
     private fun filament5() = Patch("Filament", "Blown",
         mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 1f),
-        low = 48, high = 84)
+        low = 48, high = 82)
 
     private fun filament6() = Patch("Filament", "Sympathy",
         mapOf("tone" to 0.5f, "sympathy" to 1f, "symtune" to 0.8f, "symlevel" to 0.7f, "symsustain" to 0.786f, "symwide" to 0.8f, "volume" to 0.59f, "on release" to 0f),
         low = 45, high = 81)
 
     private fun filament7() = Patch("Filament", "Prepared",
-        mapOf("exciter" to 0.4f, "sustain" to 0.727f, "tone" to 0.6f, "stiffness" to 0.3f, "stages" to 0.75f, "damper at" to 0.33f, "damper" to 0.4f, "rattle" to 0.55f, "rattle at" to 0.2f, "drive" to 0.2f, "volume" to 0.57f),
+        mapOf("exciter" to 0.4f, "sustain" to 0.727f, "tone" to 0.6f, "stiffness" to 0.3f, "stages" to 0.75f, "damper" to 0.4f, "rattle" to 0.55f, "rattle at" to 0.2f, "drive" to 0.2f, "volume" to 0.22f),
         low = 36, high = 76)
 
     private fun filament8() = Patch("Filament", "Spoken To",

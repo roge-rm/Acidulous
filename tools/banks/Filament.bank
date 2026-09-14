@@ -82,9 +82,26 @@
 # finger can only take away; divided by that peak it still nulls the note at
 # a node, which is the whole point of putting one there.
 #
+# **The last ten notes in the bank's ranges were two different things.** Nine
+# were the damper on Prepared nulling the fundamental it sat under, so that
+# the loudest thing in the note was the body ringing at its own pitch rather
+# than the string at the played one - `harm` read 0.00 to 0.10 and taking
+# `bodymix` to zero brought the note straight back. The damper is halfway
+# along now, where it nulls the odd harmonics instead and every note returns.
+# The tenth was Blown at note 84, in tune and on the right partial but nine
+# parts jet noise to one part note, so its range stops at 82. All 379 notes
+# of this bank now pass.
+#
 # **What is still wrong.** `Spoken To` is played by the audio input and so
 # measures as silence here, which is correct and means it cannot be
-# auditioned without one. The harness's `pitch` is unreliable for a string
+# auditioned without one. Prepared is even from note 36 to 57 and then tapers
+# sixteen decibels to the top of its range; about five of that is the damper
+# and the rest was there before it. And the two plucked patches read twenty
+# five decibels between their peak and their loudest four hundred
+# milliseconds, which says a tall narrow spike in front of a quiet note - the
+# `click` column puts Nylon at 5x, the sharpest onset here. That is the next
+# thing to look at, and it only became visible when there was a loudness
+# column to see it against. The harness's `pitch` is unreliable for a string
 # picked near its bridge - Steel's fundamental sits eleven decibels under its
 # own fifth harmonic, and a direct look at the spectrum says the note is
 # eight cents flat where the column says a hundred and ninety-six. Scoring a
@@ -162,7 +179,10 @@ patch Bowed  note=55 range=36..76
   velocity       0.4
   volume         0.27
 
-patch Blown  note=67 range=48..84
+# 48..82 rather than 84: at a kilohertz a string blown at rather than
+# struck is nine parts jet noise to one part note, and 84 measured 0.11 on
+# the harmonic series with the right pitch underneath it.
+patch Blown  note=67 range=48..82
   bodymix        0.5
   exciter        #4
   grit           0.7
@@ -185,7 +205,14 @@ patch Sympathy  note=60 range=45..81
 
 patch Prepared  note=55 range=36..76
   damper         0.4
-  "damper at"    0.33
+  # Halfway rather than a third along. A damper nulls the harmonics that
+  # have a node under it, and at a third it takes the fundamental with
+  # them: from note 64 up, nine notes of this range had almost no energy
+  # on the note's own series at all and what was loudest was the body
+  # ringing at its own pitch rather than the string at the played one.
+  # At a half it nulls the odd harmonics instead, which is a different
+  # colour and a real one, and every note of the range comes back.
+  "damper at"    0.5
   drive          0.2
   exciter        #2
   rattle         0.55
@@ -194,7 +221,7 @@ patch Prepared  note=55 range=36..76
   stiffness      0.3
   sustain        0.727
   tone           0.6
-  volume         0.57
+  volume         0.22
 
 patch "Spoken To"  note=55 range=36..72
   bodymix        0.3
