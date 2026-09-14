@@ -276,27 +276,27 @@ internal object FactoryBanks {
     private fun timber0() = Patch("Timber", "Init", emptyMap())
 
     private fun timber1() = Patch("Timber", "Clarinet",
-        mapOf("breath" to 0.1f, "keys" to 0.2f, "attack" to 0.3333333f, "volume" to 0.7f),
+        mapOf("breath" to 0.1f, "keys" to 0.2f, "attack" to 0.3333333f, "fine" to 0.61f, "volume" to 0.6666667f),
         low = 52, high = 76)
 
     private fun timber2() = Patch("Timber", "Bass Clarinet",
-        mapOf("body" to 0.318022f, "lattice" to 0.401896f, "embouchure" to 0.3846154f, "pressure" to 0.6923077f, "breath" to 0.16f, "tongue" to 0.6f, "keys" to 0.35f, "volume" to 0.74666667f),
+        mapOf("body" to 0.318022f, "lattice" to 0.401896f, "embouchure" to 0.3846154f, "pressure" to 0.6923077f, "breath" to 0.16f, "tongue" to 0.6f, "keys" to 0.35f, "fine" to 0.63f, "volume" to 0.74666667f),
         low = 40, high = 62)
 
     private fun timber3() = Patch("Timber", "Alto Sax",
-        mapOf("bore" to 1f, "body" to 0.5439642f, "lattice" to 0.3667258f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to 0.2916871f, "vibrato" to 0.15f, "volume" to 0.686666667f),
+        mapOf("bore" to 1f, "body" to 0.5439642f, "lattice" to 0.3667258f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to 0.2916871f, "vibrato" to 0.15f, "fine" to 0.59f, "volume" to 0.46f),
         low = 50, high = 74)
 
     private fun timber4() = Patch("Timber", "Oboe",
-        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.7287489f, "lattice" to 0.558787048f, "embouchure" to 0.6923077f, "pressure" to 0.7307693f, "breath" to 0.08f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0.2f, "volume" to 0.8733333f),
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.7287489f, "lattice" to 0.558787048f, "embouchure" to 0.3076923f, "pressure" to 0.7307693f, "breath" to 0.08f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0.2f, "fine" to 0.58f, "volume" to 0.366666675f),
         low = 60, high = 84)
 
     private fun timber5() = Patch("Timber", "Bassoon",
-        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.2361563f, "lattice" to 0.282834977f, "embouchure" to 0.538461566f, "pressure" to 0.6923077f, "keys" to 0.4f, "attack" to 0.365636677f, "volume" to 0.826666653f),
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.2361563f, "lattice" to 0.282834977f, "embouchure" to 0.353846163f, "pressure" to 0.6923077f, "keys" to 0.4f, "attack" to 0.365636677f, "fine" to 0.6f, "volume" to 0.5933333f),
         low = 36, high = 60)
 
     private fun timber6() = Patch("Timber", "Flute",
-        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.615384638f, "breath" to 0.45f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to 0.43367663f, "vibrato" to 0.18f, "volume" to 0.233333334f),
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.615384638f, "breath" to 0.45f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to 0.43367663f, "vibrato" to 0.18f, "volume" to 0.193333328f),
         low = 62, high = 86)
 
     private fun timber7() = Patch("Timber", "Pan Pipe",
@@ -304,11 +304,11 @@ internal object FactoryBanks {
         low = 57, high = 79)
 
     private fun timber8() = Patch("Timber", "Stopped Wood",
-        mapOf("body" to 0.461817741f, "lattice" to 0.282834977f, "holes" to 0.5f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "cutoff" to 0.66574645f, "drive" to 0.2f, "volume" to 0.333333343f),
+        mapOf("body" to 0.461817741f, "lattice" to 0.282834977f, "holes" to 0.5f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "cutoff" to 0.66574645f, "fine" to 0.64f, "drive" to 0.2f, "volume" to 0.226666674f),
         low = 46, high = 68)
 
     private fun timber9() = Patch("Timber", "Forked",
-        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.581818163f, "embouchure" to 0.3846154f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "volume" to 0.5133333f),
+        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.581818163f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "fine" to 0.52f, "volume" to 0.213333324f),
         low = 52, high = 74)
 
     private val timber: List<Patch> by lazy { listOf(timber0(), timber1(), timber2(), timber3(), timber4(), timber5(), timber6(), timber7(), timber8(), timber9()) }

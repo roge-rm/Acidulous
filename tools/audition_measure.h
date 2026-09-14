@@ -157,6 +157,12 @@ struct Measured {
     float crestDb = 0.0f;   // peak - rms: transients, or a wall
     float centroidHz = 0.0f;
     float f0Hz = 0.0f;
+    // The even harmonics against the odd ones, in decibels. A centroid
+    // cannot tell a hollow tone from a full one of the same brightness -
+    // a clarinet and a saxophone levelled to the same loudness read within
+    // a percent of each other - and hollow against full is the largest
+    // single fact about a wind instrument. Negative is hollow.
+    float evenOddDb = 0.0f;
     float speaksMs = 0.0f;    // note-on to half the level it settles at
     float onsetEdge = 1.0f;   // how much brighter the attack is than the tone
     float tailSeconds = 0.0f; // note-off to -60 dB
@@ -256,6 +262,16 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
     }
     m.centroidHz = den > 0.0 ? static_cast<float>(num / den) : centroid(mono, start);
     m.f0Hz = fundamental(mono, start);
+    if (m.f0Hz > 20.0f) {
+        double even = 1e-20, odd = 1e-20;
+        for (int h = 1; h <= 12; ++h) {
+            const float f = m.f0Hz * static_cast<float>(h);
+            if (f > kSr * 0.45f) break;
+            const double a = magnitudeAt(mono, start, f);
+            (h % 2 == 0 ? even : odd) += a * a;
+        }
+        m.evenOddDb = static_cast<float>(10.0 * std::log10(even / odd));
+    }
 
     // How long before you hear it.
     //

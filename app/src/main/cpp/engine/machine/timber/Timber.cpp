@@ -97,7 +97,7 @@ void Timber::reset() {
         v.amp.kill();
         v.filter.reset();
         v.pipe.clear();
-        v.tongueLeft = v.keyLeft = v.keyState = 0.0f;
+        v.tongueLeft = v.keyLeft = v.keyState = v.breathScale = 0.0f;
         v.lift = false;
         v.fadeLeft = 0;
         v.pendingNote = -1;
@@ -189,6 +189,7 @@ void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) 
         // patch here is mono, so that was every note but the first.
         v.amp.retrigger();
         v.pipe.clear();
+        v.breathScale = 0.0f; // the breath comes back up behind the tongue
         // The loop gain this instrument asks for came down so the reed would
         // stay off its stops and the thing would play in tune; a lower gain
         // is a slower note, and this is what pays for it. Needs the note and
@@ -271,6 +272,8 @@ bool Timber::render(float *L, float *R, int32_t frames) {
     const float tongueOff = std::min(0.003f * sampleRate, paramOf(TongueTime) * sampleRate);
     const float tongueOffInv = tongueOff > 1.0f ? 1.0f / tongueOff : 1.0f;
     const float keyInv = 1.0f / (kKeyClick * sampleRate);
+    const float breathRise = 1.0f - std::exp(-1.0f / (0.004f * sampleRate));
+    const float breathFall = 1.0f - std::exp(-1.0f / (0.025f * sampleRate));
 
     lastLattice = lattice * (1.0f - fingering * 0.7f);
 
@@ -304,10 +307,18 @@ bool Timber::render(float *L, float *R, int32_t frames) {
         while (v.vibratoPhase >= 1.0f) v.vibratoPhase -= 1.0f;
         const float vib = std::sin(v.vibratoPhase * kTwoPi) * vibratoDepth;
 
-        const float env0 = v.amp.value();
+        // What the player is blowing. **Not scaled by the envelope.** A
+        // wind player's breath is up before the note sounds - that is what a
+        // tongued attack *is*, full pressure behind a stopped reed - and
+        // taking the envelope through it here meant the mouthpiece was
+        // re-solved at a different pressure every block on the way up, so
+        // the loop gain climbed through one somewhere in the middle of the
+        // attack and the big reeds took a quarter of a second to speak. The
+        // envelope shapes what comes out of the instrument, which is where
+        // it belongs; the breath has its own short ramp below.
         const float vel = 1.0f - velAmount + velAmount * v.velocity;
         const float at = v.pressure >= 0.0f ? v.pressure : aftertouch;
-        const float push = mouth * env0 * vel * (1.0f + at * 0.3f);
+        const float push = mouth * vel * (1.0f + at * 0.3f);
 
         const float hz = v.freq * tuneMul * bendMul * noteBendMul(v) * std::pow(2.0f, vib / 1200.0f);
         v.pipe.setNote(hz);
@@ -357,7 +368,11 @@ bool Timber::render(float *L, float *R, int32_t frames) {
 
             rng = rng * 1664525u + 1013904223u;
             const float white = static_cast<float>(rng >> 8) * (1.0f / 16777216.0f) * 2.0f - 1.0f;
-            const float breath = push * env / (env0 > 0.0001f ? env0 : 1.0f);
+            // The breath itself: up in four milliseconds and away in
+            // twenty-five, which is a tongue rather than an envelope.
+            v.breathScale += ((v.gate ? 1.0f : 0.0f) - v.breathScale) *
+                             (v.gate ? breathRise : breathFall);
+            const float breath = push * v.breathScale;
             float s = v.pipe.step(breath, white * breathNoise * 0.35f * breath);
 
             // A pad closing on the body: a click, not a note - but a click

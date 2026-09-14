@@ -463,8 +463,14 @@ void checkBank(const Bank &bank) {
     for (size_t a = 0; a < rendered.size(); ++a) {
         for (size_t b = a + 1; b < rendered.size(); ++b) {
             const Measured &x = rendered[a].m, &y = rendered[b].m;
+            // ...including how hollow each one is, because a bank that has
+            // been levelled on purpose has the same rms all the way down,
+            // and a centroid cannot tell a clarinet from a saxophone: the
+            // two read within a percent of each other with thirteen
+            // decibels between their second harmonics.
             if (std::fabs(x.rmsDb - y.rmsDb) < 1.0f && x.centroidHz > 0.0f &&
                 std::fabs(x.centroidHz - y.centroidHz) < 0.05f * x.centroidHz &&
+                std::fabs(x.evenOddDb - y.evenOddDb) < 2.0f &&
                 std::fabs(x.tailSeconds - y.tailSeconds) < 0.1f * std::max(0.1f, x.tailSeconds)) {
                 warn(label, names[a] + " and " + names[b] + " measure the same");
             }

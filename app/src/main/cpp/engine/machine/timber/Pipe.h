@@ -50,10 +50,89 @@ namespace acidulous::machine::timber {
 constexpr float kWantSlope = 0.4f, kWantMax = 1.9f, kLiftCeiling = 2.6f;
 /** What the loop settles at once the note is under way, for sizing the lift. */
 constexpr float kSettled = 1.15f;
-/** How much of the top the walls take, per round trip. See tune(). */
-constexpr float kWallDepth = 0.2f;
+/**
+ * How much of the top the walls take, on the round trip of the bottom note.
+ *
+ * A bore loses more of a wave the higher it is: the boundary layer goes as
+ * the root of the frequency. But what the loop feels is the loss over a
+ * *round trip*, and a round trip is as long as the tube that is sounding -
+ * so the loss per turn goes as the root of the partial number and as one
+ * over the root of the note. A high note is a short tube and loses less per
+ * turn than a low one, which is why this is a depth at the bottom of the
+ * instrument, scaled from there. Saying it as a fixed frequency instead -
+ * a fifth off above four times the bottom note - was the same law stated
+ * wrongly: deep enough to stop the saxophone's bottom note coming out an
+ * octave high, it took the top three notes off the oboe.
+ */
+constexpr float kWallDepth = 0.35f;
+/**
+ * How curved the reed's table is, and therefore where its gain comes from.
+ *
+ * A straight table has only one way to make gain: tilt it. But the tilt and
+ * the resting point are then the same number - the reed sits at
+ * `offset + tilt x pressure` and answers the wave at twice that tilt - so a
+ * loop gain of 1.24 at a normal embouchure meant a reed resting 97 per cent
+ * shut, with three per cent of its travel left against wave swings ten
+ * times that. It spent every note against its own stops: the gain was
+ * capped at `2 r_rest - offset` whatever the player did, the big reeds took
+ * a quarter of a second to speak, and `pressure` moved nothing at all.
+ *
+ * A real reed's table is a curve. It barely moves at low pressure and then
+ * closes hard, so the slope *at the operating point* is several times the
+ * slope from rest to there - which is gain the reed does not have to buy
+ * with its own travel. At a cube the loop sees `offset + S(1 + 3L)` for a
+ * closure of only S, so 1.24 costs a sixth of the aperture instead of all
+ * of it, and the ceiling goes from 2 - offset to 4 - 3 x offset. The curve
+ * also reaches exactly one at the closing pressure, so the hard clamp that
+ * used to be the whole nonlinearity is now the smooth end of the table.
+ */
+constexpr float kReedCurve = 3.0f;
 
 using dsp::clampf;
+
+/**
+ * One section of the lattice, as a filter rather than a lag.
+ *
+ * A row of open holes is a *cutoff*: below it the wave turns round almost
+ * whole, above it the wave goes on down the bore. A one-pole is neither -
+ * it is already eleven percent down at half its corner, so the top of an
+ * instrument's range was losing an eighth of its loop to a lattice that
+ * should have been giving it back untouched, and the oboe simply stopped
+ * making a pitch from note 75. This is flat where a lattice is flat and
+ * steeper where it turns over, which is the whole of the difference.
+ */
+struct Section {
+    float b0 = 1.0f, b1 = 0.0f, b2 = 0.0f, a1 = 0.0f, a2 = 0.0f;
+    float z1 = 0.0f, z2 = 0.0f;
+
+    void setLowpass(float hz, float sr, float q) {
+        const float k = std::tan(3.14159265358979f * clampf(hz / sr, 1e-4f, 0.49f));
+        const float kk = k * k;
+        const float norm = 1.0f / (1.0f + k / q + kk);
+        b0 = kk * norm;
+        b1 = 2.0f * b0;
+        b2 = b0;
+        a1 = 2.0f * (kk - 1.0f) * norm;
+        a2 = (1.0f - k / q + kk) * norm;
+    }
+    float process(float x) {
+        const float y = b0 * x + z1;
+        z1 = b1 * x - a1 * y + z2;
+        z2 = b2 * x - a2 * y;
+        return y;
+    }
+    /** What it does to a partial at [w] radians a sample. */
+    void at(float w, float &re, float &im) const {
+        const float c1 = std::cos(w), s1 = std::sin(w);
+        const float c2 = std::cos(2.0f * w), s2 = std::sin(2.0f * w);
+        const float nr = b0 + b1 * c1 + b2 * c2, ni = -(b1 * s1 + b2 * s2);
+        const float dr = 1.0f + a1 * c1 + a2 * c2, di = -(a1 * s1 + a2 * s2);
+        const float den = dr * dr + di * di + 1e-20f;
+        re = (nr * dr + ni * di) / den;
+        im = (ni * dr - nr * di) / den;
+    }
+    void clear() { z1 = z2 = 0.0f; }
+};
 
 class Pipe {
   public:
@@ -72,7 +151,8 @@ class Pipe {
         for (auto &v : lower) v = 0.0f;
         for (auto &v : jetLine) v = 0.0f;
         wUpper = wLower = wJet = 0;
-        holeLp = holeLp2 = bellLp = inertia = mouthLag = breathLp = ventLp = wallLp = 0.0f;
+        hole1.clear(); hole2.clear();
+        bellLp = inertia = breathLp = ventLp = wallLp = 0.0f;
         dcIn = dcOut = 0.0f;
         radiated = 0.0f;
         // The tube length goes back with the rest of it. tune() rewrites it
@@ -263,8 +343,19 @@ class Pipe {
         // not would simply not speak up there.
         const float cut = clampf(latticeHz * (1.0f - finger * 0.7f),
                                  std::max(120.0f, freq * 1.6f), sr * 0.45f);
-        holeCoeff = 1.0f - std::exp(-6.28318530718f * cut / sr);
-        holeSecond = holeDepth > 0.5f;
+        // Two poles, or four when the holes are deep: a lattice with more
+        // of them open cuts off harder, and that is what `holes` is. Flat
+        // below the corner either way - a real lattice reflects what is
+        // under its cutoff whole, and the one-pole this replaced was down
+        // an eighth at half of it, which is where the top of the oboe went.
+        latticeCut = cut;
+        holeOrder4 = holeDepth > 0.5f;
+        if (holeOrder4) {
+            hole1.setLowpass(cut, sr, 0.5412f);
+            hole2.setLowpass(cut, sr, 1.3066f);
+        } else {
+            hole1.setLowpass(cut, sr, 0.70711f);
+        }
         holeReflect = 0.98f - fork * 0.12f;
         throat = 0.2f + fork * 0.75f;
 
@@ -309,7 +400,15 @@ class Pipe {
         // the turn now closes where this filter passes half, and the mode
         // reads 0.5 instead of 1.0. Cylinders have half a turn at DC and
         // never had the mode, and lose a few degrees the solve puts back.
-        float ventHz = lowest * 0.3f;
+        // ...and a quarter of the note as well as a third of the bottom of
+        // the instrument. The tube that is actually sounding is the one
+        // above the first open hole, and it has no resonance below its own
+        // fundamental - but the *loop* still had one, and it grew as the
+        // note rose, because the bore left hanging below the hole gets
+        // longer as you go up. The oboe's top octave was arguing with a
+        // mode at an eighth of its pitch, gain 1.00 at the top of its range
+        // against the note's own 0.99.
+        float ventHz = std::max(lowest * 0.3f, freq * 0.25f);
         if (useMode > 1) ventHz = std::max(ventHz, (freq / static_cast<float>(useMode)) * 1.5f);
         ventCoeff = 1.0f - std::exp(-6.28318530718f * ventHz / sr);
         float below = (whole - nominal) * (1.0f + finger * 0.4f) * belowScale;
@@ -346,7 +445,9 @@ class Pipe {
         // twenty times by the tube and one at 0.75 four times - the tube's
         // resonance is most of a woodwind's brightness, and a loss that
         // looks small on paper is a loss of that.
-        wallCoeff = 1.0f - std::exp(-6.28318530718f * clampf(lowest * 4.0f, 100.0f, sr * 0.45f) / sr);
+        const float tubeHz = freq / static_cast<float>(useMode);
+        wallCoeff = 1.0f - std::exp(-6.28318530718f * clampf(tubeHz, 30.0f, sr * 0.45f) / sr);
+        wallDepth = clampf(kWallDepth * std::sqrt(lowest / std::max(tubeHz, 1.0f)), 0.0f, 0.6f);
         {
             float wr, wi;
             wallAt(w, wr, wi);
@@ -386,33 +487,41 @@ class Pipe {
             fr = 1.0f - g * cp;
             fi = -g * sp;
         } else {
-            // The reed table: r = offset + slope . (reed position), and
-            // what goes back down the tube is mouth + difference x r. Its
-            // slope against the returning wave is
-            //     F(w) = offset - slope . mouth . (1 + L(w)),
-            // which is over one as soon as the player blows - and that is
-            // where a clarinet's gain comes from. Solve |F| = t for slope,
-            // taking the negative root because a reed closes as the bore
-            // fills and an open one is a saxophone that will not play.
+            // The reed table: r rises from the embouchure to fully shut as
+            // the pressure across the reed goes from nothing to the pressure
+            // that closes it, as the cube of that fraction. Blowing steadily
+            // puts it S of the way there, and what the loop sees is
+            //     F(w) = offset + S . (1 + 3 L(w)),
+            // three quarters of which is the curvature and not the closure.
+            // Solve |F| = t for S - one quadratic, positive root, because a
+            // reed closes as the bore fills and one that opened instead is a
+            // saxophone that will not play.
             float lr, li;
             onePole(reedCoeff, std::cos(w), std::sin(w), lr, li);
-            const float bre = -mouth * (1.0f + lr), bim = -mouth * li;
-            const float bb = bre * bre + bim * bim + 1e-20f;
-            const float disc = offset * offset * bre * bre - bb * (offset * offset - t * t);
-            slope = disc >= 0.0f ? (-offset * bre - std::sqrt(disc)) / bb : -40.0f;
-            // ...but no steeper than the reed can be without sitting in its
-            // own clamp before a note has even started. At rest the table
-            // reads offset + |slope| x mouth, and if that is already one the
-            // mouthpiece is a mirror: the tube reflects perfectly, nothing
-            // is added, and the instrument is silent however much gain the
-            // arithmetic thinks it has. The reed must have somewhere left
-            // to go. The ceiling this puts on the loop is 2 - offset, which
-            // is why a tight embouchure chokes a real one too.
-            const float steepest = 0.9f * (1.0f - offset) / mouth;
-            slope = clampf(slope, -steepest, -0.0005f);
-            rRest = offset - slope * mouth;
-            fr = offset + slope * bre;
-            fi = slope * bim;
+            const float ar = 1.0f + kReedCurve * lr, ai = kReedCurve * li;
+            const float aa = ar * ar + ai * ai + 1e-20f;
+            const float bq = offset * ar;
+            const float cq = offset * offset - t * t;
+            const float disc = bq * bq - aa * cq;
+            float shut = disc >= 0.0f ? (-bq + std::sqrt(disc)) / aa : 1.0f;
+            // ...but the reed must still have somewhere left to go: nine
+            // tenths of the way shut and the mouthpiece is nearly a mirror,
+            // and a tight embouchure chokes a real one for the same reason.
+            // The ceiling this leaves is 4 - 3 x offset, which at these
+            // embouchures is 1.8 rather than 1.2 - enough that the solve now
+            // gets what it asks for, and the note's gain no longer ripples
+            // with whatever the tube below the fingers happens to be doing.
+            shut = clampf(shut, 0.0f, 0.9f * (1.0f - offset));
+            reedShut = shut;
+            rRest = offset + shut;
+            // Which says what the closing pressure is, since the player is
+            // blowing `mouth` and that is what has taken the reed this far:
+            // the reed sits at a = cbrt(S / (1 - offset)) of the way, so the
+            // pressure that shuts it is mouth / a. Nothing else states it.
+            const float aOp = std::cbrt(shut / (1.0f - offset));
+            reedScale = aOp > 1e-4f ? aOp / mouth : 0.0f;
+            fr = offset + shut * ar;
+            fi = shut * ai;
         }
 
         float phase = std::atan2(fi, fr) + std::atan2(bi, br) + std::atan2(ji, jr);
@@ -478,9 +587,8 @@ class Pipe {
 
         // The lattice splits the wave: the low end turns round, the high
         // end goes on down the rest of the instrument.
-        holeLp += (arrive - holeLp) * holeCoeff;
-        float low = holeLp;
-        if (holeSecond) { holeLp2 += (holeLp - holeLp2) * holeCoeff; low = holeLp2; }
+        float low = hole1.process(arrive);
+        if (holeOrder4) low = hole2.process(low);
         const float past = (arrive - low) * throat;
         const float fromHoles = arrive - 0.8f * low;
 
@@ -517,24 +625,20 @@ class Pipe {
             const float late = read(jetLine, wJet, jetDelay);
             in = bore - (dsp::fastTanh(jetGain * late + jetAim) - jetRest);
         } else {
-            // mouth + difference x reflection, and the reflection saturates
-            // when the reed beats shut against the mouthpiece. That clamp
-            // is the whole nonlinearity, and a clarinet is what it sounds
-            // like.
-            const float pd = bore - breath;
-            inertia += (pd - inertia) * reedCoeff;
-            mouthLag += (mouth - mouthLag) * reedCoeff;
-            // The reed sits where the solve put it, and moves with what the
-            // tube sends back: `inertia` carries the breath's own DC through
-            // the same one-pole, so adding the lagged breath leaves the
-            // wave alone. Its rest is the solved one, not offset minus
-            // slope times *this sample's* breath - the slope is solved once
-            // a block against the block's pressure, floored at 0.05, and
-            // for the first block of a note that is a slope of eight; the
-            // breath then ramps past the floor within the block and a rest
-            // worked from it swept from the embouchure to fully shut in a
-            // millisecond, sending half the breath down the tube as a
-            // pulse. That pulse was the click on the front of every note.
+            // mouth + difference x reflection, and the reflection is the
+            // reed's own table read at the pressure across it. The reed has
+            // inertia, so it reads a lagged one - and that lag is the only
+            // state here: the table itself is a function, evaluated fresh
+            // every sample, with nothing in it solved per block. What the
+            // block rate does set is the scale: how much of the closing
+            // pressure one unit of `breath` is.
+            //
+            // The table is a cube rising from the embouchure at no pressure
+            // to fully shut at the pressure that shuts it, and to fully open
+            // - an inversion, which is what an open mouthpiece is - at that
+            // much the other way. So it saturates smoothly at both ends and
+            // there is no clamp in it at all. The old straight table hit a
+            // hard limit at one and spent every note there; see kReedCurve.
             //
             // The tongue holds the reed *shut*: the reflection goes to one
             // and the flow to nothing, and the reed's answer to the wave is
@@ -545,9 +649,12 @@ class Pipe {
             // tongue was on and shut it by a quarter at the release: fifty
             // cents sharp at thirty milliseconds on the clarinet, a pulse
             // circulating the bassoon's whole bore.
-            float r = rRest + (1.0f - rRest) * tongue + slope * (inertia + mouthLag) * (1.0f - tongue);
-            if (r > 1.0f) r = 1.0f;
-            else if (r < -1.0f) r = -1.0f;
+            const float pd = bore - breath;
+            inertia += ((breath - bore) - inertia) * reedCoeff;
+            const float a = clampf(inertia * reedScale, -1.0f, 1.0f);
+            const float cube = a * a * a;
+            const float rFree = offset + (cube >= 0.0f ? 1.0f - offset : 1.0f + offset) * cube;
+            const float r = rFree + (1.0f - rFree) * tongue;
             in = breath + pd * r;
         }
 
@@ -560,7 +667,7 @@ class Pipe {
             hp -= ventLp;
         }
         wallLp += (hp - wallLp) * wallCoeff;
-        write(upper, wUpper, (hp - kWallDepth * (hp - wallLp)) * loss);
+        write(upper, wUpper, (hp - wallDepth * (hp - wallLp)) * loss);
 
         radiated = fromHoles * 0.7f + fromBell * 0.5f;
         return radiated;
@@ -587,11 +694,13 @@ class Pipe {
     void junction(float w, float &re, float &im) const {
         const float c1 = std::cos(w), s1 = std::sin(w);
         float lr, li;
-        onePole(holeCoeff, c1, s1, lr, li);
-        if (holeSecond) {
+        hole1.at(w, lr, li);
+        if (holeOrder4) {
+            float r2, i2;
+            hole2.at(w, r2, i2);
             const float ar = lr, ai = li;
-            lr = ar * ar - ai * ai;
-            li = 2.0f * ar * ai;
+            lr = ar * r2 - ai * i2;
+            li = ar * i2 + ai * r2;
         }
         re = -lr * holeReflect;
         im = -li * holeReflect;
@@ -619,8 +728,8 @@ class Pipe {
     void wallAt(float w, float &re, float &im) const {
         float lr, li;
         onePole(wallCoeff, std::cos(w), std::sin(w), lr, li);
-        re = 1.0f - kWallDepth * (1.0f - lr);
-        im = kWallDepth * li;
+        re = 1.0f - wallDepth * (1.0f - lr);
+        im = wallDepth * li;
     }
 
     /** The register vent: 1 - onepole, or nothing at all when it is shut. */
@@ -650,9 +759,8 @@ class Pipe {
         } else {
             float lr, li;
             onePole(reedCoeff, std::cos(w), std::sin(w), lr, li);
-            const float mouth = clampf(pressure, 0.05f, 2.0f);
-            re = offset + slope * (-mouth * (1.0f + lr));
-            im = slope * (-mouth * li);
+            re = offset + reedShut * (1.0f + kReedCurve * lr);
+            im = reedShut * kReedCurve * li;
         }
     }
 
@@ -674,23 +782,27 @@ class Pipe {
     int32_t wUpper = 0, wLower = 0, wJet = 0;
 
     float sr = 48000.0f, freq = 220.0f, lowest = 146.8f;
-    bool cylinder = true, holeSecond = false, dirty = true;
+    bool cylinder = true, holeOrder4 = false, dirty = true;
     int32_t regMode = 1, excite = Single;
 
     float upperDelay = 100.0f, lowerDelay = 1.0f;
     int32_t sounding = 1;
-    float latticeHz = 1500.0f, finger = 0.0f, holeDepth = 0.4f;
-    float holeCoeff = 0.2f, holeReflect = 0.98f, throat = 0.2f, fork = 0.0f, belowScale = 1.0f;
+    float latticeHz = 1500.0f, finger = 0.0f, holeDepth = 0.4f, latticeCut = 1500.0f;
+    Section hole1, hole2;
+    float holeReflect = 0.98f, throat = 0.2f, fork = 0.0f, belowScale = 1.0f;
     float bellGain = 0.9f, bellCoeff = 0.4f;
 
-    float reedStiff = 0.5f, offset = 0.7f, slope = -1.0f, reedCoeff = 0.2f, inertia = 0.0f;
-    float rRest = 0.7f, mouthLag = 0.0f; // where the solve put the reed, and the breath as the reed feels it
+    float reedStiff = 0.5f, offset = 0.7f, reedCoeff = 0.2f, inertia = 0.0f;
+    // How far the steady breath has shut the reed, what one unit of pressure
+    // is as a fraction of the pressure that would shut it, and where the two
+    // together leave the table at rest.
+    float reedShut = 0.1f, reedScale = 1.0f, rRest = 0.7f;
     float jetRatio = 0.5f, jetAim = 0.0f, jetDelay = 48.0f, jetGain = 1.0f, jetSlope = 1.0f, jetRest = 0.0f;
 
     float pressure = 0.5f, drive = 1.0f, loss = 0.999f, tongue = 0.0f;
-    float holeLp = 0.0f, holeLp2 = 0.0f, bellLp = 0.0f, breathLp = 0.0f;
+    float bellLp = 0.0f, breathLp = 0.0f;
     float ventCoeff = 0.0f, ventLp = 0.0f;
-    float wallCoeff = 1.0f, wallLp = 0.0f;
+    float wallCoeff = 1.0f, wallLp = 0.0f, wallDepth = kWallDepth;
     float dcIn = 0.0f, dcOut = 0.0f;
     float radiated = 0.0f, loopMag = 0.0f;
     /** The attack's lift and how fast it lets go. See lift(). */

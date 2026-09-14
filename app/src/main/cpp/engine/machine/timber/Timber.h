@@ -85,6 +85,7 @@ class Timber final : public Machine {
         int pendingNote = -1;
         uint8_t pendingVel = 0;
         bool pendingOff = false;
+        float breathScale = 0.0f;  // the breath itself, which the envelope does not touch
         float tongueLeft = 0.0f;   // the tongue is still on the reed
         float keyLeft = 0.0f;      // a pad is still closing
         float keyState = 0.0f;

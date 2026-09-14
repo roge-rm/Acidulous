@@ -690,8 +690,8 @@ void printTrack(const std::vector<float> &stereo, float f0, int note) {
 }
 
 void printHeader() {
-    std::printf("  %-24s %7s %7s %6s %8s %9s %7s %5s %6s %6s %6s\n", "patch", "peak", "rms", "crest", "centroid",
-                "pitch", "speaks", "edge", "tail", "mono", "dc");
+    std::printf("  %-24s %7s %7s %6s %8s %7s %9s %7s %5s %6s %6s %6s\n", "patch", "peak", "rms", "crest",
+                "centroid", "hollow", "pitch", "speaks", "edge", "tail", "mono", "dc");
 }
 
 void printRow(const std::string &name, const Measured &m, int note) {
@@ -699,9 +699,10 @@ void printRow(const std::string &name, const Measured &m, int note) {
     if (m.f0Hz > 0.0f && note > 0) {
         std::snprintf(pitch, sizeof(pitch), "%+.0fc", static_cast<double>(cents(m.f0Hz, midiToHz(note))));
     }
-    std::printf("  %-24s %+6.1f %+6.1f %5.1f %7.0fHz %8s %6.0fms %4.1fx %4.2f%s %+5.1f %+6.0f%s\n", name.c_str(),
+    std::printf("  %-24s %+6.1f %+6.1f %5.1f %7.0fHz %+6.0f %8s %6.0fms %4.1fx %4.2f%s %+5.1f %+6.0f%s\n", name.c_str(),
                 static_cast<double>(m.peakDb), static_cast<double>(m.rmsDb), static_cast<double>(m.crestDb),
-                static_cast<double>(m.centroidHz), pitch, static_cast<double>(m.speaksMs),
+                static_cast<double>(m.centroidHz), static_cast<double>(m.evenOddDb),
+                pitch, static_cast<double>(m.speaksMs),
                 static_cast<double>(m.onsetEdge),
                 static_cast<double>(m.tailSeconds), m.tailRanOut ? "+s" : "s ",
                 static_cast<double>(m.monoLossDb), static_cast<double>(m.dcDb),
@@ -764,6 +765,7 @@ struct Options {
     float bpm = 120.0f;
     bool ladder = false;
     bool track = false;
+    bool quiet = false; // sweep: no row, no wav, just the numbers back
     std::vector<std::pair<std::string, double>> sets;
 };
 
@@ -883,6 +885,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
 
     // An effect has no note to hold, so what it was given is what it is measured on.
     if (!measuredAlready) measured = measure(take.stereo, take.offAt, 0, take.offAt + static_cast<int64_t>(kSr * 0.05f));
+    if (opt.quiet) return true;
     writeWav(folderFor(bank.unit) + "/" + safeName(patch.name) + ".wav", take.stereo);
     if (joined != nullptr) {
         joined->insert(joined->end(), take.stereo.begin(), take.stereo.end());
@@ -937,6 +940,72 @@ int cmdBank(const std::string &unit, const Options &opt) {
         std::printf("  the whole bank, in order: %s\n", path.c_str());
     }
     return 0;
+}
+
+/**
+ * Every note of a patch's range, one line each.
+ *
+ * The single measured note says nothing about the twenty-four either side of
+ * it, and those are what a player will use. Everything this machine family
+ * has got wrong has been wrong at one end of a range and right in the middle:
+ * a note the loop cannot hold, a mode above the one that was asked for, a
+ * pitch that walks as the tube below the fingers grows. So the acceptance
+ * test is the range, not the centre.
+ *
+ * `dead` is a note that never reaches a tenth of the patch's own loudest;
+ * `mode` is one whose pitch is a long way from what was asked for, which on
+ * these models means another partial won.
+ */
+int cmdSweep(const std::string &unit, const std::string &patchName, const Options &opt) {
+    Bank bank;
+    if (!loadBank(unit, bank)) return 1;
+    Options one = opt;
+    one.quiet = true;
+    int worst = 0;
+    for (const BankPatch &p : bank.patches) {
+        if (!patchName.empty() && p.name != patchName) continue;
+        if (p.low < 0 || p.high <= p.low) continue;
+        std::printf("\n%s  %s  notes %d..%d\n", bank.unit.c_str(), p.name.c_str(), p.low, p.high);
+        std::printf("   note   cents      rms   speaks\n");
+        std::vector<float> rmsAt;
+        std::vector<float> centsAt;
+        std::vector<float> speakAt;
+        for (int n = p.low; n <= p.high; ++n) {
+            one.note = n;
+            Measured m;
+            if (!auditionOne(bank, p, one, m, nullptr)) break;
+            const float wanted = 440.0f * std::pow(2.0f, static_cast<float>(n - 69) / 12.0f);
+            const float cents = m.f0Hz > 1.0f ? 1200.0f * std::log2(m.f0Hz / wanted) : -9999.0f;
+            rmsAt.push_back(m.rmsDb);
+            centsAt.push_back(cents);
+            speakAt.push_back(m.speaksMs);
+        }
+        if (rmsAt.empty()) continue;
+        const float loudest = *std::max_element(rmsAt.begin(), rmsAt.end());
+        int bad = 0;
+        for (size_t i = 0; i < rmsAt.size(); ++i) {
+            const int n = p.low + static_cast<int>(i);
+            const bool dead = rmsAt[i] < loudest - 20.0f;
+            const bool mode = std::fabs(centsAt[i]) > 60.0f;
+            if (dead || mode) ++bad;
+            char cents[16];
+            if (centsAt[i] < -9000.0f) std::snprintf(cents, sizeof(cents), "    -");
+            else std::snprintf(cents, sizeof(cents), "%+7.0f", static_cast<double>(centsAt[i]));
+            std::printf("   %4d %s  %7.1f  %5.0fms%s%s\n", n, cents,
+                        static_cast<double>(rmsAt[i]), static_cast<double>(speakAt[i]),
+                        dead ? "  <- dead" : "", mode ? "  <- wrong partial" : "");
+        }
+        // What a player would notice: how far the loudest note is from the
+        // quietest, and how far out of tune the worst one is.
+        const float quietest = *std::min_element(rmsAt.begin(), rmsAt.end());
+        float worstCents = 0.0f;
+        for (float c : centsAt) if (c > -9000.0f && std::fabs(c) > std::fabs(worstCents)) worstCents = c;
+        std::printf("   %d of %zu notes wrong, %.0f dB across the range, worst tuning %+.0f cents\n",
+                    bad, rmsAt.size(), static_cast<double>(loudest - quietest),
+                    static_cast<double>(worstCents));
+        worst += bad;
+    }
+    return worst > 0 ? 1 : 0;
 }
 
 int cmdList(const std::string &unit) {
@@ -1218,6 +1287,7 @@ void usage() {
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|chord|arp|hold|chromatic|velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
+        "  sweep <Unit> [patch]   every note of the range, one line each\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"
         "  --out DIR one folder per unit under it; the default is build/audition\n"
         "  --ladder  the first twelve harmonics, for machines a centroid cannot describe\n"
@@ -1268,6 +1338,8 @@ int main(int argc, char **argv) {
     if (cmd == "list" && positional.size() >= 2) return cmdList(positional[1]);
     if (cmd == "play" && positional.size() >= 3) return cmdPlay(positional[1], positional[2], opt);
     if (cmd == "bank" && positional.size() >= 2) return cmdBank(positional[1], opt);
+    if (cmd == "sweep" && positional.size() >= 2)
+        return cmdSweep(positional[1], positional.size() >= 3 ? positional[2] : std::string(), opt);
     if (cmd == "selftest") {
         // Before the tracker is believed about an instrument it is asked
         // about a tone whose pitch is known. Two cents is the bar; a real
