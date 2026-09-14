@@ -58,6 +58,9 @@ using dsp::clampf;
  */
 constexpr float kDcPole = 0.997f;
 
+/** How far over the steady ceiling a tongue may lean. See tune(). */
+constexpr float kLiftCeiling = 3.0f;
+
 /**
  * The corner of the airstream, as a one-pole coefficient at 48 kHz.
  *
@@ -335,7 +338,16 @@ class Bore {
         // drive the solve produces: the loop gain is not linear in that drive
         // - G is a0 - k u H - so scaling u scales nothing predictable, while
         // scaling what the solve is *asked* for is exact by construction.
-        const float want = clampf((0.86f + 0.62f * pressure * lipGain) * onsetBoost, 0.0f, 1.9f);
+        // ...and the lift is allowed past the steady ceiling, because 1.9 is
+        // what keeps a *held* note in bounds and a tongue is not a held
+        // note. Clamped at 1.9 the lift was flattened to an effective 1.45x
+        // at every pitch below F2 - the tongue asks for 1.5x at F2 and 6.3x
+        // at the pedal, and got 1.45 for all of them - so onset time went
+        // back to being one over the frequency, which is the whole thing
+        // `tongue` exists to stop. See kLiftCeiling.
+        const float steady = 0.86f + 0.62f * pressure * lipGain;
+        const float ceiling = onsetBoost > 1.001f ? kLiftCeiling : 1.9f;
+        const float want = clampf(steady * onsetBoost, 0.0f, ceiling);
         const float t = want / (outside > 1e-6f ? outside : 1e-6f);
 
         // The returning wave moves the lips, the lips move the opening,
