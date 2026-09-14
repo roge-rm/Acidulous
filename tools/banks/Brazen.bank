@@ -99,13 +99,39 @@
 # simply takes longer to build. Seating the tuba at 20% of its resting width
 # put its excess *up* from 3.6x to 23.1x and its speak time from 70 ms to 180.
 #
-# The ladder is a clean gradient now and is the thing to protect: Tuba 3,
-# Bass Trombone 4, Trombone 4, Horn 4, Flugel 5, Cornet 7, Trumpet 10,
+# The ladder is a clean gradient now and is the thing to protect: Tuba 4,
+# Bass Trombone 4, Trombone 5, Horn 5, Flugel 5, Cornet 6, Trumpet 10,
 # Piccolo 11, Harmon 12.
+#
+# **The big instruments were being blown as gently as they look**, and that
+# was the last thing wrong with this bank. A column for it arrived with the
+# woodwinds: `hollow` is the even harmonics against the odd ones in decibels,
+# and a brass instrument's series is complete, so anything past about -15
+# means the lips are barely working. The dark half of this bank read -19 to
+# -28 - a tuba with its second harmonic *under* its third, which is a
+# clarinet's signature and not a tuba's - because `bite`, `brass` and
+# `pressure` had all been graded by the size of the instrument. They are the
+# lips and the air, and a tuba takes more of both than a trumpet; what makes
+# it dark is the bore and the bell, which is where `size`, `bell` and
+# `cutoff` already put it. Driven properly the dark seven read -11 to -15
+# with the same centroids they had, the ladder gains a harmonic or two each,
+# and Section and Shambles went from 120 and 330 ms to speak down to 70 and
+# 80. It cost 11 to 18 cents of pitch, which `fine` carries - the lips pull
+# flat as they are leaned on, here as anywhere.
+#
+# `audition sweep Brazen` plays every note of every range and names the dead
+# ones and the ones on the wrong partial. All 428 pass, and the tuning holds
+# within 12 cents across a range except where a patch detunes itself on
+# purpose (Section, Shambles, Fanfare). Straight Mute and Harmon vary 14 and
+# 16 dB across a range, which is a mute's own resonance deciding how much of
+# each note gets out, and is what a mute does.
 #
 # Levelled to about -20 dB RMS. The harmon sits 6 dB under it at its volume's
 # maximum and no amount of knob will fetch it back, because most of the
 # instrument is not coming out of the bell any more - which is what a mute is.
+#
+# Shambles still reads 330 ms to speak on a single note. Four players
+# scattered over 85 ms behind a 70 ms attack is the patch, not a fault.
 #
 # And they are auditioned with a melody rather than one held note - `role
 # tune` - because one note is what one note sounds like. Every patch in the
@@ -124,10 +150,10 @@ patch Tuba  note=41 range=29..53
   # fundamental and nothing above them.
   size           0.03
   bell           0.88
-  brass          0.25
-  pressure       0.7
+  brass          0.62
+  pressure       0.88
   lipdamp        0.45
-  bite           0.5
+  bite           0.9
   attack         0.05 s
   release        0.32 s
   vibrato        2 cents
@@ -136,6 +162,7 @@ patch Tuba  note=41 range=29..53
   # than the piccolo. A big instrument blown gently is nearly all fundamental
   # and the hiss has nowhere to hide behind.
   breath         0
+  fine           13 cents
   volume         1.5
 
   cutoff         1600 Hz
@@ -144,14 +171,15 @@ patch "Bass Trombone"  note=43 range=34..58
   # harder, so the ladder reaches further before it gives up.
   size           0.16
   bell           0.76
-  brass          0.45
-  pressure       0.75
+  brass          0.68
+  pressure       0.88
   lipdamp        0.5
-  bite           0.55
+  bite           0.88
   attack         0.04 s
   glide          0.09 s
   vibrato        4 cents
   breath         0.03
+  fine           15 cents
   volume         1.45
 
   cutoff         3200 Hz
@@ -160,14 +188,15 @@ patch Trombone  note=48 range=40..67
   # hearing: a trombone gets between two notes rather than stepping.
   size           0.3
   bell           0.66
-  brass          0.58
-  pressure       0.8
+  brass          0.72
+  pressure       0.88
   lipdamp        0.55
-  bite           0.6
+  bite           0.82
   attack         0.028 s
   glide          0.12 s
   vibrato        5 cents
   breath         0.04
+  fine           18 cents
   volume         1.3
 
   cutoff         5000 Hz
@@ -182,15 +211,16 @@ patch Horn  note=53 range=41..72
   # are where the ensemble lives.
   size           0.34
   bell           0.8
-  brass          0.28
-  pressure       0.65
+  brass          0.6
+  pressure       0.85
   lipdamp        0.42
-  bite           0.42
+  bite           0.78
   attack         0.045 s
   release        0.4 s
   vibrato        6 cents
   width          0.5
   breath         0.05
+  fine           12 cents
   volume         1.3
 
   cutoff         4800 Hz
@@ -199,25 +229,27 @@ patch Flugel  note=58 range=52..77
   # register are separate things.
   size           0.55
   bell           0.72
-  brass          0.32
-  pressure       0.68
+  brass          0.55
+  pressure       0.82
   lipdamp        0.45
-  bite           0.4
+  bite           0.7
   attack         0.03 s
   vibrato        5 cents
   breath         0.05
+  fine           7 cents
   volume         1.35
 
 patch Cornet  note=60 range=52..77
   # Between the flugel and the trumpet, which is exactly what it is.
   size           0.72
   bell           0.62
-  brass          0.5
-  pressure       0.76
-  bite           0.4
+  brass          0.62
+  pressure       0.85
+  bite           0.72
   attack         0.022 s
   vibrato        7 cents
   breath         0.06
+  fine           11 cents
   volume         1.25
 
 patch Trumpet  note=62 range=52..82
@@ -247,6 +279,7 @@ patch Piccolo  note=70 range=64..91
   attack         0.008 s
   vibrato        6 cents
   breath         0.1
+  fine           11 cents
   volume         1.25
 
 patch "Straight Mute"  note=62 range=52..82
@@ -271,11 +304,12 @@ patch "Cup Mute"  note=58 range=52..82
   mutetone       0.3
   size           0.82
   bell           0.74
-  brass          0.42
-  pressure       0.72
-  bite           0.45
+  brass          0.66
+  pressure       0.85
+  bite           0.82
   attack         0.026 s
   breath         0.06
+  fine           16 cents
   volume         1.3
 
   cutoff         3200 Hz
@@ -303,14 +337,21 @@ patch Section  note=55 range=55..79
   spread         14 cents
   scatter        22 ms
   drift          8 cents
-  width          0.85
+  # 0.85 with the lips this far into their own clamp lost six decibels
+  # summed to mono: four players with four tunings are four uncorrelated
+  # sources, and the wider they sit the less of them survives a phone
+  # speaker. 0.7 reads +3.6 dB, which is what uncorrelated means rather
+  # than what cancelling means.
+  width          0.7
   size           0.55
   bell           0.6
   brass          0.6
-  pressure       0.8
+  pressure       0.85
+  bite           0.7
   attack         0.045 s
   breath         0.05
-  volume         0.62
+  fine           6 cents
+  volume         0.91
 
   cutoff         4000 Hz
 patch Shambles  note=55 range=55..79
@@ -325,10 +366,12 @@ patch Shambles  note=55 range=55..79
   size           0.55
   bell           0.6
   brass          0.6
-  pressure       0.8
+  pressure       0.85
+  bite           0.78
   attack         0.07 s
   breath         0.06
-  volume         0.6
+  fine           27 cents
+  volume         0.68
 
   cutoff         4400 Hz
 patch Growl  note=58 range=55..77
@@ -345,6 +388,7 @@ patch Growl  note=58 range=55..77
   drive          0.28
   attack         0.018 s
   breath         0.07
+  fine           10 cents
   volume         1.0
 
 patch Fanfare  note=65 range=55..79
@@ -363,4 +407,5 @@ patch Fanfare  note=65 range=55..79
   spread         9 cents
   vibrato        4 cents
   breath         0.07
+  fine           14 cents
   volume         1.1
