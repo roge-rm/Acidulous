@@ -211,14 +211,73 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         p.frames = p.lastOff + secondsToFrames(2.5f);
     } else if (kind == "arp") {
-        static const int kTriad[] = {0, 4, 7};
+        // A broken chord over a progression rather than one triad forever.
+        // Sixteenths, up and back down, so a pluck's attack is heard thirty
+        // times and its tail is heard against the next note.
+        static const int kRoot[4] = {0, -4, -7, -5};
+        static const int kShape[8] = {0, 4, 7, 12, 16, 12, 7, 4};
         float t = 0.0f;
-        for (int i = 0; i < 32; ++i) {
-            const int step = kTriad[i % 3] + 12 * ((i / 3) % 3);
-            p.lastOff = hit(p, t, beat * 0.25f * 0.5f, note + step, velocity);
-            t += beat * 0.25f;
+        for (int bar = 0; bar < 4; ++bar) {
+            for (int i = 0; i < 8; ++i) {
+                p.lastOff = hit(p, t, beat * 0.25f * 0.9f, note + kRoot[bar] + kShape[i], velocity);
+                t += beat * 0.25f;
+            }
         }
         p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "pad") {
+        // Four chords, each held four seconds and overlapping the next by
+        // half of one. A pad is judged on what happens *while* it is held -
+        // the attack arriving, the filter moving, two oscillators drifting
+        // apart - and on whether the release of one chord sits properly
+        // under the attack of the next. A single held note shows none of it.
+        static const int kChord[4][4] = {
+            {0, 7, 12, 15},   // i
+            {-4, 5, 8, 12},   // VI
+            {-7, 4, 7, 12},   // III
+            {-5, 2, 7, 11},   // VII
+        };
+        for (int c = 0; c < 4; ++c) {
+            const float at = static_cast<float>(c) * 3.5f;
+            for (int n = 0; n < 4; ++n) {
+                // Staggered, because four note-ons in one block is not hands.
+                p.lastOff = hit(p, at + 0.025f * static_cast<float>(n), 4.0f,
+                                note + kChord[c][n], velocity);
+            }
+        }
+        p.frames = p.lastOff + secondsToFrames(4.0f);
+    } else if (kind == "lead") {
+        // One line, played the way a lead is: two long notes to hear the
+        // tone settle, a run to hear it move, and an interval leap at the
+        // end that a mono voice has to glide or step across.
+        struct Step { float at; float len; int step; int vel; };
+        static const Step kLine[] = {
+            {0.00f, 1.10f,  0, 100}, {1.20f, 0.45f,  3,  92}, {1.70f, 0.45f,  5,  96},
+            {2.20f, 1.40f,  7, 108}, {3.80f, 0.22f, 12, 100}, {4.05f, 0.22f, 10,  96},
+            {4.30f, 0.22f,  8,  98}, {4.55f, 0.22f,  7, 100}, {4.80f, 0.22f,  5,  94},
+            {5.05f, 0.22f,  3,  96}, {5.30f, 0.90f,  2, 104}, {6.40f, 0.45f,  7,  98},
+            {6.90f, 0.45f, 10, 102}, {7.40f, 2.20f, 14, 112}, {9.80f, 1.80f,  0,  96},
+        };
+        for (const Step &st : kLine) p.lastOff = hit(p, st.at, st.len, note + st.step, st.vel);
+        p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "keys") {
+        // Left hand and right hand: a root underneath, chords on the off
+        // beats above it. What this shows that a chord alone does not is
+        // whether the machine has the voices for both, and what its note-off
+        // does when they overlap.
+        static const int kRoot[4] = {0, -4, -7, -5};
+        static const int kStab[3] = {12, 16, 19};
+        for (int bar = 0; bar < 4; ++bar) {
+            const float at = static_cast<float>(bar) * beat * 2.0f;
+            p.lastOff = hit(p, at, beat * 1.8f, note + kRoot[bar] - 12, 104);
+            for (int s = 0; s < 3; ++s) {
+                const float when = at + beat * (0.5f + 0.5f * static_cast<float>(s));
+                for (int n = 0; n < 3; ++n) {
+                    p.lastOff = hit(p, when + 0.02f * static_cast<float>(n), beat * 0.4f,
+                                    note + kRoot[bar] + kStab[n], s == 0 ? 100 : 84);
+                }
+            }
+        }
+        p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "chromatic") {
         for (int i = 0; i < 13; ++i) {
             p.lastOff = hit(p, 0.5f * static_cast<float>(i), 0.4f, 24 + i * 6, velocity);

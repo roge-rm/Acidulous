@@ -149,25 +149,207 @@ internal object FactoryBanks {
 
     private fun trinity0() = Patch("Trinity", "Init", emptyMap())
 
-    private fun trinity1() = Patch("Trinity", "Wide Saws",
-        mapOf("o1_level" to 0.7f, "o1_density" to 0.714285731f, "o1_detune" to 0.45f, "o1_drift" to 0.3f, "o2_fine" to 0.41f, "o2_level" to 0.6f, "o2_density" to 0.428571433f, "o2_detune" to 0.6f, "o2_drift" to 0.3f, "o3_coarse" to 0.25f, "o3_level" to 0.4f, "o3_density" to 0.142857149f, "o3_drift" to 0.2f, "f1_freq" to 0.8257071f, "f1_res" to 0.1f, "f1_env" to 0.625f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "a_release" to 0.618813455f, "m01_src" to 0.13333334f, "m01_dest" to 0.6969697f, "m01_depth" to 0.7f, "m02_src" to 0.2f, "m02_dest" to 0.5151515f, "m02_depth" to 0.7f))
+    private fun trinity1() = Patch("Trinity", "Bell Keys",
+        mapOf("o1_wave" to 0.6363636f, "o1_pos" to 0.7f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.75f, "o2_level" to 0.57f, "ring12" to 0.35f, "f1_freq" to 0.8844042f, "f1_env" to 0.75f, "a_attack" to 0.075257495f, "a_decay" to 0.7491727f, "a_sustain" to 0.05f, "a_release" to 0.716931f, "f_sustain" to 0f, "volume" to 0.8f),
+        low = 36, high = 84)
 
-    private fun trinity2() = Patch("Trinity", "Glass Pad",
-        mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.2f, "o1_level" to 0.75f, "o2_wave" to 0.363636374f, "o2_pos" to 0.6f, "o2_fine" to 0.56f, "f1_type" to 0.09090909f, "f1_freq" to 0.76701f, "f1_res" to 0.2f, "a_attack" to 0.7257725f, "a_decay" to 0.774181366f, "a_sustain" to 0.75f, "a_release" to 0.79919f, "l1_rate" to 0.3265052f, "l2_rate" to 0.2346152f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.7f, "m02_src" to 0.933333337f, "m02_dest" to 0.6969697f, "m02_depth" to 0.575f, "m03_src" to 0.13333334f, "m03_dest" to 0.151515156f, "m03_depth" to 0.75f, "m04_src" to 0.2f, "m04_dest" to 0.6969697f, "m04_depth" to 0.725f))
+    private fun trinity2() = Patch("Trinity", "Wide Saws",
+        mapOf("o1_level" to 1f, "o1_density" to 0.5714286f, "o1_detune" to 0.45f, "o1_drift" to 0.3f, "o2_fine" to 0.41f, "o2_level" to 1f, "o2_density" to 0.2857143f, "o2_detune" to 0.6f, "o2_drift" to 0.3f, "o3_coarse" to 0.25f, "o3_level" to 0.68f, "o3_drift" to 0.2f, "f1_freq" to 0.8257071f, "f1_res" to 0.1f, "f1_env" to 0.625f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "a_release" to 0.618813455f, "m01_src" to 0.13333334f, "m01_dest" to 0.6969697f, "m01_depth" to 0.7f, "m02_src" to 0.2f, "m02_dest" to 0.5151515f, "m02_depth" to 0.7f, "volume" to 0.4f),
+        low = 36, high = 79)
 
-    private fun trinity3() = Patch("Trinity", "Bell Keys",
-        mapOf("o1_wave" to 0.6363636f, "o1_pos" to 0.7f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.75f, "o2_level" to 0.35f, "ring12" to 0.35f, "f1_freq" to 0.8844042f, "f1_env" to 0.75f, "a_attack" to 0.075257495f, "a_decay" to 0.7491727f, "a_sustain" to 0.05f, "a_release" to 0.716931f, "f_sustain" to 0f))
+    private fun trinity3() = Patch("Trinity", "Glass Pad",
+        mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.2f, "o1_level" to 1f, "o2_wave" to 0.363636374f, "o2_pos" to 0.6f, "o2_fine" to 0.56f, "f1_type" to 0.09090909f, "f1_freq" to 0.76701f, "f1_res" to 0.2f, "a_attack" to 0.7257725f, "a_decay" to 0.774181366f, "a_sustain" to 0.75f, "a_release" to 0.79919f, "l1_rate" to 0.3265052f, "l2_rate" to 0.2346152f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.7f, "m02_src" to 0.933333337f, "m02_dest" to 0.6969697f, "m02_depth" to 0.575f, "m03_src" to 0.13333334f, "m03_dest" to 0.151515156f, "m03_depth" to 0.75f, "m04_src" to 0.2f, "m04_dest" to 0.6969697f, "m04_depth" to 0.725f, "volume" to 1f),
+        low = 36, high = 79)
 
-    private fun trinity4() = Patch("Trinity", "FM Bass",
-        mapOf("o1_wave" to 0.272727281f, "o1_level" to 0.9f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.75f, "o2_level" to 0f, "fm21" to 0.55f, "f1_freq" to 0.551070869f, "f1_res" to 0.25f, "f1_env" to 0.775f, "a_attack" to 0.075257495f, "a_decay" to 0.578839362f, "a_sustain" to 0.35f, "a_release" to 0.483879149f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "e3_decay" to 0.5411295f, "e3_sustain" to 0f, "m01_src" to 0.6f, "m01_dest" to 0.6363636f, "m01_depth" to 0.65f, "voicemode" to 0.333333343f, "glide" to 0.04f))
+    private fun trinity4() = Patch("Trinity", "Drift Strings",
+        mapOf("o1_level" to 0.95f, "o1_density" to 0.142857149f, "o1_detune" to 0.3f, "o1_drift" to 0.8f, "o2_fine" to 0.43f, "o2_level" to 0.87f, "o2_drift" to 0.9f, "o3_wave" to 0.181818187f, "o3_coarse" to 0.75f, "o3_level" to 0.55f, "o3_drift" to 0.7f, "f1_type" to 0.181818187f, "f1_freq" to 0.747679353f, "f1_res" to 0.05f, "a_attack" to 0.636016965f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.7342073f, "l1_rate" to 0.736582041f, "l1_delay" to 0.4f, "m01_src" to 0.8666667f, "m01_src2" to 0.13333334f, "m01_dest" to 0.0303030312f, "m01_depth" to 0.51f, "volume" to 0.45f),
+        low = 36, high = 79)
 
     private fun trinity5() = Patch("Trinity", "Sync Lead",
-        mapOf("o1_level" to 0.85f, "o1_sync" to 0.25f, "o2_wave" to 0.09090909f, "o2_fine" to 0.55f, "o2_level" to 0.3f, "f1_freq" to 0.84802264f, "a_attack" to 0.24999997f, "a_decay" to 0.618813455f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "m01_src" to 0.13333334f, "m01_dest" to 0.424242437f, "m01_depth" to 0.85f, "m02_src" to 0.266666681f, "m02_dest" to 0.6969697f, "m02_depth" to 0.65f, "voicemode" to 0.6666667f, "glide" to 0.06f))
+        mapOf("o1_level" to 1f, "o1_sync" to 0.25f, "o2_wave" to 0.09090909f, "o2_fine" to 0.55f, "o2_level" to 0.49f, "f1_freq" to 0.84802264f, "a_attack" to 0.24999997f, "a_decay" to 0.618813455f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "m01_src" to 0.13333334f, "m01_dest" to 0.424242437f, "m01_depth" to 0.85f, "m02_src" to 0.266666681f, "m02_dest" to 0.6969697f, "m02_depth" to 0.65f, "voicemode" to 0.6666667f, "glide" to 0.06f, "volume" to 0.48f),
+        low = 48, high = 91)
 
-    private fun trinity6() = Patch("Trinity", "Drift Strings",
-        mapOf("o1_level" to 0.6f, "o1_density" to 0.2857143f, "o1_detune" to 0.3f, "o1_drift" to 0.8f, "o2_fine" to 0.43f, "o2_level" to 0.55f, "o2_drift" to 0.9f, "o3_wave" to 0.181818187f, "o3_coarse" to 0.75f, "o3_level" to 0.35f, "o3_drift" to 0.7f, "f1_type" to 0.181818187f, "f1_freq" to 0.747679353f, "f1_res" to 0.05f, "a_attack" to 0.636016965f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.7342073f, "l1_rate" to 0.736582041f, "l1_delay" to 0.4f, "m01_src" to 0.8666667f, "m01_src2" to 0.13333334f, "m01_dest" to 0.0303030312f, "m01_depth" to 0.51f))
+    private fun trinity6() = Patch("Trinity", "FM Bass",
+        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.75f, "o2_level" to 0f, "fm21" to 0.55f, "f1_freq" to 0.551070869f, "f1_res" to 0.25f, "f1_env" to 0.775f, "a_attack" to 0.075257495f, "a_decay" to 0.578839362f, "a_sustain" to 0.35f, "a_release" to 0.483879149f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "e3_decay" to 0.5411295f, "e3_sustain" to 0f, "m01_src" to 0.6f, "m01_dest" to 0.6363636f, "m01_depth" to 0.65f, "voicemode" to 0.333333343f, "glide" to 0.04f, "volume" to 0.92f),
+        low = 24, high = 55)
 
-    private val trinity: List<Patch> by lazy { listOf(trinity0(), trinity1(), trinity2(), trinity3(), trinity4(), trinity5(), trinity6()) }
+    private fun trinity7() = Patch("Trinity", "Electric Piano",
+        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.6458333f, "o2_level" to 0.66f, "fm21" to 0.28f, "f1_type" to 0.09090909f, "f1_freq" to 0.774073064f, "f1_env" to 0.675f, "f1_key" to 0.5f, "a_attack" to 0.075257495f, "a_decay" to 0.7491727f, "a_sustain" to 0.12f, "a_release" to 0.618813455f, "f_decay" to 0.618813455f, "f_sustain" to 0.05f, "volume" to 0.53f),
+        low = 36, high = 84)
+
+    private fun trinity8() = Patch("Trinity", "Clav",
+        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o1_pw" to 0.166666672f, "o2_wave" to 0.09090909f, "o2_fine" to 0.56f, "o2_level" to 1f, "o2_pw" to 0.249999985f, "f1_type" to 0.181818187f, "f1_freq" to 0.6930604f, "f1_res" to 0.25f, "f1_env" to 0.75f, "f1_key" to 0.6f, "a_attack" to 0f, "a_decay" to 0.6070053f, "a_sustain" to 0f, "a_release" to 0.5043127f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "volume" to 0.5f),
+        low = 36, high = 84)
+
+    private fun trinity9() = Patch("Trinity", "Mallet",
+        mapOf("o1_wave" to 0.6363636f, "o1_pos" to 0.25f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.75f, "o2_level" to 0.66f, "f1_env" to 0.775f, "f1_key" to 0.7f, "a_attack" to 0f, "a_decay" to 0.6846892f, "a_sustain" to 0f, "a_release" to 0.578839362f, "f_decay" to 0.553830743f, "f_sustain" to 0f, "volume" to 0.8f),
+        low = 36, high = 84)
+
+    private fun trinity10() = Patch("Trinity", "Music Box",
+        mapOf("o1_wave" to 0.6363636f, "o1_pos" to 0.7f, "o1_level" to 1f, "o1_drift" to 0.05f, "o2_wave" to 0.272727281f, "o2_coarse" to 1f, "o2_level" to 0.35f, "f1_type" to 0.09090909f, "f1_freq" to 0.8257071f, "f1_key" to 0.8f, "a_attack" to 0f, "a_decay" to 0.707179248f, "a_sustain" to 0f, "a_release" to 0.639247f, "volume" to 0.86f),
+        low = 36, high = 84)
+
+    private fun trinity11() = Patch("Trinity", "Harpsi",
+        mapOf("o1_level" to 1f, "o2_fine" to 0.61f, "o2_level" to 0.98f, "o3_coarse" to 0.75f, "o3_level" to 0.41f, "f1_type" to 0.181818187f, "f1_freq" to 0.8049911f, "f1_key" to 0.55f, "a_attack" to 0f, "a_decay" to 0.656523347f, "a_sustain" to 0f, "a_release" to 0.5411295f, "volume" to 0.84f),
+        low = 36, high = 84)
+
+    private fun trinity12() = Patch("Trinity", "Kalimba",
+        mapOf("o1_wave" to 0.727272749f, "o1_pos" to 0.4f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.6458333f, "noise" to 0.2f, "noisecol" to 0.8f, "f1_type" to 0.09090909f, "f1_freq" to 0.7046478f, "f1_env" to 0.7f, "f1_key" to 0.6f, "a_attack" to 0f, "a_decay" to 0.6294953f, "a_sustain" to 0f, "f_decay" to 0.4134283f, "f_sustain" to 0f, "volume" to 1f),
+        low = 36, high = 84)
+
+    private fun trinity13() = Patch("Trinity", "Toy Piano",
+        mapOf("o1_wave" to 0.8181818f, "o1_pos" to 0.3f, "o1_warp" to 0.35f, "o1_level" to 1f, "o1_drift" to 0.4f, "o2_wave" to 0.181818187f, "o2_fine" to 0.28f, "o2_level" to 0.73f, "f1_type" to 0.09090909f, "f1_freq" to 0.743482947f, "f1_env" to 0.725f, "f1_key" to 0.5f, "a_attack" to 0f, "a_decay" to 0.671488762f, "a_sustain" to 0f, "volume" to 0.85f),
+        low = 36, high = 84)
+
+    private fun trinity14() = Patch("Trinity", "Pluck Wide",
+        mapOf("o1_level" to 1f, "o1_density" to 1f, "o1_detune" to 0.55f, "o2_coarse" to 0.75f, "o2_level" to 0.57f, "o2_density" to 0.714285731f, "o2_detune" to 0.4f, "f1_freq" to 0.759584546f, "f1_res" to 0.2f, "f1_env" to 0.725f, "a_attack" to 0.075257495f, "a_decay" to 0.6846892f, "a_sustain" to 0f, "a_release" to 0.593804836f, "f_decay" to 0.578839362f, "f_sustain" to 0f, "volume" to 1f),
+        low = 40, high = 79)
+
+    private fun trinity15() = Patch("Trinity", "Warm Pad",
+        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.3f, "o1_drift" to 0.25f, "o2_fine" to 0.42f, "o2_level" to 1f, "o2_density" to 0.2857143f, "o3_wave" to 0.181818187f, "o3_coarse" to 0.25f, "o3_level" to 0.57f, "f1_freq" to 0.6804642f, "f1_res" to 0.12f, "a_attack" to 0.7385606f, "a_decay" to 0.81962353f, "a_sustain" to 0.75f, "a_release" to 0.7848632f, "volume" to 0.38f),
+        low = 36, high = 79)
+
+    private fun trinity16() = Patch("Trinity", "Choir",
+        mapOf("o1_wave" to 0.545454562f, "o1_pos" to 0.35f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.25f, "o1_drift" to 0.35f, "o2_wave" to 0.545454562f, "o2_pos" to 0.6f, "o2_coarse" to 0.6458333f, "o2_level" to 0.83f, "o2_drift" to 0.4f, "f1_type" to 0.09090909f, "f1_freq" to 0.73470664f, "f1_res" to 0.2f, "a_attack" to 0.6945378f, "a_decay" to 0.79919f, "a_sustain" to 0.8f, "a_release" to 0.762373149f, "volume" to 1f),
+        low = 36, high = 79)
+
+    private fun trinity17() = Patch("Trinity", "Sweep Pad",
+        mapOf("o1_wave" to 0.363636374f, "o1_pos" to 0.2f, "o1_level" to 1f, "o1_density" to 0.142857149f, "o2_wave" to 0.363636374f, "o2_pos" to 0.7f, "o2_fine" to 0.44f, "o2_level" to 1f, "f1_type" to 0.09090909f, "f1_freq" to 0.76701f, "a_attack" to 0.7697953f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.8035856f, "l1_rate" to 0.299601138f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.75f, "volume" to 1f),
+        low = 36, high = 79)
+
+    private fun trinity18() = Patch("Trinity", "Dark Pad",
+        mapOf("o1_coarse" to 0.25f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o2_wave" to 0.181818187f, "o2_level" to 0.86f, "noise" to 0.31f, "noisecol" to 0.25f, "f1_freq" to 0.5146893f, "f1_res" to 0.25f, "f1_env" to 0.6f, "a_attack" to 0.786532f, "a_decay" to 0.8518653f, "a_release" to 0.81962353f, "volume" to 0.49f),
+        low = 36, high = 79)
+
+    private fun trinity19() = Patch("Trinity", "Shimmer",
+        mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.5f, "o1_level" to 1f, "o1_drift" to 0.5f, "o2_wave" to 0.454545468f, "o2_pos" to 0.75f, "o2_coarse" to 0.8958333f, "o2_level" to 0.45f, "o2_drift" to 0.45f, "o3_wave" to 0.272727281f, "o3_level" to 0.55f, "f1_type" to 0.454545468f, "f1_freq" to 0.259383738f, "f1_key" to 0.9f, "a_attack" to 0.80103f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.8368998f, "volume" to 0.77f),
+        low = 36, high = 79)
+
+    private fun trinity20() = Patch("Trinity", "Breath Pad",
+        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.6458333f, "o2_level" to 0.6f, "noise" to 1f, "noisecol" to 0.55f, "f1_type" to 0.727272749f, "f1_freq" to 0.5927171f, "f1_res" to 0.3f, "f1_env" to 0.625f, "f1_key" to 0.9f, "a_attack" to 0.7603482f, "a_decay" to 0.81962353f, "a_sustain" to 0.75f, "a_release" to 0.7946149f, "volume" to 1f),
+        low = 36, high = 79)
+
+    private fun trinity21() = Patch("Trinity", "Rotor Pad",
+        mapOf("o1_wave" to 1f, "o1_level" to 1f, "o2_wave" to 1f, "o2_fine" to 0.54f, "o2_level" to 1f, "f1_type" to 0.09090909f, "a_attack" to 0.5440228f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.639247f, "l1_rate" to 0.762949f, "m01_src" to 0.8666667f, "m01_dest" to 0.09090909f, "m01_depth" to 0.56f, "volume" to 0.53f),
+        low = 36, high = 79)
+
+    private fun trinity22() = Patch("Trinity", "Glass Ice",
+        mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.15f, "o1_level" to 0.75f, "o1_density" to 0.142857149f, "o2_wave" to 0.454545468f, "o2_pos" to 0.85f, "o2_fine" to 0.39f, "f1_type" to 0.909090936f, "f1_freq" to 0.5927171f, "f1_res" to 0.5f, "a_attack" to 0.7112745f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.7848632f, "l1_rate" to 0.361190557f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.725f, "volume" to 0.83f),
+        low = 36, high = 79)
+
+    private fun trinity23() = Patch("Trinity", "Wash",
+        mapOf("o1_level" to 1f, "o1_density" to 1f, "o1_detune" to 0.8f, "o1_drift" to 0.6f, "o2_wave" to 0.181818187f, "o2_coarse" to 0.395833343f, "o2_level" to 0.77f, "o2_density" to 1f, "o2_detune" to 0.7f, "f1_type" to 0.09090909f, "f1_freq" to 0.651414156f, "a_attack" to 0.849485f, "a_decay" to 0.8768739f, "a_sustain" to 0.8f, "a_release" to 0.8518653f, "volume" to 0.5f),
+        low = 36, high = 79)
+
+    private fun trinity24() = Patch("Trinity", "Solo String",
+        mapOf("o1_level" to 1f, "o1_drift" to 0.3f, "o2_fine" to 0.55f, "o2_level" to 0.74f, "f1_type" to 0.181818187f, "f1_freq" to 0.6930604f, "f1_res" to 0.18f, "f1_env" to 0.625f, "a_attack" to 0.5856057f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.618813455f, "glide" to 0.02f, "volume" to 0.44f),
+        low = 48, high = 84)
+
+    private fun trinity25() = Patch("Trinity", "Ensemble",
+        mapOf("o1_level" to 1f, "o1_density" to 0.714285731f, "o1_detune" to 0.32f, "o1_drift" to 0.45f, "o2_wave" to 0.181818187f, "o2_fine" to 0.43f, "o2_level" to 0.97f, "o2_density" to 0.5714286f, "o2_detune" to 0.28f, "o2_drift" to 0.3f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "f1_res" to 0.1f, "a_attack" to 0.636016965f, "a_decay" to 0.79919f, "a_sustain" to 0.85f, "a_release" to 0.716931f, "volume" to 0.38f),
+        low = 36, high = 79)
+
+    private fun trinity26() = Patch("Trinity", "Brass Section",
+        mapOf("o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.22f, "o2_fine" to 0.59f, "o2_level" to 1f, "o3_wave" to 0.09090909f, "o3_coarse" to 0.25f, "o3_level" to 0.59f, "f1_freq" to 0.5146893f, "f1_res" to 0.22f, "f1_env" to 0.875f, "f1_key" to 0.4f, "a_attack" to 0.40051496f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "f_attack" to 0.444537818f, "f_decay" to 0.618813455f, "f_sustain" to 0.45f, "volume" to 0.38f),
+        low = 40, high = 79)
+
+    private fun trinity27() = Patch("Trinity", "Soft Horn",
+        mapOf("o1_level" to 1f, "o1_density" to 0.142857149f, "o2_wave" to 0.181818187f, "o2_fine" to 0.45f, "o2_level" to 0.92f, "o3_wave" to 0.272727281f, "o3_coarse" to 0.25f, "o3_level" to 0.5f, "f1_freq" to 0.5801209f, "f1_res" to 0.1f, "f1_env" to 0.6f, "a_attack" to 0.619280338f, "a_decay" to 0.774181366f, "a_sustain" to 0.8f, "a_release" to 0.671488762f, "volume" to 0.34f),
+        low = 36, high = 79)
+
+    private fun trinity28() = Patch("Trinity", "Analog Strings",
+        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.38f, "o1_drift" to 0.5f, "o2_wave" to 0.09090909f, "o2_fine" to 0.58f, "o2_level" to 0.82f, "o2_pw" to 0.416666627f, "f1_type" to 0.181818187f, "f1_freq" to 0.6666667f, "a_attack" to 0.6747425f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.7491727f, "l1_rate" to 0.2649158f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.675f, "volume" to 0.31f),
+        low = 36, high = 79)
+
+    private fun trinity29() = Patch("Trinity", "Swell",
+        mapOf("o1_wave" to 0.363636374f, "o1_pos" to 0.45f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.3f, "o2_coarse" to 0.395833343f, "o2_level" to 0.61f, "f1_type" to 0.09090909f, "f1_freq" to 0.7046478f, "f1_env" to 0.7f, "a_delay" to 0.125f, "a_attack" to 0.7603482f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.79919f, "volume" to 0.79f),
+        low = 36, high = 69)
+
+    private fun trinity30() = Patch("Trinity", "Sub Bass",
+        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.75f, "o2_level" to 0.2f, "f1_type" to 0.09090909f, "f1_freq" to 0.5146893f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.6f, "a_release" to 0.483879149f, "volume" to 0.54f),
+        low = 24, high = 55)
+
+    private fun trinity31() = Patch("Trinity", "Reese",
+        mapOf("o1_level" to 1f, "o2_fine" to 0.22f, "o2_level" to 1f, "f1_freq" to 0.440739781f, "f1_res" to 0.3f, "f1_env" to 0.625f, "a_attack" to 0.24999997f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "a_release" to 0.5411295f, "volume" to 0.38f),
+        low = 24, high = 55)
+
+    private fun trinity32() = Patch("Trinity", "Pluck Bass",
+        mapOf("o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.75f, "o2_level" to 0.69f, "o2_pw" to 0.34374997f, "f1_freq" to 0.46598f, "f1_res" to 0.35f, "f1_env" to 0.85f, "a_attack" to 0.075257495f, "a_decay" to 0.618813455f, "a_sustain" to 0.15f, "a_release" to 0.5161209f, "f_decay" to 0.4588705f, "f_sustain" to 0f, "volume" to 0.84f),
+        low = 24, high = 55)
+
+    private fun trinity33() = Patch("Trinity", "Growl Bass",
+        mapOf("o1_wave" to 0.909090936f, "o1_pos" to 0.4f, "o1_warp" to 0.5f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.65f, "f1_freq" to 0.492373765f, "f1_res" to 0.3f, "f1_drivetype" to 0.4f, "f1_drive" to 0.3f, "f1_env" to 0.7f, "a_attack" to 0.15051499f, "a_decay" to 0.69649744f, "a_release" to 0.5161209f, "volume" to 1f),
+        low = 24, high = 55)
+
+    private fun trinity34() = Patch("Trinity", "Wide Bass",
+        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.2f, "o2_wave" to 0.272727281f, "o2_level" to 0.74f, "f1_freq" to 0.426251173f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.194537818f, "a_decay" to 0.716931f, "a_sustain" to 0.75f, "a_release" to 0.5161209f, "volume" to 0.48f),
+        low = 24, high = 55)
+
+    private fun trinity35() = Patch("Trinity", "Square Bass",
+        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o1_pw" to 0.37499997f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.25f, "o2_level" to 0.64f, "f1_type" to 0.181818187f, "f1_freq" to 0.551070869f, "f1_res" to 0.05f, "f1_env" to 0.6f, "a_attack" to 0.119280316f, "a_decay" to 0.69649744f, "a_release" to 0.483879149f, "volume" to 0.33f),
+        low = 24, high = 55)
+
+    private fun trinity36() = Patch("Trinity", "Ring Bass",
+        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.395833343f, "o2_level" to 1f, "ring12" to 0.65f, "f1_freq" to 0.53402f, "f1_res" to 0.25f, "f1_env" to 0.7f, "a_attack" to 0.119280316f, "a_decay" to 0.6846892f, "a_sustain" to 0.5f, "a_release" to 0.5161209f, "volume" to 0.4f),
+        low = 24, high = 55)
+
+    private fun trinity37() = Patch("Trinity", "Square Lead",
+        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_fine" to 0.44f, "o2_level" to 0.64f, "o2_pw" to 0.447916627f, "f1_freq" to 0.7046478f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5411295f, "glide" to 0.015f, "volume" to 0.27f),
+        low = 48, high = 91)
+
+    private fun trinity38() = Patch("Trinity", "Saw Lead",
+        mapOf("o1_level" to 1f, "o2_fine" to 0.54f, "o2_level" to 1f, "o3_fine" to 0.45f, "o3_level" to 0.83f, "f1_freq" to 0.651414156f, "f1_res" to 0.25f, "f1_key" to 0.8f, "a_attack" to 0.2257725f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "volume" to 0.39f),
+        low = 48, high = 91)
+
+    private fun trinity39() = Patch("Trinity", "Fifth Lead",
+        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.6458333f, "o2_level" to 0.91f, "o3_wave" to 0.09090909f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "volume" to 0.26f),
+        low = 48, high = 91)
+
+    private fun trinity40() = Patch("Trinity", "Soft Lead",
+        mapOf("o1_wave" to 0.181818187f, "o1_level" to 1f, "o1_drift" to 0.2f, "o2_wave" to 0.272727281f, "o2_level" to 0.81f, "f1_type" to 0.09090909f, "f1_freq" to 0.634363353f, "f1_env" to 0.6f, "a_attack" to 0.444537818f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "a_release" to 0.618813455f, "glide" to 0.045f, "volume" to 0.37f),
+        low = 48, high = 91)
+
+    private fun trinity41() = Patch("Trinity", "Hard Sync",
+        mapOf("o1_level" to 0.82f, "o2_coarse" to 0.8958333f, "o2_level" to 1f, "o2_sync" to 1f, "f1_type" to 0.181818187f, "f1_freq" to 0.76701f, "f1_env" to 0.7f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5161209f, "volume" to 0.66f),
+        low = 48, high = 91)
+
+    private fun trinity42() = Patch("Trinity", "PWM Lead",
+        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_fine" to 0.46f, "o2_level" to 0.96f, "f1_freq" to 0.71537596f, "f1_res" to 0.12f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "l1_rate" to 0.4589631f, "m01_src" to 0.8666667f, "m01_dest" to 0.333333343f, "m01_depth" to 0.7f, "m02_src" to 0.8666667f, "m02_dest" to 0.363636374f, "m02_depth" to 0.325f, "volume" to 0.22f),
+        low = 48, high = 91)
+
+    private fun trinity43() = Patch("Trinity", "Vowel Lead",
+        mapOf("o1_wave" to 0.545454562f, "o1_pos" to 0.2f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.2f, "o2_wave" to 0.545454562f, "o2_pos" to 0.5f, "o2_fine" to 0.56f, "o2_level" to 0.93f, "f1_type" to 0.181818187f, "f1_res" to 0.2f, "a_attack" to 0.24999997f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.8f, "volume" to 1f),
+        low = 48, high = 91)
+
+    private fun trinity44() = Patch("Trinity", "Whistle",
+        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o1_drift" to 0.35f, "o2_wave" to 0.272727281f, "o2_fine" to 0.53f, "o2_level" to 0.49f, "f1_type" to 0.09090909f, "f1_freq" to 0.799313366f, "a_attack" to 0.4247425f, "a_decay" to 0.69649744f, "a_sustain" to 0.9f, "a_release" to 0.593804836f, "glide" to 0.06f, "volume" to 0.36f),
+        low = 48, high = 91)
+
+    private fun trinity45() = Patch("Trinity", "Noise Sweep",
+        mapOf("o1_level" to 0f, "o2_level" to 0f, "noise" to 1f, "noisecol" to 0.5f, "f1_type" to 0.09090909f, "f1_freq" to 0.440739781f, "f1_res" to 0.45f, "f1_env" to 0.95f, "a_attack" to 0.650515f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.774181366f, "f_attack" to 0.861789465f, "f_decay" to 0.81962353f, "f_sustain" to 0.9f, "volume" to 1f),
+        low = 36, high = 79)
+
+    private fun trinity46() = Patch("Trinity", "Ring Bells",
+        mapOf("o1_wave" to 0.272727281f, "o1_level" to 0.98f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.625f, "o2_level" to 0.98f, "o3_wave" to 0.6363636f, "o3_coarse" to 0.75f, "o3_level" to 0.41f, "ring12" to 0.9f, "f1_type" to 0.09090909f, "f1_freq" to 0.8257071f, "a_attack" to 0.075257495f, "a_decay" to 0.79919f, "a_sustain" to 0f, "a_release" to 0.716931f, "volume" to 0.38f),
+        low = 36, high = 79)
+
+    private fun trinity47() = Patch("Trinity", "Drone",
+        mapOf("o1_wave" to 1f, "o1_level" to 1f, "o1_drift" to 0.55f, "o2_wave" to 1f, "o2_coarse" to 0.6458333f, "o2_level" to 0.75f, "o2_drift" to 0.5f, "o3_wave" to 1f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "o3_drift" to 0.6f, "f1_type" to 0.09090909f, "f1_freq" to 0.6930604f, "a_attack" to 0.8252575f, "a_decay" to 0.929549158f, "a_sustain" to 0.9f, "a_release" to 0.81962353f, "volume" to 0.57f),
+        low = 36, high = 79)
+
+    private fun trinity48() = Patch("Trinity", "Metallic",
+        mapOf("o1_wave" to 0.8181818f, "o1_pos" to 0.8f, "o1_warp" to 0.75f, "o1_level" to 1f, "o2_wave" to 0.8181818f, "o2_pos" to 0.3f, "o2_coarse" to 0.625f, "o2_level" to 0.81f, "f1_type" to 1f, "f1_freq" to 0.651414156f, "f1_res" to 0.6f, "a_attack" to 0.24999997f, "a_decay" to 0.81962353f, "a_sustain" to 0.3f, "a_release" to 0.7419396f, "volume" to 0.42f),
+        low = 36, high = 79)
+
+    private fun trinity49() = Patch("Trinity", "Sweep Down",
+        mapOf("o1_level" to 1f, "o1_density" to 0.5714286f, "o1_detune" to 0.45f, "o2_wave" to 0.909090936f, "o2_level" to 0.55f, "noise" to 0.35f, "f1_freq" to 0.8844042f, "f1_res" to 0.45f, "f1_env" to 0.025000006f, "a_attack" to 0.24999997f, "a_decay" to 0.8768739f, "a_sustain" to 0.6f, "a_release" to 0.7419396f, "f_attack" to 0.24999997f, "f_decay" to 0.8518653f, "f_sustain" to 0f, "volume" to 0.41f),
+        low = 36, high = 79)
+
+    private fun trinity50() = Patch("Trinity", "Air",
+        mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.9f, "o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.5f, "o1_drift" to 0.6f, "noise" to 0.3f, "noisecol" to 0.9f, "f1_type" to 0.454545468f, "f1_freq" to 0.492373765f, "f1_res" to 0.2f, "f1_key" to 0.8f, "a_attack" to 0.7940228f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.81962353f, "volume" to 1f),
+        low = 36, high = 79)
+
+    private val trinity: List<Patch> by lazy { listOf(trinity0(), trinity1(), trinity2(), trinity3(), trinity4(), trinity5(), trinity6(), trinity7(), trinity8(), trinity9(), trinity10(), trinity11(), trinity12(), trinity13(), trinity14(), trinity15(), trinity16(), trinity17(), trinity18(), trinity19(), trinity20(), trinity21(), trinity22(), trinity23(), trinity24(), trinity25(), trinity26(), trinity27(), trinity28(), trinity29(), trinity30(), trinity31(), trinity32(), trinity33(), trinity34(), trinity35(), trinity36(), trinity37(), trinity38(), trinity39(), trinity40(), trinity41(), trinity42(), trinity43(), trinity44(), trinity45(), trinity46(), trinity47(), trinity48(), trinity49(), trinity50()) }
 
     private fun ratio0() = Patch("Ratio", "Init", emptyMap())
 

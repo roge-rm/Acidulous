@@ -426,7 +426,12 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
     }
 
     const float velAmp = 1.0f - paramOf(VelocityAmount) * (1.0f - static_cast<float>(v.velocity) / 127.0f);
-    const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f);
+    // The app's house level, so this machine's default lands where every
+    // other machine's does. See Subvert's kHouse for why: the factory had
+    // come to span twenty-five decibels because every bank was levelled
+    // against its own patches and none against the others.
+    constexpr float kHouse = 0.61f;
+    const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * kHouse;
     const float glideSeconds = paramOf(Glide);
     const float glideStep = glideSeconds > 0.001f ? 1.0f / (glideSeconds * sampleRate) : 1.0f;
     const float targetFreq = mtof(static_cast<float>(v.note));

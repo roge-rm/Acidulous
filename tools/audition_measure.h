@@ -115,7 +115,13 @@ struct Spectrum {
         const float a = mag[static_cast<size_t>(best - 1)], b = mag[static_cast<size_t>(best)],
                     c = mag[static_cast<size_t>(best + 1)];
         const float den = a - 2.0f * b + c;
-        const float shift = den != 0.0f ? 0.5f * (a - c) / den : 0.0f;
+        float shift = den != 0.0f ? 0.5f * (a - c) / den : 0.0f;
+        // A parabola through three nearly equal bins is nearly a straight
+        // line, and its vertex can be a long way outside them. Unclamped,
+        // that turned a +-60 cent search window into readings of +-600 on any
+        // patch flat enough to have no clear peak.
+        if (shift > 0.5f) shift = 0.5f;
+        else if (shift < -0.5f) shift = -0.5f;
         atHz = (static_cast<float>(best) + shift) * binHz;
         size = b;
     }
@@ -516,10 +522,16 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         for (int h = 1; h <= 6; ++h) {
             const float target = want * static_cast<float>(h);
             if (target > kSr * 0.45f) break;
+            // Below about eight bins the transform cannot resolve sixty cents
+            // at all - at 65 Hz one bin *is* eighty cents - so a reading there
+            // is the grid speaking, not the note. The upper partials of a flat
+            // note are flat by the same amount and are resolved far better, so
+            // the answer comes from them instead.
+            if (target < 8.0f * sp.binHz) continue;
             float atHz = 0.0f, size = 0.0f;
             sp.peakNear(target, 60.0f, atHz, size);
             if (atHz <= 0.0f) continue;
-            const double weight = static_cast<double>(size) / h;
+            const double weight = static_cast<double>(size) / std::sqrt(static_cast<double>(h));
             num += weight * 1200.0 * std::log2(static_cast<double>(atHz) / target);
             den += weight;
         }
