@@ -883,8 +883,17 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         }
     }
 
-    // An effect has no note to hold, so what it was given is what it is measured on.
-    if (!measuredAlready) measured = measure(take.stereo, take.offAt, 0, take.offAt + static_cast<int64_t>(kSr * 0.05f));
+    // An effect has no note to hold, so what it was given is what it is
+    // measured on - and its tail is where one preset differs from the next,
+    // so brightness and pitch are read from just after the source stops. A
+    // machine reaches this line only when it made no measure take of its
+    // own, and then the body of the note is still what it is: the default
+    // window starts past the attack and averages over what is sounding.
+    if (!measuredAlready) {
+        measured = bank.isEffect()
+                       ? measure(take.stereo, take.offAt, 0, take.offAt + static_cast<int64_t>(kSr * 0.05f))
+                       : measure(take.stereo, take.offAt, 0);
+    }
     if (opt.quiet) return true;
     writeWav(folderFor(bank.unit) + "/" + safeName(patch.name) + ".wav", take.stereo);
     if (joined != nullptr) {
@@ -954,7 +963,12 @@ int cmdBank(const std::string &unit, const Options &opt) {
  *
  * `dead` is a note that never reaches a tenth of the patch's own loudest;
  * `mode` is one whose pitch is a long way from what was asked for, which on
- * these models means another partial won.
+ * these models means another partial won; `atonal` is one the harness could
+ * find no pitch in at all. Those last two are not the same thing and the
+ * first version of this said they were - a bowed string that read "41 of 41
+ * notes wrong, worst tuning +0 cents" was forty-one notes with no reading,
+ * which is a different fault from forty-one notes on the wrong partial and
+ * wants a different fix.
  */
 int cmdSweep(const std::string &unit, const std::string &patchName, const Options &opt) {
     Bank bank;
@@ -983,25 +997,30 @@ int cmdSweep(const std::string &unit, const std::string &patchName, const Option
         if (rmsAt.empty()) continue;
         const float loudest = *std::max_element(rmsAt.begin(), rmsAt.end());
         int bad = 0;
+        int atonal = 0;
         for (size_t i = 0; i < rmsAt.size(); ++i) {
             const int n = p.low + static_cast<int>(i);
+            const bool none = centsAt[i] < -9000.0f;
             const bool dead = rmsAt[i] < loudest - 20.0f;
-            const bool mode = std::fabs(centsAt[i]) > 60.0f;
-            if (dead || mode) ++bad;
+            const bool mode = !none && std::fabs(centsAt[i]) > 60.0f;
+            if (none) ++atonal;
+            if (dead || mode || none) ++bad;
             char cents[16];
-            if (centsAt[i] < -9000.0f) std::snprintf(cents, sizeof(cents), "    -");
+            if (none) std::snprintf(cents, sizeof(cents), "    -");
             else std::snprintf(cents, sizeof(cents), "%+7.0f", static_cast<double>(centsAt[i]));
-            std::printf("   %4d %s  %7.1f  %5.0fms%s%s\n", n, cents,
+            std::printf("   %4d %s  %7.1f  %5.0fms%s%s%s\n", n, cents,
                         static_cast<double>(rmsAt[i]), static_cast<double>(speakAt[i]),
-                        dead ? "  <- dead" : "", mode ? "  <- wrong partial" : "");
+                        dead ? "  <- dead" : "", mode ? "  <- wrong partial" : "",
+                        none && !dead ? "  <- atonal" : "");
         }
         // What a player would notice: how far the loudest note is from the
         // quietest, and how far out of tune the worst one is.
         const float quietest = *std::min_element(rmsAt.begin(), rmsAt.end());
         float worstCents = 0.0f;
         for (float c : centsAt) if (c > -9000.0f && std::fabs(c) > std::fabs(worstCents)) worstCents = c;
-        std::printf("   %d of %zu notes wrong, %.0f dB across the range, worst tuning %+.0f cents\n",
-                    bad, rmsAt.size(), static_cast<double>(loudest - quietest),
+        std::printf("   %d of %zu notes wrong (%d with no pitch at all), %.0f dB across the "
+                    "range, worst tuning %+.0f cents\n",
+                    bad, rmsAt.size(), atonal, static_cast<double>(loudest - quietest),
                     static_cast<double>(worstCents));
         worst += bad;
     }

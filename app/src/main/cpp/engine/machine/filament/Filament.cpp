@@ -325,7 +325,12 @@ bool Filament::render(float *L, float *R, int32_t frames) {
         }
     }
     for (int i = 0; i < kSympathetic; ++i) {
-        sympathetic[i].setDamping(0.95f + 0.05f * symDamping, 0.2f + 0.6f * paramOf(Tone));
+        // ...and the sympathetic strings the same way, against their own
+        // pitches, or the high ones in the bank die while the low ones hang.
+        const float symRing = 0.1f * std::pow(60.0f, symDamping);
+        sympathetic[i].setDamping(
+            std::fmin(0.99995f, std::exp(-1.0f / (std::fmax(20.0f, sympatheticHz[i]) * symRing))),
+            0.2f + 0.6f * paramOf(Tone));
         sympathetic[i].setDispersion(dispersion * 0.7f, stages);
     }
 
@@ -344,18 +349,35 @@ bool Filament::render(float *L, float *R, int32_t frames) {
 
             // Damping, brightness and tuning, note by note: a short string
             // rings for less time and darker, as a real one does.
-            const float keyDamp = 1.0f - paramOf(DampingKey) * v.key01 * 0.35f;
-            const float sustain = clampf(paramOf(Damping) + mod[DstDamping], 0.0f, 1.0f) * keyDamp;
-            const float loopGain = 0.9f + 0.0999f * sustain - v.damp * (1.0f - std::exp(-releaseCoeff)) * 0.0f;
             const float keyTone = 1.0f - paramOf(ToneKey) * v.key01 * 0.5f;
             const float tone = clampf((paramOf(Tone) + mod[DstTone]) * keyTone, 0.02f, 1.0f);
             const float freq = v.freq * pitchScale * noteBendMul(v) * std::pow(2.0f, mod[DstPitch]);
 
-            // Letting go: the string is damped by shortening its loop gain
-            // over the release time rather than by an envelope, because a
-            // damped string is still a string.
+            // **How long the string rings is a time, not a loop gain.**
+            //
+            // A fixed gain per turn is a fixed loss per turn, and a string
+            // goes round f times a second - so the same number gave a low
+            // string twice the ring of the one an octave up and four times
+            // the one above that. Two octaves up from the note it was voiced
+            // at, every patch here was gone before the harness could find a
+            // pitch in it: not a wrong note, no note. The same law the
+            // woodwinds' walls needed, in the other direction.
+            //
+            // So `sustain` is a time - a twentieth of a second at nothing, a
+            // little over half a second in the middle, eight at the top - and the gain follows
+            // from it and the pitch. `sustainkey` then does what it says
+            // instead of the opposite: it shortens the top of the keyboard a
+            // little, as a real instrument's short strings are.
+            //
+            // Letting go shortens that time rather than scaling the gain,
+            // because a damped string is still a string and a hand on a high
+            // one stops it just as fast as on a low one.
             if (v.damp > 0.0f) v.damp = std::fmin(1.0f, v.damp + releaseCoeff * 4.0f);
-            const float damped = v.damp > 0.0f ? loopGain * (1.0f - 0.06f * v.damp) : loopGain;
+            const float keyDamp = 1.0f - paramOf(DampingKey) * v.key01 * 0.35f;
+            const float sustain = clampf(paramOf(Damping) + mod[DstDamping], 0.0f, 1.0f);
+            const float ring = 0.05f * std::pow(160.0f, sustain) * keyDamp * (1.0f - 0.92f * v.damp);
+            const float damped = std::fmin(
+                0.99995f, std::exp(-1.0f / (std::fmax(20.0f, freq) * std::fmax(0.002f, ring))));
 
             v.a.setFrequency(freq);
             v.b.setFrequency(freq * std::pow(2.0f, (detune + mod[DstDetune] * 50.0f) / 1200.0f));
@@ -438,8 +460,21 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             const float a = v.a.step(excite);
             const float b = v.b.step(excite * (1.0f - pos));
             const float coupled = (a + b) * 0.5f;
-            v.a.excite(b * couple * 0.02f);
-            v.b.excite(a * couple * 0.02f);
+            // A course is two strings over one bridge, and a bridge *shares*
+            // energy rather than making it. Each string is given a fraction
+            // of the difference, so what one gains the other loses and the
+            // pair rings exactly as long as one string would; and the
+            // fraction is a fraction of a whole turn, not of a sample.
+            //
+            // Handing each string the other's output per sample did both
+            // things wrong. Over a 145-sample turn at `couple` 0.8 that was
+            // two and a third added to a loop gain already at 0.999, so the
+            // Wire patch was fourteen decibels louder with the coupling on
+            // than off and its note-on read fifty thousand times the edge of
+            // its own tone.
+            const float share = (b - a) * couple * 0.05f;
+            v.a.exciteOverTurn(share);
+            v.b.exciteOverTurn(-share);
 
             float voiceOut = coupled;
             if (rattle > 0.0f && std::fabs(voiceOut) > rattleAt) {
@@ -462,9 +497,13 @@ bool Filament::render(float *L, float *R, int32_t frames) {
 
         // The sympathetic bank hears everything and answers.
         if (symOn) {
-            symFeed = sumForSympathy * clampf(symLevel + mod[DstSympathetic], 0.0f, 1.0f) * 0.08f;
+            // ...per turn as well, and for the same reason: six strings each
+            // given eight per cent of the played one every sample is forty
+            // times a turn at the bottom of the range, and they never stopped.
+            symFeed = sumForSympathy * clampf(symLevel + mod[DstSympathetic], 0.0f, 1.0f) * 0.6f;
             float symOut = 0.0f;
-            for (int i = 0; i < kSympathetic; ++i) symOut += sympathetic[i].step(symFeed);
+            for (int i = 0; i < kSympathetic; ++i)
+                symOut += sympathetic[i].step(symFeed * sympathetic[i].turnScale());
             symOut *= 0.2f * clampf(symLevel + mod[DstSympathetic], 0.0f, 1.0f);
             mixL += symOut;
             mixR += symOut * 0.85f;

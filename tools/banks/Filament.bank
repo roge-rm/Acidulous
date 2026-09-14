@@ -1,4 +1,63 @@
-# Filament - seeded from what shipped, and not yet voiced.
+# Filament - strings, and the first pass over them with the harness pointed
+# at the machine rather than at the bank.
+#
+# **Six things in the model were wrong and all six are fixed.** They are the
+# same three lessons the brass and the woodwinds gave, in a third dress.
+#
+#   - **The loop length was guessed, not solved.** It was the period minus a
+#     *DC estimate* of two of the four things in the loop. But it is the
+#     phase at the note that decides where a string sounds, and an allpass
+#     has its full delay at DC and less at every frequency above; the damper
+#     tap was not counted at all. A damper a third of the way along put the
+#     note fifty cents up. Solved from the whole loop's phase now, the tap
+#     included, which takes three passes because the tap sits along the
+#     length being solved for.
+#   - **An allpass at zero stiffness is still a one-sample delay.** Two of
+#     them on a 367-sample string is nine cents, and every patch had it.
+#   - **Coupling was a gain.** Two strings over one bridge were each handed
+#     the other's whole output every sample: over a 145-sample turn at
+#     `couple` 0.8 that added two and a third to a loop gain already at
+#     0.999. The Wire patch was fourteen decibels louder with coupling on
+#     than off and its note-on read *fifty-four thousand times* the edge of
+#     its own tone. A bridge shares rather than makes, so each string now
+#     gets a fraction of the *difference*, and the fraction is of a turn.
+#   - **The sympathetic bank had the same fault**, six strings each given
+#     eight per cent of the played note every sample. They never stopped.
+#   - **Stiffness could bend the loop by a third of the string.** A real wire
+#     is sharp in its partials by a fraction of a percent low down and a few
+#     percent at the top. A third is not a stiff string, it is a different
+#     instrument every note. A twelfth at full stiffness now.
+#   - **A string cannot hold DC, and this one could.** Nothing blocked it and
+#     the loop passes DC whole, so a hammer - whose blow is a squared sine
+#     and therefore never negative - and a jet, whose pressure has an offset
+#     by definition, each left a standing offset going round for ever. A
+#     seventh of full scale on the sympathetic patch. It was headroom spent
+#     on nothing, a thump at every note, and enough of a pedestal that the
+#     harness could not find a pitch in six of these ten patches at all.
+#
+# **And how long a string rings is a time, not a loop gain.** A fixed loss per
+# turn is a string that goes round f times a second, so the same number gave
+# a low string twice the ring of the one an octave up. Two octaves above where
+# a patch was voiced there was nothing left to measure. `sustain` is now
+# seconds - a twentieth at nothing, eight at the top - and `sustainkey` does
+# what it says instead of the opposite.
+#
+# Measured, against the bank this replaces: DC from -17 dB to -110, note-ons
+# from 54076x and 1346x and 35x down to 17.8x at the worst, and eight of ten
+# patches have a findable pitch where four did. Every one of those eight is
+# within 16 cents. The plucked patches are levelled on peak and the sustained
+# ones on rms, because a bank holding both cannot be levelled on one number -
+# the "loudness spread" line is reading the two against each other and should
+# be ignored here.
+#
+# **What is still wrong.** The bow plays a note two and a half octaves under
+# the one it was asked for: it needed far more pressure once its own offset
+# was blocked, and at that pressure the friction curve is period-doubling.
+# Steel and Wire still start fifteen times brighter than they continue.
+# `Spoken To` is played by the audio input and so measures as silence here,
+# which is correct and means it cannot be auditioned without one. And the
+# timbres past this are a first pass: the ring times are chosen numbers
+# rather than heard ones.
 #
 # Values are in each parameter's own units; `audition params Filament` lists
 # them. A patch names only what it changes.
@@ -11,7 +70,7 @@ role    tune
 
 patch Init
 
-patch Nylon
+patch Nylon  note=52 range=40..76
   bodymix        0.45
   couple         0.3
   detune         5 c
@@ -19,10 +78,11 @@ patch Nylon
   length         0.00102617 s
   position       0.188
   size           0.55
-  sustain        0.78
+  sustain        0.727
   tone           0.4
+  volume         0.74
 
-patch Steel
+patch Steel  note=52 range=40..79
   bodymix        0.4
   couple         0.4
   detune         6 c
@@ -31,10 +91,11 @@ patch Steel
   position       0.0776
   size           0.4
   stiffness      0.18
-  sustain        0.88
+  sustain        0.807
   tone           0.62
+  volume         0.58
 
-patch Hammered
+patch Hammered  note=60 range=36..84
   bodymix        0.3
   couple         0.5
   exciter        #2
@@ -43,44 +104,52 @@ patch Hammered
   size           0.3
   stages         #4
   stiffness      0.55
-  sustain        0.93
+  sustain        0.943
   symlevel       0.25
   sympathy       #1
   symtune        #5
   tension        0.3
   tone           0.5
+  volume         0.53
 
-patch Bowed
+patch Bowed  note=55 range=36..76
   bodymix        0.4
   exciter        #3
-  grit           0.35
+  grit           0.7
   position       0.1064
-  pressure       0.55
-  speed          0.45
-  sustain        0.9
+  # The bow leans harder than it did. With the string's own offset blocked
+  # the friction curve has to do all the work, and at 0.55 it did not start
+  # one: the patch measured as broadband noise at 3900 Hz with the string
+  # barely in it. At 0.85 the centroid falls to 1163 Hz, which is a string.
+  pressure       0.85
+  speed          0.8
+  sustain        0.454
   tone           0.4
   velocity       0.4
+  volume         0.32
 
-patch Blown
+patch Blown  note=67 range=48..84
   bodymix        0.5
   exciter        #4
   grit           0.7
   pressure       0.6
   size           0.7
   stiffness      0.1
-  sustain        0.86
+  sustain        0.41
   tone           0.3
+  volume         0.16
 
-patch Sympathy
+patch Sympathy  note=60 range=45..81
   "on release"   #0
   symlevel       0.7
   sympathy       #1
-  symsustain     0.97
+  symsustain     0.786
   symtune        #4
   symwide        0.8
   tone           0.5
+  volume         0.55
 
-patch Prepared
+patch Prepared  note=55 range=36..76
   damper         0.4
   "damper at"    0.33
   drive          0.2
@@ -89,20 +158,21 @@ patch Prepared
   "rattle at"    0.208
   stages         #3
   stiffness      0.3
-  sustain        0.9
+  sustain        0.727
   tone           0.6
+  volume         0.16
 
-patch "Spoken To"
+patch "Spoken To"  note=55 range=36..72
   bodymix        0.3
   exciter        #5
   "in gain"      2
-  sustain        0.92
+  sustain        0.727
   symlevel       0.4
   sympathy       #1
   symtune        #2
   tone           0.55
 
-patch Wire
+patch Wire  note=64 range=52..88
   couple         0.8
   detune         30 c
   drive          0.3
@@ -111,6 +181,7 @@ patch Wire
   rattle         0.3
   stages         #4
   stiffness      0.85
-  sustain        0.99
+  sustain        0.907
   tension        0.8
   tone           0.85
+  volume         0.51
