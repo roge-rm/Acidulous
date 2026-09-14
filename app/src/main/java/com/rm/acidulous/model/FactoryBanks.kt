@@ -344,31 +344,31 @@ internal object FactoryBanks {
     private fun filament0() = Patch("Filament", "Init", emptyMap())
 
     private fun filament1() = Patch("Filament", "Nylon",
-        mapOf("position" to 0.35f, "grit" to 0.6f, "length" to 0.120000787f, "sustain" to 0.727f, "tone" to 0.4f, "detune" to 0.1f, "couple" to 0.3f, "size" to 0.55f, "bodymix" to 0.45f, "volume" to 0.72f),
+        mapOf("position" to 0.35f, "grit" to 0.6f, "length" to 0.120000787f, "sustain" to 0.727f, "tone" to 0.4f, "detune" to 0.1f, "couple" to 0.3f, "size" to 0.55f, "bodymix" to 0.45f, "volume" to 1f),
         low = 40, high = 76)
 
     private fun filament2() = Patch("Filament", "Steel",
-        mapOf("exciter" to 0.2f, "position" to 0.120000005f, "sustain" to 0.807f, "tone" to 0.62f, "stiffness" to 0.18f, "detune" to 0.12f, "couple" to 0.4f, "size" to 0.4f, "bodymix" to 0.4f, "drive" to 0.12f, "volume" to 0.65f),
+        mapOf("exciter" to 0.2f, "position" to 0.120000005f, "sustain" to 0.807f, "tone" to 0.5f, "stiffness" to 0.18f, "detune" to 0.12f, "couple" to 0.4f, "size" to 0.4f, "bodymix" to 0.4f, "drive" to 0.12f, "volume" to 1f),
         low = 40, high = 79)
 
     private fun filament3() = Patch("Filament", "Hammered",
-        mapOf("exciter" to 0.4f, "hardness" to 0.55f, "length" to 0.04999988f, "sustain" to 0.943f, "tone" to 0.5f, "stiffness" to 0.55f, "stages" to 1f, "tension" to 0.3f, "couple" to 0.5f, "sympathy" to 1f, "symtune" to 1f, "symlevel" to 0.25f, "size" to 0.3f, "bodymix" to 0.3f, "volume" to 0.53f),
+        mapOf("exciter" to 0.4f, "hardness" to 0.55f, "length" to 0.04999988f, "sustain" to 0.943f, "tone" to 0.5f, "stiffness" to 0.55f, "stages" to 1f, "tension" to 0.3f, "couple" to 0.5f, "sympathy" to 1f, "symtune" to 1f, "symlevel" to 0.25f, "size" to 0.3f, "bodymix" to 0.3f, "volume" to 0.35f),
         low = 36, high = 84)
 
     private fun filament4() = Patch("Filament", "Bowed",
-        mapOf("exciter" to 0.6f, "position" to 0.18f, "pressure" to 0.85f, "speed" to 0.8f, "grit" to 0.3f, "sustain" to 0.454f, "tone" to 0.4f, "bodymix" to 0.4f, "volume" to 0.27f, "velocity" to 0.4f),
+        mapOf("exciter" to 0.6f, "position" to 0.18f, "pressure" to 0.85f, "speed" to 0.8f, "grit" to 0.3f, "sustain" to 0.454f, "tone" to 0.4f, "bodymix" to 0.4f, "volume" to 0.19f, "velocity" to 0.4f),
         low = 36, high = 76)
 
     private fun filament5() = Patch("Filament", "Blown",
-        mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 1f),
+        mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 0.79f),
         low = 48, high = 82)
 
     private fun filament6() = Patch("Filament", "Sympathy",
-        mapOf("tone" to 0.5f, "sympathy" to 1f, "symtune" to 0.8f, "symlevel" to 0.7f, "symsustain" to 0.786f, "symwide" to 0.8f, "volume" to 0.59f, "on release" to 0f),
+        mapOf("tone" to 0.5f, "sympathy" to 1f, "symtune" to 0.8f, "symlevel" to 0.7f, "symsustain" to 0.786f, "symwide" to 0.8f, "volume" to 0.76f, "on release" to 0f),
         low = 45, high = 81)
 
     private fun filament7() = Patch("Filament", "Prepared",
-        mapOf("exciter" to 0.4f, "sustain" to 0.727f, "tone" to 0.6f, "stiffness" to 0.3f, "stages" to 0.75f, "damper" to 0.4f, "rattle" to 0.55f, "rattle at" to 0.2f, "drive" to 0.2f, "volume" to 0.22f),
+        mapOf("exciter" to 0.4f, "sustain" to 0.727f, "tone" to 0.6f, "stiffness" to 0.3f, "stages" to 0.75f, "damper" to 0.4f, "rattle" to 0.55f, "rattle at" to 0.2f, "drive" to 0.2f, "volume" to 0.18f),
         low = 36, high = 76)
 
     private fun filament8() = Patch("Filament", "Spoken To",
@@ -376,7 +376,7 @@ internal object FactoryBanks {
         low = 36, high = 72)
 
     private fun filament9() = Patch("Filament", "Wire",
-        mapOf("exciter" to 0.2f, "position" to 0.05f, "sustain" to 0.907f, "tone" to 0.85f, "stiffness" to 0.85f, "stages" to 1f, "tension" to 0.8f, "rattle" to 0.3f, "detune" to 0.6f, "couple" to 0.8f, "drive" to 0.3f, "volume" to 0.52f),
+        mapOf("exciter" to 0.2f, "position" to 0.05f, "sustain" to 0.907f, "tone" to 0.85f, "stiffness" to 0.85f, "stages" to 1f, "tension" to 0.8f, "rattle" to 0.3f, "detune" to 0.6f, "couple" to 0.8f, "drive" to 0.3f, "volume" to 0.6f),
         low = 52, high = 88)
 
     private val filament: List<Patch> by lazy { listOf(filament0(), filament1(), filament2(), filament3(), filament4(), filament5(), filament6(), filament7(), filament8(), filament9()) }

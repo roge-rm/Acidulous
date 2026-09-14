@@ -204,7 +204,55 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     const float lengthSeconds = mode == Bow || mode == Breath || mode == External
                                     ? 0.0f
                                     : paramOf(ExcitLength);
-    v->exciteLeft = static_cast<int32_t>(lengthSeconds * sampleRate);
+    // **A pluck displaces the whole string, so it fills the whole loop.**
+    //
+    // `length` is the contact time - how long a finger or a pick is against
+    // the string - and it is a time, honestly. But the *displacement* it
+    // leaves behind is spread along the entire string, and a waveguide's
+    // string is one period long. Put in as a burst shorter than that and the
+    // burst simply goes round as a burst: measured on the nylon patch at
+    // note 52, one millisecond of excitation in a six millisecond loop came
+    // out as two milliseconds of sound and four of near silence, over and
+    // over - a pulse train at the right pitch rather than a string, thirty
+    // decibels between the loud part and the quiet part of every period.
+    //
+    // It was also the last of this machine's fixed times that should have
+    // been a turn: at the bottom of a range the burst covered a sixth of the
+    // loop and at the top two thirds of it, so the same patch was a different
+    // instrument at each end and seven decibels louder at the top.
+    //
+    // A **hammer** is the other case and does not get this. It does not
+    // displace the string, it hits one point of it and leaves: the contact
+    // time is the whole of what it has to say, and stretching it to a period
+    // put the struck patch's octave above its fundamental and tripled the
+    // corner at its onset. Pluck and pick set a shape along the string;
+    // hammer, bow and breath act at a point.
+    // A **hammer** does not get that: it does not displace the string, it hits
+    // one point of it and leaves. But its contact time is a fraction of the
+    // string's period and not a fixed number of milliseconds, for the same
+    // reason a piano's treble hammers are harder and lighter than its bass
+    // ones. Fixed, the default six milliseconds is two thirds of a period at
+    // the bottom of a range and four whole periods at the top, and a pulse
+    // four periods long has nothing at the note to give it: the prepared
+    // patch was twelve decibels quieter at the top of its range than the
+    // bottom with an identical peak, which is a hammer too slow to move the
+    // string it is hitting. `length` is read at middle C and scales from
+    // there, so every note is struck the same way and what changes across a
+    // range is the string rather than the hammer.
+    const float turn = sampleRate / std::max(20.0f, v->target);
+    const bool spread = mode == Pluck || mode == Pick;
+    const float contact = mode == Hammer ? lengthSeconds * 261.63f / std::max(20.0f, v->target)
+                                         : lengthSeconds;
+    // A shorter contact is a smaller blow unless the hammer hits harder for
+    // it, and a hammer of one mass at one speed carries the same energy
+    // whatever it lands on. Without this the scaling above traded a twelve
+    // decibel taper for a fifteen: the struck patch spans four octaves and
+    // its contact at the top is a quarter of the one at the bottom.
+    if (mode == Hammer) {
+        v->exciteGain *= clampf(std::sqrt(v->target / 261.63f), 0.35f, 3.0f);
+    }
+    v->exciteLeft = static_cast<int32_t>(spread ? std::max(contact * sampleRate, turn)
+                                                : contact * sampleRate);
     retuneSympathetic(v->target);
 }
 

@@ -92,16 +92,36 @@
 # parts jet noise to one part note, so its range stops at 82. All 379 notes
 # of this bank now pass.
 #
+# **The spike in front of the note was a pulse train.** Nylon put one
+# millisecond of excitation into a six millisecond loop, so what came out was
+# two milliseconds of sound and four of near silence, over and over, at the
+# right pitch - thirty decibels between the loud part and the quiet part of
+# every single period. A pluck displaces the *whole* string, and a
+# waveguide's string is one period long, so a pluck fills the loop. Nylon's
+# note-on went from five times the corner of its own tone to one, its loudest
+# partial from the octave to the fundamental, and the note carries seven
+# decibels more of its own energy.
+#
+# **And a hammer's contact is a fraction of the string's period**, which is
+# why a piano's treble hammers are harder and lighter than its bass ones.
+# Fixed at six milliseconds it was two thirds of a period at the bottom of a
+# range and four whole periods at the top, and a pulse four periods long has
+# nothing at the note to give it: Prepared was twelve decibels quieter at the
+# top of its range than the bottom with an identical peak. It scales from
+# middle C now, and hits harder as the contact shortens, because a hammer of
+# one mass at one speed carries the same blow whatever it lands on.
+#
 # **What is still wrong.** `Spoken To` is played by the audio input and so
 # measures as silence here, which is correct and means it cannot be
-# auditioned without one. Prepared is even from note 36 to 57 and then tapers
-# sixteen decibels to the top of its range; about five of that is the damper
-# and the rest was there before it. And the two plucked patches read twenty
-# five decibels between their peak and their loudest four hundred
-# milliseconds, which says a tall narrow spike in front of a quiet note - the
-# `click` column puts Nylon at 5x, the sharpest onset here. That is the next
-# thing to look at, and it only became visible when there was a loudness
-# column to see it against. The harness's `pitch` is unreliable for a string
+# auditioned without one. `position` does not do what its comment says: it is
+# supposed to be the same disturbance a little later and inverted, which is
+# the comb that makes a bridge pickup thin, and it is actually a level
+# difference between the two strings of the course. Setting it from 0.08 to
+# 0.3 moves nothing measurable. Steel is four decibels under the rest of the
+# bank at full volume, because its energy sits in high partials rather than
+# at the note. And `chiff` reads 1.0 whenever a patch's tail is under a
+# twentieth of its peak, which means "not measured" rather than "no chiff" -
+# do not read the plucked patches' 1.0 as a result. The harness's `pitch` is unreliable for a string
 # picked near its bridge - Steel's fundamental sits eleven decibels under its
 # own fifth harmonic, and a direct look at the spectrum says the note is
 # eight cents flat where the column says a hundred and ninety-six. Scoring a
@@ -131,7 +151,7 @@ patch Nylon  note=52 range=40..76
   size           0.55
   sustain        0.727
   tone           0.4
-  volume         0.72
+  volume         1.00
 
 patch Steel  note=52 range=40..79
   bodymix        0.4
@@ -143,8 +163,10 @@ patch Steel  note=52 range=40..79
   size           0.4
   stiffness      0.18
   sustain        0.807
-  tone           0.62
-  volume         0.65
+  # 0.62 made a loop bright enough that the eighth harmonic was the loudest
+  # thing in the note. A steel string is bright and still has a fundamental.
+  tone           0.5
+  volume         1.00
 
 patch Hammered  note=60 range=36..84
   bodymix        0.3
@@ -161,7 +183,7 @@ patch Hammered  note=60 range=36..84
   symtune        #5
   tension        0.3
   tone           0.5
-  volume         0.53
+  volume         0.35
 
 patch Bowed  note=55 range=36..76
   bodymix        0.4
@@ -177,7 +199,7 @@ patch Bowed  note=55 range=36..76
   sustain        0.454
   tone           0.4
   velocity       0.4
-  volume         0.27
+  volume         0.19
 
 # 48..82 rather than 84: at a kilohertz a string blown at rather than
 # struck is nine parts jet noise to one part note, and 84 measured 0.11 on
@@ -191,7 +213,7 @@ patch Blown  note=67 range=48..82
   stiffness      0.1
   sustain        0.41
   tone           0.3
-  volume         1.00
+  volume         0.79
 
 patch Sympathy  note=60 range=45..81
   "on release"   #0
@@ -201,7 +223,7 @@ patch Sympathy  note=60 range=45..81
   symtune        #4
   symwide        0.8
   tone           0.5
-  volume         0.59
+  volume         0.76
 
 patch Prepared  note=55 range=36..76
   damper         0.4
@@ -221,7 +243,7 @@ patch Prepared  note=55 range=36..76
   stiffness      0.3
   sustain        0.727
   tone           0.6
-  volume         0.22
+  volume         0.18
 
 patch "Spoken To"  note=55 range=36..72
   bodymix        0.3
@@ -245,4 +267,4 @@ patch Wire  note=64 range=52..88
   sustain        0.907
   tension        0.8
   tone           0.85
-  volume         0.52
+  volume         0.60

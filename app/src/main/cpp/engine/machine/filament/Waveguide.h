@@ -274,7 +274,17 @@ class Waveguide {
         const float dcMag = std::sqrt((1.0f - cw) * (1.0f - cw) + sw * sw) /
                             std::sqrt((1.0f - dcPole * cw) * (1.0f - dcPole * cw) +
                                       (dcPole * sw) * (dcPole * sw));
-        loopKeeps = clampf(toneMag * dcMag, 0.05f, 1.0f);
+        // ...and the straight line drawn between two samples to read a
+        // fractional delay, which is a low-pass and not a free one. It costs
+        // a thousandth of a turn at the top of a range, which sounds like
+        // nothing until you remember the string goes round six hundred times
+        // a second there: a note that should ring as long as the one three
+        // octaves below it rang a third as long. The last of the losses in
+        // this loop that nothing was counting.
+        const float frac = d - std::floor(d);
+        const float ir = 1.0f - frac + frac * cw, ii = -frac * sw;
+        const float interp = std::sqrt(ir * ir + ii * ii);
+        loopKeeps = clampf(toneMag * dcMag * interp, 0.05f, 1.0f);
         effGain = clampf(gain / loopKeeps, 0.0f, 1.05f);
     }
 
