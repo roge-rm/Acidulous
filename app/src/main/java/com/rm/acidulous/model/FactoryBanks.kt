@@ -558,95 +558,95 @@ internal object FactoryBanks {
     private fun manual0() = Patch("Manual", "Init", emptyMap())
 
     private fun manual1() = Patch("Manual", "Gospel",
-        mapOf("click" to 0.4f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "pa_2" to 0.625f, "perclvl" to 0.7f, "percdec" to 0.42361632f, "vibtype" to 0.6f, "vibdepth" to 0.45f, "rotspeed" to 0.5f, "drive" to 0.28f, "volume" to 0.38f),
+        mapOf("click" to 0.4f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "pa_2" to 0.625f, "perclvl" to 0.7f, "percdec" to 0.42361632f, "vibtype" to 0.6f, "vibdepth" to 0.45f, "rotspeed" to 0.5f, "drive" to 0.28f, "volume" to 0.89f),
         low = 29, high = 84)
 
     private fun manual2() = Patch("Manual", "Full Draw",
-        mapOf("click" to 0.55f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 1f, "la_223" to 1f, "la_2" to 1f, "la_135" to 1f, "la_113" to 1f, "la_1" to 1f, "pa_2" to 1f, "perc" to 0f, "vibtype" to 1f, "vibdepth" to 0.7f, "rotspeed" to 1f, "drive" to 0.5f, "volume" to 0.37f),
+        mapOf("click" to 0.55f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 1f, "la_223" to 1f, "la_2" to 1f, "la_135" to 1f, "la_113" to 1f, "la_1" to 1f, "pa_2" to 1f, "perc" to 0f, "vibtype" to 1f, "vibdepth" to 0.7f, "rotspeed" to 1f, "drive" to 0.5f, "volume" to 0.92f),
         low = 36, high = 84)
 
     private fun manual3() = Patch("Manual", "Smoke",
-        mapOf("age" to 0.45f, "leakage" to 0.32f, "click" to 0.45f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 0.875f, "ua_2" to 0.75f, "ua_135" to 0.625f, "ua_113" to 0.5f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.42f, "treble" to 0.416666657f, "volume" to 0.375f),
+        mapOf("age" to 0.45f, "leakage" to 0.32f, "click" to 0.45f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 0.875f, "ua_2" to 0.75f, "ua_135" to 0.625f, "ua_113" to 0.5f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.42f, "treble" to 0.416666657f, "volume" to 0.9f),
         low = 36, high = 84)
 
     private fun manual4() = Patch("Manual", "Comping",
-        mapOf("split" to 0.503937f, "upper" to 0.8f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 0.375f, "ua_4" to 0f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "pa_1" to 0.75f, "pa_2" to 0.375f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.15f, "volume" to 0.44f),
+        mapOf("split" to 0.503937f, "upper" to 0.8f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 0.375f, "ua_4" to 0f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "pa_1" to 0.75f, "pa_2" to 0.375f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.15f, "volume" to 0.93f),
         low = 41, high = 79)
 
     private fun manual5() = Patch("Manual", "Jazz Flutes",
-        mapOf("click" to 0.2f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "vibtype" to 1f, "vibdepth" to 0.75f, "rotspeed" to 0.5f, "drive" to 0.08f, "volume" to 0.465f),
+        mapOf("click" to 0.2f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "vibtype" to 1f, "vibdepth" to 0.75f, "rotspeed" to 0.5f, "drive" to 0.08f, "volume" to 0.895f),
         low = 48, high = 84)
 
     private fun manual6() = Patch("Manual", "Third Perc",
-        mapOf("click" to 0.5f, "loweron" to 1f, "ua_8" to 0f, "ua_4" to 0f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "percharm" to 0f, "perclvl" to 1f, "percdec" to 0.338109434f, "perckey" to 0.45f, "rotspeed" to 1f, "drive" to 0.3f, "volume" to 0.41f),
+        mapOf("click" to 0.5f, "loweron" to 1f, "ua_8" to 0f, "ua_4" to 0f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "percharm" to 0f, "perclvl" to 1f, "percdec" to 0.338109434f, "perckey" to 0.45f, "rotspeed" to 1f, "drive" to 0.3f, "volume" to 1f),
         low = 48, high = 84)
 
     private fun manual7() = Patch("Manual", "Slow Tap",
-        mapOf("ua_513" to 0.75f, "ua_4" to 0f, "perclvl" to 0.45f, "percfast" to 0f, "percdec" to 0.659597039f, "perckey" to 0.2f, "rotspeed" to 0.5f, "drive" to 0.2f, "volume" to 0.4f),
+        mapOf("ua_513" to 0.75f, "ua_4" to 0f, "perclvl" to 0.45f, "percfast" to 0f, "percdec" to 0.659597039f, "perckey" to 0.2f, "rotspeed" to 0.5f, "drive" to 0.2f, "volume" to 0.885f),
         low = 48, high = 84)
 
     private fun manual8() = Patch("Manual", "Blues Wail",
-        mapOf("click" to 0.5f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 1f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "rotspeed" to 1f, "drive" to 0.72f, "bias" to 0.56f, "mid" to 0.5833333f, "volume" to 0.355f),
+        mapOf("click" to 0.5f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 1f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "rotspeed" to 1f, "drive" to 0.72f, "bias" to 0.56f, "mid" to 0.5833333f, "volume" to 0.935f),
         low = 48, high = 84)
 
     private fun manual9() = Patch("Manual", "Overdrive",
-        mapOf("click" to 0.6f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 1f, "pa_2" to 1f, "perc" to 0f, "rotspeed" to 1f, "hornfast" to 0.8129129f, "drive" to 0.92f, "bias" to 0.65f, "bass" to 0.5833333f, "treble" to 0.375f, "volume" to 0.37f),
+        mapOf("click" to 0.6f, "loweron" to 1f, "pedalon" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 1f, "pa_2" to 1f, "perc" to 0f, "rotspeed" to 1f, "hornfast" to 0.8129129f, "drive" to 0.92f, "bias" to 0.65f, "bass" to 0.5833333f, "treble" to 0.375f, "volume" to 0.975f),
         low = 41, high = 84)
 
     private fun manual10() = Patch("Manual", "Whistle",
-        mapOf("click" to 0.45f, "ua_16" to 0f, "ua_8" to 0.875f, "ua_4" to 0f, "ua_223" to 0.75f, "ua_1" to 0.625f, "perc" to 0f, "vibtype" to 0.4f, "vibdepth" to 0.5f, "rotspeed" to 1f, "drive" to 0.28f, "volume" to 0.495f),
+        mapOf("click" to 0.45f, "ua_16" to 0f, "ua_8" to 0.875f, "ua_4" to 0f, "ua_223" to 0.75f, "ua_1" to 0.625f, "perc" to 0f, "vibtype" to 0.4f, "vibdepth" to 0.5f, "rotspeed" to 1f, "drive" to 0.28f, "volume" to 1f),
         low = 48, high = 88)
 
     private fun manual11() = Patch("Manual", "Bright Ballad",
-        mapOf("loweron" to 1f, "ua_16" to 0f, "ua_8" to 0.75f, "ua_4" to 1f, "ua_223" to 0.875f, "ua_2" to 0.75f, "ua_135" to 0.625f, "ua_113" to 0.5f, "la_8" to 0.5f, "la_4" to 0.625f, "perc" to 0f, "vibdepth" to 0.5f, "rotspeed" to 0.5f, "drive" to 0.2f, "volume" to 0.475f),
+        mapOf("loweron" to 1f, "ua_16" to 0f, "ua_8" to 0.75f, "ua_4" to 1f, "ua_223" to 0.875f, "ua_2" to 0.75f, "ua_135" to 0.625f, "ua_113" to 0.5f, "la_8" to 0.5f, "la_4" to 0.625f, "perc" to 0f, "vibdepth" to 0.5f, "rotspeed" to 0.5f, "drive" to 0.2f, "volume" to 1f),
         low = 48, high = 84)
 
     private fun manual12() = Patch("Manual", "Two Manuals",
-        mapOf("lower" to 0.75f, "pedal" to 0.95f, "loweron" to 1f, "pedalon" to 1f, "pedsus" to 0.25f, "ua_513" to 1f, "ua_4" to 1f, "la_8" to 0.5f, "la_4" to 0.625f, "la_223" to 0.5f, "la_2" to 0.5f, "la_135" to 0.25f, "la_113" to 0.25f, "la_1" to 0.25f, "pa_2" to 0.75f, "perclvl" to 0.65f, "rotspeed" to 0.5f, "drive" to 0.3f, "volume" to 0.375f),
+        mapOf("lower" to 0.75f, "pedal" to 0.95f, "loweron" to 1f, "pedalon" to 1f, "pedsus" to 0.25f, "ua_513" to 1f, "ua_4" to 1f, "la_8" to 0.5f, "la_4" to 0.625f, "la_223" to 0.5f, "la_2" to 0.5f, "la_135" to 0.25f, "la_113" to 0.25f, "la_1" to 0.25f, "pa_2" to 0.75f, "perclvl" to 0.65f, "rotspeed" to 0.5f, "drive" to 0.3f, "volume" to 0.88f),
         low = 29, high = 84)
 
     private fun manual13() = Patch("Manual", "Pedal Bass",
-        mapOf("split" to 0.503937f, "pedsplit" to 0.417322844f, "upper" to 0.7f, "lower" to 0.7f, "pedal" to 1f, "loweron" to 1f, "pedalon" to 1f, "pedsus" to 0.45f, "ua_16" to 0f, "ua_8" to 0.5f, "la_16" to 1f, "la_8" to 0.75f, "la_4" to 0f, "pa_2" to 1f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.35f, "bass" to 0.625f, "volume" to 0.355f),
+        mapOf("split" to 0.503937f, "pedsplit" to 0.417322844f, "upper" to 0.7f, "lower" to 0.7f, "pedal" to 1f, "loweron" to 1f, "pedalon" to 1f, "pedsus" to 0.45f, "ua_16" to 0f, "ua_8" to 0.5f, "la_16" to 1f, "la_8" to 0.75f, "la_4" to 0f, "pa_2" to 1f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.35f, "bass" to 0.625f, "volume" to 0.97f),
         low = 29, high = 79)
 
     private fun manual14() = Patch("Manual", "Chorus Vib",
-        mapOf("ua_16" to 0f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "perc" to 0f, "vibtype" to 1f, "vibrate" to 0.6491668f, "vibdepth" to 1f, "vibwide" to 0.7f, "drive" to 0.12f, "volume" to 0.38f),
+        mapOf("ua_16" to 0f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "perc" to 0f, "vibtype" to 1f, "vibrate" to 0.6491668f, "vibdepth" to 1f, "vibwide" to 0.7f, "drive" to 0.12f, "volume" to 0.785f),
         low = 48, high = 84)
 
     private fun manual15() = Patch("Manual", "Tired Machine",
-        mapOf("age" to 0.9f, "leakage" to 0.62f, "hum" to 0.35f, "click" to 0.7f, "clickoff" to 0.5f, "contacts" to 0.8f, "loweron" to 1f, "ua_513" to 1f, "ua_8" to 0.75f, "ua_4" to 0.5f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "spray" to 0.3f, "sprayrate" to 0.383417428f, "spraywide" to 0.6f, "perc" to 0f, "drive" to 0.3f, "volume" to 0.385f),
+        mapOf("age" to 0.9f, "leakage" to 0.62f, "hum" to 0.35f, "click" to 0.7f, "clickoff" to 0.5f, "contacts" to 0.8f, "loweron" to 1f, "ua_513" to 1f, "ua_8" to 0.75f, "ua_4" to 0.5f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "spray" to 0.3f, "sprayrate" to 0.383417428f, "spraywide" to 0.6f, "perc" to 0f, "drive" to 0.3f, "volume" to 0.925f),
         low = 41, high = 79)
 
     private fun manual16() = Patch("Manual", "Drawbar Morph",
-        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_8" to 0.75f, "ua_4" to 0f, "ub_16" to 0f, "ub_513" to 0f, "ub_8" to 1f, "ub_4" to 1f, "ub_223" to 1f, "ub_2" to 1f, "ub_135" to 1f, "ub_113" to 1f, "ub_1" to 1f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "lb_16" to 0f, "lb_513" to 0f, "lb_8" to 0.5f, "lb_4" to 0.75f, "lb_223" to 0.75f, "lb_2" to 0.75f, "lb_135" to 0.5f, "lb_113" to 0f, "lb_1" to 0f, "morph" to 0.4f, "morphsrc" to 0.642857134f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.25f, "volume" to 0.415f, "lfo1wave" to 0.125f, "lfo1rate" to 0.289074183f, "m1_src" to 0.642857134f, "m1_dst" to 0.0416666679f, "m1_amt" to 1f),
+        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_8" to 0.75f, "ua_4" to 0f, "ub_16" to 0f, "ub_513" to 0f, "ub_8" to 1f, "ub_4" to 1f, "ub_223" to 1f, "ub_2" to 1f, "ub_135" to 1f, "ub_113" to 1f, "ub_1" to 1f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "lb_16" to 0f, "lb_513" to 0f, "lb_8" to 0.5f, "lb_4" to 0.75f, "lb_223" to 0.75f, "lb_2" to 0.75f, "lb_135" to 0.5f, "lb_113" to 0f, "lb_1" to 0f, "morph" to 0.4f, "morphsrc" to 0.642857134f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.25f, "volume" to 0.96f, "lfo1wave" to 0.125f, "lfo1rate" to 0.289074183f, "m1_src" to 0.642857134f, "m1_dst" to 0.0416666679f, "m1_amt" to 1f),
         low = 41, high = 84)
 
     private fun manual17() = Patch("Manual", "Combo Bright",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0.2f, "vibrate" to 0.7149028f, "vibdepth" to 0.55f, "tab16" to 0.9f, "tab4" to 0.75f, "tab2" to 0.15f, "reedy" to 0.55f, "comboatk" to 0.22f, "rotary" to 0f, "drive" to 0.25f, "volume" to 0.32f),
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0.2f, "vibrate" to 0.7149028f, "vibdepth" to 0.55f, "tab16" to 0.9f, "tab4" to 0.75f, "tab2" to 0.15f, "reedy" to 0.55f, "comboatk" to 0.22f, "rotary" to 0f, "drive" to 0.25f, "volume" to 0.755f),
         low = 48, high = 84)
 
     private fun manual18() = Patch("Manual", "Combo Reed",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibrate" to 0.800935864f, "vibdepth" to 0.4f, "combowave" to 0.5f, "tab16" to 0.4f, "tab4" to 0.6f, "tab2" to 0.25f, "reedy" to 0.95f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.35f, "mid" to 0.6041667f, "volume" to 0.26f),
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibrate" to 0.800935864f, "vibdepth" to 0.4f, "combowave" to 0.5f, "tab16" to 0.4f, "tab4" to 0.6f, "tab2" to 0.25f, "reedy" to 0.95f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.35f, "mid" to 0.6041667f, "volume" to 0.67f),
         low = 48, high = 84)
 
     private fun manual19() = Patch("Manual", "Combo Sixties",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0.4f, "vibrate" to 0.82689923f, "vibdepth" to 0.45f, "combowave" to 1f, "tab16" to 0f, "tab4" to 0.85f, "tab2" to 0.5f, "tab2r" to 0.55f, "reedy" to 0.5f, "comboatk" to 0.06f, "rotary" to 0f, "drive" to 0.4f, "volume" to 0.315f),
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0.4f, "vibrate" to 0.82689923f, "vibdepth" to 0.45f, "combowave" to 1f, "tab16" to 0f, "tab4" to 0.85f, "tab2" to 0.5f, "tab2r" to 0.55f, "reedy" to 0.5f, "comboatk" to 0.06f, "rotary" to 0f, "drive" to 0.4f, "volume" to 0.87f),
         low = 48, high = 84)
 
     private fun manual20() = Patch("Manual", "Combo Mixture",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibdepth" to 0.4f, "tab16" to 0.5f, "tab8" to 0.9f, "tab2" to 0.6f, "tab2r" to 0.9f, "tab4r" to 0.85f, "reedy" to 0.35f, "rotary" to 0f, "drive" to 0.22f, "treble" to 0.4375f, "volume" to 0.31f),
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibdepth" to 0.4f, "tab16" to 0.5f, "tab8" to 0.9f, "tab2" to 0.6f, "tab2r" to 0.9f, "tab4r" to 0.85f, "reedy" to 0.35f, "rotary" to 0f, "drive" to 0.22f, "treble" to 0.4375f, "volume" to 0.65f),
         low = 48, high = 84)
 
     private fun manual21() = Patch("Manual", "Combo Stab",
-        mapOf("model" to 0.333333343f, "click" to 0.8f, "clickoff" to 0.45f, "contacts" to 0.15f, "perc" to 0f, "vibdepth" to 0f, "tab16" to 0f, "tab4" to 0.95f, "tab2" to 0.9f, "reedy" to 0.88f, "comboatk" to 0f, "rotary" to 0f, "drive" to 0.45f, "volume" to 0.21f, "attack" to 0.06803998f, "release" to 0.259383738f),
+        mapOf("model" to 0.333333343f, "click" to 0.8f, "clickoff" to 0.45f, "contacts" to 0.15f, "perc" to 0f, "vibdepth" to 0f, "tab16" to 0f, "tab4" to 0.95f, "tab2" to 0.9f, "reedy" to 0.88f, "comboatk" to 0f, "rotary" to 0f, "drive" to 0.45f, "volume" to 0.57f, "attack" to 0.06803998f, "release" to 0.259383738f),
         low = 48, high = 84)
 
     private fun manual22() = Patch("Manual", "Combo Split",
-        mapOf("model" to 0.333333343f, "lower" to 1f, "loweron" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 0f, "la_4" to 0f, "perc" to 0f, "vibtype" to 0.2f, "vibdepth" to 0.5f, "combowave" to 0.5f, "tab16" to 0.35f, "tab4" to 0.8f, "tab2" to 0.45f, "tab2r" to 0.5f, "reedy" to 0.7f, "comboatk" to 0.07f, "rotary" to 0f, "drive" to 0.45f, "bass" to 0.6041667f, "volume" to 0.265f),
+        mapOf("model" to 0.333333343f, "lower" to 1f, "loweron" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 0f, "la_4" to 0f, "perc" to 0f, "vibtype" to 0.2f, "vibdepth" to 0.5f, "combowave" to 0.5f, "tab16" to 0.35f, "tab4" to 0.8f, "tab2" to 0.45f, "tab2r" to 0.5f, "reedy" to 0.7f, "comboatk" to 0.07f, "rotary" to 0f, "drive" to 0.45f, "bass" to 0.6041667f, "volume" to 0.715f),
         low = 41, high = 84)
 
     private fun manual23() = Patch("Manual", "Combo Thin",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibdepth" to 0.5f, "combowave" to 1f, "tab16" to 0f, "tab8" to 0f, "tab4" to 0.55f, "tab2" to 1f, "tab2r" to 0.8f, "tab4r" to 0.6f, "reedy" to 0.3f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.18f, "bass" to 0.333333343f, "volume" to 0.315f),
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibdepth" to 0.5f, "combowave" to 1f, "tab16" to 0f, "tab8" to 0f, "tab4" to 0.55f, "tab2" to 1f, "tab2r" to 0.8f, "tab4r" to 0.6f, "reedy" to 0.3f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.18f, "bass" to 0.333333343f, "volume" to 0.71f),
         low = 55, high = 88)
 
     private fun manual24() = Patch("Manual", "Diapason",
@@ -690,7 +690,7 @@ internal object FactoryBanks {
         low = 41, high = 81)
 
     private fun manual34() = Patch("Manual", "Musette",
-        mapOf("model" to 1f, "ua_16" to 0f, "ua_4" to 1f, "ua_223" to 1f, "spray" to 0.5f, "sprayrate" to 0.5695119f, "spraywide" to 0.9f, "spraypat" to 1f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.28f, "tremrate" to 0.794312f, "tremdepth" to 0.1f, "buzz" to 0.3f, "reedtrem" to 0.15f, "rotary" to 0f, "volume" to 0.765f, "attack" to 0.4600704f),
+        mapOf("model" to 1f, "ua_16" to 0f, "ua_4" to 1f, "ua_223" to 1f, "spray" to 0.55f, "sprayrate" to 0.5695119f, "spraywide" to 0.9f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.28f, "tremrate" to 0.794312f, "tremdepth" to 0.1f, "buzz" to 0.3f, "reedtrem" to 0.15f, "rotary" to 0f, "volume" to 0.755f, "attack" to 0.4600704f),
         low = 45, high = 84)
 
     private fun manual35() = Patch("Manual", "Melodeon",
@@ -706,11 +706,11 @@ internal object FactoryBanks {
         low = 36, high = 81)
 
     private fun manual38() = Patch("Manual", "Drift",
-        mapOf("loweron" to 1f, "ua_8" to 0.75f, "ua_4" to 1f, "ub_16" to 0f, "ub_513" to 0f, "ub_8" to 0.5f, "ub_4" to 0.75f, "ub_223" to 0.75f, "ub_2" to 0.75f, "ub_135" to 1f, "ub_113" to 0.25f, "ub_1" to 0f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "lb_16" to 0f, "lb_513" to 0f, "lb_4" to 1f, "lb_223" to 0.5f, "lb_2" to 0.5f, "lb_135" to 0f, "lb_113" to 0f, "lb_1" to 0f, "morphsrc" to 0.642857134f, "spray" to 0.12f, "sprayrate" to 0.300690442f, "spraywide" to 0.8f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.25f, "volume" to 0.395f, "lfo1wave" to 0.125f, "lfo1rate" to 0.200773031f, "lfo2rate" to 0.387380183f, "m1_src" to 0.642857134f, "m1_dst" to 0.0416666679f, "m1_amt" to 0.95f, "m2_src" to 0.714285731f, "m2_dst" to 0.0833333358f, "m2_amt" to 0.725f),
+        mapOf("loweron" to 1f, "ua_8" to 0.75f, "ua_4" to 1f, "ub_16" to 0f, "ub_513" to 0f, "ub_8" to 0.5f, "ub_4" to 0.75f, "ub_223" to 0.75f, "ub_2" to 0.75f, "ub_135" to 1f, "ub_113" to 0.25f, "ub_1" to 0f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "lb_16" to 0f, "lb_513" to 0f, "lb_4" to 1f, "lb_223" to 0.5f, "lb_2" to 0.5f, "lb_135" to 0f, "lb_113" to 0f, "lb_1" to 0f, "morphsrc" to 0.642857134f, "spray" to 0.12f, "sprayrate" to 0.300690442f, "spraywide" to 0.8f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.25f, "volume" to 0.93f, "lfo1wave" to 0.125f, "lfo1rate" to 0.200773031f, "lfo2rate" to 0.387380183f, "m1_src" to 0.642857134f, "m1_dst" to 0.0416666679f, "m1_amt" to 0.95f, "m2_src" to 0.714285731f, "m2_dst" to 0.0833333358f, "m2_amt" to 0.725f),
         low = 41, high = 84)
 
     private fun manual39() = Patch("Manual", "Cabinet Mod",
-        mapOf("ua_513" to 1f, "ua_4" to 0.5f, "perc" to 0f, "rotspeed" to 1f, "micdist" to 0.2f, "micangle" to 0.95f, "rotwide" to 0.9f, "drive" to 0.22f, "volume" to 0.45f, "m1_src" to 0.785714269f, "m1_dst" to 0.5833333f, "m1_amt" to 0.545f, "m2_src" to 0.857142866f, "m2_dst" to 0.416666657f, "m2_amt" to 0.590000033f, "m3_src" to 0.785714269f, "m3_dst" to 0.125f, "m3_amt" to 0.53f),
+        mapOf("ua_513" to 1f, "ua_4" to 0.5f, "perc" to 0f, "rotspeed" to 0.5f, "micdist" to 0.55f, "micangle" to 0.85f, "rotwide" to 0.8f, "drive" to 0.22f, "volume" to 0.8f, "m1_src" to 0.785714269f, "m1_dst" to 0.5833333f, "m1_amt" to 0.58f, "m2_src" to 0.857142866f, "m2_dst" to 0.416666657f, "m2_amt" to 0.65f, "m3_src" to 0.785714269f, "m3_dst" to 0.125f, "m3_amt" to 0.55f),
         low = 48, high = 84)
 
     private fun manual40() = Patch("Manual", "Breath",
@@ -718,7 +718,7 @@ internal object FactoryBanks {
         low = 36, high = 81)
 
     private fun manual41() = Patch("Manual", "Sprayed",
-        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "spray" to 0.85f, "sprayrate" to 0.419341654f, "spraywide" to 1f, "spraypat" to 1f, "perc" to 0f, "vibdepth" to 0.3f, "drive" to 0.2f, "volume" to 0.405f),
+        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "spray" to 0.85f, "sprayrate" to 0.419341654f, "spraywide" to 1f, "spraypat" to 1f, "perc" to 0f, "vibdepth" to 0.3f, "drive" to 0.2f, "volume" to 0.875f),
         low = 41, high = 84)
 
     private val manual: List<Patch> by lazy { listOf(manual0(), manual1(), manual2(), manual3(), manual4(), manual5(), manual6(), manual7(), manual8(), manual9(), manual10(), manual11(), manual12(), manual13(), manual14(), manual15(), manual16(), manual17(), manual18(), manual19(), manual20(), manual21(), manual22(), manual23(), manual24(), manual25(), manual26(), manual27(), manual28(), manual29(), manual30(), manual31(), manual32(), manual33(), manual34(), manual35(), manual36(), manual37(), manual38(), manual39(), manual40(), manual41()) }

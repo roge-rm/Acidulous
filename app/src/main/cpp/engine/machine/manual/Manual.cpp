@@ -885,8 +885,21 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         }
         float x = wet;
         if (drive > 0.001f) {
-            const float g = 1.0f + drive * 12.0f;
-            x = std::tanh(x * g + bias * 0.3f) / std::tanh(g * 0.6f + 0.0001f);
+            // **A saturation, not a clipper.**
+            //
+            // Dividing by `tanh(0.6g)` hard-codes an input of 0.6 to exactly
+            // full scale at *every* drive setting - 0.08 and 0.50 both map
+            // 0.6 to 1.000 - so everything above six tenths arrived
+            // flat-topped whatever the knob said. A chord puts more into this
+            // stage than a melody note does, which is why the chord was the
+            // part that squared off, and why patches three knob-turns apart
+            // all did it. The gain range is gentler, the curve is normalised
+            // so a nominal signal passes at its own size, and the bias's own
+            // offset is taken back out rather than left as DC.
+            const float g = 1.0f + drive * 5.0f;
+            const float b = bias * 0.5f;
+            const float norm = 0.4f / std::tanh(0.4f * g);
+            x = (std::tanh(x * g + b) - std::tanh(b)) * norm;
         }
         if (eqActive) x = trebleEq.process(midEq.process(bassEq.process(x)));
         if (model == Transistor) x += reedyFilter.process(x) * paramOf(ComboReedy) * 0.5f;

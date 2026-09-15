@@ -63,7 +63,7 @@ class Rotary {
         // to thirteen decibels of ping-pong, on every patch with the cabinet
         // on. A horn going round a room is a few decibels and a Doppler, and
         // the Doppler is most of what tells you it is turning.
-        depth = 0.10f + 0.30f * (1.0f - distance01);
+        depth = 0.08f + 0.24f * (1.0f - distance01);
         doppler = (0.25f + 0.75f * (1.0f - distance01)) * 0.0016f * sampleRate;
         // Half the included angle. A pair of microphones on a cabinet is
         // perhaps a third of a turn apart in total, not a half.
@@ -103,7 +103,13 @@ class Rotary {
         const float ampDL = 1.0f + depth * 0.7f * dl, ampDR = 1.0f + depth * 0.7f * dr;
         float l = hdL * ampHL + ddL * ampDL;
         float r = hdR * ampHR + ddR * ampDR;
-        const float k = 0.35f + 0.3f * (1.0f + hl) * 0.5f;
+        // How much duller it gets pointing away has to scale with how close
+        // the microphone is, exactly as the level swing does. It did not: the
+        // coefficient swept 0.35 to 0.65 whatever the mic distance said, so
+        // most of the wobble was a tone modulation that no control reached,
+        // and backing the mic off made a patch *worse* rather than better.
+        const float tilt = depth * 1.1f;
+        const float k = std::fmax(0.08f, 0.62f - tilt * (1.0f - hl) * 0.5f);
         lpL += (l - lpL) * k;
         lpR += (r - lpR) * k;
         l = lpL; r = lpR;

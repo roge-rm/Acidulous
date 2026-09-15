@@ -82,7 +82,7 @@ patch Gospel note=60 range=29..84 role=gospel
   vibtype        #3
   vibdepth       0.45
   click          0.4
-  volume         0.76
+  volume         1.78
 
 # Every bar out, which is not a registration so much as a decision.
 # It is meant to be too much, and the cabinet on fast is the point.
@@ -115,7 +115,7 @@ patch "Full Draw" note=60 range=36..84 role=gospel
   click          0.55
   vibtype        #5
   vibdepth       0.7
-  volume         0.74
+  volume         1.84
 
 # The dark half-drawn one. Mid bars in, top bars back, leakage up:
 # the sound of an instrument that has been in the room a long time.
@@ -149,7 +149,7 @@ patch Smoke note=60 range=36..84 role=gospel
   rotspeed       #1
   drive          0.42
   treble         -2
-  volume         0.75
+  volume         1.80
 
 # A left-hand registration: flat, no percussion, nothing to cut through
 # with. What you play under somebody else.
@@ -181,7 +181,7 @@ patch Comping note=60 range=41..79 role=gospel
   rotspeed       #1
   drive          0.15
   upper          0.8
-  volume         0.88
+  volume         1.86
 
 # Three flutes and the scanner in chorus, no percussion and no drive.
 # All of the sound is the vibrato and the cabinet.
@@ -211,7 +211,7 @@ patch "Jazz Flutes" note=60 range=48..84 role=gospel
   rotspeed       #1
   drive          0.08
   click          0.2
-  volume         0.93
+  volume         1.79
 
 # Two bars and the third-harmonic tap, fast and loud, stealing the 1'.
 # It only fires when every key is up, which is what makes it playable.
@@ -245,7 +245,7 @@ patch "Third Perc" note=60 range=48..84 role=gospel
   rotspeed       #2
   drive          0.3
   click          0.5
-  volume         0.82
+  volume         2.00
 
 # The same tap taken slowly and quietly, on the second harmonic, so it
 # reads as an attack rather than as a note of its own.
@@ -267,7 +267,7 @@ patch "Slow Tap" note=60 range=48..84 role=gospel
   perckey        0.2
   rotspeed       #1
   drive          0.2
-  volume         0.80
+  volume         1.77
 
 # Four bars and the amplifier worked hard. The 8' sitting under it is
 # what stops the drive turning the whole thing into fuzz.
@@ -300,7 +300,7 @@ patch "Blues Wail" note=60 range=48..84 role=gospel
   rotspeed       #2
   click          0.5
   mid            2
-  volume         0.71
+  volume         1.87
 
 # Past where the amplifier is polite. The bias is off centre so the
 # clipping is not symmetrical, which is where the even harmonics come
@@ -336,7 +336,7 @@ patch Overdrive note=64 range=41..84 role=gospel
   click          0.6
   bass           2
   treble         -3
-  volume         0.74
+  volume         1.95
 
 # Nothing at the bottom and a gap in the middle. A thin registration is
 # a real one - it is what you use when a horn section has the tune.
@@ -356,7 +356,7 @@ patch Whistle note=67 range=48..88 role=gospel
   vibtype        #2
   vibdepth       0.5
   click          0.45
-  volume         0.99
+  volume         2.00
 
 # No 16', so the left hand does not muddy, and the upper bars tapered
 # rather than out - a taper is what a drawbar set is for.
@@ -385,7 +385,7 @@ patch "Bright Ballad" note=60 range=48..84 role=gospel
   drive          0.2
   vibtype        #4
   vibdepth       0.5
-  volume         0.95
+  volume         2.00
 
 # The whole instrument at once, which is the thing this machine is for:
 # a bright upper with the tap, a soft lower to comp on, and the feet
@@ -424,7 +424,7 @@ patch "Two Manuals" note=60 range=29..84 role=gospel
   pedsus         0.25
   rotspeed       #1
   drive          0.3
-  volume         0.75
+  volume         1.76
 
 # Written from the feet up. The pedal split is high enough that the left
 # hand walks on it, the sustain is long enough to join the notes, and
@@ -462,7 +462,7 @@ patch "Pedal Bass" note=60 range=29..79 role=gospel
   rotspeed       #1
   drive          0.35
   bass           3
-  volume         0.71
+  volume         1.94
 
 # The scanner alone, at its widest, with the cabinet braked so there is
 # nothing else moving. This is the line delay, not a chorus pedal.
@@ -484,7 +484,7 @@ patch "Chorus Vib" note=60 range=48..84 role=gospel
   rotspeed       #0
   rotary         #1
   drive          0.12
-  volume         0.76
+  volume         1.57
 
 # An old one. The wheels are worn so the tuning wanders, the shielding
 # has given up so the generator is audible on its own, and the motor
@@ -521,7 +521,7 @@ patch "Tired Machine" note=60 range=41..79 role=gospel
   perc           #0
   rotspeed       #0
   drive          0.3
-  volume         0.77
+  volume         1.85
 
 # Two whole registrations and a slow LFO between them: the bars move
 # under a chord you are still holding, which no organ with real
@@ -576,7 +576,7 @@ patch "Drawbar Morph" note=60 range=41..84 role=gospel
   perc           #0
   rotspeed       #1
   drive          0.25
-  volume         0.83
+  volume         1.92
 
 # Squares divided down from one master oscillator and switched in by
 # footage, which is the whole of a combo organ. No drawbars: a tab is
@@ -598,7 +598,7 @@ patch "Combo Bright" note=60 range=48..84 role=combo
   vibrate        7.2
   vibdepth       0.55
   drive          0.25
-  volume         0.64
+  volume         1.51
 
 # The pulse wave through the reedy filter well up, which is the buzz
 # that made these things sound like a harmonica with a mains lead.
@@ -618,7 +618,7 @@ patch "Combo Reed" note=60 range=48..84 role=combo
   vibdepth       0.4
   drive          0.35
   mid            2.5
-  volume         0.52
+  volume         1.34
 
 # Saws rather than squares, 8' and 4' and the first mixture tab, with
 # the vibrato fast and shallow. The riff sound.
@@ -639,7 +639,7 @@ patch "Combo Sixties" note=60 range=48..84 role=combo
   vibrate        8.8
   vibdepth       0.45
   drive          0.4
-  volume         0.63
+  volume         1.74
 
 # Both mixture tabs out, which on a small transistor organ was always
 # sold as a church sound and is nothing of the kind. That is exactly
@@ -661,7 +661,7 @@ patch "Combo Mixture" note=60 range=48..84 role=combo
   vibdepth       0.4
   drive          0.22
   treble         -1.5
-  volume         0.62
+  volume         1.30
 
 # The attack shortened until the key click is most of the note. Played
 # short this is a percussion instrument.
@@ -684,7 +684,7 @@ patch "Combo Stab" note=60 range=48..84 role=combo
   attack         0.0008
   release        0.012
   drive          0.45
-  volume         0.42
+  volume         1.14
 
 # A combo organ with the bottom two octaves switched to a bass
 # registration, which is how these were played when there was no bass
@@ -717,7 +717,7 @@ patch "Combo Split" note=60 range=41..84 role=combo
   vibdepth       0.5
   drive          0.45
   bass           2.5
-  volume         0.53
+  volume         1.43
 
 # 2' and the mixtures with nothing underneath. It has no bottom at all,
 # and against a bass line that is the point.
@@ -738,7 +738,7 @@ patch "Combo Thin" note=67 range=55..88 role=combo
   vibdepth       0.5
   drive          0.18
   bass           -4
-  volume         0.63
+  volume         1.42
 
 # The principal chorus at 16', 8' and 4' - one rank at three pitches,
 # which is what an organ means by a chorus and has nothing to do with
@@ -1095,14 +1095,14 @@ patch Musette note=60 range=45..84 role=swell
   pressure       0.7
   buzz           0.3
   reedtrem       0.15
-  spray          0.5
+  spray          0.55
   sprayrate      0.9
   spraywide      0.9
-  spraypat       #2
+  spraypat       #0
   tremdepth      0.1
   tremrate       5.4
   windsag        0.28
-  volume         1.53
+  volume         1.51
 
 # One 8' rank and a tremolo, which is a small reed organ's whole
 # vocabulary. Quiet, and it wheezes.
@@ -1252,7 +1252,7 @@ patch Drift note=60 range=41..84 role=gospel
   perc           #0
   rotspeed       #1
   drive          0.25
-  volume         0.79
+  volume         1.86
 
 # The cabinet driving the instrument instead of only carrying it. The
 # horn's phase is a modulation source here, so the upper bars and the
@@ -1268,22 +1268,22 @@ patch "Cabinet Mod" note=60 range=48..84 role=gospel
   ua_135         0
   ua_113         0
   ua_1           0
-  rotspeed       #2
-  rotwide        0.9
-  micdist        0.2
-  micangle       0.95
+  rotspeed       #1
+  rotwide        0.8
+  micdist        0.55
+  micangle       0.85
   m1_src         #11
   m1_dst         #14
-  m1_amt         0.09
+  m1_amt         0.16
   m2_src         #12
   m2_dst         #10
-  m2_amt         0.18
+  m2_amt         0.3
   m3_src         #11
   m3_dst         #3
-  m3_amt         0.06
+  m3_amt         0.1
   perc           #0
   drive          0.22
-  volume         0.90
+  volume         1.60
 
 # The wind supply as the instrument. Nothing here is an envelope: the
 # attack of a chord is the pressure falling as eight pipes start to
@@ -1360,5 +1360,5 @@ patch Sprayed note=60 range=41..84 role=gospel
   vibtype        #4
   vibdepth       0.3
   drive          0.2
-  volume         0.81
+  volume         1.75
 
