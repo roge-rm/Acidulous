@@ -291,6 +291,146 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         };
         for (const Hit &h : kHits) p.lastOff = hit(p, h.at, 0.25f, note + h.step, h.vel);
         p.frames = p.lastOff + secondsToFrames(5.0f);
+    } else if (kind == "gospel" || kind == "chorale" || kind == "combo" || kind == "swell") {
+        // **The organ phrases, and the only ones here written in absolute
+        // notes rather than as steps above a moving centre.**
+        //
+        // An organ rack is not one keyboard. The split decides which manual
+        // a key belongs to and the pedal split decides whether it is a foot,
+        // and both of those are MIDI notes: a phrase written relative to a
+        // patch's centre would drag its bass line across them and play a
+        // hymn's pedal part on the swell. So these are written for the
+        // machine's own defaults - the feet below 48, the lower manual below
+        // 60, the upper above it - and `--note` moves them by whole octaves
+        // only, which is the one transposition that leaves every part on the
+        // manual it was written for.
+        //
+        // They are also the four instruments this machine is, played four
+        // different ways, because a hymn says nothing about a combo organ
+        // and a gospel turnaround says nothing about a harmonium.
+        struct Step { float at; float len; int note; int vel; };
+        const int shift = 12 * static_cast<int>(std::lround((note - 60) / 12.0));
+
+        // Gospel: right hand above the split, left hand comping under it,
+        // and the feet on the roots. Grace notes into the chords and one
+        // run of sixteenths, which is where the percussion's one-shot rule
+        // and the contact clicks are heard. Times are in beats.
+        static const Step kGospel[] = {
+            // feet
+            { 0.0f, 3.6f, 29, 100}, { 4.0f, 3.6f, 34, 100}, { 8.0f, 1.8f, 31,  98},
+            {10.0f, 1.8f, 36,  98}, {12.0f, 3.6f, 29, 100}, {16.0f, 1.8f, 38,  98},
+            {18.0f, 1.8f, 31,  98}, {20.0f, 1.8f, 36,  98}, {22.0f, 4.0f, 29, 104},
+            // left hand, on the off beats
+            { 1.5f, 0.40f, 53, 88}, { 1.5f, 0.40f, 57, 88},
+            { 3.0f, 0.40f, 53, 84}, { 3.0f, 0.40f, 57, 84},
+            { 5.5f, 0.40f, 53, 88}, { 5.5f, 0.40f, 58, 88},
+            { 7.0f, 0.40f, 53, 84}, { 7.0f, 0.40f, 58, 84},
+            { 9.5f, 0.40f, 55, 88}, { 9.5f, 0.40f, 59, 88},
+            {11.0f, 0.40f, 52, 84}, {11.0f, 0.40f, 55, 84},
+            {13.5f, 0.40f, 53, 88}, {13.5f, 0.40f, 57, 88},
+            {15.0f, 0.40f, 53, 84}, {15.0f, 0.40f, 57, 84},
+            {17.5f, 0.40f, 54, 88}, {17.5f, 0.40f, 57, 88},
+            {19.0f, 0.40f, 55, 84}, {19.0f, 0.40f, 59, 84},
+            {21.5f, 0.40f, 52, 84}, {21.5f, 0.40f, 55, 84},
+            {23.0f, 1.50f, 53, 88}, {23.0f, 1.50f, 57, 88},
+            // right hand
+            { 0.00f, 0.12f, 68,  72},
+            { 0.12f, 1.60f, 69, 104}, { 0.12f, 1.60f, 72, 104}, { 0.12f, 1.60f, 77, 104},
+            { 2.00f, 1.60f, 72, 100}, { 2.00f, 1.60f, 77, 100}, { 2.00f, 1.60f, 81, 100},
+            { 4.00f, 0.12f, 73,  72},
+            { 4.12f, 1.70f, 74, 104}, { 4.12f, 1.70f, 77, 104}, { 4.12f, 1.70f, 82, 104},
+            { 6.00f, 1.60f, 70,  96}, { 6.00f, 1.60f, 74,  96}, { 6.00f, 1.60f, 77,  96},
+            { 8.00f, 1.60f, 71,  98}, { 8.00f, 1.60f, 74,  98}, { 8.00f, 1.60f, 79,  98},
+            {10.00f, 1.60f, 72, 100}, {10.00f, 1.60f, 76, 100}, {10.00f, 1.60f, 79, 100},
+            // the run: eight sixteenths down, every one a fresh key
+            {12.00f, 0.22f, 84, 104}, {12.25f, 0.22f, 82,  98}, {12.50f, 0.22f, 81, 100},
+            {12.75f, 0.22f, 79,  96}, {13.00f, 0.22f, 77,  98}, {13.25f, 0.22f, 76,  94},
+            {13.50f, 0.22f, 74,  96}, {13.75f, 0.22f, 72,  92},
+            {14.00f, 1.80f, 69, 104}, {14.00f, 1.80f, 72, 104}, {14.00f, 1.80f, 77, 104},
+            {16.00f, 1.60f, 74, 100}, {16.00f, 1.60f, 78, 100}, {16.00f, 1.60f, 81, 100},
+            {18.00f, 1.60f, 71,  98}, {18.00f, 1.60f, 74,  98}, {18.00f, 1.60f, 79,  98},
+            {20.00f, 1.50f, 72, 100}, {20.00f, 1.50f, 76, 100}, {20.00f, 1.50f, 79, 100},
+            {22.00f, 2.50f, 69, 108}, {22.00f, 2.50f, 72, 108}, {22.00f, 2.50f, 77, 108},
+            {22.00f, 2.50f, 81, 108},
+        };
+
+        // The hymn: four parts held, doubled in the feet an octave down, and
+        // a breath in the middle. Everything an organ does that a synthesizer
+        // does not is in the held part - the wind sagging under eight notes,
+        // the chiff on each attack, the release of one chord under the next -
+        // so the notes are long and there are no fast ones at all. Seconds,
+        // not beats: a hymn is not at the demo's tempo.
+        static const Step kChorale[] = {
+            { 0.00f, 1.70f, 72, 96}, { 0.00f, 1.70f, 67, 92}, { 0.00f, 1.70f, 64, 92}, { 0.00f, 1.70f, 48, 96}, { 0.00f, 1.70f, 36, 100},
+            { 1.80f, 1.70f, 71, 96}, { 1.80f, 1.70f, 67, 92}, { 1.80f, 1.70f, 62, 92}, { 1.80f, 1.70f, 47, 96}, { 1.80f, 1.70f, 35, 100},
+            { 3.60f, 1.70f, 72, 98}, { 3.60f, 1.70f, 69, 92}, { 3.60f, 1.70f, 64, 92}, { 3.60f, 1.70f, 45, 96}, { 3.60f, 1.70f, 33, 100},
+            { 5.40f, 2.20f, 77,104}, { 5.40f, 2.20f, 72, 96}, { 5.40f, 2.20f, 65, 94}, { 5.40f, 2.20f, 53, 98}, { 5.40f, 2.20f, 41, 102},
+            // the breath
+            { 8.00f, 1.70f, 76,100}, { 8.00f, 1.70f, 72, 94}, { 8.00f, 1.70f, 67, 92}, { 8.00f, 1.70f, 52, 96}, { 8.00f, 1.70f, 40, 100},
+            { 9.80f, 1.70f, 74, 98}, { 9.80f, 1.70f, 69, 92}, { 9.80f, 1.70f, 65, 92}, { 9.80f, 1.70f, 50, 96}, { 9.80f, 1.70f, 38, 100},
+            {11.60f, 1.70f, 74,100}, {11.60f, 1.70f, 71, 94}, {11.60f, 1.70f, 67, 92}, {11.60f, 1.70f, 55, 96}, {11.60f, 1.70f, 43, 100},
+            {13.40f, 3.60f, 72,104}, {13.40f, 3.60f, 67, 96}, {13.40f, 3.60f, 64, 94}, {13.40f, 3.60f, 48,100}, {13.40f, 3.60f, 36, 104},
+        };
+
+        // The combo: a riff, played hard and short. This one is about the
+        // attack and the release - tabs rather than drawbars, a reedy filter,
+        // and notes that stop - so it is eighths at the demo's tempo with a
+        // two-note vamp under them and nothing held except the last chord.
+        static const Step kCombo[] = {
+            { 0.0f, 0.42f, 69,110}, { 0.5f, 0.42f, 72, 96}, { 1.0f, 0.42f, 76,104}, { 1.5f, 0.42f, 72, 94},
+            { 2.0f, 0.42f, 74,102}, { 2.5f, 0.42f, 72, 94}, { 3.0f, 0.42f, 69,100}, { 3.5f, 0.42f, 67, 92},
+            { 4.0f, 0.42f, 69,110}, { 4.5f, 0.42f, 72, 96}, { 5.0f, 0.42f, 76,104}, { 5.5f, 0.42f, 72, 94},
+            { 6.0f, 0.42f, 77,106}, { 6.5f, 0.42f, 76, 96}, { 7.0f, 0.42f, 74,100}, { 7.5f, 0.42f, 72, 92},
+            { 8.0f, 0.42f, 67,108}, { 8.5f, 0.42f, 71, 96}, { 9.0f, 0.42f, 74,104}, { 9.5f, 0.42f, 71, 94},
+            {10.0f, 0.42f, 72,102}, {10.5f, 0.42f, 71, 94}, {11.0f, 0.42f, 67,100}, {11.5f, 0.42f, 65, 92},
+            {12.0f, 0.42f, 69,110}, {12.5f, 0.42f, 72, 96}, {13.0f, 0.42f, 76,104}, {13.5f, 0.42f, 79,108},
+            {14.0f, 0.42f, 76,100}, {14.5f, 0.42f, 72, 96},
+            {15.0f, 2.20f, 69,112}, {15.0f, 2.20f, 76,104}, {15.0f, 2.20f, 81,100},
+            // the vamp, under the split
+            { 0.0f, 0.90f, 57, 92}, { 0.0f, 0.90f, 60, 88}, { 2.0f, 0.90f, 57, 84}, { 2.0f, 0.90f, 60, 80},
+            { 4.0f, 0.90f, 57, 92}, { 4.0f, 0.90f, 60, 88}, { 6.0f, 0.90f, 58, 84}, { 6.0f, 0.90f, 62, 80},
+            { 8.0f, 0.90f, 55, 92}, { 8.0f, 0.90f, 59, 88}, {10.0f, 0.90f, 55, 84}, {10.0f, 0.90f, 59, 80},
+            {12.0f, 0.90f, 57, 92}, {12.0f, 0.90f, 60, 88}, {14.0f, 0.90f, 56, 88}, {14.0f, 0.90f, 59, 84},
+            {15.0f, 2.20f, 57, 96}, {15.0f, 2.20f, 64, 92},
+        };
+
+        // The reed organ: everything slow and everything held, with the
+        // dynamic coming from how hard the bellows are worked rather than
+        // from any note. Five chords rising to the loudest and falling away,
+        // one inner voice moving each time, and a drone underneath that never
+        // lets the wind supply recover. Seconds.
+        static const Step kSwell[] = {
+            { 0.0f, 16.5f, 38, 96},  // the drone, under the feet the whole way
+            { 0.0f, 2.60f, 50, 72}, { 0.0f, 2.60f, 57, 70}, { 0.0f, 2.60f, 62, 70}, { 0.0f, 2.60f, 65, 74},
+            { 2.5f, 2.60f, 50, 84}, { 2.5f, 2.60f, 57, 80}, { 2.5f, 2.60f, 62, 80}, { 2.5f, 2.60f, 66, 86},
+            { 5.0f, 2.60f, 50, 96}, { 5.0f, 2.60f, 55, 92}, { 5.0f, 2.60f, 60, 92}, { 5.0f, 2.60f, 67, 98},
+            { 7.5f, 2.60f, 53, 106}, { 7.5f, 2.60f, 58, 102}, { 7.5f, 2.60f, 62, 102}, { 7.5f, 2.60f, 65, 108},
+            {10.0f, 2.60f, 52, 118}, {10.0f, 2.60f, 57, 112}, {10.0f, 2.60f, 60, 112}, {10.0f, 2.60f, 69, 120},
+            {12.5f, 4.00f, 50, 92}, {12.5f, 4.00f, 57, 88}, {12.5f, 4.00f, 62, 88}, {12.5f, 4.00f, 74, 96},
+        };
+
+        const Step *steps = kGospel;
+        size_t count = sizeof(kGospel) / sizeof(kGospel[0]);
+        float unit = beat; // gospel and combo are in beats
+        if (kind == "chorale") { steps = kChorale; count = sizeof(kChorale) / sizeof(kChorale[0]); unit = 1.0f; }
+        else if (kind == "combo") { steps = kCombo; count = sizeof(kCombo) / sizeof(kCombo[0]); }
+        else if (kind == "swell") { steps = kSwell; count = sizeof(kSwell) / sizeof(kSwell[0]); unit = 1.0f; }
+
+        // Notes that land together are staggered a few milliseconds apart,
+        // because two hands and two feet do not arrive in the same block -
+        // and because an organ's contact clicks all landing on one sample is
+        // the one thing that makes a chord sound like a machine.
+        float lastAt = -1.0f;
+        int together = 0;
+        for (size_t i = 0; i < count; ++i) {
+            const Step &st = steps[i];
+            together = st.at == lastAt ? together + 1 : 0;
+            lastAt = st.at;
+            const int n = std::clamp(st.note + shift, 0, 127);
+            p.lastOff = std::max(p.lastOff, hit(p, st.at * unit + 0.013f * static_cast<float>(together),
+                                                st.len * unit, n, st.vel));
+        }
+        p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "chromatic") {
         for (int i = 0; i < 13; ++i) {
             p.lastOff = hit(p, 0.5f * static_cast<float>(i), 0.4f, 24 + i * 6, velocity);
@@ -1429,7 +1569,8 @@ void usage() {
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
-        "  --phrase note|tune|bass|chord|arp|hold|chromatic|velocity|beat|voices\n"
+        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|bell|hold\n"
+        "          |gospel|chorale|combo|swell|chromatic|velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"

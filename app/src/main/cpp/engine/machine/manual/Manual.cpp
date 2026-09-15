@@ -13,10 +13,40 @@ constexpr int kPedalFootage[Manual::kPedalBars] = {-12, 0};
 const char *kModelNames[] = {"tonewheel", "transistor", "pipe", "reed"};
 const char *kVibNames[] = {"V1", "V2", "V3", "C1", "C2", "C3"};
 
-// Which rank each footage is drawn from when the model is pipes. A real
-// stop list is not nine harmonics of one voice: the quint is a flute, the
-// tierce is a string, the mixture is bright principals.
-constexpr int kPipeRank[Manual::kBars] = {0, 1, 0, 1, 2, 0, 2, 3, 4};
+// The stop list, when the model is pipes: how much of each rank every
+// footage draws.
+//
+// A drawbar organ has one timbre per footage, and a pipe organ is not built
+// that way at all - its 8' is a Diapason *and* a Gamba *and* a Trumpet, three
+// ranks of pipes at the same pitch that you draw separately and that sound
+// together. One rank per footage meant the string and the reed had nowhere to
+// be except the mutations, so a patch that wanted strings at 8' got silence
+// and one that wanted a trumpet got a 1 1/3' squeal. These are stops:
+//
+//   16'    Bourdon (flute) with a Bombarde (reed) under it
+//   5 1/3' Quint, a flute
+//   8'     Diapason, Gamba and Trumpet - principal, string and reed together
+//   4'     Octave and a Flute 4
+//   2 2/3' Nazard, a flute
+//   2'     Fifteenth, a principal
+//   1 3/5' Tierce, a flute
+//   1 1/3' Larigot, a principal
+//   1'     the mixture
+//
+// Each rank still gets its own bus slot, because two ranks on one wheel are
+// two pipes and do load the wind separately.
+constexpr float kPipeStops[Manual::kBars][5] = {
+    // principal, flute, string, reed, mixture
+    {0.55f, 1.00f, 0.00f, 0.55f, 0.00f}, // 16'    Bourdon, Bombarde
+    {0.00f, 1.00f, 0.00f, 0.00f, 0.00f}, // 5 1/3' Quint
+    {1.00f, 1.00f, 1.00f, 1.00f, 0.00f}, // 8'     Diapason, Rohrflote, Gamba, Trumpet
+    {1.00f, 1.00f, 0.45f, 0.35f, 0.00f}, // 4'     Octave, Flute, Salicet, Clarion
+    {0.00f, 1.00f, 0.00f, 0.00f, 0.00f}, // 2 2/3' Nazard
+    {1.00f, 0.55f, 0.30f, 0.00f, 0.00f}, // 2'     Fifteenth, Piccolo
+    {0.00f, 1.00f, 0.00f, 0.00f, 0.00f}, // 1 3/5' Tierce
+    {0.80f, 0.00f, 0.00f, 0.00f, 0.45f}, // 1 1/3' Larigot
+    {0.00f, 0.00f, 0.00f, 0.00f, 1.00f}, // 1'     Mixture
+};
 } // namespace
 
 Manual::Manual() { initParams(); }
@@ -144,12 +174,26 @@ const ParamDef *Manual::paramDefs(int32_t &count) const {
         lin(RotSpread, "rotwide", 0.0f, 1.0f, 0.75f);
         step(RotSync, "rotsync", 6, 0.0f); // free, 1/1, 1/2, 1/4, 1/8, 1/8T
 
-        lin(Drive, "drive", 0.0f, 1.0f, 0.2f);
+        // Off by default, because `drive` is the *amplifier* and only two of
+        // the four models have one. It was 0.2, which is not a little: the
+        // normalisation is tanh(x.g)/tanh(0.6g), so 0.2 is +8.5 dB of gain
+        // with 0.30 squashed to 0.80 - a fuzz pedal, and every pipe and reed
+        // patch was inheriting it. The tonewheel and combo patches all set
+        // their own.
+        lin(Drive, "drive", 0.0f, 1.0f, 0.0f);
         lin(Bias, "bias", -1.0f, 1.0f, 0.0f);
         lin(Bass, "bass", -12.0f, 12.0f, 0.0f, "dB");
         lin(Mid, "mid", -12.0f, 12.0f, 0.0f, "dB");
         lin(Treble, "treble", -12.0f, 12.0f, 0.0f, "dB");
-        lin(Volume, "volume", 0.0f, 1.0f, 0.8f);
+        // Up to 2.0, because a stop list means what it says: one 8' flute is
+        // *quiet*, full organ is loud, and the honest difference between them
+        // is far more than a patch volume topping out at 1.0 can cover. Soft
+        // Flute could not reach the bank's level at full travel; the only
+        // thing making it seem to before was a drive the model has no
+        // amplifier for. The default sits at 1.35 rather than mid travel so
+        // that Init - which sets nothing, by rule - arrives at the same level
+        // as the rest of the bank with no amplifier under it.
+        lin(Volume, "volume", 0.0f, 2.0f, 1.35f);
         lin(Pan, "pan", -1.0f, 1.0f, 0.0f);
 
         exp_(AmpAttack, "attack", 0.0005f, 0.5f, 0.004f, "s");
@@ -344,7 +388,14 @@ void Manual::noteOn(uint8_t note, uint8_t velocity) {
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     rngState = rngState * 1664525u + 1013904223u;
     v->rnd = static_cast<float>((rngState >> 9) & 0xffff) / 65536.0f;
-    v->amp.set(0.0f, paramOf(AmpAttack), 0.0f, 1.0f, paramOf(AmpRelease), false);
+    // A combo organ's percussive/soft switch is an attack, and this was the
+    // knob for it: `comboatk` had been read into a local that nothing used,
+    // so every tab setting spoke in the same four milliseconds. A quarter of
+    // a second at the top of it is the slow-attack tab, which is the one
+    // thing on those organs that is not percussive.
+    float attackSec = paramOf(AmpAttack);
+    if (steppedOf(Model) == Transistor) attackSec += paramOf(ComboAttack) * 0.25f;
+    v->amp.set(0.0f, attackSec, 0.0f, 1.0f, paramOf(AmpRelease), false);
     v->amp.retrigger();
 
     const int bars = manual == MPedal ? kPedalBars : kBars;
@@ -358,9 +409,13 @@ void Manual::noteOn(uint8_t note, uint8_t velocity) {
                                             (0.15f + 0.85f * std::fmod(v->rnd * (b + 3) * 7.13f, 1.0f))
                                       : 0.0f;
     }
-    v->click = paramOf(Click);
+    // Click and chiff are fixed at the moment the key goes down, so they
+    // take the matrix's block value rather than a per-voice one: the voice
+    // does not exist yet. Both were listed as destinations and neither was
+    // read, so a routing to either did nothing at all.
+    v->click = clampf(paramOf(Click) + blockMod[DstClick], 0.0f, 1.5f);
     v->clickCoeff = std::exp(-1.0f / (0.0018f * sampleRate));
-    v->chiff = steppedOf(Model) == Pipe ? paramOf(Chiff) : 0.0f;
+    v->chiff = steppedOf(Model) == Pipe ? clampf(paramOf(Chiff) + blockMod[DstChiff], 0.0f, 1.5f) : 0.0f;
     v->chiffCoeff = std::exp(-1.0f / (0.035f * sampleRate));
 
     // Harmonic percussion fires on the first key of a phrase, not on every
@@ -445,16 +500,15 @@ int32_t Manual::timbreForRank(int32_t rank) const {
 }
 
 int32_t Manual::timbreFor(int32_t bar) const {
+    (void)bar;
     switch (steppedOf(Model)) {
     case Transistor: {
         const int32_t w = steppedOf(ComboWave);
         return w == 0 ? WheelBank::Square : (w == 1 ? WheelBank::Pulse : WheelBank::Saw);
     }
-    case Pipe: {
-        static const int32_t rankTimbre[5] = {WheelBank::Principal, WheelBank::Flute, WheelBank::String,
-                                              WheelBank::Reed, WheelBank::Principal};
-        return rankTimbre[kPipeRank[bar]];
-    }
+    // Pipes have no single answer: a footage is however many ranks are drawn
+    // at it, and the render loop walks them slot by slot.
+    case Pipe: return WheelBank::Principal;
     case ReedOrgan: return WheelBank::Reed;
     default: return WheelBank::Wheel;
     }
@@ -477,18 +531,29 @@ float Manual::drawbarLevel(int32_t manual, int32_t bar, const float *mod) const 
         b = paramOf(UpperB + bar);
     }
     if (model == Transistor && manual != MPedal) {
-        // Tabs, not drawbars: a combo organ has footage switches and the
-        // two mixture tabs that made it sound like a cathedral in a box.
-        static const int tabFor[kBars] = {Tab16, -1, Tab8, Tab4, -1, Tab2, TabII, TabII, TabIV};
+        // Tabs, not drawbars: a combo organ has footage switches and two
+        // mixture tabs above them.
+        //
+        // **The II tab used to sound the tierce**, the 1 3/5' - a major
+        // third, two octaves up. One note at a time that is a colour. In a
+        // chord it is a wrong note: every key grows a major third above
+        // itself, so a major triad sprouts an augmented triad on top of it
+        // and three notes arrive as six. A mixture is built of octaves and
+        // fifths for exactly this reason, and these tabs are now: II is the
+        // 2 2/3' and the 1 1/3' quints, IV adds the 2', the 1 1/3' and the
+        // 1' on top of whatever else is drawn, which is what four ranks
+        // means. The tierce stays a drawbar on the tonewheel model, where a
+        // player chooses it a note at a time.
+        static const int tabFor[kBars] = {Tab16, -1, Tab8, Tab4, TabII, Tab2, -1, TabII, -1};
         const int p = tabFor[bar];
         a = p < 0 ? 0.0f : paramOf(p) * (bar == 7 ? 0.6f : 1.0f);
+        if (bar == 5) a += paramOf(TabIV) * 0.45f;
+        else if (bar == 7) a += paramOf(TabIV) * 0.55f;
+        else if (bar == 8) a += paramOf(TabIV);
         b = a;
-    } else if (model == Pipe) {
-        static const int rankParam[5] = {RankPrincipal, RankFlute, RankString, RankReed, RankMixture};
-        const float rank = paramOf(rankParam[kPipeRank[bar]]);
-        a *= rank;
-        b *= rank;
     }
+    // Pipes deliberately do not scale here: a footage's level is the drawbar,
+    // and which ranks it draws is settled in render(), one slot each.
     float morph = clampf(paramOf(Morph) + mod[DstMorph] * paramOf(MorphAmount), 0.0f, 1.0f);
     const int32_t msrc = static_cast<int32_t>(paramOf(MorphSource) + 0.5f);
     if (msrc != SrcOff) morph = clampf(morph, 0.0f, 1.0f);
@@ -558,22 +623,27 @@ bool Manual::render(float *L, float *R, int32_t frames) {
             sprayStep[w] = wheelStep[w] * (std::pow(2.0f, cents / 1200.0f) - 1.0f);
         }
     }
-    const float sprayRate = paramOf(SprayRate);
-    const int32_t sprayPat = steppedOf(SprayPattern);
     const float sprayWidth = paramOf(SprayWidth);
     const float leak = paramOf(Leakage);
     const float hum = paramOf(Hum);
     const float windSag = clampf(paramOf(WindSag) + blockMod[DstWindSag], 0.0f, 1.0f);
     const float windCoeff = onePoleCoeff(paramOf(WindResponse), sampleRate);
     const float windNoise = paramOf(WindNoise);
-    const float tremDepth = paramOf(TremDepth) + (model == ReedOrgan ? paramOf(ReedTremolo) : 0.0f);
+    // Two tremulants, one output. They used to be *added*, so a reed patch
+    // asking for a strong one on each knob got 0.95 and swung its own level
+    // down to a twentieth twice a second - and anything over 1.0 sent the
+    // multiplier negative, which inverts the signal rather than quietening
+    // it. Combined the way two independent depths combine, and bounded.
+    const float tremA = paramOf(TremDepth);
+    const float tremB = model == ReedOrgan ? paramOf(ReedTremolo) : 0.0f;
+    const float tremDepth = 1.0f - (1.0f - clampf(tremA, 0.0f, 1.0f)) * (1.0f - clampf(tremB, 0.0f, 1.0f));
     const float tremStep = paramOf(TremRate) / sampleRate;
     const float percLevel = clampf(paramOf(PercLevel) + blockMod[DstPercLevel], 0.0f, 1.5f);
     const int32_t percBar = steppedOf(PercHarmonic) != 0 ? 3 : 4; // 2nd is the 4', 3rd the 2⅔'
     const bool percSteal = steppedOf(PercSteal) != 0;
     const float drive = clampf(paramOf(Drive) + blockMod[DstDrive], 0.0f, 1.0f);
     const float bias = paramOf(Bias);
-    const float volume = clampf(paramOf(Volume) + blockMod[DstVolume], 0.0f, 1.5f);
+    const float volume = clampf(paramOf(Volume) + blockMod[DstVolume], 0.0f, 2.5f);
     const float pan = clampf(paramOf(Pan) + blockMod[DstPan], -1.0f, 1.0f);
     const int32_t expr = steppedOf(Expression);
     const float exprGain = expr == 0 ? 1.0f : (expr == 1 ? 0.25f + 0.75f * modWheel : 0.25f + 0.75f * pressure);
@@ -586,7 +656,6 @@ bool Manual::render(float *L, float *R, int32_t frames) {
     const float buzz = model == ReedOrgan ? paramOf(ReedBuzz) : 0.0f;
     const float chiffAmt = model == Pipe ? paramOf(Chiff) : 0.0f;
     const float trackerAmt = model == Pipe ? paramOf(Tracker) : 0.0f;
-    const float comboAtk = model == Transistor ? paramOf(ComboAttack) : 0.0f;
     // Pipes and reeds are one sound source each, so they really do add; a
     // generator is shared, so it does not.
     const bool busLoaded = model == Tonewheel || model == Transistor;
@@ -594,6 +663,16 @@ bool Manual::render(float *L, float *R, int32_t frames) {
     const bool eqActive = std::fabs(paramOf(Bass)) + std::fabs(paramOf(Mid)) + std::fabs(paramOf(Treble)) > 0.05f;
     int slotTimbre[kSlots];
     for (int sl = 0; sl < kSlots; ++sl) slotTimbre[sl] = model == Pipe ? timbreForRank(sl) : timbreFor(0);
+    // What each footage draws from each rank, once a block: the stop list
+    // times the five rank knobs.
+    float stopGain[kBars][kSlots] = {};
+    if (model == Pipe) {
+        static const int rankParam[kSlots] = {RankPrincipal, RankFlute, RankString, RankReed, RankMixture};
+        for (int r = 0; r < kSlots; ++r) {
+            const float knob = paramOf(rankParam[r]);
+            for (int b = 0; b < kBars; ++b) stopGain[b][r] = kPipeStops[b][r] * knob;
+        }
+    }
 
     // The scanner: a delay swept by a triangle, mixed dry or not at all
     // depending on which of the six positions the switch is in.
@@ -639,16 +718,31 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         }
 
         // Wind: one supply, everybody drawing on it.
-        const float target = 1.0f / (1.0f + windSag * demand * 0.55f);
+        // How far the supply is pulled down by what is drawing on it.
+        //
+        // The 0.55 that used to be here made this a power cut rather than a
+        // sag: a five-note chord on the default registration lost 2.5 dB,
+        // Full Organ lost 9.5, and the patch built to show the effect off
+        // lost 11.5 and slid 158 cents downhill - a minor second and a half -
+        // every time a chord landed. A large organ under a full chord loses a
+        // few decibels and a dozen cents. That is what this is worth.
+        const float target = 1.0f / (1.0f + windSag * demand * 0.16f);
         windPressure += (target - windPressure) * windCoeff;
         float trem = 1.0f;
         if (tremDepth > 0.0005f) {
             tremPhase += tremStep;
             if (tremPhase >= 1.0f) tremPhase -= 1.0f;
-            trem = 1.0f - tremDepth * 0.5f * (1.0f - std::cos(6.2831853f * tremPhase));
+            // Full depth is a deep tremulant - about ten decibels - and not
+            // a gate. A tremolo that reaches silence is a gate.
+            trem = 1.0f - tremDepth * 0.35f * (1.0f - std::cos(6.2831853f * tremPhase));
         }
 
-        float dry = 0.0f, click = 0.0f;
+        // `click` is the electric contact, scaled by the click knob; `mech`
+        // is the key itself moving, which is what a tracker action makes a
+        // noise with and has nothing to do with electricity. They were one
+        // accumulator, so a pipe patch's tracker noise was silently set by a
+        // knob labelled key click.
+        float dry = 0.0f, click = 0.0f, mech = 0.0f;
         ++frameStamp;
         for (int sl = 0; sl < kSlots; ++sl) usedCount[sl] = 0;
         for (auto &v : voices) {
@@ -665,20 +759,33 @@ bool Manual::render(float *L, float *R, int32_t frames) {
                 if (level <= 0.0005f) continue;
                 if (v.contactPhase[b] > 0.0f) {
                     v.contactPhase[b] -= 1.0f;
-                    if (v.contactPhase[b] <= 0.0f) click += v.click * level; // the contact makes
+                    if (v.contactPhase[b] <= 0.0f) {
+                        click += v.click * level;   // the contact makes
+                        mech += level;              // and the key moves
+                    }
                     continue;
                 }
                 const int w = v.wheel[b];
-                const int sl = model == Pipe ? kPipeRank[b] : 0;
                 const float g = level * voiceGain;
-                if (wheelStamp[sl][w] != frameStamp) {
-                    wheelStamp[sl][w] = frameStamp;
-                    wheelGain[sl][w] = 0.0f;
-                    wheelPeak[sl][w] = 0.0f;
-                    usedWheel[sl][usedCount[sl]++] = static_cast<int16_t>(w);
+                // One footage, one entry - except in pipes, where a footage
+                // is however many ranks are drawn at it and each of those is
+                // a separate rank of pipes on the same note.
+                auto draw = [&](int sl, float gain) {
+                    if (gain <= 0.0005f) return;
+                    if (wheelStamp[sl][w] != frameStamp) {
+                        wheelStamp[sl][w] = frameStamp;
+                        wheelGain[sl][w] = 0.0f;
+                        wheelPeak[sl][w] = 0.0f;
+                        usedWheel[sl][usedCount[sl]++] = static_cast<int16_t>(w);
+                    }
+                    wheelGain[sl][w] += gain;
+                    if (gain > wheelPeak[sl][w]) wheelPeak[sl][w] = gain;
+                };
+                if (model == Pipe) {
+                    for (int r = 0; r < kSlots; ++r) draw(r, g * stopGain[b][r]);
+                } else {
+                    draw(0, g);
                 }
-                wheelGain[sl][w] += g;
-                if (g > wheelPeak[sl][w]) wheelPeak[sl][w] = g;
             }
             if (v.perc > 0.0f) {
                 const int w = v.wheel[percBar];
@@ -689,7 +796,12 @@ bool Manual::render(float *L, float *R, int32_t frames) {
             if (v.chiff > 0.0f) {
                 rngState = rngState * 1664525u + 1013904223u;
                 const float n = (static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f;
-                dry += chiffFilter.process(n) * v.chiff * chiffAmt * 0.5f;
+                // Not scaled by the envelope, because the chiff *is* the
+                // first few milliseconds and the envelope is still at nothing
+                // there - but scaled by everything else about how hard the
+                // note was played, or a chord whispered on the choir organ
+                // arrives with five full-sized puffs of wind in front of it.
+                dry += chiffFilter.process(n) * v.chiff * chiffAmt * 0.5f * manualGain * velGain;
                 v.chiff *= v.chiffCoeff;
             }
         }
@@ -730,11 +842,35 @@ bool Manual::render(float *L, float *R, int32_t frames) {
             const float n = (static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f;
             dry += n * windNoise * 0.01f * (0.3f + demand);
         }
-        if (trackerAmt > 0.0005f && click > 0.0f) dry += click * trackerAmt * 0.4f;
+        if (trackerAmt > 0.0005f && mech > 0.0f) dry += mech * trackerAmt * 0.06f;
 
-        dry += click * 0.6f;
-        dry *= windPressure * trem * reedPress;
-        if (buzz > 0.0f) dry = dry + buzz * 0.35f * std::sin(dry * (3.0f + buzz * 9.0f));
+        // Key click is a *contact* - two bits of metal meeting under a key -
+        // so it belongs to the two electric models and to nothing else. The
+        // pipes and the reeds got it as well as their own tracker noise,
+        // which is a pipe organ wired for electricity, and on a quiet stop
+        // with a slow attack the click was the loudest thing in the note.
+        // The contact timing still runs on every model, because that is what
+        // the tracker noise is timed by.
+        if (model == Tonewheel || model == Transistor) dry += click * 0.6f;
+        // The tremulant is a *wind* modulation: it moves the pressure, and
+        // the pressure is what sets both how hard a reed beats its frame and
+        // how loud it is. So it goes into the nonlinearity and comes out the
+        // other side of it too. Applied only before, a saturator eats it -
+        // six decibels of asked-for swing measured as 0.7.
+        dry *= windPressure * reedPress;
+        if (buzz > 0.0f) {
+            // A free reed beats against its frame: the swing is stopped
+            // harder one way than the other, which is an asymmetric
+            // saturation. What was here was `sin(dry * k)`, which *folds* -
+            // past half scale the harmonics come back down again, so the
+            // rasp changed character every time the tremolo moved the level,
+            // and with two tremulants adding up it did that twice a second.
+            // A clip is monotonic: more level is more buzz, always.
+            const float k = 1.0f + buzz * 7.0f;
+            const float frame = dry > 0.0f ? 1.0f : 1.0f + 1.3f * buzz;
+            dry = std::tanh(dry * k * trem * frame) * (0.55f + 0.45f / k);
+        }
+        dry *= trem;
 
         // Scanner vibrato, then the amp, then the cabinet.
         const bool vibActive = vibDepthP > 0.001f && (vibUp || vibLow);
@@ -754,13 +890,17 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         }
         if (eqActive) x = trebleEq.process(midEq.process(bassEq.process(x)));
         if (model == Transistor) x += reedyFilter.process(x) * paramOf(ComboReedy) * 0.5f;
-        x *= volume * exprGain * 0.5f;
+        // The house level. Every machine leaves the same amount of room for
+        // the next one, and it is taken out here rather than out of forty
+        // patch volumes. See Subvert's kHouse for why.
+        constexpr float kHouse = 0.5f;
+        x *= volume * exprGain * kHouse;
 
         float outL = x, outR = x;
         if (rotOn) rotary.process(x, outL, outR);
         const float wide = sprayWidth * spray * 0.5f;
-        outL += wideL * wide * volume * exprGain * 0.5f;
-        outR += wideR * wide * volume * exprGain * 0.5f;
+        outL += wideL * wide * volume * exprGain * kHouse;
+        outR += wideR * wide * volume * exprGain * kHouse;
         const float angle = (pan + 1.0f) * 0.25f * kPi;
         L[i] = outL * std::cos(angle) * 1.4142f;
         R[i] = outR * std::sin(angle) * 1.4142f;

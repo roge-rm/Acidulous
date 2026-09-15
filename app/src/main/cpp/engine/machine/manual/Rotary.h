@@ -54,12 +54,20 @@ class Rotary {
     void setMic(float distance01, float angle01, float spread01) {
         // Close in, the level swing and the Doppler are extreme; further back
         // the room averages them out.
-        depth = 0.18f + 0.62f * (1.0f - distance01);
+        //
+        // **Three things here used to multiply into an auto-panner.** The
+        // depth reached 0.58, so one channel swung 11 dB on its own; the
+        // half-angle reached a quarter turn, which puts the two mics a half
+        // turn apart and therefore in *opposition*, so what one gained the
+        // other lost; and the width below widened the difference again. Ten
+        // to thirteen decibels of ping-pong, on every patch with the cabinet
+        // on. A horn going round a room is a few decibels and a Doppler, and
+        // the Doppler is most of what tells you it is turning.
+        depth = 0.10f + 0.30f * (1.0f - distance01);
         doppler = (0.25f + 0.75f * (1.0f - distance01)) * 0.0016f * sampleRate;
-        // Half the included angle: at 1.0 the mics are a quarter turn either
-        // side of the cabinet, which is where the horn throws hardest from
-        // one to the other. A full pi would put them back in phase.
-        angle = angle01 * 1.5707963f;
+        // Half the included angle. A pair of microphones on a cabinet is
+        // perhaps a third of a turn apart in total, not a half.
+        angle = angle01 * 1.0471976f;
         spread = spread01;
     }
 
@@ -100,7 +108,10 @@ class Rotary {
         lpR += (r - lpR) * k;
         l = lpL; r = lpR;
 
-        const float mid = 0.5f * (l + r), side = 0.5f * (l - r) * (0.4f + 1.2f * spread);
+        // The width narrows from what the microphones actually heard; it
+        // does not widen past it. Anything over 1.0 here is inventing
+        // difference that no pair of mics in a room could have picked up.
+        const float mid = 0.5f * (l + r), side = 0.5f * (l - r) * (0.25f + 0.75f * spread);
         outL = mid + side;
         outR = mid - side;
     }
