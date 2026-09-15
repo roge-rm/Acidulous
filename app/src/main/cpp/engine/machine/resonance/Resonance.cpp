@@ -74,7 +74,7 @@ const ParamDef *Resonance::paramDefs(int32_t &count) const {
         defs[Coupling] = {"coupling", 0.0f, 1.0f, 0.25f, Curve::Linear, 0, ""};
         defs[Humanise] = {"humanise", 0.0f, 1.0f, 0.15f, Curve::Linear, 0, ""};
         defs[Accent] = {"accent", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""};
-        defs[Volume] = {"volume", 0.0f, 1.5f, 0.9f, Curve::Linear, 0, ""};
+        defs[Volume] = {"volume", 0.0f, 1.5f, 0.5f, Curve::Linear, 0, ""}; // Init on the house line
         defs[MasterPan] = {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""};
         built = true;
     }
@@ -93,7 +93,7 @@ void Resonance::reset() {
     // being cleared - and a default Pad has builtTune -1, which is what
     // forces the rebuild the old code asked for by hand.
     for (auto &p : pads) p = Pad();
-    bus = 0.0f;
+    knockBus = ringBus = 0.0f;
     rng = kRngSeed;
 }
 
@@ -104,8 +104,9 @@ void Resonance::allNotesOff() {
         p.exciteLeft = 0.0f;
         p.ringing = false;
         p.last = 0.0f;
+        p.coupleLp = 0.0f;
     }
-    bus = 0.0f;
+    knockBus = ringBus = 0.0f;
 }
 
 /**
@@ -131,6 +132,31 @@ void Resonance::buildPad(int32_t pad) {
     p.builtHit = hit;
     p.builtModes = want;
 
+    // How loud this object is overall must not depend on how long it rings:
+    // a two-pole resonator driven for longer than a few of its own periods
+    // builds towards b0/(1-r), and 1-r runs forty to one between a practice
+    // pad at fifty milliseconds and a bell at two seconds, so the dry kits
+    // came out thirty decibels under the ringing ones. The square root of it,
+    // because a strike is short against a low mode's period and long against
+    // a high one's - full correction put the long-decay kits down instead.
+    //
+    // **Once per object, from its own decay - not per mode.** The high modes
+    // are damped far shorter than the fundamental on purpose, and correcting
+    // each one by its own decay handed them up to seventeen decibels of boost
+    // apiece: every object in the bank grew a hiss made of its own overtones.
+    // What is being levelled here is objects against each other, not the
+    // inside of one.
+    static const float kRefDecay = 0.5f;
+    const float rRef = std::exp(-6.9078f / (kRefDecay * sr));
+    const float r0 = std::exp(-6.9078f / (std::max(0.01f, decay) * sr));
+    const float decayTrim = std::sqrt((1.0f - r0) / (1.0f - rRef));
+    // The same number keeps the coupling loop stable at every decay: a
+    // resonator's gain at resonance runs as 1/sqrt(1-r), so scaling what it
+    // accepts from the frame by sqrt(1-r) makes the round trip flat. Without
+    // it, Cathedral - eight-second bells at coupling 0.8 - sat at a steady
+    // -15.9 dB for ever while the short kits were perfectly stable.
+    p.couplingTrim = std::min(1.0f, decayTrim);
+
     for (int32_t k = 0; k < want; ++k) {
         // Stretch: a real bar is stiff, and stiffness runs its partials
         // sharp. Past a little of it nothing on earth sounds like this.
@@ -148,9 +174,19 @@ void Resonance::buildPad(int32_t pad) {
         Mode &m = p.modes[k];
         m.a1 = 2.0f * r * std::cos(w);
         m.a2 = -r * r;
-        // Normalised so a mode's peak does not depend on its frequency, then
-        // rolled off up the series so an object has a spectrum, not a comb.
-        m.b0 = std::sin(w) * node / std::pow(static_cast<float>(k + 1), 0.7f);
+        // Normalised so a mode's peak does not depend much on its frequency,
+        // then rolled off up the series so an object has a spectrum rather
+        // than a comb.
+        //
+        // The *square root* of sin(w), not the whole of it. A resonator
+        // driven continuously peaks at b0/((1-r).sin w), so sin(w) is the
+        // right correction for a sustained input - but a strike is impulsive
+        // against a low mode, where the peak is simply b0, and sustained only
+        // against a high one whose period is shorter than the contact. With
+        // the full correction b0 *rose* threefold up the series: a
+        // glockenspiel's fundamental was the quietest thing in it and the kit
+        // measured as 99.7% treble.
+        m.b0 = std::sqrt(std::sin(w)) * node / std::pow(static_cast<float>(k + 1), 0.7f) * decayTrim;
     }
     for (int32_t k = want; k < kMaxModes; ++k) p.modes[k].clear();
 }
@@ -205,7 +241,22 @@ namespace {
  * the bus goes through a tanh: scaling before it would change how hard the
  * objects drive each other, which is a sound and not a level.
  */
-constexpr float kOutputTrim = 1.0f / 96.0f; // -39.6 dB
+// The house level. 1/96 was set against mode gains that had no decay term
+// in them; normalising those moved the whole machine down, and thirteen of
+// twenty-six kits ended up pinned at full volume and still short. This does
+// not decide how loud Resonance is - the bank is levelled either way - it
+// decides where in the volume knob's travel the kits sit.
+constexpr float kOutputTrim = 1.0f / 26.0f; // -28.3 dB
+// One pole at about a kilohertz at 48 kHz: what a shared frame passes.
+constexpr float kBusPole = 0.125f;
+// How much of an object's *ring* reaches the frame. A knock is broadband and
+// travels; a ring is a handful of lines and travels much less well. It is
+// also what keeps the two-step path - A into B into A - under unity.
+constexpr float kRingToBus = 0.06f;
+// And how much of a *knock* does. Nearly all of it: a strike is broadband and
+// is what sets a neighbour going. It is also a one-shot - made by a key, not
+// by a resonator - so no amount of it can close a loop.
+constexpr float kKnockToBus = 0.9f;
 } // namespace
 
 bool Resonance::render(float *L, float *R, int32_t frames) {
@@ -231,8 +282,8 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
 
     for (int32_t i = 0; i < frames; ++i) {
         float mixL = 0.0f, mixR = 0.0f;
-        const float busIn = bus;
-        float busOut = 0.0f;
+        const float knockIn = knockBus, ringIn = ringBus;
+        float knockOut = 0.0f, ringOut = 0.0f;
 
         for (int32_t pad = 0; pad < kPads; ++pad) {
             Pad &p = pads[pad];
@@ -252,10 +303,57 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
             const float strike = x;
             // And what the rest of the kit is doing, which is the whole
             // point: eight objects in one room, not eight recordings.
-            x += busIn * couple * 0.25f;
+            // **The difference, not the sum - a pad must not hear itself.**
+            //
+            // Feeding a resonator its own output back into its own input is
+            // regeneration: it raises the Q, and with eight high-Q banks in
+            // one loop the round trip passes unity and the kit howls. The
+            // `fastTanh` on the bus bounds the amplitude of that howl but
+            // does nothing to its gain, so it settled at a steady tone
+            // instead of growing. A frame *shares*: each object takes its
+            // portion of what the room is doing less what it is doing itself,
+            // so what one gains another loses. Same fault and same fix as
+            // Filament's sympathetic strings.
+            //
+            // **And the losses are per pad, not on the bus.** Filtering the
+            // shared bus looks equivalent and is not: the subtraction then
+            // takes an *unfiltered* `p.last` off a *filtered* sum, so the
+            // cancellation is exact only at DC and a filtered residue of the
+            // pad's own output returns everywhere else - positive feedback,
+            // strongest exactly where a lowpass passes best. Kit and Foundry
+            // sat at a dead-steady -34 dB at 95 and 176 Hz for that reason.
+            // Subtract first, then filter.
+            // Subtract what this pad actually put *into* the bus, which is
+            // `kRingToBus` of its output and not the whole of it. Taking the
+            // whole leaves a net negative whenever an object rings alone -
+            // the frame damping it instead of sharing it - and the bell kits
+            // died in a second and a half.
+            // The knock arrives whole - it is the thing that actually sets a
+            // neighbour going - and the ring arrives as a trimmed share of
+            // what the others are doing, less this object's own contribution
+            // so it never regenerates itself.
+            const float ringShare = (ringIn - p.last * kRingToBus) *
+                                    (1.0f / static_cast<float>(kPads - 1)) * couple * 0.5f *
+                                    p.couplingTrim;
+            const float knockShare = (knockIn - strike * kKnockToBus) *
+                                     (1.0f / static_cast<float>(kPads - 1)) * couple * 2.2f;
+            p.coupleLp += ((ringShare + knockShare) - p.coupleLp) * kBusPole;
+            x += p.coupleLp;
+
+            // **Nothing resonates at DC, and this did.** A mode here is all
+            // poles and no zeros, so its gain at nought hertz is not nought,
+            // and the strike makes it worse - `shape * shape` is always
+            // positive, so a hit is a lump of DC with a click on top. Feeding
+            // every mode the *difference* of the input puts a zero at DC and
+            // at Nyquist, which is what a struck object actually has. One
+            // pair of history values per pad, not per mode, because all
+            // twenty-four modes see the same excitation.
+            const float xin = x - p.x2;
+            p.x2 = p.x1;
+            p.x1 = x;
 
             float sum = 0.0f;
-            for (int32_t k = 0; k < p.modeCount; ++k) sum += p.modes[k].step(x);
+            for (int32_t k = 0; k < p.modeCount; ++k) sum += p.modes[k].step(xin);
 
             // Pitch bend on the strike, the way a tom's head tightens.
             if (p.bendLeft > 0.0001f) {
@@ -265,8 +363,15 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
 
             const float drive = padParam(pad, Drive);
             if (drive > 0.0001f) {
-                const float k = 1.0f + drive * 12.0f;
-                sum = dsp::fastTanh(sum * k) / std::sqrt(k);
+                // Normalised so a nominal signal passes at its own size, not
+                // by 1/sqrt(k) - which hands *small* signals a gain of
+                // sqrt(k), nine decibels at the top of the knob. That is gain
+                // inside the coupling loop, and it is what kept Junkyard
+                // sitting at a flat -26 dB for ever: a drive that can amplify
+                // can sustain. This one can only ever reduce.
+                const float k = 1.0f + drive * 8.0f;
+                const float norm = 0.35f / dsp::fastTanh(0.35f * k);
+                sum = dsp::fastTanh(sum * k) * norm;
             }
             sum *= padParam(pad, Level);
             p.last = sum;
@@ -275,7 +380,8 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
             // share. A strike is broadband; a ring is a handful of lines,
             // and a handful of lines cannot excite anything that is not
             // already in tune with it.
-            busOut += sum + strike * 0.6f;
+            ringOut += sum * kRingToBus;
+            knockOut += strike * kKnockToBus;
 
             if (p.ringing && p.exciteLeft <= 0.0f && std::fabs(sum) < 1e-5f) {
                 // It has stopped; let it out of the loop until it is hit again.
@@ -294,8 +400,20 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
 
         // The room, one sample old, kept in bounds: coupling is a loop and a
         // loop with gain is a howl.
-        bus = dsp::fastTanh(busOut);
-        if (!std::isfinite(bus)) bus = 0.0f;
+        // The average of what the objects are doing, not the sum: a frame
+        // carries one room's worth of movement however many things are
+        // bolted to it, and summing made the loop gain scale with the pad
+        // count. The tanh stays as a last resort, not as the design.
+        // The sum of what the objects are doing; each pad takes its share of
+        // the rest of it above and loses what the frame loses. The tanh is a
+        // last resort, not the design - it bounds a howl and does not stop
+        // one. And a ring contributes far less to the frame than a knock
+        // does, which is both true of a real kit and what takes the two-step
+        // path - A into B into A - safely under unity.
+        ringBus = dsp::fastTanh(ringOut);
+        knockBus = knockOut;
+        if (!std::isfinite(ringBus)) ringBus = 0.0f;
+        if (!std::isfinite(knockBus)) knockBus = 0.0f;
 
         const float angle = (masterPan + 1.0f) * 0.25f * 3.14159265f;
         L[i] = mixL * volume * std::cos(angle) * 1.4142f * kOutputTrim;

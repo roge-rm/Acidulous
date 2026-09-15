@@ -291,6 +291,41 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         };
         for (const Hit &h : kHits) p.lastOff = hit(p, h.at, 0.25f, note + h.step, h.vel);
         p.frames = p.lastOff + secondsToFrames(5.0f);
+    } else if (kind == "mallets" && kit != nullptr) {
+        // **Every pad, and played rather than programmed.**
+        //
+        // `beat` is a drum pattern and uses voices 0, 2, 3, 5, 7, 8 and 9 -
+        // which on an eight-pad machine means pads 1, 4 and 6 never sound at
+        // all. It is also a *kit* pattern: kick, snare, hats. Resonance's
+        // kits are as often tuned as they are drums - a marimba, a set of
+        // bells, a steel pan - and those want playing up and down, with
+        // rolls, and with two pads struck together to hear them ring into
+        // each other, which is the thing this machine has that no drum
+        // machine does.
+        struct Step { float at; int voice; int vel; };
+        static const Step kPattern[] = {
+            // up the kit, one at a time
+            {0.00f, 0, 112}, {0.25f, 1, 96}, {0.50f, 2, 104}, {0.75f, 3, 92},
+            {1.00f, 4, 108}, {1.25f, 5, 96}, {1.50f, 6, 104}, {1.75f, 7, 100},
+            // and back down, quieter, so the decay of each is heard under it
+            {2.00f, 7,  88}, {2.25f, 5, 84}, {2.50f, 3,  88}, {2.75f, 1, 84},
+            // a roll on one pad: how a struck thing behaves when it is
+            // struck again before it has finished
+            {3.00f, 2, 104}, {3.12f, 2, 84}, {3.25f, 2, 96}, {3.37f, 2, 80},
+            {3.50f, 2, 108}, {3.62f, 2, 84}, {3.75f, 2, 92}, {3.87f, 2, 78},
+            // two together, twice - the coupling is loudest here
+            {4.25f, 0, 110}, {4.25f, 6, 100},
+            {4.75f, 1, 106}, {4.75f, 7,  96},
+            // and one struck hard and left, with nothing after it
+            {5.50f, 4, 120},
+        };
+        const int n = static_cast<int>(kit->voices.size());
+        for (const Step &st : kPattern) {
+            if (st.voice >= n) continue;
+            p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, 0.08f,
+                                                kit->baseNote + st.voice, st.vel));
+        }
+        p.frames = p.lastOff + secondsToFrames(5.0f);
     } else if (kind == "chip") {
         // **Fast, short and jumpy, because that is how the music is written.**
         //
@@ -1633,7 +1668,8 @@ void usage() {
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|bell|hold\n"
-        "          |chip|drone|gospel|chorale|combo|swell|chromatic|velocity|beat|voices\n"
+        "          |chip|drone|mallets|gospel|chorale|combo|swell|chromatic\n"
+        "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"

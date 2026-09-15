@@ -465,7 +465,12 @@ void checkBank(const Bank &bank) {
         // same five decibels is a cabinet coming round at 0.8 Hz and a
         // tremolo at 6.6. Only the fast ones are worth a word - and not on an
         // effect, where moving the level about is the entire job.
-        if (!bank.isEffect() && out.m.swingDb > 8.0f && out.m.swingHz > 3.0f) {
+        // Not on a struck machine either: its measure take is one strike per
+        // second, and the envelope of eight decaying hits has harmonics at
+        // five and ten hertz that this locks onto. A kit's level going up and
+        // down *is* the kit.
+        if (!bank.isEffect() && kitFor(bank.typeName()) == nullptr &&
+            out.m.swingDb > 8.0f && out.m.swingHz > 3.0f) {
             std::snprintf(warnText, sizeof(warnText), "wobbles %.0f dB at %.1f Hz inside one note",
                           static_cast<double>(out.m.swingDb), static_cast<double>(out.m.swingHz));
             warn(who, warnText);
@@ -490,13 +495,19 @@ void checkBank(const Bank &bank) {
         // and a plucked string has a bright attack and a long dull tail.
         // Both are true and neither is a fault, and the column read twenty
         // on a perfectly clean string.
-        if (out.m.clickRatio > 4.0f) {
+        // Not on a struck machine: a drum *is* a click, and this measures the
+        // discontinuity at the onset against what follows it - which on a
+        // woodblock is the whole sound.
+        if (kitFor(bank.typeName()) == nullptr && (out.m.clickRatio > 4.0f)) {
             char buf[80];
             std::snprintf(buf, sizeof(buf), "starts with a click, %.0fx the corner of its own tone",
                           static_cast<double>(out.m.clickRatio));
             warn(who, buf);
         }
-        if (out.m.speaksMs > 250.0f) {
+        // Not on a struck machine: `speaks` is note-on to half the level it
+        // *settles* at, and a struck thing never settles - it decays from its
+        // loudest moment, so the question has no answer.
+        if (kitFor(bank.typeName()) == nullptr && (out.m.speaksMs > 250.0f)) {
             char buf[80];
             std::snprintf(buf, sizeof(buf), "takes %.0f ms to speak", static_cast<double>(out.m.speaksMs));
             warn(who, buf);
@@ -538,16 +549,23 @@ void checkBank(const Bank &bank) {
         }
     }
 
+    // On a struck machine the level that matters is the *peak*: `loud` is the
+    // loudest four hundred milliseconds, so a kit of dry hits spends most of
+    // that window silent and a kit of bells fills every one. Levelled to
+    // match by peak - which is what a drum actually presents - such a bank
+    // reads seventeen decibels apart on loudness and is correct.
+    const bool struck = kitFor(bank.typeName()) != nullptr;
     float lo = 200.0f, hi = -200.0f;
     for (const Rendered &r : rendered) {
-        if (r.m.loudnessDb < -190.0f) continue;
-        lo = std::min(lo, r.m.loudnessDb);
-        hi = std::max(hi, r.m.loudnessDb);
+        const float level = struck ? r.m.peakDb : r.m.loudnessDb;
+        if (level < -190.0f) continue;
+        lo = std::min(lo, level);
+        hi = std::max(hi, level);
     }
     if (hi > lo && hi - lo > 12.0f) {
         char buf[80];
-        std::snprintf(buf, sizeof(buf), "%.1f dB between its loudest and quietest patch",
-                      static_cast<double>(hi - lo));
+        std::snprintf(buf, sizeof(buf), "%.1f dB between its loudest and quietest patch%s",
+                      static_cast<double>(hi - lo), struck ? ", by peak" : "");
         warn(label, buf);
     }
 }
