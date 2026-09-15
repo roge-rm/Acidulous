@@ -273,6 +273,22 @@ struct Measured {
     float tailSeconds = 0.0f; // note-off to -60 dB
     bool tailRanOut = false;  // it was still going when the render stopped
     float monoLossDb = 0.0f;  // how much is lost by summing to mono
+    // Energy below 45 Hz against everything above 15. A patch is allowed a
+    // bottom octave; what this is for is the *accident* - Manual's demo was
+    // putting its bass line on a manual, where a 16' and an 8' drawbar fold
+    // onto the same bottom wheel, and twenty-two patches were carrying up to
+    // 28% of themselves below 45 Hz without one column saying so.
+    float subDb = -200.0f;
+    // Peak-to-trough of the level inside one sustained note, and how fast it
+    // moves. A cabinet, a tremulant and two detuned ranks all live here, and
+    // the difference between a swell and a chop is the rate rather than the
+    // depth: five decibels at 0.8 Hz is musical and the same five at 6.6 Hz
+    // is not.
+    float swingDb = 0.0f;
+    float swingHz = 0.0f;
+    // Left against right at its widest, inside one note. A rotary cabinet
+    // that measures 13 dB here is an auto-panner, not a room.
+    float panSwingDb = 0.0f;
     float dcDb = -200.0f;
     bool finite = true;
 };
@@ -338,6 +354,73 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         const float stereoRms = static_cast<float>(std::sqrt(sumSq / (static_cast<double>(frames) * 2.0)));
         const float monoRms = static_cast<float>(std::sqrt(monoSq / static_cast<double>(frames)));
         m.monoLossDb = dB(stereoRms) - dB(monoRms);
+    }
+
+    // --- what a held note does while it is held --------------------------
+    //
+    // These three are why Manual took five rounds of listening: a chord that
+    // squared off while the tune stayed clean, a cabinet swinging thirteen
+    // decibels across the stereo field, a celeste that could not beat, and a
+    // bass line an octave below where it was written are all *inside* a note
+    // and none of them move a single column that reads the note's average.
+    {
+        const size_t hop = static_cast<size_t>(kSr * 0.02f);
+        std::vector<float> env, panDb;
+        for (size_t s = 0; s + hop <= frames; s += hop) {
+            double l = 0.0, r = 0.0;
+            for (size_t i = s; i < s + hop; ++i) {
+                l += static_cast<double>(stereo[i * 2]) * stereo[i * 2];
+                r += static_cast<double>(stereo[i * 2 + 1]) * stereo[i * 2 + 1];
+            }
+            l = std::sqrt(l / hop);
+            r = std::sqrt(r / hop);
+            const double both = std::sqrt((l * l + r * r) * 0.5);
+            if (both < m.peak * 0.05f) continue; // only where it is sounding
+            env.push_back(static_cast<float>(both));
+            if (l > 1e-6 && r > 1e-6) panDb.push_back(static_cast<float>(std::abs(20.0 * std::log10(l / r))));
+        }
+        // **The middle of the note only, for both of them.** A note's own
+        // attack and release are a level change of exactly the kind this is
+        // looking for, and including them means measuring the envelope rather
+        // than anything underneath it - a patch with a slow attack read as a
+        // sixteen-decibel wobble on that alone. The same goes for the stereo:
+        // Brazen's Shambles staggers four players across 85 ms, so for the
+        // first of those milliseconds one player really is alone in one ear,
+        // and reading that as the patch's width said 47 dB.
+        if (env.size() > 16) {
+            const size_t drop = env.size() / 5;
+            env.assign(env.begin() + static_cast<long>(drop), env.end() - static_cast<long>(drop));
+        }
+        if (panDb.size() > 16) {
+            const size_t drop = panDb.size() / 5;
+            panDb.assign(panDb.begin() + static_cast<long>(drop), panDb.end() - static_cast<long>(drop));
+        }
+        if (env.size() > 8) {
+            std::vector<float> sorted = env;
+            std::sort(sorted.begin(), sorted.end());
+            const float lo = sorted[sorted.size() / 20];
+            const float hi = sorted[sorted.size() - 1 - sorted.size() / 20];
+            if (lo > 1e-9f) m.swingDb = dB(hi) - dB(lo);
+            // How fast: the strongest cycle in the envelope between a half
+            // hertz and thirty, found by walking candidate rates rather than
+            // by an FFT, because there are only a few hundred hops.
+            double mean = 0.0;
+            for (float v : env) mean += v;
+            mean /= static_cast<double>(env.size());
+            double best = 0.0;
+            for (double hz = 0.5; hz <= 30.0; hz += 0.1) {
+                double re = 0.0, im = 0.0;
+                for (size_t i = 0; i < env.size(); ++i) {
+                    const double t = static_cast<double>(i) * 0.02;
+                    const double w = 6.283185307 * hz * t;
+                    re += (env[i] - mean) * std::cos(w);
+                    im += (env[i] - mean) * std::sin(w);
+                }
+                const double mag = re * re + im * im;
+                if (mag > best) { best = mag; m.swingHz = static_cast<float>(hz); }
+            }
+        }
+        if (!panDb.empty()) m.panSwingDb = *std::max_element(panDb.begin(), panDb.end());
     }
 
     // Brightness is averaged over the whole sounding part rather than read
@@ -541,6 +624,14 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
             const float after = worstBend(onset + twoMs, onset + twoMs + fifty);
             m.clickRatio = after > 1e-9f ? at / after : 0.0f;
         }
+    }
+
+    // Sub-bass, which needs no note to be meaningful: below 45 Hz is below
+    // the bottom of almost every instrument here, and anything much of it is
+    // an accident rather than a choice.
+    {
+        const Spectrum sub = spectrumAt(mono, start);
+        m.subDb = dB(std::sqrt(sub.fractionBelow(45.0f)));
     }
 
     // --- everything that needs to know which note was asked for -------------

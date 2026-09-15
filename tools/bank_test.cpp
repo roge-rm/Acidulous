@@ -109,6 +109,12 @@ void todo(const std::string &who, const std::string &what) {
     std::printf("  todo %-28s %s\n", who.c_str(), what.c_str());
     ++gTodo;
 }
+/** "C4" for 60, so a warning about pitch says which one. */
+std::string noteName(int midi) {
+    static const char *kNames[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+    return std::string(kNames[((midi % 12) + 12) % 12]) + std::to_string(midi / 12 - 1);
+}
+
 void warn(const std::string &who, const std::string &what) {
     std::printf("  warn %-28s %s\n", who.c_str(), what.c_str());
     ++gWarnings;
@@ -428,6 +434,44 @@ void checkBank(const Bank &bank) {
         if (out.m.dcDb > -40.0f) warn(who, "carries a DC offset");
         if (out.m.monoLossDb > 6.0f) warn(who, "loses more than 6 dB summed to mono");
         if (out.m.tailSeconds > 6.0f) warn(who, "rings for more than six seconds");
+        // Three that Manual's bank cost five rounds of listening to find,
+        // because nothing printed them. Each is about what a note does while
+        // it is held rather than what it averages to.
+        char warnText[96];
+        // Only where 45 Hz is nowhere near the note being played. A bass
+        // machine's sub patches live down there on purpose - Subvert's Sub
+        // Drop is 79% below 45 Hz and is called Sub Drop - so this asks
+        // whether the *note* is up out of the cellar while a quarter of the
+        // sound is still in it. That was Manual's fault exactly: a patch
+        // measured at middle C with 28% of itself six octaves down.
+        // Not for the machines where `note` picks a *voice* rather than a
+        // pitch - a kit's kick is meant to be under 45 Hz, and asking what
+        // note it is playing is a category error. Nor for effects, whose
+        // output is whatever was put into them.
+        const bool notePicksVoice = kitFor(bank.typeName()) != nullptr ||
+                                    (!bank.material.empty() && bank.material != "none");
+        if (!notePicksVoice && !bank.isEffect() && note >= 48 && out.m.subDb > -7.0f) {
+            std::snprintf(warnText, sizeof(warnText), "%.0f%% of it is below 45 Hz, playing %s",
+                          std::pow(10.0, static_cast<double>(out.m.subDb) / 10.0) * 100.0,
+                          noteName(note).c_str());
+            warn(who, warnText);
+        }
+        // A swing is a swell or a chop depending on how fast it goes: the
+        // same five decibels is a cabinet coming round at 0.8 Hz and a
+        // tremolo at 6.6. Only the fast ones are worth a word - and not on an
+        // effect, where moving the level about is the entire job.
+        if (!bank.isEffect() && out.m.swingDb > 8.0f && out.m.swingHz > 3.0f) {
+            std::snprintf(warnText, sizeof(warnText), "wobbles %.0f dB at %.1f Hz inside one note",
+                          static_cast<double>(out.m.swingDb), static_cast<double>(out.m.swingHz));
+            warn(who, warnText);
+        }
+        // Likewise the stereo: a ping-pong delay is *supposed* to swing
+        // sixteen decibels between the channels.
+        if (!bank.isEffect() && out.m.panSwingDb > 9.0f) {
+            std::snprintf(warnText, sizeof(warnText), "swings %.0f dB between the channels",
+                          static_cast<double>(out.m.panSwingDb));
+            warn(who, warnText);
+        }
         // A quarter of a second is an eighth note at 120. A patch slower than
         // that is fine held and produces almost nothing in a phrase - which
         // is how Brazen's low brass shipped: excitation with no tube behind
