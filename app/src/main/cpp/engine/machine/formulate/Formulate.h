@@ -96,6 +96,8 @@ class Formulate final : public Machine {
     float sampleRate = 48000.0f;
     const formulate::Program *program = nullptr;
     Voice voices[kVoices];
+    // The output DC blocker's state; see kDcPole in the cpp.
+    float dcX1 = 0.0f, dcPrev = 0.0f;
     int64_t ageCounter = 0;
     float bpm = 120.0f;
     float bend = 0.0f, modWheel = 0.0f;

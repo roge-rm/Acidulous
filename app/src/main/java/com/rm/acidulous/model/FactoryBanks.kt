@@ -890,34 +890,203 @@ internal object FactoryBanks {
     private fun formulate0() = Patch("Formulate", "Init", emptyMap())
 
     private fun formulate1() = Patch("Formulate", "Pulse Lead",
-        mapOf("duty" to 0.25f, "ampattack" to 0.07710003f, "ampdecay" to 0.594000041f, "ampsustain" to 0.7f, "mono" to 1f, "volume" to 0.4667f),
-        mapOf("arp" to "0 4 7", "duty" to "", "formula" to "", "vol" to ""))
+        mapOf("ampattack" to 0.07712607f, "ampdecay" to 0.5939509f, "ampsustain" to 0.7f, "amprelease" to 0.312098175f, "mono" to 1f, "volume" to 0.5133333f),
+        low = 48, high = 88)
 
-    private fun formulate2() = Patch("Formulate", "Arcade Bass",
-        mapOf("sub" to 0.6f, "framerate" to 0.7704999f, "ampattack" to 0.07710003f, "ampdecay" to 0.5301999f, "ampsustain" to 0.5f, "amprelease" to 0.336800128f, "mono" to 1f, "volume" to 0.599999964f),
-        mapOf("arp" to "0 0 0 12", "duty" to "", "formula" to "", "vol" to "255 200 | 160"))
+    private fun formulate2() = Patch("Formulate", "Quarter Pulse",
+        mapOf("duty" to 0.25f, "ampattack" to 0.07712607f, "ampdecay" to 0.5758517f, "ampsustain" to 0.7f, "amprelease" to 0.312098175f, "mono" to 1f, "volume" to 0.5933333f),
+        low = 48, high = 88)
 
-    private fun formulate3() = Patch("Formulate", "Noise Hit",
-        mapOf("wave" to 0.75f, "noiseshort" to 1f, "framerate" to 0.8552f, "ampattack" to 0f, "ampdecay" to 0.555000246f, "ampsustain" to 0f, "amprelease" to 0.312100083f),
-        mapOf("arp" to "", "duty" to "", "formula" to "", "vol" to "255 190 120 70 40 20 8 0 |"))
+    private fun formulate3() = Patch("Formulate", "Eighth Pulse",
+        mapOf("duty" to 0.125f, "ampattack" to 0.07712607f, "ampdecay" to 0.554957747f, "ampsustain" to 0.65f, "amprelease" to 0.281852722f, "mono" to 1f, "volume" to 0.75333333f),
+        low = 52, high = 91)
 
-    private fun formulate4() = Patch("Formulate", "Buzzsaw",
-        mapOf("wave" to 0.5f, "bits" to 0.2857143f, "crush" to 0.430799842f, "cutoff" to 0.878500044f, "ampdecay" to 0.718099952f, "amprelease" to 0.5f, "volume" to 0.4667f),
-        mapOf("arp" to "", "duty" to "", "formula" to "", "vol" to ""))
+    private fun formulate4() = Patch("Formulate", "Triangle Bass",
+        mapOf("wave" to 0.25f, "ampattack" to 0.07712607f, "ampdecay" to 0.773105f, "ampsustain" to 0.9f, "mono" to 1f, "volume" to 0.8666666f),
+        low = 28, high = 60)
 
-    private fun formulate5() = Patch("Formulate", "Formula Buzz",
-        mapOf("wave" to 1f, "formula" to 1f, "a" to 0.627498031f, "cutoff" to 0.9288998f, "ampdecay" to 0.6488999f, "amprelease" to 0.4609996f, "volume" to 0.4f),
-        mapOf("arp" to "", "duty" to "", "formula" to "t * (t >> 5 & a >> 4)", "vol" to ""))
+    private fun formulate5() = Patch("Formulate", "Sub Bass",
+        mapOf("wave" to 0.25f, "sub" to 0.85f, "cutoff" to 0.6314876f, "ampdecay" to 0.8120982f, "ampsustain" to 0.9f, "amprelease" to 0.4060491f, "mono" to 1f, "volume" to 0.960000038f),
+        low = 24, high = 55)
 
-    private fun formulate6() = Patch("Formulate", "Ring Chip",
-        mapOf("formula" to 1f, "formulamode" to 0.5f, "timescale" to 0.6667003f, "framerate" to 0.663800061f, "ampdecay" to 0.687899947f, "ampsustain" to 0.6f, "amprelease" to 0.5f, "volume" to 0.4667f),
-        mapOf("arp" to "0 7", "duty" to "", "formula" to "x * sin(t) >> 7", "vol" to ""))
+    private fun formulate6() = Patch("Formulate", "Saw Lead",
+        mapOf("wave" to 0.5f, "cutoff" to 0.8578259f, "ampattack" to 0.07712607f, "ampdecay" to 0.624196351f, "ampsustain" to 0.7f, "amprelease" to 0.3368105f, "mono" to 1f, "volume" to 0.8866667f),
+        low = 45, high = 84)
 
-    private fun formulate7() = Patch("Formulate", "Gated Grit",
-        mapOf("duty" to 0.125f, "bits" to 0.714285731f, "formula" to 1f, "formulamode" to 0.75f, "framerate" to 0.9534001f, "ampattack" to 0.07710003f, "ampdecay" to 0.624199867f, "ampsustain" to 0.7f, "amprelease" to 0.406f, "volume" to 0.4667f),
-        mapOf("arp" to "0 0 12 7", "duty" to "", "formula" to "t >> 9 & 1 ? 255 : 0", "vol" to ""))
+    private fun formulate7() = Patch("Formulate", "Noise Snare",
+        mapOf("wave" to 0.75f, "framerate" to 0.85521704f, "ampattack" to 0f, "ampdecay" to 0.554957747f, "ampsustain" to 0f, "amprelease" to 0.312098175f, "volume" to 1f),
+        mapOf("vol" to "255 190 120 70 40 20 8 0 |"),
+        low = 36, high = 72)
 
-    private val formulate: List<Patch> by lazy { listOf(formulate0(), formulate1(), formulate2(), formulate3(), formulate4(), formulate5(), formulate6(), formulate7()) }
+    private fun formulate8() = Patch("Formulate", "Noise Hat",
+        mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.955938935f, "ampattack" to 0f, "ampdecay" to 0.3368105f, "ampsustain" to 0f, "amprelease" to 0.187901825f, "volume" to 1f),
+        low = 48, high = 84)
+
+    private fun formulate9() = Patch("Formulate", "Noise Kick",
+        mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.34116134f, "resonance" to 0.35f, "ampattack" to 0f, "ampdecay" to 0.469754547f, "ampsustain" to 0f, "amprelease" to 0.281852722f, "drive" to 0.4f, "volume" to 1f),
+        low = 24, high = 55)
+
+    private fun formulate10() = Patch("Formulate", "PWM Pad",
+        mapOf("pwmdepth" to 0.84f, "pwmrate" to 0.4147411f, "cutoff" to 0.83441484f, "ampattack" to 0.728934765f, "ampdecay" to 0.7428596f, "ampsustain" to 0.85f, "amprelease" to 0.6489087f, "volume" to 0.52f),
+        low = 40, high = 79)
+
+    private fun formulate11() = Patch("Formulate", "PWM Lead",
+        mapOf("duty" to 0.4f, "pwmdepth" to 0.44f, "pwmrate" to 0.784529448f, "ampattack" to 0.07712607f, "ampdecay" to 0.5939509f, "ampsustain" to 0.75f, "amprelease" to 0.3368105f, "mono" to 1f, "volume" to 0.52f),
+        low = 48, high = 88)
+
+    private fun formulate12() = Patch("Formulate", "Metal Noise",
+        mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.8784759f, "resonance" to 0.25f, "ampattack" to 0.07712607f, "ampdecay" to 0.6698026f, "ampsustain" to 0.4f, "amprelease" to 0.4060491f, "volume" to 0.62f),
+        low = 40, high = 79)
+
+    private fun formulate13() = Patch("Formulate", "Two Bit",
+        mapOf("bits" to 0.142857149f, "ampattack" to 0.07712607f, "ampdecay" to 0.6489087f, "ampsustain" to 0.7f, "amprelease" to 0.3368105f, "mono" to 1f, "volume" to 0.66f),
+        low = 45, high = 84)
+
+    private fun formulate14() = Patch("Formulate", "One Bit",
+        mapOf("wave" to 0.25f, "bits" to 0f, "cutoff" to 0.807388842f, "ampattack" to 0.07712607f, "ampdecay" to 0.6879018f, "amprelease" to 0.3368105f, "mono" to 1f, "volume" to 0.946666658f),
+        low = 45, high = 84)
+
+    private fun formulate15() = Patch("Formulate", "Major Arp",
+        mapOf("ampattack" to 0.07712607f, "ampdecay" to 0.624196351f, "ampsustain" to 0.75f, "amprelease" to 0.312098175f, "mono" to 1f, "volume" to 0.480000019f),
+        mapOf("arp" to "0 4 7"),
+        low = 45, high = 84)
+
+    private fun formulate16() = Patch("Formulate", "Minor Arp",
+        mapOf("duty" to 0.25f, "ampattack" to 0.07712607f, "ampdecay" to 0.624196351f, "ampsustain" to 0.75f, "amprelease" to 0.312098175f, "mono" to 1f, "volume" to 0.5466667f),
+        mapOf("arp" to "0 3 7"),
+        low = 45, high = 84)
+
+    private fun formulate17() = Patch("Formulate", "Seventh Arp",
+        mapOf("duty" to 0.375f, "framerate" to 0.780715644f, "ampattack" to 0.07712607f, "ampdecay" to 0.6489087f, "ampsustain" to 0.75f, "amprelease" to 0.312098175f, "mono" to 1f, "volume" to 0.486666679f),
+        mapOf("arp" to "0 4 7 10"),
+        low = 45, high = 84)
+
+    private fun formulate18() = Patch("Formulate", "Octave Trill",
+        mapOf("framerate" to 0.85521704f, "ampattack" to 0.07712607f, "ampdecay" to 0.6698026f, "amprelease" to 0.312098175f, "mono" to 1f, "volume" to 0.453333348f),
+        mapOf("arp" to "0 12"),
+        low = 45, high = 84)
+
+    private fun formulate19() = Patch("Formulate", "Echo Pluck",
+        mapOf("duty" to 0.25f, "framerate" to 0.7104341f, "ampattack" to 0.07712607f, "ampdecay" to 0.9060491f, "ampsustain" to 1f, "amprelease" to 0.312098175f, "volume" to 1f),
+        mapOf("vol" to "255 90 0 0 200 60 0 0 150 40 0 0 100 25 0 0 60 12 0 0 |"),
+        low = 45, high = 84)
+
+    private fun formulate20() = Patch("Formulate", "Duty Sweep",
+        mapOf("framerate" to 0.748517f, "ampattack" to 0.07712607f, "ampdecay" to 0.6879018f, "amprelease" to 0.3368105f, "mono" to 1f, "volume" to 0.5f),
+        mapOf("duty" to "32 64 96 128 160 192 160 128 96 64 |"),
+        low = 45, high = 84)
+
+    private fun formulate21() = Patch("Formulate", "Slow Frame",
+        mapOf("duty" to 0.25f, "framerate" to 0.5190414f, "ampattack" to 0.07712607f, "ampdecay" to 0.7428596f, "ampsustain" to 0.85f, "amprelease" to 0.312098175f, "mono" to 1f, "volume" to 0.486666679f),
+        mapOf("arp" to "0 7 12 7 3 7 12 19"),
+        low = 45, high = 84)
+
+    private fun formulate22() = Patch("Formulate", "Locked Arp",
+        mapOf("framesync" to 1f, "ampattack" to 0.07712607f, "ampdecay" to 0.6879018f, "amprelease" to 0.312098175f, "mono" to 1f, "volume" to 0.453333348f),
+        mapOf("arp" to "0 4 7 12 7 4"),
+        low = 45, high = 84)
+
+    private fun formulate23() = Patch("Formulate", "Ring Chip",
+        mapOf("formula" to 1f, "formulamode" to 0.5f, "timescale" to 0.468989164f, "ampattack" to 0.07712607f, "ampdecay" to 0.6879018f, "ampsustain" to 0.6f, "amprelease" to 0.4060491f, "volume" to 0.68f),
+        mapOf("formula" to "sin(t) + 128"),
+        low = 45, high = 84)
+
+    private fun formulate24() = Patch("Formulate", "Gated Grit",
+        mapOf("duty" to 0.125f, "bits" to 0.5714286f, "formula" to 1f, "formulamode" to 1f, "timescale" to 0.0389813446f, "framerate" to 0.6638244f, "ampattack" to 0.07712607f, "ampdecay" to 0.624196351f, "ampsustain" to 0.7f, "amprelease" to 0.4060491f, "volume" to 0.653333366f),
+        mapOf("formula" to "t & 64 ? 255 : 0", "arp" to "0 0 12 7", "vol" to "255 255 0 0 255 0 255 0"),
+        low = 45, high = 84)
+
+    private fun formulate25() = Patch("Formulate", "Xor Fold",
+        mapOf("wave" to 0.25f, "formula" to 1f, "formulamode" to 1f, "timescale" to 0.204828769f, "cutoff" to 0.8784759f, "ampattack" to 0.07712607f, "ampdecay" to 0.6698026f, "ampsustain" to 0.65f, "volume" to 0.8533333f),
+        mapOf("formula" to "t & 255"),
+        low = 45, high = 84)
+
+    private fun formulate26() = Patch("Formulate", "Bit Mask",
+        mapOf("formula" to 1f, "a" to 0.784313738f, "ampattack" to 0.07712607f, "ampdecay" to 0.7038664f, "ampsustain" to 0.7f, "volume" to 0.586666644f),
+        mapOf("formula" to "x & (a | 15)"),
+        low = 45, high = 84)
+
+    private fun formulate27() = Patch("Formulate", "Fold Back",
+        mapOf("wave" to 0.25f, "formula" to 1f, "cutoff" to 0.8969479f, "ampattack" to 0.07712607f, "ampdecay" to 0.6879018f, "ampsustain" to 0.7f, "volume" to 0.74666667f),
+        mapOf("formula" to "abs(x - 128) * 2"),
+        low = 45, high = 84)
+
+    private fun formulate28() = Patch("Formulate", "Step Ring",
+        mapOf("formula" to 1f, "formulamode" to 0.5f, "framerate" to 0.6638244f, "ampattack" to 0.07712607f, "ampdecay" to 0.7181473f, "ampsustain" to 0.7f, "amprelease" to 0.4060491f, "volume" to 0.75333333f),
+        mapOf("formula" to "(s * 40 + 80) & 255", "arp" to "0 3 7 10 12 10 7 3"),
+        low = 45, high = 84)
+
+    private fun formulate29() = Patch("Formulate", "Note Shape",
+        mapOf("formula" to 1f, "formulamode" to 1f, "timescale" to 0.371905416f, "ampattack" to 0.07712607f, "ampdecay" to 0.6879018f, "ampsustain" to 0.7f, "volume" to 0.859999955f),
+        mapOf("formula" to "t >> (n >> 4) & 255"),
+        low = 36, high = 84)
+
+    private fun formulate30() = Patch("Formulate", "Velocity Grit",
+        mapOf("duty" to 0.375f, "formula" to 1f, "formulamode" to 0.5f, "ampattack" to 0.07712607f, "ampdecay" to 0.6698026f, "ampsustain" to 0.7f, "velocity" to 0f, "volume" to 0.8533333f),
+        mapOf("formula" to "x * v >> 6"),
+        low = 45, high = 84)
+
+    private fun formulate31() = Patch("Formulate", "Pure Sine",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "ampattack" to 0.410459369f, "ampdecay" to 0.7181473f, "ampsustain" to 0.85f, "amprelease" to 0.5f, "volume" to 0.66f),
+        mapOf("formula" to "sin(t) + 128"),
+        low = 36, high = 84)
+
+    private fun formulate32() = Patch("Formulate", "Formula Square",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "b" to 0.3764706f, "ampattack" to 0.07712607f, "ampdecay" to 0.6489087f, "ampsustain" to 0.7f, "amprelease" to 0.3368105f, "volume" to 0.5133333f),
+        mapOf("formula" to "(t & 255) < b ? 255 : 0"),
+        low = 45, high = 84)
+
+    private fun formulate33() = Patch("Formulate", "Sierpinski",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.5385721f, "cutoff" to 0.9136579f, "ampattack" to 0.07712607f, "ampdecay" to 0.7038664f, "ampsustain" to 0.7f, "volume" to 0.5933333f),
+        mapOf("formula" to "min((t & t >> 8) * 2, 255)"),
+        low = 45, high = 84)
+
+    private fun formulate34() = Patch("Formulate", "Crunch",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "cutoff" to 0.8784759f, "ampattack" to 0.07712607f, "ampdecay" to 0.7428596f, "ampsustain" to 0.75f, "amprelease" to 0.4060491f, "volume" to 0.8066667f),
+        mapOf("formula" to "(t * (((t >> 16 | t >> 14) & 7) | 1)) & 255"),
+        low = 40, high = 79)
+
+    private fun formulate35() = Patch("Formulate", "Bit Melody",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.871598f, "cutoff" to 0.782300055f, "resonance" to 0.2f, "ampattack" to 0.07712607f, "ampdecay" to 0.763753533f, "amprelease" to 0.4060491f, "volume" to 0.74666667f),
+        mapOf("formula" to "(t >> 4) * ((t >> 18 & 6) + 2) & 255"),
+        low = 45, high = 84)
+
+    private fun formulate36() = Patch("Formulate", "Dice",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "cutoff" to 0.83441484f, "resonance" to 0.3f, "ampattack" to 0.07712607f, "ampdecay" to 0.624196351f, "ampsustain" to 0.4f, "volume" to 1f),
+        mapOf("formula" to "(((t >> 5) & 7) * 97) & 255"),
+        low = 45, high = 84)
+
+    private fun formulate37() = Patch("Formulate", "Two Sines",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "ampattack" to 0.5124145f, "ampdecay" to 0.7428596f, "amprelease" to 0.5302454f, "volume" to 0.6333333f),
+        mapOf("formula" to "sin(t) + (sin(t * 2) >> 1) + 128"),
+        low = 40, high = 84)
+
+    private fun formulate38() = Patch("Formulate", "Stair",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "c" to 0.1882353f, "ampdecay" to 0.7181473f, "ampsustain" to 0.75f, "amprelease" to 0.4060491f, "volume" to 0.68f),
+        mapOf("formula" to "((sin(t) + 128) / max(c, 4)) * max(c, 4)"),
+        low = 45, high = 84)
+
+    private fun formulate39() = Patch("Formulate", "Table Ring",
+        mapOf("formula" to 1f, "formulamode" to 0.5f, "framerate" to 0.723914742f, "ampattack" to 0.07712607f, "ampdecay" to 0.7428596f, "ampsustain" to 0.7f, "amprelease" to 0.4060491f, "volume" to 0.859999955f),
+        mapOf("formula" to "((s & 3) * 60 + 90) & 255", "arp" to "0 4 7 12", "duty" to "64 96 128 160"),
+        low = 45, high = 84)
+
+    private fun formulate40() = Patch("Formulate", "Macro Morph",
+        mapOf("duty" to 0.375f, "formula" to 1f, "timescale" to 0.204828769f, "a" to 0.2509804f, "b" to 0.627451f, "c" to 0.3764706f, "ampattack" to 0.07712607f, "ampdecay" to 0.7181473f, "ampsustain" to 0.75f, "amprelease" to 0.4060491f, "volume" to 0.68f),
+        mapOf("formula" to "(x * b >> 8) + (sin(t * (a >> 5) + c) >> 1) & 255"),
+        low = 45, high = 84)
+
+    private fun formulate41() = Patch("Formulate", "Keyed Chaos",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "cutoff" to 0.8969479f, "ampattack" to 0.07712607f, "ampdecay" to 0.7181473f, "ampsustain" to 0.7f, "amprelease" to 0.4060491f, "volume" to 0.813333333f),
+        mapOf("formula" to "(t & 255) ^ (f & 255)"),
+        low = 36, high = 84)
+
+    private fun formulate42() = Patch("Formulate", "Crush Formula",
+        mapOf("wave" to 1f, "bits" to 0.2857143f, "crush" to 0.597493768f, "formula" to 1f, "timescale" to 0.204828769f, "smooth" to 0.2f, "ampattack" to 0.07712607f, "ampdecay" to 0.731065869f, "ampsustain" to 0.75f, "amprelease" to 0.4060491f, "drive" to 0.3f, "volume" to 0.406666666f),
+        mapOf("formula" to "(t & 255) ^ (t >> 9 & 48)"),
+        low = 40, high = 79)
+
+    private val formulate: List<Patch> by lazy { listOf(formulate0(), formulate1(), formulate2(), formulate3(), formulate4(), formulate5(), formulate6(), formulate7(), formulate8(), formulate9(), formulate10(), formulate11(), formulate12(), formulate13(), formulate14(), formulate15(), formulate16(), formulate17(), formulate18(), formulate19(), formulate20(), formulate21(), formulate22(), formulate23(), formulate24(), formulate25(), formulate26(), formulate27(), formulate28(), formulate29(), formulate30(), formulate31(), formulate32(), formulate33(), formulate34(), formulate35(), formulate36(), formulate37(), formulate38(), formulate39(), formulate40(), formulate41(), formulate42()) }
 
     private fun pollen0() = Patch("Pollen", "Init", emptyMap())
 

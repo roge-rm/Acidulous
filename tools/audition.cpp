@@ -291,6 +291,41 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         };
         for (const Hit &h : kHits) p.lastOff = hit(p, h.at, 0.25f, note + h.step, h.vel);
         p.frames = p.lastOff + secondsToFrames(5.0f);
+    } else if (kind == "chip") {
+        // **Fast, short and jumpy, because that is how the music is written.**
+        //
+        // Every other melodic phrase here is too legato for a chip machine.
+        // The tables run at fifty steps a second, so a four-step arpeggio
+        // turns over in eighty milliseconds and a volume shape is done inside
+        // a fifth of one - on a phrase of half-second notes the tables have
+        // finished long before the note has, and on a phrase with slurs the
+        // retrigger never happens at all. One voice also has to carry the
+        // harmony *and* the tune, which is what the leaps are for.
+        //
+        // Sixteenths at the demo tempo, mostly staccato, with two held notes
+        // late on so a duty sweep and a looping volume table have somewhere
+        // to be heard.
+        struct Step { float at; float len; int step; int vel; };
+        static const Step kLine[] = {
+            { 0.00f, 0.20f,  0, 116}, { 0.25f, 0.20f, 12, 100}, { 0.50f, 0.20f,  7, 104},
+            { 0.75f, 0.20f, 12,  96}, { 1.00f, 0.20f,  3, 110}, { 1.25f, 0.20f, 15, 100},
+            { 1.50f, 0.20f, 10, 104}, { 1.75f, 0.20f, 15,  96}, { 2.00f, 0.20f,  5, 112},
+            { 2.25f, 0.20f, 17, 100}, { 2.50f, 0.20f, 12, 104}, { 2.75f, 0.20f, 17,  96},
+            { 3.00f, 0.45f,  7, 114}, { 3.50f, 0.20f, 19, 104}, { 3.75f, 0.20f, 12,  98},
+            // a bar of the same shape a fourth down, so a table that depends
+            // on the note shows that it does
+            { 4.00f, 0.20f, -5, 116}, { 4.25f, 0.20f,  7, 100}, { 4.50f, 0.20f,  2, 104},
+            { 4.75f, 0.20f,  7,  96}, { 5.00f, 0.20f, -2, 110}, { 5.25f, 0.20f, 10, 100},
+            { 5.50f, 0.20f,  5, 104}, { 5.75f, 0.20f, 10,  96}, { 6.00f, 0.45f,  0, 112},
+            { 6.50f, 0.20f, 12, 104}, { 6.75f, 0.20f,  7,  98},
+            // and two long ones, which is where a duty sweep or a looping
+            // volume table lives
+            { 7.00f, 1.40f, 12, 118}, { 8.50f, 1.90f,  0, 110},
+        };
+        for (const Step &st : kLine) {
+            p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, note + st.step, st.vel));
+        }
+        p.frames = p.lastOff + secondsToFrames(2.0f);
     } else if (kind == "drone") {
         // **One chord, held far longer than anything else here.**
         //
@@ -1598,7 +1633,7 @@ void usage() {
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|bell|hold\n"
-        "          |drone|gospel|chorale|combo|swell|chromatic|velocity|beat|voices\n"
+        "          |chip|drone|gospel|chorale|combo|swell|chromatic|velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"

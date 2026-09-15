@@ -70,6 +70,9 @@ void Formulate::prepare(int32_t sr) {
 }
 
 void Formulate::reset() {
+    // The output blocker holds a sample of history, so a render that starts
+    // after a panic must not begin by stepping away from the last one.
+    dcX1 = dcPrev = 0.0f;
     for (auto &v : voices) {
         v.used = v.gate = false;
         v.amp.kill();
@@ -205,6 +208,11 @@ int32_t Formulate::oscSample(Voice &v, int32_t wave, int32_t duty, float dt, flo
     return std::clamp(out, 0, 255);
 }
 
+namespace {
+// exp(-2.pi.10/48000), a one-pole high pass at ten hertz.
+constexpr float kDcPole = 0.99869f;
+} // namespace
+
 bool Formulate::render(float *L, float *R, int32_t frames) {
     params_.tick();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
@@ -331,7 +339,27 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
     }
 
     for (int32_t i = 0; i < frames; ++i) {
-        float s = L[i] * volume * 0.5f;
+        // **A chip's output was AC-coupled and this one was not.**
+        //
+        // Centre here is 128, not zero, and almost nothing in this machine
+        // averages to 128: a pulse at an eighth duty sits at one level for
+        // seven eighths of its cycle, and a formula averages to whatever the
+        // arithmetic says. Twenty-seven of forty-three patches carried a DC
+        // offset, which costs headroom on every one of them, thumps when a
+        // voice is released, and is the one artefact of the real hardware
+        // that nobody ever heard, because there was a capacitor in the way.
+        //
+        // Ten hertz, which is below anything this machine is asked to play
+        // and above the offsets it makes.
+        dcPrev = L[i] - dcX1 + kDcPole * dcPrev;
+        dcX1 = L[i];
+        // The house level. A chip is a loud machine - square waves at full
+        // scale, no filter in the way by default - and at the 0.5 this used
+        // to be, a patch that set nothing arrived ten decibels over the line
+        // every other machine sits on. See Subvert's kHouse for why this is
+        // one constant rather than forty patch volumes.
+        constexpr float kHouse = 0.15f;
+        float s = dcPrev * volume * kHouse;
         if (drive > 0.0001f) {
             const float k = 1.0f + drive * 12.0f;
             s = dsp::fastTanh(s * k) / std::sqrt(k);

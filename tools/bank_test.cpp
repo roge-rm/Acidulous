@@ -450,7 +450,12 @@ void checkBank(const Bank &bank) {
         // output is whatever was put into them.
         const bool notePicksVoice = kitFor(bank.typeName()) != nullptr ||
                                     (!bank.material.empty() && bank.material != "none");
-        if (!notePicksVoice && !bank.isEffect() && note >= 48 && out.m.subDb > -7.0f) {
+        // ...and only where there is a note to be below. A noise burst on a
+        // melodic machine - Formulate's snare and hat - has no pitch at all,
+        // so "how much of it is under the note" has no answer. Harmonicity
+        // says whether a patch stands on a series or not.
+        if (!notePicksVoice && !bank.isEffect() && note >= 48 && out.m.harmonicity > 0.1f &&
+            out.m.subDb > -7.0f) {
             std::snprintf(warnText, sizeof(warnText), "%.0f%% of it is below 45 Hz, playing %s",
                           std::pow(10.0, static_cast<double>(out.m.subDb) / 10.0) * 100.0,
                           noteName(note).c_str());
@@ -518,7 +523,13 @@ void checkBank(const Bank &bank) {
             // and a centroid cannot tell a clarinet from a saxophone: the
             // two read within a percent of each other with thirteen
             // decibels between their second harmonics.
-            if (std::fabs(x.loudnessDb - y.loudnessDb) < 1.0f && x.centroidHz > 0.0f &&
+            // ...and which partial each one is actually sounding, because two
+            // patches an octave apart are not the same sound however alike
+            // their brightness reads. Formulate's Crunch and Bit Melody sit
+            // 3.8% apart on centroid and an octave apart on pitch.
+            const bool samePitch = x.partialRatio > 0.0f && y.partialRatio > 0.0f &&
+                                   std::fabs(x.partialRatio - y.partialRatio) < 0.25f * x.partialRatio;
+            if (samePitch && std::fabs(x.loudnessDb - y.loudnessDb) < 1.0f && x.centroidHz > 0.0f &&
                 std::fabs(x.centroidHz - y.centroidHz) < 0.05f * x.centroidHz &&
                 std::fabs(x.evenOddDb - y.evenOddDb) < 2.0f &&
                 std::fabs(x.tailSeconds - y.tailSeconds) < 0.1f * std::max(0.1f, x.tailSeconds)) {
