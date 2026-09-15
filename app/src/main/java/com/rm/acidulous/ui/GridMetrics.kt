@@ -30,3 +30,18 @@ internal val RulerTextSize = 12.sp
 
 /** The beats between them, and other second-rank marks. */
 internal val TickTextSize = 9.sp
+
+/**
+ * The drum grid's rows: the gap between them, and how far one may be sized.
+ *
+ * A row has no natural height - it holds a two-letter name and a run of
+ * boxes - so it is given whatever the grid's slot can spare, shared between
+ * however many voices the machine has. The floor is where a box stops being
+ * worth tapping and scrolling is the better answer; the ceiling only applies
+ * to the automatic fit, because a pinch on a tablet may legitimately want
+ * more.
+ */
+internal const val RowGap = 2f
+internal const val MinRow = 14f
+internal const val MaxRow = 44f
+

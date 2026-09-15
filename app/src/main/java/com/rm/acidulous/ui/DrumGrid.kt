@@ -17,12 +17,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -61,13 +64,34 @@ fun DrumGrid(
     val grid = clip.grid.coerceAtLeast(1)
     val steps = (visibleTicks / grid).coerceIn(1, 64)
     val scroll = rememberScrollState()
-    // How tall a voice's row is. A pinch up and down sets it, because
-    // thirteen voices do not fit a phone at any comfortable height and which
-    // compromise you want is a matter of what you are doing.
-    var rowHeight by rememberSaveable { mutableStateOf(24f) }
+    // How tall a voice's row is.
+    //
+    // Nought means nobody has pinched, and then the rows are sized to fill
+    // whatever height this has been given: a fixed 24 left a phone with most
+    // of a row's worth of empty space under the grid and a tablet with far
+    // more, and the right height was never a constant anyway - it depends on
+    // the screen and on how many voices the machine has. A pinch still wins
+    // once there has been one, because which compromise you want is a matter
+    // of what you are doing, and it survives a rotation.
+    var pinched by rememberSaveable { mutableStateOf(0f) }
+
+    // The height on offer, shared out. Measured rather than assumed: the slot
+    // is a weight(1f) of whatever is left after the header, the automation
+    // strip, the machine panel and the pads, so only the layout knows it.
+    // Below the floor there is no point growing the rows - the grid scrolls
+    // instead, which is what it is for - and the ceiling only applies to the
+    // fit, not to a pinch.
+    var slotPx by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    val fitted = if (voices.isEmpty() || slotPx == 0) 24f else {
+        val dp = with(density) { slotPx.toDp().value }
+        ((dp - RowGap * (voices.size - 1)) / voices.size).coerceIn(MinRow, MaxRow)
+    }
+    val rowHeight = if (pinched > 0f) pinched else fitted
 
     Column(
         modifier.background(Acid.colors.bg).padding(4.dp)
+            .onSizeChanged { slotPx = it.height }
             // Two fingers move the view; one still edits. Watched on the
             // Initial pass, which travels parent to child, because the cells
             // below have a clickable each and the column scrolls - both would
@@ -107,7 +131,8 @@ fun DrumGrid(
                                 }
                             TwoFingerMode.ZoomPitch ->
                                 if (last.spreadY > TwoFingers.MinSpread && now.spreadY > TwoFingers.MinSpread) {
-                                    rowHeight = (rowHeight * now.spreadY / last.spreadY).coerceIn(14f, 40f)
+                                    pinched = (rowHeight * now.spreadY / last.spreadY)
+                                        .coerceIn(MinRow, maxOf(MaxRow, fitted))
                                 }
                             TwoFingerMode.Undecided -> {}
                         }
@@ -116,7 +141,7 @@ fun DrumGrid(
                 }
             },
     ) {
-        Column(Modifier.verticalScrollWithBar(scroll), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.verticalScrollWithBar(scroll), verticalArrangement = Arrangement.spacedBy(RowGap.dp)) {
             for (voice in voices) {
                 Row(
                     Modifier.fillMaxWidth().height(rowHeight.dp),
