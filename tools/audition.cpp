@@ -291,6 +291,35 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         };
         for (const Hit &h : kHits) p.lastOff = hit(p, h.at, 0.25f, note + h.step, h.vel);
         p.frames = p.lastOff + secondsToFrames(5.0f);
+    } else if (kind == "drone") {
+        // **One chord, held far longer than anything else here.**
+        //
+        // A spectral pad's whole argument is what happens while nothing is
+        // being played: the cloud drifting, each voice reading a different
+        // part of a second and a half of table, the morph walking from one
+        // spectrum to another. All of that is slower than any phrase in this
+        // file - the pad chords turn over every three and a half seconds,
+        // which is faster than a drift rate of 0.07 Hz completes a cycle -
+        // so on every existing demo the machine's best feature is a still
+        // photograph.
+        //
+        // The chord also changes *under* itself rather than being replaced:
+        // notes join and leave a sound that never restarts, because a pad
+        // that is re-struck every bar never shows what it does on the third
+        // bar. Nothing here is faster than a whole note.
+        struct Voice { float at; float len; int step; int vel; };
+        static const Voice kVoices[] = {
+            { 0.0f, 21.0f,  0,  92}, // the root, the whole way
+            { 0.0f, 21.0f,  7,  88}, // and the fifth
+            { 4.0f, 17.0f,  4,  84}, // the third joins
+            { 9.0f, 12.0f, 14,  80}, // and the ninth, an octave up
+            {13.0f,  4.0f, 11,  76}, // a seventh, which leaves again
+            {17.0f,  4.0f, 12,  80}, // and an octave that does not
+        };
+        for (const Voice &v : kVoices) {
+            p.lastOff = std::max(p.lastOff, hit(p, v.at, v.len, note + v.step, v.vel));
+        }
+        p.frames = p.lastOff + secondsToFrames(6.0f);
     } else if (kind == "gospel" || kind == "chorale" || kind == "combo" || kind == "swell") {
         // **The organ phrases, and the only ones here written in absolute
         // notes rather than as steps above a moving centre.**
@@ -1145,7 +1174,14 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
                        : measure(take.stereo, take.offAt, 0);
     }
     if (opt.quiet) return true;
-    writeWav(folderFor(bank.unit) + "/" + safeName(patch.name) + ".wav", take.stereo);
+    // Named "<family>-<patch>.wav", so a folder of forty sorts into the
+    // groups a person is actually comparing: every bell next to every other
+    // bell rather than next to whatever starts with the same letter.
+    const std::string family = !patch.family.empty() ? patch.family
+                             : !patch.role.empty()   ? patch.role
+                                                     : bank.role;
+    writeWav(folderFor(bank.unit) + "/" + safeName(family) + "-" + safeName(patch.name) + ".wav",
+             take.stereo);
     printRow(patch.name, measured, measuredNote);
     if (!voices.empty()) printVoices(voices);
     if (opt.ladder) printLadder(bank.isEffect() ? take.stereo : gMeasureTake.stereo, measured.f0Hz);
@@ -1562,7 +1598,7 @@ void usage() {
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|bell|hold\n"
-        "          |gospel|chorale|combo|swell|chromatic|velocity|beat|voices\n"
+        "          |drone|gospel|chorale|combo|swell|chromatic|velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"
         "  --material kit|break|voice|voicetake|map|none   --input voice|noise|break|none\n"

@@ -60,6 +60,11 @@ struct BankValue {
 struct BankPatch {
     std::string name;
     std::string role;     // overrides the bank's
+    // What kind of sound this is, for grouping - it prefixes the rendered
+    // wav's name so a folder of forty sorts into its families. Defaults to
+    // the role, which for most machines is the same thing; Cumulus is the
+    // exception, where ten families share four demo phrases.
+    std::string family;
     std::string material; // overrides the bank's
     std::string input;    // overrides the bank's
     int note = -1;        // overrides the phrase's default
@@ -183,6 +188,7 @@ inline bool readBank(const std::string &path, Bank &bank, std::string &error) {
                 if (eq == std::string::npos) return fail("expected key=value, got '" + attr + "'");
                 const std::string k = attr.substr(0, eq), v = attr.substr(eq + 1);
                 if (k == "role") p.role = v;
+                else if (k == "family") p.family = v;
                 else if (k == "material") p.material = v;
                 else if (k == "input") p.input = v;
                 else if (k == "note") p.note = std::atoi(v.c_str());

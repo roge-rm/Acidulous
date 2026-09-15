@@ -73,7 +73,7 @@ const ParamDef *Cumulus::paramDefs(int32_t &count) const {
         {"lfo2cutoff", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"lfo2pan", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
+        {"volume", 0.0f, 1.5f, 1.07f, Curve::Linear, 0, ""}, // Init lands on the house line
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"glide", 0.0f, 2.0f, 0.0f, Curve::Linear, 0, "s"},
         {"bendrange", 0.0f, 24.0f, 2.0f, Curve::Stepped, 25, ""},

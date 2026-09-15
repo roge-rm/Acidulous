@@ -726,24 +726,166 @@ internal object FactoryBanks {
     private fun cumulus0() = Patch("Cumulus", "Init", emptyMap())
 
     private fun cumulus1() = Patch("Cumulus", "Cirrus",
-        mapOf("partials" to 0.433100015f, "tilt" to 0.466700017f, "bandwidth" to 0.5018f, "bwscale" to 0.24000001f, "bbandwidth" to 0.48330003f, "width" to 0.7f, "detune" to 0.14f, "cutoff" to 0.9229994f, "ampattack" to 0.7437999f, "amprelease" to 0.7819997f))
+        mapOf("partials" to 0.433070868f, "tilt" to 0.466666669f, "bandwidth" to 0.5018075f, "bwscale" to 0.24000001f, "bbandwidth" to 0.483333319f, "width" to 0.7f, "drift" to 0.16f, "driftrate" to 0.3667258f, "detune" to 0.14f, "cutoff" to 0.9230136f, "ampattack" to 0.7437927f, "amprelease" to 0.782037735f, "volume" to 0.686666667f),
+        low = 48, high = 96)
 
-    private fun cumulus2() = Patch("Cumulus", "Choir",
-        mapOf("partials" to 0.3386f, "tilt" to 0.5333f, "vowel" to 0.25f, "vowelamount" to 0.85f, "bandwidth" to 0.4203996f, "bbandwidth" to 0.4f, "bvowel" to 0.775f, "morphkey" to 0.65f, "width" to 0.8f, "drift" to 0.18f, "driftrate" to 0.384300023f, "spread" to 1f, "detune" to 0.18f, "cutoff" to 0.8732f, "ampattack" to 0.6914999f, "amprelease" to 0.7697998f))
+    private fun cumulus2() = Patch("Cumulus", "Stratus",
+        mapOf("partials" to 0.5590551f, "tilt" to 0.3f, "bandwidth" to 0.676871836f, "bwscale" to 0.32f, "bbandwidth" to 0.266666681f, "width" to 0.85f, "drift" to 0.24f, "driftrate" to 0.2686218f, "spread" to 1f, "detune" to 0.24f, "cutoff" to 0.8058892f, "ampattack" to 0.9111505f, "ampdecay" to 0.9060491f, "amprelease" to 0.8875185f, "volume" to 0.913333356f),
+        low = 36, high = 79)
 
-    private fun cumulus3() = Patch("Cumulus", "Bell Cloud",
-        mapOf("partials" to 0.212600008f, "tilt" to 0.6f, "comb" to 0.35f, "combperiod" to 0.2727f, "bandwidth" to 0.2822001f, "stretch" to 0.650000036f, "bbandwidth" to 0.533300042f, "bstretch" to 0.75f, "shimmer" to 0.2f, "spread" to 0f, "cutoff" to 0.9606998f, "filterenv" to 0.65f, "ampattack" to 0.15429996f, "ampdecay" to 0.905999959f, "ampsustain" to 0.25f, "amprelease" to 0.8875f))
+    private fun cumulus3() = Patch("Cumulus", "Nimbus",
+        mapOf("partials" to 0.496063f, "tilt" to 0.433333337f, "bandwidth" to 0.5810506f, "bwscale" to 0.26f, "width" to 0.75f, "drift" to 0.32f, "driftrate" to 0.428100556f, "spread" to 1f, "detune" to 0.2f, "cutoff" to 0.8652129f, "ampattack" to 0.7889086f, "amprelease" to 0.813022554f, "volume" to 0.9066667f),
+        low = 36, high = 84)
 
-    private fun cumulus4() = Patch("Cumulus", "Deep Wash",
-        mapOf("partials" to 0.4961f, "tilt" to 0.2667f, "bandwidth" to 0.7889002f, "bwscale" to 0.359999985f, "btilt" to 0.3333f, "bbandwidth" to 0.1333f, "width" to 1f, "drift" to 0.28f, "driftrate" to 0.324799955f, "spread" to 1f, "detune" to 0.28f, "cutoff" to 0.828300059f, "ampattack" to 0.870600045f, "amprelease" to 0.8875f))
+    private fun cumulus4() = Patch("Cumulus", "Warm Bed",
+        mapOf("partials" to 0.307086617f, "tilt" to 0.366666675f, "bandwidth" to 0.4626855f, "bbandwidth" to 0.391666681f, "drift" to 0.14f, "cutoff" to 0.8383484f, "ampattack" to 0.7021008f, "amprelease" to 0.756255269f, "volume" to 0.58f),
+        low = 36, high = 84)
 
-    private fun cumulus5() = Patch("Cumulus", "Glass Rain",
-        mapOf("tilt" to 0.4f, "odd" to 0.75f, "bandwidth" to 0.46269986f, "btilt" to 0.7222f, "bbandwidth" to 0.5833f, "bodd" to 0.25f, "shimmer" to 0.55f, "shimmerint" to 1f, "width" to 0.9f, "detune" to 0.12f, "cutoff" to 0.9816002f, "ampattack" to 0.6346998f, "amprelease" to 0.8219002f, "lfo1rate" to 0.273599952f, "lfo1morph" to 0.8f))
+    private fun cumulus5() = Patch("Cumulus", "Deep Wash",
+        mapOf("partials" to 0.496063f, "tilt" to 0.266666681f, "bandwidth" to 0.788916767f, "bwscale" to 0.359999985f, "bbandwidth" to 0.13333334f, "width" to 0.9f, "drift" to 0.28f, "driftrate" to 0.324780375f, "spread" to 1f, "detune" to 0.28f, "cutoff" to 0.8282594f, "ampattack" to 0.8705769f, "amprelease" to 0.8875185f, "volume" to 0.74666667f),
+        low = 33, high = 72)
 
-    private fun cumulus6() = Patch("Cumulus", "Hollow",
-        mapOf("partials" to 0.3071f, "tilt" to 0.4333f, "odd" to 1f, "comb" to 0.55f, "bandwidth" to 0.47480014f, "bbandwidth" to 0.45f, "bcomb" to 0.25f, "bodd" to 0.199999988f, "detune" to 0.1f, "cutoff" to 0.8523999f, "ampattack" to 0.756899953f, "amprelease" to 0.7931999f))
+    private fun cumulus6() = Patch("Cumulus", "Halo",
+        mapOf("tilt" to 0.6f, "bandwidth" to 0.3141353f, "bbandwidth" to 0.4f, "shimmer" to 0.25f, "width" to 0.8f, "drift" to 0.1f, "driftrate" to 0.5f, "detune" to 0.1f, "cutoff" to 0.9714986f, "ampattack" to 0.6797723f, "amprelease" to 0.80350107f, "volume" to 0.5733333f),
+        low = 48, high = 96)
 
-    private val cumulus: List<Patch> by lazy { listOf(cumulus0(), cumulus1(), cumulus2(), cumulus3(), cumulus4(), cumulus5(), cumulus6()) }
+    private fun cumulus7() = Patch("Cumulus", "Veil",
+        mapOf("partials" to 0.4015748f, "tilt" to 0.2f, "bandwidth" to 0.623331666f, "bwscale" to 0.280000031f, "bbandwidth" to 0.383333325f, "width" to 0.7f, "drift" to 0.2f, "detune" to 0.18f, "cutoff" to 0.7299922f, "resonance" to 0.15f, "ampattack" to 0.8340244f, "amprelease" to 0.837968f, "volume" to 0.673333347f),
+        low = 36, high = 84)
+
+    private fun cumulus8() = Patch("Cumulus", "Choir",
+        mapOf("partials" to 0.338582665f, "tilt" to 0.533333361f, "vowel" to 0.25f, "vowelamount" to 0.85f, "bandwidth" to 0.4204044f, "bbandwidth" to 0.4f, "bvowel" to 0.65f, "morphkey" to 0.65f, "width" to 0.8f, "drift" to 0.18f, "driftrate" to 0.3843109f, "spread" to 1f, "detune" to 0.18f, "cutoff" to 0.873231351f, "ampattack" to 0.6914957f, "amprelease" to 0.76979214f, "volume" to 0.6666667f),
+        low = 43, high = 84)
+
+    private fun cumulus9() = Patch("Cumulus", "Ooh",
+        mapOf("partials" to 0.275590539f, "tilt" to 0.4f, "vowel" to 0.92f, "vowelamount" to 1f, "bandwidth" to 0.385222375f, "bbandwidth" to 0.375f, "bvowel" to 0.375f, "width" to 0.7f, "drift" to 0.16f, "detune" to 0.14f, "cutoff" to 0.799758f, "ampattack" to 0.728934765f, "amprelease" to 0.782037735f, "volume" to 0.5266667f),
+        low = 40, high = 79)
+
+    private fun cumulus10() = Patch("Cumulus", "Ahh",
+        mapOf("vowel" to 0.05f, "vowelamount" to 0.95f, "bandwidth" to 0.403694421f, "bbandwidth" to 0.408333331f, "bvowel" to 0.7f, "width" to 0.75f, "drift" to 0.18f, "cutoff" to 0.9000958f, "ampattack" to 0.7021008f, "amprelease" to 0.77606076f, "volume" to 0.75333333f),
+        low = 45, high = 84)
+
+    private fun cumulus11() = Patch("Cumulus", "Whisper Choir",
+        mapOf("partials" to 0.464566916f, "tilt" to 0.333333343f, "vowel" to 0.5f, "vowelamount" to 0.7f, "bandwidth" to 0.815942764f, "bwscale" to 0.4f, "bbandwidth" to 0.483333319f, "width" to 1f, "drift" to 0.36f, "driftrate" to 0.462756425f, "detune" to 0.26f, "cutoff" to 0.9230136f, "ampattack" to 0.806060851f, "amprelease" to 0.813022554f, "volume" to 0.733333349f),
+        low = 48, high = 88)
+
+    private fun cumulus12() = Patch("Cumulus", "Vowel Morph",
+        mapOf("partials" to 0.354330719f, "vowel" to 0.05f, "vowelamount" to 0.9f, "bandwidth" to 0.435659438f, "btilt" to 0.3888889f, "bbandwidth" to 0.366666675f, "bvowel" to 0.925f, "morphkey" to 1f, "width" to 0.8f, "drift" to 0.2f, "cutoff" to 0.8845368f, "ampattack" to 0.7437927f, "amprelease" to 0.80350107f, "volume" to 0.686666667f),
+        low = 43, high = 84)
+
+    private fun cumulus13() = Patch("Cumulus", "Bell Cloud",
+        mapOf("partials" to 0.212598428f, "tilt" to 0.6f, "comb" to 0.35f, "combperiod" to 0.272727281f, "bandwidth" to 0.2821703f, "stretch" to 0.650000036f, "bbandwidth" to 0.533333361f, "bstretch" to 0.75f, "shimmer" to 0.2f, "spread" to 0f, "cutoff" to 0.960713267f, "filterenv" to 0.65f, "ampattack" to 0.154252142f, "ampdecay" to 0.9060491f, "ampsustain" to 0.25f, "amprelease" to 0.8875185f, "volume" to 0.78f),
+        low = 48, high = 91)
+
+    private fun cumulus14() = Patch("Cumulus", "Tubular",
+        mapOf("partials" to 0.133858263f, "tilt" to 0.6666667f, "odd" to 0.72f, "bandwidth" to 0.219637215f, "stretch" to 0.475f, "drift" to 0.08f, "detune" to 0.06f, "ampattack" to 0.122241929f, "ampdecay" to 0.9610069f, "ampsustain" to 0.15f, "amprelease" to 0.93074894f, "volume" to 0.66f),
+        low = 48, high = 88)
+
+    private fun cumulus15() = Patch("Cumulus", "Glass Rain",
+        mapOf("partials" to 0.307086617f, "tilt" to 0.4f, "odd" to 0.75f, "bandwidth" to 0.4626855f, "btilt" to 0.7222222f, "bbandwidth" to 0.5833333f, "bodd" to 0.25f, "shimmer" to 0.55f, "shimmerint" to 1f, "width" to 0.9f, "detune" to 0.12f, "cutoff" to 0.9815876f, "ampattack" to 0.6346564f, "amprelease" to 0.8218869f, "lfo1rate" to 0.273578227f, "lfo1morph" to 0.8f, "volume" to 0.413333327f),
+        low = 55, high = 100)
+
+    private fun cumulus16() = Patch("Cumulus", "Struck Metal",
+        mapOf("partials" to 0.259842515f, "tilt" to 0.6333333f, "comb" to 0.65f, "combperiod" to 0.13636364f, "bandwidth" to 0.26369825f, "stretch" to 0.75f, "bbandwidth" to 0.466666669f, "bcomb" to 0.3f, "cutoff" to 0.9714986f, "filterenv" to 0.725f, "ampattack" to 0.07712607f, "ampdecay" to 0.8476597f, "ampsustain" to 0.18f, "amprelease" to 0.830178857f, "filtdecay" to 0.7428596f, "volume" to 0.653333366f),
+        low = 45, high = 88)
+
+    private fun cumulus17() = Patch("Cumulus", "Temple",
+        mapOf("partials" to 0.338582665f, "tilt" to 0.566666663f, "comb" to 0.25f, "combperiod" to 0.363636374f, "bandwidth" to 0.4204044f, "stretch" to 0.8500001f, "bbandwidth" to 0.6f, "bstretch" to 0.625f, "width" to 0.9f, "drift" to 0.18f, "driftrate" to 0.231378213f, "detune" to 0.22f, "cutoff" to 0.891643763f, "ampattack" to 0.256207228f, "ampdecay" to 0.9819008f, "ampsustain" to 0.3f, "amprelease" to 0.9630382f, "volume" to 0.7733333f),
+        low = 36, high = 72)
+
+    private fun cumulus18() = Patch("Cumulus", "Music Box",
+        mapOf("partials" to 0.102362208f, "tilt" to 0.7f, "odd" to 0.65f, "bandwidth" to 0.160646155f, "stretch" to 0.6f, "bbandwidth" to 0.383333325f, "detune" to 0.04f, "cutoff" to 0.9910647f, "ampattack" to 0.07712607f, "ampdecay" to 0.696119f, "ampsustain" to 0.05f, "amprelease" to 0.6929812f, "volume" to 0.846666634f),
+        low = 60, high = 103)
+
+    private fun cumulus19() = Patch("Cumulus", "Gong",
+        mapOf("partials" to 0.622047246f, "tilt" to 0.533333361f, "bandwidth" to 0.7178297f, "bwscale" to 0.44f, "stretch" to 0.93750006f, "bbandwidth" to 0.6666667f, "bstretch" to 0.25f, "width" to 1f, "drift" to 0.4f, "driftrate" to 0.299052f, "spread" to 1f, "detune" to 0.32f, "cutoff" to 0.908114254f, "ampattack" to 0.3333333f, "ampdecay" to 1f, "ampsustain" to 0.35f, "amprelease" to 0.9765751f, "volume" to 0.813333333f),
+        low = 33, high = 72)
+
+    private fun cumulus20() = Patch("Cumulus", "Sheet Metal",
+        mapOf("partials" to 0.511811f, "tilt" to 0.6f, "comb" to 0.8f, "combperiod" to 0.09090909f, "bandwidth" to 0.5963056f, "stretch" to 0.775f, "bbandwidth" to 0.283333331f, "bcomb" to 0.199999988f, "width" to 0.95f, "drift" to 0.3f, "detune" to 0.26f, "cutoff" to 0.9491284f, "ampattack" to 0.231378213f, "ampdecay" to 0.9220137f, "ampsustain" to 0.25f, "amprelease" to 0.8997641f, "volume" to 0.786666632f),
+        low = 36, high = 79)
+
+    private fun cumulus21() = Patch("Cumulus", "Cavern",
+        mapOf("partials" to 0.543307066f, "tilt" to 0.333333343f, "bandwidth" to 0.7448557f, "bwscale" to 0.34f, "stretch" to 0.0250000041f, "bstretch" to 0.625f, "width" to 1f, "drift" to 0.36f, "driftrate" to 0.2686218f, "spread" to 1f, "detune" to 0.3f, "cutoff" to 0.7933765f, "ampattack" to 0.8831869f, "amprelease" to 0.910943449f, "volume" to 0.686666667f),
+        low = 33, high = 72)
+
+    private fun cumulus22() = Patch("Cumulus", "Spectral Pluck",
+        mapOf("partials" to 0.322834641f, "tilt" to 0.466666669f, "bandwidth" to 0.364572376f, "stretch" to 0.325000018f, "bbandwidth" to 0.45f, "drift" to 0.08f, "detune" to 0.12f, "cutoff" to 0.9230136f, "filterenv" to 0.75f, "filterkey" to 0.5f, "ampattack" to 0.07712607f, "ampdecay" to 0.731065869f, "ampsustain" to 0f, "amprelease" to 0.6671987f, "filtdecay" to 0.6489087f, "volume" to 0.8333333f),
+        low = 40, high = 84)
+
+    private fun cumulus23() = Patch("Cumulus", "Harp Cloud",
+        mapOf("partials" to 0.275590539f, "tilt" to 0.433333337f, "odd" to 0.58f, "bandwidth" to 0.298880249f, "bbandwidth" to 0.408333331f, "width" to 0.7f, "drift" to 0.06f, "detune" to 0.08f, "cutoff" to 0.908114254f, "ampattack" to 0.199368f, "ampdecay" to 0.825016737f, "ampsustain" to 0.08f, "amprelease" to 0.76979214f, "volume" to 0.733333349f),
+        low = 43, high = 88)
+
+    private fun cumulus24() = Patch("Cumulus", "Cimbalom",
+        mapOf("partials" to 0.4015748f, "tilt" to 0.566666663f, "bandwidth" to 0.34116134f, "stretch" to 0.399999976f, "bbandwidth" to 0.425f, "spread" to 1f, "detune" to 0.28f, "spreadwidth" to 0.9f, "cutoff" to 0.960713267f, "filterenv" to 0.675f, "ampattack" to 0.07712607f, "ampdecay" to 0.797817349f, "ampsustain" to 0.1f, "amprelease" to 0.793217063f, "volume" to 0.75333333f),
+        low = 45, high = 88)
+
+    private fun cumulus25() = Patch("Cumulus", "Prepared Piano",
+        mapOf("comb" to 0.55f, "combperiod" to 0.227272734f, "bandwidth" to 0.328168571f, "stretch" to 0.5f, "bbandwidth" to 0.483333319f, "bcomb" to 0.7f, "detune" to 0.14f, "ampattack" to 0.122241929f, "ampdecay" to 0.83681047f, "ampsustain" to 0.12f, "amprelease" to 0.80350107f, "volume" to 1f),
+        low = 36, high = 84)
+
+    private fun cumulus26() = Patch("Cumulus", "Hollow",
+        mapOf("partials" to 0.307086617f, "tilt" to 0.433333337f, "odd" to 1f, "comb" to 0.55f, "bandwidth" to 0.474781454f, "bbandwidth" to 0.45f, "bcomb" to 0.25f, "bodd" to 0.199999988f, "detune" to 0.1f, "cutoff" to 0.85235703f, "ampattack" to 0.7568984f, "amprelease" to 0.793217063f, "volume" to 0.5733333f),
+        low = 36, high = 84)
+
+    private fun cumulus27() = Patch("Cumulus", "Reed Bed",
+        mapOf("partials" to 0.2913386f, "tilt" to 0.466666669f, "odd" to 0.88f, "vowel" to 0.35f, "vowelamount" to 0.6f, "bandwidth" to 0.435659438f, "bbandwidth" to 0.416666657f, "bodd" to 0.35f, "width" to 0.75f, "drift" to 0.22f, "detune" to 0.18f, "cutoff" to 0.8478255f, "amprelease" to 0.76979214f, "volume" to 0.8733333f),
+        low = 40, high = 81)
+
+    private fun cumulus28() = Patch("Cumulus", "Pipe Cloud",
+        mapOf("partials" to 0.228346452f, "odd" to 0.92f, "bandwidth" to 0.192611188f, "bbandwidth" to 0.366666675f, "width" to 0.5f, "drift" to 0.04f, "driftrate" to 0.2686218f, "detune" to 0.04f, "cutoff" to 0.891643763f, "ampattack" to 0.614369631f, "amprelease" to 0.7041605f, "volume" to 0.5733333f),
+        low = 43, high = 88)
+
+    private fun cumulus29() = Patch("Cumulus", "Comb Pad",
+        mapOf("partials" to 0.433070868f, "tilt" to 0.466666669f, "comb" to 0.75f, "bbandwidth" to 0.4f, "bcomb" to 0.15f, "width" to 0.8f, "drift" to 0.18f, "detune" to 0.18f, "cutoff" to 0.8881307f, "ampattack" to 0.7686218f, "amprelease" to 0.80350107f, "volume" to 0.8333333f),
+        low = 36, high = 84)
+
+    private fun cumulus30() = Patch("Cumulus", "Phase Cloud",
+        mapOf("partials" to 0.464566916f, "tilt" to 0.433333337f, "comb" to 0.85f, "combperiod" to 0.13636364f, "bandwidth" to 0.5458685f, "btilt" to 0.6111111f, "bbandwidth" to 0.366666675f, "bcomb" to 0f, "width" to 0.9f, "drift" to 0.24f, "detune" to 0.2f, "cutoff" to 0.9000958f, "ampattack" to 0.8209188f, "amprelease" to 0.8453118f, "lfo1rate" to 0.164817646f, "lfo1morph" to 1f, "volume" to 0.673333347f),
+        low = 36, high = 84)
+
+    private fun cumulus31() = Patch("Cumulus", "Scallop",
+        mapOf("partials" to 0.496063f, "tilt" to 0.533333361f, "comb" to 0.6f, "combperiod" to 0.909090936f, "bandwidth" to 0.4496927f, "bcomb" to 0.65f, "width" to 0.75f, "drift" to 0.14f, "detune" to 0.14f, "cutoff" to 0.9157413f, "ampattack" to 0.728934765f, "amprelease" to 0.782037735f, "volume" to 0.7f),
+        low = 43, high = 88)
+
+    private fun cumulus32() = Patch("Cumulus", "Shimmer Pad",
+        mapOf("partials" to 0.385826766f, "tilt" to 0.4f, "bandwidth" to 0.4860965f, "bbandwidth" to 0.416666657f, "shimmer" to 0.6f, "width" to 0.85f, "drift" to 0.2f, "ampattack" to 0.7792269f, "amprelease" to 0.830178857f, "volume" to 0.7266667f),
+        low = 43, high = 88)
+
+    private fun cumulus33() = Patch("Cumulus", "Fifth Up",
+        mapOf("partials" to 0.354330719f, "tilt" to 0.466666669f, "bandwidth" to 0.4496927f, "bbandwidth" to 0.408333331f, "shimmer" to 0.5f, "shimmerint" to 0f, "width" to 0.8f, "drift" to 0.16f, "detune" to 0.14f, "cutoff" to 0.9230136f, "ampattack" to 0.7568984f, "amprelease" to 0.813022554f, "volume" to 0.64f),
+        low = 43, high = 88)
+
+    private fun cumulus34() = Patch("Cumulus", "Two Octaves",
+        mapOf("partials" to 0.4488189f, "tilt" to 0.3f, "bandwidth" to 0.5963056f, "bbandwidth" to 0.4f, "shimmer" to 0.4f, "shimmerint" to 1f, "width" to 0.9f, "drift" to 0.26f, "driftrate" to 0.347067326f, "detune" to 0.22f, "cutoff" to 0.840772152f, "ampattack" to 0.8340244f, "amprelease" to 0.8588487f, "volume" to 0.566666663f),
+        low = 40, high = 84)
+
+    private fun cumulus35() = Patch("Cumulus", "Morph Key",
+        mapOf("partials" to 0.496063f, "tilt" to 0.266666681f, "bandwidth" to 0.364572376f, "btilt" to 0.7777778f, "bbandwidth" to 0.6333333f, "bodd" to 0.35f, "morphkey" to 1f, "width" to 0.85f, "drift" to 0.2f, "detune" to 0.18f, "cutoff" to 0.891643763f, "filterkey" to 0.6f, "ampattack" to 0.7686218f, "amprelease" to 0.8218869f, "volume" to 0.566666663f),
+        low = 36, high = 88)
+
+    private fun cumulus36() = Patch("Cumulus", "Slow Turn",
+        mapOf("partials" to 0.527559042f, "tilt" to 0.4f, "bandwidth" to 0.5643406f, "bbandwidth" to 0.533333361f, "bstretch" to 0.675f, "bodd" to 0.3f, "width" to 0.9f, "drift" to 0.28f, "driftrate" to 0.2510367f, "spread" to 1f, "detune" to 0.22f, "cutoff" to 0.8770914f, "ampattack" to 0.856353f, "amprelease" to 0.873981655f, "lfo1rate" to 0.103732072f, "lfo1morph" to 1f, "volume" to 0.7266667f),
+        low = 36, high = 84)
+
+    private fun cumulus37() = Patch("Cumulus", "Breathing",
+        mapOf("partials" to 0.464566916f, "tilt" to 0.366666675f, "bandwidth" to 0.623331666f, "bwscale" to 0.3f, "btilt" to 0.3611111f, "bbandwidth" to 0.283333331f, "width" to 0.95f, "drift" to 0.32f, "driftrate" to 0.299052f, "detune" to 0.24f, "cutoff" to 0.817474067f, "resonance" to 0.2f, "ampattack" to 0.874940932f, "amprelease" to 0.8925576f, "lfo1rate" to 0.172128618f, "lfo1morph" to 0.85f, "lfo2rate" to 0.233518645f, "lfo2cutoff" to 0.5f, "volume" to 0.58f),
+        low = 36, high = 84)
+
+    private fun cumulus38() = Patch("Cumulus", "Drone Field",
+        mapOf("partials" to 0.685039341f, "tilt" to 0.333333343f, "bandwidth" to 0.7025747f, "bwscale" to 0.380000025f, "btilt" to 0.5833333f, "bbandwidth" to 0.45f, "bstretch" to 0.6f, "width" to 1f, "drift" to 0.52f, "driftrate" to 0.231378213f, "spread" to 1f, "detune" to 0.36f, "spreadwidth" to 1f, "cutoff" to 0.85235703f, "ampattack" to 0.9047905f, "amprelease" to 0.93074894f, "lfo1rate" to 0.135460153f, "lfo1morph" to 0.7f, "volume" to 0.8333333f),
+        low = 33, high = 72)
+
+    private fun cumulus39() = Patch("Cumulus", "Sub Cloud",
+        mapOf("partials" to 0.08661418f, "tilt" to 0.13333334f, "bandwidth" to 0.26369825f, "bbandwidth" to 0.375f, "width" to 0.4f, "drift" to 0.08f, "detune" to 0.1f, "cutoff" to 0.600761652f, "ampattack" to 0.7437927f, "amprelease" to 0.793217063f, "volume" to 0.34f),
+        low = 28, high = 60)
+
+    private fun cumulus40() = Patch("Cumulus", "Undertow",
+        mapOf("tilt" to 0.166666672f, "bandwidth" to 0.8318922f, "bwscale" to 0.4f, "bbandwidth" to 0.183333337f, "width" to 1f, "drift" to 0.44f, "driftrate" to 0.209091261f, "spread" to 1f, "detune" to 0.34f, "cutoff" to 0.685020268f, "ampattack" to 0.8908637f, "amprelease" to 0.921227455f, "volume" to 0.8066667f),
+        low = 28, high = 64)
+
+    private val cumulus: List<Patch> by lazy { listOf(cumulus0(), cumulus1(), cumulus2(), cumulus3(), cumulus4(), cumulus5(), cumulus6(), cumulus7(), cumulus8(), cumulus9(), cumulus10(), cumulus11(), cumulus12(), cumulus13(), cumulus14(), cumulus15(), cumulus16(), cumulus17(), cumulus18(), cumulus19(), cumulus20(), cumulus21(), cumulus22(), cumulus23(), cumulus24(), cumulus25(), cumulus26(), cumulus27(), cumulus28(), cumulus29(), cumulus30(), cumulus31(), cumulus32(), cumulus33(), cumulus34(), cumulus35(), cumulus36(), cumulus37(), cumulus38(), cumulus39(), cumulus40()) }
 
     private fun formulate0() = Patch("Formulate", "Init", emptyMap())
 
