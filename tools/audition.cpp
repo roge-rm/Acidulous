@@ -66,9 +66,29 @@ struct Phrase {
     int64_t frames = 0;   // how long to render, including the tail
     int64_t lastOff = 0;  // where the tail starts, for measuring it
     int measuredNote = 0; // what the pitch reading should be compared against
+    /**
+     * Keep rendering past `frames` until the sound has actually stopped.
+     *
+     * A phrase knows when the *playing* stops; it cannot know when the sound
+     * does, because that is the patch's business. Every tail here was a fixed
+     * guess - two seconds after the last drum, three after the last bell - and
+     * Dan caught the guess being wrong by ear: Hexbeat's long kits were still
+     * ten decibels above their floor when the file ended, and Enormous, whose
+     * crash is set to 3.8 seconds, was cut off less than halfway down. The
+     * harness had been saying so all along in the `+` on the tail column, and
+     * it went unread for seventeen banks.
+     *
+     * Off for the per-voice probe, which bounds each voice to one window on
+     * purpose so the thirteen can be compared against each other.
+     */
+    bool ringOut = true;
 };
 
 int64_t secondsToFrames(float s) { return static_cast<int64_t>(kSr * s); }
+
+/** The longest a ring-out may add. Twelve seconds covers the longest thing
+ *  any machine here can be set to and still ends a runaway patch. */
+constexpr float kMaxRingOut = 12.0f;
 
 /** How long each voice of a kit gets to itself, in the `voices` phrase. */
 constexpr float kVoiceWindow = 1.0f;
@@ -560,10 +580,18 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         // Two bars. Voices past what the kit has simply do not fire.
         const int n = static_cast<int>(kit->voices.size());
         struct Step { int voice; int sixteenth; int vel; };
+        // The crash is on the downbeat, where a crash goes. It was on the
+        // second-to-last sixteenth, which meant every kit with a long one
+        // ended in a solo cymbal: Dan heard it as "a crash overwhelming
+        // everything else in the kit" across the whole room family, and the
+        // measurement agreed - under one per cent of the energy but nine and
+        // a half seconds of tail, all of it after the kit had stopped. On the
+        // downbeat it rings *under* the two bars instead, which is both the
+        // musical place for it and the only way to hear it against the kit.
         static const Step kPattern[] = {
-            {0, 0, 120}, {7, 2, 70},  {2, 4, 110}, {7, 6, 70},  {0, 8, 100}, {0, 10, 80},
-            {2, 12, 110}, {8, 14, 80}, {0, 16, 120}, {7, 18, 70}, {2, 20, 110}, {3, 20, 70},
-            {7, 22, 70}, {0, 24, 100}, {5, 26, 85}, {2, 28, 110}, {9, 30, 65},
+            {0, 0, 120}, {9, 0, 65},  {7, 2, 70},  {2, 4, 110}, {7, 6, 70},  {0, 8, 100},
+            {0, 10, 80}, {2, 12, 110}, {8, 14, 80}, {0, 16, 120}, {7, 18, 70}, {2, 20, 110},
+            {3, 20, 70}, {7, 22, 70}, {0, 24, 100}, {5, 26, 85}, {2, 28, 110},
         };
         for (const Step &s : kPattern) {
             if (s.voice >= n) continue;
@@ -771,6 +799,37 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
             out.stereo.push_back(stereo ? R[i] : L[i]);
         }
     }
+
+    // The ring-out. Sixty decibels under the loudest sample is the same floor
+    // the tail measurement uses, so what is written and what is measured agree
+    // about when a sound has ended. Held for a tenth of a second, because a
+    // decaying oscillator passes through zero twice a cycle and one quiet
+    // block is not silence. Capped, because a machine with a noise floor or a
+    // patch left self-oscillating never reaches any floor at all - and a cap
+    // hit is visible as the `+` that started this.
+    if (phrase.ringOut) {
+        float peak = 0.0f;
+        for (float v : out.stereo) peak = std::max(peak, std::fabs(v));
+        const float floorAt = peak * 0.001f;
+        const int64_t cap = phrase.frames + secondsToFrames(kMaxRingOut);
+        const int32_t quietBlocksWanted = static_cast<int32_t>(kSr * 0.1f) / kBlock + 1;
+        int32_t quiet = 0;
+        for (int64_t at = phrase.frames; at < cap && quiet < quietBlocksWanted; at += kBlock) {
+            const auto t0 = static_cast<int64_t>(static_cast<double>(at) * ticksPerFrame);
+            const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
+            m->onBlock(t0, t1, bpm);
+            std::memset(L, 0, sizeof(L));
+            std::memset(R, 0, sizeof(R));
+            const bool stereo = m->render(L, R, kBlock);
+            float loudest = 0.0f;
+            for (int32_t i = 0; i < kBlock; ++i) {
+                out.stereo.push_back(L[i]);
+                out.stereo.push_back(stereo ? R[i] : L[i]);
+                loudest = std::max(loudest, std::max(std::fabs(L[i]), std::fabs(stereo ? R[i] : L[i])));
+            }
+            quiet = loudest < floorAt ? quiet + 1 : 0;
+        }
+    }
     InputBus::get().publish(nullptr, 0);
     return out;
 }
@@ -936,6 +995,7 @@ std::vector<VoiceRow> measureVoices(const Kit &kit, const std::vector<float> &no
         Phrase one;
         one.lastOff = hit(one, 0.0f, 0.1f, kit.baseNote + static_cast<int>(v), velocity);
         one.frames = secondsToFrames(kVoiceWindow);
+        one.ringOut = false; // bounded on purpose: the thirteen share a window
         const Take take = render(m.get(), one, bpm, mat);
         rows.push_back({kit.voices[v], measure(take.stereo, 0, 0)});
     }
