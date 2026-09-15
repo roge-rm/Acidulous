@@ -24,7 +24,11 @@ class Hexbeat final : public Machine {
         RimTune, RimLevel,
         BellTune, BellDecay, BellLevel,
         ClaveTune, ClaveLevel,
-        Accent, Count
+        Accent,
+        // Appended, and it stays appended: a parameter's position in this
+        // enum is its index in every song already saved.
+        Volume,
+        Count
     };
     enum Voice : int32_t { Kick, Rim, Snare, Clap, TomLo, TomMid, TomHi, HatClosed, HatOpen, Cymbal, Ride, Cowbell, Clave, VoiceCount };
     static constexpr uint8_t kBaseNote = 36;

@@ -41,10 +41,74 @@ const ParamDef kDefs[Hexbeat::Count] = {
     {"clave_tune", 1200.0f, 4000.0f, 2500.0f, Curve::Exponential, 0, "Hz"},
     {"clave_level", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
     {"accent", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
+    {"volume", 0.0f, 1.5f, 0.9f, Curve::Linear, 0, ""},
 };
 // The classic six, as ratios of the lowest.
 const float kMetalRatios[6] = {1.0f, 1.483f, 1.800f, 2.546f, 2.634f, 3.902f};
 constexpr float kMetalBase = 205.0f;
+
+// How hard the thirteen voices drive the output stage.
+//
+// This is the same fault the saturators in Formulate, Manual and Resonance
+// had, wearing different clothes: a tanh normalised on a point the signal
+// routinely passes. Thirteen voices each carrying a gain of their own summed
+// straight into `tanh` with nothing before it, so every kit in the bank
+// peaked at -0.0 dB - not because the kits were balanced but because the
+// output stage was clamping all of them flat against the ceiling. Eleven
+// kits measured within a tenth of a decibel of each other and the bank's own
+// header wrote that up as the number that mattered for a kit. It was the
+// number that mattered for the clipper.
+//
+// The tanh stays: a box that clips when the whole kit lands on one beat is
+// the sound, and the small boxes all did it. What changes is that it is now
+// something the loud hits reach rather than something every hit lives in.
+// A single voice at full accent comes out around a third of full scale and
+// stays straight; it takes several at once to bend.
+constexpr float kDrive = 0.375f; // -8.5 dB into the clipper
+
+// And the house level, which is a different question from the one above and
+// is why they are two constants rather than one. `kDrive` decides how dirty
+// the box is; this decides where in the volume knob's travel a kit sits, so
+// that a levelled bank lands near the middle of the fader rather than at the
+// bottom of it. Chosen against the Init kit at the -11 dB peak the struck
+// machines level to.
+//
+// It was 0.45 before the per-voice trims below went in, and *raising* it was
+// the correction: taking the loud voices down took the whole machine down
+// with them, and six kits ended up pinned at the top of a 1.5 fader and
+// still short of the line. A house level set too low reads as patches that
+// cannot get loud enough, which is the opposite of how it feels from here.
+constexpr float kHouse = 0.96f; // -0.4 dB
+
+// What one unit of `level` is worth, per voice.
+//
+// It was worth nine decibels more on the clap than on the kick. Measured on
+// the Init kit, the four voices that are oscillators - kick, toms, snare, rim
+// - all delivered -16.6 dB at unit level and agreed with each other to within
+// two tenths; the six built out of noise and band-passed metal ran 3 to 9 dB
+// hot, because each one's gain constant was set by ear on its own and never
+// against the others. So a kit left at its defaults came out with the *clap*
+// seven decibels louder than the kick, and every kit in the old bank spent
+// its level knobs undoing that before it could say anything of its own.
+//
+// These bring the six onto the line the four already sat on, so `level` now
+// means one thing everywhere and the defaults read as what they say: kick at
+// 0.9 loudest, hats 0.6 four decibels down, cymbals 0.5 six.
+constexpr float kVoiceTrim[Hexbeat::VoiceCount] = {
+    1.0f,   // Kick
+    1.0f,   // Rim
+    1.0f,   // Snare
+    0.355f, // Clap     -9.0 dB
+    1.0f,   // TomLo
+    1.0f,   // TomMid
+    1.0f,   // TomHi
+    0.586f, // HatClosed -4.6 dB
+    0.586f, // HatOpen
+    0.402f, // Cymbal   -7.9 dB
+    0.523f, // Ride     -5.6 dB
+    0.410f, // Cowbell  -7.7 dB
+    0.681f, // Clave    -3.3 dB
+};
 } // namespace
 
 Hexbeat::Hexbeat() { initParams(); }
@@ -137,7 +201,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
     const float g = gain[v];
     switch (v) {
     case Kick: {
-        const float base = params_.get(KickTune), punch = params_.get(KickPunch), level = params_.get(KickLevel);
+        const float base = params_.get(KickTune), punch = params_.get(KickPunch), level = params_.get(KickLevel) * kVoiceTrim[v];
         for (int32_t i = 0; i < frames; ++i) {
             const float pe = pitchEnv[v].next();
             const float hz = base * (1.0f + punch * 6.0f * pe);
@@ -148,7 +212,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
         break;
     }
     case Snare: {
-        const float f = params_.get(SnareTune), snappy = params_.get(SnareSnappy), level = params_.get(SnareLevel);
+        const float f = params_.get(SnareTune), snappy = params_.get(SnareSnappy), level = params_.get(SnareLevel) * kVoiceTrim[v];
         bp[v].set(params_.get(SnareTone), 0.3f);
         for (int32_t i = 0; i < frames; ++i) {
             const float tone = (sine(osc[v], f) * 0.6f + sine(osc2[v], f * 1.6f) * 0.4f) * amp[v].next();
@@ -158,7 +222,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
         break;
     }
     case TomLo: case TomMid: case TomHi: {
-        const float base = params_.get(v == TomLo ? TomLoTune : v == TomMid ? TomMidTune : TomHiTune), level = params_.get(TomLevel);
+        const float base = params_.get(v == TomLo ? TomLoTune : v == TomMid ? TomMidTune : TomHiTune), level = params_.get(TomLevel) * kVoiceTrim[v];
         for (int32_t i = 0; i < frames; ++i) {
             const float hz = base * (1.0f + 1.5f * pitchEnv[v].next());
             out[i] += dsp::fastTanh(sine(osc[v], hz) * amp[v].next() * 1.4f * g) * level;
@@ -166,7 +230,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
         break;
     }
     case HatClosed: case HatOpen: {
-        const float tune = params_.get(HatTune), level = params_.get(HatLevel);
+        const float tune = params_.get(HatTune), level = params_.get(HatLevel) * kVoiceTrim[v];
         bp[v].set(params_.get(HatTone), 0.55f);
         for (int32_t i = 0; i < frames; ++i) {
             const float m = metallic(tune);
@@ -175,7 +239,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
         break;
     }
     case Cymbal: {
-        const float level = params_.get(CymLevel), tone = params_.get(CymTone);
+        const float level = params_.get(CymLevel) * kVoiceTrim[v], tone = params_.get(CymTone);
         bp[v].set(tone, 0.5f);
         bp2[v].set(tone * 0.4f, 0.4f);
         for (int32_t i = 0; i < frames; ++i) {
@@ -186,7 +250,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
         break;
     }
     case Ride: {
-        const float level = params_.get(RideLevel);
+        const float level = params_.get(RideLevel) * kVoiceTrim[v];
         bp[v].set(5200.0f, 0.6f);
         for (int32_t i = 0; i < frames; ++i) {
             const float m = metallic(params_.get(HatTune));
@@ -196,7 +260,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
         break;
     }
     case Clap: {
-        const float level = params_.get(ClapLevel);
+        const float level = params_.get(ClapLevel) * kVoiceTrim[v];
         bp[v].set(params_.get(ClapTone), 0.45f);
         for (int32_t i = 0; i < frames; ++i) {
             // three fast pulses ten milliseconds apart, then the tail
@@ -210,7 +274,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
         break;
     }
     case Rim: {
-        const float f = params_.get(RimTune), level = params_.get(RimLevel);
+        const float f = params_.get(RimTune), level = params_.get(RimLevel) * kVoiceTrim[v];
         bp[v].set(f * 2.5f, 0.6f);
         for (int32_t i = 0; i < frames; ++i) {
             const float s = sine(osc[v], f) * amp[v].next() + bp[v].bandpass(noise()) * aux[v].next() * 3.0f;
@@ -219,7 +283,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
         break;
     }
     case Cowbell: {
-        const float f = params_.get(BellTune), level = params_.get(BellLevel);
+        const float f = params_.get(BellTune), level = params_.get(BellLevel) * kVoiceTrim[v];
         bp[v].set(f * 1.15f, 0.35f);
         for (int32_t i = 0; i < frames; ++i) {
             const float s = (square(osc[v], f) + square(osc2[v], f * 1.48f)) * 0.5f;
@@ -228,7 +292,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
         break;
     }
     case Clave: {
-        const float f = params_.get(ClaveTune), level = params_.get(ClaveLevel);
+        const float f = params_.get(ClaveTune), level = params_.get(ClaveLevel) * kVoiceTrim[v];
         for (int32_t i = 0; i < frames; ++i) out[i] += sine(osc[v], f) * amp[v].next() * g * level;
         break;
     }
@@ -238,11 +302,14 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
 
 bool Hexbeat::render(float *L, float * /*R*/, int32_t frames) {
     params_.tick();
+    const float volume = params_.get(Volume);
     for (int32_t i = 0; i < frames; ++i) L[i] = 0.0f;
     for (int32_t v = 0; v < VoiceCount; ++v) {
         if (amp[v].active || aux[v].active) renderVoice(v, L, frames);
     }
-    for (int32_t i = 0; i < frames; ++i) L[i] = dsp::fastTanh(L[i]);
+    // Drive before the clipper, fader after it: turning a kit down must not
+    // also clean it up, and driving it harder must not also make it louder.
+    for (int32_t i = 0; i < frames; ++i) L[i] = dsp::fastTanh(L[i] * kDrive) * volume * kHouse;
     return false;
 }
 
