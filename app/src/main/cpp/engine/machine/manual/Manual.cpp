@@ -85,7 +85,14 @@ const ParamDef *Manual::paramDefs(int32_t &count) const {
         lin(LowerLevel, "lower", 0.0f, 1.0f, 0.9f);
         lin(PedalLevel, "pedal", 0.0f, 1.0f, 0.9f);
         step(LowerOn, "loweron", 2, 0.0f);
-        step(PedalOn, "pedalon", 2, 0.0f);
+        // On by default. One rack is a whole instrument, and a note below the
+        // pedal split with the pedals switched off does not go silent - it
+        // goes to a *manual*, where a 16' drawbar and an 8' drawbar fold onto
+        // the same bottom wheel and double up at 43 Hz. The pedal division
+        // has its own registration, its own level and its own foldback, which
+        // is the reason it exists. The split between the two manuals stays
+        // off by default, because that one really is a decision.
+        step(PedalOn, "pedalon", 2, 1.0f);
         lin(PedalSustain, "pedsus", 0.0f, 1.0f, 0.15f);
 
         static const char *barName[Manual::kBars] = {"16", "513", "8", "4", "223", "2", "135", "113", "1"};
@@ -193,7 +200,7 @@ const ParamDef *Manual::paramDefs(int32_t &count) const {
         // amplifier for. The default sits at 1.35 rather than mid travel so
         // that Init - which sets nothing, by rule - arrives at the same level
         // as the rest of the bank with no amplifier under it.
-        lin(Volume, "volume", 0.0f, 2.0f, 1.35f);
+        lin(Volume, "volume", 0.0f, 2.0f, 0.75f);
         lin(Pan, "pan", -1.0f, 1.0f, 0.0f);
 
         exp_(AmpAttack, "attack", 0.0005f, 0.5f, 0.004f, "s");
@@ -281,12 +288,23 @@ void Manual::rebuildTuning() {
         // so an octave played on two drawbars beats with itself and a chord
         // spreads. Which way it runs is the pattern.
         const float t = static_cast<float>(w) / static_cast<float>(WheelBank::kWheels - 1);
-        const float shape = pattern == 0 ? (t * 2.0f - 1.0f)
-                                         : (pattern == 1 ? (1.0f - t * 2.0f) : std::sin(t * 12.566f));
+        // How much this wheel's second rank is detuned, as a fraction of the
+        // spray amount. It used to be a ramp *through zero*, which left the
+        // middle of the keyboard barely detuned and only the ends beating -
+        // a stretch tuning rather than a celeste. A celeste is a roughly even
+        // number of cents all the way up, because every note has to beat at a
+        // musical rate and not only the ones at the extremes.
+        const float shape = pattern == 0 ? 1.0f
+                          : pattern == 1 ? 0.45f + 0.55f * t
+                                         : 0.7f + 0.3f * std::sin(t * 12.566f);
         const float cents = r1 * age * 7.0f;
         wheelStep[w] = bank->freq(w) * std::pow(2.0f, cents / 1200.0f) / sampleRate;
         wheelTrim[w] = 1.0f + r2 * age * 0.12f;
-        sprayPan[w] = shape;
+        sprayDetune[w] = shape;
+        // Where in the field the second rank sits: low at one side, high at
+        // the other, which is a pair of ranks in a room rather than a pair of
+        // ranks in the same place.
+        sprayPan[w] = t * 2.0f - 1.0f;
     }
 }
 
@@ -619,7 +637,7 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         if (sprayDrift >= 1.0f) sprayDrift -= 1.0f;
         for (int w = 0; w < WheelBank::kWheels; ++w) {
             const float move = 1.0f + 0.35f * std::sin(6.2831853f * (sprayDrift + 0.11f * static_cast<float>(w)));
-            const float cents = spray * 26.0f * sprayPan[w] * move;
+            const float cents = spray * 26.0f * sprayDetune[w] * move;
             sprayStep[w] = wheelStep[w] * (std::pow(2.0f, cents / 1200.0f) - 1.0f);
         }
     }
@@ -817,13 +835,34 @@ bool Manual::render(float *L, float *R, int32_t frames) {
                 const int w = usedWheel[sl][k];
                 const float sum = wheelGain[sl][w], peak = wheelPeak[sl][w];
                 const float g = busLoaded ? peak + (sum - peak) * 0.25f : sum;
-                float ph = wheelPhase[w] + sprayPhase[w];
-                if (ph >= 1.0f) ph -= 1.0f;
-                const float x = bank->sample(w, timbre, ph) * g * wheelTrim[w] * 0.32f;
+                // **Spray is a second rank, not a bent one.**
+                //
+                // A generator has one wheel per pitch, so detuning that wheel
+                // moves the whole note: it puts a chord out of tune with
+                // itself and nothing ever beats, because there is nothing for
+                // it to beat against. That is not what a celeste or a musette
+                // is - those are two ranks at the same pitch a few cents
+                // apart, and the beat *is* the sound. So the detuned phase
+                // reads a second copy of the same wheel and the two are
+                // summed; the difference between them is the beating, and
+                // that is what gets thrown across the stereo field.
+                const float x0 = bank->sample(w, timbre, wheelPhase[w]);
+                float x = x0;
+                float beat = 0.0f;
+                if (spray > 0.0005f) {
+                    float ph = wheelPhase[w] + sprayPhase[w];
+                    if (ph >= 1.0f) ph -= 1.0f;
+                    else if (ph < 0.0f) ph += 1.0f;
+                    const float x1 = bank->sample(w, timbre, ph);
+                    x = (x0 + x1) * 0.5f;
+                    beat = (x1 - x0) * 0.5f;
+                }
+                const float gain = g * wheelTrim[w] * 0.32f;
+                x *= gain;
                 dry += x;
-                if (sprayWidth > 0.0f) {
-                    wideL += x * sprayPan[w];
-                    wideR -= x * sprayPan[w];
+                if (sprayWidth > 0.0f && beat != 0.0f) {
+                    wideL += beat * gain * sprayPan[w];
+                    wideR -= beat * gain * sprayPan[w];
                 }
             }
         }
@@ -866,9 +905,30 @@ bool Manual::render(float *L, float *R, int32_t frames) {
             // rasp changed character every time the tremolo moved the level,
             // and with two tremulants adding up it did that twice a second.
             // A clip is monotonic: more level is more buzz, always.
-            const float k = 1.0f + buzz * 7.0f;
-            const float frame = dry > 0.0f ? 1.0f : 1.0f + 1.3f * buzz;
-            dry = std::tanh(dry * k * trem * frame) * (0.55f + 0.45f / k);
+            // **A reed beats against its own frame, and ten reeds do not beat
+            // ten times as hard.** This sat on the summed mix, so a chord
+            // drove it by the sum of every sounding reed: at Musette's 0.3 a
+            // single note was 85% saturated and a four-note chord was 100% -
+            // a square wave - so the tune stayed clean and the chords behind
+            // it turned into a fuzz box. The drive is taken per reed now.
+            //
+            // And it is normalised on a nominal level rather than on a point
+            // the signal routinely passes, which was the amplifier's fault
+            // one stage later.
+            // The divisor is the *square root* of how many are sounding, not
+            // the count: notes on different wheels add incoherently, so four
+            // of them are twice one and not four times. Dividing by four
+            // over-corrected and handed chords less drive than single notes,
+            // which is the original fault upside down.
+            const float reeds = std::sqrt(std::fmax(1.0f, demand));
+            const float k = 1.0f + buzz * 4.0f;
+            const float b = buzz * 0.45f; // the frame is closer on one side
+            // Normalised at the level that actually arrives here, measured,
+            // rather than at a guess - the whole point of the exercise.
+            constexpr float kNominal = 0.55f;
+            const float norm = kNominal / std::tanh(kNominal * k);
+            const float one = dry / reeds;
+            dry = reeds * (std::tanh(one * k * trem + b) - std::tanh(b)) * norm;
         }
         dry *= trem;
 
@@ -906,7 +966,14 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         // The house level. Every machine leaves the same amount of room for
         // the next one, and it is taken out here rather than out of forty
         // patch volumes. See Subvert's kHouse for why.
-        constexpr float kHouse = 0.5f;
+        // This does not decide how loud the machine is - the bank is levelled
+        // to the same target whatever it says - it decides **where in the
+        // volume knob's travel the bank sits**. At 0.5 the thinnest stops ran
+        // out of travel at the top while full organ sat near 0.3 with the
+        // whole bottom of the knob unused, because the two saturations in
+        // front of this now cost real level instead of supplying makeup gain.
+        // 0.9 slides the bank down the knob so both ends fit.
+        constexpr float kHouse = 0.9f;
         x *= volume * exprGain * kHouse;
 
         float outL = x, outR = x;

@@ -309,7 +309,12 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         // different ways, because a hymn says nothing about a combo organ
         // and a gospel turnaround says nothing about a harmonium.
         struct Step { float at; float len; int note; int vel; };
-        const int shift = 12 * static_cast<int>(std::lround((note - 60) / 12.0));
+        // Whole octaves, and *truncated* rather than rounded: a patch
+        // measured at G4 is not an octave away from middle C, but rounding
+        // 0.58 up said it was and moved its entire demo up twelve semitones.
+        // Two of the brightest patches in Manual's bank were being auditioned
+        // an octave above the rest of it for that reason alone.
+        const int shift = 12 * ((note - 60) / 12);
 
         // Gospel: right hand above the split, left hand comping under it,
         // and the feet on the roots. Grace notes into the chords and one
@@ -1016,8 +1021,7 @@ struct Options {
 };
 
 /** Renders one patch, writes its wav, and returns what it measured. */
-bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, Measured &measured,
-                 std::vector<float> *joined) {
+bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, Measured &measured) {
     int32_t count = 0;
     const ParamDef *defs = defsFor(bank.unit, count);
     if (defs == nullptr || count == 0) {
@@ -1142,10 +1146,6 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
     }
     if (opt.quiet) return true;
     writeWav(folderFor(bank.unit) + "/" + safeName(patch.name) + ".wav", take.stereo);
-    if (joined != nullptr) {
-        joined->insert(joined->end(), take.stereo.begin(), take.stereo.end());
-        joined->insert(joined->end(), static_cast<size_t>(kSr * 0.3f) * 2, 0.0f);
-    }
     printRow(patch.name, measured, measuredNote);
     if (!voices.empty()) printVoices(voices);
     if (opt.ladder) printLadder(bank.isEffect() ? take.stereo : gMeasureTake.stereo, measured.f0Hz);
@@ -1160,7 +1160,7 @@ int cmdPlay(const std::string &unit, const std::string &patchName, const Options
         if (p.name != patchName) continue;
         printHeader();
         Measured m;
-        return auditionOne(bank, p, opt, m, nullptr) ? 0 : 1;
+        return auditionOne(bank, p, opt, m) ? 0 : 1;
     }
     std::fprintf(stderr, "no patch called '%s' in %s\n", patchName.c_str(), bank.path.c_str());
     return 1;
@@ -1171,11 +1171,10 @@ int cmdBank(const std::string &unit, const Options &opt) {
     if (!loadBank(unit, bank)) return 1;
     std::printf("%s - %zu patches\n\n", bank.unit.c_str(), bank.patches.size());
     printHeader();
-    std::vector<float> joined;
     std::vector<float> rms;
     for (const BankPatch &p : bank.patches) {
         Measured m;
-        if (!auditionOne(bank, p, opt, m, &joined)) continue;
+        if (!auditionOne(bank, p, opt, m)) continue;
         if (m.loudnessDb > -190.0f) rms.push_back(m.loudnessDb);
     }
     if (rms.size() > 1) {
@@ -1186,13 +1185,6 @@ int cmdBank(const std::string &unit, const Options &opt) {
         // ear is worst at catching patch by patch.
         std::printf("\n  loudness spread %.1f dB%s\n", static_cast<double>(hi - lo),
                     hi - lo > 12.0f ? "   <- wide; level these against each other" : "");
-    }
-    if (!joined.empty()) {
-        // Named for the unit rather than just "bank", so it still says what
-        // it is once it has been copied out of its folder.
-        const std::string path = folderFor(bank.unit) + "/" + safeName(bank.unit) + "-bank.wav";
-        writeWav(path, joined);
-        std::printf("  the whole bank, in order: %s\n", path.c_str());
     }
     return 0;
 }
@@ -1236,7 +1228,7 @@ int cmdSweep(const std::string &unit, const std::string &patchName, const Option
         for (int n = p.low; n <= p.high; ++n) {
             one.note = n;
             Measured m;
-            if (!auditionOne(bank, p, one, m, nullptr)) break;
+            if (!auditionOne(bank, p, one, m)) break;
             // Anchored: the note is known, so "how far out" and "which
             // partial" are separate questions and neither needs a guess.
             rmsAt.push_back(m.loudnessDb);

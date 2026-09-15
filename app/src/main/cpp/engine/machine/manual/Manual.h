@@ -156,6 +156,7 @@ class Manual final : public Machine {
     int16_t usedCount[kSlots] = {};
     uint16_t frameStamp = 0;
     float sprayPan[WheelBank::kWheels] = {};
+    float sprayDetune[WheelBank::kWheels] = {}; // how many cents, per wheel
     float sprayPhase[WheelBank::kWheels] = {};
     float sprayStep[WheelBank::kWheels] = {};
     float sprayDrift = 0.0f;
