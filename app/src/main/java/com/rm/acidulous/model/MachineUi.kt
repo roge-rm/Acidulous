@@ -92,6 +92,34 @@ object MachineUi {
         DrumVoice(46, "Ride", "RD"), DrumVoice(47, "Cowbell", "CB"), DrumVoice(48, "Clave", "CL"),
     )
 
+    /**
+     * The order the *pads* are laid out in, which is deliberately not the order
+     * the grid lists them in.
+     *
+     * Two rows of an odd count give the *shorter* row the wider cells, and
+     * `DrumPads` fills the rows top-first - so whatever is put last ends up
+     * both wider and nearest the thumb. Left alone, Hexbeat's thirteen split
+     * seven and six and handed that row to `CH OH CY RD CB CL`: the hats and
+     * cymbals were 18% wider than the kick and the snare, which is the wrong
+     * way round for every piece of music anybody plays.
+     *
+     * The grid keeps ascending note order, because a drum grid is read with
+     * the kick at the top and that convention is older than this app.
+     *
+     * Looked up by short code rather than by index, because Genesis and
+     * Hexbeat do not agree on note order (Genesis is BD SD CP RS, Hexbeat is
+     * BD RS SD CP) and neither should break if a voice is ever added.
+     */
+    fun padOrder(type: String, voices: List<DrumVoice>): List<DrumVoice> {
+        // Numbered slices, objects and samples have no pecking order; moving
+        // pad 5 somewhere else would only make pad 5 hard to find.
+        if (type != "Hexbeat" && type != "Genesis") return voices
+        val core = listOf("BD", "RS", "SD", "CP", "CH", "OH")
+        val rest = voices.filter { it.short !in core }
+        val hand = core.mapNotNull { code -> voices.firstOrNull { it.short == code } }
+        return rest + hand
+    }
+
     /** Forage pads are named after their samples; unloaded pads by number. */
     fun voicesOf(type: String, settings: Map<String, String> = emptyMap()): List<DrumVoice> = when (type) {
         "Hexbeat" -> hexbeatVoices

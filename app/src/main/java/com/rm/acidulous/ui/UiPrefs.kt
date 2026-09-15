@@ -39,6 +39,21 @@ object UiPrefs {
         private set
 
     /**
+     * Whether a drum pad sends full strength wherever it is struck.
+     *
+     * Off, a pad reads the height of the hit: low is soft, high is hard. That
+     * is how you play a part in. On, every pad sends 127 - which is what you
+     * want when you are auditioning a kit, checking a patch, or tapping a
+     * pattern in where every hit is meant to be identical and a finger landing
+     * a little low is a mistake rather than a nuance.
+     *
+     * A statement about how somebody is working rather than about the song, so
+     * it lives here and follows them between tracks and across launches.
+     */
+    var padsFullStrength by mutableStateOf(false)
+        private set
+
+    /**
      * The song grid as a launcher rather than an arranger. A way of working
      * rather than anything about the song, so it follows the person and not
      * the file - open somebody else's song and it is still however you left
@@ -147,6 +162,7 @@ object UiPrefs {
         val p = context.getSharedPreferences("ui", Context.MODE_PRIVATE)
         store = p
         automationFolded = p.getBoolean(KEY_AUTO_FOLDED, false)
+        padsFullStrength = p.getBoolean(KEY_PADS_FULL, false)
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
@@ -212,6 +228,11 @@ object UiPrefs {
         NativeEngine.setLaunchQuantise(launchQuantise * 4 * 240)
         NativeEngine.setCountInBars(countInBars)
         pushClick()
+    }
+
+    fun choosePadsFullStrength(on: Boolean) {
+        padsFullStrength = on
+        store?.edit()?.putBoolean(KEY_PADS_FULL, on)?.apply()
     }
 
     fun foldAutomation(folded: Boolean) {
@@ -390,6 +411,7 @@ object UiPrefs {
     }
 
     private const val KEY_AUTO_FOLDED = "automation_folded"
+    private const val KEY_PADS_FULL = "pads_full_strength"
     private const val KEY_CLIP_MODE = "clip_mode"
     private const val KEY_LAUNCH_Q = "launch_quantise"
     private const val KEY_THEME = "theme"

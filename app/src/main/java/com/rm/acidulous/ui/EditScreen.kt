@@ -501,7 +501,11 @@ fun EditScreen(
         LaunchedEffect(trackIndex) { NativeEngine.controlChange(trackIndex, 1, (mod * 127f).toInt(), record = false) }
 
         val keysSlot: @Composable (Dp) -> Unit = { height ->
-        if (kind == MachineKind.Drums) DrumPads(trackIndex, voices, selectedPad, { selectedPad = it }, Modifier.fillMaxWidth().height(height - 6.dp).padding(top = 6.dp))
+        if (kind == MachineKind.Drums) DrumPads(
+            trackIndex, voices, selectedPad, { selectedPad = it },
+            Modifier.fillMaxWidth().height(height - 6.dp).padding(top = 6.dp),
+            track.machine.type,
+        )
         else Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
             Row(
                 Modifier.fillMaxWidth().height(26.dp),
@@ -605,7 +609,10 @@ fun EditScreen(
         // holds the right-hand group where it belongs. Three of them will not
         // fit at that width - eight pills and their gaps is 380dp of a
         // phone's 377 - and only then do they share.
-        val views = 1 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0)
+        // The pad strength toggle counts as one of them: a drum machine has
+        // only fx on the left otherwise, and this sits in the gap beside it.
+        val padToggle = kind == MachineKind.Drums
+        val views = 1 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0) + (if (padToggle) 1 else 0)
         val view = if (views >= 3 || landscape) Modifier.weight(1f) else Modifier.width(BarAnchor)
         BottomBar {
             // fx first, at the head of the row. It is the pair to mix at the
@@ -615,6 +622,15 @@ fun EditScreen(
                 "fx", view,
                 colour = if (panel == 1) Acid.colors.accent else Color.Unspecified,
             ) { panel = if (panel == 1) 0 else 1 }
+            // How hard a pad hits: a wedge for velocity off the height of the
+            // strike, a solid block for the same full strength wherever it
+            // lands. Only where there are pads to say it about.
+            if (padToggle) {
+                BarButton(
+                    if (UiPrefs.padsFullStrength) "\u25A0" else "\u25E2", view,
+                    colour = if (UiPrefs.padsFullStrength) Acid.colors.accent else Color.Unspecified,
+                ) { UiPrefs.choosePadsFullStrength(!UiPrefs.padsFullStrength) }
+            }
             if (hasSteps) {
                 BarButton(if (steps) "\u25A6" else "\u25A4", view) { steps = !steps }
             }
@@ -731,9 +747,16 @@ private const val MaxRows = 36
 private const val PAGE_BARS_LAND = 4
 private val CONTROL_W = 300.dp
 private val KEYS_H = 104.dp
-private val PADS_H = 72.dp
+// The pads used to get 72, which after padding is two rows of 28.5dp - forty
+// per cent under the smallest thing a finger is meant to hit, and a third less
+// than the keyboard gets *before* the keyboard spends thirty of its own on a
+// control strip the pads do not have. A playing surface is not chrome; it is
+// the counterpart of the keyboard and is sized like one.
+private val PADS_H = 132.dp
 private val KEYS_H_LAND = 92.dp
-private val PADS_H_LAND = 60.dp
+// Landscape rows come out at 44.5dp, knowingly just under: the whole screen is
+// about 360dp tall here and the grid has the first claim on it.
+private val PADS_H_LAND = 104.dp
 
 @Composable
 private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
