@@ -154,6 +154,8 @@ class Engine {
     bool startPending = false;
     /** Playing was asked for, and we are waiting for the session's downbeat. */
     bool linkWaiting = false;
+    /** Was anybody else in the session at the last capture? */
+    bool linkInSession = false;
     /** What we last told the session we were doing, for the edge. */
     bool linkToldPlaying = false;
     /** What the session was last seen doing, and whether we have looked yet. */

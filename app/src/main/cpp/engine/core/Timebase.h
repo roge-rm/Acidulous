@@ -31,6 +31,14 @@ class Timebase {
         bool playing = false;
         /** Beats per block, so a caller can see where the block ends. */
         double beatsPerBlock = 0.0;
+        /**
+         * How many other machines are in the session.
+         *
+         * Zero is not the same as switched off. A session of one still has a
+         * tempo and a phase, and following them costs nothing - but *waiting*
+         * for them does, and there is nobody to be in time with.
+         */
+        int32_t peers = 0;
     };
 
     /**

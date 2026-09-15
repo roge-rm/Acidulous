@@ -122,6 +122,7 @@ Timebase::State LinkTimebase::capture(int64_t framesRendered) {
     out.quantum = quantum;
     out.playing = state.isPlaying();
     out.beatsPerBlock = impl->blockSeconds.load(std::memory_order_relaxed) * out.bpm / 60.0;
+    out.peers = static_cast<int32_t>(impl->link.numPeers());
     return out;
 }
 

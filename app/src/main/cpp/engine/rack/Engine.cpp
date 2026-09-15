@@ -95,8 +95,15 @@ void Engine::renderBlock(const float *in, float *out) {
             // whole point of a shared phase. A count-in is its own bar line
             // and keeps its meaning, so the two do not both apply; the pull
             // brings the count-in's bar into line over the following one.
+            //
+            // **Only when somebody is out there.** Link left switched on with
+            // no peers is the common case, not the exotic one: it persists
+            // across launches and nothing on screen says it is on, so every
+            // press of play sat waiting up to a whole bar to come into phase
+            // with a session of one. There is no phase to join on your own,
+            // and the wait reads as the transport being broken.
             linkWaiting = startPending && transport.followingLink() &&
-                          timebase.load(std::memory_order_acquire) != nullptr;
+                          timebase.load(std::memory_order_acquire) != nullptr && linkInSession;
             if (linkWaiting) startPending = false;
         } else {
             scheduler.allNotesOff();
@@ -442,6 +449,7 @@ void Engine::followTimebase() {
         linkWaiting = false;
         linkSeen = false;
         linkToldPlaying = false;
+        linkInSession = false;
         return;
     }
     // Our bar, in beats, before anything is asked of the session: a phase is
@@ -450,7 +458,15 @@ void Engine::followTimebase() {
     if (barTicks > 0.0) tb->setQuantum(barTicks / static_cast<double>(kPPQN));
 
     const Timebase::State s = tb->capture(framesRendered);
-    if (!s.valid || s.bpm < 1.0) return;
+    if (!s.valid || s.bpm < 1.0) {
+        linkInSession = false;
+        return;
+    }
+    // Read every block, because the decision that needs it - whether to hold
+    // play for a downbeat - is taken at the top of a block, before this runs.
+    // A block old is close enough for something that changes when a machine
+    // joins the network.
+    linkInSession = seq::LinkFollower::waitsForDownbeat(s);
 
     const double perTick = clock.framesPerTickAt(s.bpm);
     const seq::LinkFollower::Advice advice = seq::LinkFollower::advise(

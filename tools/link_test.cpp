@@ -122,6 +122,22 @@ void followerTests() {
            !LinkFollower::advise(state(120.0, 2.0, 4.0, bb), 0.0, bar, perTick, false).downbeat);
     }
 
+    // Whether to wait for that downbeat at all. Play held for the session's
+    // bar line is right with somebody out there and wrong on your own: Link
+    // left switched on alone made every press of play sit out up to a whole
+    // bar to come into phase with nobody.
+    {
+        Timebase::State alone = state(120.0, 2.0, 4.0, blockBeats(120.0));
+        alone.peers = 0;
+        ok("a session of one does not hold play", !LinkFollower::waitsForDownbeat(alone));
+        Timebase::State joined = alone;
+        joined.peers = 1;
+        ok("one peer out there does hold play", LinkFollower::waitsForDownbeat(joined));
+        Timebase::State off;
+        off.peers = 3;
+        ok("switched off holds nothing, peers or not", !LinkFollower::waitsForDownbeat(off));
+    }
+
     // A 7/8 bar against a four-beat quantum: both are read as a fraction of
     // their own bar, so the phases still compare.
     {

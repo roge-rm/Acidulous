@@ -39,6 +39,18 @@ class LinkFollower {
     };
 
     /**
+     * Should a press of play hold until the session's next downbeat?
+     *
+     * Only when there is somebody to be in phase with. A session of one has
+     * a tempo and a phase like any other, and following them costs nothing -
+     * but *waiting* for them costs up to a bar, and buys being in time with
+     * nobody. Link switched on and left on, alone, is the ordinary case: the
+     * setting survives a restart and nothing on screen announces it, so the
+     * wait arrives as the transport simply not starting when you press it.
+     */
+    static bool waitsForDownbeat(const Timebase::State &s) { return s.valid && s.peers > 0; }
+
+    /**
      * [ourTickInBar] is where we are in our own bar, [barTicks] how long that
      * bar is, and [framesPerTickAtTempo] how long a tick would be at the
      * session's tempo. [pulling] is false when the phase is not to be
