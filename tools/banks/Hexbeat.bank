@@ -97,7 +97,7 @@ patch Boomy family=classic
   tom_hi_tune    160 Hz
   hat_open_decay 600 ms
   kick_level     0.95
-  volume         0.64
+  volume         0.86
 
 patch Deep family=classic
   # Everything a fourth or so down, and given room. Not longer than Boomy -
@@ -117,7 +117,7 @@ patch Deep family=classic
   cym_tone       2600 Hz
   bell_tune      380 Hz
   clave_tune     1600 Hz
-  volume         0.80
+  volume         0.90
 
 patch Garage family=classic
   # Fast hats and a clap where the snare would be, which is most of what
@@ -137,7 +137,7 @@ patch Garage family=classic
   hat_level      0.72
   tom_decay      240 ms
   accent         0.75
-  volume         0.64
+  volume         0.71
 
 patch Hall family=room
   # Nothing short anywhere. The metal is what carries a room, so the open hat
@@ -157,7 +157,7 @@ patch Hall family=room
   ride_level     0.6
   clap_decay     420 ms
   bell_decay     360 ms
-  volume         0.65
+  volume         0.90
 
 patch Stadium family=room
   # Built on the toms: low, long and loud, with a kick underneath rather than
@@ -179,7 +179,7 @@ patch Stadium family=room
   clap_level     0.9
   hat_open_decay 900 ms
   cym_decay      2600 ms
-  volume         0.48
+  volume         0.82
 
 patch Distant family=room
   # The kit heard from the other end of the building: the attacks down, the
@@ -209,7 +209,7 @@ patch Distant family=room
   rim_level      0.4
   clave_level    0.35
   bell_level     0.3
-  volume         0.75
+  volume         1.14
 
 patch Plate family=room
   # The snare is the patch: long, bright and mostly noise, the way a plate
@@ -229,7 +229,7 @@ patch Plate family=room
   ride_decay     1400 ms
   clap_decay     560 ms
   clap_tone      2400 Hz
-  volume         0.73
+  volume         0.82
 
 patch Enormous family=room
   # Everything long, everything loud, nothing left for anything else in the
@@ -250,7 +250,7 @@ patch Enormous family=room
   ride_level     0.7
   clap_decay     700 ms
   accent         0.5
-  volume         0.47
+  volume         0.82
 
 patch Cardboard family=dry
   # Nothing metallic left to speak of: hats and cymbals right down and short,
@@ -343,7 +343,7 @@ patch Deadened family=dry
   clap_decay     70 ms
   bell_decay     45 ms
   accent         0.9
-  volume         0.82
+  volume         0.89
 
 patch Tabletop family=dry
   # Small and high: everything tuned up, nothing with any body. The kit you
@@ -388,7 +388,7 @@ patch Trashy family=metal
   clap_tone      1950 Hz
   accent         0.9
   hat_level      0.7
-  volume         0.83
+  volume         0.86
 
 patch Glassy family=metal
   # Pitched metal rather than bright metal, which is what separates it from
@@ -411,7 +411,7 @@ patch Glassy family=metal
   rim_tune       1400 Hz
   rim_level      0.85
   kick_decay     260 ms
-  volume         0.71
+  volume         0.77
 
 patch Ironworks family=metal
   # The metal tuned right down - the hat stack at half its usual base, the
@@ -436,7 +436,7 @@ patch Ironworks family=metal
   kick_decay     480 ms
   snare_tone     1300 Hz
   snare_snappy   0.45
-  volume         0.71
+  volume         0.90
 
 patch Splash family=metal
   # Cymbals at their shortest and their brightest: a splash rather than a
@@ -457,7 +457,7 @@ patch Splash family=metal
   snare_tone     3600 Hz
   tom_decay      190 ms
   accent         0.85
-  volume         0.73
+  volume         0.90
 
 patch Gamelan family=metal
   # The cowbell is the instrument: two squares, tuned high and rung long, with
@@ -489,7 +489,7 @@ patch Gamelan family=metal
   tom_mid_tune   165 Hz
   tom_hi_tune    248 Hz
   tom_decay      600 ms
-  volume         0.62
+  volume         0.76
 
 patch Sizzle family=metal
   # Open hat and ride held down for as long as they will go, thin and high,
@@ -511,7 +511,7 @@ patch Sizzle family=metal
   snare_tone     4400 Hz
   tom_decay      240 ms
   accent         0.7
-  volume         0.71
+  volume         0.90
 
 patch Circuitry family=electro
   # Nothing with any noise in it that can be helped: the snare tuned up and
@@ -539,7 +539,7 @@ patch Circuitry family=electro
   bell_tune      1080 Hz
   bell_decay     70 ms
   accent         0.9
-  volume         0.84
+  volume         0.87
 
 patch Rubber family=electro
   # A low kick with all its sweep and no click to speak of, toms to match, and
@@ -592,7 +592,7 @@ patch Falling family=electro
   cym_level      0.35
   ride_level     0.42
   accent         0.55
-  volume         0.42
+  volume         0.81
 
 patch Chordal family=electro
   # The three toms and the cowbell tuned to a minor seventh, so playing the
@@ -622,7 +622,7 @@ patch Chordal family=electro
   hat_level      0.42
   cym_level      0.26
   ride_level     0.28
-  volume         0.52
+  volume         0.86
 
 patch Bleep family=electro
   # Rim and clave at the top of their ranges and everything else out of their
@@ -696,7 +696,7 @@ patch Clapback family=perc
   hat_tone       9600 Hz
   tom_decay      200 ms
   accent         0.85
-  volume         0.54
+  volume         0.51
 
 patch Blocks family=perc
   # Rim and clave carrying, both tuned into the wood range, with the toms up
@@ -727,7 +727,7 @@ patch Blocks family=perc
   hat_level      0.45
   cym_level      0.34
   ride_level     0.34
-  volume         0.81
+  volume         0.82
 
 patch Cowbells family=perc
   # The bell at four tunings' worth of prominence, long enough to ring into
@@ -753,7 +753,7 @@ patch Cowbells family=perc
   cym_level      0.26
   ride_level     0.3
   clap_level     0.4
-  volume         0.75
+  volume         0.80
 
 patch Sidestick family=perc
   # The rim doing the snare's job for a whole song, which is what a sidestick
@@ -779,4 +779,4 @@ patch Sidestick family=perc
   bell_level     0.35
   clave_level    0.45
   tom_decay      320 ms
-  volume         0.74
+  volume         0.82

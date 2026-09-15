@@ -163,8 +163,8 @@ void Hexbeat::trigger(int32_t v, float acc) {
     switch (v) {
     case Kick:
         amp[v].fire(sr, params_.get(KickDecay) * ms);
-        pitchEnv[v].fire(sr, 0.035f);
-        aux[v].fire(sr, 0.004f); // click
+        pitchEnv[v].fireTau(sr, 0.035f);
+        aux[v].fireTau(sr, 0.004f); // click
         osc[v].phase = 0.0f;
         break;
     case Snare:
@@ -174,25 +174,25 @@ void Hexbeat::trigger(int32_t v, float acc) {
         break;
     case TomLo: case TomMid: case TomHi:
         amp[v].fire(sr, params_.get(TomDecay) * ms);
-        pitchEnv[v].fire(sr, 0.05f);
+        pitchEnv[v].fireTau(sr, 0.05f);
         osc[v].phase = 0.0f;
         break;
     case HatClosed:
         amp[v].fire(sr, params_.get(HatClosedDecay) * ms);
-        if (amp[HatOpen].active) amp[HatOpen].fire(sr, 0.02f, amp[HatOpen].level); // choke
+        if (amp[HatOpen].active) amp[HatOpen].fireTau(sr, 0.02f, amp[HatOpen].level); // choke
         break;
     case HatOpen: amp[v].fire(sr, params_.get(HatOpenDecay) * ms); break;
     case Cymbal: amp[v].fire(sr, params_.get(CymDecay) * ms); aux[v].fire(sr, params_.get(CymDecay) * ms * 0.3f); break;
-    case Ride: amp[v].fire(sr, params_.get(RideDecay) * ms); aux[v].fire(sr, 0.25f); osc[v].phase = 0.0f; break;
+    case Ride: amp[v].fire(sr, params_.get(RideDecay) * ms); aux[v].fireTau(sr, 0.25f); osc[v].phase = 0.0f; break;
     case Clap:
         amp[v].fire(sr, params_.get(ClapDecay) * ms);
-        aux[v].fire(sr, 0.008f);
+        aux[v].fireTau(sr, 0.008f);
         clapPulse = 3;
         clapTimer = 0.0f;
         break;
-    case Rim: amp[v].fire(sr, 0.02f); aux[v].fire(sr, 0.003f); osc[v].phase = 0.0f; break;
+    case Rim: amp[v].fireTau(sr, 0.02f); aux[v].fireTau(sr, 0.003f); osc[v].phase = 0.0f; break;
     case Cowbell: amp[v].fire(sr, params_.get(BellDecay) * ms); break;
-    case Clave: amp[v].fire(sr, 0.04f); osc[v].phase = 0.0f; break;
+    case Clave: amp[v].fireTau(sr, 0.04f); osc[v].phase = 0.0f; break;
     default: break;
     }
 }
@@ -266,7 +266,7 @@ void Hexbeat::renderVoice(int32_t v, float *out, int32_t frames) {
             // three fast pulses ten milliseconds apart, then the tail
             if (clapPulse > 0) {
                 clapTimer += 1.0f / sr;
-                if (clapTimer >= 0.010f) { clapTimer = 0.0f; --clapPulse; aux[v].fire(sr, 0.008f); }
+                if (clapTimer >= 0.010f) { clapTimer = 0.0f; --clapPulse; aux[v].fireTau(sr, 0.008f); }
             }
             const float e = aux[v].next() * 1.5f + amp[v].next() * 0.6f;
             out[i] += bp[v].bandpass(noise()) * e * 2.5f * g * level;

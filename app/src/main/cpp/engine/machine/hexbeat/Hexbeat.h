@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cstdint>
 #include <engine/dsp/Filter.h>
 #include <engine/machine/Machine.h>
@@ -47,7 +48,32 @@ class Hexbeat final : public Machine {
     struct Env { // exponential decay with a fast attack
         float level = 0.0f, coeff = 0.01f;
         bool active = false;
-        void fire(float sr, float seconds, float amp = 1.0f) { level = amp; coeff = 1.0f - std::exp(-1.0f / (seconds * sr)); active = true; }
+        /**
+         * [seconds] is how long the sound *lasts* - the time to fall 60 dB.
+         *
+         * It used to be one time constant, and 60 dB is 6.9 of them, so every
+         * decay here ran nearly seven times longer than the number beside it:
+         * `cym_decay 1500 ms` really lasted ten and a half seconds and
+         * Enormous's 3800 lasted twenty-six. Dan found it in Genesis, which
+         * had the same envelope - "a metallic constant noise... the only
+         * sound for the last 15 seconds" - and this is the same fault.
+         */
+        void fire(float sr, float seconds, float amp = 1.0f) {
+            level = amp;
+            constexpr float kLn1000 = 6.907755f; // 60 dB, in time constants
+            coeff = 1.0f - std::exp(-kLn1000 / (std::max(0.002f, seconds) * sr));
+            active = true;
+        }
+        /**
+         * The same curve read the old way: [seconds] is one time constant.
+         *
+         * For the envelopes that are a *shape* rather than a length - the
+         * pitch sweeps, the click, the clap's pulses, the hat choke, and the
+         * rim and clave whose lengths are fixed in the code rather than on a
+         * panel. Those numbers were tuned by ear as curves and none of them
+         * is a duration anybody reads.
+         */
+        void fireTau(float sr, float seconds, float amp = 1.0f) { level = amp; coeff = 1.0f - std::exp(-1.0f / (std::max(0.002f, seconds) * sr)); active = true; }
         float next() { level -= level * coeff; if (level < 1e-4f) { level = 0.0f; active = false; } return level; }
     };
     struct Osc { float phase = 0.0f; float step(float hz, float sr) { phase += hz / sr; if (phase >= 1.0f) phase -= 1.0f; return phase; } };

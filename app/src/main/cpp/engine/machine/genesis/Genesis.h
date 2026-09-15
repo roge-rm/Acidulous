@@ -62,7 +62,36 @@ class Genesis final : public Machine {
     struct Env {
         float level = 0.0f, coeff = 0.01f;
         bool active = false;
+        /**
+         * [seconds] is how long the sound *lasts* - the time to fall 60 dB -
+         * and not one time constant.
+         *
+         * It used to be one time constant, which is 60 dB in 6.9 of them, so
+         * every decay in this machine ran nearly seven times longer than the
+         * number beside it said. A crash set to 2.2 seconds was still only
+         * 20 dB down after 4.8 and took 14.8 to finish: Dan heard it as "a
+         * metallic constant noise... the only sound for the last 15 seconds
+         * of each sample", which is exactly what it was. A control in seconds
+         * has to mean seconds - the number is the promise.
+         */
         void fire(float sr, float seconds, float amp = 1.0f) {
+            level = amp;
+            constexpr float kLn1000 = 6.907755f; // 60 dB, in time constants
+            coeff = 1.0f - std::exp(-kLn1000 / (std::max(0.002f, seconds) * sr));
+            active = true;
+        }
+
+        /**
+         * The same curve read the old way: [seconds] is one time constant.
+         *
+         * For the envelopes that are a *shape* rather than a length - the
+         * kick's pitch sweep, the tom's bend, the click - where the number
+         * was never a duration anybody reads off a panel and was tuned by ear
+         * as a curve. Changing those to mean 60 dB made them seven times
+         * faster and quietly rewrote how the kick speaks, which is not what
+         * was wrong.
+         */
+        void fireTau(float sr, float seconds, float amp = 1.0f) {
             level = amp;
             coeff = 1.0f - std::exp(-1.0f / (std::max(0.002f, seconds) * sr));
             active = true;

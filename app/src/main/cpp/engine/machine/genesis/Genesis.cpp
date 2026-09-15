@@ -6,6 +6,51 @@
 namespace acidulous::machine {
 
 namespace {
+// Where each saturator pins unity: an input this size comes out this size at
+// any setting of its knob, so the knob is a colour and not a level. Pick a
+// level the signal *works* at rather than one it routinely passes - normalise
+// on a peak and every quiet moment gets the gain instead. Below the pin a
+// saturator still lifts, which is what an overdriven stage does to a tail;
+// above it, it bends. Same form as Resonance's per-pad drive.
+constexpr float kKickNominal = 0.5f;
+constexpr float kBusNominal = 0.5f;
+
+// The house level. Genesis had none, and with the drive knob at zero - where
+// there is no saturator in the path at all - the Init kit came out at +3.9
+// dBFS and was clipped by the master rather than by anything of its own. This
+// does not decide how loud Genesis is, the bank is levelled either way; it
+// decides where in the volume knob's travel a kit sits, and it keeps the
+// machine's own output inside full scale at every setting of drive.
+constexpr float kHouse = 0.57f; // -4.9 dB, set so Init sits on the house line
+
+// What one unit of `level` is worth, per voice - the same correction Hexbeat
+// needed, and hidden twice over.
+//
+// Measured through the machine it spread only 4.5 dB, because the bus
+// compressor and the drive saturator were both clamping: trim a voice and
+// they hand most of it back. With the bus bypassed it spreads 13.5 dB on
+// loudness and 15.2 on peak, and the rim came out the loudest voice in the
+// kit - five decibels over the kick by loudness, twelve by peak - while the
+// closed hat was the quietest by eight.
+//
+// So these are not computed from the raw voices; they are *solved* against
+// the balance heard through the bus, the way the bank's volumes are solved
+// against the house line: measure, correct, measure again. Three passes to
+// land every voice within four tenths of where a 909 kit puts it - the kick
+// on top, the snare just under, the cymbals five decibels back.
+constexpr float kLevelTrim[] = {
+    1.000f, // Kick      reference
+    0.680f, // Snare     -0.2 dB
+    0.854f, // Clap      +1.4
+    0.227f, // Rim       -9.1
+    0.579f, // Tom       -3.6
+    0.461f, // Cowbell   -3.5
+    0.962f, // Hat       +5.3
+    0.949f, // Crash     +1.8
+    0.746f, // Ride      +1.6
+};
+enum Trim { TKick, TSnare, TClap, TRim, TTom, TBell, THat, TCrash, TRide };
+
 constexpr float kTwoPi = 6.28318530718f;
 /** The six ratios the metal voices are built from - inharmonic on purpose. */
 constexpr float kMetalRatios[6] = {1.0f, 1.4471f, 1.6170f, 1.9265f, 2.5028f, 2.6637f};
@@ -116,8 +161,8 @@ void Genesis::trigger(int32_t voice, float velocity) {
     case Kick:
         tuneOf[voice] = params_.get(KickTune) * wobble(drift);
         amp[voice].fire(sr, params_.get(KickDecay) * wobble(drift), level);
-        pitch[voice].fire(sr, params_.get(KickSweep) * wobble(drift), 1.0f);
-        aux[voice].fire(sr, 0.004f, params_.get(KickClick) * level);
+        pitch[voice].fireTau(sr, params_.get(KickSweep) * wobble(drift), 1.0f);
+        aux[voice].fireTau(sr, 0.004f, params_.get(KickClick) * level);
         break;
     case Snare:
         tuneOf[voice] = params_.get(SnareTune) * wobble(drift);
@@ -140,7 +185,7 @@ void Genesis::trigger(int32_t voice, float velocity) {
                                           : (voice == TomMid ? params_.get(TomMidTune) : params_.get(TomHiTune));
         tuneOf[voice] = tune * wobble(drift);
         amp[voice].fire(sr, params_.get(TomDecay) * wobble(drift), level);
-        pitch[voice].fire(sr, 0.06f, params_.get(TomBend));
+        pitch[voice].fireTau(sr, 0.06f, params_.get(TomBend));
         break;
     }
     case HatClosed:
@@ -212,8 +257,16 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
             const float click = aux[Kick].next();
             if (click > 0.0f) s += noise() * click * 0.5f;
             const float d = params_.get(KickDrive);
-            if (d > 0.0001f) s = dsp::fastTanh(s * (1.0f + d * 6.0f)) / std::sqrt(1.0f + d * 6.0f);
-            kickOut = s * params_.get(KickLevel);
+            if (d > 0.0001f) {
+                // Pinned so a kick at its working size comes out its own
+                // size, rather than divided by sqrt(k) - which is a ceiling,
+                // not a normalisation, and drops as the knob turns. Driving
+                // a kick harder made it quieter and squarer at the same
+                // time, so the knob read as a level rather than a colour.
+                const float k = 1.0f + d * 6.0f;
+                s = dsp::fastTanh(s * k) * (kKickNominal / dsp::fastTanh(kKickNominal * k));
+            }
+            kickOut = s * params_.get(KickLevel) * kLevelTrim[TKick];
             mix += kickOut;
         }
 
@@ -225,7 +278,7 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
             const float body = (std::sin(osc[Snare].step(tuneOf[Snare], sr) * kTwoPi) * 0.6f +
                                 std::sin(osc2[Snare].step(tuneOf[Snare] * 1.48f, sr) * kTwoPi) * 0.4f) * env;
             const float rattle = bp[Snare].step(noise()).bp * nEnv * params_.get(SnareSnap) * 1.6f;
-            mix += (body * (1.0f - tone * 0.5f) + rattle) * params_.get(SnareLevel);
+            mix += (body * (1.0f - tone * 0.5f) + rattle) * params_.get(SnareLevel) * kLevelTrim[TSnare];
         }
 
         // --- the clap: four bursts and a room
@@ -240,27 +293,27 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
                     env = amp[Clap].level;
                 }
             }
-            mix += bp[Clap].step(noise()).bp * env * params_.get(ClapLevel) * 1.4f;
+            mix += bp[Clap].step(noise()).bp * env * params_.get(ClapLevel) * kLevelTrim[TClap] * 1.4f;
         }
 
         // --- rim, toms, cowbell
         if (amp[Rim].active) {
             const float env = amp[Rim].next();
             mix += bp[Rim].step(noise() * 0.4f + (osc[Rim].step(tuneOf[Rim], sr) < 0.5f ? 1.0f : -1.0f)).bp *
-                   env * params_.get(RimLevel);
+                   env * params_.get(RimLevel) * kLevelTrim[TRim];
         }
         for (int32_t v = TomLo; v <= TomHi; ++v) {
             if (!amp[v].active) continue;
             const float env = amp[v].next();
             const float bend = pitch[v].next();
             const float hz = tuneOf[v] * (1.0f + bend * 1.2f);
-            mix += std::sin(osc[v].step(hz, sr) * kTwoPi) * env * params_.get(TomLevel);
+            mix += std::sin(osc[v].step(hz, sr) * kTwoPi) * env * params_.get(TomLevel) * kLevelTrim[TTom];
         }
         if (amp[Cowbell].active) {
             const float env = amp[Cowbell].next();
             const float a = osc[Cowbell].step(tuneOf[Cowbell], sr) < 0.5f ? 1.0f : -1.0f;
             const float b = osc2[Cowbell].step(tuneOf[Cowbell] * 1.5f, sr) < 0.5f ? 1.0f : -1.0f;
-            mix += bp[Cowbell].step((a + b) * 0.4f).bp * env * params_.get(BellLevel);
+            mix += bp[Cowbell].step((a + b) * 0.4f).bp * env * params_.get(BellLevel) * kLevelTrim[TBell];
         }
 
         // --- everything metal shares one stack of six squares
@@ -268,17 +321,17 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
         if (anyMetal) {
             const float source = metallic(hatTune);
             if (amp[HatClosed].active) {
-                mix += bp[HatClosed].step(source).hp * amp[HatClosed].next() * params_.get(HatLevel);
+                mix += bp[HatClosed].step(source).hp * amp[HatClosed].next() * params_.get(HatLevel) * kLevelTrim[THat];
             }
             if (amp[HatOpen].active) {
-                mix += bp[HatOpen].step(source).hp * amp[HatOpen].next() * params_.get(HatLevel);
+                mix += bp[HatOpen].step(source).hp * amp[HatOpen].next() * params_.get(HatLevel) * kLevelTrim[THat];
             }
             if (amp[Crash].active) {
-                mix += bp[Crash].step(source * 0.8f + noise() * 0.2f).hp * amp[Crash].next() * params_.get(CrashLevel);
+                mix += bp[Crash].step(source * 0.8f + noise() * 0.2f).hp * amp[Crash].next() * params_.get(CrashLevel) * kLevelTrim[TCrash];
             }
             if (amp[Ride].active) {
                 const float bell = std::sin(osc[Ride].step(hatTune * 2.5f, sr) * kTwoPi) * aux[Ride].next();
-                mix += (bp[Ride].step(source).hp * amp[Ride].next() + bell * 0.5f) * params_.get(RideLevel);
+                mix += (bp[Ride].step(source).hp * amp[Ride].next() + bell * 0.5f) * params_.get(RideLevel) * kLevelTrim[TRide];
             }
         }
 
@@ -294,10 +347,15 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
         float out = (mix - kickOut) * compGain * duckGain + kickOut * compGain;
 
         if (drive > 0.0001f) {
+            // Same correction on the bus, and the same reason. Unity is
+            // pinned at the level the bus actually works at, so turning the
+            // knob changes the shape and not the loudness: what came out
+            // before fell 6 dB from one end of the travel to the other, which
+            // is a fader with a tone control attached.
             const float k = 1.0f + drive * 8.0f;
-            out = dsp::fastTanh(out * k) / std::sqrt(k);
+            out = dsp::fastTanh(out * k) * (kBusNominal / dsp::fastTanh(kBusNominal * k));
         }
-        out *= volume;
+        out *= volume * kHouse;
         L[i] = out * panL * 1.4142f;
         R[i] = out * panR * 1.4142f;
     }
