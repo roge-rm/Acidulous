@@ -1584,22 +1584,115 @@ internal object FactoryBanks {
 
     private fun mosaic0() = Patch("Mosaic", "Init", emptyMap())
 
-    private fun mosaic1() = Patch("Mosaic", "Soft Pad",
-        mapOf("keyfade" to 0.25f, "velfade" to 0.3125f, "loop" to 1f, "a_attack" to 0.6945378f, "a_decay" to 0.81962353f, "a_sustain" to 0.9f, "a_release" to 0.762373149f, "f_freq" to 0.747679353f, "f_env" to 0.6f))
+    private fun mosaic1() = Patch("Mosaic", "Felt",
+        mapOf("keyfade" to 0.25f, "velfade" to 0.375f, "start" to 0.004f, "a_decay" to 0.7848632f, "a_sustain" to 0.45f, "a_release" to 0.618813455f, "f_freq" to 0.5801209f, "f_key" to 0.3f, "f_decay" to 0.716931f, "f_sustain" to 0.3f, "volume" to 0.6666667f, "velamt" to 0.8f, "veltofilter" to 0.2f))
 
-    private fun mosaic2() = Patch("Mosaic", "Cloud",
-        mapOf("grain" to 1f, "grate" to 0.5375f, "gsize" to 0.7781513f, "gdensity" to 0.6037341f, "gspray" to 0.25f, "gpitch" to 0.008333334f, "a_attack" to 0.636016965f, "a_release" to 0.79919f, "m01_src" to 0.166666672f, "m01_dest" to 0.266666681f, "m01_depth" to 0.8f))
+    private fun mosaic2() = Patch("Mosaic", "Mallets",
+        mapOf("keyfade" to 0.125f, "loop" to 0.5f, "a_decay" to 0.656523347f, "a_sustain" to 0f, "a_release" to 0.5411295f, "f_type" to 0.09090909f, "f_freq" to 0.8257071f, "f_key" to 0.6f, "volume" to 0.366666675f, "velamt" to 0.9f, "veltofilter" to 0.5f))
 
-    private fun mosaic3() = Patch("Mosaic", "Shimmer",
-        mapOf("grain" to 1f, "grate" to 0.5125f, "gsize" to 0.422549f, "gdensity" to 0.887415648f, "gspray" to 0.5f, "gpitch" to 0.5f, "a_attack" to 0.5752575f, "a_release" to 0.81962353f, "l1_rate" to 0.361190557f, "m01_src" to 0.9166667f, "m01_dest" to 0.266666681f, "m01_depth" to 0.625f, "m02_src" to 0.25f, "m02_dest" to 0.6f, "m02_depth" to 0.75f))
+    private fun mosaic3() = Patch("Mosaic", "Electric",
+        mapOf("a_decay" to 0.762373149f, "a_sustain" to 0.3f, "a_release" to 0.593804836f, "f_type" to 0.181818187f, "f_freq" to 0.774073064f, "f_env" to 0.65f, "f_decay" to 0.6846892f, "f_sustain" to 0.25f, "volume" to 0.686666667f, "velamt" to 0.85f, "veltofilter" to 0.45f, "l1_rate" to 0.754013956f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.8f, "m01_depth" to 0.61f))
 
-    private fun mosaic4() = Patch("Mosaic", "Scan Layers",
-        mapOf("scan" to 0.2f, "scanamt" to 1f, "velfade" to 0.46875f, "a_release" to 0.618813455f, "m01_src" to 0.166666672f, "m01_dest" to 0.13333334f, "m01_depth" to 0.9f))
+    private fun mosaic4() = Patch("Mosaic", "Clav",
+        mapOf("start" to 0.008f, "loop" to 0.5f, "a_decay" to 0.639247f, "a_sustain" to 0f, "a_release" to 0.4588705f, "f_type" to 1f, "f_freq" to 0.5265945f, "f_res" to 0.45f, "f_env" to 0.75f, "f_attack" to 0f, "f_decay" to 0.5411295f, "f_sustain" to 0.3f, "volume" to 0.66f, "velamt" to 1f, "veltofilter" to 0.45f))
 
-    private fun mosaic5() = Patch("Mosaic", "Backwards",
-        mapOf("start" to 0.99f, "reverse" to 1f, "a_attack" to 0.5440228f))
+    private fun mosaic5() = Patch("Mosaic", "Bell Keys",
+        mapOf("keyfade" to 0.333333343f, "velfade" to 0.46875f, "a_decay" to 0.8518653f, "a_sustain" to 0.25f, "a_release" to 0.7848632f, "f_type" to 0.454545468f, "f_freq" to 0.492373765f, "octave" to 0.6666667f, "volume" to 0.5933333f))
 
-    private val mosaic: List<Patch> by lazy { listOf(mosaic0(), mosaic1(), mosaic2(), mosaic3(), mosaic4(), mosaic5()) }
+    private fun mosaic6() = Patch("Mosaic", "Undertow",
+        mapOf("keyfade" to 0.416666657f, "a_attack" to 0.3692803f, "a_decay" to 0.8768739f, "a_sustain" to 0.6f, "a_release" to 0.716931f, "f_freq" to 0.551070869f, "f_res" to 0.2f, "f_key" to 0.4f, "octave" to 0.166666672f, "volume" to 0.50666666f))
+
+    private fun mosaic7() = Patch("Mosaic", "Soft Pad",
+        mapOf("keyfade" to 0.25f, "velfade" to 0.3125f, "start" to 0.06f, "loop" to 1f, "a_attack" to 0.6945378f, "a_decay" to 0.81962353f, "a_sustain" to 0.9f, "a_release" to 0.762373149f, "f_freq" to 0.747679353f, "f_env" to 0.6f, "f_decay" to 0.774181366f, "f_sustain" to 0.6f, "volume" to 0.66f))
+
+    private fun mosaic8() = Patch("Mosaic", "Warm Wash",
+        mapOf("keyfade" to 0.333333343f, "start" to 0.08f, "loop" to 1f, "a_attack" to 0.7697953f, "a_decay" to 0.897307456f, "a_sustain" to 0.85f, "a_release" to 0.81962353f, "f_type" to 0.181818187f, "f_freq" to 0.6930604f, "f_res" to 0.25f, "volume" to 0.480000019f, "l1_rate" to 0.2649158f, "l1_keysync" to 0f, "l2_wave" to 0.75f, "l2_rate" to 0.318186849f, "l2_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.6666667f, "m01_depth" to 0.7f, "m02_src" to 1f, "m02_dest" to 0.6666667f, "m02_depth" to 0.61f))
+
+    private fun mosaic9() = Patch("Mosaic", "Glass Pad",
+        mapOf("keyfade" to 0.5f, "velfade" to 0.625f, "start" to 0.05f, "loop" to 1f, "a_attack" to 0.7385606f, "a_decay" to 0.8768739f, "a_sustain" to 0.8f, "a_release" to 0.8035856f, "f_type" to 0.363636374f, "f_freq" to 0.410149634f, "f_res" to 0.3f, "f_env" to 0.6f, "f_decay" to 0.8518653f, "f_sustain" to 0.4f, "octave" to 0.6666667f, "volume" to 0.566666663f))
+
+    private fun mosaic10() = Patch("Mosaic", "Slow Swell",
+        mapOf("keyfade" to 0.25f, "start" to 0.07f, "loop" to 1f, "a_attack" to 0.8138181f, "a_decay" to 0.929549158f, "a_sustain" to 0.7f, "a_release" to 0.8518653f, "f_freq" to 0.5801209f, "volume" to 0.5466667f, "e1_attack" to 0.8450528f, "e1_decay" to 0.897307456f, "e1_sustain" to 0.8f, "e1_release" to 0.81962353f, "m01_src" to 0.75f, "m01_dest" to 0.6666667f, "m01_depth" to 0.775f))
+
+    private fun mosaic11() = Patch("Mosaic", "Dark Pad",
+        mapOf("keyfade" to 0.25f, "grain" to 1f, "gpos" to 0.75f, "grate" to 0.6f, "gsize" to 0.858001649f, "gdensity" to 0.5512401f, "gspray" to 0.12f, "a_attack" to 0.7257725f, "a_release" to 0.7946149f, "f_freq" to 0.634363353f, "f_res" to 0.15f, "volume" to 0.713333368f))
+
+    private fun mosaic12() = Patch("Mosaic", "Choir Fade",
+        mapOf("keyfade" to 0.5833333f, "velfade" to 0.4375f, "start" to 0.09f, "loop" to 1f, "a_attack" to 0.80103f, "a_decay" to 0.9145838f, "a_sustain" to 0.9f, "a_release" to 0.833651066f, "f_type" to 0.09090909f, "f_freq" to 0.774073064f, "volume" to 0.306666672f, "velamt" to 0.4f, "veltofilter" to 0.2f))
+
+    private fun mosaic13() = Patch("Mosaic", "Cloud",
+        mapOf("grain" to 1f, "gpos" to 0.1f, "grate" to 0.5375f, "gsize" to 0.7781513f, "gdensity" to 0.6037341f, "gspray" to 0.25f, "gpitch" to 0.008333334f, "a_attack" to 0.636016965f, "a_release" to 0.79919f, "volume" to 0.453333348f, "m01_src" to 0.166666672f, "m01_dest" to 0.266666681f, "m01_depth" to 0.8f))
+
+    private fun mosaic14() = Patch("Mosaic", "Shimmer",
+        mapOf("grain" to 1f, "gpos" to 0.07f, "grate" to 0.51f, "gsize" to 0.3406206f, "gdensity" to 0.901826739f, "gspray" to 0.08f, "gpitch" to 0.0125f, "a_attack" to 0.5752575f, "a_release" to 0.81962353f, "volume" to 0.8066667f, "l1_rate" to 0.361190557f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.266666681f, "m01_depth" to 0.625f, "m02_src" to 0.25f, "m02_dest" to 0.6f, "m02_depth" to 0.75f))
+
+    private fun mosaic15() = Patch("Mosaic", "Freeze",
+        mapOf("grain" to 1f, "gpos" to 0.45f, "grate" to 0.5f, "gsize" to 0.6901056f, "gdensity" to 0.770524442f, "gspray" to 0.03f, "a_attack" to 0.599485f, "a_decay" to 0.954557836f, "a_release" to 0.7491727f, "f_type" to 0.09090909f, "f_freq" to 0.84802264f))
+
+    private fun mosaic16() = Patch("Mosaic", "Stutter",
+        mapOf("grain" to 1f, "gpos" to 0.3f, "grate" to 0.65f, "gsize" to 0.477121264f, "gdensity" to 0.7104341f, "gspray" to 0f, "a_attack" to 0.17474249f, "a_release" to 0.5615631f, "f_type" to 1f, "f_freq" to 0.551070869f, "f_res" to 0.4f, "volume" to 0.673333347f, "l1_wave" to 1f, "l1_rate" to 0.789853036f, "m01_src" to 0.9166667f, "m01_dest" to 0.266666681f, "m01_depth" to 0.675f))
+
+    private fun mosaic17() = Patch("Mosaic", "Dust",
+        mapOf("grain" to 1f, "gpos" to 0.35f, "grate" to 0.55f, "gsize" to 0.349485f, "gdensity" to 0.6456497f, "gspray" to 0.85f, "gpitch" to 0.0416666679f, "a_attack" to 0.6945378f, "a_decay" to 0.9427497f, "a_sustain" to 0.8f, "a_release" to 0.81962353f, "f_type" to 0f, "f_freq" to 0.8844042f, "volume" to 0.553333342f, "l1_wave" to 0.75f, "l1_rate" to 0.8443482f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.466666669f, "m01_depth" to 0.875f))
+
+    private fun mosaic18() = Patch("Mosaic", "Smear",
+        mapOf("grain" to 1f, "grate" to 0.6875f, "gsize" to 1f, "gdensity" to 0.7104341f, "gspray" to 0.08f, "a_attack" to 0.650515f, "a_decay" to 0.929549158f, "a_sustain" to 0.9f, "a_release" to 0.8118912f, "f_freq" to 0.799313366f, "volume" to 0.38f))
+
+    private fun mosaic19() = Patch("Mosaic", "Scatter",
+        mapOf("grain" to 1f, "gpos" to 0.4f, "grate" to 0.575f, "gsize" to 0.627636254f, "gdensity" to 0.6638244f, "gspray" to 0.5f, "gpitch" to 0.020833334f, "a_attack" to 0.5440228f, "a_release" to 0.762373149f, "m01_src" to 0.5f, "m01_dest" to 0.266666681f, "m01_depth" to 0.9f))
+
+    private fun mosaic20() = Patch("Mosaic", "Tremolo",
+        mapOf("start" to 0.025f, "a_decay" to 0.8518653f, "a_sustain" to 0.8f, "a_release" to 0.639247f, "f_freq" to 0.8844042f, "volume" to 0.42f, "l1_wave" to 0.5f, "l1_rate" to 0.780918f, "m01_src" to 0.9166667f, "m01_dest" to 0.8f, "m01_depth" to 0.75f))
+
+    private fun mosaic21() = Patch("Mosaic", "Wah",
+        mapOf("a_decay" to 0.8768739f, "a_sustain" to 0.85f, "a_release" to 0.671488762f, "f_freq" to 0.5927171f, "f_res" to 0.55f, "volume" to 0.5733333f, "l1_wave" to 0.125f, "l1_rate" to 0.595805764f, "l1_delay" to 0.1f, "m01_src" to 0.9166667f, "m01_dest" to 0.6666667f, "m01_depth" to 0.875f))
+
+    private fun mosaic22() = Patch("Mosaic", "Autopan",
+        mapOf("start" to 0.025f, "loop" to 1f, "a_attack" to 0.5752575f, "a_decay" to 0.897307456f, "a_sustain" to 0.9f, "a_release" to 0.7342073f, "volume" to 0.62f, "l1_rate" to 0.401758462f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.8666667f, "m01_depth" to 0.95f))
+
+    private fun mosaic23() = Patch("Mosaic", "Scan Sweep",
+        mapOf("scan" to 0f, "scanamt" to 1f, "keyfade" to 0.25f, "velfade" to 1f, "start" to 0.025f, "a_attack" to 0.5f, "a_decay" to 0.897307456f, "a_sustain" to 0.85f, "a_release" to 0.7491727f, "volume" to 0.49333334f, "e1_attack" to 0.8138181f, "e1_decay" to 0.81962353f, "e1_sustain" to 0.9f, "e1_release" to 0.716931f, "m01_src" to 0.75f, "m01_dest" to 0.13333334f, "m01_depth" to 1f))
+
+    private fun mosaic24() = Patch("Mosaic", "Pulse",
+        mapOf("grain" to 1f, "gpos" to 0.25f, "grate" to 0.55f, "gsize" to 0.573064f, "gdensity" to 0.9153074f, "a_attack" to 0.5f, "a_release" to 0.716931f, "f_type" to 1f, "f_freq" to 0.56632334f, "f_res" to 0.35f, "volume" to 0.326666683f, "l1_wave" to 0.875f, "l1_rate" to 0.695477068f, "m01_src" to 0.9166667f, "m01_dest" to 0.466666669f, "m01_depth" to 0.65f))
+
+    private fun mosaic25() = Patch("Mosaic", "Wobble",
+        mapOf("start" to 0.025f, "a_decay" to 0.8518653f, "a_sustain" to 0.7f, "a_release" to 0.6846892f, "f_freq" to 0.8673533f, "volume" to 0.586666644f, "l1_wave" to 0.75f, "l1_rate" to 0.670442343f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.06666667f, "m01_depth" to 0.53f, "m02_src" to 0.5f, "m02_dest" to 0.2f, "m02_depth" to 0.56f))
+
+    private fun mosaic26() = Patch("Mosaic", "Mono Lead",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.7f, "a_release" to 0.5161209f, "f_freq" to 0.651414156f, "f_res" to 0.4f, "f_env" to 0.8f, "f_decay" to 0.618813455f, "f_sustain" to 0.35f, "voicemode" to 0.5f, "volume" to 0.68f, "velamt" to 0.9f, "veltofilter" to 0.6f))
+
+    private fun mosaic27() = Patch("Mosaic", "Glide Lead",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.32525748f, "a_decay" to 0.774181366f, "a_sustain" to 0.8f, "a_release" to 0.5615631f, "f_type" to 0.181818187f, "f_freq" to 0.7046478f, "f_res" to 0.3f, "f_env" to 0.675f, "glide" to 0.08f, "glidemode" to 1f, "voicemode" to 1f, "volume" to 0.5733333f))
+
+    private fun mosaic28() = Patch("Mosaic", "Bright Lead",
+        mapOf("start" to 0.02f, "loop" to 1f, "a_attack" to 0.2257725f, "a_decay" to 0.7419396f, "a_sustain" to 0.75f, "a_release" to 0.5411295f, "f_type" to 1f, "f_freq" to 0.743482947f, "f_res" to 0.6f, "f_env" to 0.7f, "f_decay" to 0.639247f, "octave" to 0.6666667f, "voicemode" to 0.5f, "volume" to 0.613333344f, "velamt" to 0.85f))
+
+    private fun mosaic29() = Patch("Mosaic", "Reed",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.4757725f, "a_decay" to 0.81962353f, "a_sustain" to 0.85f, "a_release" to 0.5615631f, "f_type" to 1f, "f_freq" to 0.551070869f, "f_res" to 0.3f, "glide" to 0.025f, "voicemode" to 1f, "volume" to 0.52f, "l1_rate" to 0.733872533f, "l1_delay" to 0.0899999961f, "m01_src" to 0.9166667f, "m01_dest" to 0.06666667f, "m01_depth" to 0.525f))
+
+    private fun mosaic30() = Patch("Mosaic", "Grind",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.119280316f, "a_sustain" to 0.6f, "a_release" to 0.5043127f, "f_freq" to 0.793403745f, "f_res" to 0.7f, "f_env" to 0.15f, "f_attack" to 0.15051499f, "f_decay" to 0.656523347f, "f_sustain" to 0.2f, "coarse" to 0.25f, "voicemode" to 0.5f, "volume" to 0.880000055f, "velamt" to 1f, "veltofilter" to 0.7f))
+
+    private fun mosaic31() = Patch("Mosaic", "Backwards",
+        mapOf("loop" to 0.5f, "reverse" to 1f, "a_attack" to 0.24999997f, "a_decay" to 0.897307456f, "a_release" to 0.618813455f, "f_freq" to 0.913454235f, "volume" to 0.92f))
+
+    private fun mosaic32() = Patch("Mosaic", "Scan Layers",
+        mapOf("scan" to 0.2f, "scanamt" to 1f, "keyfade" to 0.166666672f, "velfade" to 0.25f, "start" to 0.025f, "a_release" to 0.618813455f, "volume" to 0.486666679f, "m01_src" to 0.166666672f, "m01_dest" to 0.13333334f, "m01_depth" to 0.9f))
+
+    private fun mosaic33() = Patch("Mosaic", "Late Start",
+        mapOf("keyfade" to 0.25f, "start" to 0.9f, "loop" to 1f, "a_attack" to 0.599485f, "a_decay" to 0.929549158f, "a_sustain" to 0.95f, "a_release" to 0.774181366f, "f_type" to 0.09090909f, "f_freq" to 0.799313366f, "volume" to 0.68f))
+
+    private fun mosaic34() = Patch("Mosaic", "Broken Loop",
+        mapOf("start" to 0.55f, "loop" to 0.5f, "a_attack" to 0.194537818f, "a_release" to 0.593804836f, "f_freq" to 0.8844042f, "volume" to 0.9533333f, "velamt" to 0.8f))
+
+    private fun mosaic35() = Patch("Mosaic", "Metal Sheet",
+        mapOf("grain" to 1f, "gpos" to 0.55f, "grate" to 0.5f, "gsize" to 0.80103f, "gdensity" to 0.406457126f, "gspray" to 0.1f, "gpitch" to 0.0125f, "a_attack" to 0.5f, "a_decay" to 0.9145838f, "a_sustain" to 0.85f, "a_release" to 0.7848632f, "f_type" to 0.909090936f, "f_freq" to 0.725363731f, "f_res" to 0.5f, "octave" to 0.8333333f, "volume" to 1f))
+
+    private fun mosaic36() = Patch("Mosaic", "Detuned",
+        mapOf("keyfade" to 1f, "velfade" to 0.75f, "loop" to 1f, "a_attack" to 0.619280338f, "a_decay" to 0.897307456f, "a_sustain" to 0.85f, "a_release" to 0.762373149f, "f_type" to 0.09090909f, "f_freq" to 0.76701f, "fine" to 0.06f, "volume" to 0.206666663f))
+
+    private val mosaic: List<Patch> by lazy { listOf(mosaic0(), mosaic1(), mosaic2(), mosaic3(), mosaic4(), mosaic5(), mosaic6(), mosaic7(), mosaic8(), mosaic9(), mosaic10(), mosaic11(), mosaic12(), mosaic13(), mosaic14(), mosaic15(), mosaic16(), mosaic17(), mosaic18(), mosaic19(), mosaic20(), mosaic21(), mosaic22(), mosaic23(), mosaic24(), mosaic25(), mosaic26(), mosaic27(), mosaic28(), mosaic29(), mosaic30(), mosaic31(), mosaic32(), mosaic33(), mosaic34(), mosaic35(), mosaic36()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap())
 

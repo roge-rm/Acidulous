@@ -98,6 +98,58 @@ class Mosaic final : public Machine {
         // block because some of their sources are continuous controllers.
         float modGain = 1.0f;
         float modPan = 0.0f;
+        /**
+         * A short ramp to nothing when the sample runs off its end.
+         *
+         * A non-looping sample stopped dead wherever the playhead happened to
+         * be, with the amplitude envelope still wide open: Dan heard it as
+         * "pops between some of the notes... and at the end", and a held note
+         * went from 91% of full scale to silence in one sample. A player does
+         * not hear two milliseconds of fade, and does hear that step.
+         */
+        float fade = 1.0f;
+        /**
+         * And the same ramp at the *start* of a note.
+         *
+         * A sample whose `start` is anywhere but the very beginning opens
+         * part way through a waveform, at whatever value that sample happens
+         * to hold, and the amplitude envelope is the only thing hiding the
+         * jump. Broken Loop starts 55% in behind a six millisecond attack -
+         * less than two cycles at these pitches - and Dan heard the result as
+         * "quiet pops between some of the notes". Two milliseconds of ramp is
+         * shorter than any attack anybody sets and longer than any edge.
+         */
+        float fadeIn = 1.0f;
+        /**
+         * Where the playhead is going, once the old content has faded out.
+         *
+         * Retriggering a voice that is still sounding used to move `pos`
+         * immediately: the new note ramps in over `fadeIn`, but the old one
+         * stops on whatever sample it was on. In mono and legato that is
+         * every note, because they all land on voice zero - Dan on Reed: "a
+         * small popping noise at the start of some notes".
+         *
+         * The obvious fix - hold the last output and decay it - is wrong, and
+         * measurably so: the signal being replaced is mid-oscillation, so a
+         * held sample decayed to nothing is a DC thump, and it made the steps
+         * worse (35% of full scale to 61%). What is needed is to keep playing
+         * the old content while it fades, and only then jump. Two
+         * milliseconds out, two back in, and nothing in between to hear.
+         */
+        double pendingPos = -1.0;
+        /**
+         * And the zone it is going to, because a note can change zone.
+         *
+         * Deferring the playhead but not the sample under it is worse than
+         * not deferring at all: for two milliseconds the layer reads the
+         * *new* sample at the *old* position. The tune steps to +12 at seven
+         * seconds, which is exactly where the mid zone ends and the high one
+         * begins, and every mono lead cracked there - Dan reported it on
+         * Grind, Bright Lead, Glide Lead and Mono Lead in turn, "same spot".
+         */
+        const MapZone *pendingZone = nullptr;
+        const SampleData *pendingSample = nullptr;
+        float pendingGain = 0.0f, pendingPan = 0.0f;
         float modTuneCents = 0.0f;
         bool finished = true;
     };
@@ -123,7 +175,18 @@ class Mosaic final : public Machine {
         float grainTimer = 0.0f;
         dsp::Adsr amp, filterEg, modEg[kModEgs];
         dsp::LfoGen lfo[kLfos];
-        dsp::MultiFilter filter;
+        /**
+         * One filter per channel, because a filter has state.
+         *
+         * There used to be one, processing left and then right through the
+         * same instance: the right channel came out filtered through history
+         * left behind by the left, the two blended, and the stereo image
+         * collapsed. Panning a patch hard left measured 0.0 dB between the
+         * channels - Dan, on stereo earbuds: "I cannot hear any panning in
+         * autopan, it sounds right in the middle to me." It was not the
+         * modulation, or the rate, or the patch. The machine was mono.
+         */
+        dsp::MultiFilter filter, filterR;
         float mod[DestCount]{};
         float modCutoffCents = 0.0f; // from the file's modulators, not the matrix
         bool fileDrivesLevel = false;

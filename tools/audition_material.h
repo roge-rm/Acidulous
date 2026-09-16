@@ -311,7 +311,29 @@ inline std::unique_ptr<audio::Utterance> voiceUtterance() {
  * uncovered - a Mosaic patch that only works because every key happens to
  * find a zone is not proven, and `--phrase chromatic` walks straight off the
  * end of the map to show it.
+ *
+ * **Each zone is a struck note, not a tone.** It used to be a sum of
+ * harmonics at constant amplitude, looped, and against that map half of
+ * Mosaic did nothing measurable: `reverse` moved the centroid two hertz,
+ * `start` twelve, and the three loop modes were identical to each other. Of
+ * course they were - a signal with no attack sounds the same from either end
+ * and from anywhere in the middle, and a sampler fed one cannot be voiced,
+ * only assumed. The same mistake as judging Cipher on a held vowel.
+ *
+ * So a zone now has the three parts a real sampled note has, and each one is
+ * there because some control needs it:
+ *
+ *   - a **transient**: a noise burst through a low-pass, 12 ms, which is what
+ *     `start` scrubs past and what `reverse` puts at the end;
+ *   - a **body** whose upper partials die faster than its lower ones, so the
+ *     note gets darker as it goes - that is what makes a grain's position
+ *     audible, and what `scan` and `gpos` have to have to mean anything;
+ *   - a **sustain** that is level and loops cleanly over whole periods, very
+ *     slightly detuned against itself so it breathes rather than sits.
  */
+/** How long a zone takes to arrive. See the note at the write, below. */
+constexpr float kOnset = 0.004f;
+
 inline std::unique_ptr<SampleMap> zoneMap() {
     auto map = std::make_unique<SampleMap>();
     map->name = "audition";
@@ -320,32 +342,129 @@ inline std::unique_ptr<SampleMap> zoneMap() {
     // velocity crossfade has to have to be worth testing.
     struct Layer { int root; int lo; int hi; int loVel; int hiVel; int partials; float odd; };
     static const Layer kLayers[] = {
-        {36, 24, 47, 1, 79, 12, 1.0f},  {36, 24, 47, 80, 127, 20, 0.6f},
-        {60, 48, 71, 1, 79, 8, 1.0f},   {60, 48, 71, 80, 127, 16, 0.6f},
-        {84, 72, 95, 1, 79, 5, 1.0f},   {84, 72, 95, 80, 127, 9, 0.6f},
+        // Partial counts sized so that a zone played at the top of its range
+        // - eleven semitones above its root, so read 1.89x faster - still has
+        // its highest partial under Nyquist. The low zone can afford forty;
+        // the high one cannot afford more than twelve.
+        {36, 24, 47, 1, 79, 24, 1.0f},  {36, 24, 47, 80, 127, 40, 0.6f},
+        {60, 48, 71, 1, 79, 16, 1.0f},  {60, 48, 71, 80, 127, 28, 0.6f},
+        {84, 72, 95, 1, 79, 8, 1.0f},   {84, 72, 95, 80, 127, 12, 0.6f},
     };
+    Rng rng(0x5a3c19u);
+    // Every partial gets a phase of its own, fixed for the life of the sample.
+    //
+    // Starting them all at zero is the additive-synthesis mistake: they align
+    // perfectly at t=0, so the note opens on an impulse the size of the sum of
+    // every harmonic and then thrashes for a few milliseconds as they beat
+    // apart. Dan heard it on patch after patch - "a clapping/chopping sound
+    // every note", "gated noise at the beginning of each note", "very choppy
+    // with a distinct percussive sound" - and it survived every change to the
+    // hammer, because it was never the hammer: the lumpiness of the first
+    // twenty milliseconds sat at 0.45 whatever the noise burst was set to.
+    // A random phase is still an exact harmonic, so the loop stays seamless.
+    float phase[33];
+    for (float &ph : phase) ph = (rng.next() + 1.0f) * static_cast<float>(M_PI);
     for (const Layer &l : kLayers) {
         SampleData s;
         s.name = "zone";
         s.rate = static_cast<int32_t>(kMatSr);
         const float hz = 440.0f * std::pow(2.0f, (static_cast<float>(l.root) - 69.0f) / 12.0f);
-        const int32_t n = static_cast<int32_t>(kMatSr * 1.5f);
+        // Three seconds, so `start` has somewhere to go and a grain cloud has
+        // more than one thing to find.
+        const int32_t n = static_cast<int32_t>(kMatSr * 3.0f);
+        const auto period = static_cast<int32_t>(kMatSr / hz);
+        // The sustain begins after the body has finished getting darker, and
+        // is where the loop lives.
+        // Late enough that the body has all but stopped moving. At 1.2 s the
+        // fundamental was still falling about two per cent across one loop,
+        // so every time round it stepped back up - inaudible on its own, a
+        // buzz at the sixteen to sixty loops a second this runs at.
+        const int32_t sustainAt = period * ((static_cast<int32_t>(kMatSr * 2.1f)) / period);
         s.left.assign(static_cast<size_t>(n), 0.0f);
+        float lp = 0.0f;
         for (int32_t i = 0; i < n; ++i) {
             const float t = static_cast<float>(i) / kMatSr;
             float v = 0.0f;
             for (int h = 1; h <= l.partials; ++h) {
                 const float amp = (h % 2 == 1 ? 1.0f : l.odd) / static_cast<float>(h);
-                v += amp * std::sin(2.0f * static_cast<float>(M_PI) * hz * static_cast<float>(h) * t);
+                // A partial's own decay, shorter the higher it is, down to a
+                // floor it holds through the sustain. The floor is what lets
+                // the loop be seamless: past the body every partial is steady.
+                //
+                // Both fall as the *square root* of the partial, not as the
+                // partial. With 1/h either way, the sustain came out at
+                // 1/h-squared - a spectrum no sampled instrument has, and one
+                // nothing could be high-passed out of: Mosaic's Glass Pad
+                // measured forty decibels down through an 18 dB slope at 1400
+                // Hz, because at 1400 Hz there was nothing. A map is material,
+                // and material that is too dark cannot show what a filter does
+                // any more than a steady tone can show what a start point does.
+                const float rootH = std::sqrt(static_cast<float>(h));
+                const float tau = 0.9f / rootH;
+                // Flat across the partials, so the sustain keeps a 1/h
+                // spectrum - what a sustained instrument actually has. Scaled
+                // by the square root it was 1/h-to-the-three-halves, and the
+                // whole bank came out with no bright patches in it at all:
+                // Mosaic's centroids topped out at 1.9 kHz where Trinity
+                // reaches 3.8 and Cumulus 5.0, and Dan heard the pads as
+                // "very dark and hard to hear".
+                const float held = 0.5f;
+                const float env = held + (1.0f - held) * std::exp(-t / tau);
+                // Every partial is an exact multiple of the fundamental, and
+                // it has to be: the loop is a whole number of the
+                // fundamental's periods, so anything that is not a harmonic
+                // of it arrives at the loop point with the wrong phase and
+                // clicks, once per loop. There used to be a hair of detune
+                // here - 0.06% per partial, to make the sustain breathe - and
+                // Dan heard the result as "many smaller pops" in Late Start,
+                // the one patch in the bank that loops. Measured at 37 Hz,
+                // which is the loop rate of the notes it was playing.
+                v += amp * env * std::sin(2.0f * static_cast<float>(M_PI) * hz * static_cast<float>(h) * t +
+                                          phase[h & 31]);
             }
-            s.left[static_cast<size_t>(i)] = v * 0.12f;
+            // The transient: a short noise burst, low-passed so it reads as a
+            // hammer rather than as a click, and gone before the loop starts.
+            const float hit = std::exp(-t / 0.012f);
+            // Darker than it was by a long way. At 0.35 the burst kept most
+            // of its top and read as a tick of noise on the front of every
+            // note - Dan heard it on Scan Layers, Grind and Reed in turn, and
+            // the harness put every patch that starts at zero at six to eight
+            // times brighter on the attack than in the tone, against a
+            // threshold of four. A hammer is a thump with an edge, not an
+            // edge on its own.
+            lp += (rng.next() - lp) * 0.20f;
+            // Six was a sixteen-decibel crest on a sustained instrument, and
+            // it put the Init patch within a decibel of full scale once the
+            // house level was set from its loudness. A hammer is louder than
+            // the note it starts, but not by that.
+            v += lp * hit * 1.0f;
+            // And a breath of it through the body, because every real
+            // instrument has some and it is most of what survives a
+            // high-pass. Gone before the loop starts: noise is the one thing
+            // here that is not periodic, so a loop that contains any repeats
+            // the same 60 ms of it and jumps at the seam every time round.
+            v += lp * 0.012f * std::exp(-t / 0.35f);
+            // A real sample does not switch its whole spectrum on in one
+            // frame. Every partial here began at full amplitude at t=0, so
+            // the tone arrived fully formed and instantly - and no amount of
+            // amp attack hides that, because what clicks is the spectrum
+            // appearing, not the level. Dan heard it on ten patches in a row
+            // as "a hard chk sound at the start of every note", and it
+            // survived taking the hammer out altogether: onset 115% of the
+            // body with the noise burst, 114% without it.
+            //
+            // Four milliseconds of raised cosine. Short enough that a lead
+            // still speaks immediately, long enough that the partials arrive
+            // rather than appear.
+            const float in = t < kOnset ? 0.5f - 0.5f * std::cos(static_cast<float>(M_PI) * t / kOnset) : 1.0f;
+            s.left[static_cast<size_t>(i)] = v * 0.12f * in;
         }
         s.frames = n;
         s.stereo = false;
-        // A loop over whole periods, so a held note does not click.
-        const auto period = static_cast<int32_t>(kMatSr / hz);
-        s.loopStart = period * 8;
-        s.loopEnd = s.loopStart + period * 16;
+        // A loop over whole periods inside the sustain, so a held note does
+        // not click and does not fade either.
+        s.loopStart = sustainAt;
+        s.loopEnd = sustainAt + period * 16;
         map->samples.push_back(std::move(s));
 
         MapZone z;

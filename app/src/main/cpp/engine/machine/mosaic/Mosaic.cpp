@@ -1,4 +1,5 @@
 #include "Mosaic.h"
+#include <algorithm>
 #include <engine/machine/Voices.h>
 
 #include <cstdio>
@@ -11,6 +12,15 @@ using dsp::kTwoPi;
 using dsp::mtof;
 
 namespace {
+// The house level. It was 0.7, which put the bank's median patch eight and a
+// half decibels under the line every other machine is levelled to - and with
+// `volume` topping out at 1.0 against a default of 0.8, the levelling had
+// under two decibels of travel to close it with. This does not decide how
+// loud Mosaic is, the bank is levelled either way; it decides where in the
+// volume knob's travel a patch sits, and it has to leave the knob room to
+// move in both directions.
+constexpr float kHouse = 1.92f; // set from Init, which carries no volume line of its own
+
 constexpr int kSyncCount = 9;
 constexpr float kSyncBeats[kSyncCount] = {0.0f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f, 16.0f, 32.0f};
 
@@ -75,7 +85,12 @@ const ParamDef *Mosaic::paramDefs(int32_t &count) const {
         putN(Octave, "octave", -3.0f, 3.0f, 0.0f, Curve::Stepped, 7, "");
         putN(Transpose, "transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, "st");
         putN(VoiceMode, "voicemode", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, "");
-        putN(Volume, "volume", 0.0f, 1.0f, 0.8f, Curve::Linear, 0, "");
+        // To 1.5, like every other machine. At 1.0 the levelling had two
+        // decibels of travel above the default and five patches sat pinned
+        // at the ceiling, still short. Values persist normalised, so widening
+        // the range rescales anything already saved - which is why it waited
+        // until Dan confirmed there was nothing saved to rescale.
+        putN(Volume, "volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, "");
         putN(Pan, "pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         putN(VelocityAmount, "velamt", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, "");
         putN(VelToFilter, "veltofilter", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
@@ -131,6 +146,7 @@ void Mosaic::reset() {
         v.filterEg.kill();
         for (auto &e : v.modEg) e.kill();
         v.filter.reset();
+        v.filterR.reset();
         for (auto &g : v.grain) g.active = false;
         for (auto &m : v.mod) m = 0.0f;
     }
@@ -176,6 +192,7 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
     Voice *vp = (mode == 1 || mode == 2) ? &voices[0] : allocate();
     if (vp == nullptr) return;
     Voice &v = *vp;
+    const bool wasSounding = v.used;
     const bool wasHeld = v.used && v.gate;
     const bool retrigger = !(mode == 2 && wasHeld);
 
@@ -208,15 +225,65 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
                                   zones, gains, kZonesPerVoice);
     v.layerCount = n;
     const float startAt = clampf(paramOf(Start) + v.mod[DstStart], 0.0f, 0.999f);
+    const bool reversed = paramOf(Reverse) >= 0.5f;
     for (int32_t i = 0; i < n; ++i) {
         const MapZone &z = map->zones[static_cast<size_t>(zones[i])];
         Layer &L = v.layer[i];
-        L.zone = &z;
-        L.sample = &map->samples[static_cast<size_t>(z.sample)];
-        L.gain = gains[i] * z.gain;
-        L.pan = z.pan;
+        const SampleData *newSample = &map->samples[static_cast<size_t>(z.sample)];
+        const float newGain = gains[i] * z.gain;
+        // Defer whenever a sounding layer has to change sample, retrigger or
+        // not. Legato does not retrigger - that is the point of it - but a
+        // legato line still crosses a zone boundary, and swapping the sample
+        // under a running playhead is a jump whether or not a note began.
+        // Glide Lead cracked at exactly seven seconds, where the tune steps
+        // to +12 and the mid zone hands over to the high one.
+        const bool defer = wasSounding && L.sample != nullptr && !L.finished &&
+                           (retrigger || L.sample != newSample);
+        if (!defer) {
+            L.zone = &z;
+            L.sample = newSample;
+            L.gain = newGain;
+            L.pan = z.pan;
+        }
         L.finished = false;
-        if (retrigger) L.pos = startAt * static_cast<double>(L.sample->frames);
+        // Reversed, `start` counts in from the *end* - so turning reverse on
+        // and touching nothing else plays the sample backwards, which is the
+        // only thing anybody means by it. Taken literally the other way it
+        // put the playhead at sample zero and walked it off the front, and
+        // the Backwards patch measured -113 dB: silence, from the one
+        // control whose whole job is audible.
+        if (defer && !retrigger) {
+            // Same note carrying on: stay where you are, and let the fade
+            // carry the sample change.
+            L.pendingPos = L.pos;
+            L.pendingZone = &z;
+            L.pendingSample = newSample;
+            L.pendingGain = newGain;
+            L.pendingPan = z.pan;
+        }
+        if (retrigger) {
+            const auto frames = static_cast<double>(L.sample->frames);
+            double want = (reversed ? 1.0 - startAt : startAt) * frames;
+            if (reversed) want = std::min(want, frames - 2.0);
+            if (defer) {
+                // The voice is still making a sound. Leave the playhead - and
+                // the sample under it - where they are, and let `fade` take
+                // it down; everything moves when there is nothing left to
+                // move away from.
+                L.pendingPos = want;
+                L.pendingZone = &z;
+                L.pendingSample = newSample;
+                L.pendingGain = newGain;
+                L.pendingPan = z.pan;
+            } else {
+                L.pos = want;
+                L.pendingPos = -1.0;
+                L.fade = 1.0f;
+                // Ramp in from nothing unless the note starts at the very
+                // front of the sample, where there is nothing to ramp from.
+                L.fadeIn = startAt <= 0.0001f ? 1.0f : 0.0f;
+            }
+        }
     }
 
     if (!retrigger) return;
@@ -372,6 +439,9 @@ float Mosaic::readSample(const SampleData &s, double pos) {
 }
 
 void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
+    // Two milliseconds, as a step per frame: short enough that nobody hears
+    // a fade, long enough that nobody hears the edge it replaces.
+    const float endFadeStep = 1.0f / (0.002f * sampleRate);
     const float bendSemis = bend * paramOf(BendRange) + v.bend;
     const float semis = paramOf(Coarse) + paramOf(Fine) * 0.01f + paramOf(Transpose) + 12.0f * paramOf(Octave) +
                         bendSemis + v.mod[DstPitch] * 24.0f;
@@ -385,7 +455,7 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
     const float velAmp = (v.fileDrivesLevel || paramOf(VelocityAmount) <= 0.001f)
                              ? 1.0f
                              : std::pow(clampf(vel, 0.001f, 1.0f), paramOf(VelocityAmount) * 2.5f);
-    const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * velAmp * 0.7f;
+    const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * velAmp * kHouse;
     const float panBase = clampf(paramOf(Pan) + v.mod[DstPan], -1.0f, 1.0f);
     const int loopMode = stepOf(LoopModeIndex);
     const bool reverse = paramOf(Reverse) >= 0.5f;
@@ -451,10 +521,23 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                                    static_cast<double>((rnd(v.rng) * 2.0f - 1.0f) * gSpray) * span * 0.5;
                         while (p < 0.0) p += span;
                         while (p >= span) p -= span;
-                        g.pos = p;
                         g.inc = natural * std::exp2((rnd(v.rng) * 2.0f - 1.0f) * gPitch / 12.0f);
                         g.length = static_cast<int32_t>(gSizeMs * 0.001f * sampleRate);
                         if (g.length < 8) g.length = 8;
+                        // Start it far enough from the end that the whole
+                        // grain fits.
+                        //
+                        // A grain that runs off the end wraps back to the
+                        // start *mid-grain*, where the Hann window is at full
+                        // amplitude - a jump from the sustain straight to
+                        // silence, and an audible crackle. It is not rare
+                        // either: `grainOffset` walks the read point along
+                        // with the rate, so a long note arrives at the end and
+                        // every grain from then on wraps. Dan heard it on
+                        // Scatter as "little crackles or pops throughout".
+                        const double reach = static_cast<double>(g.length) * g.inc;
+                        if (reach < span) p = std::min(p, span - reach - 1.0);
+                        g.pos = p;
                         g.age = 0;
                         g.gain = 1.0f;
                         g.active = true;
@@ -485,7 +568,30 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                 const double inc = static_cast<double>(v.freq) / mtof(static_cast<float>(L.zone->rootKey)) *
                                    std::exp2((L.zone->tuneCents + L.modTuneCents) / 1200.0f) * pitchMul *
                                    (static_cast<double>(L.sample->rate) / static_cast<double>(sampleRate));
-                const float s = readSample(*L.sample, L.pos) * L.gain * L.modGain;
+                const float s = readSample(*L.sample, L.pos) * L.gain * L.modGain * L.fade * L.fadeIn;
+                if (L.pendingPos >= 0.0) {
+                    // Waiting to move: fade out where we are, then jump and
+                    // fade back in. Four milliseconds all told, and a note
+                    // that begins four milliseconds late is a note nobody
+                    // notices; one that begins on a step is not.
+                    L.fade -= endFadeStep;
+                    if (L.fade <= 0.0f) {
+                        L.pos = L.pendingPos;
+                        if (L.pendingSample != nullptr) {
+                            L.zone = L.pendingZone;
+                            L.sample = L.pendingSample;
+                            L.gain = L.pendingGain;
+                            L.pan = L.pendingPan;
+                            L.pendingSample = nullptr;
+                            L.pendingZone = nullptr;
+                        }
+                        L.pendingPos = -1.0;
+                        L.fade = 1.0f;
+                        L.fadeIn = 0.0f;
+                    }
+                } else if (L.fadeIn < 1.0f) {
+                    L.fadeIn = std::min(1.0f, L.fadeIn + endFadeStep);
+                }
                 const float angle = (clampf(panBase + L.pan + L.modPan, -1.0f, 1.0f) + 1.0f) * 0.25f * kPi;
                 l += s * std::cos(angle) * 1.4142f;
                 r += s * std::sin(angle) * 1.4142f;
@@ -497,20 +603,39 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                 const double loopB = L.zone->loopEnd > L.zone->loopStart ? static_cast<double>(L.zone->loopEnd)
                                                                          : static_cast<double>(L.sample->frames - 1);
                 if (wantLoop && loopB > loopA + 1.0) {
-                    if (L.pos >= loopB) L.pos -= (loopB - loopA);
-                    if (L.pos < loopA && reverse) L.pos += (loopB - loopA);
+                    // Wrapped, not stepped. One subtraction per sample is
+                    // enough while the playhead is walking through the loop,
+                    // and wrong the moment it starts outside one: `start` at
+                    // 0.9 puts it past the loop end, and it then jumped back
+                    // a whole loop length *every sample* until it arrived -
+                    // nine samples read from nine different places in the
+                    // sample, which is a crackle on the front of every note.
+                    const double len = loopB - loopA;
+                    if (L.pos >= loopB) L.pos = loopA + std::fmod(L.pos - loopA, len);
+                    if (L.pos < loopA && reverse) L.pos = loopB - std::fmod(loopA - L.pos, len);
                 } else if (L.pos >= static_cast<double>(L.sample->frames - 1) || L.pos < 0.0) {
-                    L.finished = true;
+                    // Off the end with nothing to loop back to: ramp out over
+                    // about two milliseconds rather than stopping on whatever
+                    // sample happened to be last. The playhead is held where
+                    // it is so the ramp fades the final sample rather than
+                    // reading past the buffer.
+                    L.pos = std::min(std::max(L.pos, 0.0), static_cast<double>(L.sample->frames - 2));
+                    L.fade -= endFadeStep;
+                    if (L.fade <= 0.0f) { L.fade = 0.0f; L.finished = true; }
                 }
             }
         }
 
         if ((i & 15) == 0) {
-            v.filter.set(filterBase * std::exp2(filterEnvAmt * fenv * 4.0f), filterRes, filterType, 0, 0.0f);
+            const float fc = filterBase * std::exp2(filterEnvAmt * fenv * 4.0f);
+            v.filter.set(fc, filterRes, filterType, 0, 0.0f);
+            v.filterR.set(fc, filterRes, filterType, 0, 0.0f);
         }
         const float g = env * volume;
-        outL[i] = v.filter.process(l) * g;
-        outR[i] = v.filter.process(r) * g;
+        float oL = v.filter.process(l) * g;
+        float oR = v.filterR.process(r) * g;
+        outL[i] = oL;
+        outR[i] = oR;
     }
 }
 
