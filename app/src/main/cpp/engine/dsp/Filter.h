@@ -22,6 +22,18 @@ class Svf {
 
     void reset() { ic1eq = ic2eq = 0.0f; }
 
+    /**
+     * What to multiply the band-pass output by for a peak gain of one.
+     *
+     * `lp` and `hp` peak at unity; `bp` peaks at 1/k, so at no resonance it
+     * arrives six decibels under its neighbours for no reason anybody asked
+     * for. Cascade two for a 12 dB slope and it is twelve. That is a filter
+     * *type* costing level rather than changing character, and it is why
+     * Mosaic's band-passed patches measured twenty decibels under the rest
+     * of the bank. The narrowness is real and stays; the scaling was not.
+     */
+    float bandNorm() const { return k; }
+
     // All three outputs of one step, for filters that mix them.
     struct Out { float lp, bp, hp; };
     Out step(float v0) {

@@ -45,8 +45,8 @@ class MultiFilter {
         case HP12: return a.step(x).hp;
         case HP18: { const float y = a.step(x).hp; return y - lp1(y); }
         case HP24: return b.step(a.step(x).hp).hp;
-        case BP6: return a.step(x).bp;
-        case BP12: return b.step(a.step(x).bp).bp;
+        case BP6: return a.step(x).bp * a.bandNorm();
+        case BP12: return b.step(a.step(x).bp * a.bandNorm()).bp * b.bandNorm();
         case Notch: { const auto o = a.step(x); return o.lp + o.hp; }
         default: { const auto o = a.step(x); return o.lp - o.hp; }
         }
