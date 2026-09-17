@@ -86,7 +86,7 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
     // use. While the metronome is on the ceiling comes down by the click's
     // own peak; the music loses a fixed fraction of a decibel instead of
     // pumping, and has it back the moment the metronome goes off.
-    const float clickPeak = clickEnabled() ? dsp::Click::peakFor(params_.get(ClickVolume)) : 0.0f;
+    const float clickPeak = clickAudible() ? dsp::Click::peakFor(params_.get(ClickVolume)) : 0.0f;
     if (params_.get(LimiterOn) >= 0.5f) {
         const float ceiling = 0.95f - clickPeak;
         limiter.set(params_.get(LimiterDrive), ceiling < 0.2f ? 0.2f : ceiling);
@@ -101,7 +101,7 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
     // With the limiter off there is no ceiling to borrow from, so a loud
     // mix plus a click can still meet the clamp. That is the user's own
     // arrangement of things, and the metronome is not what broke it.
-    if (clickEnabled()) {
+    if (clickAudible()) {
         // Stepped, so off the target rather than the smoothed value: a
         // voice sliding from blip to cowbell would pass through stick.
         click.setVoice(static_cast<int32_t>(params_.normalized(ClickVoice) * 2.0f + 0.5f));

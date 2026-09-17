@@ -167,6 +167,79 @@ class SceneScheduler {
         enterScene(idx, /*allowSmooth=*/false);
     }
 
+    /**
+     * Every rack takes up the scene that is playing, at the phase it is at.
+     *
+     * The origin is the scene's own iteration origin rather than now, so a
+     * clip half way through stays half way through: the point is that the
+     * listener hears nothing happen at the moment the mode changes.
+     */
+    void adoptPlayingScene() {
+        if (snap == nullptr || snap->scenes.empty() || sceneIdx < 0 ||
+            sceneIdx >= static_cast<int32_t>(snap->scenes.size())) {
+            return;
+        }
+        const int64_t id = snap->scenes[sceneIdx].id;
+        for (int32_t r = 0; r < rackCount; ++r) {
+            if (snap->clipFor(r, sceneIdx) == nullptr) {
+                continue; // a track with nothing here stays silent, as it was
+            }
+            launcher.adopt(r, id, cycleTicks(r, sceneIdx), iterationOrigin);
+            racks[r].clipPlayer.setClip(snap->clipFor(r, sceneIdx));
+        }
+    }
+
+    /**
+     * Clip mode ends: everyone onto one scene, at the bar line, in phase.
+     *
+     * Scene mode can only play one scene, so something has to move - the
+     * question is only how much and how audibly. The scene most racks are
+     * already playing wins, because that is the choice that moves the fewest
+     * of them: those racks carry on untouched, and only the minority
+     * re-align. Ties go to the lowest scene index so the answer is stable
+     * rather than dependent on which rack was asked first.
+     *
+     * The phase is taken from a rack that is already on that scene, so the
+     * arrangement continues from where those tracks had got to instead of
+     * restarting or resuming the stale playhead scene mode was frozen at.
+     */
+    void handBackToScenes(int64_t at) {
+        if (snap == nullptr || snap->scenes.empty()) {
+            return;
+        }
+        const auto count = static_cast<int32_t>(snap->scenes.size());
+        int32_t votes[kRackCount] = {};
+        int32_t best = -1, bestVotes = 0;
+        int64_t bestOrigin = at;
+        for (int32_t r = 0; r < rackCount; ++r) {
+            if (!launcher.playing(r)) continue;
+            const int32_t idx = snap->indexOfScene(launcher.sceneId(r));
+            if (idx < 0 || idx >= count) continue;
+            const int32_t v = ++votes[idx];
+            if (v > bestVotes || (v == bestVotes && best >= 0 && idx < best)) {
+                bestVotes = v;
+                best = idx;
+                bestOrigin = launcher.origin(r);
+            }
+        }
+        if (best < 0) {
+            return; // nothing was playing; scene mode resumes where it was
+        }
+        enterScene(best, /*allowSmooth=*/false);
+        // Keep the phase those racks already had. The origin may be well
+        // behind `at`; the scene path's own arithmetic walks it forward.
+        iterationOrigin = bestOrigin;
+        lastTickInIteration = at - bestOrigin;
+        launcher.clearAll();
+        launcher.takeChanged();
+        launcherNow = 0;
+        if (transport != nullptr) {
+            for (int32_t r = 0; r < rackCount; ++r) {
+                transport->publishLaunch(r, Transport::packLaunch(Transport::kNoScene, Transport::kNoScene, 0));
+            }
+        }
+    }
+
     /** Stopped: nothing is launched, nothing is queued, the grid goes dark. */
     void stopLauncher() {
         launcher.clearAll();
@@ -205,7 +278,39 @@ class SceneScheduler {
         if (snap == nullptr || snap->scenes.empty()) {
             return true;
         }
-        if (transport->launcherMode()) {
+        // Entering clip mode while the song is running: hand the launcher the
+        // scene every rack is already playing, in phase, so nothing stops.
+        // Without this the launcher starts empty and the whole song falls
+        // silent until each clip is tapped, which is the opposite of what
+        // switching to a launcher mid-performance is for.
+        const bool launching = transport->launcherMode();
+        if (launching && !launcherWas) {
+            adoptPlayingScene();
+            returnPending = false;
+        }
+        // Leaving clip mode is not immediate: the launcher keeps running until
+        // the next bar line, and the handover happens there. Switching on the
+        // block the button was pressed would land mid-bar every time.
+        if (!launching && launcherWas && launcher.anyPlaying()) {
+            const int64_t bar = std::max<int64_t>(1, songTicksPerBar());
+            returnAt = ((blockStart / bar) + 1) * bar;
+            returnPending = true;
+        }
+        launcherWas = launching;
+        if (returnPending) {
+            if (blockEnd <= returnAt) {
+                return processLauncher(blockStart, blockEnd); // still counting down
+            }
+            // The line falls inside this block: play the launcher up to it,
+            // hand over, and let the scene path take the rest.
+            if (returnAt > blockStart) {
+                processLauncher(blockStart, returnAt);
+            }
+            handBackToScenes(returnAt);
+            returnPending = false;
+            blockStart = returnAt;
+        }
+        if (launching) {
             return processLauncher(blockStart, blockEnd);
         }
         followTempo();
@@ -501,6 +606,11 @@ class SceneScheduler {
 
     Launcher launcher;
     int64_t launcherNow = 0;
+    /** Whether the last block was in launcher mode, to catch the change. */
+    bool launcherWas = false;
+    /** Clip mode has been switched off and is playing out to the bar line. */
+    bool returnPending = false;
+    int64_t returnAt = 0;
     int32_t sceneIdx = 0;
     int32_t repeatIdx = 0;
     int64_t iterationOrigin = 0;

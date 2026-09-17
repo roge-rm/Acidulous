@@ -32,6 +32,20 @@ class MasterBus {
     void clickAt(int32_t accent, int32_t offsetSamples) { click.trigger(accent, offsetSamples); }
     void setClickVoice(int32_t voice) { click.setVoice(voice); }
     bool clickEnabled() const { return params_.get(ClickOn) >= 0.5f; }
+    /**
+     * A count-in is running, so the click sounds whatever the metronome says.
+     *
+     * The engine already queues count-in clicks without asking whether the
+     * metronome is on - "a count-in always clicks, that is the whole of what
+     * it is" - but this bus only *rendered* them when it was. With the
+     * metronome off you got the wait and no count, which is the worst of both
+     * and is what Dan reported. Worse, `Click::trigger` queues and
+     * `Click::process` is what empties the queue: never rendering left four
+     * stale clicks sitting in it with stale sample offsets, to go off later at
+     * the wrong moment.
+     */
+    void setCountingIn(bool on) { countingIn = on; }
+    bool clickAudible() const { return clickEnabled() || countingIn; }
 
     /**
      * Whether the click should sound while the transport runs.
@@ -80,6 +94,7 @@ class MasterBus {
     float sampleRate = 48000.0f;
     float panicRamp = 1.0f;
     dsp::Click click;
+    bool countingIn = false;
     Smoothed fadeSmooth;
     float sumL[kBlockFrames]{}, sumR[kBlockFrames]{};
     float sendR[kBlockFrames]{}, sendD[kBlockFrames]{};

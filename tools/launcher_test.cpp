@@ -230,6 +230,33 @@ int main() {
         if (perBlock > 3.0) { ++failures; printf("  FAIL too many splits per block\n"); }
     }
 
+    printf("--- adopting a clip that is already sounding, for the mode switch ---\n");
+    {
+        // Scene mode hands the launcher what every rack is already playing, in
+        // phase. The origin is the scene's, not "now", or a clip half way
+        // through would restart at the moment the mode changed.
+        Launcher l;
+        const int64_t origin = 3 * kBar;   // the scene started three bars ago
+        const int64_t now = origin + kBar / 2;  // and is half a bar in
+        l.adopt(0, 77, kBar, origin);
+        eq("adopted rack is playing at once", l.playing(0) ? 1 : 0, 1);
+        eq("adopted rack has the scene it was given", l.sceneId(0), 77);
+        eq("adopted rack keeps the phase it had", now - l.origin(0), kBar / 2);
+        eq("adopting queues nothing", l.pendingId(0), Launcher::kNone);
+        eq("adopting marks the rack changed", (l.takeChanged() & 1u) ? 1 : 0, 1);
+
+        // And it replaces whatever was queued, rather than racing it.
+        l.request(0, 88, kBar, now);
+        eq("a launch can still be queued after adopting", l.pendingId(0), 88);
+        l.adopt(0, 99, kBar, origin);
+        eq("adopting again clears the queue", l.pendingId(0), Launcher::kNone);
+        eq("adopting again takes the new scene", l.sceneId(0), 99);
+
+        // A rack with nothing to adopt is left alone.
+        l.adopt(1, Launcher::kNone, kBar, origin);
+        eq("adopting nothing leaves the rack silent", l.playing(1) ? 1 : 0, 0);
+    }
+
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -659,15 +659,20 @@ fun EditScreen(
                 colour = if (panel == 2) Acid.colors.accent else Color.Unspecified,
             ) { panel = if (panel == 2) 0 else 2 }
             BarButton(
-                if (armed) "\u25CF" else "\u25CB",
+                // The glyph carries two states, because the pill carries two
+                // controls: a tap arms, a long press turns the click on, and
+                // the red ring is already spoken for by the first of them.
+                // Dan: "it's hard to tell whether just recording is on or
+                // whether both record and metronome are on".
+                (if (armed) "\u25CF" else "\u25CB") + if (clickOn) "\u266A" else "",
                 // Hold it for the click. The metronome is a thing you want on
                 // for one take and off for the next, and it lived two taps
                 // deep behind the tempo. Guarded on mapping mode, because
                 // mappable already claims a long press there to forget what
                 // drives a control.
-                anchor.mappable(MapTargets.action(Action.RecordArm.name))
-                    .onLongPress { if (!UiPrefs.mapMode) onClick(!clickOn) },
+                anchor.mappable(MapTargets.action(Action.RecordArm.name)),
                 border = if (armed) Acid.colors.red else null,
+                onLongPress = { if (!UiPrefs.mapMode) onClick(!clickOn) },
             ) { onArm(!armed) }
             BarButton(
                 if (playing) "\u25A0" else "\u25B6",

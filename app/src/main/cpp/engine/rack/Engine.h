@@ -118,6 +118,41 @@ class Engine {
      * the last pass left behind. Counting you in is not recording you.
      */
     bool recordingNow() const { return transport.isRecording() && countInFrames <= 0.0; }
+    /**
+     * The last moments of the count-in, where a note is *early* rather than
+     * unwanted.
+     *
+     * A player counted in does not arrive exactly on the beat; they arrive a
+     * little before it, and the take is supposed to start with that note.
+     * Dropping it - which is what gating the recorder on the count-in alone
+     * does - loses the first chord of every live take, and no amount of care
+     * fixes it, because the error is a human one. Dan: "when I think the
+     * recording starts it doesn't record the first notes".
+     *
+     * A thirty-second note before the downbeat, which scales with the tempo
+     * the way a player's sense of "just before" does.
+     */
+    bool countInPreRoll() const {
+        return transport.isRecording() && countInFrames > 0.0 && countInFrames <= preRollFrames;
+    }
+    /**
+     * An early note, held until the scheduler has started.
+     *
+     * It cannot be filed at the moment it is played: during the count-in the
+     * scheduler is deliberately not running, so it has no scene to name and
+     * the far end would drop the event as belonging to nothing. Kept here for
+     * at most a thirty-second note, then pushed with a tick of zero once the
+     * scene is known.
+     */
+    struct EarlyNote {
+        int32_t rack = 0;
+        uint8_t status = 0, d1 = 0, d2 = 0;
+    };
+    static constexpr int32_t kMaxEarlyNotes = 16;
+    static constexpr int32_t kPreRollTicks = kPPQN / 8; // a thirty-second
+    EarlyNote earlyNotes[kMaxEarlyNotes];
+    int32_t earlyCount = 0;
+    double preRollFrames = 0.0;
     float inputScratch[kBlockFrames * 2] = {};
 
   private:

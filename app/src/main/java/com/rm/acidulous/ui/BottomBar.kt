@@ -14,6 +14,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -140,11 +144,28 @@ fun BarButton(
     border: Color? = null,
     enabled: Boolean = true,
     fontFamily: FontFamily? = null,
+    /**
+     * A second gesture on the same pill, and the reason it lives here rather
+     * than as a `Modifier.onLongPress` at the call site.
+     *
+     * Two detectors on one button both fire: the modifier's long press ran,
+     * and then the button's own `onClick` ran on release as well - so holding
+     * the record pill for the metronome *also armed the transport*, every
+     * time. It was invisible until the click got an indicator of its own, and
+     * it is exactly why "record on" and "record and click on" were hard to
+     * tell apart. One detector owning both gestures cannot do that.
+     */
+    onLongPress: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
+    var suppressClick by remember { mutableStateOf(false) }
+    val gestures = if (onLongPress == null) modifier else modifier.onLongPress {
+        suppressClick = true
+        onLongPress()
+    }
     OutlinedButton(
-        modifier = modifier,
-        onClick = onClick,
+        modifier = gestures,
+        onClick = { if (suppressClick) suppressClick = false else onClick() },
         enabled = enabled,
         contentPadding = PaddingValues(horizontal = 4.dp),
         // Falling back to Material's own outline, not to null: null means

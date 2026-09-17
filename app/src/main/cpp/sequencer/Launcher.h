@@ -84,6 +84,33 @@ class Launcher {
         queueAt(s, sceneId, cycle, boundary(s, cycle, now));
     }
 
+    /**
+     * Take up a clip that is already sounding, in phase, without queueing.
+     *
+     * For the moment the grid becomes a launcher while the song is playing.
+     * Scene mode has every rack on the same scene and the same iteration; clip
+     * mode has each rack on its own. Going from one to the other used to hand
+     * the launcher nothing, so every track fell silent until it was tapped -
+     * which is no use at all if the point is to start remixing something that
+     * is already running. Dan: "keep the currently playing clips going ... this
+     * would allow for live remixing and going back and forth".
+     *
+     * The origin is passed in rather than taken as `now`, so the clip carries
+     * on from where the scene had already got to instead of restarting.
+     */
+    void adopt(int32_t rack, int64_t sceneId, int64_t cycle, int64_t origin) {
+        if (!valid(rack) || sceneId == kNone) {
+            return;
+        }
+        Slot &s = slots[rack];
+        s.sceneId = sceneId;
+        s.cycle = cycle > 0 ? cycle : 1;
+        s.origin = origin;
+        s.pendingId = kNone;
+        s.pendingCycle = 0;
+        changed |= (1u << rack);
+    }
+
     /** Forget what this rack had queued; leave what it is playing alone. */
     void cancel(int32_t rack) {
         if (valid(rack)) {

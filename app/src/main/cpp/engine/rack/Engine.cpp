@@ -89,6 +89,8 @@ void Engine::renderBlock(const float *in, float *out) {
             // drain at all. Frames divide exactly into blocks; ticks do not.
             countInFrames = static_cast<double>(ticks) * clock.samplesPerTickNow();
             countInPerTick = clock.samplesPerTickNow();
+            preRollFrames = countInPerTick * static_cast<double>(kPreRollTicks);
+            earlyCount = 0;
             startPending = countInFrames <= 0.0;
             // Under Link, a plain play waits for the session's next downbeat
             // instead of starting where the finger landed - which is the
@@ -170,6 +172,9 @@ void Engine::renderBlock(const float *in, float *out) {
     // clicks are counted by it - but the scheduler must not, or the song
     // would sound underneath its own count-in.
     const bool counting = countInFrames > 0.0;
+    // The bus renders the count's clicks even with the metronome switched off,
+    // and borrows the limiter's headroom for them while it does.
+    master.setCountingIn(counting);
     if (playing && !counting) {
         if (!scheduler.process(clock.blockStart(), clock.blockEnd())) {
             scheduler.allNotesOff();
@@ -526,6 +531,24 @@ void Engine::followTimebase() {
 }
 
 void Engine::drainMidi() {
+    // The notes played just before the downbeat, filed now that there is a
+    // scene to file them against. They land on tick zero: the player meant
+    // the start of the bar, and was early by less than a thirty-second.
+    if (recordingNow() && earlyCount > 0) {
+        for (int32_t i = 0; i < earlyCount; ++i) {
+            const EarlyNote &e = earlyNotes[i];
+            seq::RecordedEvent ev;
+            ev.absTick = clock.position();
+            ev.sceneId = scheduler.rackSceneId(e.rack);
+            ev.tickInIteration = 0;
+            ev.rack = e.rack;
+            ev.cmd = e.status;
+            ev.p1 = e.d1;
+            ev.p2 = e.d2;
+            recordQueue.push(ev);
+        }
+        earlyCount = 0;
+    }
     MidiMessage m;
     while (midiIn.pop(m)) {
         const int32_t rack = m.status & 0x0f;
@@ -556,6 +579,13 @@ void Engine::drainMidi() {
             }
         }
         racks[rack].handleMidi(status, m.data1, d2);
+        // Played just before the downbeat, with the scheduler not yet running:
+        // hold it rather than lose it. Flushed at the top of the first block
+        // that is actually recording, where the scene is known.
+        if (!recordingNow() && countInPreRoll() && earlyCount < kMaxEarlyNotes) {
+            earlyNotes[earlyCount++] = {rack, status, m.data1, d2};
+            continue;
+        }
         if (recordingNow()) {
             seq::RecordedEvent ev;
             ev.absTick = clock.position();
