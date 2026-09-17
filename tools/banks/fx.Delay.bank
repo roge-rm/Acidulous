@@ -8,30 +8,30 @@
 
 effect Delay
 
-patch Init
+patch Init family=short
 
-patch Slapback
+patch Slapback family=short
   time           #0
   feedback       0.12
   tone           4500 Hz
   pingpong       #0
   mix            0.28
 
-patch "Eighth Sync"
+patch "Eighth Sync" family=synced
   time           #2
   feedback       0.38
   tone           7000 Hz
   pingpong       #0
   mix            0.32
 
-patch "Ping Pong"
+patch "Ping Pong" family=synced
   time           #3
   feedback       0.5
   tone           8000 Hz
   pingpong       #1
   mix            0.38
 
-patch Dub
+patch Dub family=dub
   # Long, dark and nearly self-sustaining: the feedback is most of the sound
   # and the tone control is what stops it turning into noise.
   time           #5
@@ -40,7 +40,7 @@ patch Dub
   pingpong       #1
   mix            0.45
 
-patch Ducked
+patch Ducked family=dub
   # The extra: echoes sit under the dry signal and swell in the gaps, so a
   # long delay can sit behind a busy part without smearing it.
   time           #4
@@ -50,7 +50,7 @@ patch Ducked
   mix            0.5
   duck           0.8
 
-patch Tape
+patch Tape family=tape
   # The other extra: two sines on the read head. Slow and shallow is a tape
   # machine; further up it is a machine that needs servicing.
   time           #4
@@ -60,7 +60,7 @@ patch Tape
   mix            0.36
   wobble         0.35
 
-patch Seasick
+patch Seasick family=tape
   time           #6
   feedback       0.7
   tone           2800 Hz

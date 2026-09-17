@@ -40,9 +40,9 @@
 machine Ratio
 role    keys
 
-patch Init
+patch Init family=keys
 
-patch Tine  note=60 range=36..84 role=keys
+patch Tine family=keys  note=60 range=36..84 role=keys
   algoa          #6
   o1_decay       2.5 s
   o1_sustain     0.25
@@ -59,7 +59,7 @@ patch Tine  note=60 range=36..84 role=keys
   o4_sustain     0
   volume         0.76
 
-patch "Sync Stab"  note=60 range=36..84 role=keys
+patch "Sync Stab" family=lead  note=60 range=36..84 role=keys
   algoa          #3
   l1_rate        0.4 Hz
   m01_depth      0.25
@@ -76,7 +76,7 @@ patch "Sync Stab"  note=60 range=36..84 role=keys
   snap           #0
   volume         0.90
 
-patch Bell  note=60 range=36..84 role=bell
+patch Bell family=bell  note=60 range=36..84 role=bell
   algoa          #6
   o1_decay       6 s
   o1_release     6 s
@@ -94,7 +94,7 @@ patch Bell  note=60 range=36..84 role=bell
   snap           #5
   volume         0.79
 
-patch Stretched  note=60 range=36..84 role=bell
+patch Stretched family=pad  note=60 range=36..84 role=bell
   algoa          #6
   m01_depth      0.5
   m01_dest       #3
@@ -110,7 +110,7 @@ patch Stretched  note=60 range=36..84 role=bell
   skew           0.22
   volume         0.72
 
-patch "Grit Bass"  note=36 range=24..55 role=bass
+patch "Grit Bass" family=bass  note=36 range=24..55 role=bass
   f_freq         2200 Hz
   f_res          0.2
   m01_depth      0.35
@@ -129,7 +129,7 @@ patch "Grit Bass"  note=36 range=24..55 role=bass
   voicemode      #1
   volume         0.95
 
-patch "Fold Lead"  note=67 range=48..91 role=lead
+patch "Fold Lead" family=lead  note=67 range=48..91 role=lead
   algoa          #3
   glide          0.1 s
   m01_depth      0.3
@@ -145,7 +145,7 @@ patch "Fold Lead"  note=67 range=48..91 role=lead
   voicemode      #2
   volume         0.99
 
-patch "Morph Sweep"  note=55 range=36..79 role=pad
+patch "Morph Sweep" family=pad  note=55 range=36..79 role=pad
   e1_attack      1.2 s
   e1_decay       3 s
   e1_sustain     0.4
@@ -173,7 +173,7 @@ patch "Morph Sweep"  note=55 range=36..79 role=pad
   o6_ratio       8
   volume         0.60
 
-patch Rhodes  note=60 range=36..84 role=keys
+patch Rhodes family=keys  note=60 range=36..84 role=keys
   # Two pairs, the modulator a fourth above its carrier and decaying
   # faster than it. The whole electric piano is that one relationship.
   algoa          #6
@@ -199,7 +199,7 @@ patch Rhodes  note=60 range=36..84 role=keys
   o6_level       0
   volume         0.72
 
-patch Wurly  note=60 range=36..84 role=keys
+patch Wurly family=keys  note=60 range=36..84 role=keys
   # Harder and hollower than the tine: the modulator is a square, which
   # puts a reed's buzz on the front of every note.
   algoa          #6
@@ -225,7 +225,7 @@ patch Wurly  note=60 range=36..84 role=keys
   o6_level       0
   volume         0.77
 
-patch Clavi  note=60 range=36..84 role=keys
+patch Clavi family=keys  note=60 range=36..84 role=keys
   # A stack of three with feedback on the top of it, decaying almost at
   # once. Feedback is what turns a sine into a saw here.
   algoa          #5
@@ -251,7 +251,7 @@ patch Clavi  note=60 range=36..84 role=keys
   f_key          0.6
   volume         1.00
 
-patch "Glass Keys"  note=60 range=36..84 role=keys
+patch "Glass Keys" family=keys  note=60 range=36..84 role=keys
   # Ratios of seven and eleven, which are nowhere near harmonic, held
   # back to a level where they colour the note instead of destroying it.
   algoa          #6
@@ -275,7 +275,7 @@ patch "Glass Keys"  note=60 range=36..84 role=keys
   o6_level       0
   volume         0.76
 
-patch Hammer  note=60 range=36..84 role=keys
+patch Hammer family=keys  note=60 range=36..84 role=keys
   # The attack is a burst of noise from operator six and nothing else;
   # after forty milliseconds it is gone and a plain tone is left.
   algoa          #14
@@ -299,7 +299,7 @@ patch Hammer  note=60 range=36..84 role=keys
   o5_level       0
   volume         0.63
 
-patch "Soft Keys"  note=60 range=36..84 role=keys
+patch "Soft Keys" family=keys  note=60 range=36..84 role=keys
   # Almost no modulation at all: two carriers a fifth apart, which is a
   # machine like this being asked to be simple. It is the patch the rest
   # of the bank is measured against.
@@ -323,7 +323,7 @@ patch "Soft Keys"  note=60 range=36..84 role=keys
   f_freq         3000 Hz
   volume         1.00
 
-patch "Toy Box"  note=60 range=36..84 role=keys
+patch "Toy Box" family=keys  note=60 range=36..84 role=keys
   # A ratio of nine over a crushed sine. High, thin and mechanical: a
   # music box that has been dropped.
   algoa          #6
@@ -345,7 +345,7 @@ patch "Toy Box"  note=60 range=36..84 role=keys
   o6_level       0.00
   volume         0.84
 
-patch "Struck Glass"  note=60 range=36..84 role=bell
+patch "Struck Glass" family=bell  note=60 range=36..84 role=bell
   # Two modulators at a seventh and a thirteenth of the carrier, so every
   # partial lands between two notes of the scale. It rings for a long time
   # and never settles on a pitch.
@@ -372,7 +372,7 @@ patch "Struck Glass"  note=60 range=36..84 role=bell
   snap           #0
   volume         0.69
 
-patch Plucked  note=55 range=40..79 role=arp
+patch Plucked family=keys  note=55 range=40..79 role=arp
   # Everything short. The point is the envelope rather than the spectrum:
   # an FM stack with a fast decay is a plucked string and nobody has to
   # model one.
@@ -395,7 +395,7 @@ patch Plucked  note=55 range=40..79 role=arp
   o6_level       0.00
   volume         1.00
 
-patch Tubular  note=60 range=36..84 role=bell
+patch Tubular family=bell  note=60 range=36..84 role=bell
   # Five modulators into one carrier, all at ratios that share no factors.
   # This is the algorithm this kind of synthesis is famous for and the one
   # no subtractive synth can imitate.
@@ -425,7 +425,7 @@ patch Tubular  note=60 range=36..84 role=bell
   snap           #0
   volume         0.54
 
-patch Gamelan  note=60 range=36..84 role=bell
+patch Gamelan family=bell  note=60 range=36..84 role=bell
   # Two carriers a fraction apart, each with its own modulator, so the two
   # tails beat against each other for as long as they last.
   algoa          #6
@@ -450,7 +450,7 @@ patch Gamelan  note=60 range=36..84 role=bell
   snap           #0
   volume         0.77
 
-patch Church  note=60 range=36..84 role=bell
+patch Church family=bell  note=60 range=36..84 role=bell
   # The hum an octave below the strike, which is where a real bell's two
   # lowest partials sit. The carrier stays on the note - written with the
   # carrier itself at half the ratio the patch played an octave under
@@ -478,7 +478,7 @@ patch Church  note=60 range=36..84 role=bell
   snap           #0
   volume         0.86
 
-patch Ice  note=67 range=48..88 role=bell
+patch Ice family=bell  note=67 range=48..88 role=bell
   # Thin, very high, and almost no low end - but on the note. The carrier
   # was written at four times the ratio, so the patch played two octaves
   # above the key; the height comes from the modulators and the high-pass
@@ -508,7 +508,7 @@ patch Ice  note=67 range=48..88 role=bell
   f_key          0.8
   volume         0.73
 
-patch Anvil  note=60 range=36..84 role=bell
+patch Anvil family=bell  note=60 range=36..84 role=bell
   # The ring mode rather than frequency modulation: two operators
   # multiplied together, which produces sum and difference and nothing
   # else. Nothing in it is a harmonic of the note.
@@ -536,7 +536,7 @@ patch Anvil  note=60 range=36..84 role=bell
   snap           #0
   volume         0.86
 
-patch Bowl  note=60 range=36..84 role=bell
+patch Bowl family=bell  note=60 range=36..84 role=bell
   # Long, low and slow, with the modulation fading before the carrier
   # does. The note gets rounder as it dies, the way a struck bowl does.
   algoa          #6
@@ -560,7 +560,7 @@ patch Bowl  note=60 range=36..84 role=bell
   snap           #0
   volume         0.82
 
-patch "Kalimba FM"  note=60 range=36..84 role=bell
+patch "Kalimba FM" family=bell  note=60 range=36..84 role=bell
   # A short bright strike over a sine that keeps going: two operators, one
   # fast and one slow, which is the whole of a thumb piano.
   algoa          #6
@@ -581,7 +581,7 @@ patch "Kalimba FM"  note=60 range=36..84 role=bell
   o6_level       0.00
   volume         1.00
 
-patch "Deep Sine"  note=36 range=24..55 role=bass
+patch "Deep Sine" family=bass  note=36 range=24..55 role=bass
   # One carrier, one modulator at the octave, and almost nothing else. The
   # bass that does not fight anything.
   algoa          #6
@@ -599,7 +599,7 @@ patch "Deep Sine"  note=36 range=24..55 role=bass
   o6_level       0
   volume         1.00
 
-patch Slap  note=36 range=24..55 role=bass
+patch Slap family=bass  note=36 range=24..55 role=bass
   # The modulator is loud for sixty milliseconds and then gone, which is
   # the click of a thumb and nothing more. Under it the note is a sine.
   algoa          #6
@@ -621,7 +621,7 @@ patch Slap  note=36 range=24..55 role=bass
   o6_level       0
   volume         1.00
 
-patch "Growl FM"  note=36 range=24..55 role=bass
+patch "Growl FM" family=bass  note=36 range=24..55 role=bass
   # Feedback on a *modulator*, which is the one way to get a saw out of a
   # sine, driven hard into a carrier on the same note. Dirty and entirely
   # harmonic - every sideband of a unison modulator lands on a harmonic.
@@ -659,7 +659,7 @@ patch "Growl FM"  note=36 range=24..55 role=bass
 # sidebands stop being harmonics of anything, which reads a hundred cents
 # out even though the note is still the loudest thing there.
   volume         1.00
-patch "Sub Drop FM"  note=36 range=30..55 role=bass
+patch "Sub Drop FM" family=bass  note=36 range=30..55 role=bass
   # A second carrier fixed at fifty hertz under one that tracks the keyboard,
   # so every note has the same rumble beneath it however high it is played.
   # Fixed ratios are the other half of what this machine can do.
@@ -692,7 +692,7 @@ patch "Sub Drop FM"  note=36 range=30..55 role=bass
   f_freq         600 Hz
   volume         1.00
 
-patch "Metal Bass"  note=36 range=24..55 role=bass
+patch "Metal Bass" family=bass  note=36 range=24..55 role=bass
   # A ratio of three and a half, which is not a harmonic of anything, kept
   # quiet enough to be a colour on a bass rather than a bell.
   algoa          #6
@@ -714,7 +714,7 @@ patch "Metal Bass"  note=36 range=24..55 role=bass
   snap           #0
   volume         1.00
 
-patch "Pluck Bass FM"  note=36 range=24..55 role=bass
+patch "Pluck Bass FM" family=bass  note=36 range=24..55 role=bass
   # Short, with the filter closing faster than the amplitude so the note
   # goes dull before it goes quiet.
   algoa          #5
@@ -740,7 +740,7 @@ patch "Pluck Bass FM"  note=36 range=24..55 role=bass
   f_sustain      0.0
   volume         1.00
 
-patch "Wide Bass FM"  note=36 range=24..55 role=bass
+patch "Wide Bass FM" family=bass  note=36 range=24..55 role=bass
   # Two carriers a few cents apart panned hard, which on a bass is usually
   # a mistake and here is not, because the filter keeps the beating under
   # the note.
@@ -777,7 +777,7 @@ patch "Wide Bass FM"  note=36 range=24..55 role=bass
   f_freq         1500 Hz
   volume         0.72
 
-patch "Brass FM"  note=67 range=48..91 role=lead
+patch "Brass FM" family=lead  note=67 range=48..91 role=lead
   # The modulator rises with the amplitude rather than falling, which is
   # what a brass attack is: the sound gets brighter as it gets louder.
   algoa          #5
@@ -801,7 +801,7 @@ patch "Brass FM"  note=67 range=48..91 role=lead
   o6_level       0
   volume         0.72
 
-patch "Square Lead FM"  note=67 range=48..91 role=lead
+patch "Square Lead FM" family=lead  note=67 range=48..91 role=lead
   # A square modulator at the unison, which is how to get a hollow pulse
   # out of a machine with no pulse in it.
   algoa          #6
@@ -821,7 +821,7 @@ patch "Square Lead FM"  note=67 range=48..91 role=lead
   glide          0.03 s
   volume         0.89
 
-patch "Reed Lead"  note=67 range=48..91 role=lead
+patch "Reed Lead" family=lead  note=67 range=48..91 role=lead
   # An odd-harmonic modulator at three times the note, which is a clarinet
   # written as two numbers.
   algoa          #6
@@ -842,7 +842,7 @@ patch "Reed Lead"  note=67 range=48..91 role=lead
   o6_level       0
   volume         0.87
 
-patch Scream  note=67 range=48..91 role=lead
+patch Scream family=lead  note=67 range=48..91 role=lead
   # Feedback almost all the way up on a stack of three. Past about 0.8 the
   # operator stops being a sine at all and starts being noise, and this
   # sits just under that.
@@ -869,7 +869,7 @@ patch Scream  note=67 range=48..91 role=lead
   f_res          0.2
   volume         0.86
 
-patch "Whistle FM"  note=67 range=48..91 role=lead
+patch "Whistle FM" family=lead  note=67 range=48..91 role=lead
   # One operator, one sine, nothing else on at all. Proof that the machine
   # will get out of the way when it is asked to.
   algoa          #22
@@ -886,7 +886,7 @@ patch "Whistle FM"  note=67 range=48..91 role=lead
   glide          0.1 s
   volume         1.00
 
-patch "Fifth Stack"  note=67 range=48..91 role=lead
+patch "Fifth Stack" family=lead  note=67 range=48..91 role=lead
   # Three carriers at the unison, the fifth and the octave, with one
   # modulator across all of them. Hollow and very large.
   algoa          #10
@@ -910,7 +910,7 @@ patch "Fifth Stack"  note=67 range=48..91 role=lead
   o6_sustain     0.5
   volume         0.90
 
-patch Drawbars  note=60 range=36..84 role=keys
+patch Drawbars family=reed  note=60 range=36..84 role=keys
   # All six operators as carriers at the octave, the fifth, the double
   # octave and so on, which is exactly what an organ's drawbars are. No
   # modulation anywhere.
@@ -942,7 +942,7 @@ patch Drawbars  note=60 range=36..84 role=keys
   o1_attack      0.01 s
   volume         0.99
 
-patch "Percussive Organ"  note=60 range=36..84 role=keys
+patch "Percussive Organ" family=reed  note=60 range=36..84 role=keys
   # The same drawbars with the top two given a fast decay, which is the
   # key click an organ makes and the reason it sounds played rather than
   # switched on.
@@ -967,7 +967,7 @@ patch "Percussive Organ"  note=60 range=36..84 role=keys
   o6_level       0.00
   volume         1.00
 
-patch Harmonica  note=60 range=36..84 role=keys
+patch Harmonica family=reed  note=60 range=36..84 role=keys
   # Two carriers a fifth apart with a slow tremolo from the first LFO,
   # and a modulator too quiet to hear except as a rasp.
   algoa          #6
@@ -995,7 +995,7 @@ patch Harmonica  note=60 range=36..84 role=keys
   l1_rate        5.5 Hz
   volume         0.87
 
-patch "Oboe FM"  note=67 range=48..91 role=lead
+patch "Oboe FM" family=reed  note=67 range=48..91 role=lead
   # A rectified sine as the modulator, which is all even harmonics, at
   # twice the note. Nasal in the way a double reed is.
   algoa          #6
@@ -1016,7 +1016,7 @@ patch "Oboe FM"  note=67 range=48..91 role=lead
   o6_level       0.00
   volume         0.87
 
-patch Accordion  note=60 range=36..84 role=keys
+patch Accordion family=reed  note=60 range=36..84 role=keys
   # Three carriers, two of them a few cents out, which is the beating a
   # reed box makes and the only thing that tells it from an organ.
   algoa          #22
@@ -1043,7 +1043,7 @@ patch Accordion  note=60 range=36..84 role=keys
   o6_level       0
   volume         0.93
 
-patch Pipe  note=55 range=36..79 role=pad
+patch Pipe family=reed  note=55 range=36..79 role=pad
   # A quarter sine as the carrier, which has a hole in every cycle and
   # therefore a hollow spectrum, with no modulation at all.
   algoa          #22
@@ -1065,7 +1065,7 @@ patch Pipe  note=55 range=36..79 role=pad
   o6_level       0.00
   volume         1.00
 
-patch "String Pad FM"  note=55 range=36..79 role=pad
+patch "String Pad FM" family=pad  note=55 range=36..79 role=pad
   # A slow attack on both the carrier and its modulator, so the patch
   # gets brighter as it arrives rather than fading in at a fixed colour.
   algoa          #6
@@ -1095,7 +1095,7 @@ patch "String Pad FM"  note=55 range=36..79 role=pad
   o6_level       0
   volume         0.71
 
-patch "Choir FM"  note=55 range=36..79 role=pad
+patch "Choir FM" family=pad  note=55 range=36..79 role=pad
   # Two carriers a fifth apart with a rectified modulator too slow to
   # hear as modulation. Not a voice, and the closer you listen the less it
   # is one.
@@ -1124,7 +1124,7 @@ patch "Choir FM"  note=55 range=36..79 role=pad
   f_freq         3000 Hz
   volume         0.89
 
-patch "Morph Pad"  note=55 range=36..79 role=pad
+patch "Morph Pad" family=pad  note=55 range=36..79 role=pad
   # Built to be moved: algorithm A is three pairs and algorithm B is all
   # six as carriers, and the morph between them takes the patch from a
   # modulated sound to an additive one without changing a note.
@@ -1156,7 +1156,7 @@ patch "Morph Pad"  note=55 range=36..79 role=pad
   o6_level       0
   volume         0.96
 
-patch "Skewed Pad"  note=55 range=36..79 role=pad
+patch "Skewed Pad" family=pad  note=55 range=36..79 role=pad
   # The skew control pulls every ratio off its whole number by the same
   # amount, so the partials fan apart as they go up. A stretched harmonic
   # series, which is what a piano has and no oscillator does.
@@ -1188,7 +1188,7 @@ patch "Skewed Pad"  note=55 range=36..79 role=pad
   o6_level       0.00
   volume         1.00
 
-patch "Drone FM"  note=55 range=36..79 role=pad
+patch "Drone FM" family=pad  note=55 range=36..79 role=pad
   # Six carriers, no envelope movement at all, and two of them a few cents
   # apart so the whole thing turns over slowly and never repeats.
   algoa          #22
@@ -1223,7 +1223,7 @@ patch "Drone FM"  note=55 range=36..79 role=pad
   o6_level       0
   volume         1.00
 
-patch Wood  note=60 range=36..84 role=bell
+patch Wood family=noise  note=60 range=36..84 role=bell
   # A noise operator lasting eight milliseconds into a carrier that lasts
   # two hundred. That is the whole of a wood block, and it is two numbers.
   algoa          #6
@@ -1247,7 +1247,7 @@ patch Wood  note=60 range=36..84 role=bell
   snap           #0
   volume         1.00
 
-patch Crush  note=67 range=48..91 role=lead
+patch Crush family=noise  note=67 range=48..91 role=lead
   # The crush mode on two operators at once, which quantises the phase
   # rather than the amplitude and is therefore an aliasing effect with a
   # pitch. Not subtle.
@@ -1272,7 +1272,7 @@ patch Crush  note=67 range=48..91 role=lead
   o6_level       0
   volume         0.88
 
-patch Riser  note=55 range=36..79 role=pad
+patch Riser family=noise  note=55 range=36..79 role=pad
   # A sample-and-hold operator at a fixed rate under a carrier with a very
   # long attack. Nothing about it is pitched and it is in the bank because
   # every bank needs one thing that is not.

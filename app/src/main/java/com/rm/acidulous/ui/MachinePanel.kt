@@ -78,7 +78,7 @@ fun MachinePanel(
     patchNames: () -> List<String>,
     onSavePatch: (String) -> Unit,
     onLoadPatch: (String) -> Patch?,
-    factoryPatchNames: () -> List<String> = { emptyList() },
+    factoryPatchNames: () -> List<com.rm.acidulous.model.Patch> = { emptyList() },
     userPatchNames: () -> List<String> = { emptyList() },
     onDeletePatch: (String) -> Unit = {},
     onImportSoundFont: () -> Unit = {},
@@ -207,12 +207,13 @@ fun rememberParamBinding(
 @Composable
 private fun PatchBar(
     type: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit,
-    factoryNames: () -> List<String>, userNames: () -> List<String>, onDelete: (String) -> Unit,
+    factoryPatches: () -> List<com.rm.acidulous.model.Patch>, userNames: () -> List<String>,
+    onDelete: (String) -> Unit,
     minimized: Boolean, onToggleMinimized: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(type, color = Acid.colors.text, fontSize = 13.sp)
-        PatchPicker(type, patchNames, onSave, onLoad, factoryNames, userNames, onDelete)
+        PatchPicker(type, patchNames, onSave, onLoad, factoryPatches, userNames, onDelete)
         // Pushed to the far edge: the title row stays, everything under it goes.
         Spacer(Modifier.weight(1f))
         TextButton(onClick = onToggleMinimized, contentPadding = PaddingValues(horizontal = 8.dp)) {
@@ -232,7 +233,8 @@ private fun PatchBar(
 @Composable
 internal fun PatchPicker(
     title: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit,
-    factoryNames: () -> List<String>, userNames: () -> List<String>, onDelete: (String) -> Unit,
+    factoryPatches: () -> List<com.rm.acidulous.model.Patch>, userNames: () -> List<String>,
+    onDelete: (String) -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
@@ -247,7 +249,7 @@ internal fun PatchPicker(
     }
     if (saving) TextInputDialog("Patch name", "", onDismiss = { saving = false }) { name -> onSave(name); saving = false }
     if (browsing) {
-        val factory = remember(title) { factoryNames() }
+        val factory = remember(title) { factoryPatches() }
         val user = remember(title, listRev) { userNames() }
         PatchBrowserDialog(
             machine = title, factory = factory, user = user,
@@ -388,6 +390,45 @@ internal fun SectionChipsStyled(
                     l, color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace, maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Clip, softWrap = false,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The same chips, sized to their words and scrolling when there are too many.
+ *
+ * [SectionChipsStyled] gives every chip an equal share of the width, which is
+ * right for the machine picker's four groups and wrong as soon as there are
+ * seven: the patch browser's dialog is about 320 dp across, so seven families
+ * get 43 dp each and "ensemble" wants 48 - and Cumulus has *ten* families,
+ * which would be 30 dp apiece. A tab you cannot read is worse than a tab you
+ * have to scroll to, so these size to their text and the row scrolls, with the
+ * position bar every scrolling row in this app carries.
+ */
+@Composable
+internal fun SectionChipsScrolling(
+    labels: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()).padding(bottom = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        labels.forEachIndexed { i, l ->
+            val on = i == selected
+            Box(
+                Modifier.clip(RoundedCornerShape(4.dp))
+                    .background(if (on) Acid.colors.green else Acid.colors.control)
+                    .clickable { onSelect(i) }
+                    .padding(horizontal = 9.dp, vertical = 5.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    l, color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
                 )
             }
         }

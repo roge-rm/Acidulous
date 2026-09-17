@@ -28,6 +28,17 @@ data class Patch(
      */
     val low: Int = -1,
     val high: Int = -1,
+    /**
+     * Which shelf of the bank this sits on - Mosaic's keys/pad/grain, Pollen's
+     * cloud/bloom/rhythm, Hexbeat's classic/room/metal. Empty for a patch the
+     * user saved, which belongs on its own shelf and nowhere else.
+     *
+     * The banks have carried `family=` since M45; until now it was read by the
+     * audition harness, used to name the demo wavs, and dropped on the floor
+     * on the way to the app. A bank of fifty-one in one list is a list nobody
+     * reads to the end of.
+     */
+    val family: String = "",
 )
 
 /**

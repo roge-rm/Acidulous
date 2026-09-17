@@ -36,9 +36,9 @@
 machine Trinity
 role    pad
 
-patch Init
+patch Init family=keys
 
-patch "Bell Keys"  note=60 range=36..84 role=keys
+patch "Bell Keys" family=keys  note=60 range=36..84 role=keys
   a_attack       0.002 s
   a_decay        1.6 s
   a_release      1.2 s
@@ -54,7 +54,7 @@ patch "Bell Keys"  note=60 range=36..84 role=keys
   ring12         0.35
   volume         0.79
 
-patch "Wide Saws"  note=55 range=36..79 role=pad
+patch "Wide Saws" family=lead  note=55 range=36..79 role=pad
   a_attack       0.02 s
   a_decay        1.2 s
   a_release      0.5 s
@@ -83,7 +83,7 @@ patch "Wide Saws"  note=55 range=36..79 role=pad
   o3_level       0.68
   volume         0.40
 
-patch "Glass Pad"  note=55 range=36..79 role=pad
+patch "Glass Pad" family=pad  note=55 range=36..79 role=pad
   a_attack       0.8 s
   a_decay        2 s
   a_release      2.5 s
@@ -113,7 +113,7 @@ patch "Glass Pad"  note=55 range=36..79 role=pad
   o2_wave        #4
   volume         0.96
 
-patch "Drift Strings"  note=55 range=36..79 role=pad
+patch "Drift Strings" family=ensemble  note=55 range=36..79 role=pad
   a_attack       0.35 s
   a_decay        2 s
   a_release      1.4 s
@@ -140,7 +140,7 @@ patch "Drift Strings"  note=55 range=36..79 role=pad
   o3_wave        #2
   volume         0.45
 
-patch "Sync Lead"  note=67 range=48..91 role=lead
+patch "Sync Lead" family=lead  note=67 range=48..91 role=lead
   a_attack       0.01 s
   a_decay        0.5 s
   a_release      0.2 s
@@ -161,7 +161,7 @@ patch "Sync Lead"  note=67 range=48..91 role=lead
   voicemode      #2
   volume         0.45
 
-patch "FM Bass"  note=36 range=24..55 role=bass
+patch "FM Bass" family=bass  note=36 range=24..55 role=bass
   a_attack       0.002 s
   a_decay        0.35 s
   a_release      0.15 s
@@ -186,7 +186,7 @@ patch "FM Bass"  note=36 range=24..55 role=bass
   voicemode      #1
   volume         1.00
 
-patch "Electric Piano"  note=60 range=36..84 role=keys
+patch "Electric Piano" family=keys  note=60 range=36..84 role=keys
   # Two sines a fifth apart with a little FM between them and a hard decay:
   # the tine, without a sample of one anywhere.
   o1_wave        #3
@@ -207,7 +207,7 @@ patch "Electric Piano"  note=60 range=36..84 role=keys
   f_sustain      0.05
   volume         0.53
 
-patch Clav  note=60 range=36..84 role=keys
+patch Clav family=keys  note=60 range=36..84 role=keys
   # A narrow pulse through a band-pass with the envelope on it. All attack
   # and no body, which is the whole instrument.
   o1_wave        #1
@@ -230,7 +230,7 @@ patch Clav  note=60 range=36..84 role=keys
   f_sustain      0.0
   volume         0.71
 
-patch Mallet  note=60 range=36..84 role=keys
+patch Mallet family=keys  note=60 range=36..84 role=keys
   # The bell table struck and let go. Short, wooden, and pitched enough to
   # play a tune on rather than to ring.
   o1_wave        #7
@@ -251,7 +251,7 @@ patch Mallet  note=60 range=36..84 role=keys
   f_sustain      0.0
   volume         0.80
 
-patch "Music Box"  note=60 range=36..84 role=keys
+patch "Music Box" family=keys  note=60 range=36..84 role=keys
   # High, thin and metallic, with the second oscillator two octaves up and
   # barely there. It runs out before the note does, as the real thing does.
   o1_wave        #7
@@ -270,7 +270,7 @@ patch "Music Box"  note=60 range=36..84 role=keys
   a_release      0.6 s
   volume         0.84
 
-patch Harpsi  note=60 range=36..84 role=keys
+patch Harpsi family=keys  note=60 range=36..84 role=keys
   # Two saws a tiny way apart, plucked and filtered high: the jack and the
   # quill rather than the hammer.
   o1_wave        #0
@@ -292,7 +292,7 @@ patch Harpsi  note=60 range=36..84 role=keys
   a_release      0.25 s
   volume         0.79
 
-patch Kalimba  note=60 range=36..84 role=keys
+patch Kalimba family=keys  note=60 range=36..84 role=keys
   # Almost a sine with a knock on the front of it. The comb table gives the
   # thumb piano's hollow second partial without a filter doing the work.
   o1_wave        #8
@@ -315,7 +315,7 @@ patch Kalimba  note=60 range=36..84 role=keys
   f_sustain      0.0
   volume         1.00
 
-patch "Toy Piano"  note=60 range=36..84 role=keys
+patch "Toy Piano" family=keys  note=60 range=36..84 role=keys
   # Detuned, short and a little sour, with the fold table putting a rattle
   # above the note. Deliberately not a good piano.
   o1_wave        #9
@@ -336,7 +336,7 @@ patch "Toy Piano"  note=60 range=36..84 role=keys
   a_release      0.3 s
   volume         0.83
 
-patch "Pluck Wide"  note=55 range=40..79 role=arp
+patch "Pluck Wide" family=keys  note=55 range=40..79 role=arp
   # Eight voices of unison detuned hard, plucked. Density is the thing this
   # machine has that a three-oscillator synth normally does not, and this is
   # the patch that is only that.
@@ -361,7 +361,7 @@ patch "Pluck Wide"  note=55 range=40..79 role=arp
   f_sustain      0.0
   volume         0.98
 
-patch "Warm Pad"  note=55 range=36..79 role=pad
+patch "Warm Pad" family=pad  note=55 range=36..79 role=pad
   # Three saws, gently detuned, a long way open and slow at both ends. The
   # one a bank is incomplete without.
   o1_wave        #0
@@ -386,7 +386,7 @@ patch "Warm Pad"  note=55 range=36..79 role=pad
   a_release      2.2 s
   volume         0.39
 
-patch Choir  note=55 range=36..79 role=pad
+patch Choir family=pad  note=55 range=36..79 role=pad
   # The vowel table on two oscillators a fifth apart, drifting. Not a sample
   # of anybody, and the closer you listen the less human it is, which is the
   # interesting part.
@@ -410,7 +410,7 @@ patch Choir  note=55 range=36..79 role=pad
   a_release      1.8 s
   volume         1.00
 
-patch "Sweep Pad"  note=55 range=36..79 role=pad
+patch "Sweep Pad" family=pad  note=55 range=36..79 role=pad
   # The sweep table with its position moving under an LFO: the wavetable
   # doing what a filter usually gets asked to do.
   o1_wave        #4
@@ -433,7 +433,7 @@ patch "Sweep Pad"  note=55 range=36..79 role=pad
   a_release      2.6 s
   volume         1.00
 
-patch "Dark Pad"  note=55 range=36..79 role=pad
+patch "Dark Pad" family=pad  note=55 range=36..79 role=pad
   # Low, filtered hard and with the noise floor deliberately left in. For
   # underneath things rather than on top of them.
   o1_wave        #0
@@ -455,7 +455,7 @@ patch "Dark Pad"  note=55 range=36..79 role=pad
   a_release      3 s
   volume         0.53
 
-patch Shimmer  note=55 range=36..79 role=pad
+patch Shimmer family=pad  note=55 range=36..79 role=pad
   # The glass table an octave and a fifth up over a root that stays the
   # loudest thing in it. Written the other way round the played pitch was
   # thirty decibels under the twelfth above it, which is a patch that
@@ -490,7 +490,7 @@ patch Shimmer  note=55 range=36..79 role=pad
   a_release      3.5 s
   volume         0.73
 
-patch "Breath Pad"  note=55 range=36..79 role=pad
+patch "Breath Pad" family=pad  note=55 range=36..79 role=pad
   # Mostly noise, with just enough oscillator under it to give the noise a
   # pitch. The band-pass is what makes it a note rather than a hiss.
   o1_wave        #3
@@ -511,7 +511,7 @@ patch "Breath Pad"  note=55 range=36..79 role=pad
   a_release      2.4 s
   volume         1.00
 
-patch "Rotor Pad"  note=55 range=36..79 role=pad
+patch "Rotor Pad" family=pad  note=55 range=36..79 role=pad
   # The organ table with a fast LFO on the pitch of one oscillator only, so
   # the two beat against each other the way a spinning cabinet does.
   o1_wave        #11
@@ -531,7 +531,7 @@ patch "Rotor Pad"  note=55 range=36..79 role=pad
   a_release      0.6 s
   volume         0.53
 
-patch "Glass Ice"  note=55 range=36..79 role=pad
+patch "Glass Ice" family=pad  note=55 range=36..79 role=pad
   # The glass table played straight with a notch moving through it. Cold,
   # and the notch is what stops it being a organ.
   o1_wave        #5
@@ -555,7 +555,7 @@ patch "Glass Ice"  note=55 range=36..79 role=pad
   a_release      2.2 s
   volume         0.82
 
-patch Wash  note=55 range=36..79 role=pad
+patch Wash family=pad  note=55 range=36..79 role=pad
   # Eight-voice unison on two oscillators with the detune wide and the
   # attack long enough that nothing ever quite starts. Density at its limit.
   o1_wave        #0
@@ -576,7 +576,7 @@ patch Wash  note=55 range=36..79 role=pad
   a_release      4 s
   volume         0.51
 
-patch "Solo String"  note=60 range=48..84 role=lead
+patch "Solo String" family=ensemble  note=60 range=48..84 role=lead
   # One voice, a slow bow on the attack and a little drift. Deliberately not
   # an ensemble: it is the patch that shows the ensemble ones are ensembles.
   o1_wave        #0
@@ -596,7 +596,7 @@ patch "Solo String"  note=60 range=48..84 role=lead
   glide          0.04 s
   volume         0.44
 
-patch Ensemble  note=55 range=36..79 role=pad
+patch Ensemble family=ensemble  note=55 range=36..79 role=pad
   # Six voices of unison on each of two oscillators, drifting apart at
   # different rates. The size comes from the drift and not from the detune,
   # which is the difference between an ensemble and a chorus pedal.
@@ -620,7 +620,7 @@ patch Ensemble  note=55 range=36..79 role=pad
   a_release      1.2 s
   volume         0.38
 
-patch "Brass Section"  note=55 range=40..79 role=keys
+patch "Brass Section" family=ensemble  note=55 range=40..79 role=keys
   # The filter envelope arriving late and hard, which is what a brass attack
   # is. Three oscillators, the third an octave down for weight.
   o1_wave        #0
@@ -647,7 +647,7 @@ patch "Brass Section"  note=55 range=40..79 role=keys
   a_release      0.3 s
   volume         0.40
 
-patch "Soft Horn"  note=55 range=36..79 role=pad
+patch "Soft Horn" family=ensemble  note=55 range=36..79 role=pad
   # The same idea with the envelope taken off and the filter left low: round
   # and slow, and it stops being brass the moment it stops being bright.
   o1_wave        #0
@@ -669,7 +669,7 @@ patch "Soft Horn"  note=55 range=36..79 role=pad
   a_release      0.8 s
   volume         0.35
 
-patch "Analog Strings"  note=55 range=36..79 role=pad
+patch "Analog Strings" family=ensemble  note=55 range=36..79 role=pad
   # Saw and square a shade apart with the drift up, filtered gently and with
   # a slow sweep on the cutoff. The string machine rather than the string.
   o1_wave        #0
@@ -694,7 +694,7 @@ patch "Analog Strings"  note=55 range=36..79 role=pad
   a_release      1.6 s
   volume         0.31
 
-patch Swell  note=55 range=36..69 role=pad
+patch Swell family=ensemble  note=55 range=36..69 role=pad
   # Nothing at all for a quarter of a second and then everything. Written
   # at 0.45 plus a 1.8 second attack it had not started by the end of a two
   # second note, which is a patch nobody can play. The amplitude
@@ -717,7 +717,7 @@ patch Swell  note=55 range=36..69 role=pad
   f1_env         0.4
   volume         0.81
 
-patch "Sub Bass"  note=36 range=24..55 role=bass
+patch "Sub Bass" family=bass  note=36 range=24..55 role=bass
   # A sine and nothing else, with a square an octave up at a tenth of its
   # level so there is something to hear on a small speaker.
   o1_wave        #3
@@ -733,7 +733,7 @@ patch "Sub Bass"  note=36 range=24..55 role=bass
   a_release      0.15 s
   volume         0.70
 
-patch Reese  note=36 range=24..55 role=bass
+patch Reese family=bass  note=36 range=24..55 role=bass
   # Two saws far enough apart to beat rather than to thicken, low-passed
   # until only the beating is left. The detune is the instrument.
   o1_wave        #0
@@ -752,7 +752,7 @@ patch Reese  note=36 range=24..55 role=bass
   a_release      0.25 s
   volume         0.48
 
-patch "Pluck Bass"  note=36 range=24..55 role=bass
+patch "Pluck Bass" family=bass  note=36 range=24..55 role=bass
   # Short, filtered, and with the filter envelope faster than the amplitude
   # one so the note darkens while it is still loud.
   o1_wave        #0
@@ -773,7 +773,7 @@ patch "Pluck Bass"  note=36 range=24..55 role=bass
   a_release      0.2 s
   volume         0.99
 
-patch "Growl Bass"  note=36 range=24..55 role=bass
+patch "Growl Bass" family=bass  note=36 range=24..55 role=bass
   # The grit table through a driven filter. Where Subvert's drive is a pedal
   # after the filter, this one is a waveshape before it.
   o1_wave        #10
@@ -795,7 +795,7 @@ patch "Growl Bass"  note=36 range=24..55 role=bass
   a_release      0.2 s
   volume         1.00
 
-patch "Wide Bass"  note=36 range=24..55 role=bass
+patch "Wide Bass" family=bass  note=36 range=24..55 role=bass
   # Unison on the bass, which normally muddies it: the filter is low enough
   # that the detuning stays under the note instead of smearing across it.
   o1_wave        #0
@@ -814,7 +814,7 @@ patch "Wide Bass"  note=36 range=24..55 role=bass
   a_release      0.2 s
   volume         0.62
 
-patch "Square Bass"  note=36 range=24..55 role=bass
+patch "Square Bass" family=bass  note=36 range=24..55 role=bass
   # A hollow square with the pulse width just off centre and no resonance at
   # all. The plain one, which every bank needs and few have.
   o1_wave        #1
@@ -834,7 +834,7 @@ patch "Square Bass"  note=36 range=24..55 role=bass
   a_release      0.15 s
   volume         0.46
 
-patch "Ring Bass"  note=36 range=24..55 role=bass
+patch "Ring Bass" family=bass  note=36 range=24..55 role=bass
   # Ring modulation between the first two oscillators, which is metal rather
   # than harmony, kept low enough to still be a bass.
   o1_wave        #3
@@ -853,7 +853,7 @@ patch "Ring Bass"  note=36 range=24..55 role=bass
   a_release      0.2 s
   volume         0.58
 
-patch "Square Lead"  note=67 range=48..91 role=lead
+patch "Square Lead" family=lead  note=67 range=48..91 role=lead
   # One square, one filter, one envelope, played high. If a synth cannot do
   # this it cannot do anything.
   o1_wave        #1
@@ -874,7 +874,7 @@ patch "Square Lead"  note=67 range=48..91 role=lead
   glide          0.03 s
   volume         0.27
 
-patch "Saw Lead"  note=67 range=48..91 role=lead
+patch "Saw Lead" family=lead  note=67 range=48..91 role=lead
   # Three saws, two of them a cent or two out, with the filter tracking the
   # keyboard so the top of the range does not turn to mud.
   o1_wave        #0
@@ -896,7 +896,7 @@ patch "Saw Lead"  note=67 range=48..91 role=lead
   a_release      0.3 s
   volume         0.39
 
-patch "Fifth Lead"  note=67 range=48..91 role=lead
+patch "Fifth Lead" family=lead  note=67 range=48..91 role=lead
   # The second oscillator a fifth above and the third an octave, which is a
   # chord you cannot play a wrong note in. Hollow and very loud for its size.
   o1_wave        #1
@@ -916,7 +916,7 @@ patch "Fifth Lead"  note=67 range=48..91 role=lead
   a_release      0.2 s
   volume         0.24
 
-patch "Soft Lead"  note=67 range=48..91 role=lead
+patch "Soft Lead" family=lead  note=67 range=48..91 role=lead
   # A triangle with the corners taken off and a slow glide. For playing over
   # something rather than through it.
   o1_wave        #2
@@ -935,7 +935,7 @@ patch "Soft Lead"  note=67 range=48..91 role=lead
   glide          0.09 s
   volume         0.37
 
-patch "Hard Sync"  note=67 range=48..91 role=lead
+patch "Hard Sync" family=lead  note=67 range=48..91 role=lead
   # Oscillator two hard-synced to oscillator one and tuned a long way above
   # it, so its pitch becomes a timbre. The envelope sweeps it.
   o1_wave        #0
@@ -955,7 +955,7 @@ patch "Hard Sync"  note=67 range=48..91 role=lead
   a_release      0.2 s
   volume         0.52
 
-patch "PWM Lead"  note=67 range=48..91 role=lead
+patch "PWM Lead" family=lead  note=67 range=48..91 role=lead
   # The pulse width moving under a slow LFO, which is the oldest trick there
   # is and still the one that makes one oscillator sound like two.
   o1_wave        #1
@@ -981,7 +981,7 @@ patch "PWM Lead"  note=67 range=48..91 role=lead
   a_release      0.3 s
   volume         0.22
 
-patch "Vowel Lead"  note=67 range=48..91 role=lead
+patch "Vowel Lead" family=lead  note=67 range=48..91 role=lead
   # The vowel table with its position on the envelope, so the note says one
   # thing at its start and another by the end of it.
   o1_wave        #6
@@ -1005,7 +1005,7 @@ patch "Vowel Lead"  note=67 range=48..91 role=lead
   a_release      0.3 s
   volume         1.00
 
-patch Whistle  note=67 range=48..91 role=lead
+patch Whistle family=lead  note=67 range=48..91 role=lead
   # Near enough a sine with a little drift and a lot of glide: the top of
   # the keyboard, where most patches stop being usable.
   o1_wave        #3
@@ -1023,7 +1023,7 @@ patch Whistle  note=67 range=48..91 role=lead
   glide          0.12 s
   volume         0.36
 
-patch "Noise Sweep"  note=55 range=36..79 role=pad
+patch "Noise Sweep" family=texture  note=55 range=36..79 role=pad
   # All noise, with a resonant low-pass opening over three seconds. No
   # oscillator at all: proof the filter is an instrument on its own.
   o1_level       0.00
@@ -1043,7 +1043,7 @@ patch "Noise Sweep"  note=55 range=36..79 role=pad
   a_release      2 s
   volume         1.00
 
-patch "Ring Bells"  note=55 range=36..79 role=keys
+patch "Ring Bells" family=texture  note=55 range=36..79 role=keys
   # Ring modulation between two oscillators a tritone apart, which has no
   # harmonic relationship at all and therefore sounds like metal.
   o1_wave        #3
@@ -1063,7 +1063,7 @@ patch "Ring Bells"  note=55 range=36..79 role=keys
   a_release      1.2 s
   volume         0.39
 
-patch Drone  note=55 range=36..79 role=pad
+patch Drone family=texture  note=55 range=36..79 role=pad
   # Three oscillators on the organ table at the octave and the fifth, no
   # envelope movement at all, and enough drift that it never quite repeats.
   o1_wave        #11
@@ -1085,7 +1085,7 @@ patch Drone  note=55 range=36..79 role=pad
   a_release      3 s
   volume         0.56
 
-patch Metallic  note=55 range=36..79 role=pad
+patch Metallic family=texture  note=55 range=36..79 role=pad
   # The fold table warped hard through a peaking filter. Inharmonic on
   # purpose: it has a pitch but it does not have a key.
   o1_wave        #9
@@ -1105,7 +1105,7 @@ patch Metallic  note=55 range=36..79 role=pad
   a_release      1.5 s
   volume         0.33
 
-patch "Sweep Down"  note=55 range=36..79 role=pad
+patch "Sweep Down" family=texture  note=55 range=36..79 role=pad
   # A filter falling from the top of its range to the bottom over four
   # seconds, with nothing else happening. The one you put at the end of a
   # bar.
@@ -1129,7 +1129,7 @@ patch "Sweep Down"  note=55 range=36..79 role=pad
   a_release      1.5 s
   volume         0.42
 
-patch Air  note=55 range=36..79 role=pad
+patch Air family=texture  note=55 range=36..79 role=pad
   # A high-pass at four kilohertz on almost nothing: what is left is the top
   # of the drift and the top of the noise. Sits above a mix without being
   # in it.

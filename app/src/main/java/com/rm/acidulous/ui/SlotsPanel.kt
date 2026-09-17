@@ -183,7 +183,7 @@ private fun SlotFace(kind: SlotKind, type: String, trackIndex: Int, slot: Int, e
                             b.applyAll(patch.params)
                         }
                     },
-                    factoryNames = { PatchStore.factoryNames(key) },
+                    factoryPatches = { PatchStore.factory(key) },
                     userNames = { PatchStore.userList(context, key) },
                     onDelete = { name -> PatchStore.delete(context, key, name) },
                 )

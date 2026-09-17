@@ -99,9 +99,9 @@ role    tune
 # it: every other patch here declares its own note and range, and without one
 # Init was being measured in a dead spot of the bore - 6 dB down on note 60 for
 # the sake of two semitones, which read as a broken house level and was not.
-patch Init  note=60
+patch Init family=single  note=60
 
-patch Clarinet  note=62 range=52..76
+patch Clarinet family=single  note=62 range=52..76
   attack         0.02 s
   breath         0.1
   keys           0.2
@@ -109,7 +109,7 @@ patch Clarinet  note=62 range=52..76
 
   fine           11 cents
   volume         0.83
-patch "Bass Clarinet"  note=50 range=40..62
+patch "Bass Clarinet" family=single  note=50 range=40..62
   body           73.4 Hz
   breath         0.16
   embouchure     0.5
@@ -121,7 +121,7 @@ patch "Bass Clarinet"  note=50 range=40..62
 
   fine           13 cents
   volume         0.98
-patch "Alto Sax"  note=60 range=50..74
+patch "Alto Sax" family=single  note=60 range=50..74
   attack         0.015 s
   body           138.6 Hz
   bore           #1
@@ -136,7 +136,7 @@ patch "Alto Sax"  note=60 range=50..74
 
   fine           9 cents
   volume         0.57
-patch Oboe  note=70 range=60..84
+patch Oboe family=double  note=70 range=60..84
   attack         0.012 s
   body           233.1 Hz
   bore           #1
@@ -152,7 +152,7 @@ patch Oboe  note=70 range=60..84
 
   fine           8 cents
   volume         0.42
-patch Bassoon  note=46 range=36..60
+patch Bassoon family=double  note=46 range=36..60
   attack         0.025 s
   body           58.3 Hz
   bore           #1
@@ -169,7 +169,7 @@ patch Bassoon  note=46 range=36..60
 
   fine           10 cents
   volume         0.86
-patch Flute  note=72 range=62..86
+patch Flute family=flute  note=72 range=62..86
   attack         0.04 s
   body           261.6 Hz
   bore           #1
@@ -183,7 +183,7 @@ patch Flute  note=72 range=62..86
   volume         0.62
 
   volume         0.23
-patch "Pan Pipe"  note=67 range=57..79
+patch "Pan Pipe" family=flute  note=67 range=57..79
   aim            0.1
   attack         0.06 s
   body           196 Hz
@@ -196,7 +196,7 @@ patch "Pan Pipe"  note=67 range=57..79
   volume         0.55
 
   volume         0.55
-patch "Stopped Wood"  note=55 range=46..68
+patch "Stopped Wood" family=odd  note=55 range=46..68
   answer         0.385
   attack         0.05 s
   body           110 Hz
@@ -218,7 +218,7 @@ patch "Stopped Wood"  note=55 range=46..68
 
   fine           14 cents
   volume         0.47
-patch Forked  note=62 range=52..74
+patch Forked family=odd  note=62 range=52..74
   # 0.4675, seeded from what shipped, is past the point where the fork
   # stops being a colour and becomes a note the tube cannot hold: it read
   # -4137 cents, which is no pitch at all. It plays at 0.32.

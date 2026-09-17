@@ -42,7 +42,7 @@ machine Formulate
 # them; `pad` for the sustained few.
 role    chip
 
-patch Init
+patch Init family=chip
 # A square, played one note at a time. The whole vocabulary starts here.
 patch "Pulse Lead" note=64 range=48..88 family=chip
   wave           #0

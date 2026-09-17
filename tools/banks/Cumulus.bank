@@ -42,7 +42,7 @@ machine Cumulus
 #           because the drift and the morph are slower than any other phrase
 role    pad
 
-patch Init
+patch Init family=pad
 # High and thin, with the bands wide enough that no partial is a line
 # any more. Nothing down low at all - this is the one that goes over
 # something else.

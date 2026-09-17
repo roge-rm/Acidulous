@@ -151,9 +151,9 @@ machine Filament
 # sound all the way down.
 role    tune
 
-patch Init
+patch Init family=plucked
 
-patch Nylon  note=52 range=40..76
+patch Nylon family=plucked  note=52 range=40..76
   bodymix        0.45
   couple         0.3
   detune         5 c
@@ -168,7 +168,7 @@ patch Nylon  note=52 range=40..76
   tone           0.4
   volume         1.00
 
-patch Steel  note=52 range=40..79
+patch Steel family=plucked  note=52 range=40..79
   bodymix        0.4
   couple         0.4
   detune         6 c
@@ -184,7 +184,7 @@ patch Steel  note=52 range=40..79
   tone           0.5
   volume         1.33
 
-patch Hammered  note=60 range=36..84
+patch Hammered family=struck  note=60 range=36..84
   bodymix        0.3
   couple         0.5
   exciter        #2
@@ -201,7 +201,7 @@ patch Hammered  note=60 range=36..84
   tone           0.5
   volume         0.34
 
-patch Bowed  note=55 range=36..76
+patch Bowed family=sustained  note=55 range=36..76
   bodymix        0.4
   exciter        #3
   grit           0.3
@@ -220,7 +220,7 @@ patch Bowed  note=55 range=36..76
 # 48..82 rather than 84: at a kilohertz a string blown at rather than
 # struck is nine parts jet noise to one part note, and 84 measured 0.11 on
 # the harmonic series with the right pitch underneath it.
-patch Blown  note=67 range=48..82
+patch Blown family=sustained  note=67 range=48..82
   bodymix        0.5
   exciter        #4
   grit           0.7
@@ -231,7 +231,7 @@ patch Blown  note=67 range=48..82
   tone           0.3
   volume         0.53
 
-patch Sympathy  note=60 range=45..81
+patch Sympathy family=prepared  note=60 range=45..81
   "on release"   #0
   symlevel       0.7
   sympathy       #1
@@ -241,7 +241,7 @@ patch Sympathy  note=60 range=45..81
   tone           0.5
   volume         0.68
 
-patch Prepared  note=55 range=36..76
+patch Prepared family=prepared  note=55 range=36..76
   damper         0.4
   # Halfway rather than a third along. A damper nulls the harmonics that
   # have a node under it, and at a third it takes the fundamental with
@@ -261,7 +261,7 @@ patch Prepared  note=55 range=36..76
   tone           0.6
   volume         0.25
 
-patch "Spoken To"  note=55 range=36..72
+patch "Spoken To" family=prepared  note=55 range=36..72
   bodymix        0.3
   exciter        #5
   "in gain"      2
@@ -272,7 +272,7 @@ patch "Spoken To"  note=55 range=36..72
   tone           0.55
   volume         1.50
 
-patch Wire  note=64 range=52..88
+patch Wire family=plucked  note=64 range=52..88
   couple         0.8
   detune         30 c
   drive          0.3

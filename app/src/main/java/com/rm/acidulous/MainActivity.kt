@@ -748,7 +748,7 @@ private fun App(modifier: Modifier = Modifier) {
                 PatchStore.save(context, Patch(m.type, name, m.params, m.settings, low, high))
             },
             onLoadPatch = { name -> PatchStore.load(context, song.tracks[s.track].machine.type, name) },
-            factoryPatchNames = { PatchStore.factoryNames(song.tracks[s.track].machine.type) },
+            factoryPatchNames = { PatchStore.factory(song.tracks[s.track].machine.type) },
             userPatchNames = { PatchStore.userList(context, song.tracks[s.track].machine.type) },
             onDeletePatch = { name -> PatchStore.delete(context, song.tracks[s.track].machine.type, name) },
             onImportSample = { track, pad ->

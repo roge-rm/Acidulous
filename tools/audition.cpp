@@ -1816,6 +1816,9 @@ int cmdEmit(const std::string &outPath) {
             }
             // The range, named so it reads the same whether or not there
             // were settings before it. The app puts the keyboard here.
+            if (!patch.family.empty()) {
+                body += ",\n        family = \"" + kotlinString(patch.family) + "\"";
+            }
             if (patch.low >= 0) {
                 char range[64];
                 std::snprintf(range, sizeof(range), ",\n        low = %d, high = %d", patch.low, patch.high);

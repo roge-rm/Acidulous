@@ -143,9 +143,9 @@
 machine Brazen
 role    tune
 
-patch Init
+patch Init family=horn
 
-patch Tuba  note=41 range=29..53
+patch Tuba family=low  note=41 range=29..53
   # The widest bore and the dullest bell, blown gently. Two partials over the
   # fundamental and nothing above them.
   size           0.03
@@ -166,7 +166,7 @@ patch Tuba  note=41 range=29..53
   volume         0.71
 
   cutoff         1600 Hz
-patch "Bass Trombone"  note=43 range=34..58
+patch "Bass Trombone" family=low  note=43 range=34..58
   # Still wide, but the bell lets more out than a tuba's and it is blown
   # harder, so the ladder reaches further before it gives up.
   size           0.16
@@ -183,7 +183,7 @@ patch "Bass Trombone"  note=43 range=34..58
   volume         0.70
 
   cutoff         3200 Hz
-patch Trombone  note=48 range=40..67
+patch Trombone family=low  note=48 range=40..67
   # The slide is the glide, and it is the only thing here that has one worth
   # hearing: a trombone gets between two notes rather than stepping.
   size           0.3
@@ -200,7 +200,7 @@ patch Trombone  note=48 range=40..67
   volume         0.64
 
   cutoff         5000 Hz
-patch Horn  note=53 range=41..72
+patch Horn family=horn  note=53 range=41..72
   # Bell high and the bore wide: a horn is played into its own bell and that
   # is why it is the mellow one.
   #
@@ -224,7 +224,7 @@ patch Horn  note=53 range=41..72
   volume         0.62
 
   cutoff         4800 Hz
-patch Flugel  note=58 range=52..77
+patch Flugel family=horn  note=58 range=52..77
   # A trumpet's pitch through a horn's bore. The one that shows size and
   # register are separate things.
   size           0.55
@@ -239,7 +239,7 @@ patch Flugel  note=58 range=52..77
   fine           7 cents
   volume         0.61
 
-patch Cornet  note=60 range=52..77
+patch Cornet family=high  note=60 range=52..77
   # Between the flugel and the trumpet, which is exactly what it is.
   size           0.72
   bell           0.62
@@ -252,7 +252,7 @@ patch Cornet  note=60 range=52..77
   fine           11 cents
   volume         0.59
 
-patch Trumpet  note=62 range=52..82
+patch Trumpet family=high  note=62 range=52..82
   # Narrow bore, open bell, leant on. Eight harmonics and an even rolloff -
   # the thing the tuba is not.
   size           0.95
@@ -267,7 +267,7 @@ patch Trumpet  note=62 range=52..82
   breath         0.08
   volume         0.57
 
-patch Piccolo  note=70 range=64..91
+patch Piccolo family=high  note=70 range=64..91
   # The same instrument again, shorter and harder, up where it screams. The
   # top of the machine's range and the top of the bank's.
   size           1
@@ -282,7 +282,7 @@ patch Piccolo  note=70 range=64..91
   fine           11 cents
   volume         0.56
 
-patch "Straight Mute"  note=62 range=52..82
+patch "Straight Mute" family=muted  note=62 range=52..82
   # A mute is a filter here and not a volume knob. The straight one takes the
   # body out and leaves the edge.
   mute           #1
@@ -297,7 +297,7 @@ patch "Straight Mute"  note=62 range=52..82
   volume         1.06
 
   cutoff         4200 Hz
-patch "Cup Mute"  note=58 range=52..82
+patch "Cup Mute" family=muted  note=58 range=52..82
   # And the cup one takes the edge out and leaves the body: the same
   # instrument, the opposite half of it.
   mute           #2
@@ -313,7 +313,7 @@ patch "Cup Mute"  note=58 range=52..82
   volume         0.65
 
   cutoff         3200 Hz
-patch Harmon  note=62 range=52..82
+patch Harmon family=muted  note=62 range=52..82
   # The one everybody knows, and the reason the mutes are filters: it is all
   # upper partials and no fundamental to speak of.
   mute           #3
@@ -329,7 +329,7 @@ patch Harmon  note=62 range=52..82
   volume         1.17
 
   cutoff         5000 Hz
-patch Section  note=55 range=55..79
+patch Section family=ensemble  note=55 range=55..79
   # Four players, each a whole instrument with its own tube and its own idea
   # of the note, pulled tight together. Not one player detuned four times.
   players        #3
@@ -354,7 +354,7 @@ patch Section  note=55 range=55..79
   volume         0.43
 
   cutoff         4000 Hz
-patch Shambles  note=55 range=55..79
+patch Shambles family=ensemble  note=55 range=55..79
   # The same four with nobody listening to anybody. The `lock` knob is the one
   # control here a sampled library cannot have, and this is the far end of it.
   players        #3
@@ -374,7 +374,7 @@ patch Shambles  note=55 range=55..79
   volume         0.28
 
   cutoff         4400 Hz
-patch Growl  note=58 range=55..77
+patch Growl family=ensemble  note=58 range=55..77
   # The player humming against their own note: sidebands on the air and on the
   # lips at once, which is not a tremolo and does not sound like one.
   growl          0.75
@@ -391,7 +391,7 @@ patch Growl  note=58 range=55..77
   fine           10 cents
   volume         0.86
 
-patch Fanfare  note=65 range=55..79
+patch Fanfare family=ensemble  note=65 range=55..79
   # Everything leant on at once. Brass at the top is the shock front, which is
   # a rolloff eight deep rather than a bag of partials - and the reason it is
   # a delay in the model and not a distortion.

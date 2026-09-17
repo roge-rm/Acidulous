@@ -49,7 +49,7 @@ machine Resonance
 # other one.
 role    mallets
 
-patch Init
+patch Init family=drum
 # Hands, not sticks. A djembe's bass and slap are the same drum
 # struck in two places, which is what `hit` is for - one at a sixth of the
 # way in, one at the rim.

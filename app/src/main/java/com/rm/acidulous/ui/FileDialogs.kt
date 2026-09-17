@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rm.acidulous.model.Patch
 import com.rm.acidulous.ui.theme.Acid
 
 /**
@@ -60,25 +62,78 @@ fun SongBrowserDialog(
     }
 }
 
-/** Patches for one machine: factory ones first (fixed), then the user's (deletable). */
+/**
+ * Patches for one machine: a tab per family, and one more for the user's own.
+ *
+ * A bank of fifty-one in one list is a list nobody reads to the end of, and
+ * M45 left several that size. The banks have carried `family=` all along -
+ * Mosaic's keys/pad/grain/motion/lead/texture, Pollen's cloud/pitch/bloom -
+ * so the shelves already exist and only had to be carried through the
+ * generator and drawn.
+ *
+ * Tabs are in the order the bank introduces them, not alphabetical: a bank is
+ * written with its plainest family first and its strangest last, and that is a
+ * better order to meet a machine in than one the alphabet chose. A bank with
+ * no families at all gets a single "factory" tab rather than an empty row of
+ * chips, and a factory patch with no family of its own lands in "other" so
+ * that nothing can be made unreachable by a missing attribute.
+ *
+ * Only the user's tab can delete, which is the whole reason it is a tab of its
+ * own rather than a section at the bottom of a long list.
+ */
 @Composable
 fun PatchBrowserDialog(
-    machine: String, factory: List<String>, user: List<String>,
+    machine: String, factory: List<Patch>, user: List<String>,
     onLoad: (String) -> Unit, onDelete: (String) -> Unit, onDismiss: () -> Unit,
 ) {
-    PlainDialog(title = "$machine patches", onDismiss = onDismiss, dismissLabel = "Close") {
-        if (factory.isNotEmpty()) {
-            ListSection("factory") {
-                for (n in factory) DialogRow(mark = "◆", name = n) { onLoad(n) }
-            }
-        }
-        ListSection("yours", if (user.isEmpty()) "None saved yet - \"save as…\" on the panel." else "") {
-            for (n in user) {
-                DialogRow(mark = "◇", name = n, onRemove = { onDelete(n) }) { onLoad(n) }
+    // First-appearance order, and "other" only if something actually needs it.
+    val families = remember(factory) {
+        val seen = LinkedHashSet<String>()
+        for (p in factory) if (p.family.isNotEmpty()) seen.add(p.family)
+        val named = seen.toList()
+        if (named.isEmpty()) emptyList()
+        else named + (if (factory.any { it.family.isEmpty() }) listOf(OTHER) else emptyList())
+    }
+    val labels = remember(families) {
+        (if (families.isEmpty()) listOf("factory") else families) + "yours"
+    }
+    var tab by rememberSaveable(machine) { mutableStateOf(0) }
+    if (tab >= labels.size) tab = 0
+
+    val pages: List<@Composable () -> Unit> = labels.mapIndexed { i, label ->
+        {
+            if (i == labels.lastIndex) {
+                if (user.isEmpty()) {
+                    Text(
+                        "Nothing saved yet - \"save as…\" on the panel.",
+                        color = Acid.colors.textDim, fontSize = 12.sp,
+                    )
+                }
+                for (n in user) {
+                    DialogRow(mark = "◇", name = n, onRemove = { onDelete(n) }) { onLoad(n) }
+                }
+            } else {
+                val shown = if (families.isEmpty()) factory else {
+                    val want = families[i]
+                    factory.filter { if (want == OTHER) it.family.isEmpty() else it.family == want }
+                }
+                for (p in shown) DialogRow(mark = "◆", name = p.name) { onLoad(p.name) }
             }
         }
     }
+
+    TabbedDialog(
+        title = "$machine patches",
+        selected = tab,
+        onDismiss = onDismiss,
+        dismissLabel = "Close",
+        chips = { SectionChipsScrolling(labels, tab) { tab = it } },
+        pages = pages,
+    )
 }
+
+/** Where a factory patch with no `family=` of its own is shelved. */
+private const val OTHER = "other"
 
 /** What the export is doing; shown until dismissed so the result is read. */
 sealed class ExportState {

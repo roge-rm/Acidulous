@@ -87,7 +87,7 @@ fun EditScreen(
     /** The name, and the notes the keyboard was showing - the range a saved patch remembers. */
     onSavePatch: (name: String, low: Int, high: Int) -> Unit,
     onLoadPatch: (String) -> com.rm.acidulous.model.Patch?,
-    factoryPatchNames: () -> List<String> = { emptyList() },
+    factoryPatchNames: () -> List<com.rm.acidulous.model.Patch> = { emptyList() },
     userPatchNames: () -> List<String> = { emptyList() },
     onDeletePatch: (String) -> Unit = {},
     onImportSample: (track: Int, pad: Int) -> Unit = { _, _ -> },

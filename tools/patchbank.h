@@ -188,6 +188,12 @@ inline bool readBank(const std::string &path, Bank &bank, std::string &error) {
                 if (eq == std::string::npos) return fail("expected key=value, got '" + attr + "'");
                 const std::string k = attr.substr(0, eq), v = attr.substr(eq + 1);
                 if (k == "role") p.role = v;
+                // Every patch gets one. The browser shelves a bank by
+                // family, and a bank of fifty-one in one list is a list
+                // nobody reads to the end of - so a new bank without
+                // families is a bank nobody can find anything in. Aim for
+                // four to seven of them, three patches apiece at least: two
+                // patches is too thin to be worth a tab of its own.
                 else if (k == "family") p.family = v;
                 else if (k == "material") p.material = v;
                 else if (k == "input") p.input = v;
