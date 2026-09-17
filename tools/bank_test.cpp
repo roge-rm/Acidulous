@@ -72,18 +72,9 @@ const Known kKnown[] = {
     {"Nexus", "", "no bank yet - graphs have to be built on the device and exported"},
     {"Forage", "", "no bank yet - never had one"},
     {"Molt", "", "no bank yet - never had one"},
-    {"fx.Delay", "", "no bank yet - effects have never had presets"},
-    {"fx.Reverb", "", "no bank yet - effects have never had presets"},
-    {"fx.Eq", "", "no bank yet - effects have never had presets"},
-    {"fx.Distortion", "", "no bank yet - effects have never had presets"},
-    {"fx.Compressor", "", "no bank yet - effects have never had presets"},
-    {"fx.Filter", "", "no bank yet - effects have never had presets"},
-    {"fx.Bitcrusher", "", "no bank yet - effects have never had presets"},
-    {"fx.Phaser", "", "no bank yet - effects have never had presets"},
-    {"fx.Flanger", "", "no bank yet - effects have never had presets"},
-    // A patch whose every value is the default: it is Init under another
-    // name. Goes when Dice's bank is written.
-    {"Dice", "Straight", "sets nothing at all - identical to Init"},
+    // Everything else that was here has been written: fourteen effect banks,
+    // and Dice's Straight when it was a placeholder that set nothing. Three
+    // machines left, and then this list is empty and M45 is done.
 };
 
 constexpr size_t kKnownCount = sizeof(kKnown) / sizeof(kKnown[0]);

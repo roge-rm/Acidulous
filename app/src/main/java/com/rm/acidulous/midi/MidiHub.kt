@@ -176,7 +176,21 @@ object MidiHub {
         handler = Handler(worker!!.looper)
         refresh()
         manager?.registerDeviceCallback(object : MidiManager.DeviceCallback() {
-            override fun onDeviceAdded(device: MidiDeviceInfo) = refresh()
+            override fun onDeviceAdded(device: MidiDeviceInfo) {
+                // Plugged in while the app is running: open it. A controller
+                // you have just connected is a controller you want to play,
+                // and making somebody find a dialog to say so is a step that
+                // has no other possible answer. Dan: "any MIDI devices plugged
+                // in after the app is started are automatically enabled".
+                //
+                // Inputs only. Opening an *output* would start sending notes
+                // and clock to something the moment it appeared, which is a
+                // decision rather than a convenience.
+                if (device.outputPortCount > 0 && device.id !in declined) {
+                    open(device.id)
+                }
+                refresh()
+            }
             override fun onDeviceRemoved(device: MidiDeviceInfo) {
                 // Unplugged mid-note: nothing else will ever send the off.
                 releasePort(device.id)
@@ -432,13 +446,34 @@ object MidiHub {
 
     fun toggle(portId: Int) {
         if (opened.containsKey(portId)) {
+            // Switched off by hand. Remember that, or unplugging and plugging
+            // it back in would quietly turn it on again and the switch would
+            // look like it does not work.
+            declined += portId
             close(portId)
             return
         }
+        declined -= portId
+        open(portId)
+    }
+
+    /** Open a port for input, if it is there and not already open. */
+    private fun open(portId: Int) {
+        if (opened.containsKey(portId)) return
         val mgr = manager ?: return
         val info = @Suppress("DEPRECATION") mgr.devices.firstOrNull { it.id == portId } ?: return
+        if (info.outputPortCount <= 0) return
         mgr.openDevice(info, { device -> attach(portId, device) }, handler)
     }
+
+    /**
+     * Ports the user switched off by hand, so a hot-plug does not undo it.
+     *
+     * Only for this run: a device the user turned off and then physically
+     * unplugged and reconnected is a fresh decision, and the far commoner case
+     * is that they want it on.
+     */
+    private val declined = HashSet<Int>()
 
     private fun attach(portId: Int, device: MidiDevice?) {
         if (device == null) {

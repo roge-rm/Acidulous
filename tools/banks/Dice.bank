@@ -101,11 +101,16 @@ patch Stutter family=dice
   volume         0.68
 
 patch Drop family=dice
-  # Drop alone. A third of the triggers play nothing at all, and because the
-  # roll is per trigger the holes are somewhere else next time round. This is
-  # the die that makes a loop breathe.
+  # Drop alone. Half the triggers play nothing at all, and because the roll is
+  # per trigger the holes are somewhere else next time round. This is the die
+  # that makes a loop breathe.
+  #
+  # A half rather than a third, because a third was not enough to be the point
+  # of the patch: over the two bars bank_test plays, the dice rolled no drops
+  # at all and it came out byte-identical to Straight next door. A patch called
+  # Drop should be unmistakably dropping.
   slices         #14
-  drop           0.35
+  drop           0.5
   gate           1.0
   volume         1.01
 
