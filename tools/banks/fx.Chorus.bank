@@ -1,0 +1,81 @@
+# Chorus - voices, and a clock that will not hold still.
+#
+# `voices` is two, three or four taps, each swept at its own point in the LFO's
+# cycle and alternating across the image by `spread`. The extra is `drift`: a
+# slow random walk on each voice's delay, which is what a bucket-brigade line
+# does when its clock wanders. At nothing this is a clean digital chorus; at
+# the top no two voices agree about the tuning for long.
+#
+# Families: classic, voices, drift.
+
+machine fx.Chorus
+
+patch Init family=classic
+
+patch Ensemble family=classic
+  # Three voices, wide, moving slowly: the string-machine sound. The point is
+  # width rather than depth, so the modulation stays shallow and the spread
+  # does the work.
+  voices         #1
+  rate           #5
+  depth          0.35
+  spread         0.9
+  drift          0.1
+  mix            0.55
+  gain           3.9 dB
+
+patch Lush family=classic
+  # Four voices with more depth and a slower sweep. Thick enough that a single
+  # oscillator sounds like a section, which is the only honest use for this.
+  voices         #2
+  rate           #6
+  depth          0.6
+  spread         0.8
+  drift          0.2
+  mix            0.6
+  gain           3.9 dB
+
+patch Duo family=voices
+  # Two voices, hard apart, nearly no modulation: a doubler rather than a
+  # chorus. What you put on a part that should be wide and still in tune.
+  voices         #0
+  rate           #7
+  depth          0.15
+  spread         1.0
+  drift          0.05
+  mix            0.5
+  gain           4.8 dB
+
+patch Quartet family=voices
+  # Four voices at the sweep's fastest useful rate. Dense, and just short of
+  # the point where the modulation becomes a vibrato you can hear counting.
+  voices         #2
+  rate           #3
+  depth          0.5
+  spread         0.7
+  drift          0.15
+  gain           5.3 dB
+
+patch Tape family=drift
+  # The clock wandering the way tape does: the pitch is never wrong enough to
+  # name and never right for long. Depth low, because the drift is doing the
+  # moving.
+  voices         #1
+  rate           #6
+  depth          0.2
+  spread         0.6
+  drift          0.6
+  mix            0.5
+  gain           4.4 dB
+
+patch Seasick family=drift
+  # Drift at the top. Four voices each disagreeing about the tuning, none of
+  # them settling - past the point of being a chorus and into something that
+  # sounds broken on purpose.
+  voices         #2
+  rate           #7
+  depth          0.3
+  spread         0.9
+  drift          1.0
+  mix            0.6
+  gain           5.9 dB

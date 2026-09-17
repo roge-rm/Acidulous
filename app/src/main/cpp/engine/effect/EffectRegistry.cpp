@@ -18,6 +18,11 @@ const Entry kEntries[] = {
     {"Bitcrusher", make<effect::Bitcrusher>},
     {"Phaser", make<effect::Phaser>},
     {"Flanger", make<effect::Flanger>},
+    {"Chorus", make<effect::Chorus>},
+    {"Tremolo", make<effect::Tremolo>},
+    {"Width", make<effect::Width>},
+    {"Shifter", make<effect::Shifter>},
+    {"Harmonizer", make<effect::Harmonizer>},
 };
 constexpr int32_t kCount = sizeof(kEntries) / sizeof(kEntries[0]);
 

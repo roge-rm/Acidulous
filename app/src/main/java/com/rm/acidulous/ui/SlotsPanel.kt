@@ -21,6 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +51,7 @@ import com.rm.acidulous.model.withEffect
 import com.rm.acidulous.model.withEffectBypass
 import com.rm.acidulous.model.withEffectParam
 import com.rm.acidulous.ui.theme.Acid
+import kotlin.math.roundToInt
 
 /** What a slot panel edits: the track's insert effects or its eventors. */
 enum class SlotKind(
@@ -123,6 +128,11 @@ private fun SlotRow(
 ) {
     val fx = kind.at(track, slot)
     var menu by remember { mutableStateOf(false) }
+    // Per slot, and kept across a rotation, the same as a machine panel's.
+    // Two effects and an eventor can fill a phone between them, and most of
+    // the time what you want from a slot you are not editing is the one line
+    // that says what it is and whether it is on.
+    var minimized by rememberSaveable(kind.label, slot) { mutableStateOf(false) }
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (fixedType == null) Text("${kind.label}${slot + 1}", color = Acid.colors.teal, fontSize = 10.sp)
@@ -151,9 +161,14 @@ private fun SlotRow(
                     },
                     modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
                 ) { Text(if (on) "on" else "bypass", color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
+                Spacer(Modifier.weight(1f))
+                TextButton(
+                    onClick = { minimized = !minimized },
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                ) { Text(if (minimized) "\u25B4" else "\u25BE", color = Acid.colors.textMid, fontSize = 13.sp) }
             }
         }
-        if (!fx.isEmpty) SlotFace(kind, fx.type, trackIndex, slot, editor)
+        if (!fx.isEmpty && !minimized) SlotFace(kind, fx.type, trackIndex, slot, editor)
     }
 }
 
@@ -199,7 +214,16 @@ private fun SlotFace(kind: SlotKind, type: String, trackIndex: Int, slot: Int, e
                     p.curve == 2 && labels != null && labels.size <= 4 -> PanelSwitch(b, p.name, labels)
                     p.curve == 2 && labels != null -> Knob(
                         label = p.name, value = b.value(p.name), accent = accent,
-                        display = labels[p.map(b.value(p.name)).toInt().coerceIn(0, labels.size - 1)],
+                        // The step's *position* in the range, not its value.
+                        //
+                        // `p.map` gives the parameter in its own units, and
+                        // using that as a list index only works for a range
+                        // that starts at zero. The Harmonizer's `interval`
+                        // runs -7..7, so a default of +2 read `labels[2]` and
+                        // the knob said "-5". The normalised value is already
+                        // the position, which is what a list wants.
+                        display = labels[(b.value(p.name) * (labels.size - 1))
+                            .roundToInt().coerceIn(0, labels.size - 1)],
                         onStart = { b.start(p.name) }, onChange = { v -> b.change(p.name, v) }, onEnd = { b.end() },
                     )
                     else -> PanelKnob(b, p.name, accent = accent)
@@ -233,6 +257,12 @@ private fun ArpSteps(b: ParamBinding) {
 /** The "extra something" controls, drawn in the accent colour so they stand out from the classic set. */
 private val EXTRA = mapOf(
     "Delay" to setOf("duck", "wobble"),
+    "Reverb" to setOf("freeze", "gate", "shimmer", "bits", "crush", "wobble"),
+    "Chorus" to setOf("drift"),
+    "Tremolo" to setOf("pan", "skew"),
+    "Width" to setOf("below", "haas"),
+    "Shifter" to setOf("spread", "feedback"),
+    "Harmonizer" to setOf("scale", "key"),
     "Reverb" to setOf("freeze", "gate"),
     "Eq" to setOf("tilt"),
     "Distortion" to setOf("mode", "bias"),
@@ -288,6 +318,12 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     steps == 2 -> listOf("off", "on")
     name == "time" && type == "Delay" -> listOf("1/32", "1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2", "1")
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
+    // Scale degrees, not semitones - the whole point of the Harmonizer, so the
+    // knob should not read as a number of frets.
+    (name == "interval" || name == "interval2") && type == "Harmonizer" ->
+        (-7..7).map { if (it > 0) "+$it" else "$it" }
+    name == "shape" && type == "Tremolo" -> listOf("sine", "tri", "square")
+    name == "voices" && type == "Chorus" -> listOf("2", "3", "4")
     name == "mode" && type == "Filter" -> listOf("LP", "BP", "HP")
     name == "stages" -> listOf("2", "4", "6", "8")
     name == "pumprate" -> NOTE_RATES.take(4)

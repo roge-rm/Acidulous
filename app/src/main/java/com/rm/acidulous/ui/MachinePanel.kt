@@ -1152,6 +1152,12 @@ private fun CipherPanel(b: ParamBinding) {
                         PanelKnob(b, "pw", "width")
                         PanelKnob(b, "sub", "sub")
                         PanelKnob(b, "noise", "noise")
+                        // How much of the carrier is replaced by noise when the
+                        // modulator is unvoiced, which is what turns a sung
+                        // vowel into a whisper. It had no control at all until
+                        // an audit went looking: the Breath patch set it and no
+                        // player could reach it or put it back.
+                        PanelKnob(b, "unvoiced", "unvoiced", PanelAmber)
                         PanelKnob(b, "cardrive", "drive", PanelPink)
                     }
                     Group("envelope") {
