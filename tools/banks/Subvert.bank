@@ -93,7 +93,7 @@ patch Squelch  note=36 range=24..55
   accent         0.92
   slide          40 ms
   drive          0.22
-  volume         0.87
+  volume         0.90
 
 patch Rubber  note=36 range=24..55
   # A pulse instead of a saw, wide slide, and enough drive to round the peak
@@ -107,7 +107,7 @@ patch Rubber  note=36 range=24..55
   accent         0.8
   slide          130 ms
   drive          0.25
-  volume         0.71
+  volume         0.74
 
 patch "Long Sweep"  note=36 range=24..55
   # A decay far longer than a step, so the filter never closes and the line
@@ -132,7 +132,7 @@ patch "Slide Line"  note=36 range=24..55
   accent         0.7
   slide          420 ms
   drive          0.14
-  volume         0.90
+  volume         0.89
 
 patch Doorstop  note=36 range=24..55
   # Shut. Almost no cutoff, almost all envelope, and a decay short enough
@@ -144,7 +144,7 @@ patch Doorstop  note=36 range=24..55
   accent         0.85
   slide          25 ms
   drive          0.3
-  volume         0.95
+  volume         0.98
 
 patch Round  note=36 range=24..55
   # No resonance at all and no envelope: the note, warm, with the filter just
@@ -157,7 +157,7 @@ patch Round  note=36 range=24..55
   accent         0.35
   slide          45 ms
   drive          0.05
-  volume         1.00
+  volume         0.99
 
 patch "Open Saw"  note=36 range=24..55
   # The filter out of the way, so you can hear what it is doing to
@@ -169,7 +169,7 @@ patch "Open Saw"  note=36 range=24..55
   decay          500 ms
   accent         0.3
   drive          0.0
-  volume         1.00
+  volume         0.87
 
 patch Tick  note=36 range=24..55
   # The shortest thing the envelope can do: forty milliseconds, all of it
@@ -183,7 +183,7 @@ patch Tick  note=36 range=24..55
   accent         0.85
   slide          20 ms
   drive          0.18
-  volume         0.91
+  volume         0.92
 
 patch Wasp  note=48 range=36..67
   # The same idea carried up into the treble, where the resonance stops
@@ -196,7 +196,7 @@ patch Wasp  note=48 range=36..67
   accent         0.55
   slide          40 ms
   drive          0.1
-  volume         0.80
+  volume         0.75
 
 patch Crawl  note=24 range=24..48
   # Low, slow, and sliding most of the way: the line that moves underneath
@@ -209,7 +209,7 @@ patch Crawl  note=24 range=24..48
   accent         0.4
   slide          300 ms
   drive          0.12
-  volume         1.00
+  volume         1.32
 
 patch Talk  note=36 range=24..55
   # Envelope all the way up on a middling cutoff, so each note starts bright
@@ -222,7 +222,7 @@ patch Talk  note=36 range=24..55
   accent         0.7
   slide          70 ms
   drive          0.1
-  volume         0.91
+  volume         0.85
 
 patch Siren  note=36 range=24..55
   # Longer than Long Sweep by half again, with the resonance up: the filter
@@ -235,7 +235,7 @@ patch Siren  note=36 range=24..55
   accent         0.35
   slide          80 ms
   drive          0.14
-  volume         0.94
+  volume         0.93
 
 # --- Beyond ----------------------------------------------------------
 #
@@ -255,7 +255,7 @@ patch "Sub Hollow"  note=36 range=24..55
   decay          480 ms
   accent         0.5
   drive          0.08
-  volume         1.00
+  volume         0.91
 
 # Stops at 45: above that the cutoff at the floor leaves the sub with the
 # note only thirteen decibels behind it, and it is a sub no longer.
@@ -272,7 +272,7 @@ patch "Sub Drop"  note=36 range=24..45
   decay          900 ms
   accent         0.3
   drive          0.0
-  volume         1.00
+  volume         1.46
 
 patch "Band Squelch"  note=36 range=24..55
   # Band-pass: no bottom and no top, so what is left is the resonance itself.
@@ -286,7 +286,7 @@ patch "Band Squelch"  note=36 range=24..55
   decay          120 ms
   accent         0.9
   drive          0.55
-  volume         1.00
+  volume         1.50
 
 patch "Band Lead"  note=48 range=36..67
   # Band-pass with the resonance near the top, played an octave up. The
@@ -300,7 +300,7 @@ patch "Band Lead"  note=48 range=36..67
   accent         0.6
   slide          90 ms
   drive          0.35
-  volume         1.00
+  volume         1.26
 
 patch "Thin Ice"  note=48 range=36..67
   # Right at the top of the resonance with almost no envelope: it whistles on
@@ -311,7 +311,7 @@ patch "Thin Ice"  note=48 range=36..67
   decay          220 ms
   accent         0.4
   drive          0.05
-  volume         0.90
+  volume         0.76
 
 patch Buzzsaw  note=36 range=24..55
   # Filter nearly out of the way and the drive doing the work. Not acid at
@@ -323,7 +323,7 @@ patch Buzzsaw  note=36 range=24..55
   decay          400 ms
   accent         0.55
   drive          0.85
-  volume         1.00
+  volume         0.91
 
 patch "Hollow Pulse"  note=36 range=24..55
   # The pulse squeezed almost shut. A narrow pulse is all odd harmonics and
@@ -339,7 +339,7 @@ patch "Hollow Pulse"  note=36 range=24..55
   accent         0.6
   slide          55 ms
   drive          0.12
-  volume         1.00
+  volume         1.06
 
 patch Screamer  note=36 range=24..55
   # Drive at the top with the resonance still up, which the original could
@@ -353,7 +353,7 @@ patch Screamer  note=36 range=24..55
   accent         0.8
   slide          45 ms
   drive          1
-  volume         1.00
+  volume         0.87
 
 patch Ghost  note=48 range=36..67
   # Band-pass with the resonance low and the decay long: no bottom, no top
@@ -370,7 +370,7 @@ patch Ghost  note=48 range=36..67
   accent         0.3
   slide          180 ms
   drive          0.1
-  volume         1.00
+  volume         1.50
 
 patch "Octave Down"  note=48 range=36..60
   # The tuning control put a whole octave down with the sub underneath it.
@@ -385,7 +385,7 @@ patch "Octave Down"  note=48 range=36..60
   accent         0.5
   slide          60 ms
   drive          0.1
-  volume         1.00
+  volume         1.06
 
 # A fixed band on a moving note: below the tenor register the band sits
 # thirty-five harmonics above the fundamental and there is no note left in
@@ -405,7 +405,7 @@ patch Reed  note=48 range=36..67
   accent         0.55
   slide          90 ms
   drive          0.25
-  volume         1.00
+  volume         1.41
 
 patch Grind  note=36 range=24..48
   # Sub most of the way up, cutoff low, drive high. The distortion is working
@@ -420,7 +420,7 @@ patch Grind  note=36 range=24..48
   decay          600 ms
   accent         0.6
   drive          0.9
-  volume         1.00
+  volume         0.98
 
 # Same again, higher: a band at 2600 Hz has nothing to say about a note at
 # 100.
@@ -436,7 +436,7 @@ patch Glass  note=60 range=49..79
   accent         0.3
   slide          35 ms
   drive          0.05
-  volume         0.74
+  volume         0.62
 
 patch Wide  note=36 range=24..55
   # A square and the sub together with the filter well out of the way: no
@@ -452,7 +452,7 @@ patch Wide  note=36 range=24..55
   accent         0.4
   slide          50 ms
   drive          0.06
-  volume         1.00
+  volume         1.02
 
 patch Rasp  note=36 range=24..55
   # Mid-range, half driven, resonance only half up: the filter is shaping
@@ -464,7 +464,7 @@ patch Rasp  note=36 range=24..55
   accent         0.6
   slide          45 ms
   drive          0.7
-  volume         1.00
+  volume         0.92
 
 patch Pluck  note=36 range=24..55
   # No resonance, a very short decay and a little drive: the filter closes
@@ -478,4 +478,4 @@ patch Pluck  note=36 range=24..55
   accent         0.5
   slide          30 ms
   drive          0.3
-  volume         0.93
+  volume         0.95

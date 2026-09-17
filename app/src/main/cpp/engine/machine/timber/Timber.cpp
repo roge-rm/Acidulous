@@ -6,6 +6,17 @@
 
 namespace acidulous::machine {
 
+// What this machine's signal reaches before its drive stage, and so the level
+// that stage should treat as nominal. Measured, not guessed: after volume x1.4; peak -22.4 dB.
+// A nominal above what the signal reaches puts the whole sound on the steep
+// part of the curve, where the knob is a volume control again.
+constexpr float kNominal = 0.076f;
+// Where this bank sits in the volume knob's travel. It was an unnamed 1.4,
+// which left Init 2.3 dB under the line its own patches sit on once Init is
+// auditioned at a note the instrument actually plays - the 8.8 dB gap this
+// started from was mostly the harness measuring Init outside the range.
+constexpr float kHouse = 1.82f;
+
 /** How long a pad takes to close, in seconds. */
 constexpr float kKeyClick = 0.004f;
 /**
@@ -402,11 +413,15 @@ bool Timber::render(float *L, float *R, int32_t frames) {
     }
 
     for (int32_t i = 0; i < frames; ++i) {
-        float l = L[i] * volume * 1.4f, r = R[i] * volume * 1.4f;
+        float l = L[i] * volume * kHouse, r = R[i] * volume * kHouse;
         if (drive > 0.0001f) {
             const float k = 1.0f + drive * 8.0f;
-            l = dsp::fastTanh(l * k) / std::sqrt(k);
-            r = dsp::fastTanh(r * k) / std::sqrt(k);
+            // Normalised on the nominal level. `/ sqrt(k)` boosts a quiet
+            // signal by up to ten decibels and holds a loud one ten below,
+            // so the knob moved the level rather than the character.
+            const float norm = kNominal / dsp::fastTanh(kNominal * k);
+            l = dsp::fastTanh(l * k) * norm;
+            r = dsp::fastTanh(r * k) * norm;
         }
         L[i] = l * panL * 1.4142f;
         R[i] = r * panR * 1.4142f;

@@ -7,6 +7,10 @@
 // brightness. Resonance lives on the first stage.
 namespace acidulous::dsp {
 
+// The level a drive stage should treat as nominal: what the signal reaching it
+// actually reaches, rather than full scale or the curve's own ceiling.
+constexpr float kDriveNominal = 0.3f;
+
 class MultiFilter {
   public:
     enum Type : int32_t { LP6, LP12, LP18, LP24, HP6, HP12, HP18, HP24, BP6, BP12, Notch, Peak, TypeCount };
@@ -58,8 +62,29 @@ class MultiFilter {
         if (drive == Clean || driveAmount <= 0.0f) return x;
         const float g = 1.0f + driveAmount * 24.0f;
         switch (drive) {
-        case Valve: return fastTanh(x * g) / std::sqrt(g);
-        case Diode: return (fastTanh(x * g + 0.35f) - 0.336f) / std::sqrt(g);
+        // Normalised on a nominal level, not by 1/sqrt(g).
+        //
+        // `tanh(x * g) / sqrt(g)` is a see-saw, not a drive: for a small
+        // signal the tanh is near-linear, so the whole thing reduces to
+        // x * sqrt(g) - a *boost* of up to ten decibels - while a large one is
+        // held at a ceiling of 1/sqrt(g), ten decibels down. The knob changes
+        // the level far more than the character, in opposite directions
+        // depending on how loud the signal already is, which is an extreme
+        // compressor with a tone control attached. Resonance's coupling loop
+        // oscillated for exactly this reason: nine decibels of hidden gain
+        // handed to small signals inside a feedback path.
+        //
+        // Divide by the curve's own response at a nominal level instead, so a
+        // signal of that size comes out the size it went in.
+        case Valve: return fastTanh(x * g) * (kDriveNominal / fastTanh(kDriveNominal * g));
+        case Diode: {
+            // The bias offset is taken back out before normalising, or the DC
+            // it adds is what gets scaled.
+            const float bias = fastTanh(0.35f);
+            const float at = fastTanh(kDriveNominal * g + 0.35f) - bias;
+            const float norm = at > 1e-6f ? kDriveNominal / at : 1.0f;
+            return (fastTanh(x * g + 0.35f) - bias) * norm;
+        }
         case Clip: return clampf(x * g, -1.0f, 1.0f) / std::sqrt(g);
         case Fold: { const float t = x * g * 0.25f + 0.25f; return (4.0f * std::fabs(t - std::floor(t + 0.5f)) - 1.0f) / std::sqrt(g); }
         default: { // Crush: bit reduction, harsher the more drive

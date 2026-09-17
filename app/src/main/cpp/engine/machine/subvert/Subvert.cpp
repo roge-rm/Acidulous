@@ -3,6 +3,12 @@
 
 namespace acidulous::machine {
 
+// What this machine's signal reaches before its drive stage, and so the level
+// that stage should treat as nominal. Measured, not guessed: at the oscillator, before volume x kHouse.
+// A nominal above what the signal reaches puts the whole sound on the steep
+// part of the curve, where the knob is a volume control again.
+constexpr float kNominal = 0.45f;
+
 namespace {
 
 /**
@@ -31,7 +37,11 @@ const ParamDef kDefs[Subvert::Count] = {
     {"accent", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
     {"slide", 5.0f, 500.0f, 60.0f, Curve::Exponential, 0, "ms"},
     {"drive", 0.0f, 1.0f, 0.1f, Curve::Linear, 0, ""},
-    {"volume", 0.0f, 1.0f, 0.8f, Curve::Linear, 0, ""},
+    // To 1.5, as most machines do. Twenty-nine patches here set drive, and
+    // correcting the drive law took the level that law had been adding for
+    // free - three of them then sat six decibels under the bank with the
+    // knob already against a stop at 1.0.
+    {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
     {"pw", 0.05f, 0.95f, 0.5f, Curve::Linear, 0, ""},          // pulse width, pulse wave only
     {"sub", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},           // square an octave down
     {"mode", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},         // 0 lowpass, 1 bandpass
@@ -164,7 +174,14 @@ bool Subvert::render(float *L, float * /*R*/, int32_t frames) {
     }
 
     const float driveGain = 1.0f + drive * 7.0f;
-    const float driveComp = 1.0f / (1.0f + drive * 1.5f);
+    // Normalised on the nominal level rather than by a guessed divisor.
+    //
+    // `1 / (1 + drive * 1.5)` against a gain of `1 + drive * 7` hands a small
+    // signal about eleven decibels at the top of the knob and caps a loud one
+    // at four tenths - the same shape Cipher's output drive had. Twenty-nine
+    // patches in this bank set drive, more than any machine but Manual, so it
+    // is the one where this mattered most.
+    const float driveComp = kNominal / dsp::fastTanh(kNominal * driveGain);
 
     for (int32_t i = 0; i < frames; ++i) {
         if (gliding) {

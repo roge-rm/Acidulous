@@ -6,6 +6,12 @@
 
 namespace acidulous::machine {
 
+// What this machine's signal reaches before its drive stage, and so the level
+// that stage should treat as nominal. Measured, not guessed: after volume x kHouse; peak -16.4 dB.
+// A nominal above what the signal reaches puts the whole sound on the steep
+// part of the curve, where the knob is a volume control again.
+constexpr float kNominal = 0.09f;
+
 using formulate::Program;
 using formulate::Vars;
 
@@ -362,7 +368,8 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
         float s = dcPrev * volume * kHouse;
         if (drive > 0.0001f) {
             const float k = 1.0f + drive * 12.0f;
-            s = dsp::fastTanh(s * k) / std::sqrt(k);
+            // Normalised on the nominal level; `/ sqrt(k)` was a see-saw.
+            s = dsp::fastTanh(s * k) * (kNominal / dsp::fastTanh(kNominal * k));
         }
         L[i] = s * panL * 1.4142f;
         R[i] = s * panR * 1.4142f;

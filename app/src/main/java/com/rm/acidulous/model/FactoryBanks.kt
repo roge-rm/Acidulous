@@ -30,63 +30,63 @@ internal object FactoryBanks {
     private fun subvert0() = Patch("Subvert", "Init", emptyMap())
 
     private fun subvert1() = Patch("Subvert", "Classic",
-        mapOf("cutoff" to 0.408023566f, "resonance" to 0.72f, "envmod" to 0.64f, "decay" to 0.4850184f, "accent" to 0.75f, "slide" to 0.5f, "drive" to 0.16f, "volume" to 0.88f),
+        mapOf("cutoff" to 0.408023566f, "resonance" to 0.72f, "envmod" to 0.64f, "decay" to 0.4850184f, "accent" to 0.75f, "slide" to 0.5f, "drive" to 0.16f, "volume" to 0.586666644f),
         low = 24, high = 55)
 
     private fun subvert2() = Patch("Subvert", "Squelch",
-        mapOf("cutoff" to 0.369967341f, "resonance" to 0.9f, "envmod" to 0.85f, "decay" to 0.318411052f, "accent" to 0.92f, "slide" to 0.451545f, "drive" to 0.22f, "volume" to 0.87f),
+        mapOf("cutoff" to 0.369967341f, "resonance" to 0.9f, "envmod" to 0.85f, "decay" to 0.318411052f, "accent" to 0.92f, "slide" to 0.451545f, "drive" to 0.22f, "volume" to 0.599999964f),
         low = 24, high = 55)
 
     private fun subvert3() = Patch("Subvert", "Rubber",
-        mapOf("wave" to 1f, "cutoff" to 0.350310653f, "resonance" to 0.75f, "envmod" to 0.7f, "decay" to 0.349485f, "accent" to 0.8f, "slide" to 0.7074866f, "drive" to 0.25f, "volume" to 0.71f, "pw" to 0.4111111f),
+        mapOf("wave" to 1f, "cutoff" to 0.350310653f, "resonance" to 0.75f, "envmod" to 0.7f, "decay" to 0.349485f, "accent" to 0.8f, "slide" to 0.7074866f, "drive" to 0.25f, "volume" to 0.49333334f, "pw" to 0.4111111f),
         low = 24, high = 55)
 
     private fun subvert4() = Patch("Subvert", "Long Sweep",
-        mapOf("cutoff" to 0.26369825f, "resonance" to 0.72f, "envmod" to 0.95f, "decay" to 0.863499343f, "accent" to 0.45f, "drive" to 0.15f, "volume" to 0.91f),
+        mapOf("cutoff" to 0.26369825f, "resonance" to 0.72f, "envmod" to 0.95f, "decay" to 0.863499343f, "accent" to 0.45f, "drive" to 0.15f, "volume" to 0.6066667f),
         low = 24, high = 55)
 
     private fun subvert5() = Patch("Subvert", "Slide Line",
-        mapOf("cutoff" to 0.39470154f, "resonance" to 0.68f, "envmod" to 0.6f, "decay" to 0.468926072f, "accent" to 0.7f, "slide" to 0.9621396f, "drive" to 0.14f, "volume" to 0.9f),
+        mapOf("cutoff" to 0.39470154f, "resonance" to 0.68f, "envmod" to 0.6f, "decay" to 0.468926072f, "accent" to 0.7f, "slide" to 0.9621396f, "drive" to 0.14f, "volume" to 0.5933333f),
         low = 24, high = 55)
 
     private fun subvert6() = Patch("Subvert", "Doorstop",
-        mapOf("cutoff" to 0.14217411f, "envmod" to 1f, "decay" to 0.238560632f, "accent" to 0.85f, "slide" to 0.349485f, "drive" to 0.3f, "volume" to 0.95f),
+        mapOf("cutoff" to 0.14217411f, "envmod" to 1f, "decay" to 0.238560632f, "accent" to 0.85f, "slide" to 0.349485f, "drive" to 0.3f, "volume" to 0.653333366f),
         low = 24, high = 55)
 
     private fun subvert7() = Patch("Subvert", "Round",
-        mapOf("cutoff" to 0.4496927f, "resonance" to 0f, "envmod" to 0f, "accent" to 0.35f, "slide" to 0.477121264f, "drive" to 0.05f, "volume" to 1f),
+        mapOf("cutoff" to 0.4496927f, "resonance" to 0f, "envmod" to 0f, "accent" to 0.35f, "slide" to 0.477121264f, "drive" to 0.05f, "volume" to 0.66f),
         low = 24, high = 55)
 
     private fun subvert8() = Patch("Subvert", "Open Saw",
-        mapOf("cutoff" to 0.9495629f, "resonance" to 0.05f, "envmod" to 0f, "decay" to 0.610924363f, "accent" to 0.3f, "drive" to 0f, "volume" to 1f),
+        mapOf("cutoff" to 0.9495629f, "resonance" to 0.05f, "envmod" to 0f, "decay" to 0.610924363f, "accent" to 0.3f, "drive" to 0f, "volume" to 0.58f),
         low = 24, high = 55)
 
     private fun subvert9() = Patch("Subvert", "Tick",
-        mapOf("cutoff" to 0.3212923f, "resonance" to 0.8f, "envmod" to 1f, "decay" to 0.08804563f, "accent" to 0.85f, "slide" to 0.30102998f, "drive" to 0.18f, "volume" to 0.91f),
+        mapOf("cutoff" to 0.3212923f, "resonance" to 0.8f, "envmod" to 1f, "decay" to 0.08804563f, "accent" to 0.85f, "slide" to 0.30102998f, "drive" to 0.18f, "volume" to 0.613333344f),
         low = 24, high = 55)
 
     private fun subvert10() = Patch("Subvert", "Wasp",
-        mapOf("cutoff" to 0.6673927f, "resonance" to 0.88f, "envmod" to 0.4f, "decay" to 0.389075637f, "accent" to 0.55f, "slide" to 0.451545f),
+        mapOf("cutoff" to 0.6673927f, "resonance" to 0.88f, "envmod" to 0.4f, "decay" to 0.389075637f, "accent" to 0.55f, "slide" to 0.451545f, "volume" to 0.5f),
         low = 36, high = 67)
 
     private fun subvert11() = Patch("Subvert", "Crawl",
-        mapOf("cutoff" to 0.192611188f, "resonance" to 0.7f, "envmod" to 0.85f, "decay" to 0.7821357f, "accent" to 0.4f, "slide" to 0.889075637f, "drive" to 0.12f, "volume" to 1f),
+        mapOf("cutoff" to 0.192611188f, "resonance" to 0.7f, "envmod" to 0.85f, "decay" to 0.7821357f, "accent" to 0.4f, "slide" to 0.889075637f, "drive" to 0.12f, "volume" to 0.880000055f),
         low = 24, high = 48)
 
     private fun subvert12() = Patch("Subvert", "Talk",
-        mapOf("cutoff" to 0.480530232f, "resonance" to 0.6f, "envmod" to 1f, "decay" to 0.5271788f, "accent" to 0.7f, "slide" to 0.573064f, "volume" to 0.91f),
+        mapOf("cutoff" to 0.480530232f, "resonance" to 0.6f, "envmod" to 1f, "decay" to 0.5271788f, "accent" to 0.7f, "slide" to 0.573064f, "volume" to 0.566666663f),
         low = 24, high = 55)
 
     private fun subvert13() = Patch("Subvert", "Siren",
-        mapOf("cutoff" to 0.13215296f, "resonance" to 0.9f, "envmod" to 1f, "decay" to 0.9689261f, "accent" to 0.35f, "slide" to 0.60205996f, "drive" to 0.14f, "volume" to 0.94f),
+        mapOf("cutoff" to 0.13215296f, "resonance" to 0.9f, "envmod" to 1f, "decay" to 0.9689261f, "accent" to 0.35f, "slide" to 0.60205996f, "drive" to 0.14f, "volume" to 0.62f),
         low = 24, high = 55)
 
     private fun subvert14() = Patch("Subvert", "Sub Hollow",
-        mapOf("wave" to 1f, "cutoff" to 0.298880249f, "resonance" to 0.38f, "envmod" to 0.3f, "decay" to 0.60205996f, "accent" to 0.5f, "drive" to 0.08f, "volume" to 1f, "pw" to 0.211111113f, "sub" to 0.65f),
+        mapOf("wave" to 1f, "cutoff" to 0.298880249f, "resonance" to 0.38f, "envmod" to 0.3f, "decay" to 0.60205996f, "accent" to 0.5f, "drive" to 0.08f, "volume" to 0.6066667f, "pw" to 0.211111113f, "sub" to 0.65f),
         low = 24, high = 55)
 
     private fun subvert15() = Patch("Subvert", "Sub Drop",
-        mapOf("wave" to 1f, "cutoff" to 0.0981131f, "resonance" to 0.2f, "envmod" to 0.1f, "decay" to 0.7385606f, "accent" to 0.3f, "drive" to 0f, "volume" to 1f, "sub" to 1f),
+        mapOf("wave" to 1f, "cutoff" to 0.0981131f, "resonance" to 0.2f, "envmod" to 0.1f, "decay" to 0.7385606f, "accent" to 0.3f, "drive" to 0f, "volume" to 0.973333359f, "sub" to 1f),
         low = 24, high = 45)
 
     private fun subvert16() = Patch("Subvert", "Band Squelch",
@@ -94,23 +94,23 @@ internal object FactoryBanks {
         low = 24, high = 55)
 
     private fun subvert17() = Patch("Subvert", "Band Lead",
-        mapOf("cutoff" to 0.588843942f, "resonance" to 0.93f, "envmod" to 0.45f, "decay" to 0.411954373f, "slide" to 0.627636254f, "drive" to 0.35f, "volume" to 1f, "mode" to 1f),
+        mapOf("cutoff" to 0.588843942f, "resonance" to 0.93f, "envmod" to 0.45f, "decay" to 0.411954373f, "slide" to 0.627636254f, "drive" to 0.35f, "volume" to 0.84f, "mode" to 1f),
         low = 36, high = 67)
 
     private fun subvert18() = Patch("Subvert", "Thin Ice",
-        mapOf("cutoff" to 0.623331666f, "resonance" to 0.97f, "envmod" to 0.15f, "decay" to 0.432650715f, "accent" to 0.4f, "drive" to 0.05f, "volume" to 0.9f),
+        mapOf("cutoff" to 0.623331666f, "resonance" to 0.97f, "envmod" to 0.15f, "decay" to 0.432650715f, "accent" to 0.4f, "drive" to 0.05f, "volume" to 0.50666666f),
         low = 36, high = 67)
 
     private fun subvert19() = Patch("Subvert", "Buzzsaw",
-        mapOf("cutoff" to 0.7682668f, "resonance" to 0.25f, "envmod" to 0.25f, "decay" to 0.562469363f, "accent" to 0.55f, "drive" to 0.85f, "volume" to 1f),
+        mapOf("cutoff" to 0.7682668f, "resonance" to 0.25f, "envmod" to 0.25f, "decay" to 0.562469363f, "accent" to 0.55f, "drive" to 0.85f, "volume" to 0.6066667f),
         low = 24, high = 55)
 
     private fun subvert20() = Patch("Subvert", "Hollow Pulse",
-        mapOf("wave" to 1f, "decay" to 0.432650715f, "slide" to 0.520696342f, "drive" to 0.12f, "volume" to 1f, "pw" to 0.03333333f),
+        mapOf("wave" to 1f, "decay" to 0.432650715f, "slide" to 0.520696342f, "drive" to 0.12f, "volume" to 0.706666648f, "pw" to 0.03333333f),
         low = 24, high = 55)
 
     private fun subvert21() = Patch("Subvert", "Screamer",
-        mapOf("cutoff" to 0.480530232f, "resonance" to 0.8f, "envmod" to 0.75f, "decay" to 0.451545f, "accent" to 0.8f, "slide" to 0.477121264f, "drive" to 1f, "volume" to 1f),
+        mapOf("cutoff" to 0.480530232f, "resonance" to 0.8f, "envmod" to 0.75f, "decay" to 0.451545f, "accent" to 0.8f, "slide" to 0.477121264f, "drive" to 1f, "volume" to 0.58f),
         low = 24, high = 55)
 
     private fun subvert22() = Patch("Subvert", "Ghost",
@@ -118,31 +118,31 @@ internal object FactoryBanks {
         low = 36, high = 67)
 
     private fun subvert23() = Patch("Subvert", "Octave Down",
-        mapOf("tune" to 0f, "cutoff" to 0.353257328f, "resonance" to 0.5f, "envmod" to 0.45f, "decay" to 0.573064f, "accent" to 0.5f, "volume" to 1f, "sub" to 0.55f),
+        mapOf("tune" to 0f, "cutoff" to 0.353257328f, "resonance" to 0.5f, "envmod" to 0.45f, "decay" to 0.573064f, "accent" to 0.5f, "volume" to 0.706666648f, "sub" to 0.55f),
         low = 36, high = 60)
 
     private fun subvert24() = Patch("Subvert", "Reed",
-        mapOf("wave" to 1f, "cutoff" to 0.4496927f, "resonance" to 0.7f, "decay" to 0.551331162f, "accent" to 0.55f, "slide" to 0.627636254f, "drive" to 0.25f, "volume" to 1f, "pw" to 0.9444444f, "mode" to 1f),
+        mapOf("wave" to 1f, "cutoff" to 0.4496927f, "resonance" to 0.7f, "decay" to 0.551331162f, "accent" to 0.55f, "slide" to 0.627636254f, "drive" to 0.25f, "volume" to 0.94f, "pw" to 0.9444444f, "mode" to 1f),
         low = 36, high = 67)
 
     private fun subvert25() = Patch("Subvert", "Grind",
-        mapOf("cutoff" to 0.273177415f, "resonance" to 0.4f, "envmod" to 0.35f, "decay" to 0.650515f, "drive" to 0.9f, "volume" to 1f, "sub" to 0.4f),
+        mapOf("cutoff" to 0.273177415f, "resonance" to 0.4f, "envmod" to 0.35f, "decay" to 0.650515f, "drive" to 0.9f, "volume" to 0.653333366f, "sub" to 0.4f),
         low = 24, high = 48)
 
     private fun subvert26() = Patch("Subvert", "Glass",
-        mapOf("cutoff" to 0.731863f, "resonance" to 0.99f, "envmod" to 0.08f, "decay" to 0.468926072f, "accent" to 0.3f, "slide" to 0.422549f, "drive" to 0.05f, "volume" to 0.74f, "mode" to 1f),
+        mapOf("cutoff" to 0.731863f, "resonance" to 0.99f, "envmod" to 0.08f, "decay" to 0.468926072f, "accent" to 0.3f, "slide" to 0.422549f, "drive" to 0.05f, "volume" to 0.413333327f, "mode" to 1f),
         low = 49, high = 79)
 
     private fun subvert27() = Patch("Subvert", "Wide",
-        mapOf("wave" to 1f, "cutoff" to 0.5458685f, "resonance" to 0.15f, "envmod" to 0.1f, "decay" to 0.6839884f, "accent" to 0.4f, "slide" to 0.5f, "drive" to 0.06f, "volume" to 1f, "sub" to 1f),
+        mapOf("wave" to 1f, "cutoff" to 0.5458685f, "resonance" to 0.15f, "envmod" to 0.1f, "decay" to 0.6839884f, "accent" to 0.4f, "slide" to 0.5f, "drive" to 0.06f, "volume" to 0.68f, "sub" to 1f),
         low = 24, high = 55)
 
     private fun subvert28() = Patch("Subvert", "Rasp",
-        mapOf("cutoff" to 0.5810506f, "resonance" to 0.5f, "envmod" to 0.3f, "decay" to 0.411954373f, "slide" to 0.477121264f, "drive" to 0.7f, "volume" to 1f),
+        mapOf("cutoff" to 0.5810506f, "resonance" to 0.5f, "envmod" to 0.3f, "decay" to 0.411954373f, "slide" to 0.477121264f, "drive" to 0.7f, "volume" to 0.613333344f),
         low = 24, high = 55)
 
     private fun subvert29() = Patch("Subvert", "Pluck",
-        mapOf("cutoff" to 0.635427654f, "resonance" to 0.05f, "envmod" to 0.55f, "decay" to 0.282135725f, "accent" to 0.5f, "slide" to 0.389075637f, "drive" to 0.3f, "volume" to 0.93f),
+        mapOf("cutoff" to 0.635427654f, "resonance" to 0.05f, "envmod" to 0.55f, "decay" to 0.282135725f, "accent" to 0.5f, "slide" to 0.389075637f, "drive" to 0.3f, "volume" to 0.6333333f),
         low = 24, high = 55)
 
     private val subvert: List<Patch> by lazy { listOf(subvert0(), subvert1(), subvert2(), subvert3(), subvert4(), subvert5(), subvert6(), subvert7(), subvert8(), subvert9(), subvert10(), subvert11(), subvert12(), subvert13(), subvert14(), subvert15(), subvert16(), subvert17(), subvert18(), subvert19(), subvert20(), subvert21(), subvert22(), subvert23(), subvert24(), subvert25(), subvert26(), subvert27(), subvert28(), subvert29()) }
@@ -1200,63 +1200,63 @@ internal object FactoryBanks {
     private fun brazen0() = Patch("Brazen", "Init", emptyMap())
 
     private fun brazen1() = Patch("Brazen", "Tuba",
-        mapOf("size" to 0.03f, "bell" to 0.922222257f, "lipdamp" to 0.444444418f, "pressure" to 0.88f, "breath" to 0f, "bite" to 0.9f, "brass" to 0.62f, "release" to 0.622157753f, "vibrato" to 0.0333333351f, "cutoff" to 0.462117672f, "fine" to 0.63f, "volume" to 0.6666667f),
+        mapOf("size" to 0.03f, "bell" to 0.922222257f, "lipdamp" to 0.444444418f, "pressure" to 0.88f, "breath" to 0f, "bite" to 0.9f, "brass" to 0.62f, "release" to 0.622157753f, "vibrato" to 0.0333333351f, "cutoff" to 0.462117672f, "fine" to 0.63f, "volume" to 0.473333329f),
         low = 29, high = 53)
 
     private fun brazen2() = Patch("Brazen", "Bass Trombone",
-        mapOf("size" to 0.16f, "bell" to 0.7888889f, "lipdamp" to 0.5f, "pressure" to 0.88f, "breath" to 0.03f, "bite" to 0.88f, "brass" to 0.68f, "attack" to 0.43367663f, "vibrato" to 0.06666667f, "cutoff" to 0.6161569f, "glide" to 0.09f, "fine" to 0.65f, "volume" to 0.6666667f),
+        mapOf("size" to 0.16f, "bell" to 0.7888889f, "lipdamp" to 0.5f, "pressure" to 0.88f, "breath" to 0.03f, "bite" to 0.88f, "brass" to 0.68f, "attack" to 0.43367663f, "vibrato" to 0.06666667f, "cutoff" to 0.6161569f, "glide" to 0.09f, "fine" to 0.65f, "volume" to 0.466666669f),
         low = 34, high = 58)
 
     private fun brazen3() = Patch("Brazen", "Trombone",
-        mapOf("size" to 0.3f, "bell" to 0.6777778f, "lipdamp" to 0.5555556f, "pressure" to 0.88f, "breath" to 0.04f, "bite" to 0.82f, "brass" to 0.72f, "attack" to 0.382042676f, "vibrato" to 0.0833333358f, "cutoff" to 0.715336f, "glide" to 0.12f, "fine" to 0.68f, "volume" to 0.6666667f),
+        mapOf("size" to 0.3f, "bell" to 0.6777778f, "lipdamp" to 0.5555556f, "pressure" to 0.88f, "breath" to 0.04f, "bite" to 0.82f, "brass" to 0.72f, "attack" to 0.382042676f, "vibrato" to 0.0833333358f, "cutoff" to 0.715336f, "glide" to 0.12f, "fine" to 0.68f, "volume" to 0.426666647f),
         low = 40, high = 67)
 
     private fun brazen4() = Patch("Brazen", "Horn",
-        mapOf("size" to 0.34f, "bell" to 0.8333334f, "lipdamp" to 0.4111111f, "pressure" to 0.85f, "breath" to 0.05f, "bite" to 0.78f, "brass" to 0.6f, "width" to 0.5f, "attack" to 0.450727522f, "release" to 0.655539453f, "vibrato" to 0.1f, "cutoff" to 0.7062641f, "fine" to 0.62f, "volume" to 0.6666667f),
+        mapOf("size" to 0.34f, "bell" to 0.8333334f, "lipdamp" to 0.4111111f, "pressure" to 0.85f, "breath" to 0.05f, "bite" to 0.78f, "brass" to 0.6f, "width" to 0.5f, "attack" to 0.450727522f, "release" to 0.655539453f, "vibrato" to 0.1f, "cutoff" to 0.7062641f, "fine" to 0.62f, "volume" to 0.413333327f),
         low = 41, high = 72)
 
     private fun brazen5() = Patch("Brazen", "Flugel",
-        mapOf("size" to 0.55f, "bell" to 0.7444445f, "lipdamp" to 0.444444418f, "pressure" to 0.82f, "breath" to 0.05f, "bite" to 0.7f, "brass" to 0.55f, "attack" to 0.392030418f, "vibrato" to 0.0833333358f, "fine" to 0.57f, "volume" to 0.6666667f),
+        mapOf("size" to 0.55f, "bell" to 0.7444445f, "lipdamp" to 0.444444418f, "pressure" to 0.82f, "breath" to 0.05f, "bite" to 0.7f, "brass" to 0.55f, "attack" to 0.392030418f, "vibrato" to 0.0833333358f, "fine" to 0.57f, "volume" to 0.406666666f),
         low = 52, high = 77)
 
     private fun brazen6() = Patch("Brazen", "Cornet",
-        mapOf("size" to 0.72f, "bell" to 0.6333333f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.72f, "brass" to 0.62f, "attack" to 0.347130865f, "vibrato" to 0.116666667f, "fine" to 0.61f, "volume" to 0.6666667f),
+        mapOf("size" to 0.72f, "bell" to 0.6333333f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.72f, "brass" to 0.62f, "attack" to 0.347130865f, "vibrato" to 0.116666667f, "fine" to 0.61f, "volume" to 0.393333316f),
         low = 52, high = 77)
 
     private fun brazen7() = Patch("Brazen", "Trumpet",
-        mapOf("size" to 0.95f, "bell" to 0.5888889f, "lipdamp" to 0.6333333f, "pressure" to 0.9f, "breath" to 0.08f, "bite" to 0.6f, "brass" to 0.78f, "attack" to 0.28169933f, "vibrato" to 0.13333334f, "vibratodelay" to 0.25f, "volume" to 0.66f),
+        mapOf("size" to 0.95f, "bell" to 0.5888889f, "lipdamp" to 0.6333333f, "pressure" to 0.9f, "breath" to 0.08f, "bite" to 0.6f, "brass" to 0.78f, "attack" to 0.28169933f, "vibrato" to 0.13333334f, "vibratodelay" to 0.25f, "volume" to 0.38f),
         low = 52, high = 82)
 
     private fun brazen8() = Patch("Brazen", "Piccolo",
-        mapOf("size" to 1f, "bell" to 0.655555546f, "lipdamp" to 0.7222222f, "pressure" to 0.98f, "breath" to 0.1f, "bite" to 0.75f, "brass" to 0.9f, "attack" to 0.200686663f, "vibrato" to 0.1f, "fine" to 0.61f, "volume" to 0.6466667f),
+        mapOf("size" to 1f, "bell" to 0.655555546f, "lipdamp" to 0.7222222f, "pressure" to 0.98f, "breath" to 0.1f, "bite" to 0.75f, "brass" to 0.9f, "attack" to 0.200686663f, "vibrato" to 0.1f, "fine" to 0.61f, "volume" to 0.373333335f),
         low = 64, high = 91)
 
     private fun brazen9() = Patch("Brazen", "Straight Mute",
-        mapOf("size" to 0.9f, "bell" to 0.544444442f, "mute" to 0.333333343f, "mutetone" to 0.7f, "pressure" to 0.85f, "breath" to 0.09f, "bite" to 0.6f, "brass" to 0.7f, "attack" to 0.30102998f, "cutoff" to 0.6765892f, "volume" to 0.6666667f),
+        mapOf("size" to 0.9f, "bell" to 0.544444442f, "mute" to 0.333333343f, "mutetone" to 0.7f, "pressure" to 0.85f, "breath" to 0.09f, "bite" to 0.6f, "brass" to 0.7f, "attack" to 0.30102998f, "cutoff" to 0.6765892f, "volume" to 0.706666648f),
         low = 52, high = 82)
 
     private fun brazen10() = Patch("Brazen", "Cup Mute",
-        mapOf("size" to 0.82f, "bell" to 0.7666667f, "mute" to 0.6666667f, "mutetone" to 0.3f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.82f, "brass" to 0.66f, "attack" to 0.371314436f, "cutoff" to 0.6161569f, "fine" to 0.66f, "volume" to 0.6666667f),
+        mapOf("size" to 0.82f, "bell" to 0.7666667f, "mute" to 0.6666667f, "mutetone" to 0.3f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.82f, "brass" to 0.66f, "attack" to 0.371314436f, "cutoff" to 0.6161569f, "fine" to 0.66f, "volume" to 0.4333333f),
         low = 52, high = 82)
 
     private fun brazen11() = Patch("Brazen", "Harmon",
-        mapOf("size" to 0.95f, "bell" to 0.5f, "mute" to 1f, "mutetone" to 0.65f, "pressure" to 0.86f, "breath" to 0.12f, "bite" to 0.55f, "brass" to 0.62f, "attack" to 0.3333333f, "cutoff" to 0.715336f, "volume" to 0.6666667f),
+        mapOf("size" to 0.95f, "bell" to 0.5f, "mute" to 1f, "mutetone" to 0.65f, "pressure" to 0.86f, "breath" to 0.12f, "bite" to 0.55f, "brass" to 0.62f, "attack" to 0.3333333f, "cutoff" to 0.715336f, "volume" to 0.78f),
         low = 52, high = 82)
 
     private fun brazen12() = Patch("Brazen", "Section",
-        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.85f, "breath" to 0.05f, "bite" to 0.7f, "brass" to 0.6f, "players" to 1f, "spread" to 0.233333334f, "scatter" to 0.183333337f, "lock" to 0.88f, "drift" to 0.16f, "attack" to 0.450727522f, "cutoff" to 0.66574645f, "fine" to 0.56f, "volume" to 0.49333334f),
+        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.85f, "breath" to 0.05f, "bite" to 0.7f, "brass" to 0.6f, "players" to 1f, "spread" to 0.233333334f, "scatter" to 0.183333337f, "lock" to 0.88f, "drift" to 0.16f, "attack" to 0.450727522f, "cutoff" to 0.66574645f, "fine" to 0.56f, "volume" to 0.286666662f),
         low = 55, high = 79)
 
     private fun brazen13() = Patch("Brazen", "Shambles",
-        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.78f, "brass" to 0.6f, "players" to 1f, "spread" to 0.8f, "scatter" to 0.7083333f, "lock" to 0.03f, "drift" to 0.76f, "width" to 1f, "attack" to 0.5146893f, "cutoff" to 0.6869274f, "fine" to 0.77f, "volume" to 0.326666683f),
+        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.78f, "brass" to 0.6f, "players" to 1f, "spread" to 0.8f, "scatter" to 0.7083333f, "lock" to 0.03f, "drift" to 0.76f, "width" to 1f, "attack" to 0.5146893f, "cutoff" to 0.6869274f, "fine" to 0.77f, "volume" to 0.186666667f),
         low = 55, high = 79)
 
     private fun brazen14() = Patch("Brazen", "Growl",
-        mapOf("size" to 0.86f, "bell" to 0.566666663f, "lipdamp" to 0.7f, "pressure" to 0.92f, "breath" to 0.07f, "bite" to 0.65f, "brass" to 0.85f, "growl" to 0.75f, "growlrate" to 0.5775205f, "attack" to 0.3180808f, "fine" to 0.6f, "drive" to 0.28f, "volume" to 0.5466667f),
+        mapOf("size" to 0.86f, "bell" to 0.566666663f, "lipdamp" to 0.7f, "pressure" to 0.92f, "breath" to 0.07f, "bite" to 0.65f, "brass" to 0.85f, "growl" to 0.75f, "growlrate" to 0.5775205f, "attack" to 0.3180808f, "fine" to 0.6f, "drive" to 0.28f, "volume" to 0.5733333f),
         low = 55, high = 77)
 
     private fun brazen15() = Patch("Brazen", "Fanfare",
-        mapOf("size" to 1f, "bell" to 0.6333333f, "lipdamp" to 0.7f, "pressure" to 0.93f, "breath" to 0.07f, "bite" to 0.8f, "brass" to 1f, "players" to 0.333333343f, "spread" to 0.15f, "lock" to 0.9f, "attack" to 0.232989982f, "vibrato" to 0.06666667f, "fine" to 0.64f, "volume" to 0.5466667f),
+        mapOf("size" to 1f, "bell" to 0.6333333f, "lipdamp" to 0.7f, "pressure" to 0.93f, "breath" to 0.07f, "bite" to 0.8f, "brass" to 1f, "players" to 0.333333343f, "spread" to 0.15f, "lock" to 0.9f, "attack" to 0.232989982f, "vibrato" to 0.06666667f, "fine" to 0.64f, "volume" to 0.313333333f),
         low = 55, high = 79)
 
     private val brazen: List<Patch> by lazy { listOf(brazen0(), brazen1(), brazen2(), brazen3(), brazen4(), brazen5(), brazen6(), brazen7(), brazen8(), brazen9(), brazen10(), brazen11(), brazen12(), brazen13(), brazen14(), brazen15()) }
@@ -1264,39 +1264,39 @@ internal object FactoryBanks {
     private fun timber0() = Patch("Timber", "Init", emptyMap())
 
     private fun timber1() = Patch("Timber", "Clarinet",
-        mapOf("breath" to 0.1f, "keys" to 0.2f, "attack" to 0.3333333f, "fine" to 0.61f, "volume" to 0.6666667f),
+        mapOf("breath" to 0.1f, "keys" to 0.2f, "attack" to 0.3333333f, "fine" to 0.61f, "volume" to 0.553333342f),
         low = 52, high = 76)
 
     private fun timber2() = Patch("Timber", "Bass Clarinet",
-        mapOf("body" to 0.318022f, "lattice" to 0.401896f, "embouchure" to 0.3846154f, "pressure" to 0.6923077f, "breath" to 0.16f, "tongue" to 0.6f, "keys" to 0.35f, "fine" to 0.63f, "volume" to 0.6666667f),
+        mapOf("body" to 0.318022f, "lattice" to 0.401896f, "embouchure" to 0.3846154f, "pressure" to 0.6923077f, "breath" to 0.16f, "tongue" to 0.6f, "keys" to 0.35f, "fine" to 0.63f, "volume" to 0.653333366f),
         low = 40, high = 62)
 
     private fun timber3() = Patch("Timber", "Alto Sax",
-        mapOf("bore" to 1f, "body" to 0.5439642f, "lattice" to 0.3667258f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to 0.2916871f, "vibrato" to 0.15f, "fine" to 0.59f, "volume" to 0.49333334f),
+        mapOf("bore" to 1f, "body" to 0.5439642f, "lattice" to 0.3667258f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to 0.2916871f, "vibrato" to 0.15f, "fine" to 0.59f, "volume" to 0.38f),
         low = 50, high = 74)
 
     private fun timber4() = Patch("Timber", "Oboe",
-        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.7287489f, "lattice" to 0.558787048f, "embouchure" to 0.3076923f, "pressure" to 0.7307693f, "breath" to 0.08f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0.2f, "fine" to 0.58f, "volume" to 0.366666675f),
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.7287489f, "lattice" to 0.558787048f, "embouchure" to 0.3076923f, "pressure" to 0.7307693f, "breath" to 0.08f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0.2f, "fine" to 0.58f, "volume" to 0.28f),
         low = 60, high = 84)
 
     private fun timber5() = Patch("Timber", "Bassoon",
-        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.2361563f, "lattice" to 0.282834977f, "embouchure" to 0.353846163f, "pressure" to 0.6923077f, "keys" to 0.4f, "attack" to 0.365636677f, "fine" to 0.6f, "volume" to 0.6666667f),
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.2361563f, "lattice" to 0.282834977f, "embouchure" to 0.353846163f, "pressure" to 0.6923077f, "keys" to 0.4f, "attack" to 0.365636677f, "fine" to 0.6f, "volume" to 0.5733333f),
         low = 36, high = 60)
 
     private fun timber6() = Patch("Timber", "Flute",
-        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.615384638f, "breath" to 0.45f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to 0.43367663f, "vibrato" to 0.18f, "volume" to 0.2f),
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.615384638f, "breath" to 0.45f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to 0.43367663f, "vibrato" to 0.18f, "volume" to 0.153333336f),
         low = 62, high = 86)
 
     private fun timber7() = Patch("Timber", "Pan Pipe",
-        mapOf("family" to 1f, "body" to 0.6671323f, "lattice" to 0.665089548f, "pressure" to 0.538461566f, "breath" to 0.6f, "jet" to 0.350000024f, "aim" to 0.5625f, "tongue" to 0.2f, "attack" to 0.492373765f, "volume" to 0.473333329f),
+        mapOf("family" to 1f, "body" to 0.6671323f, "lattice" to 0.665089548f, "pressure" to 0.538461566f, "breath" to 0.6f, "jet" to 0.350000024f, "aim" to 0.5625f, "tongue" to 0.2f, "attack" to 0.492373765f, "volume" to 0.366666675f),
         low = 57, high = 79)
 
     private fun timber8() = Patch("Timber", "Stopped Wood",
-        mapOf("body" to 0.461817741f, "lattice" to 0.282834977f, "holes" to 0.5f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "cutoff" to 0.66574645f, "fine" to 0.64f, "drive" to 0.2f, "volume" to 0.24666667f),
+        mapOf("body" to 0.461817741f, "lattice" to 0.282834977f, "holes" to 0.5f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "cutoff" to 0.66574645f, "fine" to 0.64f, "drive" to 0.2f, "volume" to 0.313333333f),
         low = 46, high = 68)
 
     private fun timber9() = Patch("Timber", "Forked",
-        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.581818163f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "fine" to 0.52f, "volume" to 0.233333334f),
+        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.581818163f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "fine" to 0.52f, "volume" to 0.18f),
         low = 52, high = 74)
 
     private val timber: List<Patch> by lazy { listOf(timber0(), timber1(), timber2(), timber3(), timber4(), timber5(), timber6(), timber7(), timber8(), timber9()) }
@@ -1386,31 +1386,31 @@ internal object FactoryBanks {
     private fun filament0() = Patch("Filament", "Init", emptyMap())
 
     private fun filament1() = Patch("Filament", "Nylon",
-        mapOf("position" to 0.5416667f, "grit" to 0.6f, "length" to 0.120000787f, "sustain" to 0.727f, "tone" to 0.4f, "detune" to 0.1f, "couple" to 0.3f, "size" to 0.55f, "bodymix" to 0.45f, "volume" to 1f),
+        mapOf("position" to 0.5416667f, "grit" to 0.6f, "length" to 0.120000787f, "sustain" to 0.727f, "tone" to 0.4f, "detune" to 0.1f, "couple" to 0.3f, "size" to 0.55f, "bodymix" to 0.45f, "volume" to 0.6666667f),
         low = 40, high = 76)
 
     private fun filament2() = Patch("Filament", "Steel",
-        mapOf("exciter" to 0.2f, "position" to 0.25000003f, "sustain" to 0.807f, "tone" to 0.5f, "stiffness" to 0.18f, "detune" to 0.12f, "couple" to 0.4f, "size" to 0.4f, "bodymix" to 0.4f, "drive" to 0.12f, "volume" to 1f),
+        mapOf("exciter" to 0.2f, "position" to 0.25000003f, "sustain" to 0.807f, "tone" to 0.5f, "stiffness" to 0.18f, "detune" to 0.12f, "couple" to 0.4f, "size" to 0.4f, "bodymix" to 0.4f, "drive" to 0.12f, "volume" to 0.8866667f),
         low = 40, high = 79)
 
     private fun filament3() = Patch("Filament", "Hammered",
-        mapOf("exciter" to 0.4f, "hardness" to 0.55f, "length" to 0.04999988f, "sustain" to 0.943f, "tone" to 0.5f, "stiffness" to 0.55f, "stages" to 1f, "tension" to 0.3f, "couple" to 0.5f, "sympathy" to 1f, "symtune" to 1f, "symlevel" to 0.25f, "size" to 0.3f, "bodymix" to 0.3f, "volume" to 0.41f),
+        mapOf("exciter" to 0.4f, "hardness" to 0.55f, "length" to 0.04999988f, "sustain" to 0.943f, "tone" to 0.5f, "stiffness" to 0.55f, "stages" to 1f, "tension" to 0.3f, "couple" to 0.5f, "sympathy" to 1f, "symtune" to 1f, "symlevel" to 0.25f, "size" to 0.3f, "bodymix" to 0.3f, "volume" to 0.226666674f),
         low = 36, high = 84)
 
     private fun filament4() = Patch("Filament", "Bowed",
-        mapOf("exciter" to 0.6f, "position" to 0.18f, "pressure" to 0.85f, "speed" to 0.8f, "grit" to 0.3f, "sustain" to 0.454f, "tone" to 0.4f, "bodymix" to 0.4f, "volume" to 0.2f, "velocity" to 0.4f),
+        mapOf("exciter" to 0.6f, "position" to 0.18f, "pressure" to 0.85f, "speed" to 0.8f, "grit" to 0.3f, "sustain" to 0.454f, "tone" to 0.4f, "bodymix" to 0.4f, "volume" to 0.113333337f, "velocity" to 0.4f),
         low = 36, high = 76)
 
     private fun filament5() = Patch("Filament", "Blown",
-        mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 0.64f),
+        mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 0.353333324f),
         low = 48, high = 82)
 
     private fun filament6() = Patch("Filament", "Sympathy",
-        mapOf("tone" to 0.5f, "sympathy" to 1f, "symtune" to 0.8f, "symlevel" to 0.7f, "symsustain" to 0.786f, "symwide" to 0.8f, "volume" to 0.81f, "on release" to 0f),
+        mapOf("tone" to 0.5f, "sympathy" to 1f, "symtune" to 0.8f, "symlevel" to 0.7f, "symsustain" to 0.786f, "symwide" to 0.8f, "volume" to 0.453333348f, "on release" to 0f),
         low = 45, high = 81)
 
     private fun filament7() = Patch("Filament", "Prepared",
-        mapOf("exciter" to 0.4f, "sustain" to 0.727f, "tone" to 0.6f, "stiffness" to 0.3f, "stages" to 0.75f, "damper" to 0.4f, "rattle" to 0.55f, "rattle at" to 0.2f, "drive" to 0.2f, "volume" to 0.22f),
+        mapOf("exciter" to 0.4f, "sustain" to 0.727f, "tone" to 0.6f, "stiffness" to 0.3f, "stages" to 0.75f, "damper" to 0.4f, "rattle" to 0.55f, "rattle at" to 0.2f, "drive" to 0.2f, "volume" to 0.166666672f),
         low = 36, high = 76)
 
     private fun filament8() = Patch("Filament", "Spoken To",
@@ -1418,7 +1418,7 @@ internal object FactoryBanks {
         low = 36, high = 72)
 
     private fun filament9() = Patch("Filament", "Wire",
-        mapOf("exciter" to 0.2f, "position" to 0.05f, "sustain" to 0.907f, "tone" to 0.85f, "stiffness" to 0.85f, "stages" to 1f, "tension" to 0.8f, "rattle" to 0.3f, "detune" to 0.6f, "couple" to 0.8f, "drive" to 0.3f, "volume" to 0.58f),
+        mapOf("exciter" to 0.2f, "position" to 0.05f, "sustain" to 0.907f, "tone" to 0.85f, "stiffness" to 0.85f, "stages" to 1f, "tension" to 0.8f, "rattle" to 0.3f, "detune" to 0.6f, "couple" to 0.8f, "drive" to 0.3f, "volume" to 0.5733333f),
         low = 52, high = 88)
 
     private val filament: List<Patch> by lazy { listOf(filament0(), filament1(), filament2(), filament3(), filament4(), filament5(), filament6(), filament7(), filament8(), filament9()) }

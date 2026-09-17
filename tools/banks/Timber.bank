@@ -95,16 +95,20 @@ machine Timber
 # sound all the way down.
 role    tune
 
-patch Init
+# Auditioned at middle C rather than wherever the harness would otherwise put
+# it: every other patch here declares its own note and range, and without one
+# Init was being measured in a dead spot of the bore - 6 dB down on note 60 for
+# the sake of two semitones, which read as a broken house level and was not.
+patch Init  note=60
 
 patch Clarinet  note=62 range=52..76
   attack         0.02 s
   breath         0.1
   keys           0.2
-  volume         0.96
+  volume         0.80
 
   fine           11 cents
-  volume         1.00
+  volume         0.83
 patch "Bass Clarinet"  note=50 range=40..62
   body           73.4 Hz
   breath         0.16
@@ -113,10 +117,10 @@ patch "Bass Clarinet"  note=50 range=40..62
   lattice        1000 Hz
   pressure       0.9
   tongue         0.6
-  volume         1.00
+  volume         0.98
 
   fine           13 cents
-  volume         1.00
+  volume         0.98
 patch "Alto Sax"  note=60 range=50..74
   attack         0.015 s
   body           138.6 Hz
@@ -128,10 +132,10 @@ patch "Alto Sax"  note=60 range=50..74
   pressure       0.95
   tongue         0.75
   vibrato        9 cents
-  volume         0.75
+  volume         0.58
 
   fine           9 cents
-  volume         0.74
+  volume         0.57
 patch Oboe  note=70 range=60..84
   attack         0.012 s
   body           233.1 Hz
@@ -144,10 +148,10 @@ patch Oboe  note=70 range=60..84
   pressure       0.95
   tongue         0.8
   vibrato        12 cents
-  volume         0.70
+  volume         0.57
 
   fine           8 cents
-  volume         0.55
+  volume         0.42
 patch Bassoon  note=46 range=36..60
   attack         0.025 s
   body           58.3 Hz
@@ -161,10 +165,10 @@ patch Bassoon  note=46 range=36..60
   keys           0.4
   lattice        700 Hz
   pressure       0.9
-  volume         1.00
+  volume         0.86
 
   fine           10 cents
-  volume         1.00
+  volume         0.86
 patch Flute  note=72 range=62..86
   attack         0.04 s
   body           261.6 Hz
@@ -176,9 +180,9 @@ patch Flute  note=72 range=62..86
   pressure       0.8
   tongue         0.35
   vibrato        10.8 cents
-  volume         0.76
+  volume         0.62
 
-  volume         0.30
+  volume         0.23
 patch "Pan Pipe"  note=67 range=57..79
   aim            0.1
   attack         0.06 s
@@ -189,9 +193,9 @@ patch "Pan Pipe"  note=67 range=57..79
   lattice        2200 Hz
   pressure       0.7
   tongue         0.2
-  volume         0.70
+  volume         0.55
 
-  volume         0.71
+  volume         0.55
 patch "Stopped Wood"  note=55 range=46..68
   answer         0.385
   attack         0.05 s
@@ -210,10 +214,10 @@ patch "Stopped Wood"  note=55 range=46..68
   lattice        700 Hz
   pressure       1
   tongue         0.5
-  volume         0.76
+  volume         0.97
 
   fine           14 cents
-  volume         0.37
+  volume         0.47
 patch Forked  note=62 range=52..74
   # 0.4675, seeded from what shipped, is past the point where the fork
   # stops being a colour and becomes a note the tube cannot hold: it read
@@ -230,7 +234,7 @@ patch Forked  note=62 range=52..74
   lattice        1200 Hz
   pressure       1
   tongue         0.6
-  volume         0.77
+  volume         0.59
 
   fine           2 cents
-  volume         0.35
+  volume         0.27

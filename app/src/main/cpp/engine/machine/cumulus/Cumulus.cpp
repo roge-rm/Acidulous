@@ -6,6 +6,12 @@
 
 namespace acidulous::machine {
 
+// What this machine's signal reaches before its drive stage, and so the level
+// that stage should treat as nominal. Measured, not guessed: after volume; peak -8.0 dB.
+// A nominal above what the signal reaches puts the whole sound on the steep
+// part of the curve, where the knob is a volume control again.
+constexpr float kNominal = 0.12f;
+
 using cumulus::CloudSet;
 using cumulus::CloudTable;
 
@@ -391,8 +397,12 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
         float l = L[i] * volume, r = R[i] * volume;
         if (drive > 0.0001f) {
             const float k = 1.0f + drive * 8.0f;
-            l = dsp::fastTanh(l * k) / std::sqrt(k);
-            r = dsp::fastTanh(r * k) / std::sqrt(k);
+            // Normalised on the nominal level. `/ sqrt(k)` boosts a quiet
+            // signal by up to ten decibels and holds a loud one ten below,
+            // so the knob moved the level rather than the character.
+            const float norm = kNominal / dsp::fastTanh(kNominal * k);
+            l = dsp::fastTanh(l * k) * norm;
+            r = dsp::fastTanh(r * k) * norm;
         }
         L[i] = l * panL * 1.4142f;
         R[i] = r * panR * 1.4142f;

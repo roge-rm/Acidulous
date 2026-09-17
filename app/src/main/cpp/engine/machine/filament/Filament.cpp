@@ -5,6 +5,12 @@
 #include <cstring>
 
 namespace acidulous::machine {
+
+// What this machine's signal reaches before its drive stage, and so the level
+// that stage should treat as nominal. Measured, not guessed: before volume 0.8; peak -8.6 dB.
+// A nominal above what the signal reaches puts the whole sound on the steep
+// part of the curve, where the knob is a volume control again.
+constexpr float kNominal = 0.14f;
 using namespace dsp;
 
 namespace {
@@ -82,7 +88,10 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
         lin(BodyDamp, "bodydamp", 0.0f, 1.0f, 0.5f);
 
         lin(Drive, "drive", 0.0f, 1.0f, 0.1f);
-        lin(Volume, "volume", 0.0f, 1.0f, 0.8f);
+        // To 1.5, for the same reason Subvert's was raised: the drive law
+        // had been supplying level it should not have been, and Steel could
+        // not get it back from a knob that stopped at 1.0.
+        lin(Volume, "volume", 0.0f, 1.5f, 0.8f);
         lin(Pan, "pan", -1.0f, 1.0f, 0.0f);
         lin(Dry, "exciter out", 0.0f, 1.0f, 0.0f);
 
@@ -640,8 +649,12 @@ bool Filament::render(float *L, float *R, int32_t frames) {
         outL += exciterOut * dry;
         outR += exciterOut * dry;
         if (drive > 0.0f) {
-            outL = std::tanh(outL * (1.0f + drive * 8.0f));
-            outR = std::tanh(outR * (1.0f + drive * 8.0f));
+            // Normalised. This had no compensation at all, so turning the
+            // knob up thinned the string and quietened it at the same time.
+            const float k = 1.0f + drive * 8.0f;
+            const float norm = kNominal / std::tanh(kNominal * k);
+            outL = std::tanh(outL * k) * norm;
+            outR = std::tanh(outR * k) * norm;
         }
         L[n] = outL * volume;
         R[n] = outR * volume;
