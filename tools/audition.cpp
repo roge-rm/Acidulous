@@ -849,10 +849,22 @@ std::string defaultMaterial(const std::string &machine) {
 std::string defaultInput(const std::string &machine) {
     // A vocoder on a steady vowel tells you nothing: the band map only shows
     // what it does when what goes through it moves.
-    // Twelve seconds of synthetic speech, low-pitched and moving. A recording
-    // of a real voice is better still and `--input file:<path>` takes one, but
-    // a repository is the wrong place to keep somebody's voice.
-    if (machine == "Cipher") return "speech";
+    // A real recording when this machine has one, and synthetic speech when it
+    // does not.
+    //
+    // A vocoder voiced on synthetic speech is voiced on the wrong thing: the
+    // fricatives here are a couple of hundred milliseconds of band-passed
+    // noise where a real "s" is fifty and has a shape, so they read as bursts
+    // of static rather than as consonants. But a repository is the wrong place
+    // to keep somebody's voice, so the file is named in tools/local.env, which
+    // is untracked, and anyone without it gets `speechPhrase()` instead. The
+    // levels that ship are the ones a real voice produced; the harness still
+    // runs for anyone who has only the synthetic one.
+    if (machine == "Cipher") {
+        const char *file = std::getenv("ACIDULOUS_INPUT_FILE");
+        if (file != nullptr && *file != '\0') return std::string("file:") + file;
+        return "speech";
+    }
     return "none";
 }
 

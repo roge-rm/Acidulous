@@ -37,6 +37,20 @@ if [ ! -x "$BIN/audition" ] || [ "$ROOT/tools/audition.cpp" -nt "$BIN/audition" 
     g++ -O2 -std=c++17 -I "$CPP" "$ROOT/tools/audition.cpp" "$LIB" -o "$BIN/audition" || exit 1
 fi
 
+# A real recording on the input bus, for the machines that want one.
+#
+# tools/local.env can name a file the repository does not contain:
+#
+#   ACIDULOUS_INPUT_FILE=/home/you/acidulous-material/voice.wav
+#
+# Cipher is levelled against a real voice, because a vocoder voiced on
+# synthetic speech is voiced on the wrong thing - but a repository is the wrong
+# place to keep somebody's voice, so the file stays outside it and the harness
+# falls back to `speechPhrase()` when there is none. What that costs is
+# reproducibility of the exact numbers; what it buys is a bank levelled against
+# speech that has real consonants in it.
+export ACIDULOUS_INPUT_FILE="${ACIDULOUS_INPUT_FILE:-}"
+
 # The tool's own --out wins, so only supply one when the caller did not.
 want_out=1
 for a in "$@"; do [ "$a" = "--out" ] && want_out=0; done

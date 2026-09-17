@@ -46,7 +46,7 @@ patch Classic family=classic
   sibilance      0.5
   mix            0.25
   detune         8 c
-  volume         0.72
+  volume         1.19
 
 patch Choir family=classic
   # The same machine made to sound like people rather than a machine: more
@@ -61,7 +61,7 @@ patch Choir family=classic
   sub            0.1
   ampatk         0.08 s
   amprel         0.6 s
-  volume         0.76
+  volume         1.66
 
 patch Ensemble family=classic
   # Thick: the detune at its widest with a sub under it, which is what stops a
@@ -72,7 +72,7 @@ patch Ensemble family=classic
   detune         45 c
   sub            0.45
   "wave b"         #2
-  volume         1.18
+  volume         1.09
 
 patch Narrow family=classic
   # Few bands over a narrow range. Cheap, gritty - and *more* intelligible
@@ -86,7 +86,7 @@ patch Narrow family=classic
   attack         0.002 s
   release        0.05 s
   sibilance      0.6
-  volume         0.67
+  volume         1.91
 
 patch Backwards family=remap
   # The bank reversed: the lowest band of the analysis drives the highest of
@@ -98,7 +98,7 @@ patch Backwards family=remap
   release        0.08 s
   mix            0.5
   sub            0.25
-  volume         2.00
+  volume         1.80
 
 patch Mirror family=remap
   # Mirrored about the middle of the bank rather than end-swapped, so the
@@ -107,7 +107,7 @@ patch Mirror family=remap
   bands          #20
   remap          #2
   release        0.08 s
-  volume         0.73
+  volume         0.98
 
 patch Folded family=remap
   # Folded, so the top and the bottom of the bank share bands. Congested on
@@ -117,7 +117,7 @@ patch Folded family=remap
   remap          #5
   release        0.1 s
   q              0.5
-  volume         0.72
+  volume         1.00
 
 patch Comb family=remap
   # Odd bands against even. Hollow and phasey - speech through a grille - and
@@ -127,7 +127,7 @@ patch Comb family=remap
   remap          #3
   release        0.07 s
   q              0.5
-  volume         0.80
+  volume         1.76
 
 patch Shuffled family=remap
   # A seeded scramble: arbitrary, but the *same* arbitrary every time, so it
@@ -137,7 +137,7 @@ patch Shuffled family=remap
   remap          #4
   seed           #7
   release        0.08 s
-  volume         1.87
+  volume         0.98
 
 patch Chipmunk family=formant
   # The synthesis bank read an octave up while the carrier stays where it is:
@@ -146,7 +146,7 @@ patch Chipmunk family=formant
   bands          #20
   shift          7
   release        0.07 s
-  volume         0.97
+  volume         0.65
 
 patch Giant family=formant
   # The same idea downward: a large throat, the same note. Below about a fifth
@@ -156,7 +156,7 @@ patch Giant family=formant
   shift          -7
   release        0.09 s
   sub            0.3
-  volume         1.82
+  volume         0.83
 
 patch Stretched family=formant
   # The bank's spacing warped wider, so the bands are read further apart than
@@ -165,7 +165,7 @@ patch Stretched family=formant
   bands          #24
   stretch        0.5
   release        0.08 s
-  volume         2.00
+  volume         1.35
 
 patch Squashed family=formant
   # Spacing narrowed instead: everything crowded into the middle of the
@@ -175,7 +175,7 @@ patch Squashed family=formant
   stretch        -0.5
   release        0.08 s
   sibilance      0.55
-  volume         2.00
+  volume         0.74
 
 patch "Held Vowel" family=hold
   # Freeze on: the measured shape is held, so one vowel sustains for as long
@@ -187,7 +187,7 @@ patch "Held Vowel" family=hold
   release        0.4 s
   ampatk         0.15 s
   amprel         1.5 s
-  volume         0.59
+  volume         0.66
 
 patch Morph family=hold
   # Frozen, but morphing against the live input rather than ignoring it: half
@@ -199,7 +199,7 @@ patch Morph family=hold
   frzmorph       0.5
   frzdecay       6 s
   release        0.2 s
-  volume         0.65
+  volume         0.82
 
 patch "Trail Up" family=hold
   # Smear positive: the release is scaled across the bank so the top lets go
@@ -209,7 +209,7 @@ patch "Trail Up" family=hold
   smear          0.8
   release        0.5 s
   q              0.5
-  volume         0.63
+  volume         0.99
 
 patch "Trail Down" family=hold
   # Smear the other way: the bottom decays first and a bright ghost is left
@@ -217,7 +217,7 @@ patch "Trail Down" family=hold
   bands          #28
   smear          -0.8
   release        0.5 s
-  volume         0.57
+  volume         0.70
 
 patch Pulse family=carrier
   # A narrow pulse carrier. Nasal and reedy, with the odd harmonics a pulse
@@ -229,7 +229,7 @@ patch Pulse family=carrier
   pw             0.12
   mix            0.0
   release        0.06 s
-  volume         0.54
+  volume         1.55
 
 patch "Sub Heavy" family=carrier
   # Weighted low, with the bank's bottom brought down to meet it: chest rather
@@ -240,7 +240,7 @@ patch "Sub Heavy" family=carrier
   sub            0.8
   mix            0.3
   release        0.1 s
-  volume         2.00
+  volume         0.58
 
 patch Breath family=carrier
   # A noise carrier with the unvoiced path open: whispered, with no pitch at
@@ -267,7 +267,7 @@ patch Ring family=carrier
   mix            0.5
   detune         25 c
   release        0.07 s
-  volume         0.60
+  volume         1.47
 
 patch Talkbox family=extreme
   # Narrow, resonant bands and the carrier following the speaker's own pitch:
@@ -281,7 +281,7 @@ patch Talkbox family=extreme
   attack         0.002 s
   release        0.05 s
   sibilance      0.55
-  volume         0.47
+  volume         0.80
 
 patch Tracked family=extreme
   # Tracking without the resonance: a clean vocoder whose carrier is tuned by
@@ -293,7 +293,7 @@ patch Tracked family=extreme
   trackglide     0.06 s
   release        0.08 s
   mix            0.45
-  volume         0.82
+  volume         1.09
 
 patch Runaway family=extreme
   # A vocoder listening to itself. The output goes back into the analysis, so
@@ -304,7 +304,7 @@ patch Runaway family=extreme
   fbtone         0.6
   release        0.25 s
   q              0.6
-  volume         0.54
+  volume         0.97
 
 patch Swapped family=extreme
   # The roles reversed: what is plugged in becomes the carrier and the
@@ -316,7 +316,7 @@ patch Swapped family=extreme
   release        0.05 s
   attack         0.003 s
   mix            0.5
-  volume         0.91
+  volume         1.21
 
 patch Gated family=extreme
   # The band gate hard: a band quieter than the threshold is shut entirely
@@ -329,4 +329,4 @@ patch Gated family=extreme
   attack         0.001 s
   release        0.03 s
   sibilance      0.6
-  volume         0.69
+  volume         1.33

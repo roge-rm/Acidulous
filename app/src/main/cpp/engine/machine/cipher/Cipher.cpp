@@ -23,7 +23,7 @@ constexpr float kSibilanceMakeup = 2.0f;
 // bands normalised the machine no longer runs permanently saturated, so it
 // needs a house level like every other machine rather than a tanh holding it
 // down.
-constexpr float kHouse = 0.76f;
+constexpr float kHouse = 0.94f;
 // The volume knob's top, named once so the knob and the clamp that guards it
 // cannot drift apart again.
 constexpr float kVolumeMax = 2.0f;
