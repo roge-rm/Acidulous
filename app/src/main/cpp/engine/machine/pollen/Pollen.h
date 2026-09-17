@@ -99,6 +99,12 @@ class Pollen final : public Machine {
         double playhead = 0.0;   // where this voice is reading, in frames
         double scanOffset = 0.0; // how far the scan has carried it from the base
         float timer = 0.0f;    // frames until the next grain
+        /** This voice's envelope right now, for the grains it owns to read.
+         *  The pool is global and rendered in one pass, so a grain cannot
+         *  see the voice loop's local - and it has to read the envelope
+         *  *now* rather than the value it was born under, or a long grain
+         *  outlives the release that was supposed to end it. */
+        float envNow = 0.0f;
         int32_t living = 0;    // grains currently belonging to this voice
         dsp::Adsr amp;
         int64_t age = 0;

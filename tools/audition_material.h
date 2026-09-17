@@ -282,6 +282,114 @@ inline std::unique_ptr<audio::Take> breakLoop(float bpm = 120.0f) {
     return take;
 }
 
+/**
+ * Eight seconds of music, for the machines that granulate a buffer.
+ *
+ * A drum break is the right seed for a slicer and the wrong one for almost
+ * everything else: it proves onset snap and says nothing at all about what a
+ * cloud, a pitch spray or a pollination sounds like, which between them are
+ * two thirds of Pollen's bank. Dan asked for something musical, and this is
+ * it - four chords in C Dorian, two seconds each, the mode the `scale`
+ * patches are set to so a cloud quantised to it agrees with the source.
+ *
+ * Each chord is plucked: a short filtered-noise attack so `detect` has a real
+ * onset to find, then a bass root and a triad above it, every note a small
+ * harmonic stack whose upper partials die first. The notes are struck a few
+ * milliseconds apart, the way a hand does, which gives the attack width; and
+ * left and right take slightly different detunings, so the seed has a little
+ * of its own stereo before any grain is panned.
+ *
+ * Cm - F - Bb - Gm, which is Dorian's own progression: the major fourth is
+ * what makes it Dorian rather than minor, and it is the chord change worth
+ * hearing a scan travel through.
+ */
+inline std::unique_ptr<audio::Take> musicSeed() {
+    auto take = std::make_unique<audio::Take>();
+    take->name = "seed";
+    const float chordSeconds = 2.0f;
+    // Two seconds of tail past the last chord, so the buffer's own end is
+    // silence. A granular read wraps round it, and a buffer that stops while
+    // it is still sounding puts a cliff in the middle of the cloud.
+    const float tailSeconds = 2.0f;
+    const int32_t frames = static_cast<int32_t>(kMatSr * (chordSeconds * 4.0f + tailSeconds));
+    take->frames = frames;
+    take->left.assign(static_cast<size_t>(frames), 0.0f);
+    take->right.assign(static_cast<size_t>(frames), 0.0f);
+
+    // Cm, F, Bb, Gm - bass root, then the triad. Hertz, so the tuning is
+    // stated rather than computed from a table nobody can check.
+    struct Chord { float note[4]; };
+    static const Chord kChords[] = {
+        {{ 65.41f, 130.81f, 155.56f, 196.00f }},   // Cm  : C2  C3  Eb3 G3
+        {{ 87.31f, 174.61f, 220.00f, 261.63f }},   // F   : F2  F3  A3  C4
+        {{116.54f, 233.08f, 293.66f, 349.23f }},   // Bb  : Bb2 Bb3 D4  F4
+        {{ 98.00f, 196.00f, 233.08f, 293.66f }},   // Gm  : G2  G3  Bb3 D4
+    };
+    Rng rng(0x9e10c7u);
+    for (int c = 0; c < 4; ++c) {
+        const auto chordAt = static_cast<size_t>(kMatSr * chordSeconds * static_cast<float>(c));
+        for (int n = 0; n < 4; ++n) {
+            const float hz = kChords[c].note[n];
+            // A hand does not strike four notes at the same instant.
+            const auto at = chordAt + static_cast<size_t>(kMatSr * 0.006f * static_cast<float>(n));
+            const int partials = n == 0 ? 10 : 7;          // the bass is richer
+            const float amp = n == 0 ? 0.5f : 0.34f;
+            for (int ch = 0; ch < 2; ++ch) {
+                std::vector<float> &out = ch == 0 ? take->left : take->right;
+                const float det = ch == 0 ? 1.0f : 1.0006f;  // a little width
+                float lp = 0.0f;
+                for (size_t i = 0; at + i < static_cast<size_t>(frames); ++i) {
+                    const float t = static_cast<float>(i) / kMatSr;
+                    // No cutting the note short: it used to stop at 2.6 s,
+                    // where its fundamental is still at 18% - sixteen hard
+                    // steps buried in the buffer, and a click from every
+                    // grain that read across one. Dan heard them as
+                    // "scratching sort of noises throughout", in every patch.
+                    // The exponential is what ends a note here.
+                    float v = 0.0f;
+                    for (int h = 1; h <= partials; ++h) {
+                        // The top of a plucked note goes first.
+                        const float tau = 1.5f / std::sqrt(static_cast<float>(h));
+                        v += std::sin(2.0f * static_cast<float>(M_PI) * hz * det * static_cast<float>(h) * t) *
+                             std::exp(-t / tau) / static_cast<float>(h);
+                    }
+                    // The pluck: brief, filtered, and only on the attack.
+                    const float hit = std::exp(-t / 0.004f);
+                    lp += (rng.next() - lp) * 0.25f;
+                    v += lp * hit * 0.8f;
+                    out[at + i] += v * amp;
+                }
+            }
+        }
+    }
+    float peak = 1e-9f;
+    for (float v : take->left) peak = std::max(peak, std::abs(v));
+    for (float v : take->right) peak = std::max(peak, std::abs(v));
+    // Silence at both edges, so wrapping from the end to the start is a join
+    // between two zeros rather than a step.
+    // A long way in, not ten milliseconds.
+    //
+    // `position` defaults to the start of the buffer, so every note of every
+    // patch that does not move it begins by granulating whatever is at sample
+    // zero - and in a musical phrase that is a pluck. Dan: "a little pop to
+    // the start of every or almost every sample". A buffer that is read from
+    // its own beginning has to begin gently; the chord is barely touched,
+    // because its attack is four milliseconds and this is a fade over a
+    // hundred and eighty.
+    const auto fadeIn = static_cast<int32_t>(kMatSr * 0.18f);
+    const auto fadeOut = static_cast<int32_t>(kMatSr * 0.25f);
+    for (int32_t i = 0; i < frames; ++i) {
+        float g = 0.85f / peak;
+        if (i < fadeIn) g *= static_cast<float>(i) / static_cast<float>(fadeIn);
+        const int32_t fromEnd = frames - 1 - i;
+        if (fromEnd < fadeOut) g *= static_cast<float>(fromEnd) / static_cast<float>(fadeOut);
+        take->left[static_cast<size_t>(i)] *= g;
+        take->right[static_cast<size_t>(i)] *= g;
+    }
+    take->detect(kMatSr);
+    return take;
+}
+
 /** The voice phrase as a Take, for Pollen's file path. */
 inline std::unique_ptr<audio::Take> voiceTake() {
     auto take = std::make_unique<audio::Take>();

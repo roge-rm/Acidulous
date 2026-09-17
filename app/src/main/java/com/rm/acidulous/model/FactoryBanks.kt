@@ -1091,24 +1091,111 @@ internal object FactoryBanks {
     private fun pollen0() = Patch("Pollen", "Init", emptyMap())
 
     private fun pollen1() = Patch("Pollen", "Drift",
-        mapOf("scan" to 0.505f, "spray" to 0.25f, "size" to 0.79520005f, "density" to 0.598100245f, "jitter" to 0.35f, "panspread" to 0.7f, "ampattack" to 0.7117999f, "amprelease" to 0.7985f))
+        mapOf("scan" to 0.505f, "spray" to 0.25f, "size" to 0.8062673f, "density" to 0.7686218f, "jitter" to 0.35f, "panspread" to 0.7f, "ampattack" to 0.7117825f, "amprelease" to 0.7984619f, "volume" to 0.440000027f))
 
-    private fun pollen2() = Patch("Pollen", "Pollinate",
-        mapOf("density" to 0.462800026f, "bloom" to 1f, "drift" to 0.35f, "mutate" to 0.35f, "panspread" to 0.9f, "ampattack" to 0.6346998f, "amprelease" to 0.8219002f))
+    private fun pollen2() = Patch("Pollen", "Mist",
+        mapOf("spray" to 0.5f, "size" to 0.6125346f, "sizespread" to 0.4f, "density" to 1f, "jitter" to 0.5f, "panspread" to 0.9f, "ampattack" to 0.7437927f, "amprelease" to 0.8218869f, "volume" to 0.426666647f))
 
-    private fun pollen3() = Patch("Pollen", "Chord Dust",
-        mapOf("spray" to 0.4f, "size" to 0.658800066f, "density" to 0.7509999f, "spread" to 0.5f, "scatter" to 0.5f, "panspread" to 0.8f, "amprelease" to 0.7328003f, "volume" to 0.4667f))
+    private fun pollen3() = Patch("Pollen", "Boulders",
+        mapOf("spray" to 0.03f, "size" to 0.955840051f, "sizespread" to 0.15f, "density" to 0.4147411f, "window" to 0.333333343f, "ampattack" to 0.5895406f, "amprelease" to 0.76979214f, "volume" to 0.406666666f))
 
-    private fun pollen4() = Patch("Pollen", "Slicer",
-        mapOf("spray" to 0.8f, "snap" to 1f, "size" to 0.7563994f, "density" to 0.5562003f, "jitter" to 0.2f, "window" to 0.6666667f, "keytrack" to 0f, "ampattack" to 0.07709992f, "ampdecay" to 0.718099952f, "amprelease" to 0.525999844f, "volume" to 0.599999964f))
+    private fun pollen4() = Patch("Pollen", "Shiver",
+        mapOf("spray" to 0.15f, "size" to 0.6125346f, "sizespread" to 0.6f, "density" to 0.9914389f, "jitter" to 0.65f, "panspread" to 0.8f, "amprelease" to 0.7041605f, "volume" to 0.473333329f))
 
-    private fun pollen5() = Patch("Pollen", "Live Hold",
-        mapOf("source" to 1f, "position" to 0.1f, "spray" to 0.15f, "size" to 0.835600436f, "density" to 0.6315998f, "keytrack" to 0f, "ampattack" to 0.58949995f, "amprelease" to 0.7042001f, "dry" to 0.3f))
+    private fun pollen5() = Patch("Pollen", "Stillness",
+        mapOf("position" to 0.34f, "spray" to 0.02f, "size" to 0.955840051f, "density" to 0.462756425f, "jitter" to 0.1f, "window" to 0.333333343f, "ampattack" to 0.7889086f, "amprelease" to 0.8588487f, "volume" to 0.6466667f))
 
-    private fun pollen6() = Patch("Pollen", "Eat Itself",
-        mapOf("source" to 1f, "buffer" to 0.6f, "feedback" to 0.7368f, "scan" to 0.625f, "spray" to 0.5f, "size" to 0.8679002f, "density" to 0.683400154f, "keytrack" to 0f, "bloom" to 0.5f, "mutate" to 0.5f, "generations" to 0.2f, "bits" to 0.6f, "wobble" to 0.24f, "ampattack" to 0.6914999f, "amprelease" to 0.8219002f, "volume" to 0.4667f))
+    private fun pollen6() = Patch("Pollen", "Chord Dust",
+        mapOf("spray" to 0.3f, "size" to 0.7832408f, "density" to 0.799052f, "jitter" to 0.4f, "spread" to 0.5833333f, "scatter" to 0.75f, "panspread" to 0.8f, "ampattack" to 0.6666667f, "amprelease" to 0.7984619f, "volume" to 0.453333348f))
 
-    private val pollen: List<Patch> by lazy { listOf(pollen0(), pollen1(), pollen2(), pollen3(), pollen4(), pollen5(), pollen6()) }
+    private fun pollen7() = Patch("Pollen", "Octaves",
+        mapOf("spray" to 0.3f, "size" to 0.8062673f, "density" to 0.784529448f, "spread" to 1f, "scatter" to 0.25f, "panspread" to 0.85f, "ampattack" to 0.6914957f, "amprelease" to 0.8218869f, "volume" to 0.52f))
+
+    private fun pollen8() = Patch("Pollen", "Fifths",
+        mapOf("spray" to 0.28f, "density" to 0.857185841f, "spread" to 0.7916667f, "scatter" to 0.5f, "panspread" to 0.8f, "ampattack" to 0.6797723f, "amprelease" to 0.813022554f, "volume" to 0.453333348f))
+
+    private fun pollen9() = Patch("Pollen", "Dorian Spray",
+        mapOf("spray" to 0.35f, "density" to 0.8124115f, "jitter" to 0.45f, "spread" to 0.8333333f, "scatter" to 1f, "scale" to 0.03125f, "panspread" to 0.85f, "ampattack" to 0.6914957f, "amprelease" to 0.8218869f))
+
+    private fun pollen10() = Patch("Pollen", "Descent",
+        mapOf("scan" to 0.5875f, "spray" to 0.2f, "size" to 0.826407433f, "density" to 0.7686218f, "pitch" to 0.354166657f, "spread" to 0.208333328f, "scatter" to 0.25f, "ampattack" to 0.6346564f, "amprelease" to 0.793217063f, "volume" to 0.46f))
+
+    private fun pollen11() = Patch("Pollen", "Choir",
+        mapOf("spray" to 0.4f, "size" to 0.867895067f, "density" to 0.799052f, "jitter" to 0.6f, "spread" to 0.166666672f, "scatter" to 1f, "scale" to 0.03125f, "panspread" to 1f, "cutoff" to 0.7730826f, "ampattack" to 0.806060851f, "amprelease" to 0.8588487f, "volume" to 0.413333327f))
+
+    private fun pollen12() = Patch("Pollen", "Pollinate",
+        mapOf("spray" to 0.2f, "size" to 0.795165539f, "bloom" to 0.8f, "mutate" to 0.35f, "generations" to 0.6f, "panspread" to 0.7f, "ampattack" to 0.6666667f, "amprelease" to 0.8218869f, "volume" to 0.406666666f))
+
+    private fun pollen13() = Patch("Pollen", "Cascade",
+        mapOf("spray" to 0.15f, "size" to 0.8062673f, "density" to 0.7313782f, "bloom" to 0.95f, "mutate" to 0.8f, "generations" to 1f, "panspread" to 0.95f, "ampattack" to 0.7117825f, "amprelease" to 0.8588487f, "volume" to 0.326666683f))
+
+    private fun pollen14() = Patch("Pollen", "Seedling",
+        mapOf("spray" to 0.12f, "size" to 0.816652238f, "bloom" to 0.3f, "mutate" to 0.15f, "generations" to 0f, "ampattack" to 0.614369631f, "amprelease" to 0.76979214f, "volume" to 0.413333327f))
+
+    private fun pollen15() = Patch("Pollen", "Spore",
+        mapOf("spray" to 0.55f, "size" to 0.7563599f, "density" to 0.784529448f, "bloom" to 0.85f, "mutate" to 1f, "generations" to 0.8f, "panspread" to 1f, "ampattack" to 0.6914957f, "amprelease" to 0.8416923f, "volume" to 0.4f))
+
+    private fun pollen16() = Patch("Pollen", "Thicket",
+        mapOf("spray" to 0.45f, "size" to 0.6588259f, "density" to 0.8667258f, "jitter" to 0.7f, "bloom" to 1f, "mutate" to 0.5f, "generations" to 1f, "panspread" to 0.9f, "ampattack" to 0.6346564f, "amprelease" to 0.7984619f, "volume" to 0.406666666f))
+
+    private fun pollen17() = Patch("Pollen", "Settle",
+        mapOf("spray" to 0.25f, "size" to 0.8062673f, "density" to 0.739521444f, "bloom" to 0.9f, "mutate" to 0.4f, "generations" to 0.8f, "ampattack" to 0.256207228f, "ampdecay" to 0.7818527f, "ampsustain" to 0.15f, "amprelease" to 0.8218869f, "volume" to 0.599999964f))
+
+    private fun pollen18() = Patch("Pollen", "Slicer",
+        mapOf("spray" to 0.05f, "snap" to 1f, "density" to 0.578445554f, "jitter" to 0.15f, "window" to 0.6666667f, "ampattack" to 0.256207228f, "amprelease" to 0.6807356f, "volume" to 1f))
+
+    private fun pollen19() = Patch("Pollen", "Stutter",
+        mapOf("spray" to 0.03f, "snap" to 1f, "size" to 0.593582f, "jitter" to 0.05f, "window" to 0.6666667f, "ampattack" to 0.179081187f, "amprelease" to 0.5630092f, "volume" to 1f))
+
+    private fun pollen20() = Patch("Pollen", "Scan Up",
+        mapOf("scan" to 0.725f, "size" to 0.7832408f, "density" to 0.784529448f, "amprelease" to 0.7328303f, "volume" to 0.386666656f))
+
+    private fun pollen21() = Patch("Pollen", "Scan Down",
+        mapOf("position" to 1f, "scan" to 0.275f, "size" to 0.7832408f, "density" to 0.784529448f, "amprelease" to 0.7328303f, "volume" to 0.5266667f))
+
+    private fun pollen22() = Patch("Pollen", "Ratchet",
+        mapOf("spray" to 0.02f, "snap" to 1f, "size" to 0.644824743f, "density" to 0.694134653f, "jitter" to 0f, "window" to 0.6666667f, "ampattack" to 0.07712607f, "amprelease" to 0.526047349f, "volume" to 1f))
+
+    private fun pollen23() = Patch("Pollen", "Backwards Roll",
+        mapOf("spray" to 0.4f, "snap" to 0.85f, "reverse" to 1f, "size" to 0.8356049f, "jitter" to 0.2f, "window" to 1f, "ampattack" to 0.3333333f, "amprelease" to 0.723966f, "volume" to 1f))
+
+    private fun pollen24() = Patch("Pollen", "Crushed",
+        mapOf("spray" to 0.3f, "size" to 0.7832408f, "density" to 0.784529448f, "bits" to 0.2f, "cutoff" to 0.845404565f, "ampattack" to 0.5124145f, "amprelease" to 0.7411223f, "volume" to 0.566666663f))
+
+    private fun pollen25() = Patch("Pollen", "Downsampled",
+        mapOf("spray" to 0.3f, "size" to 0.8062673f, "density" to 0.7686218f, "crush" to 0.8643856f, "ampattack" to 0.5124145f, "amprelease" to 0.7411223f, "volume" to 0.486666679f))
+
+    private fun pollen26() = Patch("Pollen", "Wobbler",
+        mapOf("spray" to 0.25f, "size" to 0.852558553f, "panspread" to 0.7f, "wobble" to 0.7f, "wobblerate" to 0.43752113f, "ampattack" to 0.6666667f, "amprelease" to 0.7984619f, "volume" to 0.480000019f))
+
+    private fun pollen27() = Patch("Pollen", "Underwater",
+        mapOf("spray" to 0.35f, "size" to 0.8356049f, "density" to 0.7686218f, "cutoff" to 0.384887874f, "resonance" to 0.55f, "filtertype" to 0.272727281f, "ampattack" to 0.7117825f, "amprelease" to 0.8218869f, "volume" to 0.52f))
+
+    private fun pollen28() = Patch("Pollen", "Driven",
+        mapOf("spray" to 0.3f, "density" to 0.799052f, "cutoff" to 0.82017225f, "ampattack" to 0.5575304f, "amprelease" to 0.756255269f, "drive" to 0.8f, "volume" to 0.286666662f))
+
+    private fun pollen29() = Patch("Pollen", "Telephone",
+        mapOf("spray" to 0.3f, "size" to 0.7563599f, "density" to 0.799052f, "bits" to 0.333333343f, "cutoff" to 0.468503028f, "resonance" to 0.35f, "filtertype" to 0.727272749f, "ampattack" to 0.487585485f, "amprelease" to 0.7041605f, "drive" to 0.75f, "volume" to 1f))
+
+    private fun pollen30() = Patch("Pollen", "Live Hold",
+        mapOf("source" to 1f, "buffer" to 0.9169925f, "capture" to 1f, "spray" to 0.3f, "size" to 0.8062673f, "density" to 0.784529448f, "panspread" to 0.8f, "ampattack" to 0.6346564f, "amprelease" to 0.7984619f, "volume" to 0.75333333f))
+
+    private fun pollen31() = Patch("Pollen", "Eat Itself",
+        mapOf("source" to 1f, "capture" to 1f, "feedback" to 0.757894754f, "spray" to 0.35f, "size" to 0.795165539f, "density" to 0.7751679f, "panspread" to 0.85f, "cutoff" to 0.82017225f, "ampattack" to 0.6346564f, "amprelease" to 0.8416923f, "volume" to 0.813333333f))
+
+    private fun pollen32() = Patch("Pollen", "Feedback Bloom",
+        mapOf("source" to 1f, "capture" to 1f, "feedback" to 0.631579f, "spray" to 0.3f, "density" to 0.7686218f, "bloom" to 0.8f, "mutate" to 0.45f, "generations" to 0.6f, "panspread" to 0.9f, "ampattack" to 0.6666667f, "amprelease" to 0.8588487f, "volume" to 0.5133333f))
+
+    private fun pollen33() = Patch("Pollen", "Ring Scan",
+        mapOf("source" to 1f, "capture" to 1f, "scan" to 0.625f, "spray" to 0.12f, "size" to 0.795165539f, "density" to 0.784529448f, "panspread" to 0.75f, "ampattack" to 0.5895406f, "amprelease" to 0.76979214f, "volume" to 0.75333333f))
+
+    private fun pollen34() = Patch("Pollen", "Capture",
+        mapOf("source" to 1f, "buffer" to 0.6f, "capture" to 1f, "spray" to 0.45f, "size" to 0.7410234f, "density" to 0.824780345f, "jitter" to 0.4f, "panspread" to 0.8f, "ampattack" to 0.5124145f, "amprelease" to 0.756255269f, "volume" to 0.5133333f))
+
+    private fun pollen35() = Patch("Pollen", "Infinite",
+        mapOf("source" to 1f, "buffer" to 0.9169925f, "capture" to 1f, "feedback" to 0.9263158f, "spray" to 0.25f, "size" to 0.852558553f, "panspread" to 0.9f, "cutoff" to 0.7903287f, "ampattack" to 0.7686218f, "amprelease" to 0.910943449f, "volume" to 0.75333333f))
+
+    private val pollen: List<Patch> by lazy { listOf(pollen0(), pollen1(), pollen2(), pollen3(), pollen4(), pollen5(), pollen6(), pollen7(), pollen8(), pollen9(), pollen10(), pollen11(), pollen12(), pollen13(), pollen14(), pollen15(), pollen16(), pollen17(), pollen18(), pollen19(), pollen20(), pollen21(), pollen22(), pollen23(), pollen24(), pollen25(), pollen26(), pollen27(), pollen28(), pollen29(), pollen30(), pollen31(), pollen32(), pollen33(), pollen34(), pollen35()) }
 
     private fun brazen0() = Patch("Brazen", "Init", emptyMap())
 

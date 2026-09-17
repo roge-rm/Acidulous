@@ -12,6 +12,29 @@ using audio::Take;
 using audio::View;
 
 namespace {
+// The house level.
+//
+// Pollen had none, and a cloud is quiet by nature: ninety-six grains each
+// windowed to nothing at both ends sum to far less than their peaks suggest.
+// The bank's median patch sat seven decibels under the line the rest of the
+// factory is levelled to, and twenty-one of thirty-six ended up pinned at the
+// top of the volume knob still short of it - which is a levelling that has
+// run out of room, not a bank that is quiet.
+//
+// This does not decide how loud Pollen is; the bank is levelled either way.
+// It decides where in the knob's travel a patch sits, and it is set from
+// Init, which carries no volume line of its own.
+// Note the bank is levelled to -25 rather than the -21 the sustained machines
+// use, and that is not a machine that is quiet: a cloud's crest factor is
+// about twenty decibels where a pad's is twelve, so at -21 loud its peaks sit
+// on zero dBFS with nothing left for a second note. Four decibels down the
+// meter buys back the headroom the peaks need. Levelling to a loudness target
+// *decides* the peaks; there is no setting of this constant that avoids it.
+// What the grain sum actually reaches before the output stage, and so what
+// the bit crusher should treat as full scale.
+constexpr float kCrushNominal = 0.3f;
+constexpr float kHouse = 0.81f; // set from Init on the musical seed, which is louder than the break was
+
 constexpr float kTwoPi = 6.28318530718f;
 float mtof(float note) { return 440.0f * std::pow(2.0f, (note - 69.0f) / 12.0f); }
 } // namespace
@@ -33,9 +56,16 @@ const ParamDef *Pollen::paramDefs(int32_t &count) const {
         {"spray", 0.0f, 1.0f, 0.1f, Curve::Linear, 0, ""},
         {"snap", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"reverse", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},  // a probability, not a switch
-        {"size", 1.0f, 500.0f, 90.0f, Curve::Exponential, 0, "ms"},
+        {"size", 1.0f, 500.0f, 120.0f, Curve::Exponential, 0, "ms"},
         {"sizespread", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
-        {"density", 0.5f, 200.0f, 24.0f, Curve::Exponential, 0, "/s"},
+        // 45 a second at 120 ms is five and a half grains sounding at once.
+        // At 24 and 90 it was two, and two grains of a pitched source taken
+        // from unrelated points comb-filter against each other as they fade
+        // in and out - the level shakes, and Dan heard the default patch as a
+        // "crackly wind storm". Below about five it is a fault; above, a
+        // cloud. The cure is overlap: cutting the spray instead made it
+        // measurably worse.
+        {"density", 0.5f, 200.0f, 45.0f, Curve::Exponential, 0, "/s"},
         {"jitter", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
         {"window", 0.0f, 3.0f, 0.0f, Curve::Stepped, 4, ""},
         {"skew", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
@@ -164,6 +194,26 @@ Pollen::Voice *Pollen::allocate() {
 void Pollen::noteOn(uint8_t note, uint8_t velocity) {
     Voice *v = steppedOf(Mono) != 0 ? &voices[0] : allocate();
     if (v == nullptr) return;
+    // Cut the grains still in the air loose from this voice before the new
+    // note takes it over.
+    //
+    // They read their voice's envelope live - that is what stops a long grain
+    // outliving the release it was supposed to end under - but a voice that
+    // has been handed to a new note carries a *different* envelope, and a
+    // grain born under the old note would step onto it. With grains up to
+    // half a second long and eight voices under a melody, that is every
+    // reuse. Orphaned grains keep the level they had and ride out their own
+    // window, which is what they did before the envelope followed them.
+    {
+        const int32_t idx = static_cast<int32_t>(v - voices);
+        for (auto &g : grains) {
+            if (!g.active || g.voice != idx) continue;
+            g.gainL *= v->envNow;
+            g.gainR *= v->envNow;
+            g.voice = -1;
+        }
+        v->living = 0;
+    }
     const float glide = paramOf(Glide);
     const bool gliding = glide > 0.001f && v->used;
     v->glideFrom = gliding ? v->freq : mtof(static_cast<float>(note));
@@ -351,7 +401,16 @@ void Pollen::spawn(Voice &v, int32_t voiceIndex, const View &view, float env) {
     g.generation = 0;
     const float pan = (nextRandom() * 2.0f - 1.0f) * paramOf(PanSpread);
     const float angle = (std::clamp(pan, -1.0f, 1.0f) + 1.0f) * 0.25f * 3.14159265f;
-    const float level = env * (1.0f - paramOf(VelocityAmount) + paramOf(VelocityAmount) * v.velocity);
+    // Velocity only. The amplitude envelope is *not* baked in here.
+    //
+    // It used to be, and a grain then carried the envelope's value at the
+    // moment of its birth for the whole of its life - so a 440 ms grain born
+    // just before the key came up went on at full level for 440 ms after it,
+    // and the tail could get *louder* after the release than during it. The
+    // bank_test runaway check caught Boulders doing exactly that: 14 dB up,
+    // a second and a half after the last note ended. A release that a grain
+    // can outlive is not a release.
+    const float level = 1.0f - paramOf(VelocityAmount) + paramOf(VelocityAmount) * v.velocity;
     g.gainL = std::cos(angle) * level;
     g.gainR = std::sin(angle) * level;
     ++v.living;
@@ -506,6 +565,7 @@ bool Pollen::render(float *L, float *R, int32_t frames) {
             Voice &v = voices[vi];
             if (!v.used) continue;
             const float env = v.amp.next();
+            v.envNow = env;   // the grains in the pool read this, not their birth value
             if (env <= 0.0000005f && !v.gate) {
                 v.used = false;
                 continue;
@@ -548,8 +608,9 @@ bool Pollen::render(float *L, float *R, int32_t frames) {
                 const float f = static_cast<float>(p - idx);
                 const float sl = view.l[idx] + (view.l[next] - view.l[idx]) * f;
                 const float sr = view.r[idx] + (view.r[next] - view.r[idx]) * f;
-                l += sl * w * g.gainL;
-                r += sr * w * g.gainR;
+                const float ge = g.voice >= 0 ? voices[g.voice].envNow : 1.0f;
+                l += sl * w * g.gainL * ge;
+                r += sr * w * g.gainR * ge;
                 g.pos = p + g.inc * wobble;
                 if (++g.age >= g.length) {
                     g.active = false;
@@ -564,9 +625,29 @@ bool Pollen::render(float *L, float *R, int32_t frames) {
         l = mid + side;
         r = mid - side;
         if (bits < 16) {
-            const float levels = static_cast<float>(1 << bits);
-            l = std::round(l * levels) / levels;
-            r = std::round(r * levels) / levels;
+            // Quantise against what the cloud reaches, not against full scale.
+            //
+            // The signal arriving here peaks near a third, so rounding against
+            // 1.0 gave "four bits" *two* usable levels - and an attack then
+            // rounds to nothing at all until it crosses half a step, where it
+            // snaps to a whole one. That snap is a click, it sits exactly on
+            // the note's start, and it is what Dan heard as "a little pop to
+            // the start of every or almost every sample": the only two patches
+            // measuring a jump of ten thousand times over the preceding
+            // twenty milliseconds were Crushed and Telephone, the only two
+            // that set `bits`. Downsampled, which crushes the *rate*, was
+            // clean - so it was the quantiser, not the lo-fi in general.
+            //
+            // The same lesson as the saturator, one stage along: normalise on
+            // a nominal level, never on a point the signal does not reach.
+            const float step = kCrushNominal / static_cast<float>(1 << bits);
+            // A step of dither, so the first crossing dissolves instead of
+            // clicking - but only while the cloud is sounding. A machine that
+            // hisses into its own silence is a worse fault than the one being
+            // fixed.
+            const float d = active > 0 ? step : 0.0f;
+            l = std::round((l + (nextRandom() - 0.5f) * d) / step) * step;
+            r = std::round((r + (nextRandom() - 0.5f) * d) / step) * step;
         }
         if (crush > 1.001f) {
             crushAcc += 1.0f / crush;
@@ -577,12 +658,27 @@ bool Pollen::render(float *L, float *R, int32_t frames) {
         l = filterL.process(l);
         r = filterR.process(r);
         if (drive > 0.0001f) {
+            // Normalised on the nominal level, not on the ceiling.
+            //
+            // This was `tanh(x * k) / sqrt(k)`, which is not a drive at all:
+            // sqrt(k) grows faster than the tanh recovers, so turning the
+            // knob up made the machine quieter and the only way to hear the
+            // dirt was to lose the level. The same fault was fixed in Hexbeat
+            // and in Genesis this round; Pollen still had it, and it surfaced
+            // as Telephone sitting ten decibels under the bank with its
+            // volume knob already against the stop - there was no make-up
+            // gain to be had from the one stage that should have supplied it.
+            //
+            // Divide by the drive's own response at the nominal level, so a
+            // signal of that size comes out the size it went in and the knob
+            // changes the shape rather than the volume.
             const float k = 1.0f + drive * 10.0f;
-            l = dsp::fastTanh(l * k) / std::sqrt(k);
-            r = dsp::fastTanh(r * k) / std::sqrt(k);
+            const float norm = kCrushNominal / dsp::fastTanh(kCrushNominal * k);
+            l = dsp::fastTanh(l * k) * norm;
+            r = dsp::fastTanh(r * k) * norm;
         }
-        l *= volume;
-        r *= volume;
+        l *= volume * kHouse;
+        r *= volume * kHouse;
         feedbackL = l;
         feedbackR = r;
         // The input, passed through: a processor that cannot be heard

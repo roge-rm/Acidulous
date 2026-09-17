@@ -651,6 +651,9 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
     } else if (kind == "break") {
         mat.take = breakLoop();
         m->swapObject(0, mat.take.get());
+    } else if (kind == "seed") {
+        mat.take = musicSeed();
+        m->swapObject(0, mat.take.get());
     } else if (kind == "voicetake") {
         mat.take = voiceTake();
         m->swapObject(0, mat.take.get());
@@ -707,7 +710,12 @@ void loadInput(const std::string &kind, Material &mat) {
 std::string defaultMaterial(const std::string &machine) {
     if (machine == "Forage") return "kit";
     if (machine == "Dice") return "break";
-    if (machine == "Pollen") return "break";
+    // Pollen granulates music by default. A break is the right seed for a
+    // slicer and the wrong one for a cloud: it proves onset snap and says
+    // nothing about the pitch, bloom and cloud families, which are two
+    // thirds of the bank. The four rhythm patches ask for the break
+    // themselves, because they are the ones that are about transients.
+    if (machine == "Pollen") return "seed";
     if (machine == "Mosaic") return "map";
     if (machine == "Molt") return "voice";
     return "none";
