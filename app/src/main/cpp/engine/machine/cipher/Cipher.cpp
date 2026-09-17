@@ -5,6 +5,28 @@
 #include <cstring>
 
 namespace acidulous::machine {
+
+// Make-up for the normalised band sum. Bands tile the spectrum and are close
+// to decorrelated, so the sum of N of them grows about as sqrt(N) - which is
+// why this is a constant and the band count is not in it.
+constexpr float kBandMakeup = 16.0f;
+// What the summed bands reach before the output stage, and what the carrier
+// reaches before its own - the levels each saturator should treat as nominal,
+// so the knob changes shape rather than volume.
+constexpr float kNominal = 0.3f;
+constexpr float kCarrierNominal = 0.5f;
+// The consonant path's level. It belongs under the vocoded signal - a
+// vocoder with no path for consonants turns every "s" into a hole, but one
+// whose noise outweighs its bands is not a vocoder at all.
+constexpr float kSibilanceMakeup = 2.0f;
+// Where the bank sits in the volume knob's travel, set from Init. With the
+// bands normalised the machine no longer runs permanently saturated, so it
+// needs a house level like every other machine rather than a tanh holding it
+// down.
+constexpr float kHouse = 0.76f;
+// The volume knob's top, named once so the knob and the clamp that guards it
+// cannot drift apart again.
+constexpr float kVolumeMax = 2.0f;
 using namespace dsp;
 
 namespace {
@@ -35,7 +57,16 @@ const ParamDef *Cipher::paramDefs(int32_t &count) const {
         };
 
         put(Bands, "bands", 4.0f, 40.0f, 16.0f, Curve::Stepped, 37, "");
-        exp_(LowHz, "low", 40.0f, 600.0f, 110.0f, "Hz");
+        // The bottom of the bank, at 80 Hz rather than 110.
+        //
+        // A vocoder whose lowest band starts above the speaker's fundamental
+        // cannot measure half of what it is given. Measured on the voice this
+        // bank was voiced against: a median fundamental of 125 Hz, but 48 per
+        // cent of voiced frames below 110 and 25 per cent below 80. The cost
+        // of reaching lower is that the same number of bands covers more
+        // octaves and each one is wider, so this is as low as it goes before
+        // the resolution where speech is actually understood starts to suffer.
+        exp_(LowHz, "low", 40.0f, 600.0f, 80.0f, "Hz");
         exp_(HighHz, "high", 1500.0f, 16000.0f, 8000.0f, "Hz");
         lin(BandQ, "q", 0.0f, 1.0f, 0.55f);
         step(Slope, "slope", 2, 1.0f); // one pole pair, or two
@@ -73,7 +104,13 @@ const ParamDef *Cipher::paramDefs(int32_t &count) const {
         lin(Dry, "dry", 0.0f, 1.0f, 0.0f);
         lin(Wet, "wet", 0.0f, 1.0f, 1.0f);
         lin(Drive, "drive", 0.0f, 1.0f, 0.15f);
-        lin(Volume, "volume", 0.0f, 1.0f, 0.8f);
+        // To 2.0, as Manual's does, and for a reason particular to this
+        // machine: a vocoder's output level is set by a modulator it does not
+        // control - on a phone, whatever the player is speaking at - and the
+        // patches that throw the most spectrum away (few bands, a narrow
+        // range, every other band removed, a noise carrier) ran out of knob
+        // four decibels under the bank's line with nothing left to give.
+        lin(Volume, "volume", 0.0f, kVolumeMax, 0.8f);
         lin(Pan, "pan", -1.0f, 1.0f, 0.0f);
         exp_(AmpAttack, "ampatk", 0.001f, 4.0f, 0.01f, "s");
         exp_(AmpDecay, "ampdec", 0.005f, 8.0f, 0.5f, "s");
@@ -129,6 +166,7 @@ void Cipher::prepare(int32_t sr) {
         b.synthesis2.setSampleRate(sampleRate);
     }
     sibilanceFilter.setSampleRate(sampleRate);
+    sibilanceShaper.setSampleRate(sampleRate);
     for (auto &v : voices) v.amp.setSampleRate(sampleRate);
     for (auto &e : eg) e.setSampleRate(sampleRate);
     lastCount = -1;
@@ -179,6 +217,7 @@ void Cipher::reset() {
         bands[i].held = 0.0f;
     }
     sibilanceFilter.reset();
+    sibilanceShaper.reset();
     feedbackSample = 0.0f;
     loudness = brightness = 0.0f;
 }
@@ -377,7 +416,13 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const float carrierDrive = paramOf(CarrierDrive);
     const float dry = paramOf(Dry), wet = paramOf(Wet);
     const float drive = clampf(paramOf(Drive) + mod[DstDrive], 0.0f, 1.0f);
-    const float volume = clampf(paramOf(Volume) + mod[DstVolume], 0.0f, 1.5f);
+    // Clamped to the knob's own maximum, not to a number that used to match it.
+    //
+    // This said 1.5 while the parameter ran to 1.0, so modulation could push
+    // past the knob - reasonable. Raising the knob to 2.0 turned the same line
+    // into a lid: the four patches that needed the top of the range measured
+    // identically at 1.6 and at 2.0, and no amount of levelling moved them.
+    const float volume = clampf(paramOf(Volume) + mod[DstVolume], 0.0f, kVolumeMax);
     const float pan = clampf(paramOf(Pan) + mod[DstPan], -1.0f, 1.0f);
     const float velAmt = paramOf(VelocityAmount);
     const bool track = steppedOf(PitchTrack) != 0;
@@ -386,6 +431,7 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
                                              paramOf(Fine) * 0.01f + mod[DstCarrierPitch] * 12.0f) / 12.0f);
 
     sibilanceFilter.set(paramOf(SibilanceHz), 0.4f);
+    sibilanceShaper.set(paramOf(SibilanceHz), 0.25f);
 
     // Band tuning for the synthesis side: shifted, stretched, or both. The
     // analysis bank stays where it is, which is what makes a shift move the
@@ -435,7 +481,15 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             rngState = rngState * 1664525u + 1013904223u;
             carrier += ((static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f) * noiseLevel;
         }
-        if (carrierDrive > 0.0f) carrier = std::tanh(carrier * (1.0f + carrierDrive * 6.0f));
+        if (carrierDrive > 0.0f) {
+            // The carrier's own saturation, normalised the same way. It had no
+            // compensation at all, so turning it up thinned the carrier and
+            // quietened it at once - and the vocoder imposes the modulator's
+            // envelope on whatever the carrier is, so that loss passes
+            // straight through to the output.
+            const float k = 1.0f + carrierDrive * 6.0f;
+            carrier = std::tanh(carrier * k) * (kCarrierNominal / std::tanh(kCarrierNominal * k));
+        }
         carrier *= 0.5f;
 
         float modulator = external;
@@ -454,8 +508,10 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
         float loud = 0.0f, bright = 0.0f, weight = 0.0f;
         for (int i = 0; i < bandCount; ++i) {
             Band &b = bands[i];
-            float a = b.analysis1.bandpass(modulator);
-            if (twoPole) a = b.analysis2.bandpass(a);
+            // Normalised, so a band measures how loud the modulator is in its
+            // range rather than how narrow the band happens to be.
+            float a = b.analysis1.bandpass(modulator) * b.analysis1.bandNorm();
+            if (twoPole) a = b.analysis2.bandpass(a) * b.analysis2.bandNorm();
             const float rectified = std::fabs(a);
             const float coeff = rectified > b.envelope ? b.attackCoeff : b.releaseCoeff;
             b.envelope += (rectified - b.envelope) * coeff;
@@ -480,9 +536,25 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
                 const float threshold = gate * 0.25f;
                 if (amount < threshold) amount *= 1.0f - gateDepth;
             }
-            float s = b.synthesis1.bandpass(source);
-            if (twoPole) s = b.synthesis2.bandpass(s);
-            out += s * amount * 4.0f;
+            // The same normalisation on the way out.
+            //
+            // `Svf::bandpass` returns the raw band output, whose peak gain is
+            // its own Q - and this machine derives Q from how many bands cover
+            // how many octaves, so *the band count was a volume knob*. With
+            // drive off, Init measured -5.1 dB peak at four bands and +54.8 at
+            // forty: sixty decibels of swing from a control that is supposed
+            // to change the resolution of the vocoder, not its level. The
+            // output then sat so far over full scale that the drive stage was
+            // not a drive at all but the only thing keeping the machine from
+            // destroying itself, which is why all nine patches peaked at
+            // exactly the same -3.7 dB.
+            //
+            // `bandNorm()` is the correction already made to MultiFilter this
+            // round, for the same reason: a filter setting should change the
+            // character, not the level.
+            float s = b.synthesis1.bandpass(source) * b.synthesis1.bandNorm();
+            if (twoPole) s = b.synthesis2.bandpass(s) * b.synthesis2.bandNorm();
+            out += s * amount * kBandMakeup;
         }
         if (weight > 0.0f) {
             sumLoud += loud / weight;
@@ -496,10 +568,34 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             const float hiss = sibilanceFilter.highpass(modulator);
             const float level = std::fabs(hiss);
             sibilanceEnv += (level - sibilanceEnv) * (level > sibilanceEnv ? 0.02f : 0.0008f);
-            if (sibilanceEnv > sibilance * 0.05f) {
+            // Turned up means *more* sibilance, which is what the name says.
+            //
+            // The knob was the gate's threshold, so raising it let less
+            // through - a control that does the opposite of its label, and
+            // one this bank's first draft set to 0.6 on every patch that was
+            // meant to have consonants.
+            if (sibilanceEnv > (1.0f - sibilance) * 0.05f) {
                 rngState = rngState * 1664525u + 1013904223u;
                 const float noise = (static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f;
-                out += noise * sibilanceEnv * sibLevel * 6.0f;
+                // Shaped to where an "s" actually lives, and at a level
+                // that sits under the vocoder rather than over it.
+                //
+                // This was flat white noise times six. Measured on the
+                // octave bands, it put 48 dB more energy in the top octave
+                // than the whole vocoder produced - so every patch came out
+                // with an identical -10.4 dB top band, and the difference
+                // between Classic and a fully reversed bank fell from 11.7 dB
+                // to 2.0. The bank map is the machine, and the consonant path
+                // was drowning it.
+                // Band-passed, not high-passed. White noise above a corner
+                // is *more* top-heavy than white noise, because the top
+                // octave is the widest - and the bank stops at `high`, so
+                // everything above it was sibilance and nothing else. A band
+                // around the corner puts the consonant where the consonant
+                // is and leaves the air above it alone.
+                const float shaped =
+                    sibilanceShaper.bandpass(noise) * sibilanceShaper.bandNorm();
+                out += shaped * sibilanceEnv * sibLevel * kSibilanceMakeup;
             }
         }
 
@@ -522,9 +618,18 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
         }
 
         float x = out * wet + (role == InputIsCarrier ? external : carrier) * dry;
-        if (drive > 0.0f) x = std::tanh(x * (1.0f + drive * 8.0f)) / (1.0f + drive * 1.5f);
+        if (drive > 0.0f) {
+            // Normalised on the nominal level. The divisor used to be
+            // `1 + drive * 1.5`, a guess that handed small signals eleven
+            // decibels at the top of the knob and capped everything else at
+            // 0.4 - but it never showed, because until the bands were
+            // normalised this stage was permanently slammed and acting as the
+            // machine's limiter rather than as a drive.
+            const float k = 1.0f + drive * 8.0f;
+            x = std::tanh(x * k) * (kNominal / std::tanh(kNominal * k));
+        }
         feedbackSample = x;
-        x *= volume;
+        x *= volume * kHouse;
         const float angle = (pan + 1.0f) * 0.25f * kPiF;
         L[n] = x * std::cos(angle) * 1.4142f;
         R[n] = x * std::sin(angle) * 1.4142f;

@@ -108,6 +108,121 @@ inline std::vector<float> voicePhrase() {
     return out;
 }
 
+/**
+ * Twelve seconds of synthetic speech, for the vocoder.
+ *
+ * `voicePhrase` above is two vowels and a fricative, two and a half seconds
+ * long, at a fixed pitch. It is enough to prove Cipher's bands are wired to
+ * the right places and no use at all for voicing a bank: a map only shows what
+ * it does when what goes through it moves, and a vocoder is only audible while
+ * its carrier sounds, so the material has to keep going for as long as the
+ * phrase holds.
+ *
+ * Built to the measurements taken from a real recording rather than to a guess
+ * about what a voice is like, because the guess was wrong in a way that
+ * mattered. That recording's median fundamental was 125 Hz with a quarter of
+ * its voiced frames below 80 - low enough to sing underneath a vocoder bank
+ * that started at 110 Hz, which is the fault that found Cipher's `low`
+ * default. A synthetic modulator pitched at a comfortable 200 Hz would have
+ * hidden it again, so this one is deliberately low and deliberately varied:
+ * the pitch walks between 70 and 190 Hz across the utterance.
+ *
+ * Nine syllables over twelve seconds, each a vowel with its own two formants,
+ * separated by fricatives and by silence - about a tenth of the whole, which
+ * is what the real recording measured. Each syllable's pitch glides, because a
+ * flat pitch is the one thing no speaker does and the thing a pitch tracker
+ * most needs to see.
+ */
+inline std::vector<float> speechPhrase() {
+    struct Syllable {
+        float f0Start, f0End;  // Hz, gliding across the syllable
+        float f1, f2;          // the vowel
+        float seconds;
+        float fricative;       // seconds of noise after it, 0 for none
+        float silence;         // seconds of pause after that
+    };
+    // The vowels are the usual measured formant pairs: "ah" 730/1090,
+    // "ee" 270/2290, "oo" 300/870, "eh" 530/1840, "aw" 570/840.
+    static const Syllable kLine[] = {
+        {110.0f,  95.0f, 730.0f, 1090.0f, 0.75f, 0.18f, 0.10f}, // ah-s
+        { 98.0f, 130.0f, 530.0f, 1840.0f, 0.60f, 0.00f, 0.00f}, // eh
+        {132.0f, 118.0f, 270.0f, 2290.0f, 0.70f, 0.22f, 0.35f}, // ee-sh .
+        { 88.0f,  74.0f, 300.0f,  870.0f, 0.95f, 0.00f, 0.12f}, // oo
+        {120.0f, 155.0f, 570.0f,  840.0f, 0.65f, 0.15f, 0.00f}, // aw-f
+        {160.0f, 128.0f, 730.0f, 1090.0f, 0.80f, 0.00f, 0.30f}, // ah .
+        { 92.0f, 112.0f, 270.0f, 2290.0f, 0.70f, 0.20f, 0.10f}, // ee-s
+        {135.0f, 188.0f, 530.0f, 1840.0f, 0.90f, 0.00f, 0.00f}, // eh
+        {150.0f,  78.0f, 300.0f,  870.0f, 1.10f, 0.00f, 0.40f}, // oo, falling away
+    };
+
+    std::vector<float> out;
+    Rng rng(0xc1fe42u);
+    for (const Syllable &sy : kLine) {
+        // A glottal pulse train whose period changes as it goes. Written here
+        // rather than reusing `vowel`, which holds one pitch for its whole
+        // length - and a held pitch is the thing `track` cannot be judged on.
+        const auto n = static_cast<int32_t>(kMatSr * sy.seconds);
+        std::vector<float> pulses(static_cast<size_t>(n), 0.0f);
+        for (float pos = 0.0f; pos < static_cast<float>(n);) {
+            pulses[static_cast<size_t>(pos)] = 1.0f;
+            const float t = pos / static_cast<float>(n);
+            const float f0 = sy.f0Start + (sy.f0End - sy.f0Start) * t;
+            pos += kMatSr / f0;
+        }
+        std::vector<float> body(static_cast<size_t>(n), 0.0f);
+        resonate(pulses, body, sy.f1, 12.0f, 1.0f);
+        resonate(pulses, body, sy.f2, 12.0f, 0.5f);
+        // A third formant, quiet and high, so there is something for the top
+        // of the bank to measure that is not the consonant path.
+        resonate(pulses, body, 2900.0f, 10.0f, 0.15f);
+        float peak = 1e-9f;
+        for (float v : body) peak = std::max(peak, std::fabs(v));
+        for (float &v : body) v *= 0.7f / peak;
+        // Ten milliseconds on and forty off, so a syllable arrives with an
+        // edge and leaves without one.
+        const auto in = static_cast<size_t>(kMatSr * 0.01f);
+        const auto off = static_cast<size_t>(kMatSr * 0.04f);
+        for (size_t i = 0; i < in && i < body.size(); ++i) {
+            body[i] *= static_cast<float>(i) / static_cast<float>(in);
+        }
+        for (size_t i = 0; i < off && i < body.size(); ++i) {
+            body[body.size() - 1 - i] *= static_cast<float>(i) / static_cast<float>(off);
+        }
+        out.insert(out.end(), body.begin(), body.end());
+
+        if (sy.fricative > 0.0f) {
+            const auto fn = static_cast<int32_t>(kMatSr * sy.fricative);
+            // Shaped, not flat: an "s" is a band around four kilohertz, and
+            // flat noise here would be the same mistake the machine's own
+            // sibilance path was making.
+            float z1 = 0.0f, z2 = 0.0f;
+            for (int32_t i = 0; i < fn; ++i) {
+                const float w = rng.next();
+                z1 += (w - z1) * 0.55f;      // a gentle top-end tilt
+                z2 += (z1 - z2) * 0.55f;
+                const float t = static_cast<float>(i) / static_cast<float>(fn);
+                const float env = std::sin(t * 3.14159265f);
+                out.push_back((w - z2) * 0.30f * env);
+            }
+        }
+        if (sy.silence > 0.0f) {
+            out.insert(out.end(), static_cast<size_t>(kMatSr * sy.silence), 0.0f);
+        }
+    }
+    // Normalised to -20 dBFS rms, the same nominal recording level a file on
+    // the input bus is held to. A vocoder's output follows its input, so the
+    // machine's house level only means anything if every modulator arrives at
+    // the same size.
+    double sum = 0.0;
+    for (float v : out) sum += static_cast<double>(v) * v;
+    const auto rms = static_cast<float>(std::sqrt(sum / std::max<size_t>(1, out.size())));
+    if (rms > 1e-6f) {
+        const float gain = 0.1f / rms;
+        for (float &v : out) v *= gain;
+    }
+    return out;
+}
+
 // --- A thirteen-piece kit ----------------------------------------------------
 //
 // In Hexbeat's voice order, because that is the order Forage's pads are laid

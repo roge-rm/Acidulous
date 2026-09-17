@@ -32,6 +32,7 @@
 
 #include <engine/core/Constants.h>
 #include <engine/core/InputBus.h>
+#include <engine/core/WavReader.h>
 #include <engine/core/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
@@ -51,6 +52,8 @@ namespace {
 
 constexpr int32_t kBlock = kBlockFrames;
 std::string gBankDir;
+// The repo root, for material that lives in a file rather than in a header.
+std::string gRootDir = ".";
 std::string gOutDir = "build/audition";
 
 // --- Phrases -----------------------------------------------------------------
@@ -127,7 +130,33 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
     p.measuredNote = note;
     const float beat = 60.0f / bpm;
 
-    if (kind == "hold") {
+    if (kind == "vocode") {
+        // For the vocoder, and shaped by what it is being judged on.
+        //
+        // A vocoder is only audible while its carrier is sounding, and the
+        // usual phrases let go after a couple of seconds - the modulator then
+        // runs for another nine with nothing to shape, so the demo is two
+        // seconds of speech and twelve of noise floor. Dan, hearing exactly
+        // that: "the samples are mostly static".
+        //
+        // So: chords, held, covering the whole of the modulator. Four of them
+        // rather than one, because a held triad under a voice is also static
+        // in the other sense - the point of a vocoder is that the *same* words
+        // over a different chord are a different sound, and a bank of
+        // twenty-seven patches should let you hear that at least once.
+        //
+        // Cm - Ab - Eb - Bb, three seconds each, each voiced root-fifth-octave
+        // so there is something in every part of the bank to impose a shape
+        // on. Twelve seconds of carrier under an eleven-second recording.
+        static const int kChords[][3] = {{0, 7, 12}, {-4, 3, 8}, {-9, -2, 3}, {-2, 5, 10}};
+        for (int c = 0; c < 4; ++c) {
+            const float at = static_cast<float>(c) * 3.0f;
+            for (const int semi : kChords[c]) {
+                p.lastOff = hit(p, at, 3.05f, note + semi, velocity);
+            }
+        }
+        p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "hold") {
         p.lastOff = hit(p, 0.0f, 8.0f, note, velocity);
         p.frames = p.lastOff + secondsToFrames(4.0f);
     } else if (kind == "bass") {
@@ -695,6 +724,98 @@ void applySettings(Machine *m, const std::string &machine,
     m->swapObject(0, mat.program.get());
 }
 
+/**
+ * A real recording on the input bus, looped to fill the render.
+ *
+ * Synthetic speech is good enough to prove a vocoder's bands are wired to the
+ * right places and no good at all for judging whether a patch sounds like
+ * anything - the thing a vocoder does is impose the *detail* of one sound on
+ * another, and detail is exactly what a synthesised modulator does not have.
+ * Dan supplied the file. It lives in the repo so the audition is reproducible
+ * rather than depending on a path on one machine.
+ *
+ * Looped with a short crossfade, because a recording that stops dead in the
+ * middle of a render puts a step in every patch's demo at the same moment and
+ * the whole bank appears to share a fault.
+ */
+// A modulator at nominal level: -20 dBFS rms, which is a healthy recording.
+constexpr float kInputNominalRms = 0.1f;
+
+std::vector<float> fileInput(const std::string &path, float seconds) {
+    std::string error;
+    const std::unique_ptr<acidulous::SampleData> s =
+        acidulous::WavReader::read(path, static_cast<int32_t>(kSr), error);
+    if (s == nullptr || s->frames <= 0) {
+        std::fprintf(stderr, "input file %s: %s\n", path.c_str(), error.c_str());
+        return {};
+    }
+    // Folded to mono: a vocoder measures one spectrum, so the two channels
+    // have to become one before anything is analysed. The file is genuinely
+    // stereo - its side is 11.7 dB under its mid - and that width belongs to
+    // the recording, not to what the bands hear.
+    std::vector<float> src(s->left.begin(), s->left.end());
+    if (!s->right.empty()) {
+        for (size_t i = 0; i < src.size() && i < s->right.size(); ++i) {
+            src[i] = (src[i] + s->right[i]) * 0.5f;
+        }
+    }
+    // DC and rumble first, then the level.
+    //
+    // A hand-held recording carries a lot under the voice: this one has eight
+    // per cent of its energy below 20 Hz, none of which any band can measure,
+    // and levelled on the whole signal the part the bands *do* hear came out
+    // twelve decibels under where it was aimed.
+    //
+    // The corner is 45 Hz and not 100, which was the first guess and was
+    // wrong. Measured on this recording, the speaker's median fundamental is
+    // 125 Hz but a quarter of his voiced frames are under 80 - a hundred-hertz
+    // corner would have cut the fundamental out of nearly half the speech and
+    // called it rumble.
+    {
+        const float a = std::exp(-2.0f * 3.14159265f * 45.0f / kSr);
+        for (int pass = 0; pass < 3; ++pass) {
+            float px = 0.0f, py = 0.0f;
+            for (float &v : src) {
+                py = a * (py + v - px);
+                px = v;
+                v = py;
+            }
+        }
+    }
+    // Normalised to a nominal recording level.
+    //
+    // A vocoder's output follows its input, so levelling a bank against a
+    // particular file would set the machine's house level from how loud that
+    // one recording happened to be - and on a phone the modulator is whatever
+    // the player is speaking at. Normalising here means the house level is
+    // calibrated to "a modulator at nominal level" and any file lands there.
+    {
+        double sum = 0.0;
+        for (float v : src) sum += static_cast<double>(v) * v;
+        const auto rms = static_cast<float>(std::sqrt(sum / std::max<size_t>(1, src.size())));
+        if (rms > 1e-6f) {
+            const float gain = kInputNominalRms / rms;
+            for (float &v : src) v *= gain;
+        }
+    }
+    const auto fade = static_cast<size_t>(kSr * 0.01f);
+    const auto want = static_cast<size_t>(kSr * seconds);
+    std::vector<float> out;
+    out.reserve(want);
+    while (out.size() < want) {
+        const size_t base = out.size();
+        for (size_t i = 0; i < src.size() && out.size() < want; ++i) {
+            float v = src[i];
+            if (base > 0 && i < fade) v *= static_cast<float>(i) / static_cast<float>(fade);
+            if (i + fade >= src.size()) {
+                v *= static_cast<float>(src.size() - i) / static_cast<float>(fade);
+            }
+            out.push_back(v);
+        }
+    }
+    return out;
+}
+
 void loadInput(const std::string &kind, Material &mat) {
     if (kind == "voice") {
         mat.input = voicePhrase();
@@ -703,6 +824,10 @@ void loadInput(const std::string &kind, Material &mat) {
     } else if (kind == "break") {
         const std::unique_ptr<audio::Take> t = breakLoop();
         mat.input = t->left;
+    } else if (kind == "speech") {
+        mat.input = speechPhrase();
+    } else if (kind.rfind("file:", 0) == 0) {
+        mat.input = fileInput(kind.substr(5), 14.0f);
     }
 }
 
@@ -724,7 +849,10 @@ std::string defaultMaterial(const std::string &machine) {
 std::string defaultInput(const std::string &machine) {
     // A vocoder on a steady vowel tells you nothing: the band map only shows
     // what it does when what goes through it moves.
-    if (machine == "Cipher") return "voice";
+    // Twelve seconds of synthetic speech, low-pitched and moving. A recording
+    // of a real voice is better still and `--input file:<path>` takes one, but
+    // a repository is the wrong place to keep somebody's voice.
+    if (machine == "Cipher") return "speech";
     return "none";
 }
 
@@ -1768,7 +1896,8 @@ void usage() {
 
 int main(int argc, char **argv) {
     const char *root = std::getenv("ACIDULOUS_ROOT");
-    gBankDir = std::string(root != nullptr ? root : ".") + "/tools/banks";
+    gRootDir = root != nullptr ? root : ".";
+    gBankDir = gRootDir + "/tools/banks";
     if (root != nullptr) gOutDir = std::string(root) + "/build/audition";
 
     std::vector<std::string> positional;

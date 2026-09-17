@@ -141,6 +141,10 @@ class Cipher final : public Machine {
     int32_t zeroCount = 0, zeroWindow = 0;
     float sibilanceEnv = 0.0f;
     dsp::Svf sibilanceFilter;
+    // The sibilance noise gets the same high-pass the detector uses. White
+    // noise added flat is mostly bottom and middle, which is not what an "s"
+    // is and is enough to bury the vocoder it is supposed to be helping.
+    dsp::Svf sibilanceShaper;
     float feedbackSample = 0.0f;
     float feedbackLp = 0.0f;
 

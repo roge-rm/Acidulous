@@ -1304,30 +1304,84 @@ internal object FactoryBanks {
     private fun cipher0() = Patch("Cipher", "Init", emptyMap())
 
     private fun cipher1() = Patch("Cipher", "Classic",
-        mapOf("sibilance" to 0.5f, "mix" to 0.4f, "detune" to 0.25f, "sub" to 0.25f))
+        mapOf("bands" to 0.5555556f, "q" to 0.6f, "attack" to 0.231378213f, "release" to 0.347067326f, "sibilance" to 0.5f, "mix" to 0.25f, "detune" to 0.16f, "volume" to 0.36f))
 
     private fun cipher2() = Patch("Cipher", "Choir",
-        mapOf("bands" to 0.6666667f, "attack" to 0.350000173f, "release" to 0.5f, "smear" to 0.62f, "wave a" to 0.5f, "mix" to 0.5f, "detune" to 0.5f))
+        mapOf("bands" to 0.7777778f, "q" to 0.45f, "attack" to 0.615689039f, "release" to 0.6833629f, "mix" to 0.55f, "detune" to 0.6f, "sub" to 0.1f, "volume" to 0.38f, "ampatk" to 0.528333843f, "amprel" to 0.6489087f))
 
-    private fun cipher3() = Patch("Cipher", "Backwards",
-        mapOf("bands" to 0.5555556f, "remap" to 0.2f, "sibilance" to 0.2f, "wave b" to 0.25f, "mix" to 0.5f))
+    private fun cipher3() = Patch("Cipher", "Ensemble",
+        mapOf("bands" to 0.6666667f, "release" to 0.598104f, "mix" to 0.6f, "detune" to 0.9f, "sub" to 0.45f, "volume" to 0.59f))
 
-    private fun cipher4() = Patch("Cipher", "Shuffled",
-        mapOf("bands" to 0.444444448f, "release" to 0.399999946f, "smear" to 0.7f, "remap" to 0.8f, "remapamt" to 0.8f, "seed" to 0.225806445f))
+    private fun cipher4() = Patch("Cipher", "Narrow",
+        mapOf("bands" to 0.222222224f, "low" to 0.5943161f, "high" to 0.4349665f, "q" to 0.65f, "attack" to 0.231378213f, "release" to 0.3843109f, "sibilance" to 0.6f, "volume" to 0.335f))
 
-    private fun cipher5() = Patch("Cipher", "Held Vowel",
-        mapOf("bands" to 0.6666667f, "freeze" to 1f, "frzdecay" to 0.8999997f, "wave a" to 0.5f, "mix" to 0.3f, "detune" to 0.4f))
+    private fun cipher5() = Patch("Cipher", "Backwards",
+        mapOf("bands" to 0.5555556f, "release" to 0.462756425f, "remap" to 0.2f, "mix" to 0.5f, "sub" to 0.25f, "volume" to 1f))
 
-    private fun cipher6() = Patch("Cipher", "Talkbox",
-        mapOf("bands" to 0.444444448f, "sibilance" to 0.45f, "track" to 1f, "trackglide" to 0.25000006f, "wave a" to 0.25f, "pw" to 0.299999982f, "sub" to 0.35f))
+    private fun cipher6() = Patch("Cipher", "Mirror",
+        mapOf("bands" to 0.5555556f, "release" to 0.462756425f, "remap" to 0.4f, "volume" to 0.365f))
 
-    private fun cipher7() = Patch("Cipher", "Inverted",
-        mapOf("bands" to 0.5555556f, "role" to 1f, "attack" to 0.09999997f, "release" to 0.120000809f, "wave a" to 0.25f, "mix" to 0f))
+    private fun cipher7() = Patch("Cipher", "Folded",
+        mapOf("bands" to 0.5555556f, "q" to 0.5f, "release" to 0.5f, "remap" to 1f, "volume" to 0.36f))
 
-    private fun cipher8() = Patch("Cipher", "Runaway",
-        mapOf("smear" to 0.25f, "gate" to 0.15f, "feedback" to 0.62f, "fbtone" to 0.35f, "drive" to 0.35f))
+    private fun cipher8() = Patch("Cipher", "Comb",
+        mapOf("bands" to 0.8333333f, "q" to 0.5f, "release" to 0.4404695f, "remap" to 0.6f))
 
-    private val cipher: List<Patch> by lazy { listOf(cipher0(), cipher1(), cipher2(), cipher3(), cipher4(), cipher5(), cipher6(), cipher7(), cipher8()) }
+    private fun cipher9() = Patch("Cipher", "Shuffled",
+        mapOf("bands" to 0.5555556f, "release" to 0.462756425f, "remap" to 0.8f, "seed" to 0.225806445f, "volume" to 0.935f))
+
+    private fun cipher10() = Patch("Cipher", "Chipmunk",
+        mapOf("bands" to 0.5555556f, "release" to 0.4404695f, "shift" to 0.7916667f, "volume" to 0.485f))
+
+    private fun cipher11() = Patch("Cipher", "Giant",
+        mapOf("bands" to 0.5555556f, "release" to 0.4824149f, "shift" to 0.208333328f, "sub" to 0.3f, "volume" to 0.91f))
+
+    private fun cipher12() = Patch("Cipher", "Stretched",
+        mapOf("bands" to 0.6666667f, "release" to 0.462756425f, "stretch" to 0.75f, "volume" to 1f))
+
+    private fun cipher13() = Patch("Cipher", "Squashed",
+        mapOf("bands" to 0.6666667f, "release" to 0.462756425f, "stretch" to 0.25f, "sibilance" to 0.55f, "volume" to 1f))
+
+    private fun cipher14() = Patch("Cipher", "Held Vowel",
+        mapOf("bands" to 0.6666667f, "release" to 0.7313782f, "freeze" to 1f, "frzmorph" to 0f, "volume" to 0.295f, "ampatk" to 0.6041241f, "amprel" to 0.773105f))
+
+    private fun cipher15() = Patch("Cipher", "Morph",
+        mapOf("bands" to 0.6666667f, "release" to 0.6156891f, "freeze" to 1f, "frzmorph" to 0.5f, "frzdecay" to 0.7484046f, "volume" to 0.325f))
+
+    private fun cipher16() = Patch("Cipher", "Trail Up",
+        mapOf("bands" to 0.7777778f, "q" to 0.5f, "release" to 0.7686218f, "smear" to 0.9f, "volume" to 0.315f))
+
+    private fun cipher17() = Patch("Cipher", "Trail Down",
+        mapOf("bands" to 0.7777778f, "release" to 0.7686218f, "smear" to 0.099999994f, "volume" to 0.285f))
+
+    private fun cipher18() = Patch("Cipher", "Pulse",
+        mapOf("bands" to 0.5555556f, "wave a" to 0.25f, "wave b" to 0.25f, "mix" to 0f, "pw" to 0.07777777f, "volume" to 0.27f))
+
+    private fun cipher19() = Patch("Cipher", "Sub Heavy",
+        mapOf("bands" to 0.5555556f, "low" to 0.206648976f, "release" to 0.5f, "mix" to 0.3f, "sub" to 0.8f, "volume" to 1f))
+
+    private fun cipher20() = Patch("Cipher", "Breath",
+        mapOf("bands" to 0.7777778f, "release" to 0.5304302f, "sibilance" to 0.7f, "wave a" to 0.75f, "wave b" to 0.75f, "mix" to 0.7f, "noise" to 0.8f, "unvoiced" to 0.5f, "volume" to 1f))
+
+    private fun cipher21() = Patch("Cipher", "Ring",
+        mapOf("bands" to 0.5555556f, "release" to 0.4404695f, "wave a" to 1f, "wave b" to 1f, "mix" to 0.5f, "detune" to 0.5f, "volume" to 0.3f))
+
+    private fun cipher22() = Patch("Cipher", "Talkbox",
+        mapOf("bands" to 0.444444448f, "q" to 0.85f, "attack" to 0.231378213f, "release" to 0.3843109f, "sibilance" to 0.55f, "track" to 1f, "trackglide" to 0.4820468f, "volume" to 0.235f))
+
+    private fun cipher23() = Patch("Cipher", "Tracked",
+        mapOf("bands" to 0.6666667f, "release" to 0.462756425f, "track" to 1f, "trackglide" to 0.6588259f, "trackamt" to 0.8f, "mix" to 0.45f, "volume" to 0.41f))
+
+    private fun cipher24() = Patch("Cipher", "Runaway",
+        mapOf("bands" to 0.5555556f, "q" to 0.6f, "release" to 0.6529327f, "feedback" to 0.3368421f, "fbtone" to 0.6f, "volume" to 0.27f))
+
+    private fun cipher25() = Patch("Cipher", "Swapped",
+        mapOf("bands" to 0.5555556f, "role" to 1f, "attack" to 0.299052f, "release" to 0.3843109f, "mix" to 0.5f, "volume" to 0.455f))
+
+    private fun cipher26() = Patch("Cipher", "Gated",
+        mapOf("bands" to 0.6666667f, "attack" to 0.115689106f, "release" to 0.299052f, "gate" to 0.45f, "sibilance" to 0.6f, "volume" to 0.345f))
+
+    private val cipher: List<Patch> by lazy { listOf(cipher0(), cipher1(), cipher2(), cipher3(), cipher4(), cipher5(), cipher6(), cipher7(), cipher8(), cipher9(), cipher10(), cipher11(), cipher12(), cipher13(), cipher14(), cipher15(), cipher16(), cipher17(), cipher18(), cipher19(), cipher20(), cipher21(), cipher22(), cipher23(), cipher24(), cipher25(), cipher26()) }
 
     private fun filament0() = Patch("Filament", "Init", emptyMap())
 
