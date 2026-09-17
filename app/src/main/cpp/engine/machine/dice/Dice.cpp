@@ -6,6 +6,25 @@
 
 namespace acidulous::machine {
 
+// What a sliced loop reaches before the output stage, and so what the drive
+// stage should treat as its nominal level.
+constexpr float kNominal = 0.3f;
+// Where this machine's bank sits in the volume knob's travel, set from Init -
+// which carries no `volume` line, and so is the only patch that says what the
+// machine does at its defaults. Without one, Init measured 1.7 dB over the
+// bank's line and Dust, which throws away level through a short gate and a
+// low filter, ran out of knob 5.5 dB under it.
+constexpr float kHouse = 0.82f;
+// Sixty decibels, as a multiple of the time constant: a decay stated in
+// seconds has to be the time to fall sixty, or the number is a fiction.
+constexpr float kLn1000 = 6.907755f;
+// A per-slice decay at or above the top of its range means no decay at all.
+constexpr float kDecayOff = 4.0f;
+// The ramps at a slice's edges, in frames at 48 kHz. Short enough that a
+// kick still arrives as a kick, long enough that the boundary is not a step.
+constexpr int32_t kFadeIn = 24;   // half a millisecond
+constexpr int32_t kFadeOut = 96;  // two milliseconds
+
 Dice::Dice() { initParams(); }
 
 const ParamDef *Dice::paramDefs(int32_t &count) const {
@@ -58,7 +77,10 @@ const ParamDef *Dice::paramDefs(int32_t &count) const {
 
 void Dice::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
-    for (auto &v : voices) v.filter.setSampleRate(sampleRate);
+    for (auto &v : voices) {
+        v.filter.setSampleRate(sampleRate);
+        v.filterR.setSampleRate(sampleRate);
+    }
     reset();
 }
 
@@ -117,7 +139,18 @@ void Dice::recut() {
 
 Dice::Voice *Dice::allocate() {
     for (auto &v : voices) if (!v.used) return &v;
-    return &voices[0]; // a slicer steals rather than refuses: the beat comes first
+    // A slicer steals rather than refuses - the beat comes first - but it has
+    // to steal the *oldest* slice, not `voices[0]`.
+    //
+    // Taking the first slot cut whichever slice happened to live there, dead,
+    // at whatever amplitude it was passing through: on Held, where `hold`
+    // makes every roll land in the same place each pass, that was a step of
+    // 0.71 once a bar and a click reading three hundred thousand times the
+    // surrounding slope. The oldest voice is the one nearest its own end, so
+    // it is both the least missed and the quietest place to cut.
+    Voice *oldest = &voices[0];
+    for (auto &v : voices) if (v.age > oldest->age) oldest = &v;
+    return oldest;
 }
 
 /**
@@ -194,9 +227,18 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->env = 1.0f;
     // Gate at one lets a slice run to its own end; below that it is cut
     // short, which is what makes a loop breathe rather than smear.
+    //
+    // The decay is the time to fall sixty decibels, not one time constant -
+    // the same correction Hexbeat and Genesis needed, where a label in
+    // seconds meant seven times what it said. The top of the range is the
+    // exception and means *no* decay: a slicer playing a loop straight must
+    // not fade every slice, and four seconds read honestly would take three
+    // and a half decibels off a quarter-second slice.
     const float decay = sliceParam(slice, Decay) * std::max(0.02f, paramOf(Gate));
-    v->envCoeff = 1.0f - std::exp(-1.0f / (decay * sampleRate));
+    v->envCoeff = decay >= kDecayOff ? 0.0f
+                                     : 1.0f - std::exp(-kLn1000 / (decay * sampleRate));
     v->filter.reset();
+    v->filterR.reset();
 }
 
 void Dice::noteOff(uint8_t) {} // a slice plays its length; it is not held
@@ -224,6 +266,7 @@ bool Dice::render(float *L, float *R, int32_t frames) {
     for (auto &v : voices) {
         if (!v.used) continue;
         v.filter.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
+        v.filterR.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
         for (int32_t i = 0; i < frames; ++i) {
             if (!v.used) break;
             const int32_t idx = std::clamp(static_cast<int32_t>(v.pos), 0, last);
@@ -231,10 +274,27 @@ bool Dice::render(float *L, float *R, int32_t frames) {
             const float f = static_cast<float>(v.pos - idx);
             const float sl = left[idx] + (left[next] - left[idx]) * f;
             const float sr = right[idx] + (right[next] - right[idx]) * f;
-            const float e = v.env;
+            // Ramped at both ends.
+            //
+            // A slice cut at onsets ends exactly where the next transient
+            // begins, so its last sample is nowhere near zero and stopping
+            // there is a step - the harness measured sixteen thousand times
+            // the surrounding slope on Straight and three hundred thousand on
+            // Held. The out ramp is the longer of the two because that is the
+            // end that lands on a transient; the in ramp only has to cover a
+            // grid cut landing mid-waveform, and any longer would eat the
+            // attack that a slicer exists to deliver.
+            const float rampIn = v.age < kFadeIn
+                                     ? static_cast<float>(v.age) / static_cast<float>(kFadeIn)
+                                     : 1.0f;
+            const float rampOut = v.left < kFadeOut
+                                      ? static_cast<float>(v.left) / static_cast<float>(kFadeOut)
+                                      : 1.0f;
+            const float e = v.env * rampIn * rampOut;
+            ++v.age;
             v.env -= v.env * v.envCoeff;
             L[i] += v.filter.process(sl * e) * v.gainL;
-            R[i] += sr * e * v.gainR;
+            R[i] += v.filterR.process(sr * e) * v.gainR;
             v.pos += v.inc;
             if (--v.left <= 0) {
                 if (v.repeats > 1) {
@@ -242,6 +302,7 @@ bool Dice::render(float *L, float *R, int32_t frames) {
                     --v.repeats;
                     v.pos = v.inc < 0 ? v.end - 1 : v.start;
                     v.left = static_cast<int32_t>(v.repeatLen / std::max(0.05, std::fabs(v.inc)));
+                    v.age = 0; // a repeat is a new start, and needs the same ramp
                 } else {
                     v.used = false;
                 }
@@ -251,11 +312,16 @@ bool Dice::render(float *L, float *R, int32_t frames) {
     }
 
     for (int32_t i = 0; i < frames; ++i) {
-        float l = L[i] * volume, r = R[i] * volume;
+        float l = L[i] * volume * kHouse, r = R[i] * volume * kHouse;
         if (drive > 0.0001f) {
+            // Normalised on the nominal level, not on the ceiling. The fourth
+            // machine to carry `tanh(x * k) / sqrt(k)`, after Hexbeat, Genesis
+            // and Pollen: sqrt(k) grows faster than the tanh recovers, so the
+            // knob bought dirt by spending level.
             const float k = 1.0f + drive * 10.0f;
-            l = dsp::fastTanh(l * k) / std::sqrt(k);
-            r = dsp::fastTanh(r * k) / std::sqrt(k);
+            const float norm = kNominal / dsp::fastTanh(kNominal * k);
+            l = dsp::fastTanh(l * k) * norm;
+            r = dsp::fastTanh(r * k) * norm;
         }
         L[i] = l * panL * 1.4142f;
         R[i] = r * panR * 1.4142f;

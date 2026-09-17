@@ -21,7 +21,11 @@ namespace acidulous::machine {
 class Dice final : public Machine {
   public:
     static constexpr int kSlices = 16;
-    static constexpr int kVoices = 8;
+    // One per pad at the machine's maximum, so a sixteen-slice loop can have
+    // every slice sounding before anything has to be stolen. Stealing a slice
+    // is a cut in the middle of audio, and the cheapest fix for a cut is not
+    // having to make it.
+    static constexpr int kVoices = 16;
     static constexpr uint8_t kBaseNote = 36;
 
     enum SliceP : int32_t { Level = 0, Pan, Pitch, Decay, Direction, SliceParamCount };
@@ -61,8 +65,17 @@ class Dice final : public Machine {
         int32_t start = 0, end = 0;
         float gainL = 0.5f, gainR = 0.5f;
         float env = 1.0f, envCoeff = 0.0f;
+        // Frames since this slice (or this stutter repeat) started, for the
+        // ramp in. A slice ends where the next one begins, which on an
+        // onset cut is a transient - so both ends need a ramp or every
+        // slice boundary is a step.
+        int32_t age = 0;
         uint8_t note = 0;
-        dsp::MultiFilter filter;
+        // One per channel. A single filter processed into L only, which left
+        // the right channel unfiltered: on Dust, with its cutoff at 2.2 kHz,
+        // the right side measured seventeen decibels more treble than the
+        // left. The same fault Mosaic had, found the same way.
+        dsp::MultiFilter filter, filterR;
     };
 
     float sliceParam(int32_t slice, int32_t which) const {

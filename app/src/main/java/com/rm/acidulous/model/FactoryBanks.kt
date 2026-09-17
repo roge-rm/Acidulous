@@ -1650,24 +1650,58 @@ internal object FactoryBanks {
 
     private fun dice0() = Patch("Dice", "Init", emptyMap())
 
-    private fun dice1() = Patch("Dice", "Straight", emptyMap())
+    private fun dice1() = Patch("Dice", "Straight",
+        mapOf("slices" to 1f, "volume" to 0.673333347f))
 
-    private fun dice2() = Patch("Dice", "Nudge",
-        mapOf("gate" to 0.9f, "swap" to 0.1f, "reverse" to 0.08f))
+    private fun dice2() = Patch("Dice", "Grid",
+        mapOf("cut" to 1f, "slices" to 1f, "volume" to 0.72f))
 
-    private fun dice3() = Patch("Dice", "Broken",
-        mapOf("slices" to 0.714285731f, "gate" to 0.7f, "swap" to 0.5f, "reverse" to 0.3f, "stutter" to 0.15f, "drop" to 0.08f))
+    private fun dice3() = Patch("Dice", "Half Time",
+        mapOf("rate" to 0.25f, "volume" to 0.533333361f))
 
-    private fun dice4() = Patch("Dice", "Fill",
-        mapOf("cut" to 1f, "slices" to 1f, "gate" to 0.5f, "swap" to 0.3f, "stutter" to 0.6f, "stutterdiv" to 0.6666667f, "jump" to 0.35f, "drive" to 0.2f, "volume" to 0.5667f))
+    private fun dice4() = Patch("Dice", "Double Time",
+        mapOf("slices" to 1f, "gate" to 0.9f, "rate" to 0.75f, "volume" to 1f))
 
-    private fun dice5() = Patch("Dice", "Held",
-        mapOf("gate" to 0.85f, "swap" to 0.4f, "reverse" to 0.25f, "stutter" to 0.2f, "hold" to 1f, "seed" to 0.174603179f))
+    private fun dice5() = Patch("Dice", "Swap",
+        mapOf("slices" to 1f, "swap" to 1f, "volume" to 0.673333347f))
 
-    private fun dice6() = Patch("Dice", "Dust",
-        mapOf("cut" to 1f, "slices" to 1f, "gate" to 0.25f, "swap" to 0.35f, "reverse" to 0.2f, "drop" to 0.3f, "cutoff" to 0.655900061f, "resonance" to 0.15f, "volume" to 0.5333f))
+    private fun dice6() = Patch("Dice", "Reverse",
+        mapOf("slices" to 1f, "reverse" to 0.5f, "volume" to 0.673333347f))
 
-    private val dice: List<Patch> by lazy { listOf(dice0(), dice1(), dice2(), dice3(), dice4(), dice5(), dice6()) }
+    private fun dice7() = Patch("Dice", "Stutter",
+        mapOf("slices" to 1f, "stutter" to 0.55f, "volume" to 0.453333348f))
+
+    private fun dice8() = Patch("Dice", "Drop",
+        mapOf("slices" to 1f, "drop" to 0.35f, "volume" to 0.673333347f))
+
+    private fun dice9() = Patch("Dice", "Jump",
+        mapOf("slices" to 1f, "jump" to 0.5f, "volume" to 0.68f))
+
+    private fun dice10() = Patch("Dice", "Fill",
+        mapOf("slices" to 1f, "gate" to 0.45f, "swap" to 0.6f, "stutter" to 0.5f, "stutterdiv" to 0.6666667f, "jump" to 0.3f, "jumprange" to 0.545454562f, "drive" to 0.2f, "volume" to 0.5266667f))
+
+    private fun dice11() = Patch("Dice", "Roll",
+        mapOf("gate" to 0.3f, "stutter" to 1f, "stutterdiv" to 1f, "drive" to 0.15f, "volume" to 0.673333347f))
+
+    private fun dice12() = Patch("Dice", "Ghost",
+        mapOf("slices" to 1f, "gate" to 0.18f, "drop" to 0.2f, "volume" to 1f))
+
+    private fun dice13() = Patch("Dice", "Held",
+        mapOf("slices" to 1f, "gate" to 0.8f, "swap" to 0.45f, "reverse" to 0.25f, "stutter" to 0.3f, "hold" to 1f, "seed" to 0.174603179f, "volume" to 0.74666667f))
+
+    private fun dice14() = Patch("Dice", "Dust",
+        mapOf("cut" to 1f, "slices" to 0.857142866f, "gate" to 0.45f, "swap" to 0.35f, "reverse" to 0.2f, "drop" to 0.3f, "cutoff" to 0.6559455f, "resonance" to 0.15f, "volume" to 1f))
+
+    private fun dice15() = Patch("Dice", "Driven",
+        mapOf("slices" to 1f, "cutoff" to 0.8865413f, "drive" to 0.7f, "volume" to 0.386666656f))
+
+    private fun dice16() = Patch("Dice", "Pitched",
+        mapOf("slices" to 1f, "pitch" to 0.395833343f, "fine" to 0.42f, "volume" to 0.686666667f))
+
+    private fun dice17() = Patch("Dice", "Scattered",
+        mapOf("s00_pan" to 0.099999994f, "s01_pan" to 0.9f, "s02_pan" to 0.25f, "s03_pan" to 0.75f, "s03_pitch" to 0.6458333f, "s04_pan" to 0.099999994f, "s05_pan" to 0.9f, "s05_pitch" to 0.395833343f, "s06_pan" to 0.25f, "s07_pan" to 0.75f, "volume" to 0.653333366f))
+
+    private val dice: List<Patch> by lazy { listOf(dice0(), dice1(), dice2(), dice3(), dice4(), dice5(), dice6(), dice7(), dice8(), dice9(), dice10(), dice11(), dice12(), dice13(), dice14(), dice15(), dice16(), dice17()) }
 
     private fun mosaic0() = Patch("Mosaic", "Init", emptyMap())
 
