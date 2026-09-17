@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Clip
+import com.rm.acidulous.model.hasContent
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.PlayMode
 import com.rm.acidulous.model.Scene
@@ -135,12 +136,15 @@ fun ClipSettingsDialog(
     /** Render this clip to audio, or throw the render away. Both dismiss. */
     onFreeze: () -> Unit = {},
     onThaw: () -> Unit = {},
+    /** Empty it of notes and automation, keeping how it is set up. Dismisses. */
+    onClear: () -> Unit = {},
     onConfirm: (Clip) -> Unit,
 ) {
     var bars by remember { mutableStateOf(clip.bars) }
     var mode by remember { mutableStateOf(clip.playMode) }
     var mute by remember { mutableStateOf(clip.mute) }
     var grid by remember { mutableStateOf(clip.grid) }
+    var confirmClear by remember { mutableStateOf(false) }
 
     PlainDialog(
         title = "Clip",
@@ -178,6 +182,41 @@ fun ClipSettingsDialog(
             ListSection("audio", "Freezing renders this clip down: the track stops running its machine.") {
                 Choice("freeze", false, onPick = onFreeze)
             }
+        }
+
+        // Also an action rather than a setting, and the only one here that
+        // throws work away - so it asks first, and it is offered only when
+        // there is something to throw.
+        if (clip.hasContent()) {
+            val what = buildString {
+                if (clip.notes.isNotEmpty()) append("%d note%s".format(clip.notes.size, if (clip.notes.size == 1) "" else "s"))
+                if (clip.automation.isNotEmpty()) {
+                    if (isNotEmpty()) append(", ")
+                    append("%d lane%s".format(clip.automation.size, if (clip.automation.size == 1) "" else "s"))
+                }
+                if (clip.frozen != null) {
+                    if (isNotEmpty()) append(", ")
+                    append("the freeze")
+                }
+            }
+            ListSection("contents", "$what. Bars, play mode, mute and grid are kept.") {
+                Choice("clear", false) { confirmClear = true }
+            }
+        }
+    }
+
+    if (confirmClear) {
+        PlainDialog(
+            title = "Clear this clip?",
+            onDismiss = { confirmClear = false },
+            confirmLabel = "Clear",
+            onConfirm = { confirmClear = false; onClear() },
+        ) {
+            Text(
+                "Everything played into it goes: notes, automation and any frozen audio. " +
+                    "How the clip is set up - its length, play mode, mute and grid - stays as it is.",
+                color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
+            )
         }
     }
 }

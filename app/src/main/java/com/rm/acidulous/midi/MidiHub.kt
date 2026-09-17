@@ -137,6 +137,31 @@ object MidiHub {
     /** Notes a mapping swallowed, so their note-offs go the same way. */
     private val swallowed = HashSet<Int>()
 
+    /**
+     * Where every sounding note went, so its release follows it there - and
+     * what a vanished controller was holding, so those notes can be let go.
+     * The logic lives in [HeldNotes], which has no Android in it and is tested
+     * on its own, because this is the part that was wrong.
+     */
+    private val held = HeldNotes()
+
+    /** Currently dispatching from this port, or -1 for the test generators. */
+    private var currentPort = -1
+
+    /** Nothing is held any more: forget where everything went. */
+    fun forgetSounding() = held.clear()
+
+    /** Let go of whatever a port was holding; it will never send the offs. */
+    private fun releasePort(portId: Int) {
+        val freed = held.release(portId)
+        for (h in freed) {
+            NativeEngine.midiEvent(h.rack, 0x80, h.note, 0, NativeEngine.NO_CHANNEL)
+        }
+        if (freed.isNotEmpty()) {
+            lastMessage = "released ${freed.size} held note${if (freed.size == 1) "" else "s"}"
+        }
+    }
+
     /** Which rack plays when routing is [Routing.FixedTrack]. */
     var fixedRack by mutableStateOf(0)
 
@@ -153,6 +178,8 @@ object MidiHub {
         manager?.registerDeviceCallback(object : MidiManager.DeviceCallback() {
             override fun onDeviceAdded(device: MidiDeviceInfo) = refresh()
             override fun onDeviceRemoved(device: MidiDeviceInfo) {
+                // Unplugged mid-note: nothing else will ever send the off.
+                releasePort(device.id)
                 opened.remove(device.id)?.close()
                 refresh()
             }
@@ -420,7 +447,7 @@ object MidiHub {
         }
         opened[portId] = device
         val parser = MidiParser(
-            onMessage = { status, d1, d2 -> dispatch(status, d1, d2) },
+            onMessage = { status, d1, d2 -> currentPort = portId; dispatch(status, d1, d2); currentPort = -1 },
             onRealtime = { status, d1, d2, stamp -> clockIn(status, d1, d2, stamp) },
         )
         parsers[portId] = parser
@@ -439,6 +466,7 @@ object MidiHub {
     }
 
     private fun close(portId: Int) {
+        releasePort(portId)
         opened.remove(portId)?.close()
         parsers.remove(portId)
         refresh()
@@ -495,6 +523,15 @@ object MidiHub {
         // delivered either, or the machine is left holding a note it was
         // never given.
         val isOff = kind == 0x80 || (kind == 0x90 && d2 == 0)
+        // Where this actually goes. A note that is already sounding goes back
+        // to the rack that was given its note-on, whatever is selected now;
+        // expression on a member channel follows the note it is shaping.
+        val rackNow = when {
+            isOff -> held.rackForOff(channel, d1) ?: rack
+            kind == 0x90 -> rack
+            member -> held.rackForExpression(channel) ?: rack
+            else -> rack
+        }
         val taken = when {
             isOff -> swallowed.remove(d1)
             kind == 0xb0 -> onMappable(d1, null, d2, rack)
@@ -506,9 +543,15 @@ object MidiHub {
         val expressive = member && !(kind == 0xb0 && d1 == 74 && !mpeTimbre)
         if (!taken) {
             NativeEngine.midiEvent(
-                rack, kind, d1, d2,
+                rackNow, kind, d1, d2,
                 if (expressive) channel else NativeEngine.NO_CHANNEL,
             )
+        }
+        // Remember, and forget, where notes went.
+        if (kind == 0x90 && d2 > 0 && !taken) {
+            held.onNoteOn(currentPort, channel, d1, rackNow)
+        } else if (isOff) {
+            held.onNoteOff(channel, d1)
         }
         received += 1
         lastMessage = when (kind) {
@@ -518,7 +561,7 @@ object MidiHub {
             0xd0 -> "prs $d1"
             0xe0 -> "bend ${((d2 shl 7) or d1) - 8192}"
             else -> "%02x".format(status)
-        } + " → rack ${rack + 1}"
+        } + " → rack ${rackNow + 1}"
     }
 
     // --- Bluetooth ------------------------------------------------------------

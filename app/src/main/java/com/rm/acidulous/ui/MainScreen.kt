@@ -55,6 +55,7 @@ import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.addScene
 import com.rm.acidulous.model.Freeze
+import com.rm.acidulous.model.cleared
 import com.rm.acidulous.model.addTrack
 import com.rm.acidulous.ui.UiPrefs.withDefaultScale
 import com.rm.acidulous.model.changeMachine
@@ -373,7 +374,12 @@ fun MainScreen(
             // is one tap and never behind a menu - but it is also the one
             // button here you must not hit by accident, so it keeps the
             // whole width of the row between itself and the transport.
-            PanicButton(Modifier.width(BarAnchor)) { NativeEngine.panic() }
+            PanicButton(Modifier.width(BarAnchor)) {
+                NativeEngine.panic()
+                // Panic means nothing is held any more, so the hub must not go
+                // on believing a note is still down somewhere.
+                com.rm.acidulous.midi.MidiHub.forgetSounding()
+            }
             if (clipMode) {
                 // What a tap waits for. "end" is the musical default: the
                 // clip you are replacing finishes what it was doing.
@@ -411,11 +417,16 @@ fun MainScreen(
                 colour = if (showMixer) Acid.colors.accent else Color.Unspecified,
             ) { showMixer = !showMixer }
             BarButton(
-                if (armed) "\u25CF" else "\u25CB",
+                // The glyph carries two states, because the pill carries two
+                // controls: a tap arms, a long press turns the click on, and
+                // the red ring is already spoken for by the first of them.
+                // Dan: "it's hard to tell whether just recording is on or
+                // whether both record and metronome are on".
+                (if (armed) "\u25CF" else "\u25CB") + if (clickOn) "\u266A" else "",
                 // Hold it for the click - see the same gesture in the editor.
-                Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name))
-                    .onLongPress { if (!UiPrefs.mapMode) onClick(!clickOn) },
+                Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name)),
                 border = if (armed) Acid.colors.red else null,
+                onLongPress = { if (!UiPrefs.mapMode) onClick(!clickOn) },
             ) { onArm(!armed) }
             BarButton(
                 if (playing) "\u25A0" else "\u25B6",
@@ -448,6 +459,10 @@ fun MainScreen(
                 tempo = song.scenes.firstOrNull { it.id == d.sceneId }?.tempo?.bpm ?: song.tempo,
                 onFreeze = { dialog = null; onFreeze(listOf(Freeze.Target(d.track, d.sceneId))) },
                 onThaw = { dialog = null; onThaw(listOf(Freeze.Target(d.track, d.sceneId))) },
+                onClear = {
+                    dialog = null
+                    editor.editClip(d.track, d.sceneId) { it.cleared() }
+                },
             ) { edited ->
                 editor.editClip(d.track, d.sceneId) { edited }
                 dialog = null

@@ -162,6 +162,20 @@ data class Clip(
     val rev: Long = ClipRev.next()
 }
 
+/**
+ * The clip emptied of what was played into it, keeping how it is set up.
+ *
+ * Bars, play mode, mute and grid are the clip's *settings* - how long it is
+ * and how it behaves - and survive. Notes and automation are its contents and
+ * do not. The freeze goes with them: it is a render of the notes, so a cleared
+ * clip that kept its frozen audio would sit there silent-looking and still
+ * making a sound, which is the one outcome nobody could explain.
+ */
+fun Clip.cleared(): Clip = copy(notes = emptyList(), automation = emptyMap(), frozen = null)
+
+/** Is there anything in this clip to clear? */
+fun Clip.hasContent(): Boolean = notes.isNotEmpty() || automation.isNotEmpty() || frozen != null
+
 object ClipRev {
     private val counter = AtomicLong(1)
     fun next(): Long = counter.getAndIncrement()

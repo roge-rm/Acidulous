@@ -600,7 +600,7 @@ private fun App(modifier: Modifier = Modifier) {
                     com.rm.acidulous.model.Action.Stop.name -> NativeEngine.transportStop()
                     com.rm.acidulous.model.Action.PlayStop.name ->
                         if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay()
-                    com.rm.acidulous.model.Action.Panic.name -> NativeEngine.panic()
+                    com.rm.acidulous.model.Action.Panic.name -> { NativeEngine.panic(); com.rm.acidulous.midi.MidiHub.forgetSounding() }
                     com.rm.acidulous.model.Action.RecordArm.name -> { armed = !armed; onArm(armed) }
                     com.rm.acidulous.model.Action.LoopScene.name -> onLoopScene(!loopScene)
                     com.rm.acidulous.model.Action.ClipMode.name -> onClipMode(!com.rm.acidulous.ui.UiPrefs.clipMode)

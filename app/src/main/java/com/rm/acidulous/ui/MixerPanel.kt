@@ -26,6 +26,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.EngineSync
 import com.rm.acidulous.model.EngineParams
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.rm.acidulous.model.laneUnit
+import com.rm.acidulous.model.laneParam
 import com.rm.acidulous.model.Mixer
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
@@ -54,15 +61,31 @@ fun MixerPanel(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         song.tracks.forEachIndexed { index, track ->
-            ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index))
+            // Which of this channel's controls a clip is driving. A lane wins
+            // over the fader on every pass, so a channel with one is a channel
+            // whose fader will not appear to work - and nothing here said so.
+            val automated = remember(track) {
+                track.clips.values
+                    .flatMap { it.automation.keys }
+                    .filter { laneUnit(it) == "channel" }
+                    .map { laneParam(it) }
+                    .distinct()
+                    .sorted()
+            }
+            ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated)
         }
         MasterStrip(song, editor, masterPeak, clickOn, onClick)
     }
 }
 
 @Composable
-private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEditor, colour: Color) {
+private fun ChannelStrip(
+    track: Track, index: Int, peak: Float, editor: SongEditor, colour: Color,
+    /** Channel controls some clip of this track has a lane for. */
+    automated: List<String> = emptyList(),
+) {
     val c = Acid.colors
+    var askClear by remember { mutableStateOf(false) }
     val m = track.mixer
     fun live(name: String, v01: Float) = com.rm.acidulous.engine.NativeEngine.setParam(index, "channel", name, v01)
     fun gesture(name: String, v01: Float, update: (Mixer) -> Mixer) {
@@ -72,12 +95,54 @@ private fun ChannelStrip(track: Track, index: Int, peak: Float, editor: SongEdit
     fun tap(update: (Mixer) -> Mixer) = editor.edit(index) { t -> t.copy(mixer = update(t.mixer)) }
     fun map(name: String) = MapTargets.param(index, "channel", name)
 
+    if (askClear) {
+        PlainDialog(
+            title = "Clear automation on ${track.name}?",
+            onDismiss = { askClear = false },
+            confirmLabel = "Clear",
+            onConfirm = {
+                askClear = false
+                // Every clip on this track, because a lane in a scene you are
+                // not playing will bite you the moment that scene comes round.
+                editor.edit(index) { t ->
+                    t.copy(clips = t.clips.mapValues { (_, clip) ->
+                        val kept = clip.automation.filterKeys { laneUnit(it) != "channel" }
+                        if (kept.size == clip.automation.size) clip else clip.copy(automation = kept)
+                    })
+                }
+            },
+        ) {
+            Text(
+                "This channel's " + automated.joinToString(", ") + " " +
+                    (if (automated.size == 1) "is" else "are") +
+                    " being driven by recorded movement, which is why the control does not stay where you put it. " +
+                    "Clearing removes those lanes from every clip on this track; the notes are untouched.",
+                color = c.textDim, fontSize = 11.sp, lineHeight = 14.sp,
+            )
+        }
+    }
+
     Column(
         Modifier.width(STRIP_W).clip(RoundedCornerShape(6.dp)).background(c.cardAlt).padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(track.name, color = c.text, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // A lane on this channel, said out loud. Without it a fader that is
+        // being overwritten every pass simply looks broken, which is exactly
+        // how it was found: "the level didn't seem to respond to my controls".
+        if (automated.isNotEmpty()) {
+            Text(
+                "\u223F " + automated.joinToString(" "),
+                color = c.accent, fontSize = 9.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(c.accentDim)
+                    .clickable { askClear = true }
+                    .padding(horizontal = 3.dp, vertical = 1.dp),
+                textAlign = TextAlign.Center,
+            )
+        }
         Row(Modifier.height(FADER_H), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Meter(peak, Modifier.width(8.dp).height(FADER_H))
             VerticalFader(
