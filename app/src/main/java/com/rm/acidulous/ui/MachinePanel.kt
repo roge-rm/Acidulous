@@ -50,6 +50,7 @@ import com.rm.acidulous.model.Zones
 import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withPatch
+import com.rm.acidulous.model.samplesInUse
 import com.rm.acidulous.model.withSetting
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
@@ -143,7 +144,7 @@ fun MachinePanel(
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(
                 binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
-                onImportKit, onImportSlice,
+                onImportKit, onImportSlice, inUse = editor.song.samplesInUse(),
                 // How many pads the slice covers, so the pads and the grid can
                 // say which of them are playing a piece of it.
                 onSliceApplied = { count ->
@@ -490,28 +491,38 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
 internal val PanelControlH = 100.dp
 
 /**
- * A button that stands beside knobs without being squashed by them.
+ * A column of buttons in a group, where knobs would otherwise go.
  *
- * A `Group` sizes itself to its tallest child and aligns the row to the
- * bottom, which is right for knobs and wrong for a bare TextButton: the label
- * wraps to whatever width is left over, one character per line. This gives it
- * a width of its own and lets the group be as wide as it needs, which is what
- * the horizontally scrolling row is for.
+ * Three of them side by side in a card as tall as a knob is mostly empty
+ * card - a knob is a hundred device-independent pixels tall and a button is
+ * twenty. Stacked, they fill the height they are given and the card is narrow
+ * instead of wide, which is the right shape for a row that scrolls sideways.
+ *
+ * They cannot be bare TextButtons either way: a `Group` aligns its row to the
+ * bottom and sizes to its tallest child, so a TextButton takes whatever width
+ * is left over and wraps its label a character at a time. That is what turned
+ * `match` into a column of single letters.
  */
 @Composable
-private fun PanelAction(label: String, tint: Color, onClick: () -> Unit) {
-    Box(
-        Modifier.fillMaxHeight().widthIn(min = 62.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .background(Acid.colors.control)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+private fun PanelActions(vararg actions: Triple<String, Color, () -> Unit>) {
+    Column(
+        Modifier.fillMaxHeight().widthIn(min = 74.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        Text(
-            label, color = tint, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-            maxLines = 1, softWrap = false,
-            modifier = Modifier.padding(horizontal = 8.dp),
-        )
+        for ((label, tint, onClick) in actions) {
+            Box(
+                Modifier.fillMaxWidth().weight(1f)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Acid.colors.control)
+                    .clickable(onClick = onClick),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label, color = tint, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                    maxLines = 1, softWrap = false,
+                )
+            }
+        }
     }
 }
 
@@ -565,7 +576,7 @@ private fun HexbeatPanel(b: ParamBinding) {
 private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit,
                         onClear: (Int) -> Unit, onAssign: (Int, String) -> Unit,
                         onImportKit: (Int) -> Unit, onImportSlice: () -> Unit,
-                        onSliceApplied: (Int) -> Unit) {
+                        onSliceApplied: (Int) -> Unit, inUse: Set<String>) {
     val p = pad.coerceIn(0, 12)
     fun n(name: String) = "p%02d_%s".format(p, name)
     val rel = track.machine.settings[n("sample")]
@@ -685,6 +696,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         },
     )
     if (picking) SampleBrowserDialog(
+        inUse = inUse,
         onPick = { rel -> picking = false; resetTrim(p); onAssign(p, rel) },
         onDismiss = { picking = false },
     )
@@ -709,7 +721,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             // text do not fit across a phone, and what gave way was the last
             // one - `match` came out as a column of single letters.
             TextButton(onClick = { resetTrim(p); onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
-            TextButton(onClick = { picking = true }) { Text("recorded…", color = hot, fontSize = 11.sp) }
+            TextButton(onClick = { picking = true }) { Text("samples…", color = hot, fontSize = 11.sp) }
             if (rel != null) TextButton(onClick = { resetTrim(p); onClear(p) }) { Text("clear", color = Acid.colors.textMid, fontSize = 11.sp) }
         }
         Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -720,11 +732,13 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "volume", "volume", hot) }
             // The whole kit at once, where there is room for them to be read.
             Group("kit") {
-                PanelAction("kit…", hot) { onImportKit(p) }
-                PanelAction(if (sliceBusy) "slicing…" else "slice…", hot) {
-                    if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
-                }
-                PanelAction("match", Acid.colors.textMid) { matchLevels() }
+                PanelActions(
+                    Triple("kit…", hot) { onImportKit(p) },
+                    Triple(if (sliceBusy) "slicing…" else "slice…", hot) {
+                        if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
+                    },
+                    Triple("match", Acid.colors.textMid) { matchLevels() },
+                )
             }
         }
     }
@@ -2033,7 +2047,7 @@ private fun MoltPanel(
                             )
                             Row {
                                 TextButton(onClick = onImport) { Text("import…", color = c.textMid, fontSize = 11.sp) }
-                                TextButton(onClick = { picking = true }) { Text("recorded…", color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = { picking = true }) { Text("samples…", color = c.textMid, fontSize = 11.sp) }
                             }
                         }
                     }
@@ -2089,6 +2103,7 @@ private fun MoltPanel(
         }
     }
     if (picking) SampleBrowserDialog(
+        inUse = editor.song.samplesInUse(),
         onPick = { rel ->
             picking = false
             editor.edit(trackIndex) { t -> t.withSetting("sample", rel) }
@@ -2129,7 +2144,7 @@ private fun DicePanel(
                             )
                             Row {
                                 TextButton(onClick = onImport) { Text("import…", color = c.textMid, fontSize = 11.sp) }
-                                TextButton(onClick = { picking = true }) { Text("recorded…", color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = { picking = true }) { Text("samples…", color = c.textMid, fontSize = 11.sp) }
                             }
                         }
                     }
@@ -2191,6 +2206,7 @@ private fun DicePanel(
         }
     }
     if (picking) SampleBrowserDialog(
+        inUse = editor.song.samplesInUse(),
         onPick = { rel ->
             picking = false
             editor.edit(trackIndex) { t -> t.withSetting("sample", rel) }
@@ -2249,7 +2265,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                             }
                             Row {
                                 TextButton(onClick = onImport) { Text("import…", color = c.textMid, fontSize = 11.sp) }
-                                TextButton(onClick = { picking = true }) { Text("recorded…", color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = { picking = true }) { Text("samples…", color = c.textMid, fontSize = 11.sp) }
                             }
                         }
                     }
@@ -2346,6 +2362,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
         }
     }
     if (picking) SampleBrowserDialog(
+        inUse = editor.song.samplesInUse(),
         onPick = { rel ->
             picking = false
             editor.edit(trackIndex) { t -> t.withSetting("sample", rel) }
@@ -2786,6 +2803,7 @@ private fun MosaicPanel(
     // A sample recorded in the app is added as a zone the same way an
     // imported one is; a SoundFont owns the whole map, so it steps aside.
     if (pickingZone) SampleBrowserDialog(
+        inUse = editor.song.samplesInUse(),
         onPick = { rel ->
             pickingZone = false
             editor.edit(trackIndex) { t ->
@@ -2833,7 +2851,7 @@ private fun MosaicPanel(
                                 TextButton(onClick = onImportSoundFont) { Text("soundfont…", color = PanelAmber, fontSize = 10.sp) }
                                 if (sf2.isNotEmpty()) TextButton(onClick = onPickPreset) { Text("preset…", color = PanelAmber, fontSize = 10.sp) }
                                 TextButton(onClick = onImportZoneSamples) { Text("samples…", color = Acid.colors.textMid, fontSize = 10.sp) }
-                                TextButton(onClick = { pickingZone = true }) { Text("recorded…", color = Acid.colors.textMid, fontSize = 10.sp) }
+                                TextButton(onClick = { pickingZone = true }) { Text("samples…", color = Acid.colors.textMid, fontSize = 10.sp) }
                             }
                         }
                     }

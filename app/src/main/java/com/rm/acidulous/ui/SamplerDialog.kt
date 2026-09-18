@@ -192,15 +192,32 @@ fun SamplerDialog(onDismiss: () -> Unit, onRecorded: (String) -> Unit = {}) {
     }
 }
 
-/** Samples this app recorded or imported, for machines to draw on. */
+/**
+ * Everything in the sample folder, to pick from or to throw away.
+ *
+ * Not only what the app recorded, though the button used to say so: every
+ * import copies into the same folder, so after one kit import this is the kit.
+ * Nothing pruned it and nothing could delete from it, so the folder only ever
+ * grew - which on a phone is somebody else's storage filling up.
+ *
+ * [inUse] is the set of paths the song is playing. Those can still be deleted,
+ * because the alternative is a file nothing can ever remove once a track has
+ * touched it, but they say so first and they ask twice.
+ */
 @Composable
-fun SampleBrowserDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
+fun SampleBrowserDialog(onPick: (String) -> Unit, onDismiss: () -> Unit, inUse: Set<String> = emptySet()) {
     val context = LocalContext.current
     val dir = remember { File(com.rm.acidulous.engine.EngineAssets.userRoot(context), "samples") }
-    val files = remember {
+    // Re-read after a delete rather than trusting the list we opened with.
+    var generation by remember { mutableStateOf(0) }
+    val files = remember(generation) {
         (dir.listFiles { f -> f.isFile && f.name.endsWith(".wav", true) } ?: emptyArray())
             .sortedByDescending { it.lastModified() }
     }
+    // Deleting a file cannot be undone, so it takes two taps: the first arms
+    // the row and the second does it. A confirm dialog on top of a dialog is
+    // worse, and a single tap beside "use this one" is an accident waiting.
+    var armed by remember { mutableStateOf<String?>(null) }
     PlainDialog(
         title = "Samples",
         onDismiss = onDismiss,
@@ -215,12 +232,32 @@ fun SampleBrowserDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
             )
         }
         files.forEach { file ->
+            val rel = "samples/${file.name}"
+            val used = rel in inUse
+            val isArmed = armed == rel
             DialogRow(
-                mark = "♪",
+                mark = if (used) "▶" else "♪",
                 name = file.name,
-                under = "%.1f kB".format(file.length() / 1024f),
-                monoUnder = true,
-            ) { onPick("samples/${file.name}") }
+                under = when {
+                    isArmed -> "delete this? tap the cross again"
+                    used -> "%.1f kB · a track is playing this".format(file.length() / 1024f)
+                    else -> "%.1f kB".format(file.length() / 1024f)
+                },
+                on = isArmed,
+                monoUnder = !isArmed && !used,
+                onRemove = {
+                    if (!isArmed) {
+                        armed = rel
+                    } else {
+                        armed = null
+                        // The engine holds a decoded copy, so a track playing
+                        // this keeps playing until the song is reloaded - and
+                        // then finds nothing and says so, which is the same
+                        // path as any other file that will not read.
+                        if (file.delete()) generation++
+                    }
+                },
+            ) { armed = null; onPick(rel) }
         }
     }
 }

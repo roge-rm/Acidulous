@@ -105,12 +105,12 @@ object MachineUi {
      * The order the *pads* are laid out in, which is deliberately not the order
      * the grid lists them in.
      *
-     * Two rows of an odd count give the *shorter* row the wider cells, and
-     * `DrumPads` fills the rows top-first - so whatever is put last ends up
-     * both wider and nearest the thumb. Left alone, Hexbeat's thirteen split
-     * seven and six and handed that row to `CH OH CY RD CB CL`: the hats and
-     * cymbals were 18% wider than the kick and the snare, which is the wrong
-     * way round for every piece of music anybody plays.
+     * `DrumPads` puts the first half on the *bottom* row, where a hand rests,
+     * and gives it the wider cells when the count is odd - so whatever comes
+     * first here is both nearest the thumb and biggest. Left alone, Hexbeat's
+     * thirteen handed that row to `CH OH CY RD CB CL`: the hats and cymbals
+     * were wider than the kick and the snare, which is the wrong way round
+     * for every piece of music anybody plays.
      *
      * The grid keeps ascending note order, because a drum grid is read with
      * the kick at the top and that convention is older than this app.
@@ -124,9 +124,8 @@ object MachineUi {
         // pad 5 somewhere else would only make pad 5 hard to find.
         if (type != "Hexbeat" && type != "Genesis") return voices
         val core = listOf("BD", "RS", "SD", "CP", "CH", "OH")
-        val rest = voices.filter { it.short !in core }
         val hand = core.mapNotNull { code -> voices.firstOrNull { it.short == code } }
-        return rest + hand
+        return hand + voices.filter { it.short !in core }
     }
 
     /** Forage pads are named after their samples; unloaded pads by number. */
@@ -177,6 +176,29 @@ object MachineUi {
  * `Machine.settings["zones"]`, one per line, because they are a variable
  * length list rather than parameters - the same reason samples do.
  */
+/**
+ * Every sample file the song refers to, relative to the user root.
+ *
+ * What it is for is deleting: the browser lets a player clear out the sample
+ * folder, and a file that a track is playing must not go quietly. Machines
+ * name their samples in four shapes and this knows all of them - one `sample`
+ * (Dice, Pollen, Molt), thirteen `pNN_sample` (Forage), the `slice_sample`
+ * behind Forage's pads, and Mosaic's zones, which keep their paths inside an
+ * encoded string rather than in a setting of their own.
+ *
+ * Erring towards "in use": a path this misses is a file the player can delete
+ * without being warned, which is the expensive direction to be wrong in.
+ */
+fun Song.samplesInUse(): Set<String> = buildSet {
+    for (t in tracks) {
+        for ((key, value) in t.machine.settings) {
+            if (value.isEmpty()) continue
+            if (key == "sample" || key == "slice_sample" || key.endsWith("_sample")) add(value)
+            if (key == "zones") Zones.decode(value).forEach { if (it.path.isNotEmpty()) add(it.path) }
+        }
+    }
+}
+
 data class Zone(
     val path: String = "",
     val lowKey: Int = 0, val highKey: Int = 127, val rootKey: Int = 60,

@@ -39,9 +39,14 @@ private const val HARD = 127f
 /**
  * Pads in place of the keyboard for a drum machine: two rows, one per voice.
  *
- * The order is `MachineUi.padOrder`, not the order the grid lists - rows fill
- * top-first, so the voices a hand reaches for are put last and come out both
- * wider and nearer the thumb. See the note there.
+ * **Pad one is bottom left**, and the row above it holds what decorates -
+ * which is how a drum machine has always been laid out and is what a hand
+ * expects to find. The grid above keeps ascending note order, because a drum
+ * grid is read with the kick at the top; the two conventions disagree and
+ * both are right, which is why `padOrder` exists.
+ *
+ * With an odd count the bottom row takes the smaller half, so its cells are
+ * the wider ones: thirteen pads put six across the bottom and seven above.
  */
 @Composable
 fun DrumPads(rack: Int, voices: List<DrumVoice>, selected: Int = -1, onSelect: (Int) -> Unit = {}, modifier: Modifier = Modifier, type: String = "") {
@@ -51,9 +56,13 @@ fun DrumPads(rack: Int, voices: List<DrumVoice>, selected: Int = -1, onSelect: (
     // worked while the list was in ascending note order, which it no longer is.
     val base = voices.minOf { it.note }
     val laid = MachineUi.padOrder(type, voices)
-    val perRow = (laid.size + 1) / 2
+    // The bottom row takes the smaller half so that it is the wider one, and
+    // it is drawn second so that it is the lower one.
+    val bottomCount = laid.size / 2
+    val rows = if (bottomCount == 0) listOf(laid)
+               else listOf(laid.drop(bottomCount), laid.take(bottomCount))
     Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        for (row in laid.chunked(perRow)) {
+        for (row in rows) {
             Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                 for (v in row) Pad(rack, v, v.note - base == selected, { onSelect(v.note - base) }, Modifier.weight(1f).fillMaxSize())
             }
