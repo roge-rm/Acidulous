@@ -489,6 +489,32 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
  */
 internal val PanelControlH = 100.dp
 
+/**
+ * A button that stands beside knobs without being squashed by them.
+ *
+ * A `Group` sizes itself to its tallest child and aligns the row to the
+ * bottom, which is right for knobs and wrong for a bare TextButton: the label
+ * wraps to whatever width is left over, one character per line. This gives it
+ * a width of its own and lets the group be as wide as it needs, which is what
+ * the horizontally scrolling row is for.
+ */
+@Composable
+private fun PanelAction(label: String, tint: Color, onClick: () -> Unit) {
+    Box(
+        Modifier.fillMaxHeight().widthIn(min = 62.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(Acid.colors.control)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label, color = tint, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+            maxLines = 1, softWrap = false,
+            modifier = Modifier.padding(horizontal = 8.dp),
+        )
+    }
+}
+
 @Composable
 internal fun Group(title: String, content: @Composable () -> Unit) {
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(6.dp)) {
@@ -678,23 +704,28 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                     color = Acid.colors.textDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                 )
             }
+            // Only what belongs to *this pad*. The three that act on the whole
+            // kit moved into the group row below: seven controls and a line of
+            // text do not fit across a phone, and what gave way was the last
+            // one - `match` came out as a column of single letters.
             TextButton(onClick = { resetTrim(p); onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
-            TextButton(onClick = { onImportKit(p) }) { Text("kit…", color = hot, fontSize = 11.sp) }
-            TextButton(onClick = {
-                if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
-            }) {
-                Text(if (sliceBusy) "slicing…" else "slice…", color = hot, fontSize = 11.sp)
-            }
             TextButton(onClick = { picking = true }) { Text("recorded…", color = hot, fontSize = 11.sp) }
-            TextButton(onClick = { matchLevels() }) { Text("match", color = Acid.colors.textMid, fontSize = 11.sp) }
             if (rel != null) TextButton(onClick = { resetTrim(p); onClear(p) }) { Text("clear", color = Acid.colors.textMid, fontSize = 11.sp) }
         }
         Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev"), "reverse") }
+            Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev"), "reverse"); PanelSwitch(b, n("play"), listOf("once", "loop", "hold"), "play") }
             Group("amp") { PanelKnob(b, n("decay"), "decay"); PanelKnob(b, n("level"), "level"); PanelKnob(b, n("pan"), "pan"); PanelSwitch(b, n("choke"), listOf("-", "1", "2", "3", "4"), "choke") }
             Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp"), "mode"); PanelKnob(b, n("crush"), "crush", Acid.colors.pink) }
             Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
             Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "volume", "volume", hot) }
+            // The whole kit at once, where there is room for them to be read.
+            Group("kit") {
+                PanelAction("kit…", hot) { onImportKit(p) }
+                PanelAction(if (sliceBusy) "slicing…" else "slice…", hot) {
+                    if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
+                }
+                PanelAction("match", Acid.colors.textMid) { matchLevels() }
+            }
         }
     }
 }

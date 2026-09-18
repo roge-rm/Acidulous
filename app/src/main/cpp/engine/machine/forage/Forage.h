@@ -32,7 +32,11 @@ class Forage final : public Machine {
     static constexpr int32_t kSharedSlot = kPads;
     // Per-pad parameter order; the table is generated pad-major with names
     // like "p03_cutoff". Globals follow the last pad.
-    enum PadParam : int32_t { Start, End, Pitch, Decay, Level, Pan, Reverse, Choke, Cutoff, Reso, Mode, Crush, PitchEnv, PitchDecay, PadParamCount };
+    // `Play` is appended rather than filed next to `Decay` where it belongs,
+    // because the table is pad-major and inserting anywhere else would move
+    // every parameter after it. Patches and automation lanes are keyed by
+    // name so they would survive, but nothing is gained by churning them.
+    enum PadParam : int32_t { Start, End, Pitch, Decay, Level, Pan, Reverse, Choke, Cutoff, Reso, Mode, Crush, PitchEnv, PitchDecay, Play, PadParamCount };
     enum Global : int32_t { Accent, Volume, GlobalCount };
     static int32_t index(int32_t pad, PadParam p) { return pad * PadParamCount + p; }
     static int32_t globalIndex(Global g) { return kPads * PadParamCount + g; }
@@ -43,7 +47,7 @@ class Forage final : public Machine {
     void prepare(int32_t sampleRate) override;
     void reset() override;
     void noteOn(uint8_t note, uint8_t velocity) override;
-    void noteOff(uint8_t) override {}
+    void noteOff(uint8_t note) override;
     void allNotesOff() override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
@@ -68,6 +72,7 @@ class Forage final : public Machine {
         float holdL = 0.0f, holdR = 0.0f; // crusher sample-and-hold
         float holdPhase = 0.0f;
         int32_t age = 0; // frames since the trigger, for the edge ramp
+        bool held = false; // a while-held pad, waiting for its note off
     };
 
     void trigger(int32_t pad, float velocity01, bool accent);

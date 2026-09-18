@@ -1,4 +1,5 @@
 #include "Forage.h"
+#include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
 
@@ -36,6 +37,17 @@ struct Table {
             {"crush", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
             {"penv", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},   // octaves of sweep, signed
             {"pdecay", 5.0f, 500.0f, 60.0f, Curve::Exponential, 0, "ms"},
+            // 0 one shot, 1 loop, 2 while held. One shot is the default and
+            // is what the machine did before this existed.
+            //
+            // A *loop* runs while the note is held and stops when it comes
+            // up, which is the only reading that works: looping until the
+            // decay envelope ends it means a pad with the default decay - play
+            // the sample through - never stops at all, and a step in the
+            // sequencer would set it going until the next panic. So the three
+            // are "ignores the release", "repeats until the release" and
+            // "plays once, cut at the release".
+            {"play", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},
         };
         const ParamDef globals[Forage::GlobalCount] = {
             {"accent", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
@@ -89,6 +101,13 @@ constexpr float kDrive = 0.375f; // -8.5 dB into the clipper
 // nothing is waiting on the tail and a longer ramp is cheaper to hide.
 constexpr int32_t kFadeIn = 24;
 constexpr int32_t kFadeOut = 96;
+// And at a loop's seam, where the same ramps would cut a two millisecond
+// notch out of every pass - audible as a tick at anything but the longest
+// loop lengths. Short enough to hide, long enough not to be a step.
+constexpr int32_t kLoopFade = 32;
+
+/** 0 one shot, 1 loop, 2 while held. */
+enum PlayMode : int32_t { OneShot = 0, Looping = 1, WhileHeld = 2 };
 constexpr float kHouse = 0.83f;
 } // namespace
 
@@ -164,6 +183,22 @@ void Forage::trigger(int32_t i, float vel, bool accent) {
     p.filter.reset();
     p.holdPhase = 0.0f;
     p.age = 0;
+    const auto mode = static_cast<int32_t>(params_.get(index(i, Play)) + 0.5f);
+    p.held = mode == WhileHeld || mode == Looping;
+}
+
+void Forage::noteOff(uint8_t note) {
+    const int32_t pad = static_cast<int32_t>(note) - kBaseNote;
+    if (pad < 0 || pad >= kPads) return;
+    Pad &p = pads[pad];
+    // Only a pad that is waiting for the release answers a note off at all -
+    // a loop or a held pad. A one shot ignores it, because a drum pad that
+    // stopped when the finger came up would be a different instrument.
+    if (!p.playing || !p.held) return;
+    // Whichever is faster: a pad already decaying quickly should not be made
+    // to ring on by being released.
+    p.ampCoeff = std::max(p.ampCoeff, dsp::onePoleCoeff(0.008f, sr));
+    p.held = false;
 }
 
 bool Forage::render(float *L, float *R, int32_t frames) {
@@ -184,6 +219,10 @@ bool Forage::render(float *L, float *R, int32_t frames) {
         const float gl = std::cos((pan + 1.0f) * 0.25f * dsp::kPi) * 1.4142f;
         const float gr = std::sin((pan + 1.0f) * 0.25f * dsp::kPi) * 1.4142f;
         const float crush = params_.get(index(i, Crush));
+        const auto play = static_cast<int32_t>(params_.get(index(i, Play)) + 0.5f);
+        // A loop needs somewhere to loop *in*: two frames is not a loop, it is
+        // a divide by nothing, so a slice too short to run round plays once.
+        const bool looping = play == Looping && (hi - lo) > 4.0;
         const bool bandpass = params_.get(index(i, Mode)) >= 0.5f;
         p.filter.set(params_.get(index(i, Cutoff)), params_.get(index(i, Reso)));
         const float levels = crush > 0.0f ? std::exp2(16.0f - crush * 13.0f) : 0.0f; // 16 -> 3 bits
@@ -203,7 +242,14 @@ bool Forage::render(float *L, float *R, int32_t frames) {
             // last readable frame, and with the old test it was outside its
             // own range on its first sample and stopped before it made a
             // sound. Every reversed patch in the bank measured -200 dB.
-            if (p.pos < lo || p.pos > hi - 1.0) { p.playing = false; break; }
+            if (p.pos < lo || p.pos > hi - 1.0) {
+                if (!looping) { p.playing = false; break; }
+                // Round again, and start the ramp over: the seam is not at a
+                // zero crossing and without a ramp on both sides of it every
+                // pass begins with a step.
+                p.pos = reverse ? hi - 1.0 : lo;
+                p.age = 0;
+            }
             const auto i0 = static_cast<size_t>(p.pos);
             const float frac = static_cast<float>(p.pos - static_cast<double>(i0));
             const size_t i1 = i0 + 1 < static_cast<size_t>(s.frames) ? i0 + 1 : i0;
@@ -235,9 +281,11 @@ bool Forage::render(float *L, float *R, int32_t frames) {
             r += corr;
             // How far from whichever edge playback is running towards.
             const double toEdge = reverse ? p.pos - lo : (hi - 1.0) - p.pos;
-            const float rampIn = p.age < kFadeIn ? static_cast<float>(p.age) / static_cast<float>(kFadeIn) : 1.0f;
-            const float rampOut = toEdge < kFadeOut
-                                      ? static_cast<float>(toEdge) / static_cast<float>(kFadeOut)
+            const int32_t fadeIn = looping ? kLoopFade : kFadeIn;
+            const int32_t fadeOut = looping ? kLoopFade : kFadeOut;
+            const float rampIn = p.age < fadeIn ? static_cast<float>(p.age) / static_cast<float>(fadeIn) : 1.0f;
+            const float rampOut = toEdge < fadeOut
+                                      ? static_cast<float>(toEdge) / static_cast<float>(fadeOut)
                                       : 1.0f;
             ++p.age;
             const float a = p.amp * level * rampIn * (rampOut > 0.0f ? rampOut : 0.0f);

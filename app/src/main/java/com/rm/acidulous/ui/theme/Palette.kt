@@ -49,6 +49,11 @@ data class AcidColors(
     val textMid: Color,
     val textDim: Color,
     val textFaint: Color,
+    /**
+     * What goes *on* [accent] - and only on it. It is near black in both
+     * themes, so on [accentDim], which the dark theme makes a dark olive, it
+     * is dark on dark. The clip-mode button did that and the label vanished.
+     */
     val onAccent: Color,
     // The four voices the app speaks in: amber for what you are doing, teal
     // for what a thing is, green for on, red for danger.

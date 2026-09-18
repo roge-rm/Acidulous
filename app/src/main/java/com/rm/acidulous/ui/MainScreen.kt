@@ -815,9 +815,14 @@ private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
             .clickable { onClipMode(!clipMode) },
         contentAlignment = Alignment.Center,
     ) {
+        // The same colour in both modes: the background says which one this
+        // is. `onAccent` is near black and goes on `accent`, and this is
+        // `accentDim`, which in the dark theme is a dark olive - so the label
+        // read as dark text on a dark ground and was the one thing on the
+        // button nobody could make out.
         Text(
             if (clipMode) "\u25B6 clip" else "\u2630 song",
-            color = if (clipMode) Acid.colors.onAccent else Acid.colors.textMid,
+            color = Acid.colors.textMid,
             fontSize = 11.sp, maxLines = 1,
         )
     }

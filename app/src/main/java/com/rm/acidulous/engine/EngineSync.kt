@@ -69,6 +69,25 @@ object EngineSync {
      * Pads reference samples by a path relative to [sampleRoot] in
      * `Machine.settings` ("p03_sample"). Loads what changed, clears what went.
      */
+    /**
+     * Something the player did that did not work, in words they can act on.
+     *
+     * Everything here used to end at `Log.w`, which is the right place for a
+     * mount queue being full and the wrong place for "that file is an mp3".
+     * Dan: "loading anything other than a wav silently fails, we need some
+     * kind of error message on an error." The host sets this; nothing else
+     * reads it.
+     */
+    var onProblem: ((String) -> Unit)? = null
+
+    private fun problem(message: String) {
+        Log.w(TAG, message)
+        onProblem?.invoke(message)
+    }
+
+    /** A file's own name, which is what the player recognises. */
+    private fun shortName(rel: String) = rel.substringAfterLast('/')
+
     fun ensureSamples(song: Song) {
         val root = sampleRoot ?: return
         song.tracks.forEachIndexed { rack, track ->
@@ -80,7 +99,11 @@ object EngineSync {
                 if (mounted[rack] != track.machine.type) continue // machine not mounted yet
                 if (rel.isEmpty() && loadedSamples[key] == null) { loadedSamples[key] = ""; continue } // never loaded: nothing to clear
                 val err = NativeEngine.loadSample(rack, pad, if (rel.isEmpty()) "" else java.io.File(root, rel).absolutePath)
-                if (err.isEmpty()) loadedSamples[key] = rel else Log.w(TAG, "sample '$rel' on rack $rack pad $pad: $err")
+                // The key is set either way, so a file that will not read is
+                // reported once rather than on every sync for the rest of the
+                // session. Changing the setting is what asks again.
+                loadedSamples[key] = rel
+                if (err.isNotEmpty()) problem("Pad ${pad + 1}: ${shortName(rel)} would not load - $err.")
             }
             // And the shared file the pads slice, in the slot above them. One
             // copy for all thirteen: mounting it per pad would decode an
@@ -92,8 +115,8 @@ object EngineSync {
                 val err = NativeEngine.loadSample(
                     rack, 13, if (sliceRel.isEmpty()) "" else java.io.File(root, sliceRel).absolutePath,
                 )
-                if (err.isEmpty()) loadedSamples[sliceKey] = sliceRel
-                else Log.w(TAG, "slice source '$sliceRel' on rack $rack: $err")
+                loadedSamples[sliceKey] = sliceRel
+                if (err.isNotEmpty()) problem("${shortName(sliceRel)} would not load - $err.")
             }
         }
     }
@@ -311,10 +334,10 @@ object EngineSync {
                 val path = if (wanted.isEmpty()) "" else java.io.File(root, wanted).absolutePath
                 val error = if (sung) NativeEngine.loadUtterance(rack, path)
                             else NativeEngine.loadTake(rack, path)
-                if (error.isNotEmpty()) {
-                    Log.w(TAG, "take on rack $rack: $error")
-                    loadedTakes[rack] = null // let a retry happen
-                }
+                // Reported and not retried: a file that will not decode will
+                // not decode the second time either, and `loadedTakes` is
+                // already set, so asking again means changing the setting.
+                if (error.isNotEmpty()) problem("${shortName(wanted)} would not load - $error.")
             }
         }
     }

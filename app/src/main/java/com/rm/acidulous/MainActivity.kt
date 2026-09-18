@@ -16,6 +16,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
@@ -271,6 +273,31 @@ private fun App(modifier: Modifier = Modifier) {
 
 
     var status by remember { mutableStateOf("starting…") }
+
+    // Something the player did that did not work. The engine reports decode
+    // failures from a worker, so this hops to the main thread before it
+    // touches Compose state.
+    var problem by remember { mutableStateOf<String?>(null) }
+    DisposableEffect(Unit) {
+        EngineSync.onProblem = { message ->
+            android.os.Handler(android.os.Looper.getMainLooper()).post { problem = message }
+        }
+        onDispose { EngineSync.onProblem = null }
+    }
+    problem?.let { message ->
+        com.rm.acidulous.ui.PlainDialog(
+            title = "That would not load",
+            onDismiss = { problem = null },
+            dismissLabel = "Close",
+        ) {
+            Text(message, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
+            Text(
+                "Acidulous reads uncompressed WAV - 8, 16, 24 or 32-bit, or float, " +
+                    "mono or stereo, at any rate. Convert an mp3, m4a or Ogg first.",
+                fontSize = 12.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textDim,
+            )
+        }
+    }
 
     val soundFontPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val track = mapTarget ?: return@rememberLauncherForActivityResult
