@@ -306,7 +306,16 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
                 const int32_t side = plane[1][i];
                 // The mid channel dropped a bit on the way in; the side's
                 // low bit is where it went.
-                int32_t mid = (plane[0][i] << 1) | (side & 1);
+                //
+                // Doubled through `uint32_t` rather than with `<< 1`, because
+                // a mid sample is signed and shifting a negative value left is
+                // undefined behaviour in C++17 - which a sanitiser says out
+                // loud and a compiler is entitled to act on. The same
+                // round-trip the wasted-bits line above uses. Every real
+                // compiler does the obvious thing here, so this changes the
+                // decoded audio not at all; it changes what we are entitled
+                // to expect.
+                const auto mid = static_cast<int32_t>(static_cast<uint32_t>(plane[0][i]) << 1 | (side & 1u));
                 plane[0][i] = (mid + side) >> 1;
                 plane[1][i] = (mid - side) >> 1;
             }
