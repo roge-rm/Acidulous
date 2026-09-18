@@ -280,7 +280,18 @@ class Launcher {
             const int64_t past = std::max<int64_t>(0, now - s.origin);
             return s.origin + (past / s.cycle + 1) * s.cycle;
         }
-        // Silent: the next line this clip's own length falls on.
+        // Silent, with something else sounding: the next line this clip's own
+        // length falls on, counted from the transport's zero, so a stack of
+        // clips stays in phase however it was assembled.
+        //
+        // Silent with *nothing* sounding: now. There is no phase to keep, and
+        // waiting for a grid that nobody can hear is indistinguishable from
+        // the app ignoring the tap. Dan, having stopped every clip and tapped
+        // the scene again: "it seems to wait to start, like the transport was
+        // still running even though I stopped all clips" - which is exactly
+        // what was happening, because the transport *was* still running and
+        // the line was measured from a zero several bars back.
+        if (!anyPlaying()) return now;
         return incoming > 0 ? nextMultiple(now, incoming) : now;
     }
 

@@ -82,7 +82,7 @@ patch Gospel family=tonewheel note=60 range=29..84 role=gospel
   vibtype        #3
   vibdepth       0.45
   click          0.4
-  volume         1.00
+  volume         1.01
 
 # Every bar out, which is not a registration so much as a decision.
 # It is meant to be too much, and the cabinet on fast is the point.
@@ -778,7 +778,7 @@ patch "Combo Thin" family=combo note=67 range=55..88 role=combo
   vibdepth       0.5
   drive          0.18
   bass           -4
-  volume         1.25
+  volume         1.26
 
 # The principal chorus at 16', 8' and 4' - one rank at three pitches,
 # which is what an organ means by a chorus and has nothing to do with

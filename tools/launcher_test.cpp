@@ -257,6 +257,33 @@ int main() {
         eq("adopting nothing leaves the rack silent", l.playing(1) ? 1 : 0, 0);
     }
 
+    printf("--- a tap with nothing sounding starts now, not on the next line ---\n");
+    {
+        // Stop everything, let the clock run on, tap again. The grid a silent
+        // launch is measured against is the transport's zero, so after a few
+        // bars of nothing the next line can be most of a cycle away - and a
+        // tap that does nothing audible for four bars reads as a tap that was
+        // missed.
+        Timeline t;
+        t.l.request(0, 100, kBar, 0);
+        t.run(2 * kBar);
+        t.l.requestStopAll(t.now);
+        t.run(4 * kBar);          // `run` is absolute: on to bar four, past the stop
+        eq("everything stopped", t.l.anyPlaying() ? 1 : 0, 0);
+
+        const int64_t late = 3 * kBar + kBar / 3;   // well off any line
+        t.l.request(0, 100, kBar, late);
+        t.l.applyDue(late);
+        eq("a tap into silence lands at once", t.l.playing(0) ? 1 : 0, 1);
+        eq("and takes that moment as its origin", t.l.origin(0), late);
+
+        // But a rack joining others that *are* sounding still waits, because
+        // there is a phase to keep.
+        t.l.request(1, 200, kBar, late + 10);
+        t.l.applyDue(late + 10);
+        eq("joining something already playing still waits", t.l.playing(1) ? 1 : 0, 0);
+    }
+
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

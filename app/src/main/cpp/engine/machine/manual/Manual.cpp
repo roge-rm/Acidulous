@@ -73,8 +73,23 @@ const ParamDef *Manual::paramDefs(int32_t &count) const {
 
         step(Model, "model", ModelCount, 0.0f);
         lin(Age, "age", 0.0f, 1.0f, 0.25f);
-        lin(Leakage, "leakage", 0.0f, 1.0f, 0.18f);
-        lin(Hum, "hum", 0.0f, 1.0f, 0.08f);
+        // Quiet by default, and still there.
+        //
+        // The generator turns whether or not a key is down, so an idle organ
+        // hums - that is true of the instrument and the model is right to have
+        // it. What it cannot be is *noticeable*: a track makes this sound the
+        // moment it is added, before a note has been played, and sixteen racks
+        // of it sum. Dan: "there is an immediate sound playing, no matter
+        // which patch I select, before any notes are played."
+        //
+        // At 0.18 the idle peak was -33.6 dBFS against a played peak of
+        // -10.7: audible in a gap, inaudible under anything. Dropping it to
+        // -45 was not enough either - a freshly added track should make no
+        // sound whatever until it is played, and "very quiet" is still a
+        // noise nobody asked for. Off by default; the knobs reach the old
+        // values, and a patch that wants the room hum says so.
+        lin(Leakage, "leakage", 0.0f, 1.0f, 0.0f);
+        lin(Hum, "hum", 0.0f, 1.0f, 0.0f);
         lin(Click, "click", 0.0f, 1.0f, 0.35f);
         lin(ClickRelease, "clickoff", 0.0f, 1.0f, 0.2f);
         lin(ContactSpread, "contacts", 0.0f, 1.0f, 0.4f);
@@ -142,7 +157,7 @@ const ParamDef *Manual::paramDefs(int32_t &count) const {
 
         lin(WindSag, "windsag", 0.0f, 1.0f, 0.12f);
         exp_(WindResponse, "windresp", 0.01f, 1.5f, 0.12f, "s");
-        lin(WindNoise, "windnoise", 0.0f, 1.0f, 0.06f);
+        lin(WindNoise, "windnoise", 0.0f, 1.0f, 0.0f); // see Leakage: continuous, so off
         exp_(TremRate, "tremrate", 0.5f, 10.0f, 4.2f, "Hz");
         lin(TremDepth, "tremdepth", 0.0f, 1.0f, 0.0f);
 
