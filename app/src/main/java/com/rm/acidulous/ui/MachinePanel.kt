@@ -336,6 +336,11 @@ private fun PatchBar(
         }
         BarIcon("\u2039", Acid.colors.accent) { step(-1) }
         BarIcon("\u203A", Acid.colors.accent) { step(1) }
+        // A gap before the fold, because it is not one of the pair. The three
+        // touch targets were flush against each other, so the arrow that
+        // steps a patch and the one that hides the whole panel were a
+        // thumb's width apart and did very different things.
+        Spacer(Modifier.width(18.dp))
         BarIcon(if (minimized) "▴" else "▾", Acid.colors.textMid, onToggleMinimized)
     }
 }

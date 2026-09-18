@@ -937,6 +937,24 @@ private fun App(modifier: Modifier = Modifier) {
     androidx.compose.runtime.CompositionLocalProvider(
         com.rm.acidulous.ui.LocalSongMappings provides song.mappings,
     ) {
+    /**
+     * The system back button goes back a screen, and only leaves from the top.
+     *
+     * Nothing handled it at all, so back quit the app from wherever you were -
+     * from a machine editor, from a Nexus graph, with a take unsaved. Windows
+     * are not in here: a Compose Dialog is its own window and takes back for
+     * itself, which is why the conversion window (whose dismiss does nothing)
+     * cannot be dismissed out from under the work it is reporting.
+     */
+    androidx.activity.compose.BackHandler(enabled = screen !is Screen.Main) {
+        screen = when (val s = screen) {
+            // The graph belongs to a machine, so back goes to the machine
+            // rather than all the way out - the same place its own arrow goes.
+            is Screen.Patch -> Screen.Edit(s.track, s.sceneId)
+            else -> Screen.Main
+        }
+    }
+
     when (val s = screen) {
         Screen.Main -> MainScreen(
             song = song, editor = editor, position = position, playing = playing, armed = armed,
