@@ -150,6 +150,16 @@ private val AUDIO_TYPES = arrayOf(
     "audio/mpeg", "audio/mp3", "audio/x-mp3", "audio/mpeg3",
 )
 
+/** What the provider calls a file, or [fallback] when it will not say. */
+private fun displayNameOf(context: android.content.Context, uri: android.net.Uri, fallback: String): String {
+    var display = fallback
+    context.contentResolver.query(uri, null, null, null, null)?.use { c ->
+        val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+        if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+    }
+    return display
+}
+
 private sealed class Screen {
     object Main : Screen()
     data class Edit(val track: Int, val sceneId: String) : Screen()
@@ -231,11 +241,7 @@ private fun App(modifier: Modifier = Modifier) {
     var mapBusy by remember { mutableStateOf(false) }
 
     fun copyIn(uri: android.net.Uri, folder: String, fallback: String): java.io.File {
-        var display = fallback
-        context.contentResolver.query(uri, null, null, null, null)?.use { c ->
-            val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-            if (i >= 0 && c.moveToFirst()) display = c.getString(i)
-        }
+        val display = displayNameOf(context, uri, fallback)
         val safe = display.replace(Regex("[^A-Za-z0-9 _.-]"), "_").ifEmpty { fallback }
         val dir = File(EngineAssets.userRoot(context), folder).apply { mkdirs() }
         val dest = File(dir, safe)
@@ -270,6 +276,36 @@ private fun App(modifier: Modifier = Modifier) {
 
 
     /**
+     * What an import is doing, while it does it.
+     *
+     * Decoding a long mp3 takes seconds, all of them off the main thread and
+     * none of them visible - Dan, on a long file: "it seems like nothing is
+     * happening". [done] and [total] are for a kit, which is thirteen of
+     * these one after another.
+     */
+    var converting by remember { mutableStateOf<Triple<String, Int, Int>?>(null) }
+    converting?.let { (what, done, total) ->
+        com.rm.acidulous.ui.PlainDialog(
+            title = if (total > 1) "Converting $done of $total" else "Converting",
+            onDismiss = {},           // it finishes or it fails; there is nothing to cancel
+            dismissLabel = "",
+        ) {
+            Text(what, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
+            Text(
+                "Reading it and writing a WAV beside it, so it only has to be decoded once.",
+                fontSize = 12.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textDim,
+            )
+        }
+    }
+
+    /** Say so when only the front of a long file arrived. */
+    fun noteTruncated(names: List<String>) {
+        if (names.isEmpty()) return
+        problem = "Only the first 30 seconds of " + names.joinToString(", ") +
+            " was imported - that is as much as a sample can hold."
+    }
+
+    /**
      * A file the player chose, copied in and made readable.
      *
      * Everything imported lands in `samples/` as a WAV whatever it arrived
@@ -280,14 +316,26 @@ private fun App(modifier: Modifier = Modifier) {
      */
     fun bringIn(uri: android.net.Uri, fallback: String, then: (String) -> Unit) {
         scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                runCatching { copyIn(uri, "samples", fallback) }.mapCatching { dest ->
-                    val converted = NativeEngine.importAudio(dest.absolutePath)
-                    if (converted.isFailure) { dest.delete(); throw converted.exceptionOrNull()!! }
-                    "samples/" + File(converted.getOrThrow()).name
+            converting = Triple(displayNameOf(context, uri, fallback), 1, 1)
+            val result = try {
+                withContext(Dispatchers.IO) {
+                    runCatching { copyIn(uri, "samples", fallback) }.mapCatching { dest ->
+                        val converted = NativeEngine.importAudio(dest.absolutePath)
+                        if (converted.isFailure) { dest.delete(); throw converted.exceptionOrNull()!! }
+                        converted.getOrThrow()
+                    }
                 }
+            } finally {
+                // Whatever happened, the window goes: a modal that outlives
+                // its work is worse than no window at all.
+                converting = null
             }
-            result.onSuccess(then).onFailure { problem = "That file would not load - ${it.message}." }
+            result
+                .onSuccess { imported ->
+                    then("samples/" + File(imported.path).name)
+                    if (imported.truncated) noteTruncated(listOf(File(imported.path).name))
+                }
+                .onFailure { problem = "That file would not load - ${it.message}." }
         }
     }
 
@@ -323,17 +371,28 @@ private fun App(modifier: Modifier = Modifier) {
             }.sortedBy { it.first.lowercase() }
             val assigned = mutableListOf<Pair<String, String>>()
             val refused = mutableListOf<String>()
-            withContext(Dispatchers.IO) {
+            val shortened = mutableListOf<String>()
+            val wanted = named.size.coerceAtMost(13 - firstPad)
+            try {
                 named.forEachIndexed { i, (display, uri) ->
                     val pad = firstPad + i
                     if (pad > 12) return@forEachIndexed
-                    runCatching {
-                        val dest = copyIn(uri, "samples", display)
-                        val converted = NativeEngine.importAudio(dest.absolutePath)
-                        if (converted.isFailure) { dest.delete(); throw converted.exceptionOrNull()!! }
-                        assigned += "p%02d_sample".format(pad) to "samples/" + File(converted.getOrThrow()).name
-                    }.onFailure { refused += display }
+                    // Set before each file rather than once, so a kit of
+                    // thirteen counts up instead of sitting on "1 of 13".
+                    converting = Triple(display, i + 1, wanted)
+                    withContext(Dispatchers.IO) {
+                        runCatching {
+                            val dest = copyIn(uri, "samples", display)
+                            val converted = NativeEngine.importAudio(dest.absolutePath)
+                            if (converted.isFailure) { dest.delete(); throw converted.exceptionOrNull()!! }
+                            val imported = converted.getOrThrow()
+                            if (imported.truncated) shortened += display
+                            assigned += "p%02d_sample".format(pad) to "samples/" + File(imported.path).name
+                        }.onFailure { refused += display }
+                    }
                 }
+            } finally {
+                converting = null
             }
             // One edit for the whole kit, so thirteen samples are one undo and
             // one autosave rather than thirteen of each.
@@ -348,6 +407,8 @@ private fun App(modifier: Modifier = Modifier) {
             // lose the other twelve - the rest land and this says which did not.
             if (refused.isNotEmpty()) {
                 problem = "These would not load: " + refused.joinToString(", ") + "."
+            } else {
+                noteTruncated(shortened)
             }
         }
     }
@@ -388,7 +449,7 @@ private fun App(modifier: Modifier = Modifier) {
                 val dest = copyIn(uri, "samples", "sample.wav")
                 val converted = NativeEngine.importAudio(dest.absolutePath)
                 if (converted.isFailure) { dest.delete(); null }
-                else com.rm.acidulous.model.Zone(path = "samples/" + File(converted.getOrThrow()).name)
+                else com.rm.acidulous.model.Zone(path = "samples/" + File(converted.getOrThrow().path).name)
             }
             editor.edit(track) { t ->
                 t.withSetting("sf2", null).withSetting("sf2preset", null)

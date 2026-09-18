@@ -38,9 +38,11 @@ constexpr int32_t kMaxDecodeSeconds = 30;
 inline std::unique_ptr<SampleData> assemble(DecodedAudio &in, const std::string &path, int32_t targetRate) {
     if (in.frames <= 0) return nullptr;
     const int32_t cap = kMaxDecodeSeconds * in.rate;
-    if (in.frames > cap) in.frames = cap;
+    const bool cut = in.frames > cap;
+    if (cut) in.frames = cap;
 
     auto out = std::make_unique<SampleData>();
+    out->truncated = cut;
     out->stereo = in.stereo;
     const size_t slash = path.find_last_of('/');
     out->name = slash == std::string::npos ? path : path.substr(slash + 1);

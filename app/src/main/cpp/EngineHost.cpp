@@ -240,11 +240,27 @@ int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns)
     return columns;
 }
 
+/**
+ * Two lines: a word, then a path or a reason.
+ *
+ *     ok\n/some/where.wav     converted, all of it
+ *     cut\n/some/where.wav    converted, but only the first thirty seconds
+ *     err\nwhat went wrong
+ *
+ * One string crosses the boundary, and the caller has somewhere to put the
+ * one thing it could not otherwise find out - that a long file was shortened.
+ */
 std::string EngineHost::importAudio(const std::string &path, std::string &error) const {
     const AudioFormat format = sniff(path);
-    if (format == AudioFormat::Wav) return path; // nothing to do, and nothing to lose
+    if (format == AudioFormat::Wav) {
+        // A WAV is taken as it is, and a long one is truncated when it is
+        // read rather than here, so there is nothing to say yet.
+        return "ok\n" + path;
+    }
     if (format == AudioFormat::Unknown) {
-        error = "not an audio file this can read";
+        const char *kind = foreignKind(path);
+        error = kind != nullptr ? std::string(kind) + ", which this cannot read"
+                                : "not an audio file this can read";
         return "";
     }
     auto decoded = decodeAudio(path, kSampleRate, error);
@@ -280,8 +296,9 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error)
     writer.write(interleaved.data(), decoded->frames);
     if (!writer.close()) { error = "could not write the converted file"; return ""; }
     std::remove(path.c_str()); // the original was a copy of the player's own file
-    LOGI("converted %s (%s) to %s", path.c_str(), formatName(format), out.c_str());
-    return out;
+    LOGI("converted %s (%s) to %s%s", path.c_str(), formatName(format), out.c_str(),
+         decoded->truncated ? " (truncated)" : "");
+    return (decoded->truncated ? "cut\n" : "ok\n") + out;
 }
 
 std::string EngineHost::slicePoints(const std::string &path, int mode, int count, std::string &error) const {

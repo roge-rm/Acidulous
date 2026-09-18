@@ -63,17 +63,30 @@ object NativeEngine {
      */
     fun sampleShape(rack: Int, pad: Int, out: FloatArray): Int = nativeSampleShape(rack, pad, out)
 
+    /** What an import produced: where it went, and whether all of it got there. */
+    data class Imported(val path: String, val truncated: Boolean)
+
     /**
-     * Make an imported file readable: the path to use, or null and the reason.
+     * Make an imported file readable: where to find it, or a failure with the
+     * reason.
      *
      * A WAV comes back unchanged. Anything else is decoded, written beside
      * itself as a WAV and the original removed, so nothing downstream ever
      * sees a second format. Decodes the file, so call it off the main thread.
+     *
+     * [Imported.truncated] says the file was longer than the decoder takes
+     * and only its first thirty seconds arrived - which the player has to be
+     * told, because everything else about it looks like it worked.
      */
-    fun importAudio(absolutePath: String): Result<String> {
+    fun importAudio(absolutePath: String): Result<Imported> {
         val out = nativeImportAudio(absolutePath)
-        return if (out.startsWith("!")) Result.failure(IllegalArgumentException(out.drop(1)))
-               else Result.success(out)
+        val word = out.substringBefore('\n')
+        val rest = out.substringAfter('\n', "")
+        return when (word) {
+            "ok" -> Result.success(Imported(rest, truncated = false))
+            "cut" -> Result.success(Imported(rest, truncated = true))
+            else -> Result.failure(IllegalArgumentException(rest.ifEmpty { "it would not load" }))
+        }
     }
 
     /**

@@ -34,6 +34,14 @@ struct SampleData {
      */
     float peak = 0.0f;
 
+    /**
+     * True when the file was longer than the decoder will take.
+     *
+     * Silence about this is the problem it exists to solve: import a four
+     * minute mix, get thirty seconds of it, and nothing anywhere says so.
+     */
+    bool truncated = false;
+
     /** Fill [peak]. Call once, on the thread that built the data. */
     void measure() {
         float p = 0.0f;

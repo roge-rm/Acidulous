@@ -180,9 +180,9 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeImportAudio(JNIEnv *env, jobject
     std::string error;
     const std::string out = host().importAudio(p != nullptr ? p : "", error);
     env->ReleaseStringUTFChars(path, p);
-    // The path on success, "!" and the reason on failure: one string across
-    // the boundary, and a leading bang cannot begin a real path.
-    return env->NewStringUTF(out.empty() ? ("!" + error).c_str() : out.c_str());
+    // Two lines, "ok", "cut" or "err" then the path or the reason. See
+    // EngineHost::importAudio.
+    return env->NewStringUTF(out.empty() ? ("err\n" + error).c_str() : out.c_str());
 }
 
 JNIEXPORT jstring JNICALL
