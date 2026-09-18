@@ -767,12 +767,26 @@ private class Geometry(
     fun pitchOfRow(r: Int): Int = rowPitches.getOrElse(r) { topPitch - r }
 
     /**
-     * The row a pitch belongs on. When the rows are folded to a scale, a note
-     * the scale does not contain takes the row nearest to where it will
-     * actually sound, which is the truth the eventor will impose anyway.
+     * The row a pitch belongs on, which may be off the top or the bottom.
+     *
+     * When the rows are folded to a scale, a note the scale does not contain
+     * takes the row nearest to where it will actually sound, which is the
+     * truth the eventor will impose anyway. That search used to run over
+     * every row without a bound, so a note *scrolled out of view* also took
+     * the nearest row - the last one - and was drawn there: scroll a bass
+     * line up two semitones and the C2s reappeared as D2s, sitting on the
+     * bottom edge and answering taps meant for the row they had landed on.
+     *
+     * Nearest-row is for notes between rows, not for notes outside the
+     * window. A pitch past either end returns a row past that end, by the
+     * semitones it is out by, and the callers' own culling does the rest.
      */
     fun rowOfPitch(pitch: Int): Int {
         if (rowPitches.isEmpty()) return topPitch - pitch
+        val highest = rowPitches.first() // row 0: the rows descend in pitch
+        val lowest = rowPitches[rowPitches.size - 1]
+        if (pitch > highest) return -(pitch - highest)
+        if (pitch < lowest) return rowPitches.size - 1 + (lowest - pitch)
         var best = 0
         var bestD = Int.MAX_VALUE
         for (r in rowPitches.indices) {

@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.Text
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.MutableState
@@ -166,10 +168,6 @@ private sealed class Screen {
     // Nexus's graph needs a screen; a node canvas cannot live in the strip
     // under the piano roll.
     data class Patch(val track: Int, val sceneId: String) : Screen()
-    // One pad's sample, trimmed against a picture of it. A screen for the
-    // same reason: a waveform wants height and the strip under the roll has
-    // none to give.
-    data class Sample(val track: Int, val sceneId: String, val pad: Int) : Screen()
 
     companion object {
         /**
@@ -182,7 +180,6 @@ private sealed class Screen {
                 when (val v = state.value) {
                     is Edit -> listOf("edit", v.track, v.sceneId)
                     is Patch -> listOf("patch", v.track, v.sceneId)
-                    is Sample -> listOf("sample", v.track, v.sceneId, v.pad)
                     else -> listOf("main")
                 }
             },
@@ -191,7 +188,6 @@ private sealed class Screen {
                     when (saved.firstOrNull()) {
                         "edit" -> Edit(saved[1] as Int, saved[2] as String)
                         "patch" -> Patch(saved[1] as Int, saved[2] as String)
-                        "sample" -> Sample(saved[1] as Int, saved[2] as String, saved[3] as Int)
                         else -> Main
                     }
                 )
@@ -289,19 +285,53 @@ private fun App(modifier: Modifier = Modifier) {
             title = if (total > 1) "Converting $done of $total" else "Converting",
             onDismiss = {},           // it finishes or it fails; there is nothing to cancel
             dismissLabel = "",
+            spacing = 10.dp,
         ) {
             Text(what, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
-            Text(
-                "Reading it and writing a WAV beside it, so it only has to be decoded once.",
-                fontSize = 12.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textDim,
-            )
+            // Determinate for a kit, because files done out of files asked
+            // for is real progress. Indeterminate for one file, because it
+            // is one blocking decode and a bar that invented a position
+            // would be a bar that lies - all this one has to say is that
+            // something is still happening.
+            if (total > 1) {
+                androidx.compose.material3.LinearProgressIndicator(
+                    progress = { done.toFloat() / total.toFloat() },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth())
+            }
         }
     }
 
+    /**
+     * One pad's sample, open over whatever is underneath.
+     *
+     * A window rather than a screen so that trimming a sound does not take
+     * the editor away while you do it - see SampleDialog. Holds the track as
+     * well as the pad, because the track it was opened from is the one it
+     * belongs to even if the selection moves.
+     */
+    var sampleEdit by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    // A track deleted under an open window would leave it addressing nothing.
+    LaunchedEffect(song.tracks.size) {
+        if (sampleEdit?.first?.let { it !in song.tracks.indices } == true) sampleEdit = null
+    }
+    sampleEdit?.takeIf { it.first in song.tracks.indices }?.let { (track, pad) ->
+        com.rm.acidulous.ui.SampleDialog(
+            track = song.tracks[track],
+            trackIndex = track,
+            pad = pad,
+            editor = editor,
+            onBack = { sampleEdit = null },
+        )
+    }
+
     /** Say so when only the front of a long file arrived. */
-    fun noteTruncated(names: List<String>) {
+    fun noteTruncated(names: List<String>, seconds: Int = NativeEngine.PAD_SECONDS) {
         if (names.isEmpty()) return
-        problem = "Only the first 30 seconds of " + names.joinToString(", ") +
+        val long = if (seconds >= 120) "%d minutes".format(seconds / 60) else "$seconds seconds"
+        problem = "Only the first $long of " + names.joinToString(", ") +
             " was imported - that is as much as a sample can hold."
     }
 
@@ -314,13 +344,14 @@ private fun App(modifier: Modifier = Modifier) {
      * main thread and [then] is called back on it with the path to store -
      * or not called at all, after saying why.
      */
-    fun bringIn(uri: android.net.Uri, fallback: String, then: (String) -> Unit) {
+    fun bringIn(uri: android.net.Uri, fallback: String, maxSeconds: Int = NativeEngine.PAD_SECONDS,
+                then: (String) -> Unit) {
         scope.launch {
             converting = Triple(displayNameOf(context, uri, fallback), 1, 1)
             val result = try {
                 withContext(Dispatchers.IO) {
                     runCatching { copyIn(uri, "samples", fallback) }.mapCatching { dest ->
-                        val converted = NativeEngine.importAudio(dest.absolutePath)
+                        val converted = NativeEngine.importAudio(dest.absolutePath, maxSeconds)
                         if (converted.isFailure) { dest.delete(); throw converted.exceptionOrNull()!! }
                         converted.getOrThrow()
                     }
@@ -333,7 +364,7 @@ private fun App(modifier: Modifier = Modifier) {
             result
                 .onSuccess { imported ->
                     then("samples/" + File(imported.path).name)
-                    if (imported.truncated) noteTruncated(listOf(File(imported.path).name))
+                    if (imported.truncated) noteTruncated(listOf(File(imported.path).name), maxSeconds)
                 }
                 .onFailure { problem = "That file would not load - ${it.message}." }
         }
@@ -344,7 +375,10 @@ private fun App(modifier: Modifier = Modifier) {
         val (track, key) = importTarget ?: return@rememberLauncherForActivityResult
         importTarget = null
         if (uri == null) return@rememberLauncherForActivityResult
-        bringIn(uri, "sample.wav") { rel -> editor.edit(track) { t -> t.withSetting(key, rel) } }
+        // A slice source is one file for the whole machine rather than one of
+        // thirteen, so it is allowed to be a whole track. See SLICE_SECONDS.
+        val seconds = if (key == "slice_sample") NativeEngine.SLICE_SECONDS else NativeEngine.PAD_SECONDS
+        bringIn(uri, "sample.wav", seconds) { rel -> editor.edit(track) { t -> t.withSetting(key, rel) } }
     }
 
     // A whole kit in one trip.
@@ -937,7 +971,7 @@ private fun App(modifier: Modifier = Modifier) {
             rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onBack = { screen = Screen.Main },
             onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
-            onOpenSample = { pad -> screen = Screen.Sample(s.track, s.sceneId, pad) },
+            onOpenSample = { pad -> sampleEdit = s.track to pad },
             patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
             // The settings and not only the knobs: a Nexus patch without its
             // graph, a Mosaic without its zones or a Formulate without its
@@ -984,14 +1018,6 @@ private fun App(modifier: Modifier = Modifier) {
                 }
             },
             onImportZoneSamples = { track -> mapTarget = track; zoneSamplePicker.launch(AUDIO_TYPES) },
-            modifier = modifier,
-        )
-        is Screen.Sample -> com.rm.acidulous.ui.SampleScreen(
-            track = song.tracks[s.track],
-            trackIndex = s.track,
-            pad = s.pad,
-            editor = editor,
-            onBack = { screen = Screen.Edit(s.track, s.sceneId) },
             modifier = modifier,
         )
         is Screen.Patch -> com.rm.acidulous.ui.PatchScreen(

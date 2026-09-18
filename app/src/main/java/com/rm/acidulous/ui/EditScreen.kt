@@ -490,6 +490,17 @@ fun EditScreen(
             onOpenSample = onOpenSample,
             onImportOneSample = { onImportOneSample(trackIndex) },
             onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },
+            // The whole kit in one edit, so emptying it is one undo rather
+            // than fifteen - and so a half-cleared kit cannot be autosaved.
+            // Only the settings here; the pads' trim is parameters, which the
+            // panel puts back itself.
+            onClearKit = {
+                editor.edit(trackIndex) { t ->
+                    var out = t
+                    for (pad in 0 until 13) out = out.withSetting("p%02d_sample".format(pad), null)
+                    out.withSetting("slice_sample", null).withSetting("slice_count", null)
+                }
+            },
             onAssignSample = { pad, rel ->
                 editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), rel) }
             },

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -94,6 +95,8 @@ fun MachinePanel(
     onImportSlice: () -> Unit = {},
     onOpenSample: (pad: Int) -> Unit = {},
     onClearSample: (pad: Int) -> Unit = {},
+    /** Every pad and the slice source at once - see the `clear` action. */
+    onClearKit: () -> Unit = {},
     /** A sample already in the app's own folder, chosen rather than imported. */
     onAssignSample: (pad: Int, relative: String) -> Unit = { _, _ -> },
     /** Nexus keeps its graph on a screen of its own. */
@@ -115,13 +118,42 @@ fun MachinePanel(
                 editor.edit(trackIndex) { t ->
                     var next = t.withPatch(params)
                     for ((k, v) in patch.settings) next = next.withSetting(k, v)
-                    next
+                    // Last, so a patch that happens to carry these keys cannot
+                    // rename itself. Settings rather than state held here, so
+                    // the name survives a reopen, the arrows know where in the
+                    // list they are standing, and the star knows what the
+                    // patch sounded like when it arrived.
+                    //
+                    // The stamp is taken from `next`, not from `patch.params`:
+                    // `withPatch` replaces the whole map, so what the machine
+                    // now holds is the truth and what the patch file said is
+                    // only where it came from.
+                    next.withSetting(kPatchName, name).withSetting(kPatchStamp, stampOf(next.machine.params))
                 }
                 binding.applyAll(params)
             }
         }
+        // Saving under a name makes the machine *be* that patch: same name,
+        // same knobs, no star until the next one is turned.
+        val savePatch: (String) -> Unit = { name ->
+            onSavePatch(name)
+            editor.edit(trackIndex) { t ->
+                t.withSetting(kPatchName, name).withSetting(kPatchStamp, stampOf(t.machine.params))
+            }
+        }
+        // A name that has stopped being true says so. Only the parameters
+        // count: loading a sample onto a pad is how Forage is *used*, and a
+        // kit marked edited the moment it was built would mark everything.
+        //
+        // Remembered against the map itself, which is a new object on every
+        // edit: the panel recomposes with each frame of a knob drag and this
+        // walks every parameter the machine has.
+        val stamp = track.machine.settings[kPatchStamp]
+        val nowStamp = remember(track.machine.params) { stampOf(track.machine.params) }
         PatchBar(
-            type, patchNames, onSavePatch, loadPatch, factoryPatchNames, userPatchNames, onDeletePatch,
+            type, patchNames, savePatch, loadPatch, factoryPatchNames, userPatchNames, onDeletePatch,
+            current = track.machine.settings[kPatchName],
+            edited = stamp != null && stamp != nowStamp,
             minimized = minimized, onToggleMinimized = { minimized = !minimized },
         )
         if (!minimized) when (type) {
@@ -145,7 +177,7 @@ fun MachinePanel(
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(
                 binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
-                onImportKit, onImportSlice, onOpenSample, inUse = editor.song.samplesInUse(),
+                onImportKit, onImportSlice, onOpenSample, onClearKit, inUse = editor.song.samplesInUse(),
                 // How many pads the slice covers, so the pads and the grid can
                 // say which of them are playing a piece of it.
                 onSliceApplied = { count ->
@@ -237,21 +269,74 @@ fun rememberParamBinding(
     return binding
 }
 
+/**
+ * A small tappable mark in the patch bar.
+ *
+ * Not a TextButton: Material gives one of those 58 dp of width whatever is
+ * written in it, and this row already holds a machine name, a patch name and
+ * four marks. Twenty-two dp each is what let them all fit on a phone.
+ */
+@Composable
+private fun BarIcon(glyph: String, tint: Color, onClick: () -> Unit) {
+    Box(
+        Modifier.size(width = 24.dp, height = 28.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(glyph, color = tint, fontSize = 13.sp, maxLines = 1, softWrap = false)
+    }
+}
+
 @Composable
 private fun PatchBar(
     type: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit,
     factoryPatches: () -> List<com.rm.acidulous.model.Patch>, userNames: () -> List<String>,
-    onDelete: (String) -> Unit,
+    onDelete: (String) -> Unit, current: String?, edited: Boolean,
     minimized: Boolean, onToggleMinimized: () -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(type, color = Acid.colors.text, fontSize = 13.sp)
-        PatchPicker(type, patchNames, onSave, onLoad, factoryPatches, userNames, onDelete)
-        // Pushed to the far edge: the title row stays, everything under it goes.
-        Spacer(Modifier.weight(1f))
-        TextButton(onClick = onToggleMinimized, contentPadding = PaddingValues(horizontal = 8.dp)) {
-            Text(if (minimized) "▴" else "▾", color = Acid.colors.textMid, fontSize = 13.sp)
+    /**
+     * One patch along the list, without opening it.
+     *
+     * The names are read here rather than held, because reading them touches
+     * the disk and the bar recomposes with every knob: a click is the only
+     * moment the answer is wanted. Nothing loaded yet means the ends of the
+     * list - forward starts at the first, back at the last - and the walk
+     * wraps, so holding one arrow goes through the whole bank and round.
+     */
+    fun step(by: Int) {
+        val names = patchNames()
+        if (names.isEmpty()) return
+        val at = names.indexOf(current)
+        val next = if (at < 0) {
+            if (by > 0) 0 else names.size - 1
+        } else {
+            ((at + by) % names.size + names.size) % names.size
         }
+        onLoad(names[next])
+    }
+    // **The right-hand group is weighed against, not spaced away from.**
+    //
+    // This was a flat row ending in a Spacer(weight(1f)), on the theory that
+    // the spacer would pin the arrows to the edge. It only does that while
+    // there is slack, and there is none: a name, three Material TextButtons
+    // (58 dp wide apiece whatever is in them) and three marks fill a phone.
+    // So the arrows moved with the length of the patch name - fifty pixels
+    // between `Init` and `Bell Keys` - and the button under your finger was
+    // whichever one the last patch's name had left there. Putting the left
+    // half in the weight instead makes it the part that gives way.
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(type, color = Acid.colors.text, fontSize = 13.sp, maxLines = 1)
+            PatchPicker(type, patchNames, onSave, onLoad, factoryPatches, userNames, onDelete, current, edited)
+        }
+        BarIcon("\u2039", Acid.colors.accent) { step(-1) }
+        BarIcon("\u203A", Acid.colors.accent) { step(1) }
+        BarIcon(if (minimized) "▴" else "▾", Acid.colors.textMid, onToggleMinimized)
     }
 }
 
@@ -268,14 +353,37 @@ internal fun PatchPicker(
     title: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit,
     factoryPatches: () -> List<com.rm.acidulous.model.Patch>, userNames: () -> List<String>,
     onDelete: (String) -> Unit,
+    /** The patch showing, if one was chosen: the button says its name. */
+    current: String? = null,
+    /** Its knobs have moved since, so the name is where it came from. */
+    edited: Boolean = false,
 ) {
     var menu by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var browsing by remember { mutableStateOf(false) }
     var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
-    TextButton(onClick = { menu = true }) { Text("patch ▾", color = Acid.colors.accent, fontSize = 11.sp) }
-    TextButton(onClick = { saving = true }) { Text("save as…", color = Acid.colors.textMid, fontSize = 11.sp) }
-    TextButton(onClick = { browsing = true }) { Text("browse…", color = Acid.colors.textMid, fontSize = 11.sp) }
+    TextButton(onClick = { menu = true }, contentPadding = PaddingValues(horizontal = 8.dp)) {
+        // The name once there is one. "patch" told you what the button was
+        // for and nothing about what you were listening to, and a rack of
+        // eight machines all saying "patch" is a rack that has forgotten
+        // where its sounds came from.
+        // The star is not a warning, it is an accuracy: the sound is no
+        // longer the one that name refers to, and "save as..." is next to it.
+        val shown = current?.ifBlank { null }
+        Text(
+            (shown ?: "patch") + (if (shown != null && edited) " *" else "") + " ▾",
+            color = Acid.colors.accent, fontSize = 11.sp, maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.widthIn(max = 120.dp),
+        )
+    }
+    // Marks rather than words. "save as..." and "browse..." were two Material
+    // TextButtons - 116 dp between them before a letter is drawn - on a row
+    // that also has to hold a machine name, a patch name that can be long,
+    // two step arrows and the fold. Down arrow into a line for putting one
+    // away, a list for looking through them.
+    BarIcon("\u21A7", Acid.colors.textMid) { saving = true }
+    BarIcon("\u2630", Acid.colors.textMid) { browsing = true }
     val menuScroll = rememberScrollState()
     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
         for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
@@ -292,6 +400,27 @@ internal fun PatchPicker(
         )
     }
 }
+
+/** Which patch a machine is showing. A name, not a reference to anything. */
+private const val kPatchName = "patch_name"
+
+/**
+ * What that patch's knobs were, so the name can admit when it is out of date.
+ *
+ * A hash rather than the values: the honest version of this is "are the
+ * parameters still the ones the patch set", and the only way to answer that
+ * after the app has been closed and reopened is to have written down what
+ * they were. Writing down two hundred floats per machine would put tens of
+ * kilobytes of nothing into every song file, so it is a 64-bit FNV of the
+ * same numbers in a fixed order.
+ */
+private const val kPatchStamp = "patch_stamp"
+
+/** The parameters as one comparable value. Sorted, so map order cannot lie. */
+private fun stampOf(params: Map<String, Float>): String =
+    com.rm.acidulous.model.fnv1a64(
+        params.entries.sortedBy { it.key }.joinToString(",") { "${it.key}=${it.value}" },
+    ).toString(16)
 
 // The panel palette. Teal is the ordinary control; amber marks the knob that
 // gives a group its character; pink marks drive and output. See the style
@@ -506,22 +635,48 @@ internal val PanelControlH = 100.dp
  */
 @Composable
 private fun PanelActions(vararg actions: Triple<String, Color, () -> Unit>) {
+    // Built like PanelSwitch, because it stands next to one.
+    //
+    // These were small pills floating in the middle of a group that is a
+    // hundred dp tall, which read as neither a knob nor a switch and left
+    // most of the space empty. A switch solves the same problem - several
+    // small labels in one control's worth of room - so this is the same
+    // shape: one card, cells divided by a hairline, each filling its share
+    // of the height. Two rows once there are more than two, so a cell is
+    // half a control tall rather than a quarter.
+    val cols = if (actions.size <= 2) 1 else (actions.size + 1) / 2
     Column(
-        Modifier.fillMaxHeight().widthIn(min = 74.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp),
+        // A stated height, not a filled one, and that is the whole of why
+        // these came out small. `Group` sizes its row from its children's
+        // *intrinsic* height, and `fillMaxHeight` has none to offer: every
+        // other group has a knob in it bringing a hundred dp, but the kit
+        // group is nothing but these, so the row collapsed onto the text and
+        // the cells had a control's worth of nothing to fill. Saying the
+        // height outright makes it the intrinsic one too.
+        Modifier.height(PanelControlH)
+            .width(IntrinsicSize.Max)
+            .clip(RoundedCornerShape(4.dp)).background(Acid.colors.card),
+        verticalArrangement = Arrangement.spacedBy(1.dp),
     ) {
-        for ((label, tint, onClick) in actions) {
-            Box(
-                Modifier.fillMaxWidth().weight(1f)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Acid.colors.control)
-                    .clickable(onClick = onClick),
-                contentAlignment = Alignment.Center,
+        actions.toList().chunked(cols).forEach { row ->
+            Row(
+                Modifier.fillMaxWidth().weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(1.dp),
             ) {
-                Text(
-                    label, color = tint, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-                    maxLines = 1, softWrap = false,
-                )
+                for ((label, tint, onClick) in row) {
+                    Box(
+                        Modifier.weight(1f).fillMaxHeight()
+                            .background(Acid.colors.control)
+                            .clickable(onClick = onClick),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            label, color = tint, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                            maxLines = 1, softWrap = false,
+                            modifier = Modifier.padding(horizontal = 10.dp),
+                        )
+                    }
+                }
             }
         }
     }
@@ -577,7 +732,7 @@ private fun HexbeatPanel(b: ParamBinding) {
 private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit,
                         onClear: (Int) -> Unit, onAssign: (Int, String) -> Unit,
                         onImportKit: (Int) -> Unit, onImportSlice: () -> Unit,
-                        onOpenSample: (Int) -> Unit,
+                        onOpenSample: (Int) -> Unit, onClearKit: () -> Unit,
                         onSliceApplied: (Int) -> Unit, inUse: Set<String>) {
     val p = pad.coerceIn(0, 12)
     fun n(name: String) = "p%02d_%s".format(p, name)
@@ -628,6 +783,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
     }
     val hot = Acid.colors.accent
     var picking by remember { mutableStateOf(false) }
+    var clearing by remember { mutableStateOf(false) }
 
     /**
      * Put a pad's start and end back where they started.
@@ -702,6 +858,33 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         onPick = { rel -> picking = false; resetTrim(p); onAssign(p, rel) },
         onDismiss = { picking = false },
     )
+    // Emptying the kit asks first. It is one tap away from `match` in a row
+    // of four, and thirteen samples chosen by hand is not something to lose
+    // to a fat finger - the settings would be gone before the undo was found.
+    if (clearing) PlainDialog(
+        title = "Clear the kit",
+        onDismiss = { clearing = false },
+        confirmLabel = "Clear",
+        onConfirm = {
+            clearing = false
+            onClearKit()
+            // The samples are settings and the trim is parameters, so putting
+            // the pads back takes both: slicing closed the pads it did not
+            // use, and a cleared kit that stays closed is silently deaf.
+            val batch = mutableMapOf<String, Float>()
+            for (i in 0 until 13) {
+                b.infoOf("p%02d_start".format(i))?.let { batch[it.name] = it.defaultNormalized }
+                b.infoOf("p%02d_end".format(i))?.let { batch[it.name] = it.defaultNormalized }
+            }
+            b.setMany(batch)
+        },
+    ) {
+        Text(
+            "Takes the sample off all thirteen pads and forgets the file they were slicing. " +
+                "The files themselves stay in the app - samples… still lists them.",
+            color = Acid.colors.textMid, fontSize = 12.sp,
+        )
+    }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("pad ${p + 1}", color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
@@ -745,6 +928,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                         if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
                     },
                     Triple("match", Acid.colors.textMid) { matchLevels() },
+                    Triple("clear", Acid.colors.textMid) { clearing = true },
                 )
             }
         }

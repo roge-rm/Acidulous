@@ -1,7 +1,6 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,19 +44,20 @@ import kotlin.math.min
  * sound*, and setting a place by turning a dial and listening is guesswork
  * with an audible cost each time round. Here they are where they are.
  *
- * It is a screen of its own for the same reason Nexus's graph is: the
- * waveform wants the height, and the strip under the piano roll has none to
- * give. See [[editor-vertical-space]] - what that rule protects is the notes,
- * and this is not asking for their space, it is asking for a different page.
+ * A window rather than a screen. It began as a screen, on the grounds that a
+ * waveform wants height - but everything else in the app that opens over what
+ * you are doing is a window, and this is the same kind of errand: you come to
+ * it from a pad, move two handles and go back. Being a screen also cost the
+ * editor underneath, which vanished while you were trimming the sound you
+ * were trimming *for* it. See [[dialog-style]].
  */
 @Composable
-fun SampleScreen(
+fun SampleDialog(
     track: Track,
     trackIndex: Int,
     pad: Int,
     editor: SongEditor,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     val c = Acid.colors
     val info = remember(trackIndex, track.machine.type) { NativeEngine.machineParamInfo(track.machine.type) }
@@ -75,8 +74,14 @@ fun SampleScreen(
     val rel = track.machine.settings[n("sample")] ?: track.machine.settings["slice_sample"]
     var meta by remember(trackIndex, pad, rel) { mutableStateOf("") }
     LaunchedEffect(trackIndex, pad, rel) {
+        // Off the main thread: it walks every frame of the sample, and a
+        // slice source may now be a ten minute track - twenty-eight million
+        // of them, which is a visible stall if it runs where the frames are
+        // drawn.
         val out = FloatArray(columns * 2)
-        val got = NativeEngine.sampleShape(trackIndex, pad, out)
+        val got = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            NativeEngine.sampleShape(trackIndex, pad, out)
+        }
         shape = if (got > 0) out else FloatArray(0)
         meta = NativeEngine.sampleInfo(trackIndex, pad)
     }
@@ -89,32 +94,36 @@ fun SampleScreen(
     val seconds = meta.split('|').getOrNull(1)?.toFloatOrNull()?.let { it / 48000f } ?: 0f
     val name = meta.substringBefore('|').ifEmpty { "no sample" }
 
-    Column(modifier.fillMaxSize().background(c.bgDeep)) {
-        CutoutRow(
+    PlainDialog(
+        title = "Pad ${pad + 1}",
+        onDismiss = onBack,
+        dismissLabel = "Done",
+        spacing = 6.dp,
+    ) {
+        Row(
             Modifier.fillMaxWidth(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = 8.dp, end = 8.dp, top = 6.dp, bottom = 2.dp,
-            ),
-            spacing = 2.dp,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            HeaderButton("◀") { onBack() }
             Text(
-                "pad ${pad + 1} · $name",
-                color = c.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
-                modifier = Modifier.flexible().padding(horizontal = 4.dp), maxLines = 1,
+                name,
+                color = c.textHi, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                modifier = Modifier.weight(1f), maxLines = 1,
             )
-            HeaderTextButton("play") { NativeEngine.noteOn(trackIndex, 36 + pad, 110) }
-            HeaderTextButton("all") {
+            androidx.compose.material3.TextButton(
+                onClick = { NativeEngine.noteOn(trackIndex, 36 + pad, 110) },
+            ) { Text("play", color = c.accent, fontSize = 12.sp) }
+            androidx.compose.material3.TextButton(onClick = {
                 if (startDef != null) b.set(startDef.name, startDef.unmap(0f))
                 if (endDef != null) b.set(endDef.name, endDef.unmap(1f))
-            }
+            }) { Text("all", color = c.accent, fontSize = 12.sp) }
         }
 
         // --- the waveform ---------------------------------------------------
         var width by remember { mutableStateOf(1f) }
         var dragging by remember { mutableStateOf(0) } // -1 start, 1 end, 0 nothing
         Box(
-            Modifier.fillMaxWidth().height(220.dp).padding(horizontal = 8.dp, vertical = 6.dp)
+            Modifier.fillMaxWidth().height(200.dp)
                 .pointerInput(pad, shape.size) {
                     awaitEachGesture {
                         val down = awaitFirstDown()
@@ -184,7 +193,7 @@ fun SampleScreen(
         // Where the trim actually falls, in seconds - the number a player
         // needs when they are matching a slice to a beat.
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+            Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             val from = min(start, end)
@@ -199,7 +208,7 @@ fun SampleScreen(
 
         // --- the rest of the pad, so this is a page and not a detour --------
         Row(
-            Modifier.fillMaxWidth().padding(8.dp).horizontalScrollWithBar(rememberScrollState()),
+            Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Group("sample") {
