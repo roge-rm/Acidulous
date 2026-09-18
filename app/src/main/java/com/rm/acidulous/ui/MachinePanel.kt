@@ -92,6 +92,7 @@ fun MachinePanel(
     onImportSample: (pad: Int) -> Unit = {},
     onImportKit: (pad: Int) -> Unit = {},
     onImportSlice: () -> Unit = {},
+    onOpenSample: (pad: Int) -> Unit = {},
     onClearSample: (pad: Int) -> Unit = {},
     /** A sample already in the app's own folder, chosen rather than imported. */
     onAssignSample: (pad: Int, relative: String) -> Unit = { _, _ -> },
@@ -144,7 +145,7 @@ fun MachinePanel(
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(
                 binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
-                onImportKit, onImportSlice, inUse = editor.song.samplesInUse(),
+                onImportKit, onImportSlice, onOpenSample, inUse = editor.song.samplesInUse(),
                 // How many pads the slice covers, so the pads and the grid can
                 // say which of them are playing a piece of it.
                 onSliceApplied = { count ->
@@ -576,6 +577,7 @@ private fun HexbeatPanel(b: ParamBinding) {
 private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit,
                         onClear: (Int) -> Unit, onAssign: (Int, String) -> Unit,
                         onImportKit: (Int) -> Unit, onImportSlice: () -> Unit,
+                        onOpenSample: (Int) -> Unit,
                         onSliceApplied: (Int) -> Unit, inUse: Set<String>) {
     val p = pad.coerceIn(0, 12)
     fun n(name: String) = "p%02d_%s".format(p, name)
@@ -722,6 +724,11 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             // one - `match` came out as a column of single letters.
             TextButton(onClick = { resetTrim(p); onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
             TextButton(onClick = { picking = true }) { Text("samples…", color = hot, fontSize = 11.sp) }
+            // Only where there is something to trim - the page is a picture of
+            // a sample and an empty pad has none.
+            if (info.isNotEmpty()) {
+                TextButton(onClick = { onOpenSample(p) }) { Text("edit…", color = hot, fontSize = 11.sp) }
+            }
             if (rel != null) TextButton(onClick = { resetTrim(p); onClear(p) }) { Text("clear", color = Acid.colors.textMid, fontSize = 11.sp) }
         }
         Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {

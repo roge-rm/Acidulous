@@ -133,6 +133,10 @@ private sealed class Screen {
     // Nexus's graph needs a screen; a node canvas cannot live in the strip
     // under the piano roll.
     data class Patch(val track: Int, val sceneId: String) : Screen()
+    // One pad's sample, trimmed against a picture of it. A screen for the
+    // same reason: a waveform wants height and the strip under the roll has
+    // none to give.
+    data class Sample(val track: Int, val sceneId: String, val pad: Int) : Screen()
 
     companion object {
         /**
@@ -145,6 +149,7 @@ private sealed class Screen {
                 when (val v = state.value) {
                     is Edit -> listOf("edit", v.track, v.sceneId)
                     is Patch -> listOf("patch", v.track, v.sceneId)
+                    is Sample -> listOf("sample", v.track, v.sceneId, v.pad)
                     else -> listOf("main")
                 }
             },
@@ -153,6 +158,7 @@ private sealed class Screen {
                     when (saved.firstOrNull()) {
                         "edit" -> Edit(saved[1] as Int, saved[2] as String)
                         "patch" -> Patch(saved[1] as Int, saved[2] as String)
+                        "sample" -> Sample(saved[1] as Int, saved[2] as String, saved[3] as Int)
                         else -> Main
                     }
                 )
@@ -833,6 +839,7 @@ private fun App(modifier: Modifier = Modifier) {
             rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onBack = { screen = Screen.Main },
             onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
+            onOpenSample = { pad -> screen = Screen.Sample(s.track, s.sceneId, pad) },
             patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
             // The settings and not only the knobs: a Nexus patch without its
             // graph, a Mosaic without its zones or a Formulate without its
@@ -879,6 +886,14 @@ private fun App(modifier: Modifier = Modifier) {
                 }
             },
             onImportZoneSamples = { track -> mapTarget = track; zoneSamplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*")) },
+            modifier = modifier,
+        )
+        is Screen.Sample -> com.rm.acidulous.ui.SampleScreen(
+            track = song.tracks[s.track],
+            trackIndex = s.track,
+            pad = s.pad,
+            editor = editor,
+            onBack = { screen = Screen.Edit(s.track, s.sceneId) },
             modifier = modifier,
         )
         is Screen.Patch -> com.rm.acidulous.ui.PatchScreen(

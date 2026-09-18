@@ -93,6 +93,8 @@ fun EditScreen(
     onImportSample: (track: Int, pad: Int) -> Unit = { _, _ -> },
     onImportKit: (track: Int, pad: Int) -> Unit = { _, _ -> },
     onImportSlice: (track: Int) -> Unit = {},
+    /** One pad's sample, on its own page with a picture of it. */
+    onOpenSample: (pad: Int) -> Unit = {},
     /** Pollen's single sample, which is keyed by name rather than by pad. */
     onImportOneSample: (track: Int) -> Unit = {},
     onImportSoundFont: (track: Int) -> Unit = {},
@@ -485,6 +487,7 @@ fun EditScreen(
             onImportSample = { pad -> onImportSample(trackIndex, pad) },
             onImportKit = { pad -> onImportKit(trackIndex, pad) },
             onImportSlice = { onImportSlice(trackIndex) },
+            onOpenSample = onOpenSample,
             onImportOneSample = { onImportOneSample(trackIndex) },
             onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },
             onAssignSample = { pad, rel ->

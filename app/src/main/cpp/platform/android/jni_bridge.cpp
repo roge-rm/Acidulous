@@ -163,6 +163,17 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSampleInfo(JNIEnv *env, jobject,
     return env->NewStringUTF(host().sampleInfo(rackId, slot).c_str());
 }
 
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSampleShape(JNIEnv *env, jobject, jint rack, jint pad,
+                                                           jfloatArray out) {
+    const jsize max = env->GetArrayLength(out);
+    if (max < 2) return 0;
+    jfloat *data = env->GetFloatArrayElements(out, nullptr);
+    const int32_t n = host().sampleShape(rack, pad, data, static_cast<int32_t>(max / 2));
+    env->ReleaseFloatArrayElements(out, data, 0);
+    return n;
+}
+
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeImportAudio(JNIEnv *env, jobject, jstring path) {
     const char *p = env->GetStringUTFChars(path, nullptr);

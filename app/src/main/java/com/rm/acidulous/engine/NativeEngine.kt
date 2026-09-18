@@ -55,6 +55,15 @@ object NativeEngine {
     fun sampleInfo(rackId: Int, slot: Int): String = nativeSampleInfo(rackId, slot)
 
     /**
+     * A pad's sample as [out].size / 2 pairs of min and max, for drawing.
+     *
+     * Returns how many columns were filled - nought when the pad is empty.
+     * Cheap enough to call on a resize and far too expensive to call per
+     * frame: it walks the whole sample.
+     */
+    fun sampleShape(rack: Int, pad: Int, out: FloatArray): Int = nativeSampleShape(rack, pad, out)
+
+    /**
      * Make an imported file readable: the path to use, or null and the reason.
      *
      * A WAV comes back unchanged. Anything else is decoded, written beside
@@ -468,6 +477,7 @@ object NativeEngine {
     private external fun nativeSampleInfo(rackId: Int, slot: Int): String
     private external fun nativeSlicePoints(path: String, mode: Int, count: Int): String
     private external fun nativeImportAudio(path: String): String
+    private external fun nativeSampleShape(rack: Int, pad: Int, out: FloatArray): Int
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
     private external fun nativeNoteOff(rackId: Int, note: Int)

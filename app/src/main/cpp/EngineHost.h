@@ -82,6 +82,18 @@ class EngineHost {
      * that plainly exists on disk.
      */
     std::string importAudio(const std::string &path, std::string &error) const;
+
+    /**
+     * A pad's sample as something to draw: [columns] pairs of min and max.
+     *
+     * Not the samples themselves. A thirty-second file is close to three
+     * million of them and a phone is a thousand pixels wide, so what a
+     * waveform display wants is the extremes within each column - which is
+     * what makes a drawn waveform look like the sound rather than like an
+     * aliased sine. [dest] wants 2 * [columns] floats; returns how many it
+     * filled, which is nought when the pad holds nothing.
+     */
+    int32_t sampleShape(int rack, int pad, float *dest, int32_t columns) const;
     int32_t nexusActivity(int rack, float *dest, int32_t max) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
     std::string sampleInfo(int rack, int slot) const;

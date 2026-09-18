@@ -213,6 +213,33 @@ bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::st
     return true;
 }
 
+int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns) const {
+    if (rack < 0 || rack >= kRackCount || dest == nullptr || columns <= 0) return 0;
+    auto *forage = dynamic_cast<machine::Forage *>(sEngine.racks[rack].currentMachine());
+    if (forage == nullptr) return 0;
+    const SampleData *s = forage->sampleAt(pad);
+    if (s == nullptr || s->frames <= 0) return 0;
+
+    for (int32_t c = 0; c < columns; ++c) {
+        const int64_t from = static_cast<int64_t>(s->frames) * c / columns;
+        int64_t to = static_cast<int64_t>(s->frames) * (c + 1) / columns;
+        if (to <= from) to = from + 1;
+        if (to > s->frames) to = s->frames;
+        float lo = 0.0f, hi = 0.0f;
+        for (int64_t i = from; i < to; ++i) {
+            // Both channels, because a waveform that shows only the left is a
+            // waveform that lies about anything panned.
+            const float l = s->left[static_cast<size_t>(i)];
+            const float r = s->stereo ? s->right[static_cast<size_t>(i)] : l;
+            lo = std::min(lo, std::min(l, r));
+            hi = std::max(hi, std::max(l, r));
+        }
+        dest[c * 2] = lo;
+        dest[c * 2 + 1] = hi;
+    }
+    return columns;
+}
+
 std::string EngineHost::importAudio(const std::string &path, std::string &error) const {
     const AudioFormat format = sniff(path);
     if (format == AudioFormat::Wav) return path; // nothing to do, and nothing to lose
