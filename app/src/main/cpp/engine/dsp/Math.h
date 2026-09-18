@@ -57,4 +57,36 @@ inline float undenormal(float v) {
 
 inline float clampf(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
+/**
+ * Where to read in a circular buffer, for a write head at [writeHead] and a
+ * delay of [samples]. Writes the interpolation fraction to [frac].
+ *
+ * **The whole reason this is a function is the third line.** Bringing a small
+ * negative position into range by adding the buffer length can land *on* the
+ * length rather than under it: the position is a float, and a hundredth of a
+ * sample below zero plus 96000.0f rounds to exactly 96000, because the
+ * difference is far below half an ulp there. The index is then one past the
+ * end - and the fraction is zero, so that out-of-bounds float is returned at
+ * full weight rather than as a rounding error.
+ *
+ * It has now been found twice. The send delay crashed on it the day the engine
+ * started following a Link session, because a tempo nudged every block keeps
+ * the read position gliding and a gliding position eventually lands there.
+ * Then the reverb: a ten millisecond pre-delay at 48 kHz asks for 480.000031
+ * samples, which does it on the *first* read of every render, and the garbage
+ * it picked up from past the end of the buffer made the bank test report a
+ * reverb that "played differently the second time" for weeks.
+ *
+ * The condition is written as a failed less-than so that a position which is
+ * not a number goes to zero rather than being used as an index.
+ */
+inline int32_t wrappedReadIndex(int32_t writeHead, float samples, int32_t size, float &frac) {
+    float pos = static_cast<float>(writeHead) - samples;
+    while (pos < 0.0f) pos += static_cast<float>(size);
+    if (!(pos < static_cast<float>(size))) pos = 0.0f;
+    const auto i = static_cast<int32_t>(pos);
+    frac = pos - static_cast<float>(i);
+    return i;
+}
+
 } // namespace acidulous::dsp

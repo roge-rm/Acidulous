@@ -313,12 +313,19 @@ class Waveguide {
         effGain = clampf(gain / loopKeeps, 0.0f, 1.05f);
     }
 
+    /**
+     * The loop, `delay` samples back.
+     *
+     * Through `wrappedReadIndex` for the reason given there: this was the
+     * third copy of that arithmetic and the second one that was wrong. A
+     * string reads its own loop, so anything it picks up from past the end of
+     * the buffer goes round and round rather than passing once.
+     */
     float read(float delay) const {
-        float pos = static_cast<float>(write) - delay;
-        while (pos < 0.0f) pos += static_cast<float>(buffer.size());
-        const int32_t i0 = static_cast<int32_t>(pos);
-        const int32_t i1 = (i0 + 1) % static_cast<int32_t>(buffer.size());
-        const float frac = pos - static_cast<float>(i0);
+        const auto len = static_cast<int32_t>(buffer.size());
+        float frac = 0.0f;
+        const int32_t i0 = dsp::wrappedReadIndex(write, delay, len, frac);
+        const int32_t i1 = i0 + 1 >= len ? 0 : i0 + 1;
         return buffer[static_cast<size_t>(i0)] * (1.0f - frac) + buffer[static_cast<size_t>(i1)] * frac;
     }
 

@@ -56,14 +56,7 @@ class Delay {
      * value; a tempo sitting still almost never does.
      */
     static int readIndex(int32_t wr, float samples, int32_t size, float &frac) {
-        float rpos = static_cast<float>(wr) - samples;
-        while (rpos < 0.0f) rpos += static_cast<float>(size);
-        // Written as a *failed* less-than so that a position that is not a
-        // number goes here too rather than indexing with it.
-        if (!(rpos < static_cast<float>(size))) rpos = 0.0f;
-        const int r0 = static_cast<int>(rpos);
-        frac = rpos - static_cast<float>(r0);
-        return r0;
+        return wrappedReadIndex(wr, samples, size, frac);
     }
 
     // In: a mono send. Out: added to L/R (100% wet).

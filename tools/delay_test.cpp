@@ -1,4 +1,4 @@
-// The send delay, read at every position it can ever be read at.
+// Every circular buffer in the engine, read at every position it can be read at.
 //
 // Written after a crash: a tempo that moves every block keeps the read
 // position gliding, and a glide eventually lands exactly on the end of the
@@ -12,6 +12,8 @@
 #include <cmath>
 #include <cstdio>
 #include <engine/dsp/Delay.h>
+#include <engine/dsp/DelayLine.h>
+#include <engine/machine/filament/Waveguide.h>
 
 using namespace acidulous::dsp;
 
@@ -62,8 +64,90 @@ int indexTests() {
     return bad == 0 ? 0 : 1;
 }
 
+/**
+ * The other two buffers that read themselves at a fraction.
+ *
+ * `Delay` grew `readIndex` after the Link crash and `DelayLine` and
+ * `Waveguide` kept their own copies of the arithmetic, without the
+ * correction - so the same bug was still in the tree, in two places, being
+ * hit on the *first read of every reverb render*: a ten millisecond pre-delay
+ * at 48 kHz is 480.000031 samples, and 480 minus that, plus the buffer
+ * length, is exactly the buffer length. Under the sanitiser the old code
+ * aborts here; without it, it quietly read whatever the allocator had put
+ * after the buffer, which is why a reverb "played differently the second
+ * time" depending on what else had been allocated.
+ *
+ * The delays are swept across the float grid around each write head, which is
+ * where the bad values live - a plain sweep of round numbers never finds one.
+ */
+int bufferTests() {
+    int tried = 0, atEnd = 0;
+    // The sizes that actually occur: a reverb pre-delay, its combs, the
+    // shimmer window, and a low string's loop.
+    for (int32_t cap : {10080, 2314, 5760, 2666, 96}) {
+        // The write head has to be *put* where it bites, not assumed: a line
+        // that has been filled right round sits at zero, and from zero the
+        // wrap can never land on the length. The reverb's first read happens
+        // with the head a few hundred samples in, which is exactly the case.
+        for (int32_t wr : {1, 2, 3, 480, cap / 4, cap / 2, cap - 2, cap - 1}) {
+            if (wr >= cap - 1) continue;
+            acidulous::dsp::DelayLine line;
+            line.prepare(cap);
+            for (int32_t i = 0; i < wr; ++i) line.write(0.01f * static_cast<float>(i % 17));
+            for (int step = -300; step <= 300; ++step) {
+                float samples = static_cast<float>(wr);
+                for (int n = 0; n < (step < 0 ? -step : step); ++n) {
+                    samples = step < 0 ? std::nextafterf(samples, 0.0f) : std::nextafterf(samples, 1e9f);
+                }
+                if (samples < 1.0f || samples > static_cast<float>(cap - 2)) continue;
+                float frac = 0.0f;
+                const int32_t i0 = acidulous::dsp::wrappedReadIndex(wr, samples, cap, frac);
+                ++tried;
+                if (i0 < 0 || i0 >= cap || frac < 0.0f || frac >= 1.0f) {
+                    printf("  FAIL index %d frac %g out of range for cap %d\n", i0, (double)frac, cap);
+                    return 1;
+                }
+                float naive = static_cast<float>(wr) - samples;
+                while (naive < 0.0f) naive += static_cast<float>(cap);
+                if (static_cast<int>(naive) >= cap) ++atEnd;
+                // And through the real thing, with its head where it bites, so
+                // the sanitiser sees the load rather than only the arithmetic.
+                const float v = line.read(samples);
+                if (!std::isfinite(v)) { printf("  FAIL DelayLine returned a non-number\n"); return 1; }
+            }
+        }
+    }
+    // The string, driven the way a note drives it: every pitch it can be asked
+    // for, gliding, because a gliding loop length is what lands on the value.
+    {
+        acidulous::machine::Waveguide wg;
+        wg.prepare(48000.0f);
+        for (int step = 0; step < 4000; ++step) {
+            const float hz = 20.0f + static_cast<float>(step) * 1.9f;
+            wg.setFrequency(hz);
+            wg.setDamping(0.99f, 0.5f);
+            wg.setDispersion(0.4f, 4);
+            wg.setTension(0.3f);
+            if (step % 97 == 0) wg.excite(0.5f);
+            for (int i = 0; i < 16; ++i) {
+                const float v = wg.step(0.0f);
+                if (!std::isfinite(v)) { printf("  FAIL the string returned a non-number\n"); return 1; }
+                ++tried;
+            }
+        }
+    }
+    printf("  %s %d buffer reads in range (%d would have gone off the end)\n",
+           atEnd > 0 ? "ok  " : "FAIL", tried, atEnd);
+    if (atEnd == 0) {
+        printf("  FAIL the grid never reaches the case this is here for\n");
+        return 1;
+    }
+    return 0;
+}
+
 int main() {
     if (indexTests() != 0) return 1;
+    if (bufferTests() != 0) return 1;
     Delay d;
     d.prepare(48000);
 
@@ -104,6 +188,6 @@ int main() {
     }
 
     printf("  ok   %d blocks, %d samples, nothing outside the buffer\n", blocks, blocks * 64);
-    printf("\n2 checks, 0 failures\n");
+    printf("\n3 checks, 0 failures\n");
     return 0;
 }
