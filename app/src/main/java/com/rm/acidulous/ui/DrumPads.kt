@@ -1,6 +1,7 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,10 +67,25 @@ private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> 
     // Where the last strike landed, 0 at the bottom and 1 at the top, which is
     // both the velocity and how far the highlight fills.
     var strike by remember { mutableStateOf(0f) }
+    // An empty pad is drawn as a hole rather than as a pad: no fill, a dashed
+    // outline, and a "+" instead of a name. It still triggers - the engine
+    // simply has nothing to play - and a Forage track with thirteen of these
+    // now says at a glance that it is waiting for samples, which it did not
+    // when every empty pad was labelled with its own number.
     Box(
         modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(if (selected) Acid.colors.padSelected else Acid.colors.control)
+            .background(
+                when {
+                    selected -> Acid.colors.padSelected
+                    !voice.loaded -> Acid.colors.control.copy(alpha = 0.25f)
+                    else -> Acid.colors.control
+                },
+            )
+            .then(
+                if (voice.loaded) Modifier
+                else Modifier.border(1.dp, Acid.colors.textDim.copy(alpha = 0.5f), RoundedCornerShape(4.dp)),
+            )
             .pointerInput(voice.note, rack) {
                 // The loop keeps its own idea of what is down. Comparing
                 // against the drawn state instead lets a fast tap be missed,
@@ -131,7 +147,11 @@ private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> 
         }
         Text(
             voice.short,
-            color = if (pressed) Acid.colors.onAccent else Acid.colors.text,
+            color = when {
+                pressed -> Acid.colors.onAccent
+                !voice.loaded -> Acid.colors.textDim
+                else -> Acid.colors.text
+            },
             fontSize = 13.sp,
             fontFamily = FontFamily.Monospace,
         )

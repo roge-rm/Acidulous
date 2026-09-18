@@ -58,6 +58,15 @@ class EngineHost {
     std::string nexusPalette() const;
     /** The scope trace from a rack's Nexus, into a caller-owned array. */
     int32_t nexusScope(int rack, float *dest, int32_t max) const;
+    /**
+     * Where a file's slices fall, as fractions of its length.
+     *
+     * [mode] 0 finds transients and 1 divides evenly. Returns [count]+1
+     * boundaries, "a,b,c,..." - so slice n runs from boundary n to n+1 and
+     * the caller has start and end for every pad without arithmetic of its
+     * own. Empty on any failure, with [error] saying why.
+     */
+    std::string slicePoints(const std::string &path, int mode, int count, std::string &error) const;
     int32_t nexusActivity(int rack, float *dest, int32_t max) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
     std::string sampleInfo(int rack, int slot) const;

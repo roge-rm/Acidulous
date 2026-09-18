@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,7 +52,9 @@ import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withPatch
 import com.rm.acidulous.model.withSetting
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.DrawbarBlack
 import com.rm.acidulous.ui.theme.DrawbarBrown
@@ -86,6 +89,8 @@ fun MachinePanel(
     onImportZoneSamples: () -> Unit = {},
     selectedPad: Int = 0,
     onImportSample: (pad: Int) -> Unit = {},
+    onImportKit: (pad: Int) -> Unit = {},
+    onImportSlice: () -> Unit = {},
     onClearSample: (pad: Int) -> Unit = {},
     /** A sample already in the app's own folder, chosen rather than imported. */
     onAssignSample: (pad: Int, relative: String) -> Unit = { _, _ -> },
@@ -136,7 +141,8 @@ fun MachinePanel(
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
-            "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample, onAssignSample)
+            "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
+                                    onImportKit, onImportSlice)
             else -> GenericPanel(binding)
         }
     }
@@ -506,7 +512,8 @@ private fun HexbeatPanel(b: ParamBinding) {
 /** Forage: the selected pad's sample and its controls; tap a pad to select it. */
 @Composable
 private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit,
-                        onClear: (Int) -> Unit, onAssign: (Int, String) -> Unit) {
+                        onClear: (Int) -> Unit, onAssign: (Int, String) -> Unit,
+                        onImportKit: (Int) -> Unit, onImportSlice: () -> Unit) {
     val p = pad.coerceIn(0, 12)
     fun n(name: String) = "p%02d_%s".format(p, name)
     val rel = track.machine.settings[n("sample")]
@@ -514,8 +521,80 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
     LaunchedEffect(p, rel) {
         while (true) { info = NativeEngine.sampleInfo(b.trackIndex, p); delay(400) }
     }
+    // The loudest sample in this pad's file, which is not something the player
+    // chose and is the reason `match` exists: thirteen files from thirteen
+    // places arrive at thirteen different levels, and the only remedy before
+    // this was thirteen level knobs set by ear.
+    val peak = info.split('|').getOrNull(3)?.toFloatOrNull() ?: 0f
+    val peakDb = if (peak > 1e-5f) "%.1f dB".format(20.0 * kotlin.math.log10(peak.toDouble())) else "-"
+
+    /**
+     * Set every loaded pad's level so the kit comes out even.
+     *
+     * Referenced to the **median** loaded sample, not the quietest and not the
+     * loudest. Referencing the quietest would match every pad exactly and take
+     * the whole kit down with the worst of them - one quiet shaker and the
+     * other twelve drop twenty decibels, which `volume` cannot get back.
+     * Referencing the loudest pushes every ratio above one at once.
+     *
+     * Against the median the loud half comes down and the quiet half goes up,
+     * and the kit keeps the level it had. `level` reaches four for this: at a
+     * ceiling of one the loud half had nowhere to move to and a ragged kit
+     * came out as far apart as it went in.
+     */
+    fun matchLevels() {
+        val peaks = (0 until 13).map { i ->
+            NativeEngine.sampleInfo(b.trackIndex, i).split('|').getOrNull(3)?.toFloatOrNull() ?: 0f
+        }
+        val loaded = peaks.filter { it > 1e-5f }.sorted()
+        if (loaded.isEmpty()) return
+        val median = loaded[loaded.size / 2]
+        peaks.forEachIndexed { i, pk ->
+            if (pk <= 1e-5f) return@forEachIndexed
+            val name = "p%02d_level".format(i)
+            // Through the parameter's own table: `set` wants 0..1 and `level`
+            // is in its own units, and writing the conversion out here would
+            // be a second copy of a range that lives in the engine.
+            val def = b.info.firstOrNull { it.name == name } ?: return@forEachIndexed
+            b.set(name, def.unmap(median / pk))
+        }
+    }
     val hot = Acid.colors.accent
     var picking by remember { mutableStateOf(false) }
+
+    // Slicing one file across the pads. The file is a setting of its own, not
+    // a pad's, because all thirteen read the same copy of it.
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sliceRel = track.machine.settings["slice_sample"]
+    var slicing by remember { mutableStateOf(false) }
+    var sliceBusy by remember { mutableStateOf(false) }
+    if (slicing) SliceDialog(
+        name = sliceRel?.substringAfterLast('/').orEmpty(),
+        onChoose = { slicing = false; onImportSlice() },
+        onDismiss = { slicing = false },
+        onApply = { mode, count ->
+            slicing = false
+            val rel = sliceRel ?: return@SliceDialog
+            sliceBusy = true
+            scope.launch {
+                val abs = java.io.File(
+                    com.rm.acidulous.engine.EngineAssets.userRoot(context), rel,
+                ).absolutePath
+                val points = withContext(Dispatchers.IO) { NativeEngine.slicePoints(abs, mode, count) }
+                sliceBusy = false
+                if (points.size < 2) return@launch
+                for (i in 0 until minOf(count, 13, points.size - 1)) {
+                    // Through the parameter table rather than assuming 0..1,
+                    // the same reason `match` does.
+                    val startDef = b.info.firstOrNull { it.name == "p%02d_start".format(i) }
+                    val endDef = b.info.firstOrNull { it.name == "p%02d_end".format(i) }
+                    if (startDef != null) b.set(startDef.name, startDef.unmap(points[i]))
+                    if (endDef != null) b.set(endDef.name, endDef.unmap(points[i + 1]))
+                }
+            }
+        },
+    )
     if (picking) SampleBrowserDialog(
         onPick = { rel -> picking = false; onAssign(p, rel) },
         onDismiss = { picking = false },
@@ -527,8 +606,14 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                 if (info.isEmpty()) (rel?.let { "$it (not loaded)" } ?: "no sample") else info.substringBefore('|') + "  " + (info.split('|').getOrNull(1)?.toIntOrNull()?.let { "%.2fs".format(it / 48000f) } ?: "") + (if (info.endsWith("|1")) " st" else " mono"),
                 color = Acid.colors.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f), maxLines = 1,
             )
+            if (rel != null) Text(peakDb, color = Acid.colors.textDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
             TextButton(onClick = { onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
+            TextButton(onClick = { onImportKit(p) }) { Text("kit…", color = hot, fontSize = 11.sp) }
+            TextButton(onClick = { if (sliceRel == null) onImportSlice() else slicing = true }) {
+                Text(if (sliceBusy) "slicing…" else "slice…", color = hot, fontSize = 11.sp)
+            }
             TextButton(onClick = { picking = true }) { Text("recorded…", color = hot, fontSize = 11.sp) }
+            TextButton(onClick = { matchLevels() }) { Text("match", color = Acid.colors.textMid, fontSize = 11.sp) }
             if (rel != null) TextButton(onClick = { onClear(p) }) { Text("clear", color = Acid.colors.textMid, fontSize = 11.sp) }
         }
         Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -538,6 +623,69 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
             Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "volume", "volume", hot) }
         }
+    }
+}
+
+/**
+ * Cutting one file across the pads.
+ *
+ * Forage has had per-pad start and end from the beginning, so a slice is not a
+ * new kind of thing: it is thirteen pads reading one file between two points.
+ * What it needed was somewhere to put the file - see Forage::kSharedSlot - and
+ * this, to work out where the cuts go.
+ */
+@Composable
+private fun SliceDialog(name: String, onChoose: () -> Unit, onDismiss: () -> Unit,
+                        onApply: (mode: Int, count: Int) -> Unit) {
+    var mode by remember { mutableStateOf(0) }
+    var count by remember { mutableStateOf(13) }
+    PlainDialog(
+        title = "Slice across the pads",
+        onDismiss = onDismiss,
+        confirmLabel = if (name.isEmpty()) "" else "Slice",
+        confirmEnabled = name.isNotEmpty(),
+        onConfirm = if (name.isEmpty()) null else ({ onApply(mode, count) }),
+        spacing = 10.dp,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                name.ifEmpty { "no file chosen" },
+                color = if (name.isEmpty()) Acid.colors.textDim else Acid.colors.textHi,
+                fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+                modifier = Modifier.weight(1f), maxLines = 1,
+            )
+            TextButton(onClick = onChoose) {
+                Text(if (name.isEmpty()) "choose…" else "change…", color = Acid.colors.accent, fontSize = 12.sp)
+            }
+        }
+        Text("where to cut", color = Acid.colors.textDim, fontSize = 11.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("transients", "even").forEachIndexed { i, label ->
+                TextButton(onClick = { mode = i }) {
+                    Text(label, color = if (mode == i) Acid.colors.accent else Acid.colors.textMid, fontSize = 12.sp)
+                }
+            }
+        }
+        Text(
+            if (mode == 0) "Finds the hits. More than the pads can hold and the loudest win; fewer and it divides evenly instead."
+            else "Equal pieces, whatever the music does.",
+            color = Acid.colors.textDim, fontSize = 11.sp,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("slices", color = Acid.colors.textDim, fontSize = 11.sp)
+            TextButton(onClick = { count = (count - 1).coerceAtLeast(2) }) {
+                Text("−", color = Acid.colors.accent, fontSize = 15.sp)
+            }
+            Text("$count", color = Acid.colors.textHi, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+            TextButton(onClick = { count = (count + 1).coerceAtMost(13) }) {
+                Text("+", color = Acid.colors.accent, fontSize = 15.sp)
+            }
+        }
+        Text(
+            "Pads 1 to $count take a piece each. A pad with its own sample keeps it - " +
+                "clear it to let the slice through.",
+            color = Acid.colors.textDim, fontSize = 11.sp,
+        )
     }
 }
 

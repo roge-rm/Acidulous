@@ -55,6 +55,17 @@ object NativeEngine {
     fun sampleInfo(rackId: Int, slot: Int): String = nativeSampleInfo(rackId, slot)
 
     /**
+     * Where [count] slices fall in a file, as fractions of its length.
+     *
+     * [mode] 0 finds transients, 1 divides evenly. Returns count+1 boundaries
+     * so slice n is points[n]..points[n+1]; empty if the file will not read.
+     * Decodes the file, so call it off the main thread.
+     */
+    fun slicePoints(absolutePath: String, mode: Int, count: Int): List<Float> =
+        nativeSlicePoints(absolutePath, mode, count)
+            .split(',').mapNotNull { it.trim().toFloatOrNull() }
+
+    /**
      * Renders the whole song to a 24-bit WAV at [path], blocking the calling
      * thread (use a worker). Returns "" on success or an error; "cancelled" after [cancelRender].
      */
@@ -442,6 +453,7 @@ object NativeEngine {
     private external fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String
     private external fun nativeSampleMapInfo(rackId: Int): String
     private external fun nativeSampleInfo(rackId: Int, slot: Int): String
+    private external fun nativeSlicePoints(path: String, mode: Int, count: Int): String
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
     private external fun nativeNoteOff(rackId: Int, note: Int)

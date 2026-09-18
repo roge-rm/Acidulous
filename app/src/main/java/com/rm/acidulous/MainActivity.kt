@@ -230,6 +230,46 @@ private fun App(modifier: Modifier = Modifier) {
         return dest
     }
 
+    // A whole kit in one trip.
+    //
+    // Building a Forage kit used to be thirteen round trips through the system
+    // picker, because this launcher took one document and the pads are filled
+    // one at a time. Mosaic's zones had been multi-select from the start; this
+    // is the same contract, filling pads from the one that is selected
+    // onwards, in the order the file names sort - which is the order a kit
+    // folder is almost always numbered in.
+    var kitTarget by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    val kitPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        val (track, firstPad) = kitTarget ?: return@rememberLauncherForActivityResult
+        kitTarget = null
+        if (uris.isNullOrEmpty()) return@rememberLauncherForActivityResult
+        runCatching {
+            val named = uris.map { uri ->
+                var display = "sample.wav"
+                context.contentResolver.query(uri, null, null, null, null)?.use { c ->
+                    val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+                }
+                display to uri
+            }.sortedBy { it.first.lowercase() }
+            val assigned = mutableListOf<Pair<String, String>>()
+            named.forEachIndexed { i, (display, uri) ->
+                val pad = firstPad + i
+                if (pad > 12) return@forEachIndexed
+                val dest = copyIn(uri, "samples", display)
+                assigned += "p%02d_sample".format(pad) to "samples/${dest.name}"
+            }
+            // One edit for the whole kit, so thirteen samples are one undo and
+            // one autosave rather than thirteen of each.
+            editor.edit(track) { t ->
+                var next = t
+                for ((key, rel) in assigned) next = next.withSetting(key, rel)
+                next
+            }
+        }.onFailure { Log.w(TAG, "kit import failed", it) }
+    }
+
+
     var status by remember { mutableStateOf("starting…") }
 
     val soundFontPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -757,6 +797,16 @@ private fun App(modifier: Modifier = Modifier) {
             },
             onImportOneSample = { track ->
                 importTarget = track to "sample"
+                samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*"))
+            },
+            onImportKit = { track, pad ->
+                kitTarget = track to pad
+                kitPicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*"))
+            },
+            onImportSlice = { track ->
+                // One file for all thirteen pads; the slice points are worked
+                // out afterwards, in the panel.
+                importTarget = track to "slice_sample"
                 samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*"))
             },
             onImportSoundFont = { track -> mapTarget = track; soundFontPicker.launch(arrayOf("*/*")) },

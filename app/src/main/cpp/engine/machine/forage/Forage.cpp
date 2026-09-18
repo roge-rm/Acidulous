@@ -16,7 +16,17 @@ struct Table {
             {"end", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
             {"pitch", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "st"},
             {"decay", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""}, // 1 = play through
-            {"level", 0.0f, 1.0f, 0.8f, Curve::Linear, 0, ""},
+            // Up to four, not one.
+            //
+            // A pad level that can only attenuate cannot match anything: put
+            // thirteen files from thirteen sources on the pads and the loud
+            // ones come down while the quiet ones are already at the top of
+            // the knob. Measured across a ragged kit, matching against a
+            // ceiling of one closed eighteen decibels of spread to thirteen;
+            // twelve decibels of headroom closes it to one. The default is
+            // unchanged at 0.8, so nothing sounds different until somebody
+            // turns it up.
+            {"level", 0.0f, 4.0f, 0.8f, Curve::Linear, 0, ""},
             {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
             {"reverse", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
             {"choke", 0.0f, 4.0f, 0.0f, Curve::Stepped, 5, ""}, // 0 none, 1..4 groups
@@ -103,6 +113,13 @@ void Forage::reset() {
 void Forage::allNotesOff() {}
 
 void *Forage::swapObject(int32_t slot, void *object) {
+    if (slot == kSharedSlot) {
+        void *old = const_cast<SampleData *>(shared);
+        shared = static_cast<const SampleData *>(object);
+        // Anything reading the shared sample has to stop before it goes.
+        for (auto &p : pads) if (p.sample == nullptr) p.playing = false;
+        return old;
+    }
     if (slot < 0 || slot >= kPads) return object;
     void *old = const_cast<SampleData *>(pads[slot].sample);
     pads[slot].sample = static_cast<const SampleData *>(object);
@@ -118,7 +135,8 @@ void Forage::noteOn(uint8_t note, uint8_t velocity) {
 
 void Forage::trigger(int32_t i, float vel, bool accent) {
     Pad &p = pads[i];
-    if (p.sample == nullptr || p.sample->frames == 0) return;
+    const SampleData *src = p.sample != nullptr ? p.sample : shared;
+    if (src == nullptr || src->frames == 0) return;
     const float accentAmt = params_.get(globalIndex(Accent));
     // Choke: pads in the same non-zero group cut each other.
     const float group = params_.get(index(i, Choke));
@@ -131,7 +149,7 @@ void Forage::trigger(int32_t i, float vel, bool accent) {
         }
     }
     const bool reverse = params_.get(index(i, Reverse)) >= 0.5f;
-    const double frames = p.sample->frames;
+    const double frames = src->frames;
     const double start = params_.get(index(i, Start)) * frames;
     const double end = params_.get(index(i, End)) * frames;
     p.pos = reverse ? std::max(start, end) - 1.0 : std::min(start, end);
@@ -153,8 +171,9 @@ bool Forage::render(float *L, float *R, int32_t frames) {
     for (int32_t n = 0; n < frames; ++n) { L[n] = 0.0f; R[n] = 0.0f; }
     for (int32_t i = 0; i < kPads; ++i) {
         Pad &p = pads[i];
-        if (!p.playing || p.sample == nullptr) continue;
-        const SampleData &s = *p.sample;
+        const SampleData *src = p.sample != nullptr ? p.sample : shared;
+        if (!p.playing || src == nullptr) continue;
+        const SampleData &s = *src;
         const bool reverse = params_.get(index(i, Reverse)) >= 0.5f;
         const double lo = std::min(params_.get(index(i, Start)), params_.get(index(i, End))) * s.frames;
         const double hi = std::max(params_.get(index(i, Start)), params_.get(index(i, End))) * s.frames;

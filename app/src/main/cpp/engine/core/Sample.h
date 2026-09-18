@@ -23,6 +23,24 @@ struct SampleData {
     // Loop in frames, -1 for none. Set from the source file where it says so.
     int32_t loopStart = -1;
     int32_t loopEnd = -1;
+    /**
+     * The loudest sample in the file, 0..1, or 0 if nobody measured it.
+     *
+     * Kept here rather than worked out where it is wanted because the thing
+     * that wants it is a panel polling twice a second, and scanning a second
+     * of stereo audio to answer "how loud is this" is a hundred thousand
+     * reads for a number that cannot change: a SampleData is never modified
+     * after it is built.
+     */
+    float peak = 0.0f;
+
+    /** Fill [peak]. Call once, on the thread that built the data. */
+    void measure() {
+        float p = 0.0f;
+        for (float v : left) p = v < 0.0f ? (-v > p ? -v : p) : (v > p ? v : p);
+        for (float v : right) p = v < 0.0f ? (-v > p ? -v : p) : (v > p ? v : p);
+        peak = p;
+    }
 };
 
 } // namespace acidulous

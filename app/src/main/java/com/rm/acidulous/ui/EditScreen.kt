@@ -91,6 +91,8 @@ fun EditScreen(
     userPatchNames: () -> List<String> = { emptyList() },
     onDeletePatch: (String) -> Unit = {},
     onImportSample: (track: Int, pad: Int) -> Unit = { _, _ -> },
+    onImportKit: (track: Int, pad: Int) -> Unit = { _, _ -> },
+    onImportSlice: (track: Int) -> Unit = {},
     /** Pollen's single sample, which is keyed by name rather than by pad. */
     onImportOneSample: (track: Int) -> Unit = {},
     onImportSoundFont: (track: Int) -> Unit = {},
@@ -481,6 +483,8 @@ fun EditScreen(
             onImportZoneSamples = { onImportZoneSamples(trackIndex) },
             selectedPad = selectedPad,
             onImportSample = { pad -> onImportSample(trackIndex, pad) },
+            onImportKit = { pad -> onImportKit(trackIndex, pad) },
+            onImportSlice = { onImportSlice(trackIndex) },
             onImportOneSample = { onImportOneSample(trackIndex) },
             onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },
             onAssignSample = { pad, rel ->

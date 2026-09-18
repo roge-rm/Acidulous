@@ -41,5 +41,6 @@ echo "--- molt";  "$ROOT/tools/molt_test.sh"  | tail -2 || fail=1
 # over the machine's own network, which is the part worth waiting for.
 echo "--- link";  "$ROOT/tools/link_test.sh"  | tail -2 || fail=1
 echo "--- delay"; "$ROOT/tools/delay_test.sh" | tail -2 || fail=1
+echo "--- slice"; "$ROOT/tools/slice_test.sh" | tail -2 || fail=1
 
 exit $fail

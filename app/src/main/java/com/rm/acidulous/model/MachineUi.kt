@@ -7,7 +7,16 @@ package com.rm.acidulous.model
  */
 enum class MachineKind { Keyboard, Drums }
 
-data class DrumVoice(val note: Int, val name: String, val short: String)
+/**
+ * One pad, as the pads and the grid draw it.
+ *
+ * [loaded] is false only where a pad *can* be empty, which today is Forage:
+ * its thirteen pads hold whatever the player imported, and an empty one used
+ * to be labelled with its own number - indistinguishable from a pad holding a
+ * sample whose name begins with a digit. A freshly added Forage track
+ * therefore looked like a working drum machine and made no sound at all.
+ */
+data class DrumVoice(val note: Int, val name: String, val short: String, val loaded: Boolean = true)
 
 object MachineUi {
     fun kindOf(type: String): MachineKind =
@@ -131,7 +140,12 @@ object MachineUi {
         "Forage" -> (0 until 13).map { pad ->
             val file = settings["p%02d_sample".format(pad)]
             val name = file?.substringAfterLast('/')?.substringBeforeLast('.') ?: ""
-            DrumVoice(36 + pad, if (name.isEmpty()) "Pad ${pad + 1}" else name, if (name.isEmpty()) "${pad + 1}" else name.take(4))
+            DrumVoice(
+                note = 36 + pad,
+                name = if (name.isEmpty()) "Pad ${pad + 1}" else name,
+                short = if (name.isEmpty()) "+" else name.take(4),
+                loaded = name.isNotEmpty(),
+            )
         }
         else -> emptyList()
     }

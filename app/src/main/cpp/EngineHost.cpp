@@ -18,6 +18,8 @@
 #include <engine/eventor/EventorRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/format/Sf2Reader.h>
+#include <engine/core/Slices.h>
+#include <engine/core/Take.h>
 #include <engine/machine/forage/Forage.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/formulate/Formulate.h>
@@ -207,6 +209,23 @@ bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::st
     return true;
 }
 
+std::string EngineHost::slicePoints(const std::string &path, int mode, int count, std::string &error) const {
+    auto decoded = WavReader::read(path, kSampleRate, error);
+    if (!decoded) return "";
+    const std::vector<float> points = audio::slicePoints(
+        *decoded, mode == 1 ? audio::SliceMode::Even : audio::SliceMode::Transients, count,
+        static_cast<float>(kSampleRate));
+    if (points.empty()) { error = "empty"; return ""; }
+    std::string out;
+    char buf[32];
+    for (float v : points) {
+        std::snprintf(buf, sizeof(buf), "%.6f", static_cast<double>(v));
+        if (!out.empty()) out += ",";
+        out += buf;
+    }
+    return out;
+}
+
 std::string EngineHost::soundFontPresets(const std::string &path, std::string &error) {
     std::vector<Sf2Reader::PresetInfo> presets;
     if (!Sf2Reader::listPresets(path, presets, error)) return "";
@@ -383,7 +402,9 @@ std::string EngineHost::sampleInfo(int rack, int slot) const {
     if (forage == nullptr) return "";
     const SampleData *s = forage->sampleAt(slot);
     if (s == nullptr) return "";
-    return s->name + "|" + std::to_string(s->frames) + "|" + (s->stereo ? "1" : "0");
+    char peak[24];
+    std::snprintf(peak, sizeof(peak), "%.6f", static_cast<double>(s->peak));
+    return s->name + "|" + std::to_string(s->frames) + "|" + (s->stereo ? "1" : "0") + "|" + peak;
 }
 
 const char *EngineHost::mountedMachine(int rack) const {

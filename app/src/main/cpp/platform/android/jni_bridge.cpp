@@ -163,6 +163,16 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSampleInfo(JNIEnv *env, jobject,
     return env->NewStringUTF(host().sampleInfo(rackId, slot).c_str());
 }
 
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSlicePoints(JNIEnv *env, jobject, jstring path, jint mode,
+                                                           jint count) {
+    const char *p = env->GetStringUTFChars(path, nullptr);
+    std::string error;
+    const std::string out = host().slicePoints(p != nullptr ? p : "", mode, count, error);
+    env->ReleaseStringUTFChars(path, p);
+    return env->NewStringUTF(out.c_str());
+}
+
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOn(JNIEnv *, jobject,
                                                 jint rackId, jint note, jint velocity) {

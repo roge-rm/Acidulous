@@ -82,6 +82,19 @@ object EngineSync {
                 val err = NativeEngine.loadSample(rack, pad, if (rel.isEmpty()) "" else java.io.File(root, rel).absolutePath)
                 if (err.isEmpty()) loadedSamples[key] = rel else Log.w(TAG, "sample '$rel' on rack $rack pad $pad: $err")
             }
+            // And the shared file the pads slice, in the slot above them. One
+            // copy for all thirteen: mounting it per pad would decode an
+            // eleven megabyte file thirteen times.
+            val sliceKey = "$rack:shared"
+            val sliceRel = track.machine.settings["slice_sample"] ?: ""
+            if (loadedSamples[sliceKey] != sliceRel && mounted[rack] == track.machine.type &&
+                !(sliceRel.isEmpty() && loadedSamples[sliceKey] == null)) {
+                val err = NativeEngine.loadSample(
+                    rack, 13, if (sliceRel.isEmpty()) "" else java.io.File(root, sliceRel).absolutePath,
+                )
+                if (err.isEmpty()) loadedSamples[sliceKey] = sliceRel
+                else Log.w(TAG, "slice source '$sliceRel' on rack $rack: $err")
+            }
         }
     }
 

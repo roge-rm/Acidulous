@@ -97,6 +97,7 @@ std::unique_ptr<SampleData> WavReader::read(const std::string &path, int32_t tar
         if (out->stereo) out->right.assign(src[1].begin(), src[1].begin() + frames);
         const size_t cut = path.find_last_of('/');
         out->name = cut == std::string::npos ? path : path.substr(cut + 1);
+        out->measure();
         return out;
     }
 
@@ -118,6 +119,7 @@ std::unique_ptr<SampleData> WavReader::read(const std::string &path, int32_t tar
     }
     const size_t slash = path.find_last_of('/');
     out->name = slash == std::string::npos ? path : path.substr(slash + 1);
+    out->measure();
     return out;
 }
 
