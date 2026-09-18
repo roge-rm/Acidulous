@@ -22,3 +22,5 @@ local.properties
 
 # The IDE's own state, all of it.
 /.idea/
+# Core dumps, which a crash in the C++ harnesses drops in the tree root.
+/core.*

@@ -58,6 +58,7 @@ class EngineHost {
     std::string nexusPalette() const;
     /** The scope trace from a rack's Nexus, into a caller-owned array. */
     int32_t nexusScope(int rack, float *dest, int32_t max) const;
+    int32_t nexusActivity(int rack, float *dest, int32_t max) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
     std::string sampleInfo(int rack, int slot) const;
     const char *mountedMachine(int rack) const;

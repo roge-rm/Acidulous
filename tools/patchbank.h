@@ -218,7 +218,23 @@ inline bool readBank(const std::string &path, Bank &bank, std::string &error) {
             std::string key, value;
             if (!detail::token(line, at, key)) return fail("a key is wanted after set");
             detail::token(line, at, value); // an empty string is legal: it clears
-            p.settings.emplace_back(key, value);
+            // `\n` is a newline, because some settings are whole documents.
+            //
+            // A Nexus patch *is* its graph - a line per module and a line per
+            // cable - and Mosaic's zone map is the same shape. A bank file is
+            // one setting per line, so without this the only machines whose
+            // patches are text could not have a bank at all.
+            std::string out;
+            out.reserve(value.size());
+            for (size_t i = 0; i < value.size(); ++i) {
+                if (value[i] == '\\' && i + 1 < value.size()) {
+                    const char c = value[i + 1];
+                    if (c == 'n') { out += '\n'; ++i; continue; }
+                    if (c == '\\') { out += '\\'; ++i; continue; }
+                }
+                out += value[i];
+            }
+            p.settings.emplace_back(key, out);
             continue;
         }
 

@@ -352,9 +352,21 @@ object NativeEngine {
     /** Fills [out] with the scope trace and returns how many points landed. */
     fun nexusScope(rack: Int, out: FloatArray): Int = nativeNexusScope(rack, out)
 
+    /**
+     * How much is moving in the patch: [NEXUS_SLOTS] module levels followed by
+     * [NEXUS_CABLES] cable levels, so [out] wants to be that long.
+     *
+     * Slots are indexed by slot number and cables by their order in the patch
+     * text, which is the same index their depth knobs use - so the editor can
+     * read straight into what it is already drawing. Levels are decaying
+     * peaks, not instantaneous samples.
+     */
+    fun nexusActivity(rack: Int, out: FloatArray): Int = nativeNexusActivity(rack, out)
+
     private external fun nativeLoadNexusPatch(rack: Int, spec: String): String
     private external fun nativeNexusPalette(): String
     private external fun nativeNexusScope(rack: Int, out: FloatArray): Int
+    private external fun nativeNexusActivity(rack: Int, out: FloatArray): Int
 
     // --- Audio in --------------------------------------------------------
 

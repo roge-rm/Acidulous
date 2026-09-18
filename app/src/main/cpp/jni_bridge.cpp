@@ -201,6 +201,16 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeNexusScope(JNIEnv *env, jobject,
     return n;
 }
 
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeNexusActivity(JNIEnv *env, jobject, jint rack, jfloatArray out) {
+    const jsize max = env->GetArrayLength(out);
+    if (max <= 0) return 0;
+    jfloat *data = env->GetFloatArrayElements(out, nullptr);
+    const int32_t n = host().nexusActivity(rack, data, static_cast<int32_t>(max));
+    env->ReleaseFloatArrayElements(out, data, 0);
+    return n;
+}
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeStartInput(JNIEnv *, jobject) {
     return host().startInput() ? JNI_TRUE : JNI_FALSE;

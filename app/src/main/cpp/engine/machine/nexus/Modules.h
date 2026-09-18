@@ -104,28 +104,52 @@ class MacroMod final : public Module {
     bool polyCapable() const override { return false; }
 };
 
-/** The sink. Everything that reaches here is what you hear. */
+/**
+ * The sink. Everything that reaches here is what you hear.
+ *
+ * It has two audio inputs, and the second one is why the cabinet works. The
+ * rotary block, like Cipher's and like anything else in here that images a
+ * sound, produces a left and a right - and with one input on the sink there
+ * was nowhere to put the right. "Leslie String" was a rotating speaker heard
+ * through one microphone: the Doppler survived, the swirl that is the whole
+ * point of the thing did not, and the patch measured `mono +0.0` with the two
+ * channels bit-identical.
+ *
+ * Leave `in R` empty and it mirrors `in`, so every mono patch is untouched;
+ * wire it and `pan` becomes a balance across the pair rather than a placement
+ * of one signal.
+ */
 class OutMod final : public Module {
   public:
     void prepare(float, int32_t) override {}
     void reset() override {}
     void setKnobs(const float *k) override { level = lin(k[0], 0.0f, 2.0f); pan = lin(k[1], -1.0f, 1.0f); }
+    void setConnected(uint32_t mask) override { stereo = (mask & (1u << 2)) != 0; }
     void step(const float *in, float *out, const Context &) override {
         // A patch can be wired to feed itself, and should be: that is what a
         // modular is for. What it must not do is reach the speakers as an
         // infinity, so the sink saturates the way a real output stage does.
-        float x = in[0] * level;
-        if (x > 1.0f || x < -1.0f) x = std::tanh(x);
-        if (!std::isfinite(x)) x = 0.0f;
+        float l = in[0] * level;
+        float r = (stereo ? in[2] : in[0]) * level;
+        if (l > 1.0f || l < -1.0f) l = std::tanh(l);
+        if (r > 1.0f || r < -1.0f) r = std::tanh(r);
+        if (!std::isfinite(l)) l = 0.0f;
+        if (!std::isfinite(r)) r = 0.0f;
         const float p = clampf(pan + in[1], -1.0f, 1.0f);
         const float angle = (p + 1.0f) * 0.25f * 3.14159265f;
-        out[0] = x * std::cos(angle) * 1.4142f;
-        out[1] = x * std::sin(angle) * 1.4142f;
-        last = x;
+        // Equal power, and it has to stay equal power in both cases: a mono
+        // source is one signal placed in the image, a stereo source is two
+        // signals balanced against each other, and the same pair of gains
+        // says both. A patch that does not touch `pan` gets 0.7071 * 1.4142,
+        // which is unity, on each side either way.
+        out[0] = l * std::cos(angle) * 1.4142f;
+        out[1] = r * std::sin(angle) * 1.4142f;
+        last = 0.5f * (l + r);
     }
     float lastOut() const { return last; }
   private:
     float level = 1.0f, pan = 0.0f, last = 0.0f;
+    bool stereo = false;
 };
 
 /** Passes its input through and keeps the last few thousand samples to draw. */
@@ -543,6 +567,17 @@ class RotaryMod final : public Module {
 class BandsMod final : public Module {
   public:
     static constexpr int kBands = 16;
+    /**
+     * What sixteen correctly-scaled bands need to reach a usable level.
+     *
+     * Normalising the band-passes cost eleven decibels, and that is the
+     * *right* eleven decibels to lose - the old level came from sixteen
+     * filters each running three and a half times too loud, so the `width`
+     * knob was a volume control. Cipher carries a makeup constant for exactly
+     * this reason and so does this, rather than asking every patch that uses
+     * the block to find the level again with its own volume.
+     */
+    static constexpr float kMakeup = 8.0f;
     void prepare(float sr, int32_t) override {
         rate = sr;
         for (int i = 0; i < kBands; ++i) {
@@ -556,32 +591,54 @@ class BandsMod final : public Module {
     void reset() override {
         for (int i = 0; i < kBands; ++i) { analysis[i].reset(); synthesis[i].reset(); env[i] = 0.0f; }
     }
+    /**
+     * The thirty-two filters are tuned here, once a block, and not per sample.
+     *
+     * Nothing in this loop depends on the signal: the band centres are fixed
+     * at `prepare`, and the resonance, the shift and the follower's
+     * coefficient come from knobs. Tuning them from inside `step()` meant
+     * thirty-two tangents, a power and an exponential *every sample* - and
+     * "Talking" rendered at three times realtime on a desktop, which is under
+     * one on a phone. It is the same mistake as the string next door, a
+     * sixteenth as often but sixteen times over.
+     */
     void setKnobs(const float *k) override {
         shift = lin(k[0], -12.0f, 12.0f);
         follow = expo(k[1], 0.002f, 0.5f);
         width = clampf(k[2], 0.0f, 1.0f);
         level = lin(k[3], 0.0f, 4.0f);
-    }
-    void step(const float *in, float *out, const Context &) override {
         const float res = clampf((2.0f - 1.0f / (3.6f * (0.5f + width))) / 1.96f, 0.0f, 0.99f);
-        const float coeff = 1.0f - std::exp(-1.0f / std::fmax(1.0f, follow * rate));
-        float sum = 0.0f, loud = 0.0f;
+        coeff = 1.0f - std::exp(-1.0f / std::fmax(1.0f, follow * rate));
+        const float ratio = std::pow(2.0f, shift / 12.0f);
         for (int i = 0; i < kBands; ++i) {
             analysis[i].set(centre[i], res);
-            synthesis[i].set(clampf(centre[i] * std::pow(2.0f, shift / 12.0f), 20.0f, rate * 0.45f), res);
-            const float a = std::fabs(analysis[i].bandpass(in[1]));
-            env[i] += (a - env[i]) * coeff;
-            loud += env[i];
-            sum += synthesis[i].bandpass(in[0]) * env[i];
+            synthesis[i].set(clampf(centre[i] * ratio, 20.0f, rate * 0.45f), res);
+            // A band-pass out of this filter comes back with its own Q as a
+            // gain, so sixteen of them summed is a resonance knob that sets
+            // the level. `width` should change what the thing sounds like and
+            // nothing else - the same correction Cipher needed.
+            aNorm[i] = analysis[i].bandNorm();
+            sNorm[i] = synthesis[i].bandNorm();
         }
-        out[0] = sum * level;
+    }
+    void step(const float *in, float *out, const Context &) override {
+        float sum = 0.0f, loud = 0.0f;
+        for (int i = 0; i < kBands; ++i) {
+            const float a = std::fabs(analysis[i].bandpass(in[1]) * aNorm[i]);
+            env[i] = undenormal(env[i] + (a - env[i]) * coeff);
+            loud += env[i];
+            sum += synthesis[i].bandpass(in[0]) * sNorm[i] * env[i];
+        }
+        out[0] = sum * level * kMakeup;
         out[1] = clampf(loud * 0.5f, 0.0f, 1.0f);
     }
     bool polyCapable() const override { return false; }
   private:
     Svf analysis[kBands], synthesis[kBands];
     float centre[kBands] = {}, env[kBands] = {};
+    float aNorm[kBands] = {}, sNorm[kBands] = {};
     float rate = 48000.0f, shift = 0.0f, follow = 0.02f, width = 0.5f, level = 1.0f;
+    float coeff = 0.001f;
 };
 
 class EnvMod final : public Module {

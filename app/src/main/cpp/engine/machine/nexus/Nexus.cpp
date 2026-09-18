@@ -5,6 +5,13 @@
 #include <cstring>
 
 namespace acidulous::machine {
+
+// Where this bank sits in the volume knob's travel, set from Init - which
+// carries no `volume` line and so is the only patch that says what the machine
+// does at its defaults. A graph's own output level is a knob on its `out`
+// module, so without this every patch would have to spend that knob on
+// loudness rather than on balance.
+constexpr float kHouse = 0.36f;
 using namespace nexus;
 
 Nexus::Nexus() { initParams(); }
@@ -137,6 +144,10 @@ int32_t Nexus::readScope(float *dest, int32_t max) const {
     return graph != nullptr ? graph->scopePoints(dest, max) : 0;
 }
 
+int32_t Nexus::readActivity(float *dest, int32_t max) const {
+    return graph != nullptr ? graph->activity(dest, max) : 0;
+}
+
 bool Nexus::render(float *L, float *R, int32_t frames) {
     params_.tick();
     Graph *g = graph;
@@ -162,7 +173,7 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
     ctx.tickInc = frames > 0 ? tickStep / static_cast<double>(frames) : 0.0;
     ctx.tick = tickCursor;
 
-    const float volume = paramOf(Volume);
+    const float volume = paramOf(Volume) * kHouse;
     const float pan = paramOf(Pan);
     const float drive = paramOf(Drive);
     const float angle = (pan + 1.0f) * 0.25f * 3.14159265f;

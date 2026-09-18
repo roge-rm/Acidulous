@@ -47,9 +47,13 @@ import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.withParam
 import androidx.compose.ui.text.drawText
 import com.rm.acidulous.engine.NativeEngine
+import com.rm.acidulous.model.NEXUS_CABLES
 import com.rm.acidulous.model.NEXUS_KNOBS
+import com.rm.acidulous.model.NEXUS_SLOTS
 import com.rm.acidulous.model.NexusCable
 import com.rm.acidulous.model.NexusModule
+import com.rm.acidulous.model.NexusFamily
+import com.rm.acidulous.model.nexusFamilyOf
 import com.rm.acidulous.model.NexusPalette
 import com.rm.acidulous.model.NexusPatch
 import com.rm.acidulous.model.SongEditor
@@ -60,6 +64,7 @@ import com.rm.acidulous.model.nexusKnob
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.hypot
+import kotlin.math.log10
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
 
@@ -114,6 +119,7 @@ fun PatchScreen(
     var pulling by remember { mutableStateOf<Pair<Jack, Offset>?>(null) }
     var adding by remember { mutableStateOf(false) }
     var scope by remember { mutableStateOf(FloatArray(0)) }
+    var activity by remember { mutableStateOf(FloatArray(NEXUS_SLOTS + NEXUS_CABLES)) }
 
     val info = remember(track.machine.settings["nexus"]) { NativeEngine.nexusPalette() }
     val measurer = rememberTextMeasurer()
@@ -123,12 +129,18 @@ fun PatchScreen(
         editor.edit(trackIndex) { t -> t.withSetting("nexus", next.encode()) }
     }
 
+    // The patch lights up as it plays, which is why this polls at something
+    // like a frame rate rather than the scope's old sixteen times a second: a
+    // meter that updates every sixty milliseconds reads as a stutter, and the
+    // whole point is to watch the signal move through the cables.
     LaunchedEffect(trackIndex) {
         val buffer = FloatArray(512)
+        val levels = FloatArray(NEXUS_SLOTS + NEXUS_CABLES)
         while (true) {
             val n = NativeEngine.nexusScope(trackIndex, buffer)
             if (n > 0) scope = buffer.copyOf(n)
-            delay(60)
+            if (NativeEngine.nexusActivity(trackIndex, levels) > 0) activity = levels.copyOf()
+            delay(33)
         }
     }
 
@@ -277,7 +289,7 @@ fun PatchScreen(
                     }
                 },
             ) {
-                drawPatch(patch, pan, zoom, selection, pulling, scope, measurer, c)
+                drawPatch(patch, pan, zoom, selection, pulling, scope, activity, measurer, c)
             }
         }
 
@@ -358,10 +370,26 @@ private fun DrawScope.drawPatch(
     selection: Selection,
     pulling: Pair<Jack, Offset>?,
     scope: FloatArray,
+    activity: FloatArray,
     measurer: TextMeasurer,
     col: AcidColors,
 ) {
     fun screen(w: Offset) = Offset((w.x - pan.x) * zoom, (w.y - pan.y) * zoom)
+
+    // A level, as something to draw with.
+    //
+    // Linear amplitude is the wrong scale for this: half the interesting life
+    // of a patch happens below a tenth of full scale - an envelope's tail, a
+    // slow LFO, a filter that has nearly closed - and on a linear map all of
+    // that is indistinguishable from off. Sixty decibels of range, so a signal
+    // forty decibels down still shows as a third lit.
+    fun lit(level: Float): Float {
+        if (level <= 1e-5f) return 0f
+        return ((20f * log10(level) + 60f) / 60f).coerceIn(0f, 1f)
+    }
+    fun slotLit(slot: Int) = if (slot in 0 until NEXUS_SLOTS) lit(activity[slot]) else 0f
+    fun cableLit(index: Int) =
+        if (index in 0 until NEXUS_CABLES) lit(activity[NEXUS_SLOTS + index]) else 0f
 
     // A grid, so panning has something to push against.
     val step = 50f * zoom
@@ -384,7 +412,17 @@ private fun DrawScope.drawPatch(
             val bend = (abs(b.x - a.x) * 0.4f + 24f * zoom)
             cubicTo(a.x + bend, a.y, b.x - bend, b.y, b.x, b.y)
         }
+        // The dark cable is always there, so an idle patch still reads as a
+        // patch; what is carrying something is drawn over the top of it. Two
+        // passes rather than one interpolated colour, because a glow wants to
+        // be both brighter *and* thicker and a single stroke can only be one.
         drawPath(path, if (selected) col.accent else col.cable, style = Stroke(if (selected) 3.5f else 2.2f))
+        val glow = cableLit(index)
+        if (glow > 0.01f) {
+            val tint = if (selected) col.accent else col.teal
+            drawPath(path, tint.copy(alpha = 0.10f + 0.22f * glow), style = Stroke(2.2f + 7f * glow))
+            drawPath(path, tint.copy(alpha = 0.35f + 0.65f * glow), style = Stroke(1.6f + 2.2f * glow))
+        }
         if (selected) drawCircle(col.accent, 5f, (a + b) * 0.5f)
     }
     pulling?.let { (jack, at) ->
@@ -405,23 +443,74 @@ private fun DrawScope.drawPatch(
         val h = NODE_H * zoom
         if (at.x > size.width || at.y > size.height || at.x + w < 0f || at.y + h < 0f) continue
         val selected = (selection as? Selection.Module)?.slot == m.slot
+        // A band of colour across the top, by what kind of module it is.
+        // Thirty types all drawn the same grey is thirty identical boxes, and
+        // the thing you want from a glance at a patch is its shape: where the
+        // sound starts, where it is shaped, what is moving it.
+        val family = nexusFamilyOf(m.type)
+        val tint = when (family) {
+            NexusFamily.Source -> col.accent
+            NexusFamily.Voice -> col.pink
+            NexusFamily.Shape -> col.teal
+            NexusFamily.Mod -> col.green
+            NexusFamily.Time -> col.sceneQueued
+            NexusFamily.Io -> col.textDim
+        }
+        // How hard this module is working, which is what the colour band and
+        // the halo below are both saying. A module that is silent keeps its
+        // family colour at the old fixed strength, so the patch looks the same
+        // as it always did when nothing is playing.
+        val live = slotLit(m.slot)
+        if (live > 0.01f) {
+            drawRoundRect(
+                tint.copy(alpha = 0.16f * live),
+                at - Offset(5f * zoom, 5f * zoom), Size(w + 10f * zoom, h + 10f * zoom),
+                androidx.compose.ui.geometry.CornerRadius(10f, 10f),
+            )
+        }
         drawRoundRect(col.nodeBg, at, Size(w, h), androidx.compose.ui.geometry.CornerRadius(6f, 6f))
+        val band = 14f * zoom
+        drawRoundRect(
+            tint.copy(alpha = 0.22f + 0.55f * live), at, Size(w, band + 6f * zoom),
+            androidx.compose.ui.geometry.CornerRadius(6f, 6f),
+        )
+        drawRect(col.nodeBg, at + Offset(0f, band), Size(w, 6f * zoom))
         drawRoundRect(
             if (selected) col.accent else col.nodeEdge, at, Size(w, h),
             androidx.compose.ui.geometry.CornerRadius(6f, 6f), style = Stroke(if (selected) 2.5f else 1.2f),
         )
         if (zoom > 0.55f) {
             val title = measurer.measure(
-                AnnotatedString("${m.slot} ${m.type}${if (m.poly) "" else " ·mono"}"),
-                TextStyle(color = col.textHi, fontSize = (9f * zoom).sp, fontFamily = FontFamily.Monospace),
+                AnnotatedString("${m.slot} ${m.type}${if (m.poly) "" else " \u00b7mono"}"),
+                TextStyle(color = tint, fontSize = (9f * zoom).sp, fontFamily = FontFamily.Monospace),
             )
-            drawText(title, topLeft = at + Offset(6f * zoom, 4f * zoom))
+            drawText(title, topLeft = at + Offset(6f * zoom, 2f * zoom))
         }
-        meta?.inputs?.forEachIndexed { i, _ ->
-            drawCircle(col.teal, JACK_R * zoom, screen(jackPosition(m, i, false, meta.inputs.size)))
+        // Jacks, and what they are called. A cable is drawn between two dots
+        // and until now there was no way to know which dot was "pitch" and
+        // which was "fm" without selecting the module and reading the panel.
+        val labels = zoom > 0.85f
+        meta?.inputs?.forEachIndexed { i, name ->
+            val pos = screen(jackPosition(m, i, false, meta.inputs.size))
+            drawCircle(col.teal, JACK_R * zoom, pos)
+            if (labels && name.isNotEmpty()) {
+                val t = measurer.measure(
+                    AnnotatedString(name),
+                    TextStyle(color = col.textDim, fontSize = (7f * zoom).sp, fontFamily = FontFamily.Monospace),
+                )
+                drawText(t, topLeft = pos + Offset(JACK_R * zoom + 2f * zoom, -t.size.height / 2f))
+            }
         }
-        meta?.outputs?.forEachIndexed { i, _ ->
-            drawCircle(col.accent, JACK_R * zoom, screen(jackPosition(m, i, true, meta.outputs.size)))
+        meta?.outputs?.forEachIndexed { i, name ->
+            val pos = screen(jackPosition(m, i, true, meta.outputs.size))
+            drawCircle(col.accent, JACK_R * zoom, pos)
+            if (labels && name.isNotEmpty()) {
+                val t = measurer.measure(
+                    AnnotatedString(name),
+                    TextStyle(color = col.textDim, fontSize = (7f * zoom).sp, fontFamily = FontFamily.Monospace),
+                )
+                drawText(t, topLeft = pos - Offset(t.size.width + JACK_R * zoom + 2f * zoom, t.size.height / 2f))
+            }
         }
         // A scope draws its own trace: it is the one module that is a picture.
         if (m.type == "scope" && scope.isNotEmpty() && zoom > 0.5f) {

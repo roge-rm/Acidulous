@@ -19,7 +19,7 @@ const ModuleInfo kInfo[TypeCount] = {
                                                                                           {"mod", "prs", "bend"}, CapMono},
     {"macro",   {kNone, kNone, kNone, kNone, kNone, kNone, kNone, kNone},                {0, 0, 0, 0, 0, 0, 0, 0},                      {kNone},
                                                                                           {"1", "2", "3", "4", "5", "6", "7", "8"}, CapMono},
-    {"out",     {"level", "pan", kNone, kNone, kNone, kNone, kNone, kNone},              {0.5f, 0.5f, 0, 0, 0, 0, 0, 0},                {"in", "pan"}, {"L", "R"}, CapBoth},
+    {"out",     {"level", "pan", kNone, kNone, kNone, kNone, kNone, kNone},              {0.5f, 0.5f, 0, 0, 0, 0, 0, 0},                {"in", "pan", "in R"}, {"L", "R"}, CapBoth},
     {"scope",   {"zoom", kNone, kNone, kNone, kNone, kNone, kNone, kNone},               {0.2f, 0, 0, 0, 0, 0, 0, 0},                   {"in", "b"}, {"thru", "b"}, CapMono},
 
     {"osc",     {"wave", "semis", "fine", "width", "fm", "level", kNone, kNone},         {0, 0.5f, 0.5f, 0.5f, 0.25f, 1.0f, 0, 0},      {"pitch", "fm", "pw"}, {"out"}, CapBoth},

@@ -41,8 +41,30 @@ class Waveguide {
         dcIn = dcOut = 0.0f;
     }
 
+    /**
+     * Ask again for the note it is already playing and nothing is recomputed.
+     *
+     * `refreshLoop()` below is a sine, a cosine, four arctangents and an
+     * exponential - it solves the loop's phase, which is the whole reason this
+     * string plays in tune. That is a fine price to pay when the note changes.
+     * It is not a fine price to pay *per sample*: Nexus's string block sets
+     * frequency, dispersion, damping, tension and damper position from inside
+     * its `step()`, because a module's inputs are per-sample signals and it
+     * has no way to know which of them actually moved. Two of those five
+     * setters recomputed unconditionally, so a held note solved its own loop
+     * twice a sample, sixteen voices at once - and on a phone the audio thread
+     * ran out of time and the patch crackled. Filament itself never noticed,
+     * because it calls these once a block.
+     *
+     * A string whose pitch really is being modulated still pays, and should:
+     * the loop has genuinely changed. This only declines to redo work whose
+     * answer cannot have moved.
+     */
     void setFrequency(float hz) {
-        baseDelay = clampf(sr / clampf(hz, 18.0f, 8000.0f), 2.0f, static_cast<float>(buffer.size() - 2));
+        const float d = clampf(sr / clampf(hz, 18.0f, 8000.0f), 2.0f,
+                               static_cast<float>(buffer.size() - 2));
+        if (d == baseDelay) return;
+        baseDelay = d;
         refreshDispersion();
         refreshLoop();
     }
@@ -67,8 +89,11 @@ class Waveguide {
         else effGain = clampf(gain / loopKeeps, 0.0f, 1.05f);
     }
     void setDispersion(float amount01, int stages) {
-        dispersion = clampf(amount01, 0.0f, 1.0f);
-        allpassStages = stages < 0 ? 0 : (stages > kAllpass ? kAllpass : stages);
+        const float a = clampf(amount01, 0.0f, 1.0f);
+        const int n = stages < 0 ? 0 : (stages > kAllpass ? kAllpass : stages);
+        if (a == dispersion && n == allpassStages) return; // see setFrequency
+        dispersion = a;
+        allpassStages = n;
         refreshDispersion();
         refreshLoop();
     }

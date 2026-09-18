@@ -198,6 +198,8 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
             if (g->cables[c].dstNode != i) continue;
             if (n.cableCount == 0) n.cableFirst = static_cast<int32_t>(c);
             ++n.cableCount;
+            const int32_t dp = g->cables[c].dstPort;
+            if (dp >= 0 && dp < 32) n.inMask |= 1u << dp;
         }
     }
     return g;
@@ -229,12 +231,73 @@ void Graph::reset() {
     for (auto &n : nodes) for (auto &i : n.inst) if (i) i->reset();
     for (auto &v : port) v = 0.0f;
     for (auto &v : prev) v = 0.0f;
+    for (auto &v : slotLevel) v = 0.0f;
+    for (auto &v : cableLevel) v = 0.0f;
+}
+
+/**
+ * The meters, read every kMeterEvery samples rather than every one.
+ *
+ * Thirty frames a second is all the editor can draw, and a peak that has been
+ * held for a thirtieth of a second is exactly as informative whether it was
+ * found by looking three thousand times or forty-eight thousand. What this
+ * must not be is expensive, because it runs on the audio thread in service of
+ * something purely decorative: at one sample in sixteen it costs well under a
+ * percent of what the graph itself costs.
+ */
+void Graph::meter(const int32_t *active, int32_t activeCount) {
+    for (auto &v : slotLevel) v *= kMeterDecay;
+    for (auto &v : cableLevel) v *= kMeterDecay;
+
+    const auto peakAt = [&](int32_t node, int32_t portIndex) {
+        float peak = 0.0f;
+        if (nodes[static_cast<size_t>(node)].poly) {
+            for (int32_t a = 0; a < activeCount; ++a) {
+                peak = std::fmax(peak, std::fabs(readPort(node, portIndex, active[a])));
+            }
+        } else {
+            peak = std::fabs(readPort(node, portIndex, kVoices));
+        }
+        return peak;
+    };
+
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        const Node &n = nodes[i];
+        if (n.slot < 0 || n.slot >= kSlots) continue;
+        float peak = 0.0f;
+        for (int32_t p = 0; p < n.outCount; ++p) {
+            peak = std::fmax(peak, peakAt(static_cast<int32_t>(i), p));
+        }
+        float &slot = slotLevel[n.slot];
+        slot = std::fmax(slot, peak);
+    }
+    for (const auto &c : cables) {
+        if (c.paramIndex < 0 || c.srcNode < 0) continue;
+        float &lvl = cableLevel[c.paramIndex];
+        lvl = std::fmax(lvl, peakAt(c.srcNode, c.srcPort));
+    }
+}
+
+int32_t Graph::activity(float *dest, int32_t max) const {
+    int32_t n = 0;
+    for (int32_t i = 0; i < kSlots && n < max; ++i) dest[n++] = slotLevel[i];
+    for (int32_t i = 0; i < kCables && n < max; ++i) dest[n++] = cableLevel[i];
+    return n;
 }
 
 void Graph::applyKnobs(const float *slotKnobs) {
     for (auto &n : nodes) {
         const float *k = slotKnobs + static_cast<size_t>(n.slot) * kKnobs;
-        for (auto &i : n.inst) if (i) i->setKnobs(k);
+        for (auto &i : n.inst) if (i) { i->setKnobs(k); i->setConnected(n.inMask); }
+    }
+}
+
+void Graph::defaultKnobs(float *out) const {
+    for (int32_t i = 0; i < kSlots * kKnobs; ++i) out[i] = 0.0f;
+    for (const auto &n : nodes) {
+        const ModuleInfo &info = infoFor(n.type);
+        float *k = out + static_cast<size_t>(n.slot) * kKnobs;
+        for (int32_t i = 0; i < kKnobs; ++i) k[i] = info.def[i];
     }
 }
 
@@ -338,6 +401,11 @@ void Graph::step(Context &ctx, const int32_t *active, int32_t activeCount, float
             outL = readPort(outNode, 0, kVoices);
             outR = readPort(outNode, 1, kVoices);
         }
+    }
+
+    if (--meterCountdown <= 0) {
+        meterCountdown = kMeterEvery;
+        meter(active, activeCount);
     }
 
     // Only the ports a feedback cable reads are remembered.

@@ -27,6 +27,7 @@
 #include <fstream>
 #include <memory>
 #include <sys/stat.h>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -39,6 +40,9 @@
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/formulate/Program.h>
+#include <engine/machine/nexus/Graph.h>
+#include <engine/machine/nexus/Modules.h>
+#include "audition_settings.h"
 
 #include "audition_kit.h"
 #include "audition_material.h"
@@ -651,6 +655,7 @@ struct Material {
     std::unique_ptr<SampleMap> map;
     std::unique_ptr<::acidulous::machine::cumulus::CloudSet> cloud;
     std::unique_ptr<::acidulous::machine::formulate::Program> program;
+    std::unique_ptr<::acidulous::machine::nexus::Graph> graph;
     std::vector<float> input; // mono, published a block at a time
 };
 
@@ -705,7 +710,18 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
  * does when the setting changes, done here for the same reason.
  */
 void applySettings(Machine *m, const std::string &machine,
-                   const std::vector<std::pair<std::string, std::string>> &settings, Material &mat) {
+                   const std::vector<std::pair<std::string, std::string>> &settings, Material &mat,
+                   const std::set<std::string> &named = {}) {
+    // Nexus's patch *is* its graph: a line per module and a line per cable,
+    // parsed on a worker in the app and handed over with swapObject. Without
+    // this the harness mounted nothing and every Nexus patch measured -200 dB,
+    // which is what "graphs have to be built on the device" amounted to.
+    if (machine == "Nexus") {
+        for (const auto &kv : settings) {
+            if (kv.first == "nexus") mountNexusGraph(m, kv.second, kSr, named, mat.graph);
+        }
+        return;
+    }
     if (machine != "Formulate") return;
     std::string formula, arp, duty, vol;
     for (const auto &kv : settings) {
@@ -1059,6 +1075,12 @@ std::string floatLiteral(float v) {
 std::string kotlinString(const std::string &in) {
     std::string out;
     for (char c : in) {
+        // A newline has to become an escape, not a newline: a Nexus patch *is*
+        // a document - a line per module and a line per cable - and writing it
+        // raw put a line break inside a Kotlin string literal and would not
+        // compile.
+        if (c == '\n') { out += "\\n"; continue; }
+        if (c == '\r') continue;
         if (c == '\\' || c == '"' || c == '$') out += '\\';
         out += c;
     }
@@ -1377,8 +1399,16 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
                                                  : defaultInput(bank.unit);
         if (!opt.material.empty()) material = opt.material;
         if (!opt.input.empty()) input = opt.input;
-        mountMaterial(m.get(), bank.unit, material, mat);
-        applySettings(m.get(), bank.unit, r.settings, mat);
+        // Everything a patch needs before it can sound, in one place - because
+        // it has to happen twice. The listen render below resets the machine,
+        // and a reset undoes all of this.
+        std::set<std::string> named;
+        for (const BankValue &v : patch.values) named.insert(v.name);
+        const auto dress = [&] {
+            mountMaterial(m.get(), bank.unit, material, mat);
+            applySettings(m.get(), bank.unit, r.settings, mat, named);
+        };
+        dress();
         loadInput(input, mat);
 
         const Kit *kit = kitFor(bank.unit);
@@ -1436,6 +1466,17 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
             m->allNotesOff();
             m->reset();
             applyTo(m->params(), r.norm);
+            // And mount the patch again. Parameters are not the whole patch:
+            // Nexus keeps its graph in a *setting*, and mounting that graph is
+            // what seeds every knob the patch did not name from its module's
+            // own default. Re-applying only `r.norm` put all of those back to
+            // zero - so a vca sat at zero gain and the render was digital
+            // silence, while the measured row beside it, taken before the
+            // reset, read a healthy -32 dB. Every Nexus wav in the audition
+            // folder was wrong in exactly the places nobody would check: the
+            // number said the patch was fine and the file you listened to was
+            // empty.
+            dress();
             take = render(m.get(), buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range), opt.bpm, mat);
         }
     }

@@ -56,6 +56,8 @@ class Nexus final : public Machine {
 
     /** UI polling: the scope trace. Audio thread writes it, this only copies. */
     int32_t readScope(float *dest, int32_t max) const;
+    /** Slot levels then cable levels, for the editor to light the patch up. */
+    int32_t readActivity(float *dest, int32_t max) const;
 
   private:
     struct Voice {

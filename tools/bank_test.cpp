@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <cstring>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -37,6 +38,7 @@
 #include "audition_kit.h"
 #include "audition_material.h"
 #include "audition_measure.h"
+#include "audition_settings.h"
 #include "patchbank.h"
 
 using namespace acidulous;
@@ -69,7 +71,6 @@ struct Known {
 const Known kKnown[] = {
     // No bank written yet. These are the milestone's own acceptance test:
     // when the list is empty, M45 is done.
-    {"Nexus", "", "no bank yet - graphs have to be built on the device and exported"},
     {"Forage", "", "no bank yet - never had one"},
     {"Molt", "", "no bank yet - never had one"},
     // Everything else that was here has been written: fourteen effect banks,
@@ -128,6 +129,7 @@ struct Material {
     std::unique_ptr<machine::cumulus::CloudSet> cloud;
     std::unique_ptr<machine::formulate::Program> program;
     std::vector<float> input;
+    std::unique_ptr<::acidulous::machine::nexus::Graph> graph;
 };
 
 void mountMaterial(Machine *m, const std::string &machine, Material &mat) {
@@ -169,7 +171,14 @@ void mountMaterial(Machine *m, const std::string &machine, Material &mat) {
  * does when the setting changes, done here for the same reason.
  */
 void applySettings(Machine *m, const std::string &machine,
-                   const std::vector<std::pair<std::string, std::string>> &settings, Material &mat) {
+                   const std::vector<std::pair<std::string, std::string>> &settings, Material &mat,
+                   const std::set<std::string> &named = {}) {
+    if (machine == "Nexus") {
+        for (const auto &kv : settings) {
+            if (kv.first == "nexus") mountNexusGraph(m, kv.second, kSr, named, mat.graph);
+        }
+        return;
+    }
     if (machine != "Formulate") return;
     std::string formula, arp, duty, vol;
     for (const auto &kv : settings) {
@@ -189,7 +198,7 @@ void applySettings(Machine *m, const std::string &machine,
 }
 
 std::vector<float> renderMachine(const std::string &machine, const std::vector<float> &norm, int note,
-                                 const std::vector<std::pair<std::string, std::string>> &settings) {
+                                 const std::vector<std::pair<std::string, std::string>> &settings, const std::set<std::string> &named = {}) {
     std::unique_ptr<Machine> m(MachineRegistry::create(machine.c_str()));
     if (!m) return {};
     m->prepare(static_cast<int32_t>(kSr));
@@ -200,7 +209,7 @@ std::vector<float> renderMachine(const std::string &machine, const std::vector<f
 
     Material mat;
     mountMaterial(m.get(), machine, mat);
-    applySettings(m.get(), machine, settings, mat);
+    applySettings(m.get(), machine, settings, mat, named);
 
     const Kit *kit = kitFor(machine);
     const auto total = static_cast<int64_t>(kSr * (kHold + kTail));

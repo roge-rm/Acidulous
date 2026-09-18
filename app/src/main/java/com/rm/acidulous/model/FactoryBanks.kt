@@ -18,6 +18,7 @@ internal object FactoryBanks {
         "Timber" -> timber
         "Cipher" -> cipher
         "Filament" -> filament
+        "Nexus" -> nexus
         "Hexbeat" -> hexbeat
         "Genesis" -> genesis
         "Resonance" -> resonance
@@ -704,7 +705,7 @@ internal object FactoryBanks {
         family = "tonewheel")
 
     private fun manual1() = Patch("Manual", "Gospel",
-        mapOf("click" to 0.4f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "pa_2" to 0.625f, "perclvl" to 0.7f, "percdec" to 0.42361632f, "vibtype" to 0.6f, "vibdepth" to 0.45f, "rotspeed" to 0.5f, "drive" to 0.28f, "volume" to 0.5f),
+        mapOf("click" to 0.4f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "pa_2" to 0.625f, "perclvl" to 0.7f, "percdec" to 0.42361632f, "vibtype" to 0.6f, "vibdepth" to 0.45f, "rotspeed" to 0.5f, "drive" to 0.28f, "volume" to 0.505f),
         family = "tonewheel",
         low = 29, high = 84)
 
@@ -814,7 +815,7 @@ internal object FactoryBanks {
         low = 41, high = 84)
 
     private fun manual23() = Patch("Manual", "Combo Thin",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibdepth" to 0.5f, "combowave" to 1f, "tab16" to 0f, "tab4" to 0.9f, "tab2" to 0.6f, "tab2r" to 0.35f, "tab4r" to 0.15f, "reedy" to 0.3f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.18f, "bass" to 0.333333343f, "volume" to 0.625f),
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibdepth" to 0.5f, "combowave" to 1f, "tab16" to 0f, "tab4" to 0.9f, "tab2" to 0.6f, "tab2r" to 0.35f, "tab4r" to 0.15f, "reedy" to 0.3f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.18f, "bass" to 0.333333343f, "volume" to 0.63f),
         family = "combo",
         low = 55, high = 88)
 
@@ -1792,6 +1793,82 @@ internal object FactoryBanks {
         low = 52, high = 88)
 
     private val filament: List<Patch> by lazy { listOf(filament0(), filament1(), filament2(), filament3(), filament4(), filament5(), filament6(), filament7(), filament8(), filament9()) }
+
+    private fun nexus0() = Patch("Nexus", "Init", emptyMap(),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        family = "basic")
+
+    private fun nexus1() = Patch("Nexus", "Subtractive",
+        mapOf("s02_p2" to 0.45f, "s02_p3" to 0.35f, "s03_p2" to 0.05f, "s03_p4" to 0.3f, "s05_p1" to 0.35f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        family = "basic")
+
+    private fun nexus2() = Patch("Nexus", "Plucked",
+        mapOf("s02_p3" to 0.02f, "s04_p2" to 0.94f, "s05_p1" to 0.95f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0"),
+        family = "ours")
+
+    private fun nexus3() = Patch("Nexus", "Leslie String",
+        mapOf("s02_p3" to 0.02f, "s04_p2" to 0.95f, "s06_p1" to 0.95f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|rotary|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0"),
+        family = "ours")
+
+    private fun nexus4() = Patch("Nexus", "Two Operators",
+        mapOf("s01_p2" to 0.1f, "s03_p3" to 0.5f, "s05_p1" to 0.35f, "volume" to 0.87f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|op\nm|2|op\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        family = "ours")
+
+    private fun nexus5() = Patch("Nexus", "Runs Itself",
+        mapOf("s01_p2" to 0.3f, "s05_p2" to 0.05f, "s05_p4" to 0.25f, "s07_p1" to 0.35f, "volume" to 0.82f),
+        mapOf("nexus" to "v|1\nm|0|clock|mono\nm|1|euclid|mono\nm|2|rand|mono\nm|3|quant|mono\nm|4|osc\nm|5|env\nm|6|vca\nm|7|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0\nc|3.0|4.0|1.0\nc|1.0|5.0|1.0\nc|4.0|6.0|1.0\nc|5.0|6.1|1.0\nc|6.0|7.0|1.0"),
+        family = "generative")
+
+    private fun nexus6() = Patch("Nexus", "Listening",
+        mapOf("s01_p2" to 0.18f, "s01_p3" to 0.6f, "s01_p6" to 0.9f, "s02_p1" to 0.95f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|audioin|mono\nm|1|grain|mono\nm|2|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0"),
+        family = "ours")
+
+    private fun nexus7() = Patch("Nexus", "Macro Sweep",
+        mapOf("s02_p2" to 0.3f, "s02_p3" to 0.45f, "s03_p1" to 0.02f, "s03_p4" to 0.25f, "s06_p1" to 0.85f, "macro1" to 0.45f, "volume" to 0.41f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|env\nm|4|vca\nm|5|macro|mono\nm|6|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|6.0|1.0\nc|5.0|2.1|0.8"),
+        family = "macro")
+
+    private fun nexus8() = Patch("Nexus", "One Knob, Four Things",
+        mapOf("s02_p2" to 0.52f, "s05_p2" to 0.25f, "s05_p3" to 0.4f, "s06_p1" to 0.02f, "s06_p4" to 0.3f, "s09_p1" to 0.8f, "macro1" to 0.4f, "volume" to 0.4f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|osc\nm|3|noise\nm|4|mix|mono\nm|5|filter\nm|6|env\nm|7|vca\nm|8|macro|mono\nm|9|out|mono\nc|1.0|4.0|1.0\nc|2.0|4.1|0.6\nc|3.0|4.2|0.25\nc|4.0|5.0|1.0\nc|5.0|7.0|1.0\nc|0.1|6.0|1.0\nc|6.0|7.1|1.0\nc|7.0|9.0|1.0\nc|8.0|5.1|0.9\nc|8.0|2.0|0.1\nc|8.0|4.2|0.5"),
+        family = "macro")
+
+    private fun nexus9() = Patch("Nexus", "Morphing",
+        mapOf("s03_p2" to 0.03f, "s05_p2" to 0.93f, "s06_p1" to 0.9f, "morph" to 0.35f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|osc\nm|3|env\nm|4|vca\nm|5|string\nm|6|out|mono\nc|1.0|4.0|1.0|0.0\nc|2.0|4.0|0.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0"),
+        family = "morph")
+
+    private fun nexus10() = Patch("Nexus", "Tonewheels",
+        mapOf("s02_p2" to 0.55f, "s03_p1" to 0.04f, "s03_p4" to 0.2f, "s05_p1" to 0.8f, "volume" to 0.39f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|wheels\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        family = "ours")
+
+    private fun nexus11() = Patch("Nexus", "Wavetable Drift",
+        mapOf("s02_p2" to 0.22f, "s03_p2" to 0.6f, "s04_p1" to 0.08f, "s04_p4" to 0.35f, "s06_p1" to 0.85f, "volume" to 0.74f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|wtosc\nm|2|lfo|mono\nm|3|filter\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|2.0|1.2|0.7\nc|1.0|3.0|1.0\nc|3.0|5.0|1.0\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
+        family = "ours")
+
+    private fun nexus12() = Patch("Nexus", "Talking",
+        mapOf("s01_p1" to 0.25f, "s04_p1" to 0.02f, "s04_p4" to 0.2f, "s06_p1" to 0.9f, "volume" to 0.65f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|audioin|mono\nm|3|bands|mono\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|1.0|3.0|1.0\nc|2.0|3.1|1.0\nc|3.0|5.0|1.0\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
+        family = "ours")
+
+    private fun nexus13() = Patch("Nexus", "Sample and Hold",
+        mapOf("s00_p1" to 0.3f, "s04_p1" to 0.01f, "s04_p4" to 0.18f, "s06_p2" to 0.45f, "s06_p3" to 0.35f, "s07_p1" to 0.8f, "volume" to 0.62f),
+        mapOf("nexus" to "v|1\nm|0|clock|mono\nm|1|rand|mono\nm|2|quant|mono\nm|3|osc\nm|4|env\nm|5|vca\nm|6|filter\nm|7|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0\nc|0.0|4.0|1.0\nc|3.0|6.0|1.0\nc|6.0|5.0|1.0\nc|4.0|5.1|1.0\nc|5.0|7.0|1.0"),
+        family = "generative")
+
+    private fun nexus14() = Patch("Nexus", "Feeding Back",
+        mapOf("s02_p2" to 0.4f, "s02_p3" to 0.5f, "s03_p1" to 0.3f, "s03_p2" to 0.25f, "s04_p1" to 0.01f, "s04_p4" to 0.3f, "s06_p1" to 0.75f, "volume" to 0.44f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|delay|mono\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|5.0|1.0\nc|5.0|3.0|0.5\nc|3.0|2.0|0.35\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
+        family = "texture")
+
+    private val nexus: List<Patch> by lazy { listOf(nexus0(), nexus1(), nexus2(), nexus3(), nexus4(), nexus5(), nexus6(), nexus7(), nexus8(), nexus9(), nexus10(), nexus11(), nexus12(), nexus13(), nexus14()) }
 
     private fun hexbeat0() = Patch("Hexbeat", "Init", emptyMap(),
         family = "classic")

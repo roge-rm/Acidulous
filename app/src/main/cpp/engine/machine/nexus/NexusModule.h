@@ -20,6 +20,15 @@ constexpr int kPorts = 8;      // inputs and outputs, each
 constexpr int kSlots = 16;     // modules in a patch
 constexpr int kCables = 24;    // cables whose depth is a parameter
 constexpr int kVoices = 8;
+
+// How the editor's activity meters behave. One sample in sixteen is three
+// thousand readings a second against a screen that redraws thirty times, and
+// the decay is set so a level falls to about a third of itself in a tenth of
+// a second: fast enough that a cable stops glowing when the note does, slow
+// enough that an audio-rate signal reads as a steady glow rather than a
+// flicker.
+constexpr int kMeterEvery = 16;
+constexpr float kMeterDecay = 0.9964f;
 constexpr int kMacros = 8;
 
 /** What the whole graph shares: the transport, and the performance controls. */
@@ -64,6 +73,22 @@ class Module {
 
     /** Once a block: the eight knob values, already smoothed. */
     virtual void setKnobs(const float *knobs) = 0;
+
+    /**
+     * Once a block: which of this module's inputs have a cable in them.
+     *
+     * Bit n is input port n. Almost nothing wants this - a jack carrying
+     * silence and an empty jack mean the same thing nearly everywhere, and a
+     * module that behaves differently depending on what it can see of the
+     * patch around it is a module that is hard to reason about. The sink is
+     * the exception, and it is stated once here rather than guessed at from a
+     * zero sample.
+     *
+     * It is set per block rather than at build time because a graph hand-over
+     * moves live instances from the old graph into the new one, and it is the
+     * new graph's wiring that is true afterwards.
+     */
+    virtual void setConnected(uint32_t) {}
 
     /**
      * One sample. `in` is kPorts wide and already summed and scaled by the

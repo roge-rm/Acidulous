@@ -358,6 +358,13 @@ int32_t EngineHost::nexusScope(int rack, float *dest, int32_t max) const {
     return static_cast<machine::Nexus *>(m)->readScope(dest, max);
 }
 
+int32_t EngineHost::nexusActivity(int rack, float *dest, int32_t max) const {
+    if (rack < 0 || rack >= kRackCount || dest == nullptr) return 0;
+    Machine *m = sEngine.racks[rack].currentMachine();
+    if (m == nullptr || std::strcmp(m->typeName(), "Nexus") != 0) return 0;
+    return static_cast<machine::Nexus *>(m)->readActivity(dest, max);
+}
+
 std::string EngineHost::sampleMapInfo(int rack) const {
     if (rack < 0 || rack >= kRackCount) return "";
     auto *mosaic = dynamic_cast<machine::Mosaic *>(sEngine.racks[rack].currentMachine());

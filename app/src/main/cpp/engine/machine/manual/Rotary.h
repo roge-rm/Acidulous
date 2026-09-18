@@ -30,6 +30,7 @@ class Rotary {
         lowSplit.lowpass(800.0f, 0.707f, sr);
         highSplit.lowpass(800.0f, 0.707f, sr);
         hornTone.lowpass(4200.0f, 0.6f, sr);
+        upSec = downSec = -1.0f; // the coefficients depend on the rate
         reset();
     }
 
@@ -44,11 +45,22 @@ class Rotary {
 
     // Per block: where the rotors are being asked to go, and how fast they
     // are allowed to get there.
+    //
+    // The two targets are plain assignments, but the ramps are exponentials,
+    // and Nexus's cabinet block calls this from inside its per-sample `step()`
+    // - a module sees its inputs one sample at a time and cannot tell which of
+    // them moved. The ramp is a knob and almost never moves at all, so it is
+    // worth asking before paying. See Waveguide::setFrequency, which had the
+    // same problem in the same patch.
     void setTargets(float hornTargetHz, float drumTargetHz, float rampUpSec, float rampDownSec) {
         hornTarget = hornTargetHz;
         drumTarget = drumTargetHz;
-        upCoeff = dsp::onePoleCoeff(rampUpSec, sampleRate);
-        downCoeff = dsp::onePoleCoeff(rampDownSec, sampleRate);
+        if (rampUpSec != upSec || rampDownSec != downSec) {
+            upSec = rampUpSec;
+            downSec = rampDownSec;
+            upCoeff = dsp::onePoleCoeff(rampUpSec, sampleRate);
+            downCoeff = dsp::onePoleCoeff(rampDownSec, sampleRate);
+        }
     }
 
     void setMic(float distance01, float angle01, float spread01) {
@@ -132,6 +144,9 @@ class Rotary {
     float hornHz = 0.0f, drumHz = 0.0f;
     float hornTarget = 0.0f, drumTarget = 0.0f;
     float upCoeff = 0.001f, downCoeff = 0.0005f;
+    // What those two coefficients were solved for, so setTargets can tell when
+    // nothing has moved. Negative means "not solved yet", which no ramp is.
+    float upSec = -1.0f, downSec = -1.0f;
     float depth = 0.5f, doppler = 40.0f, angle = 1.5f, spread = 0.7f;
     float lpL = 0.0f, lpR = 0.0f;
     dsp::DelayLine hornL, hornR, drumL, drumR;

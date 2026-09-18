@@ -85,8 +85,20 @@ data class NexusPatch(
                     }
                 }
             }
+            // A module with no `p|` line is laid out rather than left at the
+            // origin. A patch written as text - a bank file, or a graph typed
+            // by hand - says what is wired to what and has no opinion about
+            // where the boxes sit; without this every module stacked on the
+            // same point, so the canvas showed one box and no cables at all
+            // while the header cheerfully counted six modules and five cables.
+            var placed = 0
             return NexusPatch(
-                modules.map { m -> positions[m.slot]?.let { m.copy(x = it.first, y = it.second) } ?: m },
+                modules.map { m ->
+                    positions[m.slot]?.let { m.copy(x = it.first, y = it.second) } ?: run {
+                        val i = placed++
+                        m.copy(x = 60f + (i % 4) * 190f, y = 60f + (i / 4) * 130f)
+                    }
+                },
                 cables,
             )
         }
@@ -142,6 +154,29 @@ object NexusPalette {
             )
         }
         .toList()
+}
+
+/**
+ * What kind of thing a module is, for the eye rather than for the engine.
+ *
+ * Thirty module types on a canvas all drawn the same colour is thirty
+ * identical grey boxes, and a patch of a dozen of them is unreadable at the
+ * zoom a phone gives you. The engine has no notion of a category and does not
+ * need one - this is entirely about being able to glance at a patch and see
+ * its shape: where the sound starts, where it is shaped, what is moving it.
+ */
+enum class NexusFamily { Source, Shape, Mod, Time, Voice, Io }
+
+/** Which family a module belongs to. */
+fun nexusFamilyOf(type: String): NexusFamily = when (type) {
+    "osc", "wtosc", "noise", "op", "audioin" -> NexusFamily.Source
+    // The app's own instruments, which are the point of this machine: a
+    // string, a tonewheel generator, a grain cloud, a Leslie, a vocoder.
+    "string", "wheels", "grain", "rotary", "bands" -> NexusFamily.Voice
+    "filter", "vca", "mix", "math", "delay", "slew" -> NexusFamily.Shape
+    "env", "lfo", "snh", "rand", "macro", "perf" -> NexusFamily.Mod
+    "clock", "euclid", "prob", "quant", "logic" -> NexusFamily.Time
+    else -> NexusFamily.Io // voice, out, scope, blank
 }
 
 /** The parameter name for one slot knob, which never depends on what is in the slot. */

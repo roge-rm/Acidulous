@@ -35,6 +35,26 @@ inline float onePoleCoeff(float seconds, float sampleRate) {
     return 1.0f - std::exp(-1.0f / (seconds * sampleRate));
 }
 
+/**
+ * Push a number that has fallen into the denormal range down to zero.
+ *
+ * A denormal is a float so small it has left the normal exponent range, and
+ * on most hardware arithmetic on one costs tens to hundreds of times what the
+ * same arithmetic costs on a normal number. Nothing sounds different - the
+ * values are far below anything audible - so this is invisible until it is
+ * measured, and then it is enormous: Nexus's vocoder block fed near-silence
+ * ran at three times realtime on a desktop, which is under one on a phone.
+ *
+ * Anything that decays towards zero without reaching it will get there: a
+ * leaky integrator, an envelope follower, a filter's state, a feedback line.
+ * Adding and subtracting the same tiny number is exact for a normal float and
+ * lands on zero for a denormal one, which is the whole trick.
+ */
+inline float undenormal(float v) {
+    static constexpr float kTiny = 1.0e-20f;
+    return v + kTiny - kTiny;
+}
+
 inline float clampf(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
 } // namespace acidulous::dsp
