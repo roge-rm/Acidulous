@@ -509,6 +509,7 @@ fun EditScreen(
             trackIndex, voices, selectedPad, { selectedPad = it },
             Modifier.fillMaxWidth().height(height - 6.dp).padding(top = 6.dp),
             track.machine.type,
+            onEmpty = { pad -> if (MachineUi.acceptsSamples(track.machine.type)) onImportSample(trackIndex, pad) },
         )
         else Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
             Row(

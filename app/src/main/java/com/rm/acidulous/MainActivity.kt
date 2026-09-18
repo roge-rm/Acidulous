@@ -232,8 +232,8 @@ private fun App(modifier: Modifier = Modifier) {
         ) {
             Text(message, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
             Text(
-                "Acidulous reads uncompressed WAV - 8, 16, 24 or 32-bit, or float, " +
-                    "mono or stereo, at any rate. Convert an mp3, m4a or Ogg first.",
+                "Acidulous reads WAV, AIFF, FLAC and MP3 - mono or stereo, at any rate - " +
+                    "and converts what it imports to WAV. M4A, Ogg and WMA it cannot read.",
                 fontSize = 12.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textDim,
             )
         }

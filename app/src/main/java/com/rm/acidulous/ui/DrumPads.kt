@@ -49,7 +49,8 @@ private const val HARD = 127f
  * the wider ones: thirteen pads put six across the bottom and seven above.
  */
 @Composable
-fun DrumPads(rack: Int, voices: List<DrumVoice>, selected: Int = -1, onSelect: (Int) -> Unit = {}, modifier: Modifier = Modifier, type: String = "") {
+fun DrumPads(rack: Int, voices: List<DrumVoice>, selected: Int = -1, onSelect: (Int) -> Unit = {},
+             modifier: Modifier = Modifier, type: String = "", onEmpty: (Int) -> Unit = {}) {
     // A pad's index is its distance from the *lowest* note, and it stays that
     // whatever order they are drawn in: it is what retargets the machine panel
     // for Resonance, Dice and Forage. Taking it from `voices.first()` only
@@ -64,14 +65,21 @@ fun DrumPads(rack: Int, voices: List<DrumVoice>, selected: Int = -1, onSelect: (
     Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
         for (row in rows) {
             Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                for (v in row) Pad(rack, v, v.note - base == selected, { onSelect(v.note - base) }, Modifier.weight(1f).fillMaxSize())
+                for (v in row) {
+                    Pad(rack, v, v.note - base == selected, { onSelect(v.note - base) },
+                        Modifier.weight(1f).fillMaxSize(),
+                        // An empty pad has nothing to play, so a tap on one can
+                        // only mean "put something here".
+                        onEmpty = { onEmpty(v.note - base) })
+                }
             }
         }
     }
 }
 
 @Composable
-private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> Unit, modifier: Modifier = Modifier) {
+private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> Unit,
+                modifier: Modifier = Modifier, onEmpty: () -> Unit = {}) {
     var pressed by remember { mutableStateOf(false) }
     // Where the last strike landed, 0 at the bottom and 1 at the top, which is
     // both the velocity and how far the highlight fills.
@@ -130,6 +138,7 @@ private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> 
                                     val vel = if (UiPrefs.padsFullStrength) HARD else SOFT + (HARD - SOFT) * strike
                                     NativeEngine.noteOn(rack, voice.note, vel.toInt())
                                     onSelect()
+                                    if (!voice.loaded) onEmpty()
                                 } else {
                                     NativeEngine.noteOff(rack, voice.note)
                                 }

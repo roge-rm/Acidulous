@@ -26,6 +26,16 @@ AudioFormat sniff(const std::string &path);
 const char *formatName(AudioFormat f);
 
 /**
+ * A name for a file we can recognise but cannot read, or null.
+ *
+ * Worth having because the alternative is a lie. An m4a's payload is full of
+ * byte pairs that look like an MPEG frame sync, so a scan for one finds it,
+ * and the player is then told their file is a broken mp3 rather than an m4a
+ * this app does not read. Checked before the mp3 scan for that reason.
+ */
+const char *foreignKind(const std::string &path);
+
+/**
  * Decode any of the four. [targetRate] behaves as in WavReader::read.
  *
  * Null on failure with [error] set - and the error says the format it decided

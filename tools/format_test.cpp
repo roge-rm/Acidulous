@@ -148,6 +148,82 @@ int main(int argc, char **argv) {
         } else { ++gFails; ++gChecks; }
     }
 
+    // What a file off the internet looks like: a tag in front of the audio,
+    // and something that is not audio glued on the end. Neither is unusual
+    // and both used to be fatal.
+    {
+        std::vector<unsigned char> raw;
+        FILE *f = std::fopen((dir + "/rt.mp3").c_str(), "rb");
+        if (f != nullptr) {
+            unsigned char buf[65536];
+            size_t n = 0;
+            while ((n = std::fread(buf, 1, sizeof(buf), f)) > 0) raw.insert(raw.end(), buf, buf + n);
+            std::fclose(f);
+        }
+        // An ID3v2 header: "ID3", version, flags, then a syncsafe length -
+        // four bytes of seven bits each. The body here is binary, standing in
+        // for the album art that is usually what makes these large.
+        std::vector<unsigned char> art(6000, 0xFF); // 0xFF: false frame syncs, deliberately
+        std::vector<unsigned char> tagged = {'I', 'D', '3', 4, 0, 0};
+        const size_t size = art.size();
+        tagged.push_back(static_cast<unsigned char>((size >> 21) & 0x7F));
+        tagged.push_back(static_cast<unsigned char>((size >> 14) & 0x7F));
+        tagged.push_back(static_cast<unsigned char>((size >> 7) & 0x7F));
+        tagged.push_back(static_cast<unsigned char>(size & 0x7F));
+        tagged.insert(tagged.end(), art.begin(), art.end());
+        tagged.insert(tagged.end(), raw.begin(), raw.end());
+        // And a trailing APE-ish block, which is junk to a decoder.
+        const char *junk = "APETAGEX and then some bytes that are not a frame";
+        tagged.insert(tagged.end(), junk, junk + std::strlen(junk));
+
+        const std::string path = dir + "/tagged.mp3";
+        FILE *out = std::fopen(path.c_str(), "wb");
+        std::fwrite(tagged.data(), 1, tagged.size(), out);
+        std::fclose(out);
+
+        check(sniff(path) == AudioFormat::Mp3, "an mp3 behind an ID3 tag is still an mp3");
+        std::string error;
+        auto got = decodeAudio(path, kRate, error);
+        if (!got) {
+            check(false, "a tagged mp3 with junk on the end decodes (" + error + ")");
+        } else {
+            char msg[160];
+            std::snprintf(msg, sizeof(msg), "a tagged mp3 with junk on the end decodes (%d frames)",
+                          got->frames);
+            check(got->frames > kFrames / 2, msg);
+        }
+    }
+
+    // A file we can name but cannot read is said so by name, because being
+    // told an m4a is a broken mp3 sends the player nowhere useful.
+    {
+        struct Case { const char *name; std::vector<unsigned char> head; const char *says; };
+        const std::vector<Case> cases = {
+            {"song.m4a", {0, 0, 0, 24, 'f', 't', 'y', 'p', 'M', '4', 'A', ' '}, "M4A"},
+            {"song.ogg", {'O', 'g', 'g', 'S', 0, 2, 0, 0}, "Ogg"},
+            {"song.wma", {0x30, 0x26, 0xB2, 0x75, 0x8E, 0x66, 0xCF, 0x11}, "WMA"},
+        };
+        for (const Case &c : cases) {
+            std::string path = dir + "/" + c.name;
+            std::vector<unsigned char> body = c.head;
+            // Padded with the byte that looks like half a frame sync, which
+            // is what used to make these decode as broken mp3s.
+            body.resize(20000, 0xFF);
+            FILE *f = std::fopen(path.c_str(), "wb");
+            std::fwrite(body.data(), 1, body.size(), f);
+            std::fclose(f);
+            check(sniff(path) == AudioFormat::Unknown, std::string(c.name) + " is not mistaken for an mp3");
+            std::string error;
+            // Decoded first and checked second: the two are arguments to the
+            // same call otherwise, and C++ does not say which runs first - so
+            // the message was built from an `error` nothing had written yet
+            // and reported every one of these as "()".
+            const bool refused = decodeAudio(path, kRate, error) == nullptr;
+            check(refused && error.find(c.says) != std::string::npos,
+                  std::string(c.name) + " is named in the message (" + error + ")");
+        }
+    }
+
     // And the thing the front door is for: deciding by content, not by name.
     {
         const std::string named = dir + "/actually-a-flac.wav";

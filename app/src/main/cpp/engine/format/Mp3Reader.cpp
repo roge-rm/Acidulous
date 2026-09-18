@@ -66,7 +66,7 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
     // first call always does, since it has a header to read first. A loop
     // that stops at zero therefore stops before any audio at all, which is
     // what "no audio in it" meant the first time this was written.
-    bool failed = false;
+    int errors = 0;
     // **A kilobyte at a time, and it matters.**
     //
     // mpglib copies what it is given into `bsspace[2][MAXFRAMESIZE + 1024]`,
@@ -77,7 +77,7 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
     // audio in it" meant the first time this was written. LAME's own frontend
     // reads 1024 and so does this.
     const size_t chunk = 1024;
-    for (size_t off = 0; off <= bytes.size() && !failed; off += chunk) {
+    for (size_t off = 0; off <= bytes.size(); off += chunk) {
         const size_t len = std::min(chunk, bytes.size() - std::min(off, bytes.size()));
         int n = hip_decode1_headers(hip, len > 0 ? bytes.data() + off : nullptr,
                                     len, left.data(), right.data(), &info);
@@ -86,17 +86,26 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
             if (cap > 0 && static_cast<int64_t>(got.ch[0].size()) >= cap) break;
             n = hip_decode1_headers(hip, nullptr, 0, left.data(), right.data(), &info);
         }
-        if (n < 0) failed = true;
+        // **An error is not the end.**
+        //
+        // A file off the internet is not a clean stream of frames: it carries
+        // album art inside its ID3 tag, an APE or Lyrics3 block on the end,
+        // a partial frame where somebody cut it. mpglib says -1 at each of
+        // those and carries on perfectly well afterwards, so giving up on the
+        // first one means giving up on most real mp3s - which is what "not
+        // readable as MPEG audio" was, in front of a file that played
+        // everywhere else. Keep feeding; judge it at the end by whether any
+        // audio came out.
+        if (n < 0) ++errors;
         if (cap > 0 && static_cast<int64_t>(got.ch[0].size()) >= cap) break;
         if (len == 0) break; // the last drain is done
     }
     hip_decode_exit(hip);
-    if (failed && !any) {
-        error = "not readable as MPEG audio";
+    if (!any || got.ch[0].empty()) {
+        error = errors > 0 ? "no MPEG audio in it" : "no audio in it";
         return nullptr;
     }
 
-    if (!any || got.ch[0].empty()) { error = "no audio in it"; return nullptr; }
     got.frames = static_cast<int32_t>(got.ch[0].size());
     if (got.stereo && static_cast<int32_t>(got.ch[1].size()) < got.frames) {
         got.frames = static_cast<int32_t>(got.ch[1].size());
