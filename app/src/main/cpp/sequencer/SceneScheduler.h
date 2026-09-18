@@ -179,7 +179,13 @@ class SceneScheduler {
             sceneIdx >= static_cast<int32_t>(snap->scenes.size())) {
             return;
         }
-        const int64_t id = snap->scenes[sceneIdx].id;
+        const SceneInfo &sc = snap->scenes[sceneIdx];
+        // The tempo comes with it. Taken from the scene's own override rather
+        // than from `clock->bpm()`, which may be part way through a ramp into
+        // it and would latch a value that belongs to neither scene.
+        launcherTempo = sc.bpmOverride > 0.0f ? sc.bpmOverride : clock->songTempoRequested();
+        launcherTempoFrom = clock->songTempoRequested();
+        const int64_t id = sc.id;
         for (int32_t r = 0; r < rackCount; ++r) {
             if (snap->clipFor(r, sceneIdx) == nullptr) {
                 continue; // a track with nothing here stays silent, as it was
@@ -245,6 +251,15 @@ class SceneScheduler {
         launcher.clearAll();
         launcher.takeChanged();
         launcherNow = 0;
+        // The handover is between two *running* modes, so a stop ends any of
+        // it that was in flight and re-latches the flag. Without this the
+        // latch is whatever it was when the transport last ran, so toggling
+        // the mode while stopped and then pressing play looks to `process`
+        // like a switch mid-song: it would adopt the current scene and start
+        // the whole of it, when starting a launcher should start silence.
+        if (transport != nullptr) launcherWas = transport->launcherMode();
+        returnPending = false;
+        launcherTempo = 0.0f; // nothing was adopted, so nothing is held
         if (transport != nullptr) {
             for (int32_t r = 0; r < rackCount; ++r) {
                 transport->publishLaunch(r, Transport::packLaunch(Transport::kNoScene, Transport::kNoScene, 0));
@@ -444,8 +459,22 @@ class SceneScheduler {
     bool processLauncher(int64_t blockStart, int64_t blockEnd) {
         // No scene owns the tempo when clips come from four of them, so the
         // song tempo rules and scene overrides, ramps and fades sit this out.
+        //
+        // With one exception, and it is the handover. Switching into clip
+        // mode out of a scene running its own tempo used to drop straight
+        // back to the song's - 140 to 120 in the middle of a bar, which is
+        // the loudest thing a "seamless" switch could possibly do. So the
+        // tempo that was playing is latched when the launcher adopts, and
+        // held until the player asks for something else.
         if (!clock->isRamping() && !(transport != nullptr && transport->externalSync())) {
-            const float want = clock->songTempoRequested();
+            const float song = clock->songTempoRequested();
+            // A hand on the tempo control wins: the moment the song's own
+            // tempo differs from what it was when the latch was taken, that
+            // is somebody asking for it, and the latch is done.
+            if (launcherTempo > 0.0f && song != launcherTempoFrom) {
+                launcherTempo = 0.0f;
+            }
+            const float want = launcherTempo > 0.0f ? launcherTempo : song;
             if (want != clock->bpm()) {
                 clock->setTempo(want);
             }
@@ -608,6 +637,10 @@ class SceneScheduler {
     int64_t launcherNow = 0;
     /** Whether the last block was in launcher mode, to catch the change. */
     bool launcherWas = false;
+    // The tempo clip mode holds because it was playing when clip mode began;
+    // 0 means it is following the song's own. See processLauncher.
+    float launcherTempo = 0.0f;
+    float launcherTempoFrom = 0.0f;
     /** Clip mode has been switched off and is playing out to the bar line. */
     bool returnPending = false;
     int64_t returnAt = 0;

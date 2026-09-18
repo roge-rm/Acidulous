@@ -204,16 +204,42 @@ fun MainScreen(
             Column(Modifier.horizontalScrollWithBar(hScroll)) {
                 Row {
                     song.scenes.forEachIndexed { index, scene ->
-                        val isCurrent = playing && position.scene == index
+                        // In clip mode the arranger's playhead is stale - it
+                        // stopped where the song was when the mode changed -
+                        // so reading `position` here lit up whichever scene
+                        // had been playing rather than the one you launched.
+                        // A header is live when some rack is actually
+                        // sounding a clip from it, and its progress is that
+                        // rack's own cycle, which is the only clock a column
+                        // has in clip mode.
+                        val onThisScene = if (!clipMode) null else song.tracks.indices.firstNotNullOfOrNull { t ->
+                            launchStates.getOrElse(t) { LaunchState.idle }
+                                .takeIf { it.playing && it.scene == index }?.let { t to it }
+                        }
+                        val isCurrent = if (clipMode) onThisScene != null else playing && position.scene == index
                         val bars = song.barsOf(scene)
                         val iterTicks = bars * song.signatureOf(scene).ticksPerBar
+                        // bars x repeat, the same cycle the launcher counts.
+                        val cycleTicks = if (onThisScene == null) 0 else {
+                            (song.tracks[onThisScene.first].clips[scene.id]?.bars ?: bars) *
+                                song.signatureOf(scene).ticksPerBar * scene.repeat
+                        }
                         SceneHeader(
                             index = index, name = scene.name, repeat = scene.repeat, bars = bars,
                             hasTempo = scene.tempo != null,
-                            progress = if (isCurrent && iterTicks > 0) position.tickInIteration.toFloat() / iterTicks else null,
-                            repeatIdx = if (isCurrent) position.repeat else null,
-                            holding = isCurrent && loopScene && playing,
-                            finishing = isCurrent && playing && stopAtEnd,
+                            progress = when {
+                                onThisScene != null && cycleTicks > 0 ->
+                                    onThisScene.second.tickInCycle.toFloat() / cycleTicks
+                                !clipMode && isCurrent && iterTicks > 0 ->
+                                    position.tickInIteration.toFloat() / iterTicks
+                                else -> null
+                            },
+                            // Repeats, holding and finishing all belong to the
+                            // arranger; in clip mode a cell shows its own
+                            // queue and stop, so the header says nothing.
+                            repeatIdx = if (isCurrent && !clipMode) position.repeat else null,
+                            holding = isCurrent && loopScene && playing && !clipMode,
+                            finishing = isCurrent && playing && stopAtEnd && !clipMode,
                             queued = if (clipMode) {
                                 launchStates.indices.any { t -> launchStates[t].pending == index }
                             } else {

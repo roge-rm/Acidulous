@@ -754,14 +754,28 @@ private fun App(modifier: Modifier = Modifier) {
         NativeEngine.setLoopScene(on)
     }
     // Hoisted, so the chip on screen and a mapped pad press the same thing.
+    /**
+     * Song to clip and back: flip the flag and get out of the way.
+     *
+     * The handover is the *scheduler's* - `SceneScheduler::process` watches
+     * the flag change and does the whole of it. Going in, `adoptPlayingScene`
+     * hands every rack the scene it is already playing at the phase it is
+     * already at, so nothing restarts and nothing stops; the only difference
+     * is that a clip now loops at the end of its cycle instead of the
+     * arranger moving on. Coming out, the launcher runs to the next bar line
+     * and `handBackToScenes` puts everyone on the scene most racks are
+     * already playing, in phase.
+     *
+     * So there is nothing for this to do but say which mode it is. Two
+     * previous versions of it did more and both broke the handover: one
+     * called `transportStop`, which silenced the thing the scheduler was
+     * about to adopt, and one queued fresh `launchClip` requests, which
+     * restarted every clip from its cycle boundary on top of an adoption
+     * that had already placed it correctly.
+     */
     val onClipMode: (Boolean) -> Unit = { on ->
-        // Switching how the grid plays stops it playing. Half a song in one
-        // mode and half in the other is a class of bug nobody needs, and a
-        // performer expects a mode switch to be a reset.
-        NativeEngine.transportStop()
         com.rm.acidulous.ui.UiPrefs.chooseClipMode(on)
         NativeEngine.setLaunchQuantise(com.rm.acidulous.ui.UiPrefs.launchQuantise * song.signature.ticksPerBar)
-        launchStates = List(16) { LaunchState.idle }
     }
 
     // Controller mappings. The hub offers every CC and note-on here before it
