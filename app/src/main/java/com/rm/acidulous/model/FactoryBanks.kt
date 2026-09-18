@@ -22,6 +22,7 @@ internal object FactoryBanks {
         "Hexbeat" -> hexbeat
         "Genesis" -> genesis
         "Resonance" -> resonance
+        "Forage" -> forage
         "Dice" -> dice
         "Mosaic" -> mosaic
         "fx.Delay" -> fx_delay
@@ -1810,7 +1811,7 @@ internal object FactoryBanks {
 
     private fun nexus3() = Patch("Nexus", "Leslie String",
         mapOf("s02_p3" to 0.02f, "s04_p2" to 0.95f, "s06_p1" to 0.95f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|rotary|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0"),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|rotary|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"),
         family = "ours")
 
     private fun nexus4() = Patch("Nexus", "Two Operators",
@@ -1854,7 +1855,7 @@ internal object FactoryBanks {
         family = "ours")
 
     private fun nexus12() = Patch("Nexus", "Talking",
-        mapOf("s01_p1" to 0.25f, "s04_p1" to 0.02f, "s04_p4" to 0.2f, "s06_p1" to 0.9f, "volume" to 0.65f),
+        mapOf("s01_p1" to 0.25f, "s04_p1" to 0.02f, "s04_p4" to 0.2f, "s06_p1" to 0.9f, "volume" to 0.88f),
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|audioin|mono\nm|3|bands|mono\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|1.0|3.0|1.0\nc|2.0|3.1|1.0\nc|3.0|5.0|1.0\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
         family = "ours")
 
@@ -2240,6 +2241,95 @@ internal object FactoryBanks {
         family = "bell")
 
     private val resonance: List<Patch> by lazy { listOf(resonance0(), resonance1(), resonance2(), resonance3(), resonance4(), resonance5(), resonance6(), resonance7(), resonance8(), resonance9(), resonance10(), resonance11(), resonance12(), resonance13(), resonance14(), resonance15(), resonance16(), resonance17(), resonance18(), resonance19(), resonance20(), resonance21(), resonance22(), resonance23(), resonance24(), resonance25(), resonance26()) }
+
+    private fun forage0() = Patch("Forage", "Init", emptyMap(),
+        family = "straight")
+
+    private fun forage1() = Patch("Forage", "Straight",
+        mapOf("p00_cutoff" to 0.9807205f, "p01_cutoff" to 0.9807205f, "p02_cutoff" to 0.9807205f, "p03_cutoff" to 0.9807205f, "p04_cutoff" to 0.9807205f, "p05_cutoff" to 0.9807205f, "p06_cutoff" to 0.9807205f, "p07_cutoff" to 0.9807205f, "p08_cutoff" to 0.9807205f, "p09_cutoff" to 0.9807205f, "p10_cutoff" to 0.9807205f, "p11_cutoff" to 0.9807205f, "p12_cutoff" to 0.9807205f, "accent" to 0.7f),
+        family = "straight")
+
+    private fun forage2() = Patch("Forage", "Soft",
+        mapOf("p00_cutoff" to 0.8865413f, "p01_cutoff" to 0.8865413f, "p02_cutoff" to 0.8865413f, "p03_cutoff" to 0.8865413f, "p04_cutoff" to 0.8865413f, "p05_cutoff" to 0.8865413f, "p06_cutoff" to 0.8865413f, "p07_cutoff" to 0.8865413f, "p08_cutoff" to 0.8865413f, "p09_cutoff" to 0.8865413f, "p10_cutoff" to 0.8865413f, "p11_cutoff" to 0.8865413f, "p12_cutoff" to 0.8865413f, "accent" to 0.1f, "volume" to 0.5733333f),
+        family = "straight")
+
+    private fun forage3() = Patch("Forage", "Hard",
+        mapOf("accent" to 1f, "volume" to 0.8933334f),
+        family = "straight")
+
+    private fun forage4() = Patch("Forage", "Tight",
+        mapOf("p00_decay" to 0.35f, "p01_decay" to 0.35f, "p02_decay" to 0.35f, "p03_decay" to 0.35f, "p04_decay" to 0.35f, "p05_decay" to 0.35f, "p06_decay" to 0.35f, "p07_decay" to 0.35f, "p08_decay" to 0.35f, "p09_decay" to 0.35f, "p10_decay" to 0.35f, "p11_decay" to 0.35f, "p12_decay" to 0.35f),
+        family = "shape")
+
+    private fun forage5() = Patch("Forage", "Gated",
+        mapOf("p00_decay" to 0.2f, "p01_decay" to 0.2f, "p02_decay" to 0.2f, "p03_decay" to 0.2f, "p04_decay" to 0.2f, "p05_decay" to 0.2f, "p06_decay" to 0.2f, "p07_decay" to 0.2f, "p08_decay" to 0.2f, "p09_decay" to 0.2f, "p10_decay" to 0.2f, "p11_decay" to 0.2f, "p12_decay" to 0.2f, "accent" to 0.85f, "volume" to 0.68f),
+        family = "shape")
+
+    private fun forage6() = Patch("Forage", "Clipped",
+        mapOf("p00_end" to 0.33f, "p01_end" to 0.33f, "p02_end" to 0.33f, "p03_end" to 0.33f, "p04_end" to 0.33f, "p05_end" to 0.33f, "p06_end" to 0.33f, "p07_end" to 0.33f, "p08_end" to 0.33f, "p09_end" to 0.33f, "p10_end" to 0.33f, "p11_end" to 0.33f, "p12_end" to 0.33f, "volume" to 0.626666665f),
+        family = "shape")
+
+    private fun forage7() = Patch("Forage", "Body",
+        mapOf("p00_start" to 0.1f, "p00_decay" to 0.8f, "p01_start" to 0.1f, "p01_decay" to 0.8f, "p02_start" to 0.1f, "p02_decay" to 0.8f, "p03_start" to 0.1f, "p03_decay" to 0.8f, "p04_start" to 0.1f, "p04_decay" to 0.8f, "p05_start" to 0.1f, "p05_decay" to 0.8f, "p06_start" to 0.1f, "p06_decay" to 0.8f, "p07_start" to 0.1f, "p07_decay" to 0.8f, "p08_start" to 0.1f, "p08_decay" to 0.8f, "p09_start" to 0.1f, "p09_decay" to 0.8f, "p10_start" to 0.1f, "p10_decay" to 0.8f, "p11_start" to 0.1f, "p11_decay" to 0.8f, "p12_start" to 0.1f, "p12_decay" to 0.8f, "volume" to 0.75333333f),
+        family = "shape")
+
+    private fun forage8() = Patch("Forage", "Backwards",
+        mapOf("p00_reverse" to 1f, "p01_reverse" to 1f, "p02_reverse" to 1f, "p03_reverse" to 1f, "p04_reverse" to 1f, "p05_reverse" to 1f, "p06_reverse" to 1f, "p07_reverse" to 1f, "p08_reverse" to 1f, "p09_reverse" to 1f, "p10_reverse" to 1f, "p11_reverse" to 1f, "p12_reverse" to 1f, "volume" to 0.64f),
+        family = "shape")
+
+    private fun forage9() = Patch("Forage", "Reverse Gate",
+        mapOf("p00_decay" to 0.45f, "p00_reverse" to 1f, "p01_decay" to 0.45f, "p01_reverse" to 1f, "p02_decay" to 0.45f, "p02_reverse" to 1f, "p03_decay" to 0.45f, "p03_reverse" to 1f, "p04_decay" to 0.45f, "p04_reverse" to 1f, "p05_decay" to 0.45f, "p05_reverse" to 1f, "p06_decay" to 0.45f, "p06_reverse" to 1f, "p07_decay" to 0.45f, "p07_reverse" to 1f, "p08_decay" to 0.45f, "p08_reverse" to 1f, "p09_decay" to 0.45f, "p09_reverse" to 1f, "p10_decay" to 0.45f, "p10_reverse" to 1f, "p11_decay" to 0.45f, "p11_reverse" to 1f, "p12_decay" to 0.45f, "p12_reverse" to 1f, "volume" to 1f),
+        family = "shape")
+
+    private fun forage10() = Patch("Forage", "Dusty",
+        mapOf("p00_cutoff" to 0.6559455f, "p00_reso" to 0.25f, "p00_crush" to 0.25f, "p01_cutoff" to 0.6559455f, "p01_reso" to 0.25f, "p01_crush" to 0.25f, "p02_cutoff" to 0.6559455f, "p02_reso" to 0.25f, "p02_crush" to 0.25f, "p03_cutoff" to 0.6559455f, "p03_reso" to 0.25f, "p03_crush" to 0.25f, "p04_cutoff" to 0.6559455f, "p04_reso" to 0.25f, "p04_crush" to 0.25f, "p05_cutoff" to 0.6559455f, "p05_reso" to 0.25f, "p05_crush" to 0.25f, "p06_cutoff" to 0.6559455f, "p06_reso" to 0.25f, "p06_crush" to 0.25f, "p07_cutoff" to 0.6559455f, "p07_reso" to 0.25f, "p07_crush" to 0.25f, "p08_cutoff" to 0.6559455f, "p08_reso" to 0.25f, "p08_crush" to 0.25f, "p09_cutoff" to 0.6559455f, "p09_reso" to 0.25f, "p09_crush" to 0.25f, "p10_cutoff" to 0.6559455f, "p10_reso" to 0.25f, "p10_crush" to 0.25f, "p11_cutoff" to 0.6559455f, "p11_reso" to 0.25f, "p11_crush" to 0.25f, "p12_cutoff" to 0.6559455f, "p12_reso" to 0.25f, "p12_crush" to 0.25f, "volume" to 0.7f),
+        family = "tone")
+
+    private fun forage11() = Patch("Forage", "Telephone",
+        mapOf("p00_cutoff" to 0.5819617f, "p00_reso" to 0.35f, "p00_mode" to 1f, "p01_cutoff" to 0.5819617f, "p01_reso" to 0.35f, "p01_mode" to 1f, "p02_cutoff" to 0.5819617f, "p02_reso" to 0.35f, "p02_mode" to 1f, "p03_cutoff" to 0.5819617f, "p03_reso" to 0.35f, "p03_mode" to 1f, "p04_cutoff" to 0.5819617f, "p04_reso" to 0.35f, "p04_mode" to 1f, "p05_cutoff" to 0.5819617f, "p05_reso" to 0.35f, "p05_mode" to 1f, "p06_cutoff" to 0.5819617f, "p06_reso" to 0.35f, "p06_mode" to 1f, "p07_cutoff" to 0.5819617f, "p07_reso" to 0.35f, "p07_mode" to 1f, "p08_cutoff" to 0.5819617f, "p08_reso" to 0.35f, "p08_mode" to 1f, "p09_cutoff" to 0.5819617f, "p09_reso" to 0.35f, "p09_mode" to 1f, "p10_cutoff" to 0.5819617f, "p10_reso" to 0.35f, "p10_mode" to 1f, "p11_cutoff" to 0.5819617f, "p11_reso" to 0.35f, "p11_mode" to 1f, "p12_cutoff" to 0.5819617f, "p12_reso" to 0.35f, "p12_mode" to 1f, "volume" to 0.786666632f),
+        family = "tone")
+
+    private fun forage12() = Patch("Forage", "Eight Bit",
+        mapOf("p00_crush" to 0.35f, "p01_crush" to 0.35f, "p02_crush" to 0.35f, "p03_crush" to 0.35f, "p04_crush" to 0.35f, "p05_crush" to 0.35f, "p06_crush" to 0.35f, "p07_crush" to 0.35f, "p08_crush" to 0.35f, "p09_crush" to 0.35f, "p10_crush" to 0.35f, "p11_crush" to 0.35f, "p12_crush" to 0.35f, "volume" to 0.58f),
+        family = "tone")
+
+    private fun forage13() = Patch("Forage", "Ruined",
+        mapOf("p00_cutoff" to 0.7319459f, "p00_crush" to 0.8f, "p01_cutoff" to 0.7319459f, "p01_crush" to 0.8f, "p02_cutoff" to 0.7319459f, "p02_crush" to 0.8f, "p03_cutoff" to 0.7319459f, "p03_crush" to 0.8f, "p04_cutoff" to 0.7319459f, "p04_crush" to 0.8f, "p05_cutoff" to 0.7319459f, "p05_crush" to 0.8f, "p06_cutoff" to 0.7319459f, "p06_crush" to 0.8f, "p07_cutoff" to 0.7319459f, "p07_crush" to 0.8f, "p08_cutoff" to 0.7319459f, "p08_crush" to 0.8f, "p09_cutoff" to 0.7319459f, "p09_crush" to 0.8f, "p10_cutoff" to 0.7319459f, "p10_crush" to 0.8f, "p11_cutoff" to 0.7319459f, "p11_crush" to 0.8f, "p12_cutoff" to 0.7319459f, "p12_crush" to 0.8f, "volume" to 0.686666667f),
+        family = "tone")
+
+    private fun forage14() = Patch("Forage", "Resonant",
+        mapOf("p00_cutoff" to 0.443270653f, "p00_reso" to 0.8f, "p01_cutoff" to 0.443270653f, "p01_reso" to 0.8f, "p02_cutoff" to 0.443270653f, "p02_reso" to 0.8f, "p03_cutoff" to 0.443270653f, "p03_reso" to 0.8f, "p04_cutoff" to 0.443270653f, "p04_reso" to 0.8f, "p05_cutoff" to 0.443270653f, "p05_reso" to 0.8f, "p06_cutoff" to 0.443270653f, "p06_reso" to 0.8f, "p07_cutoff" to 0.443270653f, "p07_reso" to 0.8f, "p08_cutoff" to 0.443270653f, "p08_reso" to 0.8f, "p09_cutoff" to 0.443270653f, "p09_reso" to 0.8f, "p10_cutoff" to 0.443270653f, "p10_reso" to 0.8f, "p11_cutoff" to 0.443270653f, "p11_reso" to 0.8f, "p12_cutoff" to 0.443270653f, "p12_reso" to 0.8f, "volume" to 0.46f),
+        family = "tone")
+
+    private fun forage15() = Patch("Forage", "Fifth Down",
+        mapOf("p00_pitch" to 0.354166657f, "p01_pitch" to 0.354166657f, "p02_pitch" to 0.354166657f, "p03_pitch" to 0.354166657f, "p04_pitch" to 0.354166657f, "p05_pitch" to 0.354166657f, "p06_pitch" to 0.354166657f, "p07_pitch" to 0.354166657f, "p08_pitch" to 0.354166657f, "p09_pitch" to 0.354166657f, "p10_pitch" to 0.354166657f, "p11_pitch" to 0.354166657f, "p12_pitch" to 0.354166657f, "volume" to 0.6066667f),
+        family = "motion")
+
+    private fun forage16() = Patch("Forage", "Octave Up",
+        mapOf("p00_pitch" to 0.75f, "p01_pitch" to 0.75f, "p02_pitch" to 0.75f, "p03_pitch" to 0.75f, "p04_pitch" to 0.75f, "p05_pitch" to 0.75f, "p06_pitch" to 0.75f, "p07_pitch" to 0.75f, "p08_pitch" to 0.75f, "p09_pitch" to 0.75f, "p10_pitch" to 0.75f, "p11_pitch" to 0.75f, "p12_pitch" to 0.75f, "volume" to 0.68f),
+        family = "motion")
+
+    private fun forage17() = Patch("Forage", "Boing",
+        mapOf("p00_penv" to 0.9f, "p01_penv" to 0.9f, "p02_penv" to 0.9f, "p03_penv" to 0.9f, "p04_penv" to 0.9f, "p05_penv" to 0.9f, "p06_penv" to 0.9f, "p07_penv" to 0.9f, "p08_penv" to 0.9f, "p09_penv" to 0.9f, "p10_penv" to 0.9f, "p11_penv" to 0.9f, "p12_penv" to 0.9f, "volume" to 0.66f),
+        family = "motion")
+
+    private fun forage18() = Patch("Forage", "Sucked",
+        mapOf("p00_penv" to 0.199999988f, "p00_pdecay" to 0.7385606f, "p01_penv" to 0.199999988f, "p01_pdecay" to 0.7385606f, "p02_penv" to 0.199999988f, "p02_pdecay" to 0.7385606f, "p03_penv" to 0.199999988f, "p03_pdecay" to 0.7385606f, "p04_penv" to 0.199999988f, "p04_pdecay" to 0.7385606f, "p05_penv" to 0.199999988f, "p05_pdecay" to 0.7385606f, "p06_penv" to 0.199999988f, "p06_pdecay" to 0.7385606f, "p07_penv" to 0.199999988f, "p07_pdecay" to 0.7385606f, "p08_penv" to 0.199999988f, "p08_pdecay" to 0.7385606f, "p09_penv" to 0.199999988f, "p09_pdecay" to 0.7385606f, "p10_penv" to 0.199999988f, "p10_pdecay" to 0.7385606f, "p11_penv" to 0.199999988f, "p11_pdecay" to 0.7385606f, "p12_penv" to 0.199999988f, "p12_pdecay" to 0.7385606f, "volume" to 0.66f),
+        family = "motion")
+
+    private fun forage19() = Patch("Forage", "Choked Hats",
+        mapOf("p07_choke" to 0.25f, "p08_decay" to 0.75f, "p08_choke" to 0.25f, "accent" to 0.7f, "volume" to 0.5733333f),
+        family = "kit")
+
+    private fun forage20() = Patch("Forage", "Spread",
+        mapOf("p01_pan" to 0.35f, "p04_pan" to 0.290000021f, "p05_pan" to 0.43f, "p06_pan" to 0.6f, "p07_pan" to 0.64f, "p08_pan" to 0.67f, "p09_pan" to 0.725f, "p10_pan" to 0.275f, "p11_pan" to 0.62f, "p12_pan" to 0.37f, "accent" to 0.7f, "volume" to 0.5133333f),
+        family = "kit")
+
+    private fun forage21() = Patch("Forage", "Low and High",
+        mapOf("p00_cutoff" to 0.8865413f, "p01_cutoff" to 0.8865413f, "p02_cutoff" to 0.933630943f, "p03_cutoff" to 0.933630943f, "p04_cutoff" to 0.845404565f, "p05_cutoff" to 0.845404565f, "p06_cutoff" to 0.845404565f, "p07_decay" to 0.5f, "p08_decay" to 0.6f, "p09_decay" to 0.7f, "p10_decay" to 0.65f, "p11_decay" to 0.55f, "p12_decay" to 0.5f, "accent" to 0.7f, "volume" to 0.64f),
+        family = "kit")
+
+    private val forage: List<Patch> by lazy { listOf(forage0(), forage1(), forage2(), forage3(), forage4(), forage5(), forage6(), forage7(), forage8(), forage9(), forage10(), forage11(), forage12(), forage13(), forage14(), forage15(), forage16(), forage17(), forage18(), forage19(), forage20(), forage21()) }
 
     private fun dice0() = Patch("Dice", "Init", emptyMap(),
         family = "straight")

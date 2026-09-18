@@ -71,11 +71,9 @@ struct Known {
 const Known kKnown[] = {
     // No bank written yet. These are the milestone's own acceptance test:
     // when the list is empty, M45 is done.
-    {"Forage", "", "no bank yet - never had one"},
     {"Molt", "", "no bank yet - never had one"},
-    // Everything else that was here has been written: fourteen effect banks,
-    // and Dice's Straight when it was a placeholder that set nothing. Three
-    // machines left, and then this list is empty and M45 is done.
+    // Everything else that was here has been written. One machine left, and
+    // then this list is empty and M45 is done.
 };
 
 constexpr size_t kKnownCount = sizeof(kKnown) / sizeof(kKnown[0]);

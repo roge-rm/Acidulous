@@ -21,7 +21,7 @@ class Forage final : public Machine {
     // Per-pad parameter order; the table is generated pad-major with names
     // like "p03_cutoff". Globals follow the last pad.
     enum PadParam : int32_t { Start, End, Pitch, Decay, Level, Pan, Reverse, Choke, Cutoff, Reso, Mode, Crush, PitchEnv, PitchDecay, PadParamCount };
-    enum Global : int32_t { Accent, GlobalCount };
+    enum Global : int32_t { Accent, Volume, GlobalCount };
     static int32_t index(int32_t pad, PadParam p) { return pad * PadParamCount + p; }
     static int32_t globalIndex(Global g) { return kPads * PadParamCount + g; }
 
@@ -50,6 +50,7 @@ class Forage final : public Machine {
         dsp::Svf filter;
         float holdL = 0.0f, holdR = 0.0f; // crusher sample-and-hold
         float holdPhase = 0.0f;
+        int32_t age = 0; // frames since the trigger, for the edge ramp
     };
 
     void trigger(int32_t pad, float velocity01, bool accent);

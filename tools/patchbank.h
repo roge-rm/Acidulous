@@ -5,6 +5,7 @@
 #include <cstring>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -283,21 +284,47 @@ inline Resolved resolve(const BankPatch &patch, const ParamDef *defs, int32_t co
     for (int32_t i = 0; i < count; ++i) r.norm[static_cast<size_t>(i)] = defs[i].unmap(defs[i].def);
     r.settings = patch.settings;
 
-    for (const BankValue &v : patch.values) {
-        int32_t index = -1;
-        for (int32_t i = 0; i < count; ++i) {
-            if (std::strcmp(defs[i].name, v.name.c_str()) == 0) {
-                index = i;
-                break;
+    // One `*` in a name stands for any run of characters, and the value is
+    // applied to every parameter it matches.
+    //
+    // Forage is why. Thirteen pads of fourteen parameters is a hundred and
+    // eighty-two names, and a patch that low-passes the whole kit had to say
+    // so thirteen times - which is not a patch anybody can read, and twelve
+    // more chances to fumble a digit. `p*_cutoff 2200 Hz` says the one thing
+    // it means. Dice's sixteen slices are the same shape of problem.
+    //
+    // A name with no star still has to match exactly, and a star that matches
+    // nothing is an error, so the check that matters - a typo does nothing at
+    // all in the app, silently - keeps working either way.
+    const auto matching = [&](const std::string &name, std::vector<int32_t> &out) {
+        const size_t star = name.find('*');
+        if (star == std::string::npos) {
+            for (int32_t i = 0; i < count; ++i) {
+                if (std::strcmp(defs[i].name, name.c_str()) == 0) { out.push_back(i); return; }
             }
+            return;
         }
-        if (index < 0) {
+        const std::string pre = name.substr(0, star), post = name.substr(star + 1);
+        for (int32_t i = 0; i < count; ++i) {
+            const std::string n = defs[i].name;
+            if (n.size() < pre.size() + post.size()) continue;
+            if (n.compare(0, pre.size(), pre) != 0) continue;
+            if (n.compare(n.size() - post.size(), post.size(), post) != 0) continue;
+            out.push_back(i);
+        }
+    };
+
+    for (const BankValue &v : patch.values) {
+        std::vector<int32_t> matches;
+        matching(v.name, matches);
+        if (matches.empty()) {
             // The check that matters most. A name that does not exist does
             // nothing at all in the app - applyAll fills the default and moves
             // on - so a typo in a hand-written patch has always been silent.
             r.problems.push_back("line " + std::to_string(v.line) + ": no parameter named '" + v.name + "'");
             continue;
         }
+        for (const int32_t index : matches) {
         const ParamDef &d = defs[index];
         float v01;
         if (v.stepIndex >= 0) {
@@ -333,7 +360,15 @@ inline Resolved resolve(const BankPatch &patch, const ParamDef *defs, int32_t co
         if (v01 < 0.0f) v01 = 0.0f;
         if (v01 > 1.0f) v01 = 1.0f;
         r.norm[static_cast<size_t>(index)] = v01;
+        }
     }
+    // A bad value behind a star fails once for every parameter it matched, and
+    // thirteen copies of one mistake is a worse report than one.
+    std::vector<std::string> once;
+    for (const std::string &p : r.problems) {
+        if (std::find(once.begin(), once.end(), p) == once.end()) once.push_back(p);
+    }
+    r.problems.swap(once);
     return r;
 }
 
