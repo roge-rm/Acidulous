@@ -127,6 +127,29 @@ class MainActivity : ComponentActivity() {
 
 private const val TAG = "Acidulous.UI"
 
+/**
+ * What the file picker offers when it is asked for audio.
+ *
+ * A match-anything wildcard was in this list - and inside this comment, until
+ * it closed it - and is why the picker showed every file on the device, which
+ * is not a chooser, it is a haystack. What is left is the four formats the app
+ * can actually read, named specifically as well as by family because
+ * providers disagree - `audio/wav` and `audio/x-wav` and `audio/vnd.wave` are
+ * all the same file to three different pieces of Android.
+ *
+ * It is a *hint* and not a gate: a provider that reports nothing useful for a
+ * file will hide it, and one that reports the wrong type will offer something
+ * we cannot read. The gate is the decoder, which looks at the bytes - see
+ * `sniff`. This only stops the picker wasting the player's time.
+ */
+private val AUDIO_TYPES = arrayOf(
+    "audio/*",
+    "audio/wav", "audio/x-wav", "audio/vnd.wave", "audio/wave",
+    "audio/aiff", "audio/x-aiff",
+    "audio/flac", "audio/x-flac",
+    "audio/mpeg", "audio/mp3", "audio/x-mp3", "audio/mpeg3",
+)
+
 private sealed class Screen {
     object Main : Screen()
     data class Edit(val track: Int, val sceneId: String) : Screen()
@@ -856,21 +879,21 @@ private fun App(modifier: Modifier = Modifier) {
             onDeletePatch = { name -> PatchStore.delete(context, song.tracks[s.track].machine.type, name) },
             onImportSample = { track, pad ->
                 importTarget = track to "p%02d_sample".format(pad)
-                samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*"))
+                samplePicker.launch(AUDIO_TYPES)
             },
             onImportOneSample = { track ->
                 importTarget = track to "sample"
-                samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*"))
+                samplePicker.launch(AUDIO_TYPES)
             },
             onImportKit = { track, pad ->
                 kitTarget = track to pad
-                kitPicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*"))
+                kitPicker.launch(AUDIO_TYPES)
             },
             onImportSlice = { track ->
                 // One file for all thirteen pads; the slice points are worked
                 // out afterwards, in the panel.
                 importTarget = track to "slice_sample"
-                samplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*"))
+                samplePicker.launch(AUDIO_TYPES)
             },
             onImportSoundFont = { track -> mapTarget = track; soundFontPicker.launch(arrayOf("*/*")) },
             onPickPreset = { track ->
@@ -885,7 +908,7 @@ private fun App(modifier: Modifier = Modifier) {
                     }
                 }
             },
-            onImportZoneSamples = { track -> mapTarget = track; zoneSamplePicker.launch(arrayOf("audio/*", "application/octet-stream", "*/*")) },
+            onImportZoneSamples = { track -> mapTarget = track; zoneSamplePicker.launch(AUDIO_TYPES) },
             modifier = modifier,
         )
         is Screen.Sample -> com.rm.acidulous.ui.SampleScreen(

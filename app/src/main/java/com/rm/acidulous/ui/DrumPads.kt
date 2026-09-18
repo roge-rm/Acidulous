@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,6 +82,12 @@ fun DrumPads(rack: Int, voices: List<DrumVoice>, selected: Int = -1, onSelect: (
 private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> Unit,
                 modifier: Modifier = Modifier, onEmpty: () -> Unit = {}) {
     var pressed by remember { mutableStateOf(false) }
+    // The gesture below is keyed on the note, which does not change when a
+    // sample lands on the pad - so the lambda kept the `voice` it was built
+    // with, `loaded` still false, and a pad that now held a sample went on
+    // opening the file picker every time it was tapped. This is the current
+    // one whatever the gesture was started with.
+    val current by rememberUpdatedState(voice)
     // Where the last strike landed, 0 at the bottom and 1 at the top, which is
     // both the velocity and how far the highlight fills.
     var strike by remember { mutableStateOf(0f) }
@@ -138,7 +145,7 @@ private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> 
                                     val vel = if (UiPrefs.padsFullStrength) HARD else SOFT + (HARD - SOFT) * strike
                                     NativeEngine.noteOn(rack, voice.note, vel.toInt())
                                     onSelect()
-                                    if (!voice.loaded) onEmpty()
+                                    if (!current.loaded) onEmpty()
                                 } else {
                                     NativeEngine.noteOff(rack, voice.note)
                                 }
