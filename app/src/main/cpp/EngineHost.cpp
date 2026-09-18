@@ -191,14 +191,14 @@ const char *EngineHost::mountedEffect(int rack, int slot) const {
     return (rack >= 0 && rack < kRackCount && slot >= 0 && slot < kEffectSlots) ? mountedEffectType[rack][slot].c_str() : "";
 }
 
-bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::string &error) {
+bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::string &error, int maxSeconds) {
     if (rack < 0 || rack >= kRackCount) { error = "bad rack"; return false; }
     SampleData *sample = nullptr;
     if (!path.empty()) {
         // Through the front door, so a document that still names a .flac or
         // an .mp3 - one imported before the conversion existed, or edited by
         // hand - plays rather than failing.
-        auto decoded = decodeAudio(path, kSampleRate, error);
+        auto decoded = decodeAudio(path, kSampleRate, error, maxSeconds > 0 ? maxSeconds : kMaxDecodeSeconds);
         if (!decoded) return false;
         sample = decoded.release();
     }
@@ -250,7 +250,8 @@ int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns)
  * One string crosses the boundary, and the caller has somewhere to put the
  * one thing it could not otherwise find out - that a long file was shortened.
  */
-std::string EngineHost::importAudio(const std::string &path, std::string &error) const {
+std::string EngineHost::importAudio(const std::string &path, std::string &error, int maxSeconds) const {
+    const int seconds = maxSeconds > 0 ? maxSeconds : kMaxDecodeSeconds;
     const AudioFormat format = sniff(path);
     if (format == AudioFormat::Wav) {
         // A WAV is taken as it is, and a long one is truncated when it is
@@ -263,7 +264,7 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error)
                                 : "not an audio file this can read";
         return "";
     }
-    auto decoded = decodeAudio(path, kSampleRate, error);
+    auto decoded = decodeAudio(path, kSampleRate, error, seconds);
     if (!decoded) return "";
 
     // Alongside, with the extension replaced: `break.flac` becomes
@@ -273,8 +274,12 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error)
     const std::string stem = (dot != std::string::npos && (slash == std::string::npos || dot > slash))
                                  ? path.substr(0, dot)
                                  : path;
+    // Never the file we are reading from: a source called "break.wav" that
+    // turned out not to be a WAV would otherwise be overwritten and then
+    // removed, leaving nothing at all where the import used to be.
     std::string out = stem + ".wav";
-    for (int n = 2; n < 1000 && out != path; ++n) {
+    if (out == path) out = stem + " converted.wav";
+    for (int n = 2; n < 1000; ++n) {
         FILE *exists = std::fopen(out.c_str(), "rb");
         if (exists == nullptr) break;
         std::fclose(exists);
@@ -296,13 +301,18 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error)
     writer.write(interleaved.data(), decoded->frames);
     if (!writer.close()) { error = "could not write the converted file"; return ""; }
     std::remove(path.c_str()); // the original was a copy of the player's own file
-    LOGI("converted %s (%s) to %s%s", path.c_str(), formatName(format), out.c_str(),
-         decoded->truncated ? " (truncated)" : "");
+    // Everything a report of a bad conversion needs, in one line: the format
+    // it decided on, what came out of the decoder, and how loud it was.
+    LOGI("converted %s (%s) to %s: %d frames at %d Hz, %s, peak %.3f%s", path.c_str(), formatName(format),
+         out.c_str(), decoded->frames, decoded->rate, decoded->stereo ? "stereo" : "mono",
+         static_cast<double>(decoded->peak), decoded->truncated ? ", truncated" : "");
     return (decoded->truncated ? "cut\n" : "ok\n") + out;
 }
 
 std::string EngineHost::slicePoints(const std::string &path, int mode, int count, std::string &error) const {
-    auto decoded = decodeAudio(path, kSampleRate, error);
+    // The long ceiling: this is only ever asked about a slice source, which
+    // is the one file a whole machine shares.
+    auto decoded = decodeAudio(path, kSampleRate, error, kMaxSliceSeconds);
     if (!decoded) return "";
     const std::vector<float> points = audio::slicePoints(
         *decoded, mode == 1 ? audio::SliceMode::Even : audio::SliceMode::Transients, count,

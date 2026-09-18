@@ -173,9 +173,10 @@ bool readSubframe(BitReader &br, int32_t blockSize, int bps, int32_t *out) {
 }
 } // namespace
 
-std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t targetRate, std::string &error) {
+std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t targetRate, std::string &error,
+                                            int32_t maxSeconds) {
     std::vector<unsigned char> bytes;
-    if (!slurp(path, bytes, error)) return nullptr;
+    if (!slurp(path, bytes, error, slurpCeilingFor(maxSeconds))) return nullptr;
     if (bytes.size() < 8 || std::memcmp(bytes.data(), "fLaC", 4) != 0) {
         error = "not a FLAC file";
         return nullptr;
@@ -214,7 +215,7 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
     DecodedAudio got;
     got.rate = si.rate;
     got.stereo = si.channels == 2;
-    const int64_t cap = static_cast<int64_t>(kMaxDecodeSeconds) * si.rate;
+    const int64_t cap = static_cast<int64_t>(maxSeconds) * si.rate;
     const float scale = 1.0f / static_cast<float>(1LL << (si.bits - 1));
 
     // --- frames ------------------------------------------------------------
@@ -311,6 +312,8 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
             }
         }
 
+        // A block that will not fit whole is a block the cap cut through.
+        if (static_cast<int64_t>(got.ch[0].size()) + blockSize > cap) got.truncated = true;
         for (int32_t i = 0; i < blockSize; ++i) {
             if (static_cast<int64_t>(got.ch[0].size()) >= cap) break;
             got.ch[0].push_back(static_cast<float>(plane[0][i]) * scale);
@@ -323,7 +326,7 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
 
     if (got.ch[0].empty()) { error = "no audio in it"; return nullptr; }
     got.frames = static_cast<int32_t>(got.ch[0].size());
-    auto out = assemble(got, path, targetRate);
+    auto out = assemble(got, path, targetRate, maxSeconds);
     if (!out) error = "empty";
     return out;
 }

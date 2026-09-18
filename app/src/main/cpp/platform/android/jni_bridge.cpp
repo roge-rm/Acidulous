@@ -152,9 +152,10 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSampleMapInfo(JNIEnv *env, jobje
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadSample(JNIEnv *env, jobject, jint rackId, jint slot, jstring path) {
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoadSample(JNIEnv *env, jobject, jint rackId, jint slot, jstring path,
+                                                          jint maxSeconds) {
     std::string error;
-    const bool ok = host().loadSample(rackId, slot, toStdString(env, path), error);
+    const bool ok = host().loadSample(rackId, slot, toStdString(env, path), error, maxSeconds);
     return env->NewStringUTF(ok ? "" : error.c_str()); // empty = success
 }
 
@@ -175,10 +176,10 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSampleShape(JNIEnv *env, jobject
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeImportAudio(JNIEnv *env, jobject, jstring path) {
+Java_com_rm_acidulous_engine_NativeEngine_nativeImportAudio(JNIEnv *env, jobject, jstring path, jint maxSeconds) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     std::string error;
-    const std::string out = host().importAudio(p != nullptr ? p : "", error);
+    const std::string out = host().importAudio(p != nullptr ? p : "", error, maxSeconds);
     env->ReleaseStringUTFChars(path, p);
     // Two lines, "ok", "cut" or "err" then the path or the reason. See
     // EngineHost::importAudio.

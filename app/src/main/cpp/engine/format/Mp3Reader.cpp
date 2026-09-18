@@ -30,9 +30,22 @@ namespace {
 constexpr int kOutSamples = 16384; // per channel, which is far more than a frame
 } // namespace
 
-std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t targetRate, std::string &error) {
+size_t Mp3Reader::audioStart(const unsigned char *b, size_t n) {
+    if (n < 10 || std::memcmp(b, "ID3", 3) != 0) return 0;
+    // A syncsafe length: four bytes of seven bits each, not counting the ten
+    // byte header it sits in - and ten more if the footer flag is set.
+    const size_t size = (static_cast<size_t>(b[6] & 0x7Fu) << 21) | (static_cast<size_t>(b[7] & 0x7Fu) << 14) |
+                        (static_cast<size_t>(b[8] & 0x7Fu) << 7) | static_cast<size_t>(b[9] & 0x7Fu);
+    const size_t at = 10 + size + ((b[5] & 0x10u) != 0 ? 10u : 0u);
+    // A tag claiming to be longer than the file is a tag that is lying, and
+    // starting at nought is a better guess than starting past the end.
+    return at < n ? at : 0;
+}
+
+std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t targetRate, std::string &error,
+                                           int32_t maxSeconds) {
     std::vector<unsigned char> bytes;
-    if (!slurp(path, bytes, error)) return nullptr;
+    if (!slurp(path, bytes, error, slurpCeilingFor(maxSeconds))) return nullptr;
 
     hip_t hip = hip_decode_init();
     if (hip == nullptr) { error = "no decoder"; return nullptr; }
@@ -49,10 +62,11 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
         if (!any && info.samplerate > 0) {
             got.rate = info.samplerate;
             got.stereo = info.stereo == 2;
-            cap = static_cast<int64_t>(kMaxDecodeSeconds) * got.rate;
+            cap = static_cast<int64_t>(maxSeconds) * got.rate;
             any = true;
         }
         if (!any) return;
+        if (static_cast<int64_t>(got.ch[0].size()) + samples > cap) got.truncated = true;
         for (int i = 0; i < samples && static_cast<int64_t>(got.ch[0].size()) < cap; ++i) {
             got.ch[0].push_back(left[static_cast<size_t>(i)] / 32768.0f);
             if (got.stereo) got.ch[1].push_back(right[static_cast<size_t>(i)] / 32768.0f);
@@ -77,7 +91,8 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
     // audio in it" meant the first time this was written. LAME's own frontend
     // reads 1024 and so does this.
     const size_t chunk = 1024;
-    for (size_t off = 0; off <= bytes.size(); off += chunk) {
+    // From the audio, not from the front of the file - see audioStart.
+    for (size_t off = audioStart(bytes.data(), bytes.size()); off <= bytes.size(); off += chunk) {
         const size_t len = std::min(chunk, bytes.size() - std::min(off, bytes.size()));
         int n = hip_decode1_headers(hip, len > 0 ? bytes.data() + off : nullptr,
                                     len, left.data(), right.data(), &info);
@@ -110,7 +125,7 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
     if (got.stereo && static_cast<int32_t>(got.ch[1].size()) < got.frames) {
         got.frames = static_cast<int32_t>(got.ch[1].size());
     }
-    auto out = assemble(got, path, targetRate);
+    auto out = assemble(got, path, targetRate, maxSeconds);
     if (!out) error = "empty";
     return out;
 }

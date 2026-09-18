@@ -107,13 +107,17 @@ object EngineSync {
             }
             // And the shared file the pads slice, in the slot above them. One
             // copy for all thirteen: mounting it per pad would decode an
-            // eleven megabyte file thirteen times.
+            // eleven megabyte file thirteen times - and since there is only
+            // ever one of it, it may be far longer than a pad sample.
             val sliceKey = "$rack:shared"
             val sliceRel = track.machine.settings["slice_sample"] ?: ""
             if (loadedSamples[sliceKey] != sliceRel && mounted[rack] == track.machine.type &&
                 !(sliceRel.isEmpty() && loadedSamples[sliceKey] == null)) {
                 val err = NativeEngine.loadSample(
                     rack, 13, if (sliceRel.isEmpty()) "" else java.io.File(root, sliceRel).absolutePath,
+                    // The long ceiling: one file for the whole machine, so it
+                    // is allowed to be a whole track rather than a break.
+                    maxSeconds = NativeEngine.SLICE_SECONDS,
                 )
                 loadedSamples[sliceKey] = sliceRel
                 if (err.isNotEmpty()) problem("${shortName(sliceRel)} would not load - $err.")

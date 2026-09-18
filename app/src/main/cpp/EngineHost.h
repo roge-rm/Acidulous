@@ -40,7 +40,9 @@ class EngineHost {
 
     // Decodes a WAV here and mounts it into the machine's `slot` (a pad). An
     // empty path clears the slot. Returns false if the file cannot be read.
-    bool loadSample(int rack, int slot, const std::string &path, std::string &error);
+    // [maxSeconds] is how much of a long file to keep - see kMaxDecodeSeconds
+    // and kMaxSliceSeconds.
+    bool loadSample(int rack, int slot, const std::string &path, std::string &error, int maxSeconds = 0);
 
     // --- Multisample maps (Mosaic) ------------------------------------------
     // Both build the whole instrument on the calling thread and hand it over
@@ -81,7 +83,7 @@ class EngineHost {
      * rather than on every song load, and a document keeps naming something
      * that plainly exists on disk.
      */
-    std::string importAudio(const std::string &path, std::string &error) const;
+    std::string importAudio(const std::string &path, std::string &error, int maxSeconds = 0) const;
 
     /**
      * A pad's sample as something to draw: [columns] pairs of min and max.

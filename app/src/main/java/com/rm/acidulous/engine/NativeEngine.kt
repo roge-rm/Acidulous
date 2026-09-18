@@ -33,8 +33,23 @@ object NativeEngine {
     /** Mounts an eventor (Scale, Chord, Arp) ahead of the machine; an empty [typeName] clears it. */
     fun mountEventor(rackId: Int, slot: Int, typeName: String): Boolean = nativeMountEventor(rackId, slot, typeName)
 
+    /**
+     * How much of a long file a sample may hold, in seconds.
+     *
+     * Two numbers because the two uses cost differently. [PAD_SECONDS] is a
+     * pad's own sample - one of thirteen, so thirty seconds each is already
+     * 150 MB of kit. [SLICE_SECONDS] is the one file a whole Forage slices:
+     * it is mounted once and every pad reads a region of it, so it can afford
+     * to be a whole track. Ten minutes of it is 230 MB, which is the price of
+     * slicing an album track. Must match kMaxDecodeSeconds and
+     * kMaxSliceSeconds in engine/format/Decoded.h.
+     */
+    const val PAD_SECONDS = 30
+    const val SLICE_SECONDS = 600
+
     /** Decodes a WAV and mounts it on a pad; empty path clears. Returns an error message, or "" on success. */
-    fun loadSample(rackId: Int, slot: Int, absolutePath: String): String = nativeLoadSample(rackId, slot, absolutePath)
+    fun loadSample(rackId: Int, slot: Int, absolutePath: String, maxSeconds: Int = PAD_SECONDS): String =
+        nativeLoadSample(rackId, slot, absolutePath, maxSeconds)
     /**
      * Multisample maps for Mosaic. All three block while the instrument is
      * built and decoded, so call them from a worker.
@@ -74,12 +89,12 @@ object NativeEngine {
      * itself as a WAV and the original removed, so nothing downstream ever
      * sees a second format. Decodes the file, so call it off the main thread.
      *
-     * [Imported.truncated] says the file was longer than the decoder takes
-     * and only its first thirty seconds arrived - which the player has to be
-     * told, because everything else about it looks like it worked.
+     * [Imported.truncated] says the file was longer than [maxSeconds] and
+     * only that much of it arrived - which the player has to be told, because
+     * everything else about it looks like it worked.
      */
-    fun importAudio(absolutePath: String): Result<Imported> {
-        val out = nativeImportAudio(absolutePath)
+    fun importAudio(absolutePath: String, maxSeconds: Int = PAD_SECONDS): Result<Imported> {
+        val out = nativeImportAudio(absolutePath, maxSeconds)
         val word = out.substringBefore('\n')
         val rest = out.substringAfter('\n', "")
         return when (word) {
@@ -482,14 +497,14 @@ object NativeEngine {
     private external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     private external fun nativeEffectTypes(): Array<String>
     private external fun nativeEffectParamInfo(type: String): Array<String>
-    private external fun nativeLoadSample(rackId: Int, slot: Int, path: String): String
+    private external fun nativeLoadSample(rackId: Int, slot: Int, path: String, maxSeconds: Int): String
     private external fun nativeSoundFontPresets(path: String): String
     private external fun nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String
     private external fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String
     private external fun nativeSampleMapInfo(rackId: Int): String
     private external fun nativeSampleInfo(rackId: Int, slot: Int): String
     private external fun nativeSlicePoints(path: String, mode: Int, count: Int): String
-    private external fun nativeImportAudio(path: String): String
+    private external fun nativeImportAudio(path: String, maxSeconds: Int): String
     private external fun nativeSampleShape(rack: Int, pad: Int, out: FloatArray): Int
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)

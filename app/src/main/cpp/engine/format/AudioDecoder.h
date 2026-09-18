@@ -1,6 +1,7 @@
 #pragma once
 #include <engine/core/Sample.h>
 #include <engine/format/AudioSink.h>
+#include <engine/format/Decoded.h>
 #include <memory>
 #include <string>
 
@@ -41,7 +42,11 @@ const char *foreignKind(const std::string &path);
  * Null on failure with [error] set - and the error says the format it decided
  * on, because "not a RIFF/WAVE file" is an unhelpful thing to be told about
  * an mp3 that turned out to be truncated.
+ *
+ * [maxSeconds] is how much of a long file to take - kMaxDecodeSeconds for a
+ * pad sample, kMaxSliceSeconds for the one file a whole machine slices.
  */
-std::unique_ptr<SampleData> decodeAudio(const std::string &path, int32_t targetRate, std::string &error);
+std::unique_ptr<SampleData> decodeAudio(const std::string &path, int32_t targetRate, std::string &error,
+                                        int32_t maxSeconds = kMaxDecodeSeconds);
 
 } // namespace acidulous

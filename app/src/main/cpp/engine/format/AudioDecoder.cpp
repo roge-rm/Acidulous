@@ -8,12 +8,25 @@
 
 namespace acidulous {
 
+namespace {
+/**
+ * As much of the front of a file as recognising it can possibly need.
+ *
+ * It used to read the whole thing, on the grounds that the reader was about
+ * to anyway. That stopped being cheap when a slice source could be a ten
+ * minute track: sniff, foreignKind and the reader each slurped it, so a
+ * 100 MB file was read three times to decode it once.
+ */
+constexpr size_t kHeadBytes = 64 * 1024;
+bool head(const std::string &path, std::vector<unsigned char> &bytes) {
+    std::string ignored;
+    return slurpHead(path, bytes, kHeadBytes, ignored);
+}
+} // namespace
+
 AudioFormat sniff(const std::string &path) {
     std::vector<unsigned char> bytes;
-    std::string ignored;
-    // The first bytes are all this needs, but the readers want the whole file
-    // anyway and these are small compared with the audio behind them.
-    if (!slurp(path, bytes, ignored)) return AudioFormat::Unknown;
+    if (!head(path, bytes)) return AudioFormat::Unknown;
     const size_t n = bytes.size();
     const unsigned char *b = bytes.data();
     if (n >= 12 && std::memcmp(b, "RIFF", 4) == 0 && std::memcmp(b + 8, "WAVE", 4) == 0) return AudioFormat::Wav;
@@ -30,14 +43,13 @@ AudioFormat sniff(const std::string &path) {
     // often enough, and failing that a frame sync - eleven bits set, which
     // also has to be followed by a version and a layer that are not the
     // reserved values, or half the binary files in the world are mp3s.
-    size_t at = 0;
-    if (n >= 10 && std::memcmp(b, "ID3", 3) == 0) {
-        // A syncsafe length: four bytes of seven bits each.
-        const size_t tag = (static_cast<size_t>(b[6] & 0x7F) << 21) | (static_cast<size_t>(b[7] & 0x7F) << 14) |
-                           (static_cast<size_t>(b[8] & 0x7F) << 7) | static_cast<size_t>(b[9] & 0x7F);
-        at = 10 + tag;
-        if (at >= n) return AudioFormat::Mp3; // a tag and nothing else; let the decoder say so
+    // The same skip the decoder makes, from the same function: a tag full of
+    // album art is full of things that look like frame syncs, and agreeing
+    // with the reader about where the audio begins is the point.
+    if (n >= 10 && std::memcmp(b, "ID3", 3) == 0 && Mp3Reader::audioStart(b, n) == 0) {
+        return AudioFormat::Mp3; // the tag runs past what we read; let the decoder say so
     }
+    const size_t at = Mp3Reader::audioStart(b, n);
     for (size_t i = at; i + 1 < n && i < at + 8192; ++i) {
         if (b[i] != 0xFF || (b[i + 1] & 0xE0) != 0xE0) continue;
         if ((b[i + 1] & 0x18) == 0x08) continue; // reserved MPEG version
@@ -49,8 +61,7 @@ AudioFormat sniff(const std::string &path) {
 
 const char *foreignKind(const std::string &path) {
     std::vector<unsigned char> bytes;
-    std::string ignored;
-    if (!slurp(path, bytes, ignored)) return nullptr;
+    if (!head(path, bytes)) return nullptr;
     const size_t n = bytes.size();
     const unsigned char *b = bytes.data();
     // MP4 and its children, which is most of what a phone produces: the size
@@ -82,14 +93,15 @@ const char *formatName(AudioFormat f) {
     }
 }
 
-std::unique_ptr<SampleData> decodeAudio(const std::string &path, int32_t targetRate, std::string &error) {
+std::unique_ptr<SampleData> decodeAudio(const std::string &path, int32_t targetRate, std::string &error,
+                                        int32_t maxSeconds) {
     const AudioFormat format = sniff(path);
     std::unique_ptr<SampleData> out;
     switch (format) {
-    case AudioFormat::Wav: out = WavReader::read(path, targetRate, error); break;
-    case AudioFormat::Aiff: out = AiffReader::read(path, targetRate, error); break;
-    case AudioFormat::Flac: out = FlacReader::read(path, targetRate, error); break;
-    case AudioFormat::Mp3: out = Mp3Reader::read(path, targetRate, error); break;
+    case AudioFormat::Wav: out = WavReader::read(path, targetRate, error, maxSeconds); break;
+    case AudioFormat::Aiff: out = AiffReader::read(path, targetRate, error, maxSeconds); break;
+    case AudioFormat::Flac: out = FlacReader::read(path, targetRate, error, maxSeconds); break;
+    case AudioFormat::Mp3: out = Mp3Reader::read(path, targetRate, error, maxSeconds); break;
     default: {
         // Say what it is, where we can tell. "Not an audio file this can
         // read" about an m4a is true and useless.

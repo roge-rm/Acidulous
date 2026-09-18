@@ -44,9 +44,10 @@ double extended(const unsigned char *p) {
 }
 } // namespace
 
-std::unique_ptr<SampleData> AiffReader::read(const std::string &path, int32_t targetRate, std::string &error) {
+std::unique_ptr<SampleData> AiffReader::read(const std::string &path, int32_t targetRate, std::string &error,
+                                            int32_t maxSeconds) {
     std::vector<unsigned char> bytes;
-    if (!slurp(path, bytes, error)) return nullptr;
+    if (!slurp(path, bytes, error, slurpCeilingFor(maxSeconds))) return nullptr;
     if (bytes.size() < 12 || std::memcmp(bytes.data(), "FORM", 4) != 0) {
         error = "not an AIFF file";
         return nullptr;
@@ -110,8 +111,9 @@ std::unique_ptr<SampleData> AiffReader::read(const std::string &path, int32_t ta
     DecodedAudio got;
     got.rate = static_cast<int32_t>(rate + 0.5);
     got.stereo = channels == 2;
-    got.frames = static_cast<int32_t>(
-        std::min<uint32_t>(frames, static_cast<uint32_t>(kMaxDecodeSeconds) * static_cast<uint32_t>(got.rate)));
+    const auto cap = static_cast<uint32_t>(maxSeconds) * static_cast<uint32_t>(got.rate);
+    got.truncated = frames > cap;
+    got.frames = static_cast<int32_t>(std::min<uint32_t>(frames, cap));
     for (uint16_t c = 0; c < channels; ++c) got.ch[c].resize(static_cast<size_t>(got.frames));
 
     for (int32_t i = 0; i < got.frames; ++i) {
@@ -142,7 +144,7 @@ std::unique_ptr<SampleData> AiffReader::read(const std::string &path, int32_t ta
             got.ch[c][static_cast<size_t>(i)] = v;
         }
     }
-    auto out = assemble(got, path, targetRate);
+    auto out = assemble(got, path, targetRate, maxSeconds);
     if (!out) error = "empty";
     return out;
 }

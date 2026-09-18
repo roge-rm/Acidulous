@@ -15,6 +15,7 @@
 #include <engine/format/AiffWriter.h>
 #include <engine/format/AudioDecoder.h>
 #include <engine/format/FlacWriter.h>
+#include <engine/format/Mp3Reader.h>
 #include <engine/format/Mp3Writer.h>
 #include <engine/format/WavWriter.h>
 
@@ -163,7 +164,17 @@ int main(int argc, char **argv) {
         // An ID3v2 header: "ID3", version, flags, then a syncsafe length -
         // four bytes of seven bits each. The body here is binary, standing in
         // for the album art that is usually what makes these large.
-        std::vector<unsigned char> art(6000, 0xFF); // 0xFF: false frame syncs, deliberately
+        //
+        // The body is what a real tag carries: a picture. It is seeded with
+        // the exact four bytes that broke this - `FF FE 42 00`, twenty-one
+        // bytes into a Backstreet Boys mp3, which is a legal MPEG-1 **Layer
+        // I** frame header. A decoder fed the file from byte nought locks
+        // onto that and decodes the cover art as layer 1 audio: four hundred
+        // kilobytes of bursts of noise, and the song never reached at all.
+        // Large, too, because the fault needs the art to outlast a resync.
+        std::vector<unsigned char> art(60000, 0xFF); // 0xFF: false frame syncs, deliberately
+        const unsigned char falseSync[4] = {0xFF, 0xFE, 0x42, 0x00};
+        std::memcpy(art.data() + 11, falseSync, 4); // where the real file had it
         std::vector<unsigned char> tagged = {'I', 'D', '3', 4, 0, 0};
         const size_t size = art.size();
         tagged.push_back(static_cast<unsigned char>((size >> 21) & 0x7F));
@@ -182,15 +193,33 @@ int main(int argc, char **argv) {
         std::fclose(out);
 
         check(sniff(path) == AudioFormat::Mp3, "an mp3 behind an ID3 tag is still an mp3");
+        check(Mp3Reader::audioStart(tagged.data(), tagged.size()) == 10 + art.size(),
+              "and the audio is found past the tag, not inside it");
         std::string error;
         auto got = decodeAudio(path, kRate, error);
-        if (!got) {
+        std::string plainError;
+        auto plain = decodeAudio(dir + "/rt.mp3", kRate, plainError); // the same audio, untagged
+        if (!got || !plain) {
             check(false, "a tagged mp3 with junk on the end decodes (" + error + ")");
         } else {
-            char msg[160];
-            std::snprintf(msg, sizeof(msg), "a tagged mp3 with junk on the end decodes (%d frames)",
-                          got->frames);
-            check(got->frames > kFrames / 2, msg);
+            char msg[200];
+            // **Against the untagged decode of the same audio, not against a
+            // length.** The old assertion here was `frames > kFrames / 2`,
+            // which a garbage decode passes easily: layer 1 nonsense from the
+            // art, a resync, and then the real audio, adds up to plenty of
+            // frames. It has to be the same music, so it is asked to be the
+            // same length and the same loudness as the file without the tag.
+            std::snprintf(msg, sizeof(msg), "a tagged mp3 decodes to the same length as the untagged one "
+                                            "(%d vs %d frames)", got->frames, plain->frames);
+            check(std::abs(got->frames - plain->frames) < 2304, msg);
+            const auto rms = [](const SampleData &s) {
+                double sum = 0.0;
+                for (int32_t i = 0; i < s.frames; ++i) sum += static_cast<double>(s.left[i]) * s.left[i];
+                return s.frames > 0 ? std::sqrt(sum / s.frames) : 0.0;
+            };
+            const double a = rms(*got), b = rms(*plain);
+            std::snprintf(msg, sizeof(msg), "and at the same level (rms %.4f vs %.4f)", a, b);
+            check(b > 1e-4 && std::fabs(a - b) < b * 0.05, msg);
         }
     }
 
@@ -233,6 +262,54 @@ int main(int argc, char **argv) {
         std::string error;
         check(decodeAudio(named, kRate, error) != nullptr, "and decodes anyway");
         check(sniff(dir + "/nothing-here") == AudioFormat::Unknown, "a missing file is nothing");
+    }
+
+    // --- the ceiling, and saying when it was hit ---------------------------
+    //
+    // A long file is cut to the cap, which is fine, and until now was cut in
+    // silence, which was not: `truncated` lived on the shared tail and every
+    // reader trimmed the planes before the tail ever saw them, so the flag
+    // could never be true and the message behind it was unreachable. Asked of
+    // all four, because that is four places the trimming happens.
+    {
+        // Three seconds of signal, asked for two: short enough to write four
+        // times in a test and long enough that a cap of two cuts it.
+        constexpr int32_t kLongFrames = kRate * 3;
+        constexpr int32_t kCap = 2;
+        std::vector<float> longer(static_cast<size_t>(kLongFrames) * 2);
+        for (int32_t i = 0; i < kLongFrames; ++i) {
+            const float v = 0.5f * std::sin(2.0f * 3.14159265f * 220.0f * static_cast<float>(i) / kRate);
+            longer[static_cast<size_t>(i) * 2] = v;
+            longer[static_cast<size_t>(i) * 2 + 1] = v;
+        }
+        struct Long { const char *name; AudioSink *sink; int bits; };
+        WavWriter w; AiffWriter a; FlacWriter f; Mp3Writer m;
+        const std::vector<Long> all = {{"long.wav", &w, 24}, {"long.aiff", &a, 24},
+                                       {"long.flac", &f, 16}, {"long.mp3", &m, 16}};
+        for (const Long &l : all) {
+            const std::string path = dir + "/" + l.name;
+            std::string error;
+            if (!l.sink->open(path, kRate, l.bits, error)) { check(false, std::string(l.name) + " opens"); continue; }
+            l.sink->write(longer.data(), kLongFrames);
+            l.sink->close();
+
+            auto cut = decodeAudio(path, kRate, error, kCap);
+            if (!cut) { check(false, std::string(l.name) + " decodes (" + error + ")"); continue; }
+            check(cut->truncated, std::string(l.name) + " says it was cut at " + std::to_string(kCap) + "s");
+            // Within a frame either way: mp3 pads the front and the back, so
+            // an exact count is the one thing not to ask of it.
+            check(std::abs(cut->frames - kCap * kRate) < 2304,
+                  std::string(l.name) + " kept " + std::to_string(cut->frames) + " frames, wanted " +
+                      std::to_string(kCap * kRate));
+
+            // And the whole thing under a ceiling that clears it, which is
+            // what the slice source gets: nothing lost and nothing claimed.
+            auto whole = decodeAudio(path, kRate, error, kMaxSliceSeconds);
+            if (!whole) { check(false, std::string(l.name) + " decodes whole (" + error + ")"); continue; }
+            check(!whole->truncated && std::abs(whole->frames - kLongFrames) < 2304,
+                  std::string(l.name) + " comes back whole under the long ceiling (" +
+                      std::to_string(whole->frames) + " frames)");
+        }
     }
 
     std::printf("\n%d checks, %d failures\n", gChecks, gFails);
