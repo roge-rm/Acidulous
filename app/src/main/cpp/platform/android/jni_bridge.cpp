@@ -166,11 +166,11 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSampleInfo(JNIEnv *env, jobject,
 
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSampleShape(JNIEnv *env, jobject, jint rack, jint pad,
-                                                           jfloatArray out) {
+                                                           jfloatArray out, jint fromFrame, jint toFrame) {
     const jsize max = env->GetArrayLength(out);
     if (max < 2) return 0;
     jfloat *data = env->GetFloatArrayElements(out, nullptr);
-    const int32_t n = host().sampleShape(rack, pad, data, static_cast<int32_t>(max / 2));
+    const int32_t n = host().sampleShape(rack, pad, data, static_cast<int32_t>(max / 2), fromFrame, toFrame);
     env->ReleaseFloatArrayElements(out, data, 0);
     return n;
 }

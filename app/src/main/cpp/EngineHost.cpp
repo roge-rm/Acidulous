@@ -213,16 +213,27 @@ bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::st
     return true;
 }
 
-int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns) const {
+int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns, int32_t fromFrame,
+                               int32_t toFrame) const {
     if (rack < 0 || rack >= kRackCount || dest == nullptr || columns <= 0) return 0;
     auto *forage = dynamic_cast<machine::Forage *>(sEngine.racks[rack].currentMachine());
     if (forage == nullptr) return 0;
     const SampleData *s = forage->sampleAt(pad);
     if (s == nullptr || s->frames <= 0) return 0;
 
+    // An empty or nonsensical range is the whole sample, so every caller that
+    // does not care about a window says nothing and gets what it always got.
+    int64_t first = std::clamp<int64_t>(fromFrame, 0, s->frames - 1);
+    int64_t last = toFrame > fromFrame ? std::clamp<int64_t>(toFrame, 1, s->frames) : s->frames;
+    if (last <= first) {
+        first = 0;
+        last = s->frames;
+    }
+    const int64_t span = last - first;
+
     for (int32_t c = 0; c < columns; ++c) {
-        const int64_t from = static_cast<int64_t>(s->frames) * c / columns;
-        int64_t to = static_cast<int64_t>(s->frames) * (c + 1) / columns;
+        const int64_t from = first + span * c / columns;
+        int64_t to = first + span * (c + 1) / columns;
         if (to <= from) to = from + 1;
         if (to > s->frames) to = s->frames;
         float lo = 0.0f, hi = 0.0f;

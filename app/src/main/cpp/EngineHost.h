@@ -94,8 +94,17 @@ class EngineHost {
      * what makes a drawn waveform look like the sound rather than like an
      * aliased sine. [dest] wants 2 * [columns] floats; returns how many it
      * filled, which is nought when the pad holds nothing.
+     *
+     * [fromFrame] and [toFrame] are the window to shape, in frames, which is
+     * what makes zooming worth doing: a display that only ever shaped the
+     * whole sample could be magnified but never resolved, and ten minutes
+     * across nine hundred columns is thirty thousand frames a column. An
+     * empty range means the whole of it. Frames and not fractions because a
+     * float fraction of twenty-eight million frames resolves to about two of
+     * them, which is the wrong end of the zoom to go blunt at.
      */
-    int32_t sampleShape(int rack, int pad, float *dest, int32_t columns) const;
+    int32_t sampleShape(int rack, int pad, float *dest, int32_t columns, int32_t fromFrame = 0,
+                        int32_t toFrame = 0) const;
     int32_t nexusActivity(int rack, float *dest, int32_t max) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
     std::string sampleInfo(int rack, int slot) const;

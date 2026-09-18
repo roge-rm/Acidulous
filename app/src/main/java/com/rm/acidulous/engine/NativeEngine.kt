@@ -76,7 +76,16 @@ object NativeEngine {
      * Cheap enough to call on a resize and far too expensive to call per
      * frame: it walks the whole sample.
      */
-    fun sampleShape(rack: Int, pad: Int, out: FloatArray): Int = nativeSampleShape(rack, pad, out)
+    /**
+     * [fromFrame] until [toFrame], or the whole sample when they are equal.
+     *
+     * A window rather than always the whole thing, because that is what makes
+     * zooming mean anything: ten minutes across nine hundred columns is thirty
+     * thousand frames a column, and magnifying that only makes the same
+     * blur bigger.
+     */
+    fun sampleShape(rack: Int, pad: Int, out: FloatArray, fromFrame: Int = 0, toFrame: Int = 0): Int =
+        nativeSampleShape(rack, pad, out, fromFrame, toFrame)
 
     /** What an import produced: where it went, and whether all of it got there. */
     data class Imported(val path: String, val truncated: Boolean)
@@ -518,7 +527,7 @@ object NativeEngine {
     private external fun nativeSampleInfo(rackId: Int, slot: Int): String
     private external fun nativeSlicePoints(path: String, mode: Int, count: Int): String
     private external fun nativeImportAudio(path: String, maxSeconds: Int): String
-    private external fun nativeSampleShape(rack: Int, pad: Int, out: FloatArray): Int
+    private external fun nativeSampleShape(rack: Int, pad: Int, out: FloatArray, fromFrame: Int, toFrame: Int): Int
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
     private external fun nativeNoteOff(rackId: Int, note: Int)
