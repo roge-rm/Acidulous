@@ -121,6 +121,7 @@ class SceneScheduler {
     // whichever scene we are on from its top.
     /** 0xFB: pick up where the playhead is, without restarting anything. */
     void resume() {
+        beginning();
         if (snap == nullptr || snap->scenes.empty()) {
             return;
         }
@@ -144,6 +145,7 @@ class SceneScheduler {
     }
 
     void start(int32_t requestedScene) {
+        beginning();
         if (transport != nullptr && transport->launcherMode()) {
             // Nothing plays until a clip is tapped, so the clock simply runs
             // from zero and the grid stays silent - which is what a launcher
@@ -251,13 +253,10 @@ class SceneScheduler {
         launcher.clearAll();
         launcher.takeChanged();
         launcherNow = 0;
-        // The handover is between two *running* modes, so a stop ends any of
-        // it that was in flight and re-latches the flag. Without this the
-        // latch is whatever it was when the transport last ran, so toggling
-        // the mode while stopped and then pressing play looks to `process`
-        // like a switch mid-song: it would adopt the current scene and start
-        // the whole of it, when starting a launcher should start silence.
-        if (transport != nullptr) launcherWas = transport->launcherMode();
+        // A stop ends any handover that was in flight. The flag itself is
+        // latched where a playing begins - see `beginning()` - because that
+        // is the moment that can tell "the mode changed while running" from
+        // "we are starting in this mode".
         returnPending = false;
         launcherTempo = 0.0f; // nothing was adopted, so nothing is held
         if (transport != nullptr) {
@@ -274,6 +273,26 @@ class SceneScheduler {
                 rack.clipPlayer.allNotesOff([&rack](uint8_t c, uint8_t a, uint8_t b) { rack.handleMidi(c, a, b); });
             }
         }
+    }
+
+    /**
+     * A playing is beginning, so no mode change is in flight.
+     *
+     * `process` treats the launcher flag differing from what it was as
+     * "somebody just pressed clip", and answers it by handing the launcher
+     * the scene that was playing. That is right in the middle of a song and
+     * wrong at the start of one: with the latch left over from whenever the
+     * transport last ran, pressing clip while stopped and then pressing play
+     * looked exactly like a switch mid-song, and the whole first scene
+     * started - which `start()` had just finished saying it would not do.
+     *
+     * So the latch is taken here, where a playing begins, and nowhere else.
+     */
+    void beginning() {
+        if (transport != nullptr) {
+            launcherWas = transport->launcherMode();
+        }
+        returnPending = false;
     }
 
     /**

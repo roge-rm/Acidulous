@@ -11,6 +11,16 @@ namespace acidulous::seq {
 
 class Transport {
   public:
+    Transport() {
+        // See kLaunchIdle: zero is a rack playing the first scene, not a rack
+        // playing nothing, and nothing publishes here until the launcher has
+        // run at least once.
+        for (auto &v : launchForUi) {
+            v.store(kLaunchIdle, std::memory_order_relaxed);
+        }
+    }
+
+  public:
     enum class Request : uint8_t { None, Play, Stop, Continue };
     static constexpr int32_t kCurrentScene = -1;
 
@@ -138,18 +148,34 @@ class Transport {
     // sees a torn pair.
     static constexpr int32_t kNoScene = 0xff;   // nothing there
     static constexpr int32_t kStopQueued = 0xfe; // queued to stop
-    static int64_t packLaunch(int32_t scene, int32_t pending, int64_t tickInCycle) {
+    static constexpr int64_t packLaunch(int32_t scene, int32_t pending, int64_t tickInCycle) {
         return (static_cast<int64_t>(scene & 0xff) << 56) |
                (static_cast<int64_t>(pending & 0xff) << 48) |
                (tickInCycle & 0xffffffffffffLL);
     }
+    /**
+     * What a rack that has never launched anything reads as.
+     *
+     * This has to be a *named* value and it has to be what the array starts
+     * at, because a zeroed slot is not "nothing is playing" - it unpacks to
+     * scene nought, queued scene nought, which is "playing the first scene
+     * and queued to play it again". Nothing publishes until the launcher has
+     * run, so before then every rack claimed to be playing scene one: open
+     * the app, press clip, and the whole first scene lit up and pulsed
+     * without a note being sounded. Song mode never noticed because nothing
+     * reads these until clip mode does.
+     */
+    // Written out rather than through packLaunch, which is a member of a
+    // class that is not complete yet and so cannot be called in a constant.
+    static constexpr int64_t kLaunchIdle =
+        (static_cast<int64_t>(kNoScene) << 56) | (static_cast<int64_t>(kNoScene) << 48);
     void publishLaunch(int32_t rack, int64_t packed) {
         if (rack >= 0 && rack < kRackCount) {
             launchForUi[rack].store(packed, std::memory_order_relaxed);
         }
     }
     int64_t launchState(int32_t rack) const {
-        return (rack >= 0 && rack < kRackCount) ? launchForUi[rack].load(std::memory_order_relaxed) : 0;
+        return (rack >= 0 && rack < kRackCount) ? launchForUi[rack].load(std::memory_order_relaxed) : kLaunchIdle;
     }
     void clearLaunchRequests() {
         for (auto &q : queuedClip) {
