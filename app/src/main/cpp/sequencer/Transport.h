@@ -101,6 +101,17 @@ class Transport {
     void setLauncher(bool on) { launcherFlag.store(on, std::memory_order_relaxed); }
     bool launcherMode() const { return launcherFlag.load(std::memory_order_relaxed); }
 
+    /**
+     * Whether a Fill trig may sound - a finger on a button, nothing more.
+     *
+     * It lives here rather than on the clip because it is the one condition
+     * that is not a property of the music: it is a property of what somebody
+     * is doing right now. Nobody holds a button during an offline render, so
+     * a render sees it down, which is what keeps exports repeatable.
+     */
+    void setFill(bool on) { fillFlag.store(on, std::memory_order_relaxed); }
+    bool fill() const { return fillFlag.load(std::memory_order_relaxed); }
+
     /** 0 swaps at the end of the playing clip's cycle; otherwise a tick grid. */
     void setLaunchQuantise(int32_t ticks) { launchQ.store(ticks < 0 ? 0 : ticks, std::memory_order_relaxed); }
     int32_t launchQuantise() const { return launchQ.load(std::memory_order_relaxed); }
@@ -231,6 +242,7 @@ class Transport {
     std::atomic<int32_t> queuedScene{-1};
     std::atomic<bool> recordArmed{false};
     std::atomic<bool> launcherFlag{false};
+    std::atomic<bool> fillFlag{false};
     std::atomic<bool> clockOutFlag{false};
     std::atomic<int32_t> syncFlag{SyncOff};
     std::atomic<bool> continued{false};

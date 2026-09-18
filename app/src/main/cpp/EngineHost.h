@@ -171,6 +171,8 @@ class EngineHost {
 
     // Clip mode: the grid as a launcher rather than an arranger.
     void setLauncher(bool on);
+    /** Whether Fill trigs may sound. A finger on a button, nothing more. */
+    void setFill(bool on);
     void setLaunchQuantise(int32_t ticks);
     void launchClip(int32_t rack, int64_t sceneId);
     void stopAllClips();
@@ -210,8 +212,11 @@ class EngineHost {
     bool snapshotAddScene(int64_t handle, int64_t sceneId, int ticksPerBar, int repeat, float bpmOverride,
                           bool smooth, bool fadeIn, bool fadeOut);
     bool snapshotSetClipCached(int64_t handle, int rack, int scene, int64_t rev);
+    // notes: flat [tick, length, pitch, velocity, curvePointCount, trig] x count,
+    // where `trig` is seq::packTrig's word. `seed` is the clip's own dice; a
+    // `playMode` with bit 1 set means the dice roll free rather than seeded.
     bool snapshotSetClip(int64_t handle, int rack, int scene, int64_t rev, int bars, int playMode, bool mute,
-                         const int32_t *notes, int noteCount, const float *expr, int exprCount);
+                         int seed, const int32_t *notes, int noteCount, const float *expr, int exprCount);
     // points: flat [tick, value] × count, any order. unit/name resolve against
     // `machineType`'s table (for "machine") or the channel table.
     bool snapshotSetLane(int64_t handle, int rack, int scene, const std::string &machineType,

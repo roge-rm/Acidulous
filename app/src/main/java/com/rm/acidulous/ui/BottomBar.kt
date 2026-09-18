@@ -1,6 +1,11 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -116,6 +121,47 @@ fun BottomBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             content = content,
+        )
+    }
+}
+
+/**
+ * A pill that is *held* rather than pressed.
+ *
+ * The only one in the app, and it exists because fill is the only control
+ * whose whole meaning is "while my finger is down". A BarButton fires on
+ * release, which for this would mean the fill landed after the bar it was
+ * meant for. Built on the same OutlinedButton so it is its neighbours' shape
+ * by construction rather than by arithmetic, with the click disabled and the
+ * gesture taken directly.
+ */
+@Composable
+fun BarHoldButton(
+    label: String,
+    modifier: Modifier = Modifier,
+    held: Boolean = false,
+    onHold: (Boolean) -> Unit,
+) {
+    val hold by rememberUpdatedState(onHold)
+    OutlinedButton(
+        modifier = modifier.pointerInput(Unit) {
+            awaitEachGesture {
+                awaitFirstDown(requireUnconsumed = false)
+                hold(true)
+                // Cancelled counts as released: a finger that slides off the
+                // pill has stopped asking for a fill, and a fill left on
+                // because of one is a bar nobody can explain.
+                waitForUpOrCancellation()
+                hold(false)
+            }
+        },
+        onClick = {},
+        contentPadding = PaddingValues(horizontal = 4.dp),
+        border = BorderStroke(1.dp, if (held) Acid.colors.accent else Acid.colors.line),
+    ) {
+        Text(
+            label, maxLines = 1, softWrap = false, fontSize = 13.sp,
+            color = if (held) Acid.colors.accent else Color.Unspecified,
         )
     }
 }

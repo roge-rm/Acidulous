@@ -51,8 +51,37 @@ data class Note(
     @EncodeDefault(EncodeDefault.Mode.NEVER) val bend: Lane? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER) val pressure: Lane? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER) val timbre: Lane? = null,
+    /**
+     * What this trig is allowed to decide, and where it sits.
+     *
+     * [chance] is a percentage; [trig] a condition; [ratchet] how many times
+     * the note is struck inside its own length. The defaults are an ordinary
+     * note - certain, unconditional, struck once - and the same
+     * `@EncodeDefault(NEVER)` rule applies for the same reason: a song of
+     * plain notes must not grow four lines a note saying nothing.
+     *
+     * [nudge] is the odd one out. It never reaches the engine as a property at
+     * all: the marshalling adds it to [tick], because "when does this note
+     * play" is a field the engine already has. Signed ticks, half a sixteenth
+     * either way being the useful range. It is *not* [rawTick], which records
+     * where a finger landed before quantising - a nudge is a deliberate
+     * placement and survives a later quantise.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val chance: Int = 100,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val trig: Trig = Trig.Always,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val ratchet: Int = 1,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val nudge: Int = 0,
 ) {
     val hasExpression: Boolean get() = bend != null || pressure != null || timbre != null
+
+    /** Anything here that is not the plain default, so a mark can be drawn. */
+    val hasTrig: Boolean get() = chance < 100 || trig != Trig.Always || ratchet > 1 || nudge != 0
+
+    /** The engine's packed word: chance | cond << 7 | (ratchet - 1) << 13. */
+    val trigWord: Int
+        get() = chance.coerceIn(0, 100) or
+            ((Trig.codeOf(trig) and 0x3f) shl 7) or
+            ((ratchet.coerceIn(1, 8) - 1) shl 13)
 
     /** The three in the order the engine indexes them; see `Expr` in Expression.h. */
     val curves: List<Lane?> get() = listOf(bend, pressure, timbre)
@@ -142,6 +171,21 @@ data class Clip(
     /** Quantise and display grid, in ticks. Default is a sixteenth. */
     val grid: Int = PPQN / 4,
     val notes: List<Note> = emptyList(),
+    /**
+     * The clip's own dice.
+     *
+     * [seed] makes a probability repeatable: the same clip with the same seed
+     * plays the same bar every time, which is what lets an export repeat and a
+     * take be recorded. Changing it asks for a different variation. It is a
+     * document value and deliberately not [rev], which is fresh on every edit
+     * - a pattern built on that would reroll itself under your hand.
+     *
+     * [freeRoll] sets them loose: a new roll every pass, alive on stage. A
+     * render still repeats, because a render panics first and the player
+     * rewinds its dice there.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val seed: Int = 0,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val freeRoll: Boolean = false,
     /** Parameter movement, keyed by [laneKey]. */
     val automation: Map<String, Lane> = emptyMap(),
     /** Set while this clip plays as audio rather than as notes. */

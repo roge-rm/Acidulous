@@ -1,5 +1,6 @@
 #pragma once
 #include "Clip.h"
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <limits>
@@ -28,7 +29,36 @@ class ClipPlayer {
         clip_ = newClip;
         for (float &v : lastLane) v = -1.0f;
         lastOrigin = -1;
+        // A different clip is a different pattern. `pointLaunched` calls this
+        // on every launch, so a clip you fire starts its conditions from that
+        // bar rather than inheriting the phase of whatever was there.
+        passIndex_ = 0;
+        lastBase_ = kNoBase;
     }
+
+    /**
+     * Back to the beginning, for a render.
+     *
+     * The three things below are the only state the player carries that a
+     * performance can move, and nothing rewound them until there was
+     * something to rewind: `allNotesOff` clears the pending table and that was
+     * all there was. This is the lesson `Arp::reset()` wrote down - an arp
+     * carried its RNG from one playing to the next and made an offline render
+     * of the same song come out differently. A reset means from the beginning.
+     *
+     * Deliberately *not* part of `allNotesOff`, which runs on every ordinary
+     * stop: re-seeding there would make a free-rolling clip repeat, which is
+     * the one thing free is for.
+     */
+    void reset() {
+        freeSeed_ = kFreeSeed;
+        lastFreePass_ = kNoBase;
+        passIndex_ = 0;
+        lastBase_ = kNoBase;
+    }
+
+    /** Whether Fill trigs may sound. The transport owns it; the gate reads it. */
+    void setFill(bool on) { fill_ = on; }
     const Clip *clip() const { return clip_; }
 
     // Fire everything due in absolute tick range [start, end). `origin` is the
@@ -62,18 +92,74 @@ class ClipPlayer {
                 break;
             }
             const int64_t base = origin + k * len;
+            // Which pass of this clip this is.
+            //
+            // Counted rather than derived. `base / len` looks free and is
+            // wrong twice: a three-bar clip in a four-bar scene returns the
+            // same index for two consecutive passes, because the scene's
+            // iteration length is not a multiple of the clip's; and a OneShot
+            // never leaves k = 0, so its index steps by the scene's length
+            // instead of its own. Counting distinct origins gets both right -
+            // a pass split over two blocks counts once, a block covering
+            // three counts three - at the price of one field, which the reset
+            // above pays for anyway.
+            if (base != lastBase_) {
+                if (lastBase_ != kNoBase) ++passIndex_;
+                lastBase_ = base;
+            }
+            const int64_t pass = passIndex_;
+            // Free mode re-draws the seed word once per pass. Not per note and
+            // not per block: within a pass the roll has to stay a pure
+            // function of who and when, or a ratchet whose sub-hits land in
+            // the next block, and a Prev chain cut by a block boundary, would
+            // both get a different answer the second time they asked.
+            if (clip_->freeRoll && pass != lastFreePass_) {
+                lastFreePass_ = pass;
+                freeSeed_ = freeSeed_ * 1664525u + 1013904223u;
+            }
+
+            bool prevPlayed = false; // the chain starts again every pass
             for (const ClipNote &note : clip_->notes) {
                 const int64_t t = base + note.tick;
                 if (t >= end) {
-                    break; // notes are sorted
+                    break; // notes are sorted, and no sub-hit precedes its note
                 }
-                if (t < start) {
+                const int32_t rat = note.ratchet();
+                // A note this block will not fire still had a verdict, and the
+                // note after it may be asking what that verdict was - so the
+                // gate runs above the skip, not below it. Only clips that
+                // actually contain a Prev pay for the replay.
+                if (!clip_->hasPrevCond && rat <= 1 && t < start) {
                     continue;
                 }
-                releaseIfSounding(note.pitch, sink);
-                sink(0x90, note.pitch, note.velocity);
-                onCount.fetch_add(1, std::memory_order_relaxed);
-                schedule(note, t, t + (note.length > 0 ? note.length : 1), sink);
+                const bool play = gate(note, pass, prevPlayed);
+                if (note.conditional()) {
+                    prevPlayed = play;
+                }
+                if (!play || (rat <= 1 && t < start)) {
+                    continue;
+                }
+                // A ratchet subdivides a note; it does not spill into the next
+                // bar. Without the clamp, a note near the end of the clip asks
+                // for sub-hits in a pass the loop above will never walk again,
+                // and they vanish silently.
+                const int32_t full = note.length > 0 ? note.length : 1;
+                const int32_t span = std::min<int32_t>(full, static_cast<int32_t>(len) - note.tick);
+                const int32_t step = rat > 1 ? std::max(1, span / rat) : span;
+                for (int32_t j = 0; j < rat; ++j) {
+                    const int64_t h = t + static_cast<int64_t>(j) * step;
+                    if (h >= end) break;
+                    if (h < start) continue; // an earlier block fired it
+                    const int64_t off = rat > 1
+                                            ? std::max<int64_t>(h + 1, std::min<int64_t>(h + step, t + span))
+                                            : t + span;
+                    releaseIfSounding(note.pitch, sink);
+                    sink(0x90, note.pitch, note.velocity);
+                    onCount.fetch_add(1, std::memory_order_relaxed);
+                    // `t`, not `h`: a curve belongs to the note, so it runs
+                    // across the whole ratchet instead of restarting on each.
+                    schedule(note, t, off, sink);
+                }
             }
         }
     }
@@ -226,10 +312,53 @@ class ClipPlayer {
         }
     }
 
+    /**
+     * The roll: a pure function of the dice, the pass and which note this is.
+     *
+     * Identity is (tick, pitch) rather than the note's index in the list,
+     * because inserting a note at the top of a clip must not reroll every
+     * note after it. The mixing is Dice's, which is the house's answer to
+     * "random, but the same twice".
+     */
+    uint32_t roll(const ClipNote &note, int64_t pass) const {
+        uint32_t h = clip_->freeRoll ? freeSeed_ : static_cast<uint32_t>(clip_->seed);
+        h = h * 2654435761u + static_cast<uint32_t>(pass) * 40503u + 1u;
+        h += static_cast<uint32_t>(note.tick) * 2246822519u + note.pitch * 668265263u;
+        h ^= h >> 13;
+        h *= 0x5bd1e995u;
+        h ^= h >> 15;
+        return h;
+    }
+
+    /** Does this trig play? Condition first, then the dice. */
+    bool gate(const ClipNote &note, int64_t pass, bool prevPlayed) const {
+        const int32_t c = note.condition();
+        if (c == static_cast<int32_t>(TrigCond::Prev) && !prevPlayed) return false;
+        if (c == static_cast<int32_t>(TrigCond::NotPrev) && prevPlayed) return false;
+        if (c == static_cast<int32_t>(TrigCond::Fill) && !fill_) return false;
+        if (c == static_cast<int32_t>(TrigCond::NotFill) && fill_) return false;
+        if (c >= static_cast<int32_t>(TrigCond::NthBase)) {
+            int32_t n = 0, m = 2;
+            nthOf(c, n, m);
+            if (pass % m != n - 1) return false; // pass is >= 0 by construction
+        }
+        const int32_t chance = note.chance();
+        if (chance >= 100) return true;
+        if (chance <= 0) return false;
+        return static_cast<int32_t>(roll(note, pass) % 100u) < chance;
+    }
+
     static constexpr size_t kMaxLanes = 32;
+    static constexpr int64_t kNoBase = std::numeric_limits<int64_t>::min();
+    static constexpr uint32_t kFreeSeed = 0x9E3779B9u; // as Arp's, and for the same reason
     const Clip *clip_ = nullptr;
     float lastLane[kMaxLanes]{};
     int64_t lastOrigin = -1;
+    int64_t passIndex_ = 0;
+    int64_t lastBase_ = kNoBase;
+    int64_t lastFreePass_ = kNoBase;
+    uint32_t freeSeed_ = kFreeSeed;
+    bool fill_ = false;
     PendingOff pending[kMaxPending];
     std::atomic<uint32_t> onCount{0};
     std::atomic<uint32_t> offCount{0};

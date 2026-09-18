@@ -862,6 +862,7 @@ float EngineHost::tempo() const { return sEngine.clock.bpm(); }
 int64_t EngineHost::positionPacked() const { return sEngine.transport.position(); }
 
 void EngineHost::setLauncher(bool on) { sEngine.transport.setLauncher(on); }
+void EngineHost::setFill(bool on) { sEngine.transport.setFill(on); }
 void EngineHost::setLaunchQuantise(int32_t ticks) { sEngine.transport.setLaunchQuantise(ticks); }
 void EngineHost::launchClip(int32_t rack, int64_t sceneId) { sEngine.transport.launchClip(rack, sceneId); }
 void EngineHost::stopAllClips() { sEngine.transport.requestStopAll(); }
@@ -1002,7 +1003,7 @@ bool EngineHost::snapshotSetClipCached(int64_t handle, int rack, int scene, int6
 }
 
 bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t rev, int bars, int playMode, bool mute,
-                                 const int32_t *notes, int noteCount, const float *expr, int exprCount) {
+                                 int seed, const int32_t *notes, int noteCount, const float *expr, int exprCount) {
     using namespace seq;
     auto *snap = fromHandle(handle);
     if (snap == nullptr || scene < 0 || scene >= static_cast<int>(snap->scenes.size())) return false;
@@ -1010,7 +1011,11 @@ bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t re
     clip->rev = rev;
     clip->bars = std::clamp(bars, 1, 16);
     clip->ticksPerBar = snap->scenes[scene].ticksPerBar;
-    clip->playMode = playMode == 1 ? PlayMode::OneShot : PlayMode::Loop;
+    // Bit 0 is the play mode; bit 1 is whether the dice roll free. They share
+    // a word because the alternative was a tenth argument for one bool.
+    clip->playMode = (playMode & 1) == 1 ? PlayMode::OneShot : PlayMode::Loop;
+    clip->freeRoll = (playMode & 2) != 0;
+    clip->seed = seed;
     clip->mute = mute;
     clip->notes.reserve(static_cast<size_t>(std::max(0, noteCount)));
     clip->expr.reserve(static_cast<size_t>(std::max(0, exprCount)));
@@ -1020,12 +1025,19 @@ bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t re
     // array is never reordered - only pointed into.
     int taken = 0;
     for (int n = 0; n < noteCount; ++n) {
-        const int32_t *rec = notes + n * 5;
+        const int32_t *rec = notes + n * 6;
         ClipNote note;
         note.tick = std::max<int32_t>(0, rec[0]);
         note.length = std::max<int32_t>(1, rec[1]);
         note.pitch = static_cast<uint8_t>(std::clamp<int32_t>(rec[2], 0, 127));
         note.velocity = static_cast<uint8_t>(std::clamp<int32_t>(rec[3], 1, 127));
+        note.trig = static_cast<uint16_t>(static_cast<uint32_t>(rec[5]) & 0xFFFFu);
+        // Asked once, here, so the player does not have to compute a verdict
+        // for notes it is about to skip on every clip in the song.
+        if (note.condition() == static_cast<int32_t>(TrigCond::Prev) ||
+            note.condition() == static_cast<int32_t>(TrigCond::NotPrev)) {
+            clip->hasPrevCond = true;
+        }
         const int want = std::clamp<int32_t>(rec[4], 0, exprCount - taken);
         note.exprFirst = static_cast<int32_t>(clip->expr.size());
         note.exprCount = want;
@@ -1320,11 +1332,22 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     sEngine.renderBlock(nullptr, scratch);
 
     // A clean start: nothing ringing from whatever was played before.
+    //
+    // This resets by hand rather than through the panic flag, so everything a
+    // panic would have rewound has to be named here - and two things were
+    // missing. The clip player carries a pass count and, in a free-rolling
+    // clip, the dice; and the eventors carry a step, which is exactly the
+    // fault Engine::renderBlock records for song renders. Without them a
+    // freeze captures whatever the track happened to be part way through.
     Rack &r = sEngine.racks[rack];
     r.allNotesOff();
+    r.clipPlayer.reset();
     if (r.currentMachine() != nullptr) r.currentMachine()->reset();
     for (int32_t sl = 0; sl < kEffectSlots; ++sl) {
         if (r.currentEffect(sl) != nullptr) r.currentEffect(sl)->reset();
+    }
+    for (int32_t sl = 0; sl < kEventorSlots; ++sl) {
+        if (r.currentEventor(sl) != nullptr) r.currentEventor(sl)->reset();
     }
 
     std::vector<float> left(static_cast<size_t>(clipFrames + tailFrames), 0.0f);

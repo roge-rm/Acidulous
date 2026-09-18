@@ -39,6 +39,11 @@ void Engine::renderBlock(const float *in, float *out) {
         playing = false;
         startPending = false;
         scheduler.allNotesOff();
+        // And the clip players' own beginning: a pass count and, in a
+        // free-rolling clip, the dice. Same reason the eventors are reset
+        // below - a render panics first, so this is where "from the
+        // beginning" has to mean it.
+        scheduler.resetClipPlayers();
         for (auto &n : mpeChannelNote) n = -1;
         for (int32_t r = 0; r < kRackCount; ++r) {
             racks[r].allNotesOff();

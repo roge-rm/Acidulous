@@ -393,17 +393,25 @@ object EngineSync {
                     return@forEachIndexedInner
                 }
                 marshalled++
-                val flat = IntArray(clip.notes.size * 5)
+                val flat = IntArray(clip.notes.size * 6)
                 // The curves of every note end to end, each note saying how
                 // many of them are its own. One array rather than a call per
                 // curve: a clip of expressive chords would otherwise be
                 // hundreds of JNI crossings where it is now one.
                 val expr = ArrayList<Float>()
                 clip.notes.forEachIndexed { i, n ->
-                    flat[i * 5] = n.tick
-                    flat[i * 5 + 1] = n.length
-                    flat[i * 5 + 2] = n.pitch
-                    flat[i * 5 + 3] = n.velocity
+                    // The nudge is applied here and nowhere else. "When does
+                    // this note play" is a field the engine already has, so
+                    // micro-timing costs it no property, no wire slot and no
+                    // gate; the host re-sorts by tick afterwards, which is
+                    // what keeps the sorted-notes contract true. A note nudged
+                    // off the front of the clip lands on the downbeat rather
+                    // than wrapping, which the host's own clamp decides.
+                    flat[i * 6] = n.tick + n.nudge
+                    flat[i * 6 + 1] = n.length
+                    flat[i * 6 + 2] = n.pitch
+                    flat[i * 6 + 3] = n.velocity
+                    flat[i * 6 + 5] = n.trigWord
                     var count = 0
                     if (n.hasExpression) {
                         n.curves.forEachIndexed { kind, curve ->
@@ -413,12 +421,16 @@ object EngineSync {
                             }
                         }
                     }
-                    flat[i * 5 + 4] = count
+                    flat[i * 6 + 4] = count
                 }
                 NativeEngine.snapshotSetClip(
                     handle, rack, sceneIdx, clip.rev, clip.bars,
-                    playMode = if (clip.playMode == PlayMode.OneShot) 1 else 0,
+                    // Bit 0 is the play mode, bit 1 is whether the dice roll
+                    // free: one word rather than a tenth argument for one bool.
+                    playMode = (if (clip.playMode == PlayMode.OneShot) 1 else 0) or
+                        (if (clip.freeRoll) 2 else 0),
                     mute = clip.mute,
+                    seed = clip.seed,
                     notes = flat,
                     expr = if (expr.isEmpty()) EMPTY_FLOATS else expr.toFloatArray(),
                 )

@@ -36,6 +36,25 @@ object UiPrefs {
 
     // --- Editing ---------------------------------------------------------
     var automationFolded by mutableStateOf(false)
+    /**
+     * The note lane starts folded, unlike the automation strip.
+     *
+     * Most clips never carry a chance or a condition, and the roll should not
+     * pay a row for a lane nobody has asked for yet. Like the automation
+     * fold, it says how somebody works rather than anything about the song,
+     * so it follows them between tracks and across launches.
+     */
+    var noteLaneFolded by mutableStateOf(true)
+
+    /**
+     * Whether a finger is on fill right now.
+     *
+     * Not persisted - it is a gesture, not a setting - but it lives here
+     * because two places press it: the pill in the editor's footer and a pad
+     * on a controller through `Action.Fill`. One piece of state means the
+     * pill lights up when the controller is the one holding it.
+     */
+    var fillHeld by mutableStateOf(false)
         private set
 
     /**
@@ -162,6 +181,7 @@ object UiPrefs {
         val p = context.getSharedPreferences("ui", Context.MODE_PRIVATE)
         store = p
         automationFolded = p.getBoolean(KEY_AUTO_FOLDED, false)
+        noteLaneFolded = p.getBoolean(KEY_NOTE_FOLDED, true)
         padsFullStrength = p.getBoolean(KEY_PADS_FULL, false)
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
@@ -238,6 +258,17 @@ object UiPrefs {
     fun foldAutomation(folded: Boolean) {
         automationFolded = folded
         store?.edit()?.putBoolean(KEY_AUTO_FOLDED, folded)?.apply()
+    }
+
+    fun holdFill(on: Boolean) {
+        if (fillHeld == on) return
+        fillHeld = on
+        NativeEngine.setFill(on)
+    }
+
+    fun foldNoteLane(folded: Boolean) {
+        noteLaneFolded = folded
+        store?.edit()?.putBoolean(KEY_NOTE_FOLDED, folded)?.apply()
     }
 
     // Not setClipMode: the property's own generated setter already owns
@@ -411,6 +442,7 @@ object UiPrefs {
     }
 
     private const val KEY_AUTO_FOLDED = "automation_folded"
+    private const val KEY_NOTE_FOLDED = "note_lane_folded"
     private const val KEY_PADS_FULL = "pads_full_strength"
     private const val KEY_CLIP_MODE = "clip_mode"
     private const val KEY_LAUNCH_Q = "launch_quantise"

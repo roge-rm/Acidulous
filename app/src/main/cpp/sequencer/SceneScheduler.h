@@ -276,6 +276,20 @@ class SceneScheduler {
         }
     }
 
+    /**
+     * Every clip player back to its beginning: the dice, the pass count.
+     *
+     * Deliberately not part of `allNotesOff`, which runs on every ordinary
+     * stop. A free-rolling clip that re-seeded whenever the transport stopped
+     * would play the same variation every time somebody pressed play, which is
+     * the one thing free is for. This is the panic path only.
+     */
+    void resetClipPlayers() {
+        for (int32_t r = 0; r < rackCount; ++r) {
+            racks[r].clipPlayer.reset();
+        }
+    }
+
     // While stopped the song tempo from the UI applies directly.
     void applyIdleTempo() {
         if (transport != nullptr && transport->externalSync()) {
@@ -292,6 +306,13 @@ class SceneScheduler {
     bool process(int64_t blockStart, int64_t blockEnd) {
         if (snap == nullptr || snap->scenes.empty()) {
             return true;
+        }
+        // One read of the button a block, handed to every player, so a fill
+        // means the same thing on every track within a block rather than
+        // whatever each of them happened to see.
+        const bool filling = transport != nullptr && transport->fill();
+        for (int32_t r = 0; r < rackCount; ++r) {
+            racks[r].clipPlayer.setFill(filling);
         }
         // Entering clip mode while the song is running: hand the launcher the
         // scene every rack is already playing, in phase, so nothing stops.

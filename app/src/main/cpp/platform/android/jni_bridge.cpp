@@ -556,6 +556,11 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSetLauncher(JNIEnv *, jobject, j
 }
 
 JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetFill(JNIEnv *, jobject, jboolean on) {
+    host().setFill(on == JNI_TRUE);
+}
+
+JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSetLaunchQuantise(JNIEnv *, jobject, jint ticks) {
     host().setLaunchQuantise(ticks);
 }
@@ -732,12 +737,13 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetClipCached(JNIEnv *, 
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetClip(JNIEnv *env, jobject, jlong handle, jint rack,
                                                                 jint scene, jlong rev, jint bars, jint playMode,
-                                                                jboolean mute, jintArray notes, jfloatArray expr) {
+                                                                jboolean mute, jint seed, jintArray notes,
+                                                                jfloatArray expr) {
     const jsize len = notes != nullptr ? env->GetArrayLength(notes) : 0;
-    const int noteCount = static_cast<int>(len / 5);
+    const int noteCount = static_cast<int>(len / 6);
     if (noteCount <= 0) {
-        return host().snapshotSetClip(handle, rack, scene, rev, bars, playMode, mute == JNI_TRUE, nullptr, 0, nullptr,
-                                      0)
+        return host().snapshotSetClip(handle, rack, scene, rev, bars, playMode, mute == JNI_TRUE, seed, nullptr, 0,
+                                      nullptr, 0)
                    ? JNI_TRUE
                    : JNI_FALSE;
     }
@@ -748,7 +754,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetClip(JNIEnv *env, job
     const jsize elen = expr != nullptr ? env->GetArrayLength(expr) : 0;
     const int exprCount = static_cast<int>(elen / 3);
     jfloat *edata = exprCount > 0 ? env->GetFloatArrayElements(expr, nullptr) : nullptr;
-    const bool ok = host().snapshotSetClip(handle, rack, scene, rev, bars, playMode, mute == JNI_TRUE,
+    const bool ok = host().snapshotSetClip(handle, rack, scene, rev, bars, playMode, mute == JNI_TRUE, seed,
                                            reinterpret_cast<const int32_t *>(data), noteCount,
                                            reinterpret_cast<const float *>(edata), edata != nullptr ? exprCount : 0);
     if (edata != nullptr) {

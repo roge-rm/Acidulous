@@ -828,7 +828,11 @@ private fun App(modifier: Modifier = Modifier) {
         ) ?: return@onMappable false
         val pressed = note != null || value >= com.rm.acidulous.model.Mappings.PRESS
         if (m.isAction) {
-            if (pressed) {
+            // Fill is the only action that is *held* rather than triggered, so
+            // it is the only one that wants the release as well as the press.
+            if (m.action == com.rm.acidulous.model.Action.Fill.name) {
+                com.rm.acidulous.ui.UiPrefs.holdFill(pressed)
+            } else if (pressed) {
                 when (m.action) {
                     com.rm.acidulous.model.Action.Play.name -> NativeEngine.transportPlay()
                     com.rm.acidulous.model.Action.Stop.name -> NativeEngine.transportStop()

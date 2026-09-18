@@ -12,7 +12,7 @@ trap 'rm -rf "$DIR"' EXIT
 fail=0
 
 # The sequencer is header-only, so these need no other translation unit.
-for t in clockin clockout launcher songpos expr; do
+for t in clockin clockout launcher songpos expr trig; do
     echo "--- $t"
     if ! g++ -O2 -std=c++17 -I "$CPP" "$ROOT/tools/${t}_test.cpp" -o "$DIR/$t" 2>&1; then
         echo "  FAIL did not build"; fail=1; continue

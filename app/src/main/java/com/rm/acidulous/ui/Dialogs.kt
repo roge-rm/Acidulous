@@ -144,13 +144,20 @@ fun ClipSettingsDialog(
     var mode by remember { mutableStateOf(clip.playMode) }
     var mute by remember { mutableStateOf(clip.mute) }
     var grid by remember { mutableStateOf(clip.grid) }
+    var seed by remember { mutableStateOf(clip.seed) }
+    var free by remember { mutableStateOf(clip.freeRoll) }
     var confirmClear by remember { mutableStateOf(false) }
+    // Only where the clip actually gambles. A control for a feature this clip
+    // is not using is clutter, and most clips never will be.
+    val rolls = clip.notes.any { it.chance < 100 }
 
     PlainDialog(
         title = "Clip",
         onDismiss = onDismiss,
         confirmLabel = "OK",
-        onConfirm = { onConfirm(clip.copy(bars = bars, playMode = mode, mute = mute, grid = grid)) },
+        onConfirm = {
+            onConfirm(clip.copy(bars = bars, playMode = mode, mute = mute, grid = grid, seed = seed, freeRoll = free))
+        },
     ) {
         SliderSection("bars", "$bars", "", bars.toFloat(), 1f..16f, 14) { bars = it.toInt().coerceIn(1, 16) }
 
@@ -163,6 +170,21 @@ fun ClipSettingsDialog(
         Section("grid") {
             for ((label, ticks) in GRIDS) {
                 Choice(label, grid == ticks) { grid = ticks }
+            }
+        }
+
+        if (rolls) {
+            ListSection(
+                "the dice",
+                "Seeded, this clip plays the same bar every time round, so a take can be recorded and an " +
+                    "export repeats. Free, it rolls again on every pass - and still renders the same twice, " +
+                    "because a render starts from the beginning.",
+            ) {
+                Choice("seeded", !free) { free = false }
+                Choice("free", free) { free = true }
+            }
+            if (!free) {
+                SliderSection("seed", "$seed", "", seed.toFloat(), 0f..63f, 64) { seed = it.toInt().coerceIn(0, 63) }
             }
         }
 

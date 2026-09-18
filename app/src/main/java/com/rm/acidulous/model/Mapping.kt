@@ -56,7 +56,7 @@ data class Mapping(
  * Stored by name, not ordinal, because this list will grow and a song is not
  * going to be re-saved to keep up with it.
  */
-enum class Action { PlayStop, Play, Stop, RecordArm, LoopScene, ClipMode, Panic }
+enum class Action { PlayStop, Play, Stop, RecordArm, LoopScene, ClipMode, Panic, Fill }
 
 object Mappings {
 

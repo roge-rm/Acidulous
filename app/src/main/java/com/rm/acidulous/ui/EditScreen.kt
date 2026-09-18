@@ -57,6 +57,7 @@ import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.emptyClipFor
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.rm.acidulous.ui.theme.Acid
@@ -142,6 +143,10 @@ fun EditScreen(
     // Folding the strip is a preference, not a property of this clip, so it
     // is held for the whole app and across launches - see UiPrefs.
     val autoFolded = UiPrefs.automationFolded
+    val noteFolded = UiPrefs.noteLaneFolded
+    // Which of a note's properties the lane is showing. Per track, like the
+    // roll's zoom: it is how you are working, not a property of the music.
+    var noteProp by remember(trackIndex) { mutableStateOf(NoteProp.Velocity) }
     var scaleView by rememberSaveable { mutableStateOf(ScaleView.Dim) }
     // Long clips are paged two bars at a time, as the drum grid is paged one.
     // More than two bars across a phone leaves notes too narrow to grab.
@@ -431,6 +436,54 @@ fun EditScreen(
             modifier = Modifier.fillMaxWidth().weight(1f),
         )
         }
+        val noteLaneSlot: @Composable () -> Unit = {
+        NoteLane(
+            clip = clip,
+            ticksPerBar = ticksPerBar,
+            playheadTick = playhead,
+            firstTick = firstTick,
+            visibleTicks = pageTicks.toInt(),
+            prop = noteProp,
+            onProp = { noteProp = it },
+            onGestureBegin = { editor.beginGesture(trackIndex) },
+            // Absolute, not relative: the gesture is applied to the base the
+            // editor captured, so a sweep that passes back over a note settles
+            // on the last value rather than accumulating.
+            onSet = { values ->
+                editor.updateGestureClip(sceneId) { base ->
+                    val notes = base.notes.toMutableList()
+                    for ((i, v) in values) {
+                        val n = notes.getOrNull(i) ?: continue
+                        notes[i] = when (noteProp) {
+                            NoteProp.Velocity -> n.copy(velocity = (v * 127f).roundToInt().coerceIn(1, 127))
+                            NoteProp.Chance -> n.copy(chance = (v * 100f).roundToInt().coerceIn(0, 100))
+                            NoteProp.Ratchet -> n.copy(ratchet = (v * 8f).roundToInt().coerceIn(1, 8))
+                            NoteProp.Nudge ->
+                                n.copy(nudge = ((v - 0.5f) * 2f * NUDGE_RANGE).roundToInt()
+                                    .coerceIn(-NUDGE_RANGE, NUDGE_RANGE))
+                            NoteProp.Cond -> n
+                        }
+                    }
+                    base.copy(notes = notes)
+                }
+            },
+            onGestureEnd = { editor.endGesture() },
+            onCycle = { index, by ->
+                editor.editClip(trackIndex, sceneId) { c ->
+                    val notes = c.notes.toMutableList()
+                    val n = notes.getOrNull(index) ?: return@editClip c
+                    val all = com.rm.acidulous.model.Trig.inOrder
+                    val at = (all.indexOf(n.trig) + by).mod(all.size)
+                    notes[index] = n.copy(trig = all[at])
+                    c.copy(notes = notes)
+                }
+            },
+            collapsed = noteFolded,
+            onToggleCollapse = { UiPrefs.foldNoteLane(!noteFolded) },
+            modifier = Modifier.fillMaxWidth().height(if (noteFolded) 24.dp else 72.dp).padding(top = 4.dp),
+        )
+        }
+
         val automationSlot: @Composable () -> Unit = {
         // Automation: the parameter strip under the notes.
         AutomationStrip(
@@ -631,7 +684,17 @@ fun EditScreen(
         // The pad strength toggle counts as one of them: a drum machine has
         // only fx on the left otherwise, and this sits in the gap beside it.
         val padToggle = kind == MachineKind.Drums
-        val views = 1 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0) + (if (padToggle) 1 else 0)
+        // Fill earns its place only where there is a fill trig to hear. A
+        // performance control that is always on this row would cost the seven
+        // beside it the width - eight pills and their gaps is already 380 dp
+        // of a phone's 377 - and a clip with no fill in it has nothing to say
+        // about one. Reaching it while performing is what `Action.Fill` and a
+        // pad on a controller are for.
+        val hasFill = clip.notes.any {
+            it.trig == com.rm.acidulous.model.Trig.Fill || it.trig == com.rm.acidulous.model.Trig.NotFill
+        }
+        val views = 1 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0) + (if (padToggle) 1 else 0) +
+            (if (hasFill) 1 else 0)
         val view = if (views >= 3 || landscape) Modifier.weight(1f) else Modifier.width(BarAnchor)
         BottomBar {
             // fx first, at the head of the row. It is the pair to mix at the
@@ -649,6 +712,13 @@ fun EditScreen(
                     if (UiPrefs.padsFullStrength) "\u25A0" else "\u25E2", view,
                     colour = if (UiPrefs.padsFullStrength) Acid.colors.accent else Color.Unspecified,
                 ) { UiPrefs.choosePadsFullStrength(!UiPrefs.padsFullStrength) }
+            }
+            if (hasFill) {
+                BarHoldButton(
+                    "fill",
+                    view.mappable(MapTargets.action(com.rm.acidulous.model.Action.Fill.name)),
+                    held = UiPrefs.fillHeld,
+                ) { UiPrefs.holdFill(it) }
             }
             if (hasSteps) {
                 BarButton(if (steps) "\u25A6" else "\u25A4", view) { steps = !steps }
@@ -710,6 +780,7 @@ fun EditScreen(
             Row(Modifier.fillMaxWidth().weight(1f).then(pad), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(Modifier.weight(1f).fillMaxHeight()) {
                     gridSlot()
+                    noteLaneSlot()
                     automationSlot()
                     keysSlot(if (kind == MachineKind.Drums) PADS_H_LAND else KEYS_H_LAND)
                 }
@@ -727,6 +798,7 @@ fun EditScreen(
             // its margins.
             Column(Modifier.fillMaxWidth().weight(1f).then(pad)) {
                 gridSlot()
+                noteLaneSlot()
                 automationSlot()
                 panelSlot()
                 keysSlot(if (kind == MachineKind.Drums) PADS_H else KEYS_H)

@@ -123,20 +123,41 @@ object MidiFile {
                     else (sceneTicks + clipTicks - 1) / clipTicks
                     for (pass in 0 until passes) {
                         val origin = at + pass * clipTicks
+                        // The same decisions the engine makes, so the file is
+                        // the performance rather than an idea of it. Fill is
+                        // false here for the reason it is false in a render:
+                        // nobody is holding a button while a file is written.
+                        var prevPlayed = false
                         for (note in clip.notes) {
-                            val start = origin + note.tick
+                            val plays = trigPlays(note, pass, clip.seed, prevPlayed)
+                            if (note.conditional()) prevPlayed = plays
+                            if (!plays) continue
+                            val start = origin + note.tick + note.nudge
                             if (start >= at + sceneTicks) continue // past the scene's end
+                            if (start < at) continue // nudged off the front of the scene
                             // A note is not allowed to ring past its scene:
                             // the next scene's notes start there, and a
                             // hanging note is the classic export bug.
-                            val end = (start + note.length).coerceAtMost(at + sceneTicks)
+                            // A ratchet is the note struck several times
+                            // inside its own length, clamped to its own pass
+                            // exactly as the player clamps it.
+                            val span = minOf(note.length, clipTicks - note.tick).coerceAtLeast(1)
+                            val rat = note.ratchet.coerceIn(1, 8)
+                            val step = if (rat > 1) (span / rat).coerceAtLeast(1) else span
                             val velocity = note.velocity.coerceIn(1, 127)
-                            events += Event(start, 1, byteArrayOf(
-                                (0x90 or channel).toByte(), note.pitch.coerceIn(0, 127).toByte(), velocity.toByte(),
-                            ))
-                            events += Event(end, 0, byteArrayOf(
-                                (0x80 or channel).toByte(), note.pitch.coerceIn(0, 127).toByte(), 64,
-                            ))
+                            for (j in 0 until rat) {
+                                val on = start + j * step
+                                if (on >= at + sceneTicks) break
+                                val end = (on + step).coerceAtMost(
+                                    minOf(start + span, at + sceneTicks),
+                                ).coerceAtLeast(on + 1)
+                                events += Event(on, 1, byteArrayOf(
+                                    (0x90 or channel).toByte(), note.pitch.coerceIn(0, 127).toByte(), velocity.toByte(),
+                                ))
+                                events += Event(end, 0, byteArrayOf(
+                                    (0x80 or channel).toByte(), note.pitch.coerceIn(0, 127).toByte(), 64,
+                                ))
+                            }
                             any = true
                         }
                     }

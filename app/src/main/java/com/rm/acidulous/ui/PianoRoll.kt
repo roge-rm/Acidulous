@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -350,6 +351,21 @@ fun PianoRoll(
                 Size(max(0f, rect.width - 4f), velH),
             )
             drawBend(note, rect, c)
+            // The same wedge the drum grid draws, for the same reason and with
+            // the same restraint: a mark saying "this note decides something",
+            // not a readout of what. The lane below is the readout.
+            if (note.hasTrig) {
+                val w = minOf(rect.width, rect.height) * 0.4f
+                drawPath(
+                    Path().apply {
+                        moveTo(rect.right, rect.top)
+                        lineTo(rect.right - w, rect.top)
+                        lineTo(rect.right, rect.top + w)
+                        close()
+                    },
+                    c.teal,
+                )
+            }
             drawRect(c.bg, rect.topLeft, rect.size, style = Stroke(1.5f))
         }
 

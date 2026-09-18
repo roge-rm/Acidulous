@@ -240,6 +240,15 @@ object NativeEngine {
     /** The grid becomes a launcher: every rack plays whichever clip it was given. */
     fun setLauncher(on: Boolean) = nativeSetLauncher(on)
 
+    /**
+     * Whether Fill trigs may sound.
+     *
+     * Held rather than latched, so it is a plain flag with no state machine
+     * behind it. Nobody holds a button during an offline render, which is what
+     * keeps a song with fill trigs in it exporting the same way twice.
+     */
+    fun setFill(on: Boolean) = nativeSetFill(on)
+
     /** 0 swaps at the end of the playing clip's cycle; otherwise a tick grid. */
     fun setLaunchQuantise(ticks: Int) = nativeSetLaunchQuantise(ticks)
 
@@ -302,14 +311,18 @@ object NativeEngine {
     fun snapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean =
         nativeSnapshotSetClipCached(handle, rack, scene, rev)
     /**
-     * @param notes flat [tick, length, pitch, velocity, curvePointCount] x count
+     * @param notes flat [tick, length, pitch, velocity, curvePointCount, trig] x count,
+     * where `trig` is `Note.trigWord` - chance, condition and ratchet in one
+     * int - and `tick` already has the note's nudge folded into it
+     * @param playMode bit 0 one-shot, bit 1 the dice roll free
+     * @param seed the clip's own dice, so a probability repeats
      * @param expr flat [kind, tick, value] x point, in note order; each note
      * takes the number of points it declared
      */
     fun snapshotSetClip(
-        handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, notes: IntArray,
-        expr: FloatArray,
-    ): Boolean = nativeSnapshotSetClip(handle, rack, scene, rev, bars, playMode, mute, notes, expr)
+        handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int,
+        notes: IntArray, expr: FloatArray,
+    ): Boolean = nativeSnapshotSetClip(handle, rack, scene, rev, bars, playMode, mute, seed, notes, expr)
     fun snapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean =
         nativeSnapshotSetLane(handle, rack, scene, machineType, unit, name, linear, points)
     fun snapshotCommit(handle: Long): Boolean = nativeSnapshotCommit(handle)
@@ -537,6 +550,7 @@ object NativeEngine {
     private external fun nativeQueueScene(idx: Int)
     private external fun nativeQueuedScene(): Int
     private external fun nativeSetLauncher(on: Boolean)
+    private external fun nativeSetFill(on: Boolean)
     private external fun nativeSetLaunchQuantise(ticks: Int)
     private external fun nativeLaunchClip(rack: Int, sceneId: Long)
     private external fun nativeStopAllClips()
@@ -572,8 +586,8 @@ object NativeEngine {
     ): Boolean
     private external fun nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean
     private external fun nativeSnapshotSetClip(
-        handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, notes: IntArray,
-        expr: FloatArray,
+        handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int,
+        notes: IntArray, expr: FloatArray,
     ): Boolean
     private external fun nativeSnapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean
     private external fun nativeSnapshotCommit(handle: Long): Boolean

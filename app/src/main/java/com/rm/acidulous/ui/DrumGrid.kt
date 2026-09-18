@@ -24,6 +24,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
@@ -156,6 +158,9 @@ fun DrumGrid(
                         maxLines = 1, softWrap = false,
                         modifier = Modifier.width(GutterWidth),
                     )
+                    // Read out here: a draw lambda is not a composable and
+                    // cannot reach the theme from inside itself.
+                    val mark = Acid.colors.teal
                     for (s in 0 until steps) {
                         val tick = firstTick + s * grid
                         val hit = clip.notes.firstOrNull { it.tick == tick && it.pitch == voice.note }
@@ -176,6 +181,27 @@ fun DrumGrid(
                                 .combinedClickable(
                                     onClick = { onSetHit(tick, voice.note, if (hit == null) Note(tick, 30, voice.note, 90) else null) },
                                     onLongClick = { hit?.let { onSetHit(tick, voice.note, it.copy(velocity = if (accent) 90 else 110)) } },
+                                )
+                                // A trig that decides something says so where
+                                // it lives. A corner wedge and not a readout:
+                                // the lane under the grid is where these are
+                                // set, and this only has to stop a silent kick
+                                // looking like a broken one. The grid takes no
+                                // new gesture for it - long press is already
+                                // spent on accent.
+                                .then(
+                                    if (hit?.hasTrig != true) Modifier else Modifier.drawBehind {
+                                        val w = size.minDimension * 0.34f
+                                        drawPath(
+                                            Path().apply {
+                                                moveTo(size.width, 0f)
+                                                lineTo(size.width - w, 0f)
+                                                lineTo(size.width, w)
+                                                close()
+                                            },
+                                            mark,
+                                        )
+                                    },
                                 ),
                         )
                     }
