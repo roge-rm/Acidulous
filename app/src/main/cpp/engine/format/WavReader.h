@@ -1,5 +1,5 @@
 #pragma once
-#include "Sample.h"
+#include <engine/core/Sample.h>
 #include <memory>
 #include <string>
 

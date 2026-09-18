@@ -11,13 +11,13 @@
 #include <link/LinkTimebase.h>
 #include <engine/core/Constants.h>
 #include <engine/core/Frozen.h>
-#include <engine/core/WavReader.h>
+#include <engine/format/WavReader.h>
 #include <engine/dsp/Wavetable.h>
-#include <engine/core/WavWriter.h>
+#include <engine/format/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/eventor/EventorRegistry.h>
 #include <engine/machine/MachineRegistry.h>
-#include <engine/core/Sf2Reader.h>
+#include <engine/format/Sf2Reader.h>
 #include <engine/machine/forage/Forage.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/formulate/Formulate.h>

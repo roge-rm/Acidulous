@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdio>
-#include <engine/core/AudioSink.h>
+#include <engine/format/AudioSink.h>
 #include <vector>
 
 // Writes stereo FLAC. Ours, from the published spec (RFC 9639); no

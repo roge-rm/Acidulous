@@ -9,9 +9,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -fno-finite-math-only")
 set(CMAKE_CXX_FLAGS_DEBUG "-O1 -g")
 
-# engine/    the audio engine: core, dsp, machines, effects, eventors, racks
+# engine/    the audio engine
+#   core/      realtime plumbing: params, queues, hand-over, timebase
+#   dsp/       the shared building blocks
+#   format/    reading and writing files: wav, aiff, flac, mp3, sf2
+#   machine/   one directory per instrument
+#   effect/    the inserts
+#   eventor/   the note processors
+#   rack/      what holds a machine, its effects and its fader
 # sequencer/ clock, transport, clips, scenes, recording
-# platform/  Android: the Oboe stream
+# platform/  everything that is not portable
+#   android/   the JNI bridge
+#   drivers/   the Oboe stream
+#   link/      the Ableton Link timebase
+#
+# Nothing under engine/ may include anything under platform/.
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp")
 file(GLOB_RECURSE PLATFORM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/platform/*.cpp")
 
@@ -19,7 +31,6 @@ add_library(acidulous SHARED
     ${ENGINE_SOURCES}
     ${PLATFORM_SOURCES}
     EngineHost.cpp
-    jni_bridge.cpp
 )
 
 target_include_directories(acidulous PRIVATE

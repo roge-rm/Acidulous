@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdio>
-#include <engine/core/AudioSink.h>
+#include <engine/format/AudioSink.h>
 
 // Writes stereo AIFF, header patched on close. Ours; no dependency.
 //

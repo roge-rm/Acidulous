@@ -1,6 +1,6 @@
 #include "Capture.h"
 #include "Settings.h"
-#include "WavWriter.h"
+#include <engine/format/WavWriter.h>
 #include <algorithm>
 #include <chrono>
 #include <cmath>

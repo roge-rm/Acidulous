@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <cstdio>
-#include <engine/core/AudioSink.h>
+#include <engine/format/AudioSink.h>
 #include <string>
 
 // Writes stereo WAV, header patched on close. Ours; no dependency.

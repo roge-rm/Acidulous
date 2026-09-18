@@ -5,24 +5,42 @@ to M3 was removed in favour of this. Everything under `cpp/` is ours; the only
 dependency is Oboe.
 
 ```
-core/       WavReader / WavWriter / Sf2Reader (all ours) · SampleMap (zones + crossfades) · Constants · RtQueue (SPSC, wait-free) · Handover (Mount / Retire + the
-            retire worker) · Params (ParamDef tables, 0..1 in, smoothed unit-range
-            out) · Messages (MidiMessage, ParamMessage)
+core/       the realtime plumbing, and nothing that reads a file:
+            Constants · RtQueue (SPSC, wait-free) · Handover (Mount / Retire and the
+            retire worker) · Params (ParamDef tables, 0..1 in, smoothed unit-range out) ·
+            Messages (MidiMessage, ParamMessage) · Timebase · InputBus · Settings ·
+            Frozen · Sample · SampleMap (zones + crossfades) · Take · Expression ·
+            Utterance (Molt's analyser) · Capture
+format/     reading and writing files, all ours except LAME:
+            WavReader · WavWriter · AiffWriter · FlacWriter · Mp3Writer (LAME) ·
+            Sf2Reader · AudioSink (the interface the four writers implement)
 dsp/        Math · Osc (PolyBLEP saw/pulse) · Filter (TPT SVF) · MultiFilter (12 slopes +
-            drive) · Envelope (decay, ASR) · Adsr (DADSR + repeat) · LfoGen · Wavetable ·
-            Biquad · DelayLine · Lfo (note-value phase) · Reverb · Delay · Limiter · Click
-machine/    Machine interface · MachineRegistry · subvert/ · trinity/ (the 3-osc poly) ·
-            ratio/ (6-op FM, morphing algorithms) · mosaic/ (multisample + grains) ·
-            hexbeat/ · forage/
+            drive) · Envelope · Adsr (DADSR + repeat) · LfoGen · Lfo (note-value phase) ·
+            Wavetable · Biquad · DelayLine · Delay · Reverb · Limiter · Click · Fft
+machine/    Machine interface · MachineRegistry, then one directory each:
+            subvert trinity ratio mosaic hexbeat forage genesis resonance cumulus
+            pollen dice formulate manual filament brazen timber cipher molt nexus
 effect/     Effect interface (onBlock for tempo, run() with bypass) · EffectRegistry ·
-            Effects: Delay Reverb Eq Distortion Compressor Filter Bitcrusher Phaser Flanger
-eventor/    Eventor interface + MidiSink · EventorRegistry · Scales.h (33 scales, 25 chords) ·
-            Eventors: Scale Chord Arp
-rack/       Rack (clip player -> eventors -> machine -> effects -> channel strip)
-            MasterBus (sum, peak; sends + limiter in M5) · Engine (the render loop)
-../sequencer/  TickClock · Transport · Clip · ClipPlayer · Song · SceneScheduler · RecordQueue
-../platform/   the Oboe stream
+            Delay Reverb Eq Distortion Compressor Filter Bitcrusher Phaser Flanger
+            Chorus Tremolo Width Shifter Harmonizer
+eventor/    Eventor interface + MidiSink · EventorRegistry · Scales.h (33 scales,
+            25 chords) · Eventors: Scale Chord Arp
+rack/       Rack (clip player -> eventors -> machine -> effects -> channel strip) ·
+            MasterBus (sum, peak, sends, limiter) · Engine (the render loop)
+../sequencer/  TickClock · Transport · Clip · ClipPlayer · Song · SceneScheduler ·
+               Launcher · RecordQueue · ClockFollower · LinkFollower
+../platform/   android/ (the JNI bridge) · drivers/ (the Oboe stream) · link/
+../EngineHost  the only thing the app talks to
 ```
+
+**Which way the arrows point.** `engine/` never includes anything from
+`platform/` - that is what makes a headless host on another operating system a
+matter of writing a new `platform/`, and it is checked by eye rather than by
+the build, so keep it true. `engine/` and `sequencer/` do include each other:
+`rack/Engine` owns the transport and the scheduler, so they are one layer in
+two directories rather than two layers, and nothing has been gained by
+pretending otherwise.
+
 
 ## Rules the audio thread lives by
 

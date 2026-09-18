@@ -33,8 +33,8 @@
 
 #include <engine/core/Constants.h>
 #include <engine/core/InputBus.h>
-#include <engine/core/WavReader.h>
-#include <engine/core/WavWriter.h>
+#include <engine/format/WavReader.h>
+#include <engine/format/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>

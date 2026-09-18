@@ -29,9 +29,9 @@ else
 fi
 
 g++ -O2 -std=c++17 -I "$CPP" -I "$LAME/include" "$ROOT/tools/sink_test.cpp" \
-    "$CPP/engine/core/AudioSink.cpp" "$CPP/engine/core/WavWriter.cpp" \
-    "$CPP/engine/core/AiffWriter.cpp" "$CPP/engine/core/FlacWriter.cpp" \
-    "$CPP/engine/core/Mp3Writer.cpp" "$ARCHIVE" -lm \
+    "$CPP/engine/format/AudioSink.cpp" "$CPP/engine/format/WavWriter.cpp" \
+    "$CPP/engine/format/AiffWriter.cpp" "$CPP/engine/format/FlacWriter.cpp" \
+    "$CPP/engine/format/Mp3Writer.cpp" "$ARCHIVE" -lm \
     -o "$DIR/sink_test" || exit 1
 "$DIR/sink_test" "$DIR"; FAILED=$?
 

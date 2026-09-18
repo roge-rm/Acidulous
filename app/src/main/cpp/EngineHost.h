@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <sequencer/Clip.h>
-#include <engine/core/AudioSink.h>
+#include <engine/format/AudioSink.h>
 #include <string>
 #include <utility>
 #include <vector>

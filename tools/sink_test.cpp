@@ -25,10 +25,10 @@
 #include <cstring>
 #include <string>
 #include <vector>
-#include <engine/core/AiffWriter.h>
-#include <engine/core/AudioSink.h>
-#include <engine/core/FlacWriter.h>
-#include <engine/core/WavWriter.h>
+#include <engine/format/AiffWriter.h>
+#include <engine/format/AudioSink.h>
+#include <engine/format/FlacWriter.h>
+#include <engine/format/WavWriter.h>
 
 using namespace acidulous;
 
