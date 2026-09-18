@@ -141,8 +141,15 @@ fun MachinePanel(
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
-            "Forage" -> ForagePanel(binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
-                                    onImportKit, onImportSlice)
+            "Forage" -> ForagePanel(
+                binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
+                onImportKit, onImportSlice,
+                // How many pads the slice covers, so the pads and the grid can
+                // say which of them are playing a piece of it.
+                onSliceApplied = { count ->
+                    editor.edit(trackIndex) { t -> t.withSetting("slice_count", count.toString()) }
+                },
+            )
             else -> GenericPanel(binding)
         }
     }
@@ -177,6 +184,24 @@ class ParamBinding(
         values.value = values.value + (name to v)
         NativeEngine.setParam(trackIndex, unit, name, v, record = true)
         editor.edit(trackIndex) { t -> apply(t, name, v) }
+    }
+
+    /**
+     * A batch, as one undo step and one autosave.
+     *
+     * Slicing writes twenty-six parameters at once and levelling thirteen;
+     * through `set` that is twenty-six document edits, which is twenty-six
+     * entries in the undo history for one button.
+     */
+    fun setMany(batch: Map<String, Float>) {
+        if (batch.isEmpty()) return
+        values.value = values.value + batch
+        for ((n, v) in batch) NativeEngine.setParam(trackIndex, unit, n, v, record = true)
+        editor.edit(trackIndex) { t ->
+            var next = t
+            for ((n, v) in batch) next = apply(next, n, v)
+            next
+        }
     }
 
     fun applyAll(params: Map<String, Float>) {
@@ -513,7 +538,8 @@ private fun HexbeatPanel(b: ParamBinding) {
 @Composable
 private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit,
                         onClear: (Int) -> Unit, onAssign: (Int, String) -> Unit,
-                        onImportKit: (Int) -> Unit, onImportSlice: () -> Unit) {
+                        onImportKit: (Int) -> Unit, onImportSlice: () -> Unit,
+                        onSliceApplied: (Int) -> Unit) {
     val p = pad.coerceIn(0, 12)
     fun n(name: String) = "p%02d_%s".format(p, name)
     val rel = track.machine.settings[n("sample")]
@@ -549,6 +575,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         val loaded = peaks.filter { it > 1e-5f }.sorted()
         if (loaded.isEmpty()) return
         val median = loaded[loaded.size / 2]
+        val batch = mutableMapOf<String, Float>()
         peaks.forEachIndexed { i, pk ->
             if (pk <= 1e-5f) return@forEachIndexed
             val name = "p%02d_level".format(i)
@@ -556,11 +583,30 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             // is in its own units, and writing the conversion out here would
             // be a second copy of a range that lives in the engine.
             val def = b.info.firstOrNull { it.name == name } ?: return@forEachIndexed
-            b.set(name, def.unmap(median / pk))
+            batch[name] = def.unmap(median / pk)
         }
+        b.setMany(batch)
     }
     val hot = Acid.colors.accent
     var picking by remember { mutableStateOf(false) }
+
+    /**
+     * Put a pad's start and end back where they started.
+     *
+     * Slicing closes the pads it did not use - start and end both at zero -
+     * because a pad with no sample of its own reads the shared file, and
+     * "leave it alone" would mean playing the whole break. That leaves a trap
+     * for the pad's next owner: load a sample into a closed pad and it is
+     * silent for a reason nothing on screen explains. So taking a pad over
+     * resets its trim, which is what anybody would expect of a new sample
+     * anyway - a trim belongs to the sound it was set for.
+     */
+    fun resetTrim(pad: Int) {
+        val batch = mutableMapOf<String, Float>()
+        b.infoOf("p%02d_start".format(pad))?.let { batch[it.name] = it.defaultNormalized }
+        b.infoOf("p%02d_end".format(pad))?.let { batch[it.name] = it.defaultNormalized }
+        b.setMany(batch)
+    }
 
     // Slicing one file across the pads. The file is a setting of its own, not
     // a pad's, because all thirteen read the same copy of it.
@@ -569,9 +615,16 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
     val sliceRel = track.machine.settings["slice_sample"]
     var slicing by remember { mutableStateOf(false) }
     var sliceBusy by remember { mutableStateOf(false) }
+    // Picking the file is a step on the way to slicing, not an end in itself,
+    // so the file coming back opens the dialog rather than dropping the player
+    // back on the panel with nothing to show for it.
+    var awaitingPick by remember { mutableStateOf(false) }
+    LaunchedEffect(sliceRel) {
+        if (awaitingPick && sliceRel != null) { awaitingPick = false; slicing = true }
+    }
     if (slicing) SliceDialog(
         name = sliceRel?.substringAfterLast('/').orEmpty(),
-        onChoose = { slicing = false; onImportSlice() },
+        onChoose = { slicing = false; awaitingPick = true; onImportSlice() },
         onDismiss = { slicing = false },
         onApply = { mode, count ->
             slicing = false
@@ -584,19 +637,29 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                 val points = withContext(Dispatchers.IO) { NativeEngine.slicePoints(abs, mode, count) }
                 sliceBusy = false
                 if (points.size < 2) return@launch
-                for (i in 0 until minOf(count, 13, points.size - 1)) {
+                val n = minOf(count, 13, points.size - 1)
+                val batch = mutableMapOf<String, Float>()
+                for (i in 0 until 13) {
                     // Through the parameter table rather than assuming 0..1,
                     // the same reason `match` does.
-                    val startDef = b.info.firstOrNull { it.name == "p%02d_start".format(i) }
-                    val endDef = b.info.firstOrNull { it.name == "p%02d_end".format(i) }
-                    if (startDef != null) b.set(startDef.name, startDef.unmap(points[i]))
-                    if (endDef != null) b.set(endDef.name, endDef.unmap(points[i + 1]))
+                    val startDef = b.info.firstOrNull { it.name == "p%02d_start".format(i) } ?: continue
+                    val endDef = b.info.firstOrNull { it.name == "p%02d_end".format(i) } ?: continue
+                    // Pads past the last slice are closed rather than left
+                    // alone: a pad with no sample of its own reads the shared
+                    // file, so "leave it" means "play the whole break", which
+                    // is not what slicing into eight can possibly have meant.
+                    val from = if (i < n) points[i] else 0f
+                    val to = if (i < n) points[i + 1] else 0f
+                    batch[startDef.name] = startDef.unmap(from)
+                    batch[endDef.name] = endDef.unmap(to)
                 }
+                b.setMany(batch)
+                onSliceApplied(count)
             }
         },
     )
     if (picking) SampleBrowserDialog(
-        onPick = { rel -> picking = false; onAssign(p, rel) },
+        onPick = { rel -> picking = false; resetTrim(p); onAssign(p, rel) },
         onDismiss = { picking = false },
     )
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -607,14 +670,24 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                 color = Acid.colors.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f), maxLines = 1,
             )
             if (rel != null) Text(peakDb, color = Acid.colors.textDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-            TextButton(onClick = { onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
+            else if (sliceRel != null && p < (track.machine.settings["slice_count"]?.toIntOrNull() ?: 0)) {
+                val from = b.infoOf(n("start"))?.map(b.value(n("start"))) ?: 0f
+                val to = b.infoOf(n("end"))?.map(b.value(n("end"))) ?: 0f
+                Text(
+                    "slice ${p + 1} of ${track.machine.settings["slice_count"]}  %.0f%%-%.0f%%".format(from * 100, to * 100),
+                    color = Acid.colors.textDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                )
+            }
+            TextButton(onClick = { resetTrim(p); onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
             TextButton(onClick = { onImportKit(p) }) { Text("kit…", color = hot, fontSize = 11.sp) }
-            TextButton(onClick = { if (sliceRel == null) onImportSlice() else slicing = true }) {
+            TextButton(onClick = {
+                if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
+            }) {
                 Text(if (sliceBusy) "slicing…" else "slice…", color = hot, fontSize = 11.sp)
             }
             TextButton(onClick = { picking = true }) { Text("recorded…", color = hot, fontSize = 11.sp) }
             TextButton(onClick = { matchLevels() }) { Text("match", color = Acid.colors.textMid, fontSize = 11.sp) }
-            if (rel != null) TextButton(onClick = { onClear(p) }) { Text("clear", color = Acid.colors.textMid, fontSize = 11.sp) }
+            if (rel != null) TextButton(onClick = { resetTrim(p); onClear(p) }) { Text("clear", color = Acid.colors.textMid, fontSize = 11.sp) }
         }
         Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev"), "reverse") }

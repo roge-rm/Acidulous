@@ -137,15 +137,35 @@ object MachineUi {
         // name - so they are numbered here and named on the panel.
         "Resonance" -> (0 until 8).map { DrumVoice(36 + it, "Object ${it + 1}", "${it + 1}") }
         "Dice" -> (0 until 16).map { DrumVoice(36 + it, "Slice ${it + 1}", "${it + 1}") }
-        "Forage" -> (0 until 13).map { pad ->
-            val file = settings["p%02d_sample".format(pad)]
-            val name = file?.substringAfterLast('/')?.substringBeforeLast('.') ?: ""
-            DrumVoice(
-                note = 36 + pad,
-                name = if (name.isEmpty()) "Pad ${pad + 1}" else name,
-                short = if (name.isEmpty()) "+" else name.take(4),
-                loaded = name.isNotEmpty(),
-            )
+        // A Forage pad plays its own sample, or a piece of the file the whole
+        // kit was sliced from, or nothing. All three have to be visible: the
+        // first version of slicing wrote the shared file and the start and end
+        // points and left every pad still drawn as empty, so the one thing the
+        // player had asked for was the one thing nothing on screen said had
+        // happened.
+        "Forage" -> {
+            val sliced = settings["slice_sample"]
+            val sliceName = sliced?.substringAfterLast('/')?.substringBeforeLast('.').orEmpty()
+            val sliceCount = settings["slice_count"]?.toIntOrNull() ?: 0
+            (0 until 13).map { pad ->
+                val file = settings["p%02d_sample".format(pad)]
+                val own = file?.substringAfterLast('/')?.substringBeforeLast('.') ?: ""
+                val isSlice = own.isEmpty() && sliced != null && pad < sliceCount
+                DrumVoice(
+                    note = 36 + pad,
+                    name = when {
+                        own.isNotEmpty() -> own
+                        isSlice -> "$sliceName ${pad + 1}"
+                        else -> "Pad ${pad + 1}"
+                    },
+                    short = when {
+                        own.isNotEmpty() -> own.take(4)
+                        isSlice -> "${pad + 1}"
+                        else -> "+"
+                    },
+                    loaded = own.isNotEmpty() || isSlice,
+                )
+            }
         }
         else -> emptyList()
     }
