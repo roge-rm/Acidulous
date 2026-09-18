@@ -22,10 +22,10 @@ enum class SliceMode : int { Transients = 0, Even = 1 };
  *
  * Transients are found with the same detector Dice and Pollen read. A
  * detector finds what it finds and a player asked for a number of pads, so:
- * more transients than pads keeps the loudest, which on a drum loop is the
- * kick and the snare rather than the ghost notes between them; fewer falls
- * back to an even division, because thirteen pads of which nine are empty is
- * not what anybody meant by "slice this".
+ * enough transients means one pad per stretch of the file, each snapped to
+ * the strongest onset in its own stretch; fewer than pads falls back to an
+ * even division, because thirteen pads of which nine are empty is not what
+ * anybody meant by "slice this".
  */
 inline std::vector<float> slicePoints(const SampleData &s, SliceMode mode, int count, float sampleRate) {
     if (count < 1) count = 1;
@@ -39,27 +39,45 @@ inline std::vector<float> slicePoints(const SampleData &s, SliceMode mode, int c
         take.left = s.left;
         take.right = s.stereo && !s.right.empty() ? s.right : s.left;
         take.detect(sampleRate);
-        cuts = take.onsets;
-        if (static_cast<int>(cuts.size()) > count) {
+        const std::vector<int32_t> &onsets = take.onsets;
+        if (static_cast<int>(onsets.size()) >= count) {
+            // **One cut per stretch of the file, not the loudest [count] in
+            // it.** Taking the loudest overall is right about a drum loop and
+            // wrong about anything longer: a whole song's loudest transients
+            // are wherever the song is loudest, so a four minute track cut
+            // into thirteen put twelve cuts in the first twenty seconds and
+            // left the remaining two hundred as one slice. Measured on a real
+            // one - the cuts came out at 0.0, 9.7, 10.2, 11.3 ... 20.0, 225.9.
+            //
+            // So the file is divided into [count] equal stretches and each
+            // pad takes the strongest onset inside its own. A break loses
+            // nothing by it, because hits that regular fall one to a stretch
+            // anyway; a song gains the whole of itself. A stretch the
+            // detector heard nothing in keeps its plain division, which is
+            // the honest answer for a bar of silence.
             const auto window = static_cast<int32_t>(sampleRate * 0.02f);
-            std::vector<std::pair<float, int32_t>> byLevel;
-            byLevel.reserve(cuts.size());
-            for (int32_t at : cuts) {
-                float peak = 0.0f;
-                const int32_t to = std::min(s.frames, at + window);
-                for (int32_t i = at; i < to; ++i) {
-                    peak = std::max(peak, std::fabs(s.left[static_cast<size_t>(i)]));
+            cuts.assign(static_cast<size_t>(count), 0);
+            size_t at = 0;
+            for (int i = 0; i < count; ++i) {
+                const auto from = static_cast<int32_t>(static_cast<int64_t>(s.frames) * i / count);
+                const auto to = static_cast<int32_t>(static_cast<int64_t>(s.frames) * (i + 1) / count);
+                while (at < onsets.size() && onsets[at] < from) ++at;
+                int32_t best = -1;
+                float bestPeak = -1.0f;
+                for (size_t j = at; j < onsets.size() && onsets[j] < to; ++j) {
+                    float peak = 0.0f;
+                    const int32_t until = std::min(s.frames, onsets[j] + window);
+                    for (int32_t k = onsets[j]; k < until; ++k) {
+                        peak = std::max(peak, std::fabs(s.left[static_cast<size_t>(k)]));
+                    }
+                    if (peak > bestPeak) {
+                        bestPeak = peak;
+                        best = onsets[j];
+                    }
                 }
-                byLevel.emplace_back(peak, at);
+                cuts[static_cast<size_t>(i)] = best >= 0 ? best : from;
             }
-            std::stable_sort(byLevel.begin(), byLevel.end(),
-                             [](const auto &a, const auto &b) { return a.first > b.first; });
-            byLevel.resize(static_cast<size_t>(count));
-            cuts.clear();
-            for (const auto &e : byLevel) cuts.push_back(e.second);
-            std::sort(cuts.begin(), cuts.end());
         }
-        if (static_cast<int>(cuts.size()) < count) cuts.clear();
     }
     if (cuts.empty()) {
         cuts.reserve(static_cast<size_t>(count));
