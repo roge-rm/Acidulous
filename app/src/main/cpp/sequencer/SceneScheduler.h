@@ -534,7 +534,12 @@ class SceneScheduler {
                 continue;
             }
             const int32_t idx = snap->indexOfScene(id);
-            if (idx < 0) {
+            if (idx < 0 || snap->clipFor(r, idx) == nullptr) {
+                // An empty cell is not a launch. The grid only ever queues
+                // cells that hold a clip, so this is unreachable from the UI
+                // - but a rack launched into nothing took a one-tick cycle
+                // and reported itself as playing for ever, which is a lit
+                // cell with no sound in it and nobody to blame.
                 continue;
             }
             launcher.request(r, id, cycleTicks(r, idx), blockStart);
