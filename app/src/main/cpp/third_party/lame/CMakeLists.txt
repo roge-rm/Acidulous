@@ -27,12 +27,23 @@ add_library(mp3lame SHARED
     libmp3lame/util.c
     libmp3lame/vbrquantize.c
     libmp3lame/version.c
+    # The decoder. See config.h: HAVE_MPGLIB turns mpglib_interface.c above
+    # from an empty translation unit into `hip_decode`.
+    mpglib/common.c
+    mpglib/dct64_i386.c
+    mpglib/decode_i386.c
+    mpglib/interface.c
+    mpglib/layer1.c
+    mpglib/layer2.c
+    mpglib/layer3.c
+    mpglib/tabinit.c
 )
 
 target_include_directories(mp3lame
     PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/libmp3lame
+            ${CMAKE_CURRENT_SOURCE_DIR}/mpglib
 )
 
 # HAVE_CONFIG_H points it at the config.h above rather than at configMS.h.

@@ -19,6 +19,7 @@
 #include <engine/machine/MachineRegistry.h>
 #include <engine/format/Sf2Reader.h>
 #include <engine/core/Slices.h>
+#include <engine/format/AudioDecoder.h>
 #include <engine/core/Take.h>
 #include <engine/machine/forage/Forage.h>
 #include <engine/machine/cumulus/Cumulus.h>
@@ -194,7 +195,10 @@ bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::st
     if (rack < 0 || rack >= kRackCount) { error = "bad rack"; return false; }
     SampleData *sample = nullptr;
     if (!path.empty()) {
-        auto decoded = WavReader::read(path, kSampleRate, error);
+        // Through the front door, so a document that still names a .flac or
+        // an .mp3 - one imported before the conversion existed, or edited by
+        // hand - plays rather than failing.
+        auto decoded = decodeAudio(path, kSampleRate, error);
         if (!decoded) return false;
         sample = decoded.release();
     }
@@ -209,8 +213,52 @@ bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::st
     return true;
 }
 
+std::string EngineHost::importAudio(const std::string &path, std::string &error) const {
+    const AudioFormat format = sniff(path);
+    if (format == AudioFormat::Wav) return path; // nothing to do, and nothing to lose
+    if (format == AudioFormat::Unknown) {
+        error = "not an audio file this can read";
+        return "";
+    }
+    auto decoded = decodeAudio(path, kSampleRate, error);
+    if (!decoded) return "";
+
+    // Alongside, with the extension replaced: `break.flac` becomes
+    // `break.wav`, which is the name a player will look for.
+    const size_t dot = path.find_last_of('.');
+    const size_t slash = path.find_last_of('/');
+    const std::string stem = (dot != std::string::npos && (slash == std::string::npos || dot > slash))
+                                 ? path.substr(0, dot)
+                                 : path;
+    std::string out = stem + ".wav";
+    for (int n = 2; n < 1000 && out != path; ++n) {
+        FILE *exists = std::fopen(out.c_str(), "rb");
+        if (exists == nullptr) break;
+        std::fclose(exists);
+        out = stem + " " + std::to_string(n) + ".wav";
+    }
+
+    WavWriter writer;
+    if (!writer.open(out, kSampleRate, 24, error)) return "";
+    // Interleaved, which is what a sink takes; a mono file is written to both
+    // sides rather than kept mono, because every other WAV the app writes is
+    // stereo and one shape downstream is worth a little disk.
+    std::vector<float> interleaved(static_cast<size_t>(decoded->frames) * 2);
+    for (int32_t i = 0; i < decoded->frames; ++i) {
+        const float l = decoded->left[static_cast<size_t>(i)];
+        const float r = decoded->stereo ? decoded->right[static_cast<size_t>(i)] : l;
+        interleaved[static_cast<size_t>(i) * 2] = l;
+        interleaved[static_cast<size_t>(i) * 2 + 1] = r;
+    }
+    writer.write(interleaved.data(), decoded->frames);
+    if (!writer.close()) { error = "could not write the converted file"; return ""; }
+    std::remove(path.c_str()); // the original was a copy of the player's own file
+    LOGI("converted %s (%s) to %s", path.c_str(), formatName(format), out.c_str());
+    return out;
+}
+
 std::string EngineHost::slicePoints(const std::string &path, int mode, int count, std::string &error) const {
-    auto decoded = WavReader::read(path, kSampleRate, error);
+    auto decoded = decodeAudio(path, kSampleRate, error);
     if (!decoded) return "";
     const std::vector<float> points = audio::slicePoints(
         *decoded, mode == 1 ? audio::SliceMode::Even : audio::SliceMode::Transients, count,

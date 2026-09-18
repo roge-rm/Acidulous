@@ -16,12 +16,21 @@
 
 namespace acidulous {
 
+/**
+ * One of the four, going either way.
+ *
+ * It began as "what a render writes itself into" and is now also what a
+ * decoder decided a file is, because there is no useful sense in which the
+ * FLAC we write and the FLAC we read are different formats. `Unknown` only
+ * ever comes out of `sniff`: a writer is always asked for something.
+ */
 enum class AudioFormat : int32_t {
     Wav = 0,
     Aiff = 1,
     Flac = 2,
-    /** Somebody else's encoder, and the only one - see Mp3Writer. */
+    /** Somebody else's codec, and the only one - see Mp3Writer and Mp3Reader. */
     Mp3 = 3,
+    Unknown = -1,
 };
 
 class AudioSink {

@@ -67,6 +67,21 @@ class EngineHost {
      * own. Empty on any failure, with [error] saying why.
      */
     std::string slicePoints(const std::string &path, int mode, int count, std::string &error) const;
+
+    /**
+     * Make an imported file into one the rest of the app can read.
+     *
+     * Returns the path to use - the same one when it was already a WAV, a new
+     * `.wav` beside it otherwise, with the original removed. Empty on failure,
+     * with [error] saying what the file turned out to be and what was wrong
+     * with it.
+     *
+     * The conversion is here rather than at each machine so that there is one
+     * of it: everything downstream still opens a WAV, a file is decoded once
+     * rather than on every song load, and a document keeps naming something
+     * that plainly exists on disk.
+     */
+    std::string importAudio(const std::string &path, std::string &error) const;
     int32_t nexusActivity(int rack, float *dest, int32_t max) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
     std::string sampleInfo(int rack, int slot) const;

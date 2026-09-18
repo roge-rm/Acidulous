@@ -9,11 +9,21 @@ what was left was a licence question, and LAME's answer suits us.
 
 ## What is here, and what is not
 
-Only what is needed to *encode*: `include/lame.h` and `libmp3lame/`, with the
-project's own `COPYING`, `LICENSE` and `README`. Left behind: the command
-line frontend, the decoder tests, the DirectShow and ACM wrappers, the Mac and
-DOS ports, the autotools machinery, and the hand-written i386 assembly
-(`libmp3lame/i386`) - none of which an Android build uses. `libmp3lame/vector`
+What is needed to *encode and decode*: `include/lame.h`, `libmp3lame/` and
+`mpglib/`, with the project's own `COPYING`, `LICENSE` and `README`.
+
+`mpglib/` was added in M49, when the app learned to read the formats it
+writes. Decoding mp3 is the one part of that nobody should write themselves -
+Huffman tables, a hybrid filter bank, bit reservoirs carried across frames -
+and `libmp3lame/mpglib_interface.c` had been in the build all along doing
+nothing, gated on `HAVE_MPGLIB`. Vendoring the directory beside it and
+defining the symbol is the whole change. Its `Makefile.am`, `Makefile.in` and
+`depcomp` are left behind with the rest of the autotools machinery.
+
+Left behind: the command line frontend, the decoder tests, the DirectShow and
+ACM wrappers, the Mac and DOS ports, the autotools machinery, and the
+hand-written i386 assembly (`libmp3lame/i386`) - none of which an Android
+build uses. `libmp3lame/vector`
 is here because `fft.c` includes its header whether or not the SSE paths are
 built; its one source file is not in our `CMakeLists.txt`. The tarball above
 is the whole of it if you want the rest.

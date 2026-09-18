@@ -194,24 +194,6 @@ private fun App(modifier: Modifier = Modifier) {
     // Importing a sample: the system picker, a copy into user/samples/, and the
     // pad's setting pointing at it. The engine loads it on the next sync.
     // (track, settings key): Forage keys a sample per pad, Pollen has one.
-    var importTarget by remember { mutableStateOf<Pair<Int, String>?>(null) }
-    val samplePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        val (track, key) = importTarget ?: return@rememberLauncherForActivityResult
-        importTarget = null
-        if (uri == null) return@rememberLauncherForActivityResult
-        runCatching {
-            var display = "sample.wav"
-            context.contentResolver.query(uri, null, null, null, null)?.use { c ->
-                val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                if (i >= 0 && c.moveToFirst()) display = c.getString(i)
-            }
-            val safe = display.replace(Regex("[^A-Za-z0-9 _.-]"), "_").ifEmpty { "sample.wav" }
-            val dir = File(EngineAssets.userRoot(context), "samples").apply { mkdirs() }
-            val dest = File(dir, safe)
-            context.contentResolver.openInputStream(uri)!!.use { input -> dest.outputStream().use { input.copyTo(it) } }
-            editor.edit(track) { t -> t.withSetting(key, "samples/$safe") }
-        }.onFailure { Log.w(TAG, "sample import failed", it) }
-    }
     val scope = rememberCoroutineScope()
 
     // Mosaic's instrument: a SoundFont preset, or WAVs turned into zones.
@@ -231,48 +213,6 @@ private fun App(modifier: Modifier = Modifier) {
         context.contentResolver.openInputStream(uri)!!.use { input -> dest.outputStream().use { input.copyTo(it) } }
         return dest
     }
-
-    // A whole kit in one trip.
-    //
-    // Building a Forage kit used to be thirteen round trips through the system
-    // picker, because this launcher took one document and the pads are filled
-    // one at a time. Mosaic's zones had been multi-select from the start; this
-    // is the same contract, filling pads from the one that is selected
-    // onwards, in the order the file names sort - which is the order a kit
-    // folder is almost always numbered in.
-    var kitTarget by remember { mutableStateOf<Pair<Int, Int>?>(null) }
-    val kitPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        val (track, firstPad) = kitTarget ?: return@rememberLauncherForActivityResult
-        kitTarget = null
-        if (uris.isNullOrEmpty()) return@rememberLauncherForActivityResult
-        runCatching {
-            val named = uris.map { uri ->
-                var display = "sample.wav"
-                context.contentResolver.query(uri, null, null, null, null)?.use { c ->
-                    val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                    if (i >= 0 && c.moveToFirst()) display = c.getString(i)
-                }
-                display to uri
-            }.sortedBy { it.first.lowercase() }
-            val assigned = mutableListOf<Pair<String, String>>()
-            named.forEachIndexed { i, (display, uri) ->
-                val pad = firstPad + i
-                if (pad > 12) return@forEachIndexed
-                val dest = copyIn(uri, "samples", display)
-                assigned += "p%02d_sample".format(pad) to "samples/${dest.name}"
-            }
-            // One edit for the whole kit, so thirteen samples are one undo and
-            // one autosave rather than thirteen of each.
-            editor.edit(track) { t ->
-                var next = t
-                for ((key, rel) in assigned) next = next.withSetting(key, rel)
-                next
-            }
-        }.onFailure { Log.w(TAG, "kit import failed", it) }
-    }
-
-
-    var status by remember { mutableStateOf("starting…") }
 
     // Something the player did that did not work. The engine reports decode
     // failures from a worker, so this hops to the main thread before it
@@ -298,6 +238,93 @@ private fun App(modifier: Modifier = Modifier) {
             )
         }
     }
+
+
+    /**
+     * A file the player chose, copied in and made readable.
+     *
+     * Everything imported lands in `samples/` as a WAV whatever it arrived
+     * as, so nothing past this point has to know that four formats exist.
+     * Decoding a thirty-second FLAC is not instant, so it happens off the
+     * main thread and [then] is called back on it with the path to store -
+     * or not called at all, after saying why.
+     */
+    fun bringIn(uri: android.net.Uri, fallback: String, then: (String) -> Unit) {
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching { copyIn(uri, "samples", fallback) }.mapCatching { dest ->
+                    val converted = NativeEngine.importAudio(dest.absolutePath)
+                    if (converted.isFailure) { dest.delete(); throw converted.exceptionOrNull()!! }
+                    "samples/" + File(converted.getOrThrow()).name
+                }
+            }
+            result.onSuccess(then).onFailure { problem = "That file would not load - ${it.message}." }
+        }
+    }
+
+    var importTarget by remember { mutableStateOf<Pair<Int, String>?>(null) }
+    val samplePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val (track, key) = importTarget ?: return@rememberLauncherForActivityResult
+        importTarget = null
+        if (uri == null) return@rememberLauncherForActivityResult
+        bringIn(uri, "sample.wav") { rel -> editor.edit(track) { t -> t.withSetting(key, rel) } }
+    }
+
+    // A whole kit in one trip.
+    //
+    // Building a Forage kit used to be thirteen round trips through the system
+    // picker, because this launcher took one document and the pads are filled
+    // one at a time. Mosaic's zones had been multi-select from the start; this
+    // is the same contract, filling pads from the one that is selected
+    // onwards, in the order the file names sort - which is the order a kit
+    // folder is almost always numbered in.
+    var kitTarget by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    val kitPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        val (track, firstPad) = kitTarget ?: return@rememberLauncherForActivityResult
+        kitTarget = null
+        if (uris.isNullOrEmpty()) return@rememberLauncherForActivityResult
+        scope.launch {
+            val named = uris.map { uri ->
+                var display = "sample.wav"
+                context.contentResolver.query(uri, null, null, null, null)?.use { c ->
+                    val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+                }
+                display to uri
+            }.sortedBy { it.first.lowercase() }
+            val assigned = mutableListOf<Pair<String, String>>()
+            val refused = mutableListOf<String>()
+            withContext(Dispatchers.IO) {
+                named.forEachIndexed { i, (display, uri) ->
+                    val pad = firstPad + i
+                    if (pad > 12) return@forEachIndexed
+                    runCatching {
+                        val dest = copyIn(uri, "samples", display)
+                        val converted = NativeEngine.importAudio(dest.absolutePath)
+                        if (converted.isFailure) { dest.delete(); throw converted.exceptionOrNull()!! }
+                        assigned += "p%02d_sample".format(pad) to "samples/" + File(converted.getOrThrow()).name
+                    }.onFailure { refused += display }
+                }
+            }
+            // One edit for the whole kit, so thirteen samples are one undo and
+            // one autosave rather than thirteen of each.
+            if (assigned.isNotEmpty()) {
+                editor.edit(track) { t ->
+                    var next = t
+                    for ((key, rel) in assigned) next = next.withSetting(key, rel)
+                    next
+                }
+            }
+            // A kit is loaded in one go, so one file being unreadable must not
+            // lose the other twelve - the rest land and this says which did not.
+            if (refused.isNotEmpty()) {
+                problem = "These would not load: " + refused.joinToString(", ") + "."
+            }
+        }
+    }
+
+
+    var status by remember { mutableStateOf("starting…") }
 
     val soundFontPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val track = mapTarget ?: return@rememberLauncherForActivityResult
@@ -328,9 +355,11 @@ private fun App(modifier: Modifier = Modifier) {
         if (uris.isNullOrEmpty()) return@rememberLauncherForActivityResult
         runCatching {
             val existing = com.rm.acidulous.model.Zones.decode(song.tracks[track].machine.settings["zones"])
-            val added = uris.map { uri ->
+            val added = uris.mapNotNull { uri ->
                 val dest = copyIn(uri, "samples", "sample.wav")
-                com.rm.acidulous.model.Zone(path = "samples/${dest.name}")
+                val converted = NativeEngine.importAudio(dest.absolutePath)
+                if (converted.isFailure) { dest.delete(); null }
+                else com.rm.acidulous.model.Zone(path = "samples/" + File(converted.getOrThrow()).name)
             }
             editor.edit(track) { t ->
                 t.withSetting("sf2", null).withSetting("sf2preset", null)

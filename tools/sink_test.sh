@@ -21,9 +21,12 @@ if [ -z "$(find "$LAME" -name '*.[ch]' -newer "$ARCHIVE" -print -quit 2>/dev/nul
     :
 else
     echo "  .... building LAME for the host (once)"
-    for c in "$LAME"/libmp3lame/*.c; do
+    # mpglib as well as libmp3lame: config.h defines HAVE_MPGLIB now, so
+    # mpglib_interface.c calls into the decoder rather than compiling to
+    # nothing, and the archive has to carry it or nothing links.
+    for c in "$LAME"/libmp3lame/*.c "$LAME"/mpglib/*.c; do
         gcc -O1 -w -c -DHAVE_CONFIG_H -I "$LAME" -I "$LAME/include" -I "$LAME/libmp3lame" \
-            "$c" -o "$CACHE/$(basename "$c" .c).o" || exit 1
+            -I "$LAME/mpglib" "$c" -o "$CACHE/$(basename "$c" .c).o" || exit 1
     done
     ar rcs "$ARCHIVE" "$CACHE"/*.o || exit 1
 fi

@@ -164,6 +164,17 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSampleInfo(JNIEnv *env, jobject,
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeImportAudio(JNIEnv *env, jobject, jstring path) {
+    const char *p = env->GetStringUTFChars(path, nullptr);
+    std::string error;
+    const std::string out = host().importAudio(p != nullptr ? p : "", error);
+    env->ReleaseStringUTFChars(path, p);
+    // The path on success, "!" and the reason on failure: one string across
+    // the boundary, and a leading bang cannot begin a real path.
+    return env->NewStringUTF(out.empty() ? ("!" + error).c_str() : out.c_str());
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSlicePoints(JNIEnv *env, jobject, jstring path, jint mode,
                                                            jint count) {
     const char *p = env->GetStringUTFChars(path, nullptr);

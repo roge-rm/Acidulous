@@ -20,6 +20,8 @@ SRC=$(find "$CPP/engine/machine" "$CPP/engine/dsp" "$CPP/engine/effect" -name '*
 # Molt's analyser, the onsets Dice and Pollen read, and our own file writing.
 SRC="$SRC $CPP/engine/core/Utterance.cpp $CPP/engine/core/Take.cpp"
 SRC="$SRC $CPP/engine/format/WavWriter.cpp $CPP/engine/format/WavReader.cpp"
+SRC="$SRC $CPP/engine/format/Decoded.cpp $CPP/engine/format/AiffReader.cpp $CPP/engine/format/FlacReader.cpp"
+SRC="$SRC $CPP/engine/format/AudioDecoder.cpp"
 # Deliberately not AudioSink.cpp: it includes all four writers and would pull
 # in host LAME, which only sink_test has any use for.
 

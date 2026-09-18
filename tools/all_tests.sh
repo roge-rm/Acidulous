@@ -43,5 +43,6 @@ echo "--- link";  "$ROOT/tools/link_test.sh"  | tail -2 || fail=1
 echo "--- delay"; "$ROOT/tools/delay_test.sh" | tail -2 || fail=1
 echo "--- slice"; "$ROOT/tools/slice_test.sh" | tail -2 || fail=1
 echo "--- forage"; "$ROOT/tools/forage_test.sh" | tail -2 || fail=1
+echo "--- format"; "$ROOT/tools/format_test.sh" | tail -2 || fail=1
 
 exit $fail

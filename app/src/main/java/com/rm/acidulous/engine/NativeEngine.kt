@@ -55,6 +55,19 @@ object NativeEngine {
     fun sampleInfo(rackId: Int, slot: Int): String = nativeSampleInfo(rackId, slot)
 
     /**
+     * Make an imported file readable: the path to use, or null and the reason.
+     *
+     * A WAV comes back unchanged. Anything else is decoded, written beside
+     * itself as a WAV and the original removed, so nothing downstream ever
+     * sees a second format. Decodes the file, so call it off the main thread.
+     */
+    fun importAudio(absolutePath: String): Result<String> {
+        val out = nativeImportAudio(absolutePath)
+        return if (out.startsWith("!")) Result.failure(IllegalArgumentException(out.drop(1)))
+               else Result.success(out)
+    }
+
+    /**
      * Where [count] slices fall in a file, as fractions of its length.
      *
      * [mode] 0 finds transients, 1 divides evenly. Returns count+1 boundaries
@@ -454,6 +467,7 @@ object NativeEngine {
     private external fun nativeSampleMapInfo(rackId: Int): String
     private external fun nativeSampleInfo(rackId: Int, slot: Int): String
     private external fun nativeSlicePoints(path: String, mode: Int, count: Int): String
+    private external fun nativeImportAudio(path: String): String
     private external fun nativeMachineTypes(): Array<String>
     private external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
     private external fun nativeNoteOff(rackId: Int, note: Int)

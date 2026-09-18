@@ -43,11 +43,20 @@
 #define ieee754_float32_t float
 
 /*
+ * The decoder. `mpglib/` is vendored now, so `hip_decode` has something
+ * behind it: the app writes four audio formats and reading mp3 back was the
+ * one that needed somebody else's code. `mpglib_interface.c` was already in
+ * the build, gated on this and doing nothing.
+ */
+#define HAVE_MPGLIB 1
+
+/*
  * Not defined, deliberately:
- *   HAVE_MPGLIB      - the decoder; this build only encodes
  *   HAVE_NASM        - hand-written i386 assembly, not vendored
  *   HAVE_XMMINTRIN_H - the SSE paths, likewise
  *   HAVE_ANALYSIS    - the analysis hooks the GTK frontend uses
+ *   DECODE_ON_THE_FLY - the encoder checking its own output as it goes,
+ *                       which doubles the work for a number nobody reads
  */
 
 #endif
