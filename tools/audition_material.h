@@ -6,7 +6,9 @@
 #include <string>
 #include <vector>
 
+#include <cstdlib>
 #include <engine/core/Sample.h>
+#include <engine/format/WavReader.h>
 #include <engine/core/SampleMap.h>
 #include <engine/core/Take.h>
 #include <engine/core/Utterance.h>
@@ -516,8 +518,77 @@ inline std::unique_ptr<audio::Take> voiceTake() {
     return take;
 }
 
+/** A modulator at nominal level: -20 dBFS rms, which is a healthy recording. */
+constexpr float kInputNominalRms = 0.1f;
+
 /**
- * The sung phrase, analysed, for Molt.
+ * A recording off disk as one channel, cleaned and levelled.
+ *
+ * Shared by the two things that want a real voice - the vocoder's input bus
+ * and Molt's take - because they want exactly the same treatment and two
+ * copies of a rumble filter is two places for it to be wrong. An empty or
+ * missing path returns nothing, which is every caller's cue to fall back to
+ * the synthetic phrase.
+ */
+inline std::vector<float> fileMono(const char *path, std::string &error) {
+    if (path == nullptr || *path == '\0') return {};
+    const std::unique_ptr<SampleData> s = WavReader::read(path, static_cast<int32_t>(kMatSr), error);
+    if (s == nullptr || s->frames <= 0) return {};
+
+    // Folded to mono: a spectrum is one thing, so the two channels have to
+    // become one before anything is analysed. The width belongs to the
+    // recording, not to what is measured from it.
+    std::vector<float> src(s->left.begin(), s->left.end());
+    if (!s->right.empty()) {
+        for (size_t i = 0; i < src.size() && i < s->right.size(); ++i) {
+            src[i] = (src[i] + s->right[i]) * 0.5f;
+        }
+    }
+    // DC and rumble first, then the level. A hand-held recording carries a
+    // lot under the voice - this one has eight per cent of its energy below
+    // 20 Hz - and levelling on the whole signal puts the part that matters
+    // twelve decibels under where it was aimed.
+    //
+    // The corner is 45 Hz and not 100, which was the first guess and was
+    // wrong: this speaker's median fundamental is 125 Hz but a quarter of his
+    // voiced frames are under 80, and a hundred-hertz corner would have cut
+    // the fundamental out of nearly half the speech and called it rumble.
+    const float a = std::exp(-2.0f * 3.14159265f * 45.0f / kMatSr);
+    for (int pass = 0; pass < 3; ++pass) {
+        float px = 0.0f, py = 0.0f;
+        for (float &v : src) {
+            py = a * (py + v - px);
+            px = v;
+            v = py;
+        }
+    }
+    double sum = 0.0;
+    for (float v : src) sum += static_cast<double>(v) * v;
+    const auto rms = static_cast<float>(std::sqrt(sum / std::max<size_t>(1, src.size())));
+    if (rms > 1e-6f) {
+        const float gain = kInputNominalRms / rms;
+        for (float &v : src) v *= gain;
+    }
+    return src;
+}
+
+/**
+ * A voice, analysed, for Molt.
+ *
+ * **The real recording where there is one.** Dan, hearing the synthetic take:
+ * "there's a strange noise in the middle of these samples". There is, and
+ * this file already had the diagnosis written down for Cipher a fortnight
+ * earlier - the synthetic fricatives are a couple of hundred milliseconds of
+ * band-passed noise where a real "s" is fifty and has a shape, so they land
+ * as bursts of static rather than as consonants. Molt makes that worse than a
+ * vocoder does, because an unvoiced stretch has no glottal pulses to lay down
+ * and is copied at its own rate: a long burst of static is copied as a long
+ * burst of static, in the middle of every demo in the bank.
+ *
+ * So the file named in `tools/local.env` is used when it is there, and the
+ * synthetic phrase when it is not - exactly what Cipher does, and for the
+ * same reason. A repository is the wrong place to keep somebody's voice, and
+ * the harness still runs for anyone who has only the synthetic one.
  *
  * `speechPhrase` and not `voicePhrase`, and the reason is the same one this
  * file already gives twice. A vocoder cannot be judged on a held vowel
@@ -528,14 +599,32 @@ inline std::unique_ptr<audio::Take> voiceTake() {
  * differ by a constant offset and nothing else, and `rate` - how long the
  * pull takes - has nothing at all to act on.
  *
- * So the take is the twelve second one whose pitch walks between 70 and 190
- * Hz across nine syllables. Against that, tuning is a line being bent onto
- * the notes in the clip, which is the thing the machine is for.
+ * The fallback is the twelve second phrase whose pitch walks between 70 and
+ * 190 Hz across nine syllables, and not the two and a half second one at a
+ * fixed pitch that was here before: against a flat take, `tune` at nought and
+ * `tune` at one differ by a constant offset and `rate` has nothing at all to
+ * act on.
  */
 inline std::unique_ptr<audio::Utterance> voiceUtterance() {
     auto u = std::make_unique<audio::Utterance>();
     u->name = "voice";
-    u->mono = speechPhrase();
+    std::string ignored;
+    u->mono = fileMono(std::getenv("ACIDULOUS_INPUT_FILE"), ignored);
+    if (u->mono.empty()) u->mono = speechPhrase();
+    // Levelled by peak, not by rms, and this is where the two callers part.
+    // A vocoder's modulator is an *analysis* signal - only its spectrum is
+    // read, so nominal rms is the right calibration and a peak over one
+    // costs nothing. Molt lays the take's own samples down as audio, so a
+    // take that peaks at three and a bit is a patch that peaks at three and a
+    // bit whatever the volume knob says. A real voice has a far higher crest
+    // factor than a synthesised one: the same nominal rms put this take at
+    // +10 dBFS and the synthetic phrase at -9.
+    float peak = 0.0f;
+    for (float v : u->mono) peak = std::max(peak, std::fabs(v));
+    if (peak > 1e-6f) {
+        const float gain = 0.9f / peak;
+        for (float &v : u->mono) v *= gain;
+    }
     u->frames = static_cast<int32_t>(u->mono.size());
     u->analyse(kMatSr);
     return u;

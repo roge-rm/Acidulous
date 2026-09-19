@@ -754,65 +754,15 @@ void applySettings(Machine *m, const std::string &machine,
  * middle of a render puts a step in every patch's demo at the same moment and
  * the whole bank appears to share a fault.
  */
-// A modulator at nominal level: -20 dBFS rms, which is a healthy recording.
-constexpr float kInputNominalRms = 0.1f;
-
 std::vector<float> fileInput(const std::string &path, float seconds) {
+    // The read, the mono fold, the rumble filter and the level all live in
+    // audition_material.h now, because Molt wants a real voice too and wanted
+    // exactly this treatment of it.
     std::string error;
-    const std::unique_ptr<acidulous::SampleData> s =
-        acidulous::WavReader::read(path, static_cast<int32_t>(kSr), error);
-    if (s == nullptr || s->frames <= 0) {
+    std::vector<float> src = fileMono(path.c_str(), error);
+    if (src.empty()) {
         std::fprintf(stderr, "input file %s: %s\n", path.c_str(), error.c_str());
         return {};
-    }
-    // Folded to mono: a vocoder measures one spectrum, so the two channels
-    // have to become one before anything is analysed. The file is genuinely
-    // stereo - its side is 11.7 dB under its mid - and that width belongs to
-    // the recording, not to what the bands hear.
-    std::vector<float> src(s->left.begin(), s->left.end());
-    if (!s->right.empty()) {
-        for (size_t i = 0; i < src.size() && i < s->right.size(); ++i) {
-            src[i] = (src[i] + s->right[i]) * 0.5f;
-        }
-    }
-    // DC and rumble first, then the level.
-    //
-    // A hand-held recording carries a lot under the voice: this one has eight
-    // per cent of its energy below 20 Hz, none of which any band can measure,
-    // and levelled on the whole signal the part the bands *do* hear came out
-    // twelve decibels under where it was aimed.
-    //
-    // The corner is 45 Hz and not 100, which was the first guess and was
-    // wrong. Measured on this recording, the speaker's median fundamental is
-    // 125 Hz but a quarter of his voiced frames are under 80 - a hundred-hertz
-    // corner would have cut the fundamental out of nearly half the speech and
-    // called it rumble.
-    {
-        const float a = std::exp(-2.0f * 3.14159265f * 45.0f / kSr);
-        for (int pass = 0; pass < 3; ++pass) {
-            float px = 0.0f, py = 0.0f;
-            for (float &v : src) {
-                py = a * (py + v - px);
-                px = v;
-                v = py;
-            }
-        }
-    }
-    // Normalised to a nominal recording level.
-    //
-    // A vocoder's output follows its input, so levelling a bank against a
-    // particular file would set the machine's house level from how loud that
-    // one recording happened to be - and on a phone the modulator is whatever
-    // the player is speaking at. Normalising here means the house level is
-    // calibrated to "a modulator at nominal level" and any file lands there.
-    {
-        double sum = 0.0;
-        for (float v : src) sum += static_cast<double>(v) * v;
-        const auto rms = static_cast<float>(std::sqrt(sum / std::max<size_t>(1, src.size())));
-        if (rms > 1e-6f) {
-            const float gain = kInputNominalRms / rms;
-            for (float &v : src) v *= gain;
-        }
     }
     const auto fade = static_cast<size_t>(kSr * 0.01f);
     const auto want = static_cast<size_t>(kSr * seconds);

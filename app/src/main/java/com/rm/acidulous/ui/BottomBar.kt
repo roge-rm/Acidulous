@@ -278,17 +278,27 @@ fun PanicButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
                 // The outline Material actually draws, inside the node it
                 // actually occupies.
                 val drawn = ButtonDefaults.MinHeight.toPx()
-                val top = ((size.height - drawn) / 2f).coerceAtLeast(0f)
+                // And inside the outline, not up to it. Material strokes the
+                // border *centred* on the shape's boundary, so a fill drawn to
+                // that same boundary reaches the middle of the stroke and
+                // reads as a meter slightly too big for its own pill. Dan:
+                // "the fill circle doesn't match the pill outline (it is
+                // bigger than the pill)". One stroke width in on every side,
+                // and the corner radius follows the height that is left.
+                val edge = kPanicStroke.toPx()
+                val tall = drawn - edge * 2f
+                val wide = size.width - (edge + kPanicSide.toPx()) * 2f
+                val top = ((size.height - drawn) / 2f).coerceAtLeast(0f) + edge
                 val gap = 1.dp.toPx()
-                val h = (drawn - gap * (kLadder - 1)) / kLadder
-                if (h <= 0f) return@drawBehind
+                val h = (tall - gap * (kLadder - 1)) / kLadder
+                if (h <= 0f || wide <= 0f) return@drawBehind
                 // The rungs are rectangles and the button is a stadium, so
                 // they are clipped to its shape. Without this the bottom one
                 // runs out past the curve at either end and the meter reads
                 // as a spill rather than as a reading.
                 val pill = Path().apply {
                     addRoundRect(
-                        RoundRect(Rect(Offset(0f, top), Size(size.width, drawn)), CornerRadius(drawn / 2f)),
+                        RoundRect(Rect(Offset(edge + kPanicSide.toPx(), top), Size(wide, tall)), CornerRadius(tall / 2f)),
                     )
                 }
                 clipPath(pill) {
@@ -309,16 +319,47 @@ fun PanicButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
                         }
                         drawRect(
                             colour.copy(alpha = if (load.dropped) 0.55f else 0.40f),
-                            topLeft = Offset(0f, top + (kLadder - 1 - i) * (h + gap)),
-                            size = Size(size.width, h),
+                            topLeft = Offset(edge + kPanicSide.toPx(), top + (kLadder - 1 - i) * (h + gap)),
+                            size = Size(wide, h),
                         )
                     }
                 }
             },
         onClick = onClick,
         contentPadding = PaddingValues(horizontal = 4.dp),
-    ) { Text("panic", color = c.red, fontSize = 12.sp, maxLines = 1) }
+        // The outline Material draws, stated rather than defaulted, because
+        // the meter above has to know how wide it is to sit inside it.
+        border = BorderStroke(kPanicStroke, ButtonDefaults.outlinedButtonBorder.brush),
+    ) {
+        // Red when it means something. The word was always red, which made it
+        // the loudest thing on a row where nothing was wrong - so red stopped
+        // being a warning and became the name of a button. It now says what
+        // the meter says: past nine tenths of a block's time, or a dropout
+        // already counted.
+        Text(
+            "panic",
+            color = if (load.dropped || load.level > 0.9f) c.red else c.textMid,
+            fontSize = 12.sp, maxLines = 1,
+        )
+    }
 }
 
 /** Segments in the ladder. Seven of them is 4dp a rung in a 40dp pill. */
 private const val kLadder = 7
+
+/** Material's own outline width, which the meter is inset by. */
+private val kPanicStroke = 1.dp
+
+/**
+ * How much narrower the drawn button is than the node it is drawn in.
+ *
+ * Measured, because Material does not say. The height is easy - the node is
+ * the 48 dp touch target and the surface is `MinHeight`, so centring one in
+ * the other lands exactly. The width is not: with the meter inset by the
+ * border alone it still showed three pixels of green either side of the
+ * outline at 2.75x, which is a hair over a decibel... over a *dp*, and two
+ * more brings it three pixels inside on both sides instead. Dan saw it before
+ * any of this was measured: "I can see green to the left/right of the outside
+ * of the panic pill".
+ */
+private val kPanicSide = 2.dp

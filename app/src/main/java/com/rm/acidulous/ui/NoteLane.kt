@@ -1,10 +1,8 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
@@ -78,7 +76,6 @@ enum class NoteProp(val short: String, val label: String) {
 /** How far a note may be pushed off the grid: half a sixteenth either way. */
 const val NUDGE_RANGE = PPQN / 4
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteLane(
     clip: Clip,
@@ -104,6 +101,16 @@ fun NoteLane(
     // rather than guessed at: `1:2` and `!pr` are three glyphs of monospace at
     // eight sp and the canvas has no idea how wide that is.
     val measurer = rememberTextMeasurer()
+    /**
+     * The note being dragged and the value it now holds, while it is being
+     * dragged and not afterwards.
+     *
+     * A bar is a picture of a number and for most of the time that is enough;
+     * it stops being enough at the moment you are setting it, which is also
+     * the moment a finger is over it. Cleared when the gesture ends, so the
+     * lane goes back to being a shape rather than a row of figures.
+     */
+    var editing by remember { mutableStateOf<Pair<Int, Float>?>(null) }
     // Read here and captured by the gesture block, which is keyed on Unit so
     // it never restarts mid-drag - the same trap the automation strip records.
     val clipState by rememberUpdatedState(clip)
@@ -123,10 +130,15 @@ fun NoteLane(
         Column(Modifier.width(GutterWidth).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
             if (!collapsed) {
                 Box(
-                    Modifier.weight(1f).fillMaxWidth().combinedClickable(
-                        onClick = { onProp(NoteProp.entries[(prop.ordinal + 1) % NoteProp.entries.size]) },
-                        onLongClick = { menu = true },
-                    ),
+                    // A tap opens the list. The automation strip cycles on a
+                    // tap because most clips have one or two lanes and
+                    // stepping through them is quicker than choosing; here
+                    // all five properties always exist, so cycling means
+                    // tapping four times to reach the one you want and
+                    // passing through three you did not. Dan asked for the
+                    // chooser, and the strip's own menu is what it looks
+                    // like.
+                    Modifier.weight(1f).fillMaxWidth().clickable { menu = true },
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -215,20 +227,46 @@ fun NoteLane(
                             return@awaitEachGesture
                         }
 
+                        // **One note, or a sweep across many, decided by
+                        // which way the finger set off.**
+                        //
+                        // The stroke gesture paints every note it passes
+                        // over, which is what makes levelling a bar in one
+                        // movement possible and is worth keeping. But it also
+                        // meant a finger could not move aside to see the bar
+                        // it was setting without dragging the neighbours with
+                        // it - Dan: "it's hard to see where the bar is with my
+                        // finger in the way". So a drag that sets off *upward*
+                        // owns the note it started on and keeps it however far
+                        // sideways it wanders; a drag that sets off sideways
+                        // sweeps as before. Both gestures survive and neither
+                        // has to be learned.
                         val stroke = HashMap<Int, Float>()
+                        var locked = -1        // the note a vertical drag owns
+                        var decided = false
                         fun add(p: Offset) {
-                            val at = noteAt(p.x)
+                            val at = if (locked >= 0) locked else noteAt(p.x)
                             if (at < 0) return
-                            stroke[at] = (1f - p.y / h).coerceIn(0f, 1f)
+                            val v = (1f - p.y / h).coerceIn(0f, 1f)
+                            stroke[at] = v
+                            editing = at to v
                             setState(stroke)
                         }
                         beginState()
                         add(down.position)
                         down.consume()
                         drag(down.id) { change ->
+                            if (!decided) {
+                                val d = change.position - down.position
+                                if (d.getDistance() > viewConfiguration.touchSlop) {
+                                    decided = true
+                                    if (abs(d.y) > abs(d.x)) locked = noteAt(down.position.x)
+                                }
+                            }
                             add(change.position)
                             if (change.positionChange() != Offset.Zero) change.consume()
                         }
+                        editing = null
                         endState()
                     }
                 },
@@ -276,6 +314,50 @@ fun NoteLane(
                             topLeft = Offset(
                                 (xOf(at) - laid.size.width / 2f).coerceIn(0f, size.width - laid.size.width),
                                 size.height / 2f - laid.size.height / 2f,
+                            ),
+                        )
+                    }
+                }
+
+                // The number, while it is being set and only then.
+                //
+                // At the tip of the bar rather than under its foot, because
+                // the foot is where the bar is widest and the text would be
+                // drawn on top of itself; above the tip while there is room
+                // and below it near the ceiling, so it is never off the lane.
+                // Same colour as the bar it belongs to, so there is no
+                // question which note it is about.
+                editing?.let { (index, v) ->
+                    val n = clip.notes.getOrNull(index)
+                    if (n != null) {
+                        val text = when (prop) {
+                            NoteProp.Velocity -> "${(v * 127f).roundToInt().coerceIn(1, 127)}"
+                            NoteProp.Chance -> "${(v * 100f).roundToInt().coerceIn(0, 100)}%"
+                            NoteProp.Ratchet -> "x${(v * 8f).roundToInt().coerceIn(1, 8)}"
+                            NoteProp.Nudge -> {
+                                val t = ((v - 0.5f) * 2f * NUDGE_RANGE).roundToInt()
+                                if (t > 0) "+$t" else "$t"
+                            }
+                            NoteProp.Cond -> n.trig.short
+                        }
+                        val laid = measurer.measure(
+                            text,
+                            TextStyle(
+                                color = if (prop == NoteProp.Chance && n.chance < 100) c.pink else c.accent,
+                                fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                            ),
+                        )
+                        val tip = when (prop) {
+                            NoteProp.Nudge -> size.height / 2f - (v - 0.5f) * 2f * (size.height / 2f - 3f)
+                            else -> size.height - 2f - (size.height - 4f) * v
+                        }
+                        val above = tip - laid.size.height - 2f
+                        drawText(
+                            laid,
+                            topLeft = Offset(
+                                (xOf(n.tick + n.nudge) - laid.size.width / 2f)
+                                    .coerceIn(0f, size.width - laid.size.width),
+                                if (above >= 0f) above else (tip + 3f).coerceAtMost(size.height - laid.size.height),
                             ),
                         )
                     }

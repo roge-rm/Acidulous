@@ -17,13 +17,49 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
     hopFrames = sampleRate * kHopMs * 0.001f;
     if (frames <= 0) return;
 
+    // --- rumble, first ------------------------------------------------------
+    //
+    // Anything below the lowest pitch this can report is, by definition, not
+    // a pitch. It is rumble, and in a forty millisecond window it is not even
+    // a low note - it is a drift across the window, which correlates with
+    // itself best at the *shortest* lag and less and less as the lag grows.
+    // So a take with rumble under it produces a score curve that falls
+    // monotonically from the minimum lag, with no peak at the true period
+    // anywhere, and the tracker pegs at its own ceiling for every frame.
+    //
+    // Which is exactly what a real recording did. Dan's voice take - a phone
+    // in a room, which is what this machine will always be fed - is dominated
+    // below eighty hertz for much of its length, and every frame of it came
+    // back as 889 Hz and voiced. Synthetic material has no rumble by
+    // construction, so the analyser had never met the case: Molt worked
+    // perfectly on a signal nobody will ever sing.
+    //
+    // Four poles at kMinHz, not one or two. Measured on that take: one pole
+    // and two poles both leave it pegged at 800 Hz, four bring it to 116 Hz,
+    // against a median fundamental of about 125 measured by other means. The
+    // synthetic take reads 125 Hz throughout and is unmoved by any of it,
+    // which is the point - this takes nothing away from material that was
+    // already clean.
+    std::vector<float> clean(mono.begin(), mono.begin() + frames);
+    {
+        const float a = std::exp(-2.0f * 3.14159265f * kMinHz / sampleRate);
+        for (int pass = 0; pass < 4; ++pass) {
+            float px = 0.0f, py = 0.0f;
+            for (float &v : clean) {
+                py = a * (py + v - px);
+                px = v;
+                v = py;
+            }
+        }
+    }
+
     // --- decimate -----------------------------------------------------------
     const float lowRate = sampleRate / static_cast<float>(kDecim);
     const int32_t lowFrames = frames / kDecim;
     std::vector<float> low(static_cast<size_t>(std::max(1, lowFrames)), 0.0f);
     for (int32_t i = 0; i < lowFrames; ++i) {
         float sum = 0.0f;
-        for (int32_t k = 0; k < kDecim; ++k) sum += mono[static_cast<size_t>(i * kDecim + k)];
+        for (int32_t k = 0; k < kDecim; ++k) sum += clean[static_cast<size_t>(i * kDecim + k)];
         low[static_cast<size_t>(i)] = sum / static_cast<float>(kDecim);
     }
 
