@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -15,6 +16,31 @@
 // in this directory links anybody else's encoder.
 
 namespace acidulous {
+
+/**
+ * A float to a PCM integer, the way the readers undo it.
+ *
+ * **Scaled by 2^(b-1), not by 2^(b-1) - 1.** The writers used the latter, so
+ * a float of -1.0 became -32767 and never the one code that has no positive
+ * partner, while every reader here divides by 32768. The two disagreed by a
+ * single step at full scale - only there, and only on a sample that clipped,
+ * but it meant a file written and read back was not quite the file that went
+ * in, and `sink_test` could not ask for "every sample, exactly".
+ *
+ * The clamp is what keeps the asymmetry honest: +1.0 is genuinely not
+ * representable and lands on the largest code there is, while -1.0 now lands
+ * exactly on the smallest.
+ */
+inline int32_t quantise(float v, int32_t bits) {
+    const auto scale = static_cast<float>(1 << (bits - 1));
+    const int32_t lo = -(1 << (bits - 1));
+    const int32_t hi = (1 << (bits - 1)) - 1;
+    auto s = static_cast<int32_t>(std::lrint(v * scale));
+    if (s < lo) s = lo;
+    if (s > hi) s = hi;
+    return s;
+}
+
 
 /**
  * One of the four, going either way.

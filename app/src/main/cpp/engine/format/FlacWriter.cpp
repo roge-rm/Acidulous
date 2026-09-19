@@ -436,22 +436,10 @@ void FlacWriter::write(const float *interleaved, int32_t framesIn) {
     if (file == nullptr) {
         return;
     }
-    const float scale = bps == 16 ? 32767.0f : 8388607.0f;
-    const int32_t lo = bps == 16 ? -32768 : -8388608;
-    const int32_t hi = bps == 16 ? 32767 : 8388607;
+
     for (int32_t i = 0; i < framesIn; ++i) {
-        float l = interleaved[i * 2];
-        float r = interleaved[i * 2 + 1];
-        if (l > 1.0f) l = 1.0f;
-        if (l < -1.0f) l = -1.0f;
-        if (r > 1.0f) r = 1.0f;
-        if (r < -1.0f) r = -1.0f;
-        int32_t li = static_cast<int32_t>(std::lrint(l * scale));
-        int32_t ri = static_cast<int32_t>(std::lrint(r * scale));
-        if (li < lo) li = lo;
-        if (li > hi) li = hi;
-        if (ri < lo) ri = lo;
-        if (ri > hi) ri = hi;
+        const int32_t li = quantise(interleaved[i * 2], bps);
+        const int32_t ri = quantise(interleaved[i * 2 + 1], bps);
         left.push_back(li);
         right.push_back(ri);
 

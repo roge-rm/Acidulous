@@ -48,18 +48,9 @@ void ok(const char *what, bool good, const char *detail = "") {
     printf("  %s %-44s %s\n", good ? "ok  " : "FAIL", what, detail);
 }
 
-/** The integer the encoder is required to preserve, for the raw reference. */
-int32_t quantise(float v, int bits) {
-    const float scale = bits == 16 ? 32767.0f : 8388607.0f;
-    const int32_t lo = bits == 16 ? -32768 : -8388608;
-    const int32_t hi = bits == 16 ? 32767 : 8388607;
-    if (v > 1.0f) v = 1.0f;
-    if (v < -1.0f) v = -1.0f;
-    auto s = static_cast<int32_t>(std::lrint(v * scale));
-    if (s < lo) s = lo;
-    if (s > hi) s = hi;
-    return s;
-}
+// The integer the encoder is required to preserve is `acidulous::quantise`
+// from AudioSink.h - the same function the writers use, rather than a second
+// copy of the rule that could agree with the wrong thing.
 
 /** A mix-like signal: correlated channels, which is where FLAC earns its keep. */
 std::vector<float> makeSignal(int32_t frames) {
@@ -135,7 +126,7 @@ void readBack(const std::string &path, const std::vector<float> &pcm, int32_t fr
     // The scale the writer used, so the comparison is exact rather than
     // within a tolerance: both sides are the same integer over the same
     // power of two.
-    const float scale = bits == 16 ? 32767.0f : 8388607.0f;
+    const auto scale = static_cast<float>(1 << (bits - 1));
     int32_t worstAt = -1;
     float worst = 0.0f;
     for (int32_t i = 0; i < frames; ++i) {
@@ -153,22 +144,11 @@ void readBack(const std::string &path, const std::vector<float> &pcm, int32_t fr
             }
         }
     }
-    // **One step, and only at full scale.**
-    //
-    // The writer scales by 2^(b-1) - 1 and the reader divides by 2^(b-1),
-    // which is the usual asymmetry: the writer will not emit the one code
-    // that has no positive partner, and the reader treats the range as
-    // symmetric. They agree exactly everywhere except on a sample that
-    // clipped, where they differ by a single step - measured here at frame
-    // nought, which is the deliberately over-range pair this signal starts
-    // with. Everywhere else the worst error is nought.
-    //
-    // Anything a decoder gets *wrong* - a channel swapped, a predictor undone
-    // backwards, a byte order - is orders of magnitude bigger than one step.
-    const float step = bits == 32 ? 1e-9f : 1.0f / static_cast<float>(1 << (bits - 1));
-    snprintf(note, sizeof note, "worst %.9f at frame %d, one step is %.9f",
-             static_cast<double>(worst), worstAt, static_cast<double>(step));
-    ok("every sample comes back", worst <= step * 1.001f, note);
+    // Exactly nought, at every frame, including the deliberately over-range
+    // pair this signal starts with: the writers scale by 2^(b-1) and clamp,
+    // and every reader divides by 2^(b-1), so the two are inverses.
+    snprintf(note, sizeof note, "worst %.9f at frame %d", static_cast<double>(worst), worstAt);
+    ok("every sample comes back", worst == 0.0f, note);
 }
 
 /** The mean level in dB of a decoded file, for the one format that is lossy. */
@@ -268,21 +248,14 @@ int main(int argc, char **argv) {
             } else {
                 char note2[128];
                 snprintf(note2, sizeof note2, "%d frames, wanted %d", back->frames, frames);
-                // **Two frames either way, and the reason is a gap.**
-                //
-                // An mp3 is made of 1152-sample frames and cannot end
-                // anywhere else, so one frame is the natural tolerance - and
-                // ffmpeg, which used to do this, met it. Ours does not:
-                // `Mp3Reader` decodes whole frames and does not trim the
-                // encoder delay and padding that the LAME tag declares, so a
-                // file comes back up to a couple of frames long with about
-                // twenty-five milliseconds of silence on the front. That is
-                // a real gap in the reader rather than a slack test, it is
-                // audible on an imported break as a late start, and it is
-                // written down here because a tolerance with no reason
-                // attached is how a fault becomes the expected behaviour.
+                // One frame either way, which is the natural tolerance: an
+                // mp3 is made of 1152-sample frames and cannot end anywhere
+                // else. In practice this comes back *exact*, because
+                // `Mp3Reader` trims the encoder delay and padding the LAME
+                // tag declares - the thing that used to leave twenty-five
+                // milliseconds of silence on the front of every import.
                 ok("decodes to the right length",
-                   back->frames > frames - 2304 && back->frames < frames + 2304, note2);
+                   back->frames > frames - 1152 && back->frames < frames + 1152, note2);
                 const float in = meanLevel(pcm, {});
                 const float out = meanLevel(back->left, back->right);
                 snprintf(note2, sizeof note2, "%.2f dB out, %.2f dB in", static_cast<double>(out),

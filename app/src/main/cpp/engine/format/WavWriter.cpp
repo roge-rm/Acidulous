@@ -56,14 +56,12 @@ void WavWriter::write(const float *interleaved, int32_t framesIn) {
                 std::memcpy(buf + i * 4, &v, 4);
                 continue;
             }
-            if (v > 1.0f) v = 1.0f;
-            if (v < -1.0f) v = -1.0f;
             if (bytesPerSample == 2) {
-                const auto s = static_cast<int32_t>(std::lrint(v * 32767.0f));
+                const int32_t s = quantise(v, 16);
                 buf[i * 2] = static_cast<uint8_t>(s);
                 buf[i * 2 + 1] = static_cast<uint8_t>(s >> 8);
             } else {
-                const auto s = static_cast<int32_t>(std::lrint(v * 8388607.0f));
+                const int32_t s = quantise(v, 24);
                 buf[i * 3] = static_cast<uint8_t>(s);
                 buf[i * 3 + 1] = static_cast<uint8_t>(s >> 8);
                 buf[i * 3 + 2] = static_cast<uint8_t>(s >> 16);

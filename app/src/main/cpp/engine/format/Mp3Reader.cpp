@@ -30,6 +30,64 @@ namespace {
 constexpr int kOutSamples = 16384; // per channel, which is far more than a frame
 } // namespace
 
+namespace {
+
+/**
+ * The samples an encoder added and expects a decoder to throw away.
+ *
+ * **Every mp3 starts late otherwise.** An encoder has to prime its filter
+ * bank before the first real sample can come out, so a file holds a few
+ * hundred samples of nothing at the front and a few hundred more at the back
+ * to fill the last frame. LAME writes both numbers into an `Info`/`Xing`
+ * frame at the head of the file, and a decoder that ignores them hands back
+ * about twenty-five milliseconds of silence followed by the music - which on
+ * an imported break is a loop that does not start on the one.
+ *
+ * The tag sits at the top of the first frame, past the side information,
+ * whose length depends on the version and whether it is mono. Then four bytes
+ * of flags say which of the optional fields are present, and the LAME
+ * extension follows them; the delay and padding are three bytes twenty-one
+ * into it, twelve bits each.
+ *
+ * The 529 is the decoder's own share and is a constant of the format rather
+ * than of this decoder: it is what mpglib, ffmpeg and LAME's own frontend all
+ * add to the encoder's number.
+ *
+ * Leaves both at nought - which is what every mp3 without the tag gets, and
+ * what this did for all of them until now.
+ */
+void lameTrim(const unsigned char *b, size_t n, size_t at, int32_t &skip, int32_t &trim) {
+    skip = 0;
+    trim = 0;
+    if (at + 4 > n || b[at] != 0xFFu || (b[at + 1] & 0xE0u) != 0xE0u) return;
+    const int version = (b[at + 1] >> 3) & 3;   // 3 = MPEG1, 2 = MPEG2, 0 = MPEG2.5
+    const bool mono = ((b[at + 3] >> 6) & 3) == 3;
+    const size_t side = version == 3 ? (mono ? 17u : 32u) : (mono ? 9u : 17u);
+    const size_t xing = at + 4 + side;
+    if (xing + 8 > n) return;
+    if (std::memcmp(b + xing, "Xing", 4) != 0 && std::memcmp(b + xing, "Info", 4) != 0) return;
+
+    const uint32_t flags = (static_cast<uint32_t>(b[xing + 4]) << 24) |
+                           (static_cast<uint32_t>(b[xing + 5]) << 16) |
+                           (static_cast<uint32_t>(b[xing + 6]) << 8) | b[xing + 7];
+    size_t lame = xing + 8;
+    if ((flags & 1u) != 0) lame += 4;   // the frame count
+    if ((flags & 2u) != 0) lame += 4;   // the byte count
+    if ((flags & 4u) != 0) lame += 100; // the seek table
+    if ((flags & 8u) != 0) lame += 4;   // the quality
+    if (lame + 24 > n) return;
+
+    const int32_t delay = (static_cast<int32_t>(b[lame + 21]) << 4) | (b[lame + 22] >> 4);
+    const int32_t padding = ((static_cast<int32_t>(b[lame + 22]) & 0x0F) << 8) | b[lame + 23];
+    // A tag can say anything; a delay of half a second is a tag that is wrong
+    // and trimming by it would take the start of the music with it.
+    if (delay < 0 || delay > 3000 || padding < 0 || padding > 3000) return;
+    skip = delay + 529;
+    trim = padding > 529 ? padding - 529 : 0;
+}
+
+} // namespace
+
 size_t Mp3Reader::audioStart(const unsigned char *b, size_t n) {
     if (n < 10 || std::memcmp(b, "ID3", 3) != 0) return 0;
     // A syncsafe length: four bytes of seven bits each, not counting the ten
@@ -119,6 +177,20 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
     if (!any || got.ch[0].empty()) {
         error = errors > 0 ? "no MPEG audio in it" : "no audio in it";
         return nullptr;
+    }
+
+    // The encoder's own padding, off both ends - see lameTrim.
+    {
+        int32_t skip = 0, trim = 0;
+        lameTrim(bytes.data(), bytes.size(), audioStart(bytes.data(), bytes.size()), skip, trim);
+        for (auto &ch : got.ch) {
+            if (ch.empty()) continue;
+            const auto have = static_cast<int32_t>(ch.size());
+            const int32_t front = std::min(skip, have);
+            const int32_t back = std::min(trim, have - front);
+            if (back > 0) ch.resize(static_cast<size_t>(have - back));
+            if (front > 0) ch.erase(ch.begin(), ch.begin() + front);
+        }
     }
 
     got.frames = static_cast<int32_t>(got.ch[0].size());
