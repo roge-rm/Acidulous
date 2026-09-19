@@ -210,22 +210,87 @@ private fun RecordPage(samples: File, onRecording: (Boolean) -> Unit, onRecorded
         }
     }
 
+    // **What you came to do, first.** The name, the button and the meter were
+    // under the source, the device, the gain, the monitor and the bit depth -
+    // six rows of setting up before the one thing the page is for, and on a
+    // phone that is a scroll before you can press record. Dan: "the user
+    // doesn't need to scroll before they can hit the record button".
+    //
+    // So the page is in two halves: what you do, then how it is set up. The
+    // settings have not moved relative to each other - they read in the order
+    // a signal travels, from where it comes from to what it is written as.
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        OutlinedTextField(
+            value = name, onValueChange = { name = it }, singleLine = true,
+            label = { Text("name", fontSize = 11.sp) },
+            modifier = Modifier.weight(1f), enabled = !recording,
+        )
+        Button(
+            onClick = {
+                if (recording) {
+                    NativeEngine.stopCapture()
+                    val file = lastFile
+                    message = if (file != null) "saved ${file.name}, %.1f s".format(seconds) else "saved"
+                    name = nextTakeName(samples)
+                    if (file != null) onRecorded(file)
+                } else {
+                    val target = File(samples, uniqueIn(samples, safeFileName(name, "take") + ".wav"))
+                    val error = NativeEngine.startCapture(target.absolutePath, if (fromInput) 0 else 1)
+                    if (error.isEmpty()) {
+                        lastFile = target
+                        seconds = 0f
+                        peak = 0f
+                        message = ""
+                    } else {
+                        message = error
+                    }
+                }
+            },
+            enabled = !fromInput || havePermission,
+        ) { Text(if (recording) "stop" else "record") }
+    }
+
+    // Under the button, because while it is running this is the thing being
+    // watched and it must not be somewhere else on the page.
+    Meter(level, Modifier.fillMaxWidth().height(10.dp), vertical = false, track = c.sunken)
+
+    if (recording) {
+        Text(
+            "recording  %.1f s  peak %.2f".format(seconds, peak),
+            color = c.red, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+        )
+        if (NativeEngine.captureOverflowed) {
+            Text("the writer fell behind; this take has a gap in it", color = c.accent, fontSize = 10.sp)
+        }
+        if (NativeEngine.captureDeaf) {
+            Text("nothing is arriving - this take is silence", color = c.red, fontSize = 10.sp)
+        }
+    } else if (message.isNotEmpty()) {
+        Text(message, color = c.textDim, fontSize = 11.sp)
+    }
+
+    // The one setting that cannot wait: the button above is disabled without
+    // it, and a disabled button with its explanation below the fold is a
+    // button that looks broken.
+    if (fromInput && !havePermission) {
+        Text("Recording needs permission to use the microphone.", color = c.red, fontSize = 11.sp)
+        TextButton(onClick = { ask.launch(Manifest.permission.RECORD_AUDIO) }) {
+            Text("allow", color = c.accent, fontSize = 12.sp)
+        }
+    }
+
     Section("source", note = if (fromInput) "a microphone or whatever is plugged in"
                             else "the app's own output - play something and capture the result") {
         Choice("in", fromInput) { if (!recording) fromInput = true }
         Choice("out (resample)", !fromInput) { if (!recording) fromInput = false }
     }
 
-    if (fromInput) {
-        if (!havePermission) {
-            Text(
-                "Recording needs permission to use the microphone.",
-                color = c.red, fontSize = 11.sp,
-            )
-            TextButton(onClick = { ask.launch(Manifest.permission.RECORD_AUDIO) }) {
-                Text("allow", color = c.accent, fontSize = 12.sp)
-            }
-        } else if (devices.size > 1) {
+    if (fromInput && havePermission) {
+        if (devices.size > 1) {
             // Only where there is a choice to make. On a phone with nothing
             // plugged in this is one row saying "built-in", which is a line
             // that has not earned itself.
@@ -238,9 +303,6 @@ private fun RecordPage(samples: File, onRecording: (Boolean) -> Unit, onRecorded
             Readout(opened, good = true)
         }
     }
-
-    Text("level", color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-    Meter(level, Modifier.fillMaxWidth().height(10.dp), vertical = false, track = c.sunken)
 
     if (fromInput) {
         SliderSection(
@@ -264,52 +326,8 @@ private fun RecordPage(samples: File, onRecording: (Boolean) -> Unit, onRecorded
         Choice("16 bit", UiPrefs.recordBits == 16) { if (!recording) UiPrefs.chooseRecordBits(16) }
         Choice("24 bit", UiPrefs.recordBits == 24) { if (!recording) UiPrefs.chooseRecordBits(24) }
     }
-
-    Text("name", color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-    OutlinedTextField(
-        value = name, onValueChange = { name = it }, singleLine = true,
-        modifier = Modifier.fillMaxWidth(), enabled = !recording,
-    )
-
-    if (recording) {
-        Text(
-            "recording  %.1f s  peak %.2f".format(seconds, peak),
-            color = c.red, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
-        )
-        if (NativeEngine.captureOverflowed) {
-            Text("the writer fell behind; this take has a gap in it", color = c.accent, fontSize = 10.sp)
-        }
-        if (NativeEngine.captureDeaf) {
-            Text("nothing is arriving - this take is silence", color = c.red, fontSize = 10.sp)
-        }
-    } else if (message.isNotEmpty()) {
-        Text(message, color = c.textDim, fontSize = 11.sp)
-    }
-
-    Button(
-        onClick = {
-            if (recording) {
-                NativeEngine.stopCapture()
-                val file = lastFile
-                message = if (file != null) "saved ${file.name}, %.1f s".format(seconds) else "saved"
-                name = nextTakeName(samples)
-                if (file != null) onRecorded(file)
-            } else {
-                val target = File(samples, uniqueIn(samples, safeFileName(name, "take") + ".wav"))
-                val error = NativeEngine.startCapture(target.absolutePath, if (fromInput) 0 else 1)
-                if (error.isEmpty()) {
-                    lastFile = target
-                    seconds = 0f
-                    peak = 0f
-                    message = ""
-                } else {
-                    message = error
-                }
-            }
-        },
-        enabled = !fromInput || havePermission,
-    ) { Text(if (recording) "stop" else "record") }
 }
+
 
 // --- page two: shaping it --------------------------------------------------
 
