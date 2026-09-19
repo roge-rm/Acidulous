@@ -1808,17 +1808,17 @@ internal object FactoryBanks {
     private fun nexus2() = Patch("Nexus", "Plucked",
         mapOf("s02_p3" to 0.02f, "s04_p2" to 0.94f, "s05_p1" to 0.95f, "volume" to 1f),
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0"),
-        family = "ours")
+        family = "house")
 
     private fun nexus3() = Patch("Nexus", "Leslie String",
         mapOf("s02_p3" to 0.02f, "s04_p2" to 0.95f, "s06_p1" to 0.95f, "volume" to 1f),
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|rotary|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"),
-        family = "ours")
+        family = "house")
 
     private fun nexus4() = Patch("Nexus", "Two Operators",
         mapOf("s01_p2" to 0.1f, "s03_p3" to 0.5f, "s05_p1" to 0.35f, "volume" to 0.87f),
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|op\nm|2|op\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
-        family = "ours")
+        family = "house")
 
     private fun nexus5() = Patch("Nexus", "Runs Itself",
         mapOf("s01_p2" to 0.3f, "s05_p2" to 0.05f, "s05_p4" to 0.25f, "s07_p1" to 0.35f, "volume" to 0.82f),
@@ -1828,7 +1828,7 @@ internal object FactoryBanks {
     private fun nexus6() = Patch("Nexus", "Listening",
         mapOf("s01_p2" to 0.18f, "s01_p3" to 0.6f, "s01_p6" to 0.9f, "s02_p1" to 0.95f, "volume" to 1f),
         mapOf("nexus" to "v|1\nm|0|audioin|mono\nm|1|grain|mono\nm|2|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0"),
-        family = "ours")
+        family = "house")
 
     private fun nexus7() = Patch("Nexus", "Macro Sweep",
         mapOf("s02_p2" to 0.3f, "s02_p3" to 0.45f, "s03_p1" to 0.02f, "s03_p4" to 0.25f, "s06_p1" to 0.85f, "macro1" to 0.45f, "volume" to 0.41f),
@@ -1848,17 +1848,17 @@ internal object FactoryBanks {
     private fun nexus10() = Patch("Nexus", "Tonewheels",
         mapOf("s02_p2" to 0.55f, "s03_p1" to 0.04f, "s03_p4" to 0.2f, "s05_p1" to 0.8f, "volume" to 0.39f),
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|wheels\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
-        family = "ours")
+        family = "house")
 
     private fun nexus11() = Patch("Nexus", "Wavetable Drift",
         mapOf("s02_p2" to 0.22f, "s03_p2" to 0.6f, "s04_p1" to 0.08f, "s04_p4" to 0.35f, "s06_p1" to 0.85f, "volume" to 0.74f),
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|wtosc\nm|2|lfo|mono\nm|3|filter\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|2.0|1.2|0.7\nc|1.0|3.0|1.0\nc|3.0|5.0|1.0\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
-        family = "ours")
+        family = "house")
 
     private fun nexus12() = Patch("Nexus", "Talking",
         mapOf("s01_p1" to 0.25f, "s04_p1" to 0.02f, "s04_p4" to 0.2f, "s06_p1" to 0.9f, "volume" to 0.88f),
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|audioin|mono\nm|3|bands|mono\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|1.0|3.0|1.0\nc|2.0|3.1|1.0\nc|3.0|5.0|1.0\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
-        family = "ours")
+        family = "house")
 
     private fun nexus13() = Patch("Nexus", "Sample and Hold",
         mapOf("s00_p1" to 0.3f, "s04_p1" to 0.01f, "s04_p4" to 0.18f, "s06_p2" to 0.45f, "s06_p3" to 0.35f, "s07_p1" to 0.8f, "volume" to 0.62f),

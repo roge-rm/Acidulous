@@ -16,7 +16,7 @@
 # because enumerating them was thought to need the engine over JNI. It does
 # not: the graph is text.
 #
-# Families: basic, ours, macro, morph, generative, texture.
+# Families: basic, house, macro, morph, generative, texture.
 #
 # The spread across this bank is wide on purpose. Plucked, Leslie String and
 # Listening are a struck string and a grain cloud among held notes: `loud` is
@@ -45,7 +45,7 @@ patch Subtractive family=basic
   s05_p1         0.35
   volume         1.00
 
-patch Plucked family=ours
+patch Plucked family=house
   # Filament's string, plucked by a burst of noise. No other modular has this
   # block, because no other app has Filament.
   set nexus "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0"
@@ -56,7 +56,7 @@ patch Plucked family=ours
   s05_p1         0.95
   volume         1.00
 
-patch "Leslie String" family=ours
+patch "Leslie String" family=house
   # And through Manual's cabinet, which is the other block nothing else can
   # offer. A plucked string in a rotating speaker is not a sound anybody has.
   #
@@ -72,7 +72,7 @@ patch "Leslie String" family=ours
   s06_p1         0.95
   volume         1.00
 
-patch "Two Operators" family=ours
+patch "Two Operators" family=house
   # Two operators and the rest of Ratio taken apart and patched by hand.
   set nexus "v|1\nm|0|voice\nm|1|op\nm|2|op\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"
   s01_p2         0.1
@@ -91,7 +91,7 @@ patch "Runs Itself" family=generative
   s07_p1         0.35
   volume         0.82
 
-patch Listening family=ours input=break
+patch Listening family=house input=break
   # Whatever is plugged in, granulated. On a phone that input is you.
   #
   # The cabinet came off: a rotary swells and falls on its own cycle, so a
@@ -146,7 +146,7 @@ patch Morphing family=morph
   s06_p1         0.9
   volume         1.00
 
-patch Tonewheels family=ours
+patch Tonewheels family=house
   # Manual's generator as a block. Ninety-one wheels turning, through a filter
   # and an envelope - an organ nobody built, because the generator is not
   # supposed to come out of the organ.
@@ -157,7 +157,7 @@ patch Tonewheels family=ours
   s05_p1         0.8
   volume         0.39
 
-patch "Wavetable Drift" family=ours
+patch "Wavetable Drift" family=house
   # Trinity's wavetable bank, with an LFO walking through the frames. The
   # table is a module here, so the thing that scans it can be anything - and
   # an LFO is only the least surprising choice.
@@ -169,7 +169,7 @@ patch "Wavetable Drift" family=ours
   s06_p1         0.85
   volume         0.74
 
-patch Talking family=ours input=break
+patch Talking family=house input=break
   # Cipher's band map as a block: what is plugged in shapes the oscillators.
   # A vocoder wired by hand, and the carrier is whatever you patch to it
   # rather than whatever the machine decided.

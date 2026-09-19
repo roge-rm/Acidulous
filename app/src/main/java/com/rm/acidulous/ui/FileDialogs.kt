@@ -95,7 +95,7 @@ fun PatchBrowserDialog(
         else named + (if (factory.any { it.family.isEmpty() }) listOf(OTHER) else emptyList())
     }
     val labels = remember(families) {
-        (if (families.isEmpty()) listOf("factory") else families) + "yours"
+        (if (families.isEmpty()) listOf("factory") else families) + "user"
     }
     var tab by rememberSaveable(machine) { mutableStateOf(0) }
     if (tab >= labels.size) tab = 0
