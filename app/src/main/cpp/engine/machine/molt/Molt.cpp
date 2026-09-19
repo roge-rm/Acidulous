@@ -284,13 +284,52 @@ float Molt::layGrain(Voice &v, float formantRatio, float tune, float rateSec, bo
 
     // Hann summed at fifty per cent overlap is one; laid tighter it is more
     // and wider it is less, and either way the hop over the half length is
-    // the correction. Capped, so a grain standing alone is not amplified to
-    // cover for the silence around it.
-    const float gain = clampf(2.0f * targetPeriod / static_cast<float>(n), 0.0f, 1.6f);
+    // the correction.
+    //
+    // **And it is only a correction while the grains actually overlap.** A
+    // grain is two source periods long and they are laid one target period
+    // apart, so when the note is more than an octave under the pitch the
+    // tracker reports, consecutive grains do not touch and there is nothing
+    // to correct for - the right gain is one, and `2*target/n` asks for six.
+    // The old cap of 1.6 still let a third of that through, and what it
+    // sounds like is a train of isolated bursts rather than a voice.
+    //
+    // Which is not a corner case, because the tracker is wrong about the
+    // octave on about one hop in ten of a real take: one short `srcPeriod`
+    // and the grain for that mark is a sixth as long as its own spacing.
+    // `Wide Bend` peaked at +12.3 dBFS that way, and only at rate 50 - at 20,
+    // 120 and 250 the glide crossed the bad value somewhere the take was
+    // quiet. A patch that is eighteen decibels hot because of where a glide
+    // happened to be is not a patch anybody can voice.
+    //
+    // (The comment below about the head crawling and filling the gaps is not
+    // true of this machine: the head advances one frame per sample whatever
+    // the note is. It fills gaps when the *source* is low, not when the
+    // target is.)
+    const float gain = clampf(2.0f * targetPeriod / static_cast<float>(n), 0.0f, 1.0f);
     const float *window = hannTable();
     const float wStep = static_cast<float>(kWindowSize - 1) / static_cast<float>(n - 1);
-    const float from = static_cast<float>(e.at) - half;
+    // **A grain that runs off the end of the take is laid from the middle of
+    // its own window, which is a step.**
+    //
+    // The window is what makes overlap-add seamless: it is nought at both
+    // ends, so a grain arrives and leaves without an edge. Reading it from
+    // `e.at - half` puts the epoch at its centre, which is right - but a mark
+    // less than one period into the take has no audio to fill the first half
+    // of its window, and the guard below simply skipped those samples. The
+    // grain then began at whatever the window was worth where the audio
+    // started, which for the very first mark of a take is its peak. Every
+    // note-on reaching for the front of a take emitted a step, and the
+    // harness reads a step at the note-on as exactly what it is: a click, at
+    // eleven times the sound's own corners, on the patches whose first grain
+    // was loudest.
+    //
+    // Slid rather than skipped. One grain sits a fraction of a period off
+    // its epoch at each end of the take and every window is whole.
     const int32_t frames = u->frames;
+    const float span = static_cast<float>(n - 1) * formantRatio;
+    const float from = clampf(static_cast<float>(e.at) - half, 0.0f,
+                              std::max(0.0f, static_cast<float>(frames - 2) - span));
 
     for (int32_t k = 0; k < n; ++k) {
         const float sp = from + static_cast<float>(k) * formantRatio;

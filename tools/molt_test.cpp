@@ -64,6 +64,52 @@ float voicedShare(const PitchTrack &t) {
 }
 
 
+/**
+ * A vowel as somebody would actually hand it over: a room under it, a
+ * recorder that clipped, and silence at the front while they got ready.
+ *
+ * **This is the case the harness had never met.** Molt was built and voiced
+ * against `vowel()`, which is a perfectly periodic pulse train through two
+ * resonances - no rumble, no clipping, a crest factor of eleven decibels and
+ * audio from frame nought. The first real recording it was given was 56% of
+ * its energy under seventy hertz, clipped at 0.3% of its samples, and had
+ * four hundred milliseconds of room tone in front of the first word. Every
+ * one of those broke something, and none of them could be seen from here.
+ *
+ * So the dirt is synthesised too, and the numbers are stated: a 32 Hz tone
+ * and noise under seventy hertz at three times the vowel's own level, hard
+ * clipping at eight tenths, and four hundred milliseconds of room at a
+ * fortieth of it. Dan's recording cannot live in this repository, and without
+ * a stand-in for it nothing here can ever see this class of fault again.
+ */
+std::vector<float> dirtyVowel(float f0, float seconds) {
+    std::vector<float> clean = vowel(f0, seconds);
+    audition::Rng rng(0xBEEFu);
+    const auto n = static_cast<int32_t>(clean.size());
+    float rms = 0.0f;
+    for (float v : clean) rms += v * v;
+    rms = std::sqrt(rms / static_cast<float>(std::max(1, n)));
+
+    // The room: a hum well under the tracker's floor, and low-passed noise
+    // with it. Three times the voice, which is what more than half of the
+    // energy being under seventy hertz means.
+    std::vector<float> out(static_cast<size_t>(n), 0.0f);
+    float lp = 0.0f;
+    for (int32_t i = 0; i < n; ++i) {
+        const float t = static_cast<float>(i) / kSr;
+        lp += (rng.next() - lp) * 0.002f;
+        out[static_cast<size_t>(i)] =
+            clean[static_cast<size_t>(i)] + rms * 3.0f * (std::sin(2.0f * 3.14159265f * 32.0f * t) * 0.5f + lp * 6.0f);
+    }
+    // The recorder: hard clipping, as a phone does when it is held too close.
+    for (float &v : out) v = std::max(-0.8f, std::min(0.8f, v));
+    // And the wait before the first word.
+    std::vector<float> room(static_cast<size_t>(kSr * 0.4f), 0.0f);
+    for (size_t i = 0; i < room.size(); ++i) room[i] = rms * 0.025f * rng.next();
+    room.insert(room.end(), out.begin(), out.end());
+    return room;
+}
+
 /** Play a take through a Molt and hand back what came out, in mono. */
 std::vector<float> play(audio::Utterance &u, float seconds, const std::vector<int> &notes,
                         const std::vector<std::pair<int32_t, float>> &overrides = {}) {
@@ -328,6 +374,64 @@ int main() {
         std::snprintf(detail, sizeof(detail), "(%d of %zu samples differ, peak %.3f)", differ,
                       first.size(), static_cast<double>(loudest));
         check(differ == 0 && loudest > 0.01f, "the same performance twice, bit for bit", detail);
+    }
+
+    // --- and the same thing, dirty -----------------------------------------
+    //
+    // Everything above is asserted again on a take with a room, a clip and a
+    // wait in front of it. `analyse` cleans all three, and each check here
+    // failed before it did.
+    std::printf("\na take somebody actually recorded\n");
+    {
+        audio::Utterance dirty;
+        dirty.mono = dirtyVowel(180.0f, 3.0f);
+        dirty.analyse(kSr);
+        char detail[160];
+
+        std::snprintf(detail, sizeof(detail), "(root found at %.1f Hz, %zu marks)",
+                      static_cast<double>(dirty.rootHz), dirty.epochs.size());
+        check(std::abs(cents(dirty.rootHz, 180.0f)) < 20.0f,
+              "the rumble does not become the pitch", detail);
+
+        // The room at the front is gone, so the take begins on the voice.
+        const float began = static_cast<float>(static_cast<int32_t>(dirtyVowel(180.0f, 3.0f).size()) -
+                                               dirty.frames) / kSr;
+        std::snprintf(detail, sizeof(detail), "(%.0f ms taken off the front)",
+                      static_cast<double>(began * 1000.0f));
+        check(began > 0.2f && began < 0.45f, "the silence before the first word is gone", detail);
+
+        // What is left is the voice and not the room it was sung in.
+        double below = 0.0, total = 0.0;
+        for (int32_t at = 0; at + 8192 < dirty.frames; at += static_cast<int32_t>(kSr * 0.25f)) {
+            const audition::Spectrum sp = audition::spectrumAt(dirty.mono, at);
+            below += static_cast<double>(sp.fractionBelow(audio::PitchTrack::kMinHz)) * sp.totalSq;
+            total += sp.totalSq;
+        }
+        const double share = total > 0.0 ? below / total : 0.0;
+        std::snprintf(detail, sizeof(detail), "(%.1f%% of its energy left under %g Hz)",
+                      100.0 * share, static_cast<double>(audio::PitchTrack::kMinHz));
+        check(share < 0.02, "the room under the voice is gone", detail);
+
+        // And the marks are all cut the same way up, which is what lets the
+        // grains add rather than cancel.
+        int32_t voiced = 0, negative = 0;
+        for (const audio::Epoch &e : dirty.epochs) {
+            if (!e.voiced) continue;
+            ++voiced;
+            if (dirty.mono[static_cast<size_t>(e.at)] < 0.0f) ++negative;
+        }
+        const float sameWayUp = voiced > 0 ? std::max(negative, voiced - negative) /
+                                                 static_cast<float>(voiced) : 0.0f;
+        std::snprintf(detail, sizeof(detail), "(%.0f%% of %d marks agree)",
+                      static_cast<double>(sameWayUp * 100.0f), voiced);
+        check(sameWayUp > 0.9f, "every mark is cut the same way up", detail);
+
+        const std::vector<float> out = play(dirty, 1.2f, {60});
+        const float got = pitchOf(out);
+        std::snprintf(detail, sizeof(detail), "(261.6 Hz wanted, %.1f sung, %+.1f cents)",
+                      static_cast<double>(got), static_cast<double>(cents(got, 261.63f)));
+        check(got > 0.0f && std::abs(cents(got, 261.63f)) < 25.0f,
+              "a dirty take still sings the note written", detail);
     }
 
     std::printf("\n%s\n", failures == 0 ? "all ok" : "FAILURES");

@@ -1,6 +1,7 @@
 #include "Utterance.h"
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace acidulous::audio {
 
@@ -11,7 +12,21 @@ constexpr int32_t kDecim = 6;
 
 } // namespace
 
-void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float sampleRate) {
+void removeRumble(std::vector<float> &x, float sampleRate, float hz, int poles) {
+    if (x.empty() || sampleRate <= 0.0f || hz <= 0.0f) return;
+    const float a = std::exp(-2.0f * 3.14159265f * hz / sampleRate);
+    for (int pass = 0; pass < poles; ++pass) {
+        float px = 0.0f, py = 0.0f;
+        for (float &v : x) {
+            py = a * (py + v - px);
+            px = v;
+            v = py;
+        }
+    }
+}
+
+void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float sampleRate,
+                      bool cleaned) {
     hz.clear();
     clarity.clear();
     hopFrames = sampleRate * kHopMs * 0.001f;
@@ -40,18 +55,13 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
     // synthetic take reads 125 Hz throughout and is unmoved by any of it,
     // which is the point - this takes nothing away from material that was
     // already clean.
+    //
+    // `Utterance::analyse` now does this to the take itself before it gets
+    // here, so for that caller this pass is close to a no-op - but `find` is
+    // also driven on its own by the harness, and a tracker that is only
+    // correct when somebody else has cleaned up first is a trap.
     std::vector<float> clean(mono.begin(), mono.begin() + frames);
-    {
-        const float a = std::exp(-2.0f * 3.14159265f * kMinHz / sampleRate);
-        for (int pass = 0; pass < 4; ++pass) {
-            float px = 0.0f, py = 0.0f;
-            for (float &v : clean) {
-                py = a * (py + v - px);
-                px = v;
-                v = py;
-            }
-        }
-    }
+    if (!cleaned) removeRumble(clean, sampleRate, kMinHz, 4);
 
     // --- decimate -----------------------------------------------------------
     const float lowRate = sampleRate / static_cast<float>(kDecim);
@@ -73,6 +83,7 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
     hz.assign(static_cast<size_t>(std::max(0, hops)), 0.0f);
     clarity.assign(static_cast<size_t>(std::max(0, hops)), 0.0f);
     std::vector<float> scores;
+    bool wasVoiced = false;
 
     for (int32_t h = 0; h < hops; ++h) {
         const int32_t at = h * hop;
@@ -87,7 +98,7 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
             const double s = low[static_cast<size_t>(at + i)];
             power += s * s;
         }
-        if (power < 1e-7) continue; // silence has no pitch
+        if (power < 1e-7) { wasVoiced = false; continue; } // silence has no pitch
 
         scores.assign(static_cast<size_t>(maxLag - minLag + 1), 0.0f);
         float bestScore = 0.0f;
@@ -107,7 +118,7 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
             scores[static_cast<size_t>(lag - minLag)] = score;
             bestScore = std::max(bestScore, score);
         }
-        if (bestScore < kVoiced) continue;
+        if (bestScore < (wasVoiced ? kVoicedHold : kVoiced)) { wasVoiced = false; continue; }
 
         int32_t bestLag = 0;
         for (int32_t lag = minLag; lag <= maxLag; ++lag) {
@@ -116,7 +127,7 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
                 break;
             }
         }
-        if (bestLag <= 0) continue;
+        if (bestLag <= 0) { wasVoiced = false; continue; }
 
         // Halve while halving is just as good, and no further.
         //
@@ -187,6 +198,36 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
         }
         hz[static_cast<size_t>(h)] = sampleRate / static_cast<float>(fineLag);
         clarity[static_cast<size_t>(h)] = std::max(bestScore, fineBest);
+        wasVoiced = true;
+    }
+
+    // --- and then the octave errors, which are not errors of measurement ---
+    //
+    // Every hop above decides on its own, and for a periodic signal the
+    // octave is genuinely ambiguous: a voice correlates with itself two
+    // periods away exactly as well as one. The walk at the top picks one, and
+    // on a real take it picks differently from its neighbour one time in five
+    // - a fifth of the track jumping more than seven semitones between hops
+    // ten milliseconds apart, which no voice does.
+    //
+    // A five-hop median settles it, because an octave error is a minority
+    // report among its neighbours and a sung interval is not. Only voiced
+    // hops vote, so a median never invents a pitch where there was none and
+    // never drags one toward a silence.
+    {
+        std::vector<float> smoothed = hz;
+        std::vector<float> near;
+        for (size_t i = 0; i < hz.size(); ++i) {
+            if (hz[i] <= 0.0f) continue;
+            near.clear();
+            for (size_t k = i >= 2 ? i - 2 : 0; k < hz.size() && k <= i + 2; ++k) {
+                if (hz[k] > 0.0f) near.push_back(hz[k]);
+            }
+            if (near.size() < 3) continue;
+            std::nth_element(near.begin(), near.begin() + static_cast<long>(near.size() / 2), near.end());
+            smoothed[i] = near[near.size() / 2];
+        }
+        hz.swap(smoothed);
     }
 }
 
@@ -216,8 +257,49 @@ void Utterance::analyse(float sampleRate) {
     frames = static_cast<int32_t>(mono.size());
     if (frames <= 1) return;
 
+    // Before anything reads it - see the header. Four poles at the tracker's
+    // own floor, which is the strength that was measured to work: one pole
+    // and two both left a real take pegged at the tracker's ceiling.
+    removeRumble(mono, sampleRate, PitchTrack::kMinHz, 4);
+
+    // **And then the room before the voice.**
+    //
+    // Somebody presses record, and then they sing. A real take had four
+    // hundred milliseconds of room tone in front of it, twenty to thirty
+    // decibels under the phrase - which is silence to a listener and is not
+    // silence to a machine that starts reading at frame nought. Every note
+    // began in it: the harness timed the bank at four hundred and fifty
+    // milliseconds to speak, where over two hundred and fifty is a warning,
+    // and measured the note-on's corner against a stretch of nothing, which
+    // is a number with no meaning in it.
+    //
+    // Twenty decibels under the take's own level, in ten millisecond
+    // windows, and then back off by two of them so the first consonant keeps
+    // its front. A breath that is part of the phrase is well above that; a
+    // room is well below it. Only the front - what comes after the last word
+    // is the take's own decay, and `loop` wants it.
+    {
+        double sum = 0.0;
+        for (float v : mono) sum += static_cast<double>(v) * v;
+        const auto rms = static_cast<float>(std::sqrt(sum / static_cast<double>(frames)));
+        const int32_t win = std::max(1, static_cast<int32_t>(sampleRate * 0.01f));
+        const float floorRms = rms * 0.1f;
+        int32_t at = 0;
+        while (at + win <= frames) {
+            double w = 0.0;
+            for (int32_t i = at; i < at + win; ++i) w += static_cast<double>(mono[static_cast<size_t>(i)]) * mono[static_cast<size_t>(i)];
+            if (std::sqrt(w / win) >= floorRms) break;
+            at += win;
+        }
+        at = std::max(0, at - 2 * win);
+        if (at > 0 && at < frames - win) {
+            mono.erase(mono.begin(), mono.begin() + at);
+            frames = static_cast<int32_t>(mono.size());
+        }
+    }
+
     PitchTrack track;
-    track.find(mono, frames, sampleRate);
+    track.find(mono, frames, sampleRate, true);
 
     // The median rather than the mean: a take ends on a sigh and starts on a
     // breath, and both are found as pitches somewhere absurd. The middle of
@@ -241,27 +323,90 @@ void Utterance::analyse(float sampleRate) {
     // not two thousand.
     const float unvoicedPeriod = sampleRate * 0.005f;
 
-    float pos = 0.0f;
-    while (pos < static_cast<float>(frames)) {
+    // Where the marks fall, before any of them is pulled onto a peak. The
+    // walk does not depend on the snapping - `pos` advances by the period the
+    // tracker reports and never by where a mark ended up - so it can be done
+    // first, and the polarity decided from all of it.
+    std::vector<Epoch> raw;
+    for (float pos = 0.0f; pos < static_cast<float>(frames);) {
+        const float period = track.periodAt(pos, sampleRate);
+        Epoch e;
+        e.voiced = period > 1.0f;
+        e.period = e.voiced ? period : unvoicedPeriod;
+        e.at = static_cast<int32_t>(pos);
+        raw.push_back(e);
+        pos += e.period;
+    }
+
+    // **Which way up a glottal pulse is, decided once for the take.**
+    //
+    // A voiced mark is pulled onto the biggest sample within a quarter
+    // period, because overlap-add wants every grain cut at the same point in
+    // the cycle; cut them at arbitrary phases instead and the sum of two of
+    // them cancels as often as it adds, which is heard as a hollow, phasey
+    // voice.
+    //
+    // Taking the biggest by *magnitude* does not do that. A glottal pulse has
+    // a large excursion each way and which of the two is larger is a property
+    // of the recording - the microphone, the room, the phase of everything
+    // the voice went through - and on a real take it is close to a coin toss
+    // per period. Measured on one: 48% of the marks landed on a negative
+    // sample and 52% on a positive, which is not a take that changes its mind
+    // halfway, it is alternate marks cut half a cycle apart. Grains then
+    // subtract rather than add, and the coherence between neighbours - which
+    // should be near one - came out at 0.35.
+    //
+    // So the polarity is a property of the take and is decided from the whole
+    // of it, and then every mark is snapped the same way up.
+    double positive = 0.0, negative = 0.0;
+    auto reachOf = [&](const Epoch &e) { return static_cast<int32_t>(e.period * 0.25f); };
+    for (const Epoch &e : raw) {
+        if (!e.voiced) continue;
+        const int32_t reach = reachOf(e);
+        const int32_t from = std::max(0, e.at - reach);
+        const int32_t to = std::min(frames - 1, e.at + reach);
+        float hi = 0.0f, lo = 0.0f;
+        for (int32_t i = from; i <= to; ++i) {
+            hi = std::max(hi, mono[static_cast<size_t>(i)]);
+            lo = std::min(lo, mono[static_cast<size_t>(i)]);
+        }
+        positive += static_cast<double>(hi) * hi;
+        negative += static_cast<double>(lo) * lo;
+    }
+    const float sign = negative > positive ? -1.0f : 1.0f;
+
+    // **The walk advances from where the last mark landed, not from where it
+    // was aimed.**
+    //
+    // The marks used to be laid on a ruler of their own - `pos += period`
+    // from the beginning of the take - and then each pulled onto the nearest
+    // peak within a quarter period. On material whose pitch the tracker gets
+    // exactly right that is the same thing. On a real take it is not: an
+    // error of a per cent or two in the period is a ruler that slides
+    // steadily away from the pulses, and a snap that reaches only a quarter
+    // of a period cannot keep pulling it back. The marks then drift in and
+    // out of alignment, and the spacing between neighbours - which should be
+    // one period - came out thirteen per cent away from it, against half a
+    // per cent on synthetic material.
+    //
+    // Stepping from the snapped mark closes the loop: the period says how far
+    // to go, the waveform says where to land, and an error in the first is
+    // corrected by the second instead of accumulating.
+    for (float pos = 0.0f; pos < static_cast<float>(frames);) {
         const float period = track.periodAt(pos, sampleRate);
         Epoch e;
         e.voiced = period > 1.0f;
         e.period = e.voiced ? period : unvoicedPeriod;
         e.at = static_cast<int32_t>(pos);
 
-        // A voiced mark is pulled onto the nearest peak of the waveform
-        // within a quarter period. Overlap-add wants every grain cut at the
-        // same point in the cycle; cut them at arbitrary phases instead and
-        // the sum of two of them cancels as often as it adds, which is heard
-        // as a hollow, phasey voice.
         if (e.voiced) {
-            const int32_t reach = static_cast<int32_t>(period * 0.25f);
+            const int32_t reach = reachOf(e);
             const int32_t from = std::max(0, e.at - reach);
             const int32_t to = std::min(frames - 1, e.at + reach);
             int32_t peak = e.at;
-            float best = -1.0f;
+            float best = -std::numeric_limits<float>::max();
             for (int32_t i = from; i <= to; ++i) {
-                const float v = std::abs(mono[static_cast<size_t>(i)]);
+                const float v = sign * mono[static_cast<size_t>(i)];
                 if (v > best) {
                     best = v;
                     peak = i;
@@ -275,7 +420,10 @@ void Utterance::analyse(float sampleRate) {
         if (!epochs.empty() && e.at <= epochs.back().at) e.at = epochs.back().at + 1;
         if (e.at >= frames) break;
         epochs.push_back(e);
-        pos += e.period;
+        // From the mark, and never backwards: a snap that pulled the mark
+        // back further than the next step goes forward would walk the take in
+        // the wrong direction and never leave.
+        pos = std::max(static_cast<float>(e.at) + e.period, pos + e.period * 0.5f);
     }
 }
 

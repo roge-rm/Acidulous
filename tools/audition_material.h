@@ -611,22 +611,65 @@ inline std::unique_ptr<audio::Utterance> voiceUtterance() {
     std::string ignored;
     u->mono = fileMono(std::getenv("ACIDULOUS_INPUT_FILE"), ignored);
     if (u->mono.empty()) u->mono = speechPhrase();
-    // Levelled by peak, not by rms, and this is where the two callers part.
-    // A vocoder's modulator is an *analysis* signal - only its spectrum is
-    // read, so nominal rms is the right calibration and a peak over one
-    // costs nothing. Molt lays the take's own samples down as audio, so a
-    // take that peaks at three and a bit is a patch that peaks at three and a
-    // bit whatever the volume knob says. A real voice has a far higher crest
-    // factor than a synthesised one: the same nominal rms put this take at
-    // +10 dBFS and the synthetic phrase at -9.
-    float peak = 0.0f;
-    for (float v : u->mono) peak = std::max(peak, std::fabs(v));
-    if (peak > 1e-6f) {
-        const float gain = 0.9f / peak;
+    u->frames = static_cast<int32_t>(u->mono.size());
+    // The marks, and the rumble out of the take itself on the way - which
+    // has to happen before the level is set, because on this recording the
+    // rumble was *holding the peaks down*. See below.
+    u->analyse(kMatSr);
+
+    // **Levelled by what it reaches, not by its worst sample.**
+    //
+    // This was a peak normalise to 0.9, on the reasoning that Molt lays the
+    // take's own samples down as audio while a vocoder only reads a spectrum.
+    // The second half of that is right and the first half is not: the peak is
+    // scaled by the patch's `volume` like everything else in the signal, so
+    // what peak-levelling actually buys is that a single sample sets the
+    // level of the whole take.
+    //
+    // Which is what happened. The recording is clipped - 0.3% of it at full
+    // scale - and the rumble under it was subtracting from those peaks, so
+    // taking the rumble out *raises* the loudest sample from 1.0 to 1.8. It
+    // sits fourteen decibels above the take's own 99.9th percentile. Levelled
+    // against it the take arrived at -34 dBFS rms and the whole bank measured
+    // fourteen decibels under every other bank, for one sample's sake.
+    //
+    // `[[normalise-on-a-nominal-level]]`: against the level the signal
+    // reaches. Peaks over one are then possible and are the material's own;
+    // a patch's `volume` is where they are answered, which is what voicing a
+    // bank against a take means.
+    double sum = 0.0;
+    for (float v : u->mono) sum += static_cast<double>(v) * v;
+    const auto rms = static_cast<float>(std::sqrt(sum / std::max<size_t>(1, u->mono.size())));
+    if (rms > 1e-6f) {
+        const float gain = kInputNominalRms / rms;
         for (float &v : u->mono) v *= gain;
     }
-    u->frames = static_cast<int32_t>(u->mono.size());
-    u->analyse(kMatSr);
+
+    // And a ceiling over the handful that are nothing like the rest.
+    //
+    // Levelling by rms is right and it leaves the crest factor alone, which
+    // for a clipped recording is thirty-three decibels - the peaks the
+    // rumble filter uncovered. A grain landing on one of those is a patch
+    // eight decibels hot for the sake of 0.01% of the take, and a bank
+    // cannot be voiced against a level that one grain in a thousand ignores.
+    //
+    // The knee is above the take's own 99.99th percentile, so the body of it
+    // is untouched and only the outliers bend. A limiter rather than another
+    // normalise, because the whole point is not to let the outliers set the
+    // level of everything else.
+    //
+    // The ceiling is full scale, because a take is audio and audio does not
+    // go above it. That also makes the worst case a patch can reach its own
+    // `volume` and nothing more, which is what lets a bank be levelled at
+    // all: with the ceiling at two, `Wide Bend` peaked at +2.1 dBFS while
+    // measuring the same loudness as everything around it.
+    constexpr float kKnee = 0.7f, kCeiling = 1.0f;
+    for (float &v : u->mono) {
+        const float m = std::fabs(v);
+        if (m <= kKnee) continue;
+        v = (v < 0.0f ? -1.0f : 1.0f) *
+            (kKnee + (kCeiling - kKnee) * std::tanh((m - kKnee) / (kCeiling - kKnee)));
+    }
     return u;
 }
 
