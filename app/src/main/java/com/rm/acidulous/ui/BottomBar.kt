@@ -13,7 +13,11 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.runtime.Stable
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -104,13 +108,81 @@ val BarAnchor = 44.dp
  * has been built for, but it is the number to check if one turns up.
  */
 val BarWord = 58.dp
+/**
+ * What a screen lays its controls out with, whichever way the bar runs.
+ *
+ * The bar is a row on a phone held upright and a column against the right
+ * edge when it is turned, and **the screen should not have to know which**.
+ * That was already half true: this file's own note says a screen says what
+ * goes in the row and does not get to say how tall it is or where it sits.
+ * It was only half true because the content lambda had a `RowScope`, so
+ * every call site wrote `Modifier.width(BarAnchor)` and `Modifier.weight(1f)`
+ * - two statements about the axis, in the one place that is not supposed to
+ * have an opinion about it. The editor's footer had grown three `if
+ * (landscape)` branches saying so.
+ *
+ * Now a pill asks for what it *is* - anchored, a word wide, or sharing what
+ * is left - and the bar turns it into the right axis.
+ */
+@Stable
+class BarScope internal constructor(
+    /** True when the bar runs down the screen. Rarely needed; glyphs use it. */
+    val vertical: Boolean,
+    private val weigh: (Modifier, Float) -> Modifier,
+) {
+    /** A pill that shares what the fixed ones leave. */
+    fun Modifier.barWeight(weight: Float = 1f): Modifier = weigh(this, weight)
+
+    /**
+     * The anchored size, across the bar's own axis.
+     *
+     * **Sideways it is a share rather than a stated height.** Anchoring is a
+     * portrait rule: upright the bar is the width of the phone and there is
+     * room for every pill at 44 dp with space to spare. Turned, the column
+     * has whatever is left above the keyboard - about 270 dp on a phone - and
+     * eight pills at 44 dp is 380. Stating the height there does not make
+     * them 44 dp, it makes the last three fall off the bottom.
+     *
+     * So they share it, which is what the 300 dp landscape row did before
+     * this and for the same reason. A pill comes out about 34 dp tall and the
+     * full width of the column, which is the same target area the row gave
+     * it at 37 dp wide.
+     */
+    val anchor: Modifier
+        get() = if (vertical) weigh(Modifier.fillMaxWidth(), 1f) else Modifier.width(BarAnchor)
+
+    /** Wide enough for a word - see [BarWord]. */
+    val word: Modifier
+        get() = if (vertical) weigh(Modifier.fillMaxWidth(), 1f) else Modifier.width(BarWord)
+}
+
+/**
+ * [vertical] runs the bar down the screen instead of across it.
+ *
+ * The [readout] is **not drawn when vertical**: it is two lines of position
+ * and diagnostics, and the column is about as wide as one pill. A screen that
+ * wants it sideways places it itself, where there is width for it.
+ */
 @Composable
 fun BottomBar(
     modifier: Modifier = Modifier,
+    vertical: Boolean = false,
     /** Lines above the buttons - the arranger's position and diagnostics. */
     readout: @Composable ColumnScope.() -> Unit = {},
-    content: @Composable RowScope.() -> Unit,
+    content: @Composable BarScope.() -> Unit,
 ) {
+    if (vertical) {
+        Column(
+            modifier.fillMaxHeight()
+                .background(Acid.colors.bar)
+                .padding(horizontal = 6.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            BarScope(true) { m, w -> with(this@Column) { m.weight(w) } }.content()
+        }
+        return
+    }
     Column(
         modifier.fillMaxWidth()
             .background(Acid.colors.bar)
@@ -120,8 +192,9 @@ fun BottomBar(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            content = content,
-        )
+        ) {
+            BarScope(false) { m, w -> with(this@Row) { m.weight(w) } }.content()
+        }
     }
 }
 

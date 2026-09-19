@@ -204,10 +204,7 @@ fun EditScreen(
 
     // Two bars at a time in the roll, one in the step views: any more and the
     // notes are too narrow to grab. The count of pages follows from that.
-    // Sideways: the same test ui/Cutout.kt uses, which stays right in
-    // multi-window and on a fold where the orientation constant does not.
-    val windowSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-    val landscape = windowSize.width > windowSize.height
+    val landscape = isLandscape()
     // Fewer rows sideways, because a row shorter than about 11dp loses its
     // name and a nameless roll is worth less than a shorter one.
     val defaultRows = if (landscape) ROWS_LAND else ROWS
@@ -535,11 +532,16 @@ fun EditScreen(
             modifier = Modifier.fillMaxWidth().height(if (autoFolded) 24.dp else 88.dp).padding(top = 4.dp),
         )
         }
-        val panelSlot: @Composable () -> Unit = {
+        // [bar] and [body] are the machine panel's two halves. Upright both
+        // are drawn together; sideways the header stands down the left edge
+        // and the cards on the right, with the roll between them, so each is
+        // placed separately. The fx slots and the mixer have headers of their
+        // own and belong wholly to the body.
+        val panelSlot: @Composable (bar: Boolean, body: Boolean) -> Unit = { bar, body ->
         // The machine's face: knobs go to the engine as gestures and into the document as undo steps.
         // Or, behind the fx toggle, the track's two insert slots.
-        if (panel == 1) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp))
-        else if (panel == 2) MixerPanel(song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth().padding(top = 4.dp))
+        if (panel == 1) { if (body) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp)) }
+        else if (panel == 2) { if (body) MixerPanel(song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth().padding(top = 4.dp)) }
         else MachinePanel(
             track, trackIndex, editor, patchNames,
             // A patch knows the notes it is for. Loading one puts the
@@ -581,7 +583,9 @@ fun EditScreen(
                 editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), rel) }
             },
             onOpenPatch = onOpenPatch,
-            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            bar = bar, body = body, vertical = landscape,
+            modifier = Modifier.fillMaxWidth()
+                .then(if (landscape) Modifier.fillMaxHeight() else Modifier.padding(top = 4.dp)),
         )
         }
         // The performance controls live with the keys now: a mod wheel where
@@ -687,14 +691,10 @@ fun EditScreen(
         // twenty-six dp wide when they took one, and they sit in the same
         // place and at the same width as the arranger's - see BarAnchor.
         //
-        // Sideways they stop being anchors and take a share like everything
-        // else. Anchoring is a portrait rule: it works because both screens'
-        // bars are the width of the phone there, so a natural-width pill
-        // lands in the same place on each. In landscape this bar is a 300dp
-        // column beside the roll and the arranger's is still full width -
-        // they cannot line up whatever we do - and three fixed pills in 300dp
-        // leave the five beside them seven dp each, which is no button at all.
-        val anchor = if (landscape) Modifier.weight(1f) else Modifier.width(BarAnchor)
+        // Sideways the bar is a column against the right edge, and an anchor
+        // is then a *height* rather than a width - which the pill asks for as
+        // `anchor` without knowing which. That is why the three `if
+        // (landscape)` branches that used to be here are gone: see BarScope.
         // How many buttons the left of this row carries: fx, and whichever
         // view toggles this machine has. It varies by machine - a drum track
         // has only fx - and a lone weighted child takes the whole pool, which
@@ -718,8 +718,25 @@ fun EditScreen(
         }
         val views = 1 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0) + (if (padToggle) 1 else 0) +
             (if (hasFill) 1 else 0)
-        val view = if (views >= 3 || landscape) Modifier.weight(1f) else Modifier.width(BarAnchor)
-        BottomBar {
+        val folded = landscape && UiPrefs.transportFolded
+        BottomBar(
+            modifier = if (landscape) {
+                Modifier.width(if (folded) TRANSPORT_W_FOLDED else TRANSPORT_W)
+            } else {
+                Modifier
+            },
+            vertical = landscape,
+        ) {
+            // Against the right edge, so it folds rightwards. The chevron is
+            // a pill like everything else in the column rather than a mark
+            // stuck on the end of it: it is the one control that is always
+            // there, including when it is the only one.
+            if (landscape) BarButton(
+                if (folded) "\u25C2" else "\u25B8", anchor,
+                colour = Acid.colors.textMid,
+            ) { UiPrefs.foldTransport(!folded) }
+            if (folded) return@BottomBar
+            val view = if (views >= 3) Modifier.barWeight() else anchor
             // fx first, at the head of the row. It is the pair to mix at the
             // other end - both swap what the panel under the roll is showing -
             // and the two beside it are about the roll itself.
@@ -751,7 +768,7 @@ fun EditScreen(
                     mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw
                 }
             }
-            if (views < 3 && !landscape) Spacer(Modifier.weight(1f))
+            if (views < 3) Spacer(Modifier.barWeight())
             BarButton(
                 "\u21B6", anchor, enabled = editor.canUndo(trackIndex),
             ) { selection = emptySet(); editor.undo(trackIndex) }
@@ -797,23 +814,44 @@ fun EditScreen(
 
         val pad = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
         if (landscape) {
-            // Sideways the grid is the point: it takes the whole left side and
-            // the full height, and everything that was competing with it for
-            // that height stands in a column of its own.
-            Row(Modifier.fillMaxWidth().weight(1f).then(pad), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Column(Modifier.weight(1f).fillMaxHeight()) {
-                    gridSlot()
-                    noteLaneSlot()
-                    automationSlot()
-                    keysSlot(if (kind == MachineKind.Drums) PADS_H_LAND else KEYS_H_LAND)
-                }
-                Column(Modifier.width(CONTROL_W).fillMaxHeight()) {
-                    // The panel is the tall one, so it is what scrolls; the
-                    // transport stays put, because stop should never be
-                    // somewhere you have to scroll to.
-                    Column(Modifier.weight(1f).verticalScrollWithBar(rememberScrollState())) { panelSlot() }
+            // **Sideways everything that is a row upright becomes a column,
+            // and the keyboard takes the whole bottom.**
+            //
+            // The instrument is the widest thing there is and a phone turned
+            // sideways is mostly width, so the keys get all of it - two
+            // octaves instead of one and a half, which `PianoKeys` picks from
+            // its own measured width without being told. Above them four
+            // columns: the machine's header against the left edge, the roll
+            // and its lanes in the middle, the machine's cards, and the
+            // transport against the right edge.
+            //
+            // Each of the two edge columns folds towards the edge it is
+            // against, which is the one direction that reads as putting it
+            // away rather than as hiding it somewhere.
+            val panelFolded = UiPrefs.panelFolded
+            Column(Modifier.fillMaxWidth().weight(1f)) {
+                Row(
+                    Modifier.fillMaxWidth().weight(1f).then(pad),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // Only a machine has a patch header; the fx slots and the
+                    // mixer carry their own and are all body.
+                    if (panel == 0) Column(
+                        Modifier.width(if (panelFolded) PATCH_W_FOLDED else PATCH_W).fillMaxHeight(),
+                    ) { panelSlot(true, false) }
+                    Column(Modifier.weight(1f).fillMaxHeight()) {
+                        gridSlot()
+                        noteLaneSlot()
+                        automationSlot()
+                    }
+                    // The cards own their own scrolling now - see GroupRow -
+                    // so there is no second scroller wrapped round them here.
+                    if (!panelFolded || panel != 0) Column(
+                        Modifier.width(CONTROL_W).fillMaxHeight(),
+                    ) { panelSlot(false, true) }
                     footerSlot()
                 }
+                keysSlot(if (kind == MachineKind.Drums) PADS_H_LAND else KEYS_H_LAND)
             }
         } else {
             // The bar is outside the padding, so it reaches the edges of
@@ -823,7 +861,7 @@ fun EditScreen(
                 gridSlot()
                 noteLaneSlot()
                 automationSlot()
-                panelSlot()
+                panelSlot(true, true)
                 keysSlot(if (kind == MachineKind.Drums) PADS_H else KEYS_H)
             }
             footerSlot()
@@ -865,6 +903,19 @@ private const val MaxRows = 36
 // gives it and scales, so the roll gets the difference.
 private const val PAGE_BARS_LAND = 4
 private val CONTROL_W = 300.dp
+
+/**
+ * The two edge columns, sideways.
+ *
+ * The patch header is as narrow as a turned `BarIcon` plus its padding; the
+ * transport is a pill's width. Folded, each is just wide enough for the
+ * chevron that brings it back - a strip you can still hit without it being a
+ * column of anything.
+ */
+private val PATCH_W = 54.dp
+private val PATCH_W_FOLDED = 30.dp
+private val TRANSPORT_W = 58.dp
+private val TRANSPORT_W_FOLDED = 30.dp
 private val KEYS_H = 104.dp
 // The pads used to get 72, which after padding is two rows of 28.5dp - forty
 // per cent under the smallest thing a finger is meant to hit, and a third less

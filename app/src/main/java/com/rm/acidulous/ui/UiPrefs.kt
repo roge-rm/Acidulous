@@ -47,6 +47,18 @@ object UiPrefs {
     var noteLaneFolded by mutableStateOf(true)
 
     /**
+     * The machine panel, and sideways the transport column, folded away.
+     *
+     * The panel's own flag used to be a `rememberSaveable` inside it, which
+     * survived a rotation and nothing else. It has to live out here for a
+     * second reason now: turned sideways the panel is drawn in two pieces -
+     * its header down the left edge and its cards on the right, with the roll
+     * between them - and two composables cannot share a flag one of them owns.
+     */
+    var panelFolded by mutableStateOf(false)
+    var transportFolded by mutableStateOf(false)
+
+    /**
      * Whether a finger is on fill right now.
      *
      * Not persisted - it is a gesture, not a setting - but it lives here
@@ -191,6 +203,8 @@ object UiPrefs {
         store = p
         automationFolded = p.getBoolean(KEY_AUTO_FOLDED, false)
         noteLaneFolded = p.getBoolean(KEY_NOTE_FOLDED, true)
+        panelFolded = p.getBoolean(KEY_PANEL_FOLDED, false)
+        transportFolded = p.getBoolean(KEY_TRANSPORT_FOLDED, false)
         padsFullStrength = p.getBoolean(KEY_PADS_FULL, false)
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
@@ -274,6 +288,16 @@ object UiPrefs {
         if (fillHeld == on) return
         fillHeld = on
         NativeEngine.setFill(on)
+    }
+
+    fun foldPanel(folded: Boolean) {
+        panelFolded = folded
+        store?.edit()?.putBoolean(KEY_PANEL_FOLDED, folded)?.apply()
+    }
+
+    fun foldTransport(folded: Boolean) {
+        transportFolded = folded
+        store?.edit()?.putBoolean(KEY_TRANSPORT_FOLDED, folded)?.apply()
     }
 
     fun foldNoteLane(folded: Boolean) {
@@ -460,6 +484,8 @@ object UiPrefs {
 
     private const val KEY_AUTO_FOLDED = "automation_folded"
     private const val KEY_NOTE_FOLDED = "note_lane_folded"
+    private const val KEY_PANEL_FOLDED = "panel_folded"
+    private const val KEY_TRANSPORT_FOLDED = "transport_folded"
     private const val KEY_PADS_FULL = "pads_full_strength"
     private const val KEY_CLIP_MODE = "clip_mode"
     private const val KEY_LAUNCH_Q = "launch_quantise"
