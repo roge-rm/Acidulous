@@ -1,5 +1,4 @@
 #pragma once
-#include <atomic>
 #include <engine/core/Utterance.h>
 #include <engine/dsp/Adsr.h>
 #include <engine/dsp/MultiFilter.h>
@@ -37,8 +36,6 @@ namespace acidulous::machine {
 class Molt final : public Machine {
   public:
     static constexpr int kVoices = 4;
-    /** How long a take may be. A sung phrase, not a song. */
-    static constexpr int kMaxSeconds = 12;
     /**
      * The overlap-add tail, a power of two so the ring wraps by mask. Two
      * periods at the lowest pitch this tracks (70 Hz) is 1371 frames, and a
@@ -47,8 +44,7 @@ class Molt final : public Machine {
     static constexpr int kAccum = 4096;
 
     enum P : int32_t {
-        Record = 0, Seconds, InGain,
-        Start, Loop,
+        Start = 0, Loop,
         Tune, Rate, Robot,
         Formant, Mega,
         Cutoff, Resonance, FilterType,
@@ -73,15 +69,6 @@ class Molt final : public Machine {
     void notePressure(uint8_t note, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
-
-    // --- for the host's worker, and for the harness ------------------------
-    /** True while the audio thread is writing into the capture buffer. */
-    bool capturing() const { return capturingFlag.load(std::memory_order_acquire); }
-    /** How much was captured. Only meaningful once capturing() is false. */
-    int32_t capturedFrames() const { return captured.load(std::memory_order_acquire); }
-    const float *capturedAudio() const { return capture.data(); }
-    /** Bumped every time a capture finishes, so a poller can see a new one. */
-    int32_t captureSerial() const { return serial.load(std::memory_order_acquire); }
 
     /** Where the read head is, 0..1 through the take, for the panel. */
     float headPosition() const {
@@ -116,9 +103,8 @@ class Molt final : public Machine {
 
     float paramOf(int32_t i) const { return params_.get(i); }
     /**
-     * The target rather than the smoothed value. A switch is read through
-     * this: smoothing a two-step parameter turns a rising edge into a ramp,
-     * and `record` is an edge.
+     * The target rather than the smoothed value, for a switch: smoothing a
+     * two-step parameter turns a rising edge into a ramp.
      */
     float rawOf(int32_t i) const { return params_.normalized(i); }
     int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
@@ -135,13 +121,6 @@ class Molt final : public Machine {
     dsp::MultiFilter filter;
     /** The megaphone's band, with its own clipping drive. */
     dsp::MultiFilter horn;
-
-    // --- capture ------------------------------------------------------------
-    std::vector<float> capture;
-    std::atomic<bool> capturingFlag{false};
-    std::atomic<int32_t> captured{0};
-    std::atomic<int32_t> serial{0};
-    bool lastRecord = false;
 
     float channelBend = 0.0f;
 };

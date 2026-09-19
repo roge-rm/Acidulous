@@ -287,6 +287,28 @@ std::string EngineHost::fileInfo(const std::string &path) const {
     return out;
 }
 
+std::string EngineHost::auditionFile(const std::string &path) {
+    if (path.empty()) {
+        sEngine.audition.stop();
+        return "";
+    }
+    std::string error;
+    const std::unique_ptr<SampleData> s = WavReader::read(path, kSampleRate, error, kMaxSliceSeconds);
+    if (s == nullptr || s->frames <= 0) return error.empty() ? "that file could not be read" : error;
+    // Interleaved here, on this thread, so the audio thread has nothing to do
+    // but add two numbers per frame.
+    std::vector<float> pcm(static_cast<size_t>(s->frames) * 2, 0.0f);
+    for (int32_t i = 0; i < s->frames; ++i) {
+        const float l = s->left[static_cast<size_t>(i)];
+        pcm[static_cast<size_t>(i) * 2] = l;
+        pcm[static_cast<size_t>(i) * 2 + 1] = s->stereo ? s->right[static_cast<size_t>(i)] : l;
+    }
+    sEngine.audition.play(pcm.data(), s->frames);
+    return "";
+}
+
+bool EngineHost::auditioning() const { return sEngine.audition.active(); }
+
 std::string EngineHost::editSample(const std::string &src, const std::string &dst,
                                    const audio::SampleOps &ops) const {
     std::string error;
@@ -1328,28 +1350,6 @@ std::string EngineHost::loadUtterance(int rack, const std::string &path) {
     return mountUtterance(*this, rack, std::move(utterance));
 }
 
-std::string EngineHost::analyseCapture(int rack) {
-    if (rack < 0 || rack >= kRackCount) return "no such rack";
-    auto *molt = static_cast<machine::Molt *>(awaitMachine(sEngine, rack, "Molt"));
-    if (molt == nullptr) return "that rack is not a Molt";
-    // The audio thread writes the capture buffer only while it says it is
-    // capturing, so reading it once that has gone low needs no lock - the
-    // release on the flag publishes everything written before it.
-    if (molt->capturing()) return "still recording";
-    const int32_t frames = molt->capturedFrames();
-    if (frames < 2) return "nothing was recorded";
-    auto utterance = std::make_unique<audio::Utterance>();
-    utterance->name = "take";
-    utterance->mono.assign(molt->capturedAudio(), molt->capturedAudio() + frames);
-    utterance->analyse(static_cast<float>(kSampleRate));
-    return mountUtterance(*this, rack, std::move(utterance));
-}
-
-int32_t EngineHost::captureSerial(int rack) {
-    if (rack < 0 || rack >= kRackCount) return 0;
-    auto *molt = static_cast<machine::Molt *>(awaitMachine(sEngine, rack, "Molt"));
-    return molt != nullptr ? molt->captureSerial() : 0;
-}
 
 std::string EngineHost::loadFormula(int rack, const std::string &formula, const std::string &arp,
                                     const std::string &duty, const std::string &vol) {

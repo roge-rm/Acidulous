@@ -335,6 +335,19 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeFileShape(JNIEnv *env, jobject, 
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeAuditionFile(JNIEnv *env, jobject, jstring path) {
+    const char *p = env->GetStringUTFChars(path, nullptr);
+    const std::string out = host().auditionFile(p != nullptr ? p : "");
+    if (p != nullptr) env->ReleaseStringUTFChars(path, p);
+    return env->NewStringUTF(out.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeAuditioning(JNIEnv *, jobject) {
+    return host().auditioning() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeFileInfo(JNIEnv *env, jobject, jstring path) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     const std::string out = host().fileInfo(p != nullptr ? p : "");
@@ -425,15 +438,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadUtterance(JNIEnv *env, jobje
     return env->NewStringUTF(out.c_str());
 }
 
-JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeAnalyseCapture(JNIEnv *env, jobject, jint rack) {
-    return env->NewStringUTF(host().analyseCapture(rack).c_str());
-}
 
-JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureSerial(JNIEnv *, jobject, jint rack) {
-    return host().captureSerial(rack);
-}
 
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeLoadFormula(JNIEnv *env, jobject, jint rack, jstring formula,

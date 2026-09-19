@@ -117,6 +117,15 @@ object UiPrefs {
 
     /** Bits in a recorded or exported WAV. */
     var recordBits by mutableStateOf(24)
+    /**
+     * Which input the recorder opens, as an `AudioDeviceInfo` id.
+     *
+     * Nought is whatever the platform would have chosen. A device that has
+     * been unplugged since keeps its id here and simply fails to open, at
+     * which point the screen offers the list again - remembering a wrong
+     * answer is cheaper than forgetting a right one every time.
+     */
+    var inputDevice by mutableStateOf(0)
         private set
 
     // --- Screen ----------------------------------------------------------
@@ -192,6 +201,7 @@ object UiPrefs {
         voiceLimit = p.getInt(KEY_VOICES, 0)
         fullQuality = p.getBoolean(KEY_QUALITY, true)
         recordBits = p.getInt(KEY_BITS, 24)
+        inputDevice = p.getInt(KEY_INPUT_DEVICE, 0)
         keepAwake = p.getBoolean(KEY_AWAKE, true)
         linkWanted = p.getBoolean(KEY_LINK, false)
         com.rm.acidulous.engine.LinkHub.chooseStartStop(p.getBoolean(KEY_LINK_STARTSTOP, true))
@@ -305,6 +315,13 @@ object UiPrefs {
         fullQuality = full
         store?.edit()?.putBoolean(KEY_QUALITY, full)?.apply()
         NativeEngine.setQuality(if (full) 1 else 0)
+    }
+
+    /** Remembered rather than asked for every time the window opens. */
+    fun chooseInputDevice(id: Int) {
+        if (id == inputDevice) return
+        inputDevice = id
+        store?.edit()?.putInt(KEY_INPUT_DEVICE, id)?.apply()
     }
 
     fun chooseRecordBits(bits: Int) {
@@ -451,6 +468,7 @@ object UiPrefs {
     private const val KEY_VOICES = "voice_limit"
     private const val KEY_QUALITY = "quality_full"
     private const val KEY_BITS = "record_bits"
+    private const val KEY_INPUT_DEVICE = "input_device"
     private const val KEY_AWAKE = "keep_awake"
     private const val KEY_MAPPINGS = "cc_mappings"
     private const val KEY_CLICK_VOICE = "click_voice"

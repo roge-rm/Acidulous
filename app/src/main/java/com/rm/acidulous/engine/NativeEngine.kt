@@ -348,10 +348,8 @@ object NativeEngine {
     fun loadUtterance(rack: Int, path: String): String = nativeLoadUtterance(rack, path)
 
     /** Turn what a Molt just recorded into a take. Also a worker's job. */
-    fun analyseCapture(rack: Int): String = nativeAnalyseCapture(rack)
 
     /** Changes when a Molt finishes recording, so the UI can notice. */
-    fun captureSerial(rack: Int): Int = nativeCaptureSerial(rack)
 
     /** Compile and mount Formulate's expression and tables. "" or the reason. */
     fun loadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String =
@@ -504,6 +502,15 @@ object NativeEngine {
     /** "name|frames|channels|rate|peak", or "" if it cannot be read. */
     fun fileInfo(path: String): String = nativeFileInfo(path)
 
+    /**
+     * Play a file once, to hear what it is. An empty path stops it.
+     *
+     * Outside the song entirely: not recorded into a take, not exported, not
+     * frozen, and stopped by a panic. Reads and decodes on the calling thread.
+     */
+    fun auditionFile(path: String): String = nativeAuditionFile(path)
+    val auditioning: Boolean get() = nativeAuditioning()
+
     /** What [editSample] takes, in the order the engine unpacks it. */
     const val EDIT_OPS = 14
 
@@ -541,6 +548,8 @@ object NativeEngine {
     private external fun nativeCaptureDeaf(): Boolean
     private external fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int
     private external fun nativeFileInfo(path: String): String
+    private external fun nativeAuditionFile(path: String): String
+    private external fun nativeAuditioning(): Boolean
     private external fun nativeEditSample(src: String, dst: String, ops: FloatArray): String
     private external fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int)
     private external fun nativeSetMpeZone(kind: Int, members: Int, bendSemis: Float)
@@ -549,8 +558,6 @@ object NativeEngine {
     private external fun nativeStop()
     private external fun nativeIsRunning(): Boolean
     private external fun nativeLoadUtterance(rack: Int, path: String): String
-    private external fun nativeAnalyseCapture(rack: Int): String
-    private external fun nativeCaptureSerial(rack: Int): Int
     private external fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     private external fun nativeUnmountMachine(rackId: Int)
     private external fun nativeRenderSong(

@@ -44,6 +44,10 @@ void Engine::renderBlock(const float *in, float *out) {
         // below - a render panics first, so this is where "from the
         // beginning" has to mean it.
         scheduler.resetClipPlayers();
+        // Panic means silence, and a file being auditioned is a sound this
+        // engine is making. It is not part of the song, which is exactly why
+        // it would otherwise be the one thing still playing afterwards.
+        audition.stop();
         for (auto &n : mpeChannelNote) n = -1;
         for (int32_t r = 0; r < kRackCount; ++r) {
             racks[r].allNotesOff();
@@ -305,6 +309,10 @@ void Engine::renderBlock(const float *in, float *out) {
             capture.pushSilence(kBlockFrames);
         }
     }
+    // After the capture, like the monitor and for the same reason: hearing
+    // what a file is should not print it into the take being recorded.
+    audition.mix(out, kBlockFrames);
+
     const float monitor = monitorLevel.load(std::memory_order_relaxed);
     if (monitor > 0.0001f && bus.live()) {
         const float *src = bus.block();

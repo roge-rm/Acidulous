@@ -130,6 +130,14 @@ class EngineHost {
      */
     std::string editSample(const std::string &src, const std::string &dst,
                            const audio::SampleOps &ops) const;
+    /**
+     * Play a file once, to hear what it is. An empty path stops it.
+     *
+     * Outside the song: not recorded, not exported, not frozen, and stopped
+     * by a panic like everything else this engine makes a sound with.
+     */
+    std::string auditionFile(const std::string &path);
+    bool auditioning() const;
 
     int32_t nexusActivity(int rack, float *dest, int32_t max) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
@@ -280,9 +288,7 @@ class EngineHost {
      */
     std::string loadUtterance(int rack, const std::string &path);
     /** The same, from what the machine just recorded through the input bus. */
-    std::string analyseCapture(int rack);
     /** Bumped when a capture finishes, so the UI can notice and analyse it. */
-    int32_t captureSerial(int rack);
 
     /**
      * Compile Formulate's expression and its three step tables, and mount

@@ -3,6 +3,7 @@
 #include "Rack.h"
 #include <atomic>
 #include <chrono>
+#include <engine/core/Audition.h>
 #include <engine/core/Capture.h>
 #include <engine/core/Expression.h>
 #include <engine/core/InputBus.h>
@@ -96,6 +97,8 @@ class Engine {
     std::atomic<float> inputGain{1.0f};
     std::atomic<float> monitorLevel{0.0f};
     Capture capture;
+    /** Playing one file to hear what it is - see engine/core/Audition.h. */
+    Audition audition;
 
     /**
      * Stop everything, now. Set from any thread; acted on at the next block

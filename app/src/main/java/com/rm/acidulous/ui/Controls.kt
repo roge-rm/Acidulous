@@ -111,14 +111,26 @@ fun MiniSlider(
     }
 }
 
-/** A peak meter in dB, -60 .. 0. */
+/**
+ * A peak meter in dB, -60 .. 0.
+ *
+ * [track] is what it sits on when there is nothing to show. The default is
+ * `card`, which is right on a panel and invisible inside a dialog - the
+ * dialog *is* a card, so a meter reading nothing was a label with a gap under
+ * it and no way to tell a quiet input from a missing one.
+ */
 @Composable
-fun Meter(peak: Float, modifier: Modifier = Modifier, vertical: Boolean = true) {
+fun Meter(
+    peak: Float,
+    modifier: Modifier = Modifier,
+    vertical: Boolean = true,
+    track: Color = Acid.colors.card,
+) {
     val c = Acid.colors
     Canvas(modifier) {
         val db = if (peak <= 1e-5f) -60f else (20f * log10(peak)).coerceIn(-60f, 0f)
         val frac = (db + 60f) / 60f
-        drawRect(c.card)
+        drawRect(track)
         val color = when {
             db > -1f -> c.red
             db > -8f -> c.accent

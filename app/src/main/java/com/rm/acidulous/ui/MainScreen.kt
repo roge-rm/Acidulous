@@ -51,6 +51,7 @@ import com.rm.acidulous.engine.Position
 import com.rm.acidulous.model.Action
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.Song
+import com.rm.acidulous.model.samplesInUse
 import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.addScene
@@ -164,7 +165,7 @@ fun MainScreen(
                     DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
                     DropdownMenuItem(text = { Text("Export…") }, onClick = { fileMenu = false; onExport() })
                     DropdownMenuItem(text = { Text("MIDI…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
-                    DropdownMenuItem(text = { Text("Record sample…") }, onClick = { fileMenu = false; dialog = Dialog.Sampler })
+                    DropdownMenuItem(text = { Text("Sound…") }, onClick = { fileMenu = false; dialog = Dialog.Sound })
                     DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
                     DropdownMenuItem(text = { Text("About…") }, onClick = { fileMenu = false; dialog = Dialog.About })
                 }
@@ -519,7 +520,15 @@ fun MainScreen(
             onDismiss = { dialog = null },
         )
         Dialog.Midi -> MidiDialog(song, onDismiss = { dialog = null })
-        Dialog.Sampler -> SamplerDialog(onDismiss = { dialog = null })
+        // From the menu there is no machine waiting for the file, so it opens
+        // on the library - which is the page that makes sense with no
+        // question to answer. A machine opens it on record or on library and
+        // supplies `onPick`.
+        Dialog.Sound -> RecorderDialog(
+            onDismiss = { dialog = null },
+            startOn = RecorderPage.Library,
+            inUse = song.samplesInUse(),
+        )
         Dialog.Settings -> SettingsDialog(song.tracks.map { it.name }, onDismiss = { dialog = null })
         Dialog.About -> AboutDialog(onDismiss = { dialog = null })
         Dialog.Quantise -> QuantiseDialog(
@@ -552,7 +561,7 @@ private sealed class Dialog {
     object SaveAs : Dialog()
     object NewSong : Dialog()
     object Midi : Dialog()
-    object Sampler : Dialog()
+    object Sound : Dialog()
     object Settings : Dialog()
     object About : Dialog()
     object Quantise : Dialog()

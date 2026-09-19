@@ -1,7 +1,6 @@
 #include "Molt.h"
 #include <algorithm>
 #include <cmath>
-#include <engine/core/InputBus.h>
 #include <engine/dsp/Math.h>
 
 namespace acidulous::machine {
@@ -41,11 +40,10 @@ Molt::Molt() { initParams(); }
 
 const ParamDef *Molt::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        // The take. `record` is an edge: high starts writing the input into
-        // the buffer, low ends it and the analysis follows on a worker.
-        {"record", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
-        {"seconds", 1.0f, static_cast<float>(kMaxSeconds), 6.0f, Curve::Linear, 0, "s"},
-        {"ingain", 0.0f, 4.0f, 1.0f, Curve::Linear, 0, ""},
+        // The take is a file, mounted like any other machine's material -
+        // see the recording window. This machine used to capture into a
+        // buffer of its own with `record`, `seconds` and `ingain`, which was
+        // a fourth way of recording in an app that already had three.
         {"start", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"loop", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
 
@@ -89,7 +87,6 @@ const ParamDef *Molt::paramDefs(int32_t &count) const {
 
 void Molt::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
-    capture.assign(static_cast<size_t>(kMaxSeconds * sr), 0.0f);
     for (auto &v : voices) {
         v.acc.assign(kAccum, 0.0f);
         v.amp.setSampleRate(sampleRate);
@@ -120,10 +117,6 @@ void Molt::reset() {
     head = 0.0;
     running = false;
     channelBend = 0.0f;
-    // The capture stops, but what was captured stays: it is mounted data,
-    // like a sample, and a panic is not a reason to lose a take.
-    capturingFlag.store(false, std::memory_order_release);
-    lastRecord = false;
 }
 
 void Molt::noteOn(uint8_t note, uint8_t velocity) {
@@ -345,36 +338,6 @@ float Molt::layGrain(Voice &v, float formantRatio, float tune, float rateSec, bo
 }
 
 bool Molt::render(float *L, float *R, int32_t frames) {
-    // --- capture ------------------------------------------------------------
-    const bool wantRecord = rawOf(Record) >= 0.5f;
-    const int32_t want = std::min(static_cast<int32_t>(paramOf(Seconds) * sampleRate),
-                                  static_cast<int32_t>(capture.size()));
-    if (wantRecord && !lastRecord) {
-        captured.store(0, std::memory_order_release);
-        capturingFlag.store(true, std::memory_order_release);
-    } else if (!wantRecord && lastRecord && capturingFlag.load(std::memory_order_acquire)) {
-        capturingFlag.store(false, std::memory_order_release);
-        serial.fetch_add(1, std::memory_order_acq_rel);
-    }
-    lastRecord = wantRecord;
-
-    if (capturingFlag.load(std::memory_order_acquire)) {
-        const InputBus &bus = InputBus::get();
-        int32_t at = captured.load(std::memory_order_relaxed);
-        const float gain = paramOf(InGain);
-        for (int32_t i = 0; i < frames && at < want; ++i) {
-            capture[static_cast<size_t>(at++)] = bus.mono(i) * gain;
-        }
-        captured.store(at, std::memory_order_release);
-        if (at >= want) {
-            // Full is the same as stopping: the analysis can begin.
-            capturingFlag.store(false, std::memory_order_release);
-            serial.fetch_add(1, std::memory_order_acq_rel);
-            params_.set(Record, 0.0f);
-            lastRecord = false;
-        }
-    }
-
     // --- the block's settings ----------------------------------------------
     const audio::Utterance *u = source;
     const bool haveTake = u != nullptr && u->usable();

@@ -858,7 +858,8 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             }
         },
     )
-    if (picking) SampleBrowserDialog(
+    if (picking) RecorderDialog(
+        startOn = RecorderPage.Library,
         inUse = inUse,
         onPick = { rel -> picking = false; resetTrim(p); onAssign(p, rel) },
         onDismiss = { picking = false },
@@ -2226,8 +2227,18 @@ private fun MoltPanel(
 ) {
     var section by rememberSaveable { mutableStateOf(0) }
     var picking by remember { mutableStateOf(false) }
+    var recording by remember { mutableStateOf(false) }
     val c = Acid.colors
     val sample = track.machine.settings["sample"].orEmpty()
+    if (recording) RecorderDialog(
+        startOn = RecorderPage.Record,
+        inUse = editor.song.samplesInUse(),
+        onPick = { rel ->
+            recording = false
+            editor.edit(trackIndex) { t -> t.withSetting("sample", rel) }
+        },
+        onDismiss = { recording = false },
+    )
     Column {
         SectionChips(listOf("take", "tune", "voice", "tone"), section) { section = it }
         GroupRow {
@@ -2247,10 +2258,20 @@ private fun MoltPanel(
                             }
                         }
                     }
+                    // **Recording is one window, not a switch on a panel.**
+                    //
+                    // This was `rec`, `length` and `in` - a machine with its
+                    // own capture buffer, its own twelve-second ceiling and no
+                    // way to open the microphone from the panel it was on. It
+                    // recorded six seconds of silence and said nothing.
+                    // Molt's take now arrives the way every other machine's
+                    // material does: a file, which can also be trimmed and
+                    // levelled before it is sung, which for a real recording
+                    // is most of the work.
                     Group("sing") {
-                        PanelSwitch(b, "record", listOf("rec"))
-                        PanelKnob(b, "seconds", "length", PanelAmber)
-                        PanelKnob(b, "ingain", "in")
+                        PanelActions(
+                            Triple("record…", PanelAmber) { recording = true },
+                        )
                     }
                     Group("phrase") {
                         PanelKnob(b, "start", "start", PanelAmber)
@@ -2298,7 +2319,8 @@ private fun MoltPanel(
             }
         }
     }
-    if (picking) SampleBrowserDialog(
+    if (picking) RecorderDialog(
+        startOn = RecorderPage.Library,
         inUse = editor.song.samplesInUse(),
         onPick = { rel ->
             picking = false
@@ -2401,7 +2423,8 @@ private fun DicePanel(
             }
         }
     }
-    if (picking) SampleBrowserDialog(
+    if (picking) RecorderDialog(
+        startOn = RecorderPage.Library,
         inUse = editor.song.samplesInUse(),
         onPick = { rel ->
             picking = false
@@ -2557,7 +2580,8 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
             }
         }
     }
-    if (picking) SampleBrowserDialog(
+    if (picking) RecorderDialog(
+        startOn = RecorderPage.Library,
         inUse = editor.song.samplesInUse(),
         onPick = { rel ->
             picking = false
@@ -2998,7 +3022,8 @@ private fun MosaicPanel(
     }
     // A sample recorded in the app is added as a zone the same way an
     // imported one is; a SoundFont owns the whole map, so it steps aside.
-    if (pickingZone) SampleBrowserDialog(
+    if (pickingZone) RecorderDialog(
+        startOn = RecorderPage.Library,
         inUse = editor.song.samplesInUse(),
         onPick = { rel ->
             pickingZone = false
