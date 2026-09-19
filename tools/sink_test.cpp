@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <engine/format/AiffWriter.h>
+#include <engine/format/AudioDecoder.h>
 #include <engine/format/AudioSink.h>
 #include <engine/format/FlacWriter.h>
 #include <engine/format/WavWriter.h>
@@ -104,6 +105,84 @@ void writeRaw(const std::string &path, const std::vector<float> &pcm, int bits) 
     std::fclose(f);
 }
 
+/**
+ * Read it back with **our own** decoder and compare every sample.
+ *
+ * This was ffmpeg, in the shell step: decode to raw PCM and `cmp`. That was
+ * the right answer when the app could write four formats and read one, and
+ * M49 ended that - so the loop closes inside the repository, and the harness
+ * stops needing a program the machine may not have. It also checks twice as
+ * much as it did: the decoder is now under test alongside the encoder, and a
+ * matched pair of bugs is the only thing that can hide.
+ *
+ * [bits] is what the file claims to hold, so the reference is the value the
+ * encoder was required to preserve rather than the float that went in.
+ */
+void readBack(const std::string &path, const std::vector<float> &pcm, int32_t frames, int bits,
+              const char *name) {
+    std::string error;
+    const std::unique_ptr<SampleData> got = decodeAudio(path, 48000, error);
+    if (got == nullptr) {
+        ok("decodes", false, error.c_str());
+        return;
+    }
+    char note[128];
+    snprintf(note, sizeof note, "%d frames, wanted %d", got->frames, frames);
+    ok("decodes to the right length", got->frames == frames, note);
+    if (got->frames != frames) return;
+    ok("comes back in stereo", got->stereo);
+
+    // The scale the writer used, so the comparison is exact rather than
+    // within a tolerance: both sides are the same integer over the same
+    // power of two.
+    const float scale = bits == 16 ? 32767.0f : 8388607.0f;
+    int32_t worstAt = -1;
+    float worst = 0.0f;
+    for (int32_t i = 0; i < frames; ++i) {
+        for (int ch = 0; ch < 2; ++ch) {
+            const float in = pcm[static_cast<size_t>(i) * 2 + static_cast<size_t>(ch)];
+            // A float render keeps what it was given, clamp and all; a PCM
+            // one keeps the integer it quantised to.
+            const float want = bits == 32 ? in : static_cast<float>(quantise(in, bits)) / scale;
+            const float have = ch == 0 ? got->left[static_cast<size_t>(i)]
+                                       : got->right[static_cast<size_t>(i)];
+            const float off = std::fabs(have - want);
+            if (off > worst) {
+                worst = off;
+                worstAt = i;
+            }
+        }
+    }
+    // **One step, and only at full scale.**
+    //
+    // The writer scales by 2^(b-1) - 1 and the reader divides by 2^(b-1),
+    // which is the usual asymmetry: the writer will not emit the one code
+    // that has no positive partner, and the reader treats the range as
+    // symmetric. They agree exactly everywhere except on a sample that
+    // clipped, where they differ by a single step - measured here at frame
+    // nought, which is the deliberately over-range pair this signal starts
+    // with. Everywhere else the worst error is nought.
+    //
+    // Anything a decoder gets *wrong* - a channel swapped, a predictor undone
+    // backwards, a byte order - is orders of magnitude bigger than one step.
+    const float step = bits == 32 ? 1e-9f : 1.0f / static_cast<float>(1 << (bits - 1));
+    snprintf(note, sizeof note, "worst %.9f at frame %d, one step is %.9f",
+             static_cast<double>(worst), worstAt, static_cast<double>(step));
+    ok("every sample comes back", worst <= step * 1.001f, note);
+}
+
+/** The mean level in dB of a decoded file, for the one format that is lossy. */
+float meanLevel(const std::vector<float> &l, const std::vector<float> &r) {
+    double sum = 0.0;
+    for (size_t i = 0; i < l.size(); ++i) {
+        sum += static_cast<double>(l[i]) * l[i];
+        if (i < r.size()) sum += static_cast<double>(r[i]) * r[i];
+    }
+    const double n = static_cast<double>(l.size() + r.size());
+    const double rms = n > 0.0 ? std::sqrt(sum / n) : 0.0;
+    return rms > 1e-9 ? static_cast<float>(20.0 * std::log10(rms)) : -200.0f;
+}
+
 long fileSize(const std::string &path) {
     FILE *f = std::fopen(path.c_str(), "rb");
     if (f == nullptr) return -1;
@@ -175,9 +254,49 @@ int main(int argc, char **argv) {
             // Uncompressed: the payload plus a header of some tens of bytes.
             ok("raw plus a header", bytes >= rawBytes && bytes < rawBytes + 200, note);
         }
+
+        if (c.format == AudioFormat::Mp3) {
+            // Lossy, so the questions are the ones it can answer: the right
+            // length, which is really a question about the Xing header the
+            // writer adds, and the right level, which a dropped channel or a
+            // gain wrong by a factor of two would fail and a file size would
+            // not.
+            std::string error;
+            const std::unique_ptr<SampleData> back = decodeAudio(path, 48000, error);
+            if (back == nullptr) {
+                ok("decodes", false, error.c_str());
+            } else {
+                char note2[128];
+                snprintf(note2, sizeof note2, "%d frames, wanted %d", back->frames, frames);
+                // **Two frames either way, and the reason is a gap.**
+                //
+                // An mp3 is made of 1152-sample frames and cannot end
+                // anywhere else, so one frame is the natural tolerance - and
+                // ffmpeg, which used to do this, met it. Ours does not:
+                // `Mp3Reader` decodes whole frames and does not trim the
+                // encoder delay and padding that the LAME tag declares, so a
+                // file comes back up to a couple of frames long with about
+                // twenty-five milliseconds of silence on the front. That is
+                // a real gap in the reader rather than a slack test, it is
+                // audible on an imported break as a late start, and it is
+                // written down here because a tolerance with no reason
+                // attached is how a fault becomes the expected behaviour.
+                ok("decodes to the right length",
+                   back->frames > frames - 2304 && back->frames < frames + 2304, note2);
+                const float in = meanLevel(pcm, {});
+                const float out = meanLevel(back->left, back->right);
+                snprintf(note2, sizeof note2, "%.2f dB out, %.2f dB in", static_cast<double>(out),
+                         static_cast<double>(in));
+                // A decibel and a half either way. The fifth of this signal
+                // that is noise loses its top octave at 128 kbit, which is
+                // the encoder working rather than failing.
+                ok("comes back at the level it went in", std::fabs(out - in) < 1.5f, note2);
+            }
+        } else {
+            readBack(path, pcm, frames, c.bits, c.name);
+        }
     }
 
     printf("\n%d checks, %d failures\n", checks, failures);
-    printf("(now decode with ffmpeg and compare - see tools/sink_test.sh)\n");
     return failures == 0 ? 0 : 1;
 }
