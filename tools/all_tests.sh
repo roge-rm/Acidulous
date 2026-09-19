@@ -46,5 +46,9 @@ echo "--- slice"; "$ROOT/tools/slice_test.sh" | tail -2 || fail=1
 echo "--- forage"; "$ROOT/tools/forage_test.sh" | tail -2 || fail=1
 echo "--- format"; "$ROOT/tools/format_test.sh" | tail -2 || fail=1
 echo "--- edit";  "$ROOT/tools/sampleedit_test.sh" | tail -2 || fail=1
+# Not a harness: it asks whether the milestone table still agrees with the
+# tree. Passes with nothing to say where there is no docs/PLAN.md, which is
+# every checkout but Dan's.
+echo "--- plan";  python3 "$ROOT/tools/plan_check.py" | tail -2 || fail=1
 
 exit $fail
