@@ -96,14 +96,6 @@ fun NoteLane(
     onSet: (Map<Int, Float>) -> Unit,
     onGestureEnd: () -> Unit,
     /**
-     * A tap on a column, for the one property a bar cannot express.
-     *
-     * Every note in the column, not one of them - see `stackAt`. Each steps
-     * from its own condition rather than all being set to one, so a stack
-     * whose notes already differ keeps differing.
-     */
-    onCycle: (noteIndices: List<Int>, by: Int) -> Unit,
-    /**
      * True when the editor above draws a note as a whole grid cell rather
      * than as its own length - which is what the drum grid does, and what the
      * piano roll does not. It decides only where a column is centred.
@@ -148,7 +140,6 @@ fun NoteLane(
     val clipState by rememberUpdatedState(clip)
     val propState by rememberUpdatedState(prop)
     val setState by rememberUpdatedState(onSet)
-    val cycleState by rememberUpdatedState(onCycle)
     val beginState by rememberUpdatedState(onGestureBegin)
     val endState by rememberUpdatedState(onGestureEnd)
     val filterState by rememberUpdatedState(pitchFilter)
@@ -345,34 +336,6 @@ fun NoteLane(
                             }
                         }
 
-                        if (what == NoteProp.Cond) {
-                            // A condition is a word, not a height. A tap steps
-                            // it forward, a vertical drag walks the list - the
-                            // same shape as a stepped knob.
-                            val at = stackAt(down.position.x)
-                            if (at.isEmpty()) { down.consume(); return@awaitEachGesture }
-                            down.consume()
-                            // The gutter reads out for this property too. It
-                            // was set only on the bar-drag path, so the one
-                            // lane whose value is a word - the one that needed
-                            // a readout most - was the one that had none.
-                            editing = at.first() to 0f
-                            var last = down.position.y
-                            var moved = false
-                            drag(down.id) { change ->
-                                val dy = last - change.position.y
-                                if (abs(dy) >= 18f) {
-                                    cycleState(at, if (dy > 0) 1 else -1)
-                                    last = change.position.y
-                                    moved = true
-                                }
-                                change.consume()
-                            }
-                            if (!moved) cycleState(at, 1)
-                            editing = null
-                            return@awaitEachGesture
-                        }
-
                         // **One note, or a sweep across many, decided by
                         // which way the finger set off.**
                         //
@@ -516,15 +479,26 @@ private fun DrawScope.drawMark(
             }
         }
         NoteProp.Cond -> {
-            // Nothing to scale, so the tint is all of it: a column that is
-            // lit has a condition on it, and which condition it is reads out
-            // in the gutter while you set it. The word used to be drawn here
-            // too and was three glyphs on a column a few pixels wide, which
-            // is the smudge the piano roll's own comment warns about.
-            if (n.trig != Trig.Always) {
-                drawRect(c.accentSoft, Offset(left, 2f), Size(wide, size.height - 4f))
-            } else {
-                drawRect(c.teal.copy(alpha = 0.25f), Offset(left, size.height - 4f), Size(wide, 2f))
+            // **A height, like every other lane.**
+            //
+            // This drew one tint for "has a condition" and nothing else, so
+            // the bar never moved while it was being set and the only way to
+            // know what a note held was to read the gutter. Dan: "the bar
+            // under the notes never changes height ... it would be easier to
+            // tell what is happening if each trig condition set a certain
+            // height". Forty conditions over the lane is about five pixels a
+            // step, which is not enough to pick one out exactly and is
+            // plenty to see that the finger is moving something and roughly
+            // where in the list it has got to.
+            //
+            // `Always` is the floor and is drawn as the floor line the other
+            // lanes use for nought, so a note with no condition on it still
+            // looks like a note. The last of the Nth family is the ceiling.
+            val v = Trig.codeOf(n.trig).toFloat() / (Trig.inOrder.size - 1).toFloat()
+            val h = (size.height - 4f) * v
+            drawRect(c.teal.copy(alpha = 0.35f), Offset(left, size.height - 2f), Size(wide, 2f))
+            if (h > 0f) {
+                drawRect(c.accent, Offset(left, size.height - 2f - h), Size(wide, h))
             }
         }
     }

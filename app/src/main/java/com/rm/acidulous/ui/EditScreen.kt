@@ -477,30 +477,33 @@ fun EditScreen(
                             NoteProp.Nudge ->
                                 n.copy(nudge = ((v - 0.5f) * 2f * NUDGE_RANGE).roundToInt()
                                     .coerceIn(-NUDGE_RANGE, NUDGE_RANGE))
-                            NoteProp.Cond -> n
+                            // The same y as everything else in the lane, so
+                            // the bottom is `Always` and the top is the last
+                            // of the Nth family. It used to step the list by
+                            // one per eighteen pixels of drag and wrap round
+                            // at the end, which Dan found unreadable: there
+                            // was no way to tell where in the list you were,
+                            // and dragging far enough took you back past
+                            // where you started.
+                            NoteProp.Cond -> {
+                                val all = com.rm.acidulous.model.Trig.inOrder
+                                val at = (v * (all.size - 1)).roundToInt().coerceIn(0, all.size - 1)
+                                n.copy(trig = all[at])
+                            }
                         }
                     }
                     base.copy(notes = notes)
                 }
             },
             onGestureEnd = { editor.endGesture() },
-            onCycle = { indices, by ->
-                editor.editClip(trackIndex, sceneId) { c ->
-                    val notes = c.notes.toMutableList()
-                    val all = com.rm.acidulous.model.Trig.inOrder
-                    // One edit for the whole column, so a chord is one step
-                    // of undo rather than one per note in it.
-                    for (index in indices) {
-                        val n = notes.getOrNull(index) ?: continue
-                        val at = (all.indexOf(n.trig) + by).mod(all.size)
-                        notes[index] = n.copy(trig = all[at])
-                    }
-                    c.copy(notes = notes)
-                }
-            },
             collapsed = noteFolded,
             onToggleCollapse = { UiPrefs.foldNoteLane(!noteFolded) },
-            modifier = Modifier.fillMaxWidth().height(if (noteFolded) 24.dp else 72.dp).padding(top = 4.dp),
+            // The same height as the automation strip below it. It was 72 on
+            // the theory that a bar needs less room than a curve, which is
+            // true of the drawing and not of the reading: two lanes of the
+            // same kind at two heights look like a mistake, and a bar is also
+            // how far a finger has to travel to set a value.
+            modifier = Modifier.fillMaxWidth().height(if (noteFolded) 24.dp else 88.dp).padding(top = 4.dp),
         )
         }
 

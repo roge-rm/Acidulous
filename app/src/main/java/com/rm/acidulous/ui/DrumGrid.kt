@@ -85,6 +85,9 @@ fun DrumGrid(
     // fit, not to a pinch.
     var slotPx by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
+    // The cells start after the name column, so a step is this much narrower
+    // than the row - which is what a finger dragging the view moves by.
+    val gutterPx = with(density) { GutterWidth.toPx() }
     val fitted = if (voices.isEmpty() || slotPx == 0) 24f else {
         val dp = with(density) { slotPx.toDp().value }
         ((dp - RowGap * (voices.size - 1)) / voices.size).coerceIn(MinRow, MaxRow)
@@ -92,7 +95,15 @@ fun DrumGrid(
     val rowHeight = if (pinched > 0f) pinched else fitted
 
     Column(
-        modifier.background(Acid.colors.bg).padding(4.dp)
+        // **Vertical only.** A horizontal inset here put the cells on a
+        // different tick axis from everything else in the editor: the lane,
+        // the automation strip, the roll and the playhead all map a tick
+        // across the full width after the gutter, and four dp either side
+        // moved the cells eleven pixels in from that at both ends. A bar
+        // under a drum step then drifted by up to a quarter of a cell by the
+        // end of the bar, which is the drum half of Dan's "these bars should
+        // be directly under the centre of their notes".
+        modifier.background(Acid.colors.bg).padding(vertical = 4.dp)
             .onSizeChanged { slotPx = it.height }
             // Two fingers move the view; one still edits. Watched on the
             // Initial pass, which travels parent to child, because the cells
@@ -124,7 +135,10 @@ fun DrumGrid(
                         // One thing at a time, decided once - see TwoFingerMode.
                         when (mode) {
                             TwoFingerMode.Pan -> {
-                                onScrollTime(-(now.centre.x - last.centre.x) / (size.width.toFloat() / steps) * grid)
+                                onScrollTime(
+                                    -(now.centre.x - last.centre.x) /
+                                        (((size.width - gutterPx).coerceAtLeast(1f)) / steps) * grid,
+                                )
                                 scroll.dispatchRawDelta(last.centre.y - now.centre.y)
                             }
                             TwoFingerMode.ZoomTime ->
@@ -147,7 +161,13 @@ fun DrumGrid(
             for (voice in voices) {
                 Row(
                     Modifier.fillMaxWidth().height(rowHeight.dp),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    // **No arrangement spacing.** The name is a child of this
+                    // row like the cells are, so `spacedBy` put a gap before
+                    // the first cell as well as between them - half a step of
+                    // offset that nothing else in the editor has. The gap
+                    // between cells is now padding inside each one, so a
+                    // cell's pitch is exactly the lane's step and the gap
+                    // still looks the same.
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // Same width and size as the roll's pitch gutter: the
@@ -168,7 +188,8 @@ fun DrumGrid(
                         val active = playheadTick != null && playheadTick >= tick && playheadTick < tick + grid
                         val beat = ((tick / grid) % 4) == 0
                         Box(
-                            Modifier.weight(1f).height(rowHeight.dp).clip(RoundedCornerShape(3.dp))
+                            Modifier.weight(1f).height(rowHeight.dp)
+                                .padding(horizontal = 1.dp).clip(RoundedCornerShape(3.dp))
                                 .background(
                                     when {
                                         accent -> Acid.colors.accent
