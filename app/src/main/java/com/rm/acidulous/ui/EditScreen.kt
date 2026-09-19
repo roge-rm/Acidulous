@@ -147,6 +147,10 @@ fun EditScreen(
     // Which of a note's properties the lane is showing. Per track, like the
     // roll's zoom: it is how you are working, not a property of the music.
     var noteProp by remember(trackIndex) { mutableStateOf(NoteProp.Velocity) }
+    // Which pitch the note lane is showing, or every pitch. Keyed on the
+    // track, like the property beside it: a filter that survived a jump to
+    // another machine would name a pitch that machine has never played.
+    var notePitch by remember(trackIndex) { mutableStateOf<Int?>(null) }
     var scaleView by rememberSaveable { mutableStateOf(ScaleView.Dim) }
     // Long clips are paged two bars at a time, as the drum grid is paged one.
     // More than two bars across a phone leaves notes too narrow to grab.
@@ -445,6 +449,18 @@ fun EditScreen(
             visibleTicks = pageTicks.toInt(),
             prop = noteProp,
             onProp = { noteProp = it },
+            // The drum grid gives every hit a whole cell; the roll draws the
+            // note's own length. The lane centres its columns on whichever is
+            // above it.
+            cellWide = steps && kind == MachineKind.Drums,
+            pitchFilter = notePitch,
+            onPitchFilter = { notePitch = it },
+            // A drum voice by its short name, anything else by its note name
+            // spelled the way the roll's own gutter spells it.
+            pitchName = { p ->
+                voices.firstOrNull { it.note == p }?.short
+                    ?: noteName(p, Scales.spellingFor(track))
+            },
             onGestureBegin = { editor.beginGesture(trackIndex) },
             // Absolute, not relative: the gesture is applied to the base the
             // editor captured, so a sweep that passes back over a note settles
@@ -468,13 +484,17 @@ fun EditScreen(
                 }
             },
             onGestureEnd = { editor.endGesture() },
-            onCycle = { index, by ->
+            onCycle = { indices, by ->
                 editor.editClip(trackIndex, sceneId) { c ->
                     val notes = c.notes.toMutableList()
-                    val n = notes.getOrNull(index) ?: return@editClip c
                     val all = com.rm.acidulous.model.Trig.inOrder
-                    val at = (all.indexOf(n.trig) + by).mod(all.size)
-                    notes[index] = n.copy(trig = all[at])
+                    // One edit for the whole column, so a chord is one step
+                    // of undo rather than one per note in it.
+                    for (index in indices) {
+                        val n = notes.getOrNull(index) ?: continue
+                        val at = (all.indexOf(n.trig) + by).mod(all.size)
+                        notes[index] = n.copy(trig = all[at])
+                    }
                     c.copy(notes = notes)
                 }
             },

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,10 +31,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.text.font.FontFamily
@@ -76,6 +73,15 @@ enum class NoteProp(val short: String, val label: String) {
 /** How far a note may be pushed off the grid: half a sixteenth either way. */
 const val NUDGE_RANGE = PPQN / 4
 
+/** What a note holds for one property, in as few characters as it can be said. */
+private fun valueText(n: Note, prop: NoteProp): String = when (prop) {
+    NoteProp.Velocity -> "${n.velocity}"
+    NoteProp.Chance -> "${n.chance}%"
+    NoteProp.Ratchet -> "x${n.ratchet}"
+    NoteProp.Nudge -> if (n.nudge > 0) "+${n.nudge}" else "${n.nudge}"
+    NoteProp.Cond -> n.trig.short.ifEmpty { "-" }
+}
+
 @Composable
 fun NoteLane(
     clip: Clip,
@@ -89,18 +95,44 @@ fun NoteLane(
     /** Every note the finger passed over, with the value it should take. */
     onSet: (Map<Int, Float>) -> Unit,
     onGestureEnd: () -> Unit,
-    /** A tap on a note's column, for the one property a bar cannot express. */
-    onCycle: (noteIndex: Int, by: Int) -> Unit,
+    /**
+     * A tap on a column, for the one property a bar cannot express.
+     *
+     * Every note in the column, not one of them - see `stackAt`. Each steps
+     * from its own condition rather than all being set to one, so a stack
+     * whose notes already differ keeps differing.
+     */
+    onCycle: (noteIndices: List<Int>, by: Int) -> Unit,
+    /**
+     * True when the editor above draws a note as a whole grid cell rather
+     * than as its own length - which is what the drum grid does, and what the
+     * piano roll does not. It decides only where a column is centred.
+     */
+    cellWide: Boolean = false,
+    /**
+     * Show only this pitch, or every pitch when null.
+     *
+     * A lane draws one column per note at the note's own tick, so notes that
+     * share a tick share a column and only the nearest could ever be touched.
+     * Dan: "for multiple notes on one step we need to be able to select them
+     * each individually somehow". A drum step with a kick, a hat and a crash
+     * on it is three bars in one place; with a pitch chosen it is one.
+     *
+     * It also makes a sweep mean something. Dragging across a bar to level
+     * every hat in it is the gesture this lane exists for, and without a
+     * filter the sweep takes whichever note of each step happens to be
+     * nearest - a mixture nobody asked for.
+     */
+    pitchFilter: Int? = null,
+    onPitchFilter: (Int?) -> Unit = {},
+    /** What to call a pitch: a drum voice's short name, or a note name. */
+    pitchName: (Int) -> String = { "$it" },
     collapsed: Boolean = false,
     onToggleCollapse: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val c = Acid.colors
     var menu by remember { mutableStateOf(false) }
-    // The trig lane is the only one whose value is a word. Measured properly
-    // rather than guessed at: `1:2` and `!pr` are three glyphs of monospace at
-    // eight sp and the canvas has no idea how wide that is.
-    val measurer = rememberTextMeasurer()
     /**
      * The note being dragged and the value it now holds, while it is being
      * dragged and not afterwards.
@@ -119,8 +151,44 @@ fun NoteLane(
     val cycleState by rememberUpdatedState(onCycle)
     val beginState by rememberUpdatedState(onGestureBegin)
     val endState by rememberUpdatedState(onGestureEnd)
+    val filterState by rememberUpdatedState(pitchFilter)
+    val cellState by rememberUpdatedState(cellWide)
     val foldedState by rememberUpdatedState(collapsed)
     val expandState by rememberUpdatedState(onToggleCollapse)
+
+    /**
+     * The tick a note's column is centred on - the middle of the note as the
+     * editor above draws it, not its left edge.
+     *
+     * Dan, looking at a roll: "these bars should be directly under the centre
+     * of their notes, why are they off centre?" They were drawn at `xOf(tick)`
+     * and `drawMark` centres on what it is given, so every bar sat half its
+     * own width to the left of where the note begins - and the note goes on
+     * for a cell after that.
+     *
+     * The two editors disagree about how wide a note is, so this asks the one
+     * that is showing. The drum grid gives every hit a full cell whatever its
+     * length (its notes are a thirty-second and its cells are usually a
+     * sixteenth), so a drum column centres on the cell. The roll draws the
+     * note's own length, so a roll column centres on that - capped at one
+     * grid step, because a note four bars long has its middle off the side of
+     * a one-bar window and its bar would be unreachable.
+     */
+    // **Through the updated states, not the parameters.**
+    //
+    // Both of these are called from the gesture block as well as the draw
+    // block, and the gesture block is keyed on Unit so that it survives a
+    // drag - which means it closes over whatever these were when it was
+    // built. Reading `pitchFilter` directly made the filter work everywhere
+    // the lane *draws* and nowhere it *touches*: picking one note of a chord
+    // showed one bar and still set both, because the gesture was still
+    // holding the null it started life with.
+    fun shown(n: Note): Boolean = filterState == null || n.pitch == filterState
+
+    fun centreTick(n: Note): Int {
+        val g = clipState.grid.coerceAtLeast(1)
+        return n.tick + (if (cellState) g else minOf(maxOf(1, n.length), g)) / 2
+    }
 
     val total = clip.bars * ticksPerBar
     val from = firstTick.coerceIn(0, maxOf(0, total - 1))
@@ -141,15 +209,43 @@ fun NoteLane(
                     Modifier.weight(1f).fillMaxWidth().clickable { menu = true },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        prop.short,
-                        color = c.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
-                        maxLines = 1, softWrap = false,
-                        // On its side, as the automation strip's is: the width
-                        // belongs to the notes.
-                        modifier = Modifier.requiredWidth(120.dp).rotate(-90f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    )
+                    // **The value goes in the gutter, not next to the bar.**
+                    //
+                    // It was drawn at the tip of the bar being set, which is
+                    // fine for a height and useless for a word: the trig lane
+                    // tints the whole column and the label landed on top of
+                    // the one already drawn there. Dan: "the trig condition
+                    // display while modifying it is unreadable". The gutter is
+                    // the one part of this lane a finger is never over - it is
+                    // to the left of everything that can be touched - it is
+                    // always in the same place, and every value this lane
+                    // holds says itself in four characters or fewer. So the
+                    // name steps aside while a value is being set and comes
+                    // back when the finger lifts.
+                    val live = editing?.first?.let { clip.notes.getOrNull(it) }
+                    if (live != null) {
+                        Text(
+                            valueText(live, prop),
+                            color = if (prop == NoteProp.Chance && live.chance < 100) c.pink else c.accent,
+                            fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+                            maxLines = 1, softWrap = false,
+                        )
+                    } else {
+                        Text(
+                            // "vel" on its own is every note; "vel SD" is the
+                            // snares. The gutter is the only place that can
+                            // say so - the lane itself looks the same either
+                            // way, just emptier.
+                            prop.short + (pitchFilter?.let { " " + pitchName(it) } ?: ""),
+                            color = if (pitchFilter != null) c.accent else c.teal,
+                            fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+                            maxLines = 1, softWrap = false,
+                            // On its side, as the automation strip's is: the
+                            // width belongs to the notes.
+                            modifier = Modifier.requiredWidth(120.dp).rotate(-90f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
+                    }
                 }
             }
             Box(
@@ -169,6 +265,27 @@ fun NoteLane(
                         },
                         onClick = { menu = false; onProp(p) },
                     )
+                }
+                // **Which notes, under which property.** One popup rather
+                // than a second control: the gutter is thirty-four dp wide
+                // and has a name, a fold box and nothing else in it, and a
+                // filter that is only needed on stacked clips should not cost
+                // a permanent button on every clip.
+                val pitches = clip.notes.map { it.pitch }.distinct().sortedDescending()
+                if (pitches.size > 1) {
+                    HorizontalDivider(color = c.line)
+                    for (pitch in listOf(null) + pitches) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    (if (pitch == pitchFilter) "● " else "  ") +
+                                        (pitch?.let { pitchName(it) } ?: "all notes"),
+                                    fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+                                )
+                            },
+                            onClick = { menu = false; onPitchFilter(pitch) },
+                        )
+                    }
                 }
             }
         }
@@ -190,28 +307,56 @@ fun NoteLane(
                         val here = clipState
                         val what = propState
 
-                        /** Which note is under this x, or -1. */
-                        fun noteAt(x: Float): Int {
+                        /**
+                         * **Every note in the column under this x**, or empty.
+                         *
+                         * A column is a place in the clip, and a chord or a
+                         * drum step puts several notes in one. Returning only
+                         * the nearest meant the rest could not be touched at
+                         * all: the same index won every time, and the notes
+                         * behind it were drawn over and unreachable. Dan, of
+                         * the drum grid: "for multiple notes on one step we
+                         * need to be able to select them each individually
+                         * somehow" - and then of the roll, where a chord is
+                         * the ordinary case rather than the awkward one.
+                         *
+                         * So a touch takes the whole stack and the pitch
+                         * filter is how you take one of it. Unfiltered, the
+                         * column behaves like the step it draws: setting it
+                         * sets the chord. Filtered, the stack is one note by
+                         * construction and this needs no second rule.
+                         */
+                        fun stackAt(x: Float): List<Int> {
                             val tick = from + (x / w) * span
                             var best = -1
                             var bestD = Float.MAX_VALUE
                             here.notes.forEachIndexed { i, n ->
-                                val d = abs((n.tick + n.nudge) - tick)
+                                if (!shown(n)) return@forEachIndexed
+                                val d = abs(centreTick(n) - tick)
                                 if (d < bestD) { bestD = d; best = i }
                             }
                             // Within half a grid step, or the finger was not
                             // pointing at anything and must not move a note
                             // three bars away.
-                            return if (best >= 0 && bestD <= here.grid.coerceAtLeast(1) / 2f) best else -1
+                            if (best < 0 || bestD > here.grid.coerceAtLeast(1) / 2f) return emptyList()
+                            val at = centreTick(here.notes[best])
+                            return here.notes.indices.filter {
+                                shown(here.notes[it]) && centreTick(here.notes[it]) == at
+                            }
                         }
 
                         if (what == NoteProp.Cond) {
                             // A condition is a word, not a height. A tap steps
                             // it forward, a vertical drag walks the list - the
                             // same shape as a stepped knob.
-                            val at = noteAt(down.position.x)
-                            if (at < 0) { down.consume(); return@awaitEachGesture }
+                            val at = stackAt(down.position.x)
+                            if (at.isEmpty()) { down.consume(); return@awaitEachGesture }
                             down.consume()
+                            // The gutter reads out for this property too. It
+                            // was set only on the bar-drag path, so the one
+                            // lane whose value is a word - the one that needed
+                            // a readout most - was the one that had none.
+                            editing = at.first() to 0f
                             var last = down.position.y
                             var moved = false
                             drag(down.id) { change ->
@@ -224,6 +369,7 @@ fun NoteLane(
                                 change.consume()
                             }
                             if (!moved) cycleState(at, 1)
+                            editing = null
                             return@awaitEachGesture
                         }
 
@@ -242,14 +388,14 @@ fun NoteLane(
                         // sweeps as before. Both gestures survive and neither
                         // has to be learned.
                         val stroke = HashMap<Int, Float>()
-                        var locked = -1        // the note a vertical drag owns
+                        var locked: List<Int> = emptyList()   // what a vertical drag owns
                         var decided = false
                         fun add(p: Offset) {
-                            val at = if (locked >= 0) locked else noteAt(p.x)
-                            if (at < 0) return
+                            val at = if (locked.isNotEmpty()) locked else stackAt(p.x)
+                            if (at.isEmpty()) return
                             val v = (1f - p.y / h).coerceIn(0f, 1f)
-                            stroke[at] = v
-                            editing = at to v
+                            for (i in at) stroke[i] = v
+                            editing = at.first() to v
                             setState(stroke)
                         }
                         beginState()
@@ -260,7 +406,7 @@ fun NoteLane(
                                 val d = change.position - down.position
                                 if (d.getDistance() > viewConfiguration.touchSlop) {
                                     decided = true
-                                    if (abs(d.y) > abs(d.x)) locked = noteAt(down.position.x)
+                                    if (abs(d.y) > abs(d.x)) locked = stackAt(down.position.x)
                                 }
                             }
                             add(change.position)
@@ -298,69 +444,19 @@ fun NoteLane(
 
                 val wide = (clip.grid.coerceAtLeast(1) * pxPerTick * 0.7f).coerceIn(3f, 18f)
                 for (n in clip.notes) {
-                    val at = n.tick + n.nudge
-                    if (at < from - clip.grid || at > from + span) continue
-                    drawMark(n, prop, xOf(at), wide, c)
-                    if (prop == NoteProp.Cond && n.trig != Trig.Always) {
-                        val laid = measurer.measure(
-                            n.trig.short,
-                            // Dark on the tinted column, as a selected switch
-                            // cell is: near-white on pale accent is a label
-                            // you can see is there and cannot read.
-                            TextStyle(color = c.onAccent, fontSize = 8.sp, fontFamily = FontFamily.Monospace),
-                        )
-                        drawText(
-                            laid,
-                            topLeft = Offset(
-                                (xOf(at) - laid.size.width / 2f).coerceIn(0f, size.width - laid.size.width),
-                                size.height / 2f - laid.size.height / 2f,
-                            ),
-                        )
-                    }
-                }
-
-                // The number, while it is being set and only then.
-                //
-                // At the tip of the bar rather than under its foot, because
-                // the foot is where the bar is widest and the text would be
-                // drawn on top of itself; above the tip while there is room
-                // and below it near the ceiling, so it is never off the lane.
-                // Same colour as the bar it belongs to, so there is no
-                // question which note it is about.
-                editing?.let { (index, v) ->
-                    val n = clip.notes.getOrNull(index)
-                    if (n != null) {
-                        val text = when (prop) {
-                            NoteProp.Velocity -> "${(v * 127f).roundToInt().coerceIn(1, 127)}"
-                            NoteProp.Chance -> "${(v * 100f).roundToInt().coerceIn(0, 100)}%"
-                            NoteProp.Ratchet -> "x${(v * 8f).roundToInt().coerceIn(1, 8)}"
-                            NoteProp.Nudge -> {
-                                val t = ((v - 0.5f) * 2f * NUDGE_RANGE).roundToInt()
-                                if (t > 0) "+$t" else "$t"
-                            }
-                            NoteProp.Cond -> n.trig.short
-                        }
-                        val laid = measurer.measure(
-                            text,
-                            TextStyle(
-                                color = if (prop == NoteProp.Chance && n.chance < 100) c.pink else c.accent,
-                                fontSize = 9.sp, fontFamily = FontFamily.Monospace,
-                            ),
-                        )
-                        val tip = when (prop) {
-                            NoteProp.Nudge -> size.height / 2f - (v - 0.5f) * 2f * (size.height / 2f - 3f)
-                            else -> size.height - 2f - (size.height - 4f) * v
-                        }
-                        val above = tip - laid.size.height - 2f
-                        drawText(
-                            laid,
-                            topLeft = Offset(
-                                (xOf(n.tick + n.nudge) - laid.size.width / 2f)
-                                    .coerceIn(0f, size.width - laid.size.width),
-                                if (above >= 0f) above else (tip + 3f).coerceAtMost(size.height - laid.size.height),
-                            ),
-                        )
-                    }
+                    // **At the note's tick, not where the nudge puts it.**
+                    // A column here stands for a note, and a note is where
+                    // it was written; the nudge is a property of it like the
+                    // velocity is. Drawing at `tick + nudge` meant the bar
+                    // you were dragging slid out from under the finger
+                    // setting it, and in the nudge lane the deflection and
+                    // the position then said the same thing twice. Dan:
+                    // "don't have the bar move to the left/right as you
+                    // change the value - that's confusing".
+                    if (!shown(n)) continue
+                    val mid = centreTick(n)
+                    if (mid < from - clip.grid || mid > from + span) continue
+                    drawMark(n, prop, xOf(mid), wide, c)
                 }
 
                 playheadTick?.let { pt ->
@@ -420,8 +516,11 @@ private fun DrawScope.drawMark(
             }
         }
         NoteProp.Cond -> {
-            // Nothing to scale, so the column is tinted and the word is drawn
-            // over it by the caller's text layer - see below.
+            // Nothing to scale, so the tint is all of it: a column that is
+            // lit has a condition on it, and which condition it is reads out
+            // in the gutter while you set it. The word used to be drawn here
+            // too and was three glyphs on a column a few pixels wide, which
+            // is the smudge the piano roll's own comment warns about.
             if (n.trig != Trig.Always) {
                 drawRect(c.accentSoft, Offset(left, 2f), Size(wide, size.height - 4f))
             } else {
