@@ -292,7 +292,18 @@ void Engine::renderBlock(const float *in, float *out) {
     // their own monitor path printed into the sample.
     const InputBus &bus = InputBus::get();
     if (capture.armed()) {
-        capture.push(capture.source() == Capture::FromInput && bus.live() ? bus.block() : out, kBlockFrames);
+        if (capture.source() != Capture::FromInput) {
+            capture.push(out, kBlockFrames);
+        } else if (bus.live()) {
+            capture.push(bus.block(), kBlockFrames);
+        } else {
+            // **Silence, and say so.** This used to fall through to `out`,
+            // so a capture armed for the microphone with no input stream open
+            // recorded the speakers instead - which is not a near miss, it is
+            // the one recording nobody wanted, and it arrived named as the
+            // one they asked for. The screen reads `deaf()` and can tell them.
+            capture.pushSilence(kBlockFrames);
+        }
     }
     const float monitor = monitorLevel.load(std::memory_order_relaxed);
     if (monitor > 0.0001f && bus.live()) {

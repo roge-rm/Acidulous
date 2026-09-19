@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <sequencer/Clip.h>
+#include <engine/core/SampleEdit.h>
 #include <engine/format/AudioSink.h>
 #include <string>
 #include <utility>
@@ -105,6 +106,31 @@ class EngineHost {
      */
     int32_t sampleShape(int rack, int pad, float *dest, int32_t columns, int32_t fromFrame = 0,
                         int32_t toFrame = 0) const;
+    /**
+     * The same picture, of a **file** rather than of a mounted pad.
+     *
+     * `sampleShape` asks a Forage for its pad, which is why the sample editor
+     * has only ever worked on one machine: Dice, Pollen, Molt and Mosaic all
+     * hold their material as something else and answer nothing. A recording
+     * being trimmed is not mounted anywhere yet at all. So the window that
+     * edits a file reads the file, and the two share their column walk.
+     *
+     * Reads and decodes on the calling thread - a worker, never the audio one.
+     */
+    int32_t fileShape(const std::string &path, float *dest, int32_t columns,
+                      int32_t fromFrame = 0, int32_t toFrame = 0) const;
+    /** "name|frames|channels|rate|peak" for a file on disk, "" if unreadable. */
+    std::string fileInfo(const std::string &path) const;
+    /**
+     * Read [src], apply [ops], write [dst]. "" or a reason.
+     *
+     * [dst] may be [src], which is the overwrite. Written to a temporary and
+     * renamed, so a failure halfway leaves the original where it was rather
+     * than half of it.
+     */
+    std::string editSample(const std::string &src, const std::string &dst,
+                           const audio::SampleOps &ops) const;
+
     int32_t nexusActivity(int rack, float *dest, int32_t max) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.
     std::string sampleInfo(int rack, int slot) const;
@@ -310,9 +336,17 @@ class EngineHost {
     float rackPeak(int rack) const;
     float masterFade() const;
     // --- Audio in -------------------------------------------------------
-    bool startInput();
-    void stopInput();
+    /** [deviceId] from the platform's own list, or nought for the default. */
+    bool startInput(int32_t deviceId = 0);
+    /** True if this cut a recording short - see the definition. */
+    bool stopInput();
     bool inputRunning() const;
+    /** What the open stream actually is, which is not always what was asked. */
+    int32_t inputChannels() const;
+    int32_t inputRate() const;
+    int32_t inputDevice() const;
+    /** True once an input capture has run with nothing arriving. */
+    bool captureDeaf() const;
     float inputPeak();
     void setInputGain(float gain);
     void setMonitorLevel(float level);

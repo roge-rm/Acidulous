@@ -33,11 +33,41 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     // microphone open - and is read from inside the output callback rather
     // than running a second callback of its own, so there is one audio
     // thread and no drift to reconcile between two.
-    bool startInput();
+    /**
+     * Open the ear. [deviceId] names one from the platform's own list, or
+     * nought for whatever it would have chosen.
+     *
+     * Nothing asked for a device until there was a screen to choose one on,
+     * so this took no argument and you got the default - which on a phone
+     * with a mic, a headset and an interface plugged in is a coin toss the
+     * player cannot see, let alone settle.
+     *
+     * Asking again with a different device reopens the stream; asking for the
+     * one already open does nothing.
+     */
+    bool startInput(int32_t deviceId = 0);
     void stopInput();
     bool isInputRunning() const { return inputStream != nullptr; }
     int32_t inputChannels() const { return actualInputChannels; }
-    float readInputPeak() { return inputPeak.exchange(0.0f, std::memory_order_relaxed); }
+    /** What the stream actually opened at, which is not always what was asked. */
+    int32_t inputRate() const { return actualInputRate; }
+    int32_t inputDevice() const { return actualInputDevice; }
+    /**
+     * The loudest thing that has come in since anybody looked - decayed
+     * rather than cleared.
+     *
+     * It used to `exchange(0)`, which works for exactly one reader. The
+     * recording screen and a panel's own `input` meter are both pollers, and
+     * with a destructive read the two steal from each other and both show a
+     * meter that flickers at half height. Decaying by a fixed fraction leaves
+     * the same reading for everyone and still falls at a readable rate: this
+     * is about three decibels every hundred milliseconds at the panel's poll.
+     */
+    float readInputPeak() {
+        const float now = inputPeak.load(std::memory_order_relaxed);
+        inputPeak.store(now * kMeterDecay, std::memory_order_relaxed);
+        return now;
+    }
 
     bool isRunning() const { return stream != nullptr; }
 
@@ -82,7 +112,12 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     // Peak absolute sample seen since the last read, then reset. Lets the UI
     // (and bring-up on a silent emulator) confirm the engine is actually
     // producing signal, and is the basis for a real level meter later.
-    float readPeakLevel() { return peakLevel.exchange(0.0f, std::memory_order_relaxed); }
+    /** The master's own, on the same terms - see `readInputPeak`. */
+    float readPeakLevel() {
+        const float now = peakLevel.load(std::memory_order_relaxed);
+        peakLevel.store(now * kMeterDecay, std::memory_order_relaxed);
+        return now;
+    }
 
     // oboe::AudioStreamDataCallback
     oboe::DataCallbackResult onAudioReady(oboe::AudioStream *audioStream,
@@ -110,6 +145,10 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     std::vector<float> inputScratch;
     std::vector<float> inputBlock;
     int32_t actualInputChannels = 0;
+    int32_t actualInputRate = 0;
+    int32_t actualInputDevice = 0;
+    /** What a meter read leaves behind. See `readInputPeak`. */
+    static constexpr float kMeterDecay = 0.7f;
     std::atomic<float> inputPeak{0.0f};
 
     void pumpInput(int32_t frames);

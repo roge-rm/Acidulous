@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <android/log.h>
+#include <cstdio>
 #include <cstring>
 #include <chrono>
 #include <drivers/AudioDriver.h>
@@ -213,21 +214,26 @@ bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::st
     return true;
 }
 
-int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns, int32_t fromFrame,
-                               int32_t toFrame) const {
-    if (rack < 0 || rack >= kRackCount || dest == nullptr || columns <= 0) return 0;
-    auto *forage = dynamic_cast<machine::Forage *>(sEngine.racks[rack].currentMachine());
-    if (forage == nullptr) return 0;
-    const SampleData *s = forage->sampleAt(pad);
-    if (s == nullptr || s->frames <= 0) return 0;
+namespace {
+
+/**
+ * A sample as min/max pairs, one per column.
+ *
+ * Shared by the mounted-pad shape and the file shape below, because two
+ * pictures of the same sound drawn by two loops is one of them being subtly
+ * different and nobody knowing which.
+ */
+int32_t shapeOf(const SampleData &s, float *dest, int32_t columns, int32_t fromFrame,
+                int32_t toFrame) {
+    if (dest == nullptr || columns <= 0 || s.frames <= 0) return 0;
 
     // An empty or nonsensical range is the whole sample, so every caller that
     // does not care about a window says nothing and gets what it always got.
-    int64_t first = std::clamp<int64_t>(fromFrame, 0, s->frames - 1);
-    int64_t last = toFrame > fromFrame ? std::clamp<int64_t>(toFrame, 1, s->frames) : s->frames;
+    int64_t first = std::clamp<int64_t>(fromFrame, 0, s.frames - 1);
+    int64_t last = toFrame > fromFrame ? std::clamp<int64_t>(toFrame, 1, s.frames) : s.frames;
     if (last <= first) {
         first = 0;
-        last = s->frames;
+        last = s.frames;
     }
     const int64_t span = last - first;
 
@@ -235,13 +241,13 @@ int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns,
         const int64_t from = first + span * c / columns;
         int64_t to = first + span * (c + 1) / columns;
         if (to <= from) to = from + 1;
-        if (to > s->frames) to = s->frames;
+        if (to > s.frames) to = s.frames;
         float lo = 0.0f, hi = 0.0f;
         for (int64_t i = from; i < to; ++i) {
             // Both channels, because a waveform that shows only the left is a
             // waveform that lies about anything panned.
-            const float l = s->left[static_cast<size_t>(i)];
-            const float r = s->stereo ? s->right[static_cast<size_t>(i)] : l;
+            const float l = s.left[static_cast<size_t>(i)];
+            const float r = s.stereo ? s.right[static_cast<size_t>(i)] : l;
             lo = std::min(lo, std::min(l, r));
             hi = std::max(hi, std::max(l, r));
         }
@@ -249,6 +255,73 @@ int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns,
         dest[c * 2 + 1] = hi;
     }
     return columns;
+}
+
+} // namespace
+
+int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns, int32_t fromFrame,
+                               int32_t toFrame) const {
+    if (rack < 0 || rack >= kRackCount) return 0;
+    auto *forage = dynamic_cast<machine::Forage *>(sEngine.racks[rack].currentMachine());
+    if (forage == nullptr) return 0;
+    const SampleData *s = forage->sampleAt(pad);
+    if (s == nullptr) return 0;
+    return shapeOf(*s, dest, columns, fromFrame, toFrame);
+}
+
+int32_t EngineHost::fileShape(const std::string &path, float *dest, int32_t columns,
+                              int32_t fromFrame, int32_t toFrame) const {
+    std::string error;
+    const std::unique_ptr<SampleData> s = WavReader::read(path, kSampleRate, error, kMaxSliceSeconds);
+    if (s == nullptr) return 0;
+    return shapeOf(*s, dest, columns, fromFrame, toFrame);
+}
+
+std::string EngineHost::fileInfo(const std::string &path) const {
+    std::string error;
+    const std::unique_ptr<SampleData> s = WavReader::read(path, kSampleRate, error, kMaxSliceSeconds);
+    if (s == nullptr || s->frames <= 0) return "";
+    char out[256];
+    std::snprintf(out, sizeof(out), "%s|%d|%d|%d|%.4f", s->name.c_str(), s->frames,
+                  s->stereo ? 2 : 1, s->rate, static_cast<double>(s->peak));
+    return out;
+}
+
+std::string EngineHost::editSample(const std::string &src, const std::string &dst,
+                                   const audio::SampleOps &ops) const {
+    std::string error;
+    std::unique_ptr<SampleData> s = WavReader::read(src, kSampleRate, error, kMaxSliceSeconds);
+    if (s == nullptr) return error.empty() ? "that file could not be read" : error;
+    if (!audio::applyEdit(*s, ops, error)) return error;
+
+    // **Through a temporary, always.** The common case is overwriting the file
+    // that was just read, and a writer that failed halfway through that would
+    // leave a recording that is half of itself with nothing to go back to.
+    const std::string tmp = dst + ".part";
+    {
+        WavWriter writer;
+        if (!writer.open(tmp, kSampleRate, EngineSettings::get().recordBits, error)) {
+            return error.empty() ? "that file could not be written" : error;
+        }
+        std::vector<float> block(static_cast<size_t>(kBlockFrames) * 2, 0.0f);
+        for (int32_t at = 0; at < s->frames; at += kBlockFrames) {
+            const int32_t n = std::min(kBlockFrames, s->frames - at);
+            for (int32_t i = 0; i < n; ++i) {
+                const float l = s->left[static_cast<size_t>(at + i)];
+                block[static_cast<size_t>(i) * 2] = l;
+                block[static_cast<size_t>(i) * 2 + 1] =
+                    s->stereo ? s->right[static_cast<size_t>(at + i)] : l;
+            }
+            writer.write(block.data(), n);
+        }
+        if (!writer.close()) return "that file could not be finished";
+    }
+    std::remove(dst.c_str());
+    if (std::rename(tmp.c_str(), dst.c_str()) != 0) {
+        std::remove(tmp.c_str());
+        return "that file could not be replaced";
+    }
+    return "";
 }
 
 /**
@@ -1471,12 +1544,23 @@ float EngineHost::rackPeak(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].readPeak() : 0.0f;
 }
 float EngineHost::masterFade() const { return sEngine.master.currentFade(); }
-bool EngineHost::startInput() { return sAudio.startInput(); }
-void EngineHost::stopInput() {
+bool EngineHost::startInput(int32_t deviceId) { return sAudio.startInput(deviceId); }
+bool EngineHost::stopInput() {
     sAudio.stopInput();
+    // Closing the ear stops a capture that was listening through it. That is
+    // the right thing to do and the wrong thing to do quietly: the take is
+    // cut short, and whoever asked should be told rather than find a file
+    // that ends in the middle of a word.
+    const bool wasRecording = sEngine.capture.armed() &&
+                              sEngine.capture.source() == Capture::FromInput;
     sEngine.capture.stop();
+    return wasRecording;
 }
 bool EngineHost::inputRunning() const { return sAudio.isInputRunning(); }
+int32_t EngineHost::inputChannels() const { return sAudio.inputChannels(); }
+int32_t EngineHost::inputRate() const { return sAudio.inputRate(); }
+int32_t EngineHost::inputDevice() const { return sAudio.inputDevice(); }
+bool EngineHost::captureDeaf() const { return sEngine.capture.deaf(); }
 float EngineHost::inputPeak() { return sAudio.readInputPeak(); }
 void EngineHost::setInputGain(float gain) { sEngine.inputGain.store(gain, std::memory_order_relaxed); }
 void EngineHost::setMonitorLevel(float level) { sEngine.monitorLevel.store(level, std::memory_order_relaxed); }

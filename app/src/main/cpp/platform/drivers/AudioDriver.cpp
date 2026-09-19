@@ -71,10 +71,15 @@ bool AudioDriver::start() {
     return true;
 }
 
-bool AudioDriver::startInput() {
-    if (inputStream != nullptr) return true;
+bool AudioDriver::startInput(int32_t deviceId) {
+    // Already open on the device that was asked for - including nought,
+    // which means "whatever you were going to pick" and cannot be compared
+    // against what was picked.
+    if (inputStream != nullptr && (deviceId == 0 || deviceId == actualInputDevice)) return true;
+    if (inputStream != nullptr) stopInput();
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Input)
+        ->setDeviceId(deviceId > 0 ? deviceId : oboe::kUnspecified)
         ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
         ->setSharingMode(oboe::SharingMode::Exclusive)
         ->setFormat(oboe::AudioFormat::Float)
@@ -93,6 +98,8 @@ bool AudioDriver::startInput() {
         return false;
     }
     actualInputChannels = inputStream->getChannelCount();
+    actualInputRate = inputStream->getSampleRate();
+    actualInputDevice = inputStream->getDeviceId();
     const size_t ringFrames = static_cast<size_t>(acidulous::kSampleRate) / 4; // a quarter second
     inputRing.assign(ringFrames * 2, 0.0f);
     inputScratch.assign(ringFrames * 2, 0.0f);
@@ -119,6 +126,9 @@ void AudioDriver::stopInput() {
     inputStream.reset();
     inputRingFrames = 0;
     inputRingRead = 0;
+    actualInputChannels = 0;
+    actualInputRate = 0;
+    actualInputDevice = 0;
 }
 
 // Drain whatever the input stream has ready, without waiting for it. A

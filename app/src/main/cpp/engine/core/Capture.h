@@ -28,10 +28,22 @@ class Capture {
     int64_t frames() const { return written.load(std::memory_order_relaxed); }
     float peak() const { return peakLevel.load(std::memory_order_relaxed); }
     bool overflowed() const { return overflow.load(std::memory_order_relaxed); }
+    /**
+     * True once an input capture has been asked to record with nothing
+     * arriving - no stream open, or one that has gone away.
+     *
+     * It is a separate flag from `overflowed` because it is a different
+     * sentence: one says the recording has a hole in it, this one says there
+     * was never anything to record. Both are worth more than a file of
+     * silence and no explanation.
+     */
+    bool deaf() const { return wasDeaf.load(std::memory_order_relaxed); }
     const std::string &file() const { return outPath; }
 
     // Audio thread. Interleaved stereo.
     void push(const float *interleaved, int32_t frames);
+    /** Audio thread. As `push`, with nothing to push: see `deaf()`. */
+    void pushSilence(int32_t frames);
 
   private:
     void drain();
@@ -41,6 +53,7 @@ class Capture {
     std::atomic<int64_t> readIndex{0};
     std::atomic<bool> running{false};
     std::atomic<bool> overflow{false};
+    std::atomic<bool> wasDeaf{false};
     std::atomic<int64_t> written{0};
     std::atomic<float> peakLevel{0.0f};
     std::thread worker;

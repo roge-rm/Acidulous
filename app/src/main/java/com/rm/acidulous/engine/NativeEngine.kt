@@ -453,11 +453,26 @@ object NativeEngine {
 
     // --- Audio in --------------------------------------------------------
 
-    /** Opens the microphone or line in. Needs RECORD_AUDIO to have been granted. */
-    fun startInput(): Boolean = nativeStartInput()
-    fun stopInput() = nativeStopInput()
+    /**
+     * Opens the microphone or line in. Needs RECORD_AUDIO to have been granted.
+     *
+     * [deviceId] names one of the platform's own inputs - an `AudioDeviceInfo`
+     * id - or nought for whatever it would have chosen. Defaulted, because
+     * the panels that only want to listen do not care which ear they get.
+     * Asking for a different one while open reopens the stream.
+     */
+    fun startInput(deviceId: Int = 0): Boolean = nativeStartInput(deviceId)
+    /** True if closing the ear cut a recording short. */
+    fun stopInput(): Boolean = nativeStopInput()
     val inputRunning: Boolean get() = nativeInputRunning()
-    /** Peak since the last read, then reset. */
+    /** What the open stream actually is, rather than what was asked for. */
+    val inputChannels: Int get() = nativeInputChannels()
+    val inputRate: Int get() = nativeInputRate()
+    val inputDevice: Int get() = nativeInputDevice()
+    /**
+     * The loudest thing since anybody looked, decayed rather than cleared, so
+     * two meters on screen at once agree with each other.
+     */
     fun inputPeak(): Float = nativeInputPeak()
     fun setInputGain(gain: Float) = nativeSetInputGain(gain)
     fun setMonitorLevel(level: Float) = nativeSetMonitorLevel(level)
@@ -469,9 +484,50 @@ object NativeEngine {
     val capturedSeconds: Float get() = nativeCapturedSeconds()
     val capturedPeak: Float get() = nativeCapturedPeak()
     val captureOverflowed: Boolean get() = nativeCaptureOverflowed()
+    /** True once an input capture has run with nothing arriving at all. */
+    val captureDeaf: Boolean get() = nativeCaptureDeaf()
 
-    private external fun nativeStartInput(): Boolean
-    private external fun nativeStopInput()
+    // --- A file on disk, rather than a mounted pad -----------------------
+
+    /**
+     * The waveform of a **file**, as min/max pairs, exactly as [sampleShape]
+     * gives them for a loaded pad.
+     *
+     * `sampleShape` asks a Forage for its pad, so it answers nothing for Dice,
+     * Pollen, Molt or Mosaic, and nothing at all for a recording that is not
+     * mounted anywhere yet. Walks and decodes the file: a worker, never a
+     * frame loop.
+     */
+    fun fileShape(path: String, out: FloatArray, fromFrame: Int = 0, toFrame: Int = 0): Int =
+        nativeFileShape(path, out, fromFrame, toFrame)
+
+    /** "name|frames|channels|rate|peak", or "" if it cannot be read. */
+    fun fileInfo(path: String): String = nativeFileInfo(path)
+
+    /** What [editSample] takes, in the order the engine unpacks it. */
+    const val EDIT_OPS = 14
+
+    /**
+     * Read [src], apply the edit, write [dst]; "" or a reason.
+     *
+     * [dst] may be [src], which is the overwrite - the engine writes to a
+     * temporary and renames, so a failure leaves the original alone. [ops] is
+     * a flat array because a dozen arguments of the same type is a dozen
+     * chances to swap two, and the order is written out on both sides:
+     *
+     *   0 from        1 to          2 fadeInMs    3 fadeOutMs
+     *   4 gainDb      5 normaliseTo 6 reverse     7 lowCutHz
+     *   8 cutoffHz    9 resonance  10 filterType 11 squash
+     *  12 squashAttackMs           13 squashReleaseMs
+     */
+    fun editSample(src: String, dst: String, ops: FloatArray): String =
+        nativeEditSample(src, dst, ops)
+
+    private external fun nativeStartInput(deviceId: Int): Boolean
+    private external fun nativeStopInput(): Boolean
+    private external fun nativeInputChannels(): Int
+    private external fun nativeInputRate(): Int
+    private external fun nativeInputDevice(): Int
     private external fun nativeInputRunning(): Boolean
     private external fun nativeInputPeak(): Float
     private external fun nativeSetInputGain(gain: Float)
@@ -482,6 +538,10 @@ object NativeEngine {
     private external fun nativeCapturedSeconds(): Float
     private external fun nativeCapturedPeak(): Float
     private external fun nativeCaptureOverflowed(): Boolean
+    private external fun nativeCaptureDeaf(): Boolean
+    private external fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int
+    private external fun nativeFileInfo(path: String): String
+    private external fun nativeEditSample(src: String, dst: String, ops: FloatArray): String
     private external fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int)
     private external fun nativeSetMpeZone(kind: Int, members: Int, bendSemis: Float)
     private external fun nativeMpeHeldMask(): Int

@@ -245,12 +245,27 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeNexusActivity(JNIEnv *env, jobje
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStartInput(JNIEnv *, jobject) {
-    return host().startInput() ? JNI_TRUE : JNI_FALSE;
+Java_com_rm_acidulous_engine_NativeEngine_nativeStartInput(JNIEnv *, jobject, jint deviceId) {
+    return host().startInput(deviceId) ? JNI_TRUE : JNI_FALSE;
 }
 
-JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStopInput(JNIEnv *, jobject) { host().stopInput(); }
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeStopInput(JNIEnv *, jobject) {
+    return host().stopInput() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeInputChannels(JNIEnv *, jobject) {
+    return host().inputChannels();
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeInputRate(JNIEnv *, jobject) { return host().inputRate(); }
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeInputDevice(JNIEnv *, jobject) {
+    return host().inputDevice();
+}
 
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeInputRunning(JNIEnv *, jobject) {
@@ -297,6 +312,72 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeCapturedPeak(JNIEnv *, jobject) 
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureOverflowed(JNIEnv *, jobject) {
     return host().captureOverflowed() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureDeaf(JNIEnv *, jobject) {
+    return host().captureDeaf() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeFileShape(JNIEnv *env, jobject, jstring path,
+                                                          jfloatArray out, jint fromFrame,
+                                                          jint toFrame) {
+    const jsize max = env->GetArrayLength(out);
+    if (max < 2) return 0;
+    const char *p = env->GetStringUTFChars(path, nullptr);
+    jfloat *data = env->GetFloatArrayElements(out, nullptr);
+    const int32_t n = host().fileShape(p != nullptr ? p : "", data, static_cast<int32_t>(max / 2),
+                                       fromFrame, toFrame);
+    env->ReleaseFloatArrayElements(out, data, 0);
+    if (p != nullptr) env->ReleaseStringUTFChars(path, p);
+    return n;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeFileInfo(JNIEnv *env, jobject, jstring path) {
+    const char *p = env->GetStringUTFChars(path, nullptr);
+    const std::string out = host().fileInfo(p != nullptr ? p : "");
+    if (p != nullptr) env->ReleaseStringUTFChars(path, p);
+    return env->NewStringUTF(out.c_str());
+}
+
+/**
+ * The edit, as a flat array rather than as a dozen arguments.
+ *
+ * The order is fixed and is written out on both sides - see `SampleOps` and
+ * `NativeEngine.editSample`. A dozen jfloats in a signature is a dozen chances
+ * to put two of them the wrong way round, and the compiler cannot tell.
+ */
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeEditSample(JNIEnv *env, jobject, jstring src,
+                                                           jstring dst, jfloatArray opsArray) {
+    const jsize n = env->GetArrayLength(opsArray);
+    if (n < 14) return env->NewStringUTF("the edit is incomplete");
+    jfloat *o = env->GetFloatArrayElements(opsArray, nullptr);
+    acidulous::audio::SampleOps ops;
+    ops.from = static_cast<int32_t>(o[0]);
+    ops.to = static_cast<int32_t>(o[1]);
+    ops.fadeInMs = o[2];
+    ops.fadeOutMs = o[3];
+    ops.gainDb = o[4];
+    ops.normaliseTo = o[5];
+    ops.reverse = o[6] >= 0.5f;
+    ops.lowCutHz = o[7];
+    ops.cutoffHz = o[8];
+    ops.resonance = o[9];
+    ops.filterType = static_cast<int32_t>(o[10]);
+    ops.squash = o[11];
+    ops.squashAttackMs = o[12];
+    ops.squashReleaseMs = o[13];
+    env->ReleaseFloatArrayElements(opsArray, o, JNI_ABORT);
+
+    const char *a = env->GetStringUTFChars(src, nullptr);
+    const char *b = env->GetStringUTFChars(dst, nullptr);
+    const std::string out = host().editSample(a != nullptr ? a : "", b != nullptr ? b : "", ops);
+    if (a != nullptr) env->ReleaseStringUTFChars(src, a);
+    if (b != nullptr) env->ReleaseStringUTFChars(dst, b);
+    return env->NewStringUTF(out.c_str());
 }
 
 JNIEXPORT void JNICALL

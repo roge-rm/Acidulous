@@ -34,6 +34,7 @@ bool Capture::start(const std::string &path, int32_t sampleRate, Source source, 
     written.store(0, std::memory_order_relaxed);
     peakLevel.store(0.0f, std::memory_order_relaxed);
     overflow.store(false, std::memory_order_relaxed);
+    wasDeaf.store(false, std::memory_order_relaxed);
     running.store(true, std::memory_order_release);
     worker = std::thread([this] { drain(); });
     return true;
@@ -62,6 +63,22 @@ void Capture::push(const float *interleaved, int32_t frames) {
         peak = std::fmax(peak, std::fmax(std::fabs(l), std::fabs(rr)));
     }
     peakLevel.store(peak, std::memory_order_relaxed);
+    writeIndex.store(w + n, std::memory_order_release);
+}
+
+void Capture::pushSilence(int32_t frames) {
+    if (!running.load(std::memory_order_acquire)) return;
+    wasDeaf.store(true, std::memory_order_relaxed);
+    const int64_t w = writeIndex.load(std::memory_order_relaxed);
+    const int64_t r = readIndex.load(std::memory_order_acquire);
+    const int64_t space = kRingFrames - (w - r);
+    const int32_t n = static_cast<int32_t>(std::min<int64_t>(frames, space));
+    if (n < frames) overflow.store(true, std::memory_order_relaxed);
+    for (int32_t i = 0; i < n; ++i) {
+        const int64_t slot = (w + i) % kRingFrames;
+        ring[static_cast<size_t>(slot) * 2] = 0.0f;
+        ring[static_cast<size_t>(slot) * 2 + 1] = 0.0f;
+    }
     writeIndex.store(w + n, std::memory_order_release);
 }
 
