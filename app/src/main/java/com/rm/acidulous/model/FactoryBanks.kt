@@ -25,6 +25,7 @@ internal object FactoryBanks {
         "Forage" -> forage
         "Dice" -> dice
         "Mosaic" -> mosaic
+        "Molt" -> molt
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -2552,6 +2553,107 @@ internal object FactoryBanks {
         family = "texture")
 
     private val mosaic: List<Patch> by lazy { listOf(mosaic0(), mosaic1(), mosaic2(), mosaic3(), mosaic4(), mosaic5(), mosaic6(), mosaic7(), mosaic8(), mosaic9(), mosaic10(), mosaic11(), mosaic12(), mosaic13(), mosaic14(), mosaic15(), mosaic16(), mosaic17(), mosaic18(), mosaic19(), mosaic20(), mosaic21(), mosaic22(), mosaic23(), mosaic24(), mosaic25(), mosaic26(), mosaic27(), mosaic28(), mosaic29(), mosaic30(), mosaic31(), mosaic32(), mosaic33(), mosaic34(), mosaic35(), mosaic36()) }
+
+    private fun molt0() = Patch("Molt", "Init", emptyMap(),
+        family = "tune")
+
+    private fun molt1() = Patch("Molt", "Natural",
+        mapOf("tune" to 0f, "volume" to 0.5733333f),
+        family = "tune")
+
+    private fun molt2() = Patch("Molt", "Correct",
+        mapOf("tune" to 0.78f, "rate" to 0.15f, "volume" to 0.56f),
+        family = "tune")
+
+    private fun molt3() = Patch("Molt", "Hard",
+        mapOf("rate" to 0f, "cutoff" to 0.845404565f, "drive" to 0.3f, "volume" to 0.453333348f),
+        family = "tune")
+
+    private fun molt4() = Patch("Molt", "Catch Up",
+        mapOf("tune" to 0.95f, "rate" to 0.625f, "volume" to 0.586666644f),
+        family = "tune")
+
+    private fun molt5() = Patch("Molt", "Robot",
+        mapOf("robot" to 1f, "volume" to 0.6066667f),
+        family = "robot")
+
+    private fun molt6() = Patch("Molt", "Choir",
+        mapOf("robot" to 1f, "amprelease" to 0.7223811f, "glide" to 0.06f, "volume" to 0.6066667f),
+        family = "robot")
+
+    private fun molt7() = Patch("Molt", "Talkbox",
+        mapOf("robot" to 1f, "cutoff" to 0.5567293f, "resonance" to 0.62f, "filtertype" to 0.727272749f, "volume" to 1f),
+        family = "robot")
+
+    private fun molt8() = Patch("Molt", "Monk",
+        mapOf("robot" to 1f, "formant" to 0.375f, "amprelease" to 0.820153654f, "octave" to 0.333333343f, "volume" to 0.599999964f),
+        family = "robot")
+
+    private fun molt9() = Patch("Molt", "Giant",
+        mapOf("formant" to 0.166666672f, "volume" to 0.66f),
+        family = "size")
+
+    private fun molt10() = Patch("Molt", "Child",
+        mapOf("formant" to 0.7916667f, "cutoff" to 0.8865413f, "volume" to 0.64f),
+        family = "size")
+
+    private fun molt11() = Patch("Molt", "Chest",
+        mapOf("formant" to 0.333333343f, "cutoff" to 0.670188f, "volume" to 0.566666663f),
+        family = "size")
+
+    private fun molt12() = Patch("Molt", "Megaphone",
+        mapOf("mega" to 0.8f, "cutoff" to 0.593254864f, "resonance" to 0.3f, "filtertype" to 0.727272749f, "volume" to 1f),
+        family = "size")
+
+    private fun molt13() = Patch("Molt", "Telephone",
+        mapOf("cutoff" to 0.5424868f, "resonance" to 0.35f, "filtertype" to 0.8181818f, "drive" to 0.18f, "volume" to 0.8666666f),
+        family = "tone")
+
+    private fun molt14() = Patch("Molt", "Dark Room",
+        mapOf("cutoff" to 0.50963974f, "resonance" to 0.12f, "filtertype" to 0.272727281f, "volume" to 0.653333366f),
+        family = "tone")
+
+    private fun molt15() = Patch("Molt", "Air",
+        mapOf("formant" to 0.5833333f, "cutoff" to 0.368505567f, "filtertype" to 0.363636374f, "volume" to 0.766666651f),
+        family = "tone")
+
+    private fun molt16() = Patch("Molt", "Driven",
+        mapOf("cutoff" to 0.7903287f, "drive" to 0.62f, "volume" to 0.32f),
+        family = "tone")
+
+    private fun molt17() = Patch("Molt", "Swell",
+        mapOf("ampattack" to 0.8949457f, "ampdecay" to 0.854839f, "ampsustain" to 0.9f, "amprelease" to 0.789853036f, "volume" to 0.599999964f),
+        family = "shape")
+
+    private fun molt18() = Patch("Molt", "Pluck",
+        mapOf("ampattack" to 0.182385489f, "ampdecay" to 0.687695742f, "ampsustain" to 0.34f, "amprelease" to 0.5772201f, "volume" to 0.933333337f),
+        family = "shape")
+
+    private fun molt19() = Patch("Molt", "Gated",
+        mapOf("ampattack" to 0.0911927447f, "ampdecay" to 0.471666247f, "ampsustain" to 0.75f, "amprelease" to 0.361190528f, "volume" to 0.7733333f),
+        family = "shape")
+
+    private fun molt20() = Patch("Molt", "Held",
+        mapOf("loop" to 1f, "ampattack" to 0.5386656f, "amprelease" to 0.8895244f, "volume" to 0.5466667f),
+        family = "shape")
+
+    private fun molt21() = Patch("Molt", "Glide",
+        mapOf("tune" to 0.9f, "rate" to 0.075f, "glide" to 0.15f, "volume" to 0.5733333f),
+        family = "play")
+
+    private fun molt22() = Patch("Molt", "Octave Down",
+        mapOf("formant" to 0.6666667f, "octave" to 0.333333343f, "volume" to 0.586666644f),
+        family = "play")
+
+    private fun molt23() = Patch("Molt", "Wide Bend",
+        mapOf("tune" to 0.85f, "rate" to 0.125f, "bendrange" to 0.5f, "volume" to 0.56f),
+        family = "play")
+
+    private fun molt24() = Patch("Molt", "Whisper",
+        mapOf("start" to 0.18f, "cutoff" to 0.82017225f, "velocity" to 0.9f, "drive" to 0.1f, "volume" to 0.553333342f),
+        family = "play")
+
+    private val molt: List<Patch> by lazy { listOf(molt0(), molt1(), molt2(), molt3(), molt4(), molt5(), molt6(), molt7(), molt8(), molt9(), molt10(), molt11(), molt12(), molt13(), molt14(), molt15(), molt16(), molt17(), molt18(), molt19(), molt20(), molt21(), molt22(), molt23(), molt24()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

@@ -516,11 +516,26 @@ inline std::unique_ptr<audio::Take> voiceTake() {
     return take;
 }
 
-/** The voice phrase, analysed, for Molt. */
+/**
+ * The sung phrase, analysed, for Molt.
+ *
+ * `speechPhrase` and not `voicePhrase`, and the reason is the same one this
+ * file already gives twice. A vocoder cannot be judged on a held vowel
+ * because a band map only shows what it does when what goes through it
+ * moves; a sampler cannot be judged on a signal with no attack. A machine
+ * whose whole instrument is *pitch pulled onto what you wrote* cannot be
+ * judged on a take at a fixed pitch: `tune` at nought and `tune` at one
+ * differ by a constant offset and nothing else, and `rate` - how long the
+ * pull takes - has nothing at all to act on.
+ *
+ * So the take is the twelve second one whose pitch walks between 70 and 190
+ * Hz across nine syllables. Against that, tuning is a line being bent onto
+ * the notes in the clip, which is the thing the machine is for.
+ */
 inline std::unique_ptr<audio::Utterance> voiceUtterance() {
     auto u = std::make_unique<audio::Utterance>();
     u->name = "voice";
-    u->mono = voicePhrase();
+    u->mono = speechPhrase();
     u->frames = static_cast<int32_t>(u->mono.size());
     u->analyse(kMatSr);
     return u;
