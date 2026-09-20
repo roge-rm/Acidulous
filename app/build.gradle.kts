@@ -22,8 +22,15 @@ android {
         // Bumped by hand, and the name is the tag. 0.1.0 is the first
         // release put out for anybody else to install - see docs and the
         // repository's tags.
-        versionCode = 1
-        versionName = "0.1.0"
+        //
+        // 0.1.1 because the 0.1.0 tag fell behind: twenty-eight commits
+        // landed past it, among them a behaviour change anybody who installed
+        // it would notice - panic became a long press of the stop pill rather
+        // than a button of its own - and an interface that can be made larger.
+        // A tag that no longer describes what people have is worse than no
+        // tag, so it is a new one rather than a moved one.
+        versionCode = 2
+        versionName = "0.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
