@@ -168,7 +168,19 @@ void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
  */
 void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing) {
     const FrozenClip *want = nullptr;
-    if (playing && frozenSet != nullptr) {
+    // **A muted clip is muted whether or not it was frozen.**
+    //
+    // `ClipPlayer` has always skipped a muted clip's notes, and nothing here
+    // ever looked at a clip at all - so muting a frozen clip silenced notes
+    // that were not being played and left the audio running. The mute button
+    // simply did nothing on the one kind of clip whose whole point is that
+    // the machine is not running.
+    //
+    // The player's clip is the rack's own and is set per rack per scene, so it
+    // is the right one in clip mode as well as in the arranger.
+    const seq::Clip *clip = clipPlayer.clip();
+    const bool muted = clip != nullptr && clip->mute;
+    if (playing && !muted && frozenSet != nullptr) {
         const FrozenClip *c = frozenSet->find(sceneId);
         // The tempo has to be the one it was rendered at, to a hundredth of
         // a beat: a second of audio at 121 bpm is a different number of

@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <engine/machine/MachineRegistry.h>
+#include <engine/core/Frozen.h>
 #include <engine/rack/Rack.h>
 #include <sequencer/SceneScheduler.h>
 
@@ -86,6 +87,7 @@ struct Fixture {
     SceneScheduler scheduler;
     std::shared_ptr<SongSnapshot> snap = std::make_shared<SongSnapshot>();
     std::vector<std::shared_ptr<const Clip>> keep;
+    FrozenSet frozen;
 
     Fixture() {
         for (auto &rack : racks) {
@@ -98,6 +100,7 @@ struct Fixture {
     }
 
     ~Fixture() {
+        for (auto &rack : racks) rack.swapFrozen(nullptr);
         for (auto &rack : racks) {
             delete rack.swapMachine(nullptr);
         }
@@ -130,6 +133,43 @@ struct Fixture {
         }
         keep.push_back(c);
         snap->setClip(rack, sceneIdx, c);
+    }
+
+    /** The same clip again, muted or not, as the UI's mute chip does it. */
+    void mute(int32_t rack, int32_t sceneIdx, bool on) {
+        const auto &was = snap->clips[static_cast<size_t>(rack) * snap->scenes.size() +
+                                      static_cast<size_t>(sceneIdx)];
+        auto c = std::make_shared<Clip>(*was);
+        c->mute = on;
+        c->rev = was->rev + 1000;
+        keep.push_back(c);
+        snap->setClip(rack, sceneIdx, c);
+        commit();
+    }
+
+    /** A freeze of [sceneId] on [rack], rendered at the tempo it will play at. */
+    void freeze(int32_t rack, int64_t sceneId, int32_t ticks) {
+        auto fc = std::make_shared<FrozenClip>();
+        fc->frames = kSampleRate;
+        fc->ticks = ticks;
+        fc->bpm = 120.0f;
+        fc->left.assign(static_cast<size_t>(fc->frames), 0.5f);
+        fc->right = fc->left;
+        frozen.entries.push_back({sceneId, fc});
+        racks[rack].swapFrozen(&frozen);
+    }
+
+    /**
+     * What `Engine::renderBlock` does before the scheduler fires, by hand.
+     *
+     * `run()` cannot do it: the engine asks every rack whether it is playing
+     * audio it made earlier *outside* the scheduler, and a harness that only
+     * turns the scheduler would never see the frozen path at all.
+     */
+    void updateFrozen() {
+        for (int32_t r = 0; r < kRacks; ++r) {
+            racks[r].updateFrozen(scheduler.rackSceneId(r), clock.bpm(), true);
+        }
     }
 
     void commit() { scheduler.swapSnapshot(snap.get()); }
@@ -366,6 +406,37 @@ void nothingIsLeftSounding() {
     ok("and the grid is dark", soundingCount(f->transport) == 0);
 }
 
+/**
+ * Muting a clip mutes its frozen audio too.
+ *
+ * `ClipPlayer` has always skipped a muted clip's notes. `Rack::updateFrozen`
+ * never looked at a clip at all - so muting a frozen clip silenced notes that
+ * nobody was playing and left the audio running, on the one kind of clip whose
+ * whole point is that the machine is not running. The mute chip did nothing.
+ */
+void aMutedClipIsMutedWhenFrozen() {
+    auto f = std::make_unique<Fixture>();
+    f->scene(1, 1);
+    f->clip(0, 0, 1);
+    f->commit();
+    f->play();
+    f->run(2);
+
+    f->freeze(0, 1, kBar);
+    f->updateFrozen();
+    ok("frozen audio plays", f->racks[0].frozenActive());
+
+    f->mute(0, 0, true);
+    f->run(1);
+    f->updateFrozen();
+    ok("and stops the moment the clip is muted", !f->racks[0].frozenActive());
+
+    f->mute(0, 0, false);
+    f->run(1);
+    f->updateFrozen();
+    ok("and comes back when it is not", f->racks[0].frozenActive());
+}
+
 } // namespace
 
 int main() {
@@ -379,6 +450,7 @@ int main() {
     aOneShotReArmsEveryIteration();
     sceneRepeatsAdvanceAndWrap();
     nothingIsLeftSounding();
+    aMutedClipIsMutedWhenFrozen();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
