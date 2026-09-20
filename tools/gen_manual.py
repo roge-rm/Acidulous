@@ -20,8 +20,13 @@ manual is written in is the subset a manual needs -
     1. step              a numbered item
     `code` and **bold**  left in the text, drawn by the reader
 
+Two things are written from it and neither is ever edited by hand: the app's
+`model/Manual.kt`, and the contents list in `manual/README.md` - because a
+contents page typed out beside the sections it lists is a second copy of every
+title and every summary, which is the drift this whole script exists to stop.
+
 Re-run after editing the manual:  python3 tools/gen_manual.py
-Check it is in step (this is what all_tests.sh runs):
+Check both are in step (this is what all_tests.sh runs):
                                   python3 tools/gen_manual.py --check
 """
 import pathlib
@@ -30,6 +35,8 @@ import sys
 
 SRC = pathlib.Path("manual")
 OUT = pathlib.Path("app/src/main/java/com/rm/acidulous/model/Manual.kt")
+INDEX = SRC / "README.md"
+OPEN, CLOSE = "<!-- contents -->", "<!-- /contents -->"
 
 HEADING, PARA, BULLET, STEP = 0, 1, 2, 3
 
@@ -105,23 +112,44 @@ def kotlin(sections):
     return "\n".join(out)
 
 
+def contents(files, sections):
+    """The numbered list, between the markers in manual/README.md."""
+    rows = [
+        f"{i}. [{title}]({path.name}) - {summary[0].lower() + summary[1:]}"
+        for i, (path, (title, summary, _)) in enumerate(zip(files, sections), 1)
+    ]
+    return "\n".join([OPEN, ""] + rows + ["", CLOSE])
+
+
+def indexed(files, sections):
+    """manual/README.md with its contents list brought up to date."""
+    text = INDEX.read_text(encoding="utf-8")
+    a, b = text.find(OPEN), text.find(CLOSE)
+    if a < 0 or b < 0:
+        sys.exit(f"gen_manual: {INDEX} has no {OPEN} ... {CLOSE} to write into")
+    return text[:a] + contents(files, sections) + text[b + len(CLOSE):]
+
+
 def main():
     files = sorted(p for p in SRC.glob("*.md") if p.name != "README.md")
     if not files:
         sys.exit("gen_manual: manual/ has no sections")
     sections = [parse(p) for p in files]
     text = kotlin(sections)
+    index = indexed(files, sections)
     words = sum(len(t.split()) for _, _, bs in sections for _, t in bs)
     if "--check" in sys.argv:
-        have = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
-        if have != text:
-            print(f"  FAIL manual: {OUT} is not what manual/ would produce")
-            print("       run: python3 tools/gen_manual.py")
-            sys.exit(1)
+        for path, want in ((OUT, text), (INDEX, index)):
+            have = path.read_text(encoding="utf-8") if path.exists() else ""
+            if have != want:
+                print(f"  FAIL manual: {path} is not what manual/ would produce")
+                print("       run: python3 tools/gen_manual.py")
+                sys.exit(1)
         print(f"  ok   manual: {len(sections)} sections, {words} words, in step")
         return
     OUT.write_text(text, encoding="utf-8")
-    print(f"gen_manual: {len(sections)} sections, {words} words -> {OUT}")
+    INDEX.write_text(index, encoding="utf-8")
+    print(f"gen_manual: {len(sections)} sections, {words} words -> {OUT} and {INDEX}")
 
 
 main()
