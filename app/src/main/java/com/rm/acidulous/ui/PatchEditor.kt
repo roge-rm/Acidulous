@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -169,9 +171,20 @@ fun PatchScreen(
             LoadMeter()
         }
 
-        // --- canvas -----------------------------------------------------------
+        // --- canvas and inspector ----------------------------------------------
+        //
+        // **Sideways they stand side by side.** The canvas is the thing being
+        // worked on and the only child here that can give up any size, so
+        // stacking them hands it the least room exactly when the screen is
+        // shortest - three hundred and ninety-three dp less a header less an
+        // inspector is not a patch you can see. Turned, the inspector takes a
+        // column against the right edge instead and the canvas keeps the
+        // height; it already has its own pan and zoom, so it needs nothing
+        // else from this.
         val patchState by rememberUpdatedState(patch)
-        Box(Modifier.fillMaxWidth().weight(1f)) {
+        val landscape = isLandscape()
+        val canvasAndInspector: @Composable () -> Unit = {
+        Box(if (landscape) Modifier.fillMaxHeight().weight(1f) else Modifier.fillMaxWidth().weight(1f)) {
             Canvas(
                 Modifier.fillMaxSize().pointerInput(Unit) {
                     awaitEachGesture {
@@ -293,8 +306,7 @@ fun PatchScreen(
             }
         }
 
-        // --- inspector --------------------------------------------------------
-        Inspector(patch, selection, binding, scope,
+        Inspector(patch, selection, binding, scope, landscape,
             onDelete = {
                 when (val s = selection) {
                     is Selection.Module -> {
@@ -318,6 +330,12 @@ fun PatchScreen(
                 }))
             },
         )
+        }
+        if (landscape) {
+            Row(Modifier.fillMaxWidth().weight(1f)) { canvasAndInspector() }
+        } else {
+            canvasAndInspector()
+        }
     }
 
     if (adding) {
@@ -531,11 +549,25 @@ private fun Inspector(
     selection: Selection,
     binding: ParamBinding,
     scope: FloatArray,
+    /** A column against the right edge rather than a strip under the canvas. */
+    vertical: Boolean = false,
     onDelete: () -> Unit,
     onTogglePoly: () -> Unit,
 ) {
     val c = Acid.colors
-    Box(Modifier.fillMaxWidth().heightIn(min = 96.dp).background(c.panel).padding(6.dp)) {
+    // The body is `GroupRow` and `Group`, the same two the machine panels are
+    // built from - so a column of them is a thing the app already knows how
+    // to draw. `LocalPanelStacked` turns the row of cards into a column of
+    // them and the knobs two to a line; without it the cards went on
+    // scrolling sideways inside two hundred dp, which shows one and a half.
+    androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides vertical) {
+    Box(
+        (if (vertical) {
+            Modifier.width(INSPECTOR_W).fillMaxHeight()
+        } else {
+            Modifier.fillMaxWidth().heightIn(min = 96.dp)
+        }).background(c.panel).padding(6.dp),
+    ) {
         when (selection) {
             is Selection.Module -> {
                 val m = patch.moduleAt(selection.slot)
@@ -602,6 +634,7 @@ private fun Inspector(
             }
         }
     }
+    }
 }
 
 @Composable
@@ -638,3 +671,12 @@ private fun AddModuleDialog(
         }
     }
 }
+
+/**
+ * How wide the inspector stands when it is a column.
+ *
+ * The same hundred and eighty the editor gives the machine panel sideways,
+ * because it is the same thing: a column of `Group` cards with the knobs two
+ * to a line. One number, one shape, both screens.
+ */
+private val INSPECTOR_W = 180.dp

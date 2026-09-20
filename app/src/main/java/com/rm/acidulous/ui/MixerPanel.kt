@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.EngineSync
@@ -56,8 +60,44 @@ fun MixerPanel(
     modifier: Modifier = Modifier,
 ) {
     val c = Acid.colors
+    // **The fader takes what is left, when there is a "left" to take.**
+    //
+    // A hundred and ten dp is a fair fader on a phone held upright, where the
+    // mixer slides up over a song grid that can spare it. It is not a fair
+    // fader in the editor's panel column turned sideways, which is about two
+    // hundred dp tall in total and also carries a name, a pan, two sends and
+    // two rows of chips - so the strip simply overhung and the bottom of it
+    // was not there.
+    //
+    // So the fader is worked out from the room there actually is, floored at
+    // a height you can still drag and capped at what it is upright. The
+    // branch is on the measurement rather than on the orientation, because
+    // the squeeze is a fact about the box this is in and not about which way
+    // the phone is held - the same panel is tight in a turned editor and
+    // roomy in an upright arranger.
+    BoxWithConstraints(modifier) {
+    // **A floor, and a scroll under it.** `weight(1f)` alone gave the fader
+    // whatever was left, and in the editor's panel column what was left came
+    // to about fifteen dp - everything visible and nothing draggable, which
+    // is the wrong half of the problem to solve. So the height is worked out
+    // instead, floored at something you can still move, and the strip scrolls
+    // when even that will not fit. The scroll is the safety net rather than
+    // the mechanism: at any ordinary size nothing scrolls at all.
+    // **Capped, not filled.** `fillMaxHeight` was the first answer and it was
+    // wrong in the ordinary case: a Column hands its children a bounded max
+    // height whether or not the space is tight, so upright - where there was
+    // never a problem - the strips stretched down the whole screen with a
+    // hand's width of nothing under the chips. What is wanted is a ceiling.
+    val room = if (constraints.hasBoundedHeight) maxHeight else Dp.Infinity
+    val faderH = if (room == Dp.Infinity) {
+        FADER_H
+    } else {
+        (room - STRIP_CHROME).coerceIn(FADER_MIN, FADER_H)
+    }
+    // Only once even the floor will not fit does anything scroll.
+    val tight = room != Dp.Infinity && room < STRIP_CHROME + FADER_MIN
     Row(
-        modifier.background(c.panelAlt).horizontalScrollWithBar(rememberScrollState()).padding(6.dp),
+        Modifier.background(c.panelAlt).horizontalScrollWithBar(rememberScrollState()).padding(6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         song.tracks.forEachIndexed { index, track ->
@@ -72,17 +112,25 @@ fun MixerPanel(
                     .distinct()
                     .sorted()
             }
-            ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated)
+            ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated, faderH, room, tight)
         }
-        MasterStrip(song, editor, masterPeak, clickOn, onClick)
+        MasterStrip(song, editor, masterPeak, clickOn, onClick, faderH, room, tight)
+    }
     }
 }
+
 
 @Composable
 private fun ChannelStrip(
     track: Track, index: Int, peak: Float, editor: SongEditor, colour: Color,
     /** Channel controls some clip of this track has a lane for. */
     automated: List<String> = emptyList(),
+    /** What the panel worked out this strip can spend on its fader. */
+    faderH: Dp = FADER_H,
+    /** The most the strip may be, or Infinity where nothing is pressing. */
+    room: Dp = Dp.Infinity,
+    /** Even the shortest usable strip will not fit, so this one scrolls. */
+    tight: Boolean = false,
 ) {
     val c = Acid.colors
     var askClear by remember { mutableStateOf(false) }
@@ -123,7 +171,10 @@ private fun ChannelStrip(
     }
 
     Column(
-        Modifier.width(STRIP_W).clip(RoundedCornerShape(6.dp)).background(c.cardAlt).padding(4.dp),
+        Modifier.width(STRIP_W).then(if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
+            .clip(RoundedCornerShape(6.dp)).background(c.cardAlt)
+            .then(if (tight) Modifier.verticalScrollWithBar(rememberScrollState()) else Modifier)
+            .padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -143,11 +194,14 @@ private fun ChannelStrip(
                 textAlign = TextAlign.Center,
             )
         }
-        Row(Modifier.height(FADER_H), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Meter(peak, Modifier.width(8.dp).height(FADER_H))
+        Row(
+            Modifier.height(faderH),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Meter(peak, Modifier.width(8.dp).fillMaxHeight())
             VerticalFader(
                 value = EngineParams.volume01(m.volume),
-                modifier = Modifier.width(36.dp).height(FADER_H).mappable(map("gain")),
+                modifier = Modifier.width(36.dp).fillMaxHeight().mappable(map("gain")),
                 accent = colour,
                 onStart = { editor.beginGesture(index) },
                 onChange = { v -> gesture("gain", v) { it.copy(volume = EngineParams.volumeFrom01(v)) } },
@@ -204,7 +258,12 @@ private fun ChannelStrip(
 }
 
 @Composable
-private fun MasterStrip(song: Song, editor: SongEditor, peak: Float, clickOn: Boolean, onClick: (Boolean) -> Unit) {
+private fun MasterStrip(
+    song: Song, editor: SongEditor, peak: Float, clickOn: Boolean, onClick: (Boolean) -> Unit,
+    faderH: Dp = FADER_H,
+    room: Dp = Dp.Infinity,
+    tight: Boolean = false,
+) {
     val c = Acid.colors
     val master = song.master
     fun live(name: String, v01: Float) = com.rm.acidulous.engine.NativeEngine.setParam(0, "master", name, v01)
@@ -217,15 +276,21 @@ private fun MasterStrip(song: Song, editor: SongEditor, peak: Float, clickOn: Bo
     fun map(name: String) = MapTargets.param(0, "master", name)
 
     Column(
-        Modifier.width(MASTER_W).clip(RoundedCornerShape(6.dp)).background(c.cardHi).padding(4.dp),
+        Modifier.width(MASTER_W).then(if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
+            .clip(RoundedCornerShape(6.dp)).background(c.cardHi)
+            .then(if (tight) Modifier.verticalScrollWithBar(rememberScrollState()) else Modifier)
+            .padding(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text("master", color = c.text, fontSize = 11.sp)
-        Row(Modifier.height(FADER_H), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Meter(peak, Modifier.width(8.dp).height(FADER_H))
+        Row(
+            Modifier.height(faderH),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Meter(peak, Modifier.width(8.dp).fillMaxHeight())
             VerticalFader(
                 value = EngineParams.volume01(master.volume),
-                modifier = Modifier.width(36.dp).height(FADER_H).mappable(map("volume")),
+                modifier = Modifier.width(36.dp).fillMaxHeight().mappable(map("volume")),
                 accent = Acid.colors.knobPointer,
                 onStart = { editor.beginSongGesture() },
                 onChange = { v -> gesture("volume", v) { s -> s.copy(master = s.master.copy(volume = EngineParams.volumeFrom01(v))) } },
@@ -330,4 +395,18 @@ private val PALETTE = listOf(
 
 private val STRIP_W = 76.dp
 private val MASTER_W = 232.dp
+/** What a fader is upright, and the most it is anywhere. */
 private val FADER_H = 110.dp
+
+/** Under this it stops being something you drag and becomes a readout. */
+private val FADER_MIN = 56.dp
+
+/**
+ * What a channel strip spends on everything that is not the fader.
+ *
+ * The name, three labelled sliders, the mute/solo row, the MIDI row, the
+ * padding and the gaps between them - none of which has any give in it, which
+ * is why the fader is the piece that gives. Counted off the strip below
+ * rather than guessed; if a row is added to it, this goes up.
+ */
+private val STRIP_CHROME = 204.dp
