@@ -56,6 +56,15 @@ constexpr uint8_t kNoChannel = 0xff;
 enum class Unit : uint8_t {
     Machine, Effect1, Effect2, Eventor1, Eventor2, Eventor3, Channel, Master,
     /**
+     * The two send buses' effects.
+     *
+     * Addressed like an insert rather than like the master, because that is
+     * now what they are: a slot holding any effect, with that effect's own
+     * parameter table. They belong to the song rather than to a rack, so the
+     * rack on the message is ignored.
+     */
+    Send1, Send2,
+    /**
      * The performance strip: mod and pressure.
      *
      * Not a unit with parameters of its own - a pseudo-unit, so that the

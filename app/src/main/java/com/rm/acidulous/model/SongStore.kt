@@ -29,6 +29,10 @@ object SongStore {
      * nothing for a song that is already in order.
      */
     private fun normalise(song: Song): Song {
+        // The sends were two fixed boxes before they were slots; an old song
+        // still carries them that way and is brought forward here, where every
+        // other shape change to a saved song is.
+        @Suppress("NAME_SHADOWING") val song = song.copy(master = song.master.migrated())
         val home = mapOf("Chord" to 0, "Scale" to 1, "Arp" to 2)
         if (song.tracks.none { t -> (0 until EVENTOR_SLOTS).any { home[t.eventorAt(it).type]?.let { h -> h != it } == true } }) {
             return song

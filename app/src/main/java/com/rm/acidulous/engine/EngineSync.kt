@@ -13,6 +13,8 @@ import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Master
 import com.rm.acidulous.model.Mixer
 import com.rm.acidulous.model.PlayMode
+import com.rm.acidulous.model.SEND_SLOTS
+import com.rm.acidulous.model.sendUnit
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.laneParam
 import com.rm.acidulous.model.laneUnit
@@ -165,6 +167,23 @@ object EngineSync {
                 if (NativeEngine.mountEffect(rack, slot, want ?: "")) mountedEffects[rack][slot] = want
                 else Log.w(TAG, "could not mount effect ${want ?: "(none)"} on rack $rack slot $slot")
             }
+        }
+    }
+
+    /**
+     * The two send buses, the same way.
+     *
+     * One array rather than sixteen, because a send belongs to the song and
+     * not to a rack - which is also why nothing here takes a rack index.
+     */
+    private val mountedSends = arrayOfNulls<String>(SEND_SLOTS)
+
+    fun ensureSends(song: Song) {
+        for (slot in 0 until SEND_SLOTS) {
+            val want = song.master.sendAt(slot).type.ifEmpty { null }
+            if (mountedSends[slot] == want) continue
+            if (NativeEngine.mountSend(slot, want ?: "")) mountedSends[slot] = want
+            else Log.w(TAG, "could not mount send ${want ?: "(none)"} on slot $slot")
         }
     }
 
@@ -350,6 +369,7 @@ object EngineSync {
         ensureMachines(song)
         ensureSamples(song)
         ensureEffects(song)
+        ensureSends(song)
         ensureEventors(song)
         ensureSampleMaps(song)
         ensureNexusPatches(song)
@@ -460,6 +480,7 @@ object EngineSync {
             }
         }
         pushMaster(song.master)
+        pushSends(song.master)
         return ok
     }
 
@@ -490,17 +511,19 @@ object EngineSync {
 
     fun pushMaster(m: Master) {
         NativeEngine.setParam(0, "master", "volume", EngineParams.volume01(m.volume), record = false)
-        NativeEngine.setParam(0, "master", "reverbon", EngineParams.bool01(m.reverb.on), record = false)
-        NativeEngine.setParam(0, "master", "reverbsize", EngineParams.unit01(m.reverb.size), record = false)
-        NativeEngine.setParam(0, "master", "reverbdamp", EngineParams.unit01(m.reverb.damp), record = false)
-        NativeEngine.setParam(0, "master", "reverbtone", EngineParams.unit01(m.reverb.tone), record = false)
-        NativeEngine.setParam(0, "master", "delayon", EngineParams.bool01(m.delay.on), record = false)
-        NativeEngine.setParam(0, "master", "delaytime", EngineParams.delayTime01(m.delay.time), record = false)
-        NativeEngine.setParam(0, "master", "delayfeedback", EngineParams.unit01(m.delay.feedback), record = false)
-        NativeEngine.setParam(0, "master", "delaytone", EngineParams.unit01(m.delay.tone), record = false)
-        NativeEngine.setParam(0, "master", "delaypingpong", EngineParams.bool01(m.delay.pingPong), record = false)
         NativeEngine.setParam(0, "master", "limiteron", EngineParams.bool01(m.limiter.on), record = false)
         NativeEngine.setParam(0, "master", "limiterdrive", EngineParams.unit01(m.limiter.drive), record = false)
+    }
+
+    /**
+     * The parameters of whatever is on each send.
+     *
+     * Mounting is [ensureSends]' job and has already happened by here: until
+     * the effect is there its parameter names have nothing to resolve against,
+     * which is the same order every other slot is pushed in.
+     */
+    fun pushSends(m: Master) {
+        for (slot in 0 until SEND_SLOTS) pushSlot(0, sendUnit(slot), m.sendAt(slot))
     }
 
     /** The metronome lives on the transport, not in the song. */

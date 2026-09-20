@@ -279,6 +279,9 @@ data class UnitSlot(
 typealias EffectSlot = UnitSlot
 
 const val EFFECT_SLOTS = 2
+
+/** How many send buses the master has; see [Master.sends]. */
+const val SEND_SLOTS = 2
 /** One per eventor - chord, scale, arp - because the keyboard strip gives
  *  each of them a control and all three must be able to run together. */
 const val EVENTOR_SLOTS = 3
@@ -322,9 +325,17 @@ data class Track(
     fun eventorAt(slot: Int): UnitSlot = eventors.getOrNull(slot) ?: UnitSlot()
 }
 
+/**
+ * The two fixed send boxes, as songs written before M53 carry them.
+ *
+ * **Read, never written.** The sends are slots now - any of the fourteen
+ * effects, with that effect's own parameters - and [Master.migrated] turns
+ * these two into the first two slots when an old song is opened. They stay
+ * declared so that reading one is a migration rather than a loss.
+ */
 @Serializable data class ReverbSettings(val on: Boolean = true, val size: Float = 0.5f, val damp: Float = 0.5f, val tone: Float = 0.6f)
 
-/** [time] indexes [EngineParams.DELAY_TIME_NAMES]. */
+/** [time] indexes [EngineParams.DELAY_TIME_NAMES]. See [ReverbSettings]. */
 @Serializable data class DelaySettings(val on: Boolean = true, val time: Int = 3, val feedback: Float = 0.4f, val tone: Float = 0.5f, val pingPong: Boolean = true)
 
 @Serializable data class LimiterSettings(val on: Boolean = true, val drive: Float = 0.2f)
@@ -333,10 +344,62 @@ data class Track(
 @Serializable
 data class Master(
     val volume: Float = 0.8f,
-    val reverb: ReverbSettings = ReverbSettings(),
-    val delay: DelaySettings = DelaySettings(),
+    /**
+     * What is on each of the two send buses.
+     *
+     * The same [UnitSlot] an insert is, and for the same reason: a send was
+     * two boxes nobody could change, while the rack next to it could put any
+     * of fourteen effects in either of its own slots. A reverb and a delay are
+     * what they start as, because that is what a send is *for* - but a song
+     * that wants a send chorus or a send bitcrusher can have one.
+     */
+    val sends: List<UnitSlot> = listOf(UnitSlot("Reverb"), UnitSlot("Delay")),
     val limiter: LimiterSettings = LimiterSettings(),
-)
+    /** Only ever non-null in a song written before the sends were slots. */
+    val reverb: ReverbSettings? = null,
+    val delay: DelaySettings? = null,
+) {
+    fun sendAt(slot: Int): UnitSlot = sends.getOrNull(slot) ?: UnitSlot()
+
+    /**
+     * An old song's two fixed boxes, as the two slots.
+     *
+     * **The positions carry, not the sound.** The send reverb was a different
+     * reverb from the insert one - a plainer Schroeder room against the insert's
+     * eight combs with predelay, shimmer, bits, crush and wobble - so nothing
+     * could make an old song sound identical, and the honest thing is to put
+     * every control where it was and let the better room be better. `tone` is
+     * the one that moves most: it was a plain 0..1 and is now a frequency, and
+     * the same fraction of a different range is the closest statement of
+     * "where the knob was" there is.
+     */
+    fun migrated(): Master {
+        if (reverb == null && delay == null) return this
+        val r = reverb ?: ReverbSettings()
+        val d = delay ?: DelaySettings()
+        return copy(
+            sends = listOf(
+                UnitSlot(
+                    "Reverb",
+                    mapOf("size" to r.size, "damp" to r.damp, "tone" to r.tone),
+                    bypass = !r.on,
+                ),
+                UnitSlot(
+                    "Delay",
+                    mapOf(
+                        "time" to (d.time.toFloat() / (EngineParams.DELAY_TIMES - 1).toFloat()).coerceIn(0f, 1f),
+                        "feedback" to d.feedback,
+                        "tone" to d.tone,
+                        "pingpong" to if (d.pingPong) 1f else 0f,
+                    ),
+                    bypass = !d.on,
+                ),
+            ),
+            reverb = null,
+            delay = null,
+        )
+    }
+}
 
 @Serializable
 data class Song(

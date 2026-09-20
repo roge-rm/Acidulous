@@ -148,7 +148,7 @@ fun currentMapped(track: Track, unit: String, name: String): Float = when {
  */
 private val mixerSwitches = setOf(
     "mute", "solo",                                   // channel
-    "reverbon", "delayon", "limiteron", "delaypingpong", // master
+    "limiteron", // master
 )
 
 /** Would a note on this target toggle it, rather than set it from velocity? */
@@ -158,18 +158,22 @@ fun mappedIsSwitch(track: Track?, unit: String, name: String): Boolean = when {
     else -> false
 }
 
+/**
+ * What a send's parameter is set to now, normalised, or its own default.
+ *
+ * A slot's map only holds what has been touched, which is what lets an effect
+ * gain a parameter without every saved song having to know - so a name that is
+ * not in the map is not "nought", it is "whatever the effect says".
+ */
+fun currentSend(master: Master, slot: Int, name: String): Float {
+    val send = master.sendAt(slot)
+    if (name == "bypass") return if (send.bypass) 1f else 0f
+    return send.params[name] ?: 0f
+}
+
 /** What a master parameter is set to now, normalised. */
 fun currentMaster(master: Master, name: String): Float = when (name) {
     "volume" -> EngineParams.volume01(master.volume)
-    "reverbon" -> if (master.reverb.on) 1f else 0f
-    "reverbsize" -> master.reverb.size
-    "reverbdamp" -> master.reverb.damp
-    "reverbtone" -> master.reverb.tone
-    "delayon" -> if (master.delay.on) 1f else 0f
-    "delaytime" -> master.delay.time.toFloat() / (EngineParams.DELAY_TIMES - 1)
-    "delayfeedback" -> master.delay.feedback
-    "delaytone" -> master.delay.tone
-    "delaypingpong" -> if (master.delay.pingPong) 1f else 0f
     "limiteron" -> if (master.limiter.on) 1f else 0f
     "limiterdrive" -> master.limiter.drive
     else -> 0f

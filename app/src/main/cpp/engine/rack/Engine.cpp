@@ -298,7 +298,9 @@ void Engine::renderBlock(const float *in, float *out) {
             racks[r].render(kBlockFrames);
         }
     }
-    master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade);
+    // The same tick range the racks hand their own inserts, so a tempo-synced
+    // effect behaves the same whether it is on a track or on a send.
+    master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade, clock.blockStart(), clock.blockEnd());
 
     // Monitoring is after the master so it is heard at the master's level,
     // and deliberately not recorded when capturing the input: nobody wants
@@ -695,6 +697,12 @@ void Engine::drainParams() {
     while (paramsIn.pop(p)) {
         if (p.unit == Unit::Master) {
             master.params().set(p.index, p.value);
+        } else if (p.unit == Unit::Send1 || p.unit == Unit::Send2) {
+            Effect *fx = master.send(p.unit == Unit::Send1 ? 0 : 1);
+            if (fx != nullptr) {
+                if (p.index == kEffectBypassIndex) fx->setBypass(p.value >= 0.5f);
+                else fx->params().set(p.index, p.value);
+            }
         } else if (p.rack >= 0 && p.rack < kRackCount) {
             racks[p.rack].setParam(p.unit, p.index, p.value);
             if (p.record && recordingNow()) {
@@ -743,6 +751,11 @@ void Engine::applyMount(const Mount &m) {
         } else {
             retirer.retire(m.object, deleteAs<Effect>);
         }
+        break;
+    case Mount::Kind::Send:
+        // Slot-checked inside swapSend, which hands back whatever it displaced
+        // - or the new one straight back if the slot was not a slot.
+        retirer.retire(master.swapSend(m.slot, static_cast<Effect *>(m.object)), deleteAs<Effect>);
         break;
     case Mount::Kind::Eventor:
         if (m.rack >= 0 && m.rack < kRackCount) {

@@ -45,10 +45,12 @@ own **Help…** window. Discussion, issues and suggestions:
 | **Molt** | A voice you write for: a sung take turned into an instrument, with pitch and formant moved independently. |
 | **Nexus** | A modular, whose blocks are this app's own instruments and whose patch is text. |
 
-### Nine insert effects
+### Fourteen effects
 
-Bitcrusher, Compressor, Delay, Distortion, EQ, Filter, Flanger, Phaser,
-Reverb — two slots per rack, each with one classic behaviour and one extra.
+Bitcrusher, Chorus, Compressor, Delay, Distortion, EQ, Filter, Flanger,
+Harmonizer, Phaser, Reverb, Shifter, Tremolo, Width — each with one classic
+behaviour and one extra. Two insert slots per rack, and **the song's two send
+buses hold any of the same fourteen**, chosen and edited from the master strip.
 
 ### Sequencing
 

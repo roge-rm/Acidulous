@@ -24,6 +24,15 @@ object NativeEngine {
     fun unmountMachine(rackId: Int) = nativeUnmountMachine(rackId)
     /** Mounts an insert effect on one of a rack's two slots; an empty [typeName] clears it. */
     fun mountEffect(rackId: Int, slot: Int, typeName: String): Boolean = nativeMountEffect(rackId, slot, typeName)
+
+    /**
+     * Put an effect on one of the two send buses, or empty it with "".
+     *
+     * No rack: the sends belong to the song. Their parameters are then
+     * addressed as the units `send1` and `send2`, exactly as an insert's are
+     * addressed as `effect1` and `effect2`.
+     */
+    fun mountSend(slot: Int, typeName: String): Boolean = nativeMountSend(slot, typeName)
     /**
      * Builds what machines need before they can be mounted (Trinity's
      * wavetables, ~0.1 s). Call once on a worker at startup; blocks.
@@ -587,6 +596,7 @@ object NativeEngine {
     private external fun nativeEventorTypes(): Array<String>
     private external fun nativeEventorParamInfo(type: String): Array<String>
     private external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
+    private external fun nativeMountSend(slot: Int, typeName: String): Boolean
     private external fun nativeEffectTypes(): Array<String>
     private external fun nativeEffectParamInfo(type: String): Array<String>
     private external fun nativeLoadSample(rackId: Int, slot: Int, path: String, maxSeconds: Int): String

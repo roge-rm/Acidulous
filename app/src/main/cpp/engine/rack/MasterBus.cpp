@@ -6,15 +6,6 @@ namespace acidulous {
 namespace {
 const ParamDef kDefs[MasterBus::Count] = {
     {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
-    {"reverbon", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},
-    {"reverbsize", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-    {"reverbdamp", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-    {"reverbtone", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
-    {"delayon", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},
-    {"delaytime", 0.0f, 6.0f, 3.0f, Curve::Stepped, dsp::Delay::kTimes, ""}, // index into Delay::kBeats
-    {"delayfeedback", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
-    {"delaytone", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-    {"delaypingpong", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},
     {"limiteron", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},
     {"limiterdrive", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
     {"clickon", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
@@ -31,15 +22,14 @@ MasterBus::MasterBus() {
 }
 
 void MasterBus::prepare(int32_t sampleRate) {
-    reverb.prepare(sampleRate);
-    delay.prepare(sampleRate);
     limiter.prepare(sampleRate);
     this->sampleRate = static_cast<float>(sampleRate);
     click.prepare(sampleRate);
     params_.jumpAll();
 }
 
-void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t frames, float bpm, float fade) {
+void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t frames, float bpm, float fade,
+                        int64_t tickStart, int64_t tickEnd) {
     params_.tick();
 
     // Solo: if anyone is soloed, only they are heard.
@@ -48,28 +38,43 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
         if (racks[r].isActive() && racks[r].soloed()) { anySolo = true; break; }
     }
 
-    for (int32_t i = 0; i < frames; ++i) sumL[i] = sumR[i] = sendR[i] = sendD[i] = 0.0f;
+    for (int32_t i = 0; i < frames; ++i) sumL[i] = sumR[i] = 0.0f;
+    for (int32_t s = 0; s < kSendSlots; ++s) {
+        for (int32_t i = 0; i < frames; ++i) sendSum[s][i] = 0.0f;
+    }
     for (int32_t r = 0; r < rackCount; ++r) {
         Rack &rack = racks[r];
         if (!rack.isActive() || (anySolo && !rack.soloed())) continue;
-        const float sr = rack.sendReverb(), sd = rack.sendDelay();
         for (int32_t i = 0; i < frames; ++i) {
             sumL[i] += rack.bufL[i];
             sumR[i] += rack.bufR[i];
-            const float mono = (rack.bufL[i] + rack.bufR[i]) * 0.5f;
-            sendR[i] += mono * sr;
-            sendD[i] += mono * sd;
+        }
+        for (int32_t s = 0; s < kSendSlots; ++s) {
+            const float amount = rack.sendAmount(s);
+            if (amount <= 0.0f) continue;
+            for (int32_t i = 0; i < frames; ++i) {
+                sendSum[s][i] += (rack.bufL[i] + rack.bufR[i]) * 0.5f * amount;
+            }
         }
     }
 
-    if (params_.get(ReverbOn) >= 0.5f) {
-        reverb.set(params_.get(ReverbSize), params_.get(ReverbDamp), params_.get(ReverbTone));
-        reverb.process(sendR, sumL, sumR, frames);
-    }
-    if (params_.get(DelayOn) >= 0.5f) {
-        delay.set(static_cast<int>(params_.get(DelayTime) + 0.5f), params_.get(DelayFeedback), params_.get(DelayTone),
-                  params_.get(DelayPingPong) >= 0.5f, bpm);
-        delay.process(sendD, sumL, sumR, frames);
+    // **The return is the effect's output and nothing else.** An insert is
+    // given the dry signal and hands back dry-plus-wet; a send is given a
+    // copy and what comes back is added to the dry that is already in the
+    // mix - so anything of the input that survives the effect arrives twice.
+    // That is what the slot's `mix` is pinned open for, one layer up: here
+    // the rule is simply that whatever the effect returns is what is added.
+    for (int32_t s = 0; s < kSendSlots; ++s) {
+        Effect *fx = sends[s];
+        if (fx == nullptr) continue;
+        fx->onBlock(tickStart, tickEnd, bpm);
+        for (int32_t i = 0; i < frames; ++i) wetL[i] = wetR[i] = sendSum[s][i];
+        // Mono in, so the effect is told so and may make its own width.
+        fx->run(wetL, wetR, frames, false);
+        for (int32_t i = 0; i < frames; ++i) {
+            sumL[i] += wetL[i];
+            sumR[i] += wetR[i];
+        }
     }
 
     const float volume = params_.get(Volume);
@@ -140,10 +145,11 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
 
 void MasterBus::panic() {
     // Everything with a tail is emptied: a runaway that has already filled
-    // the reverb and the delay would otherwise go on sounding after the
-    // machines that made it have stopped.
-    reverb.reset();
-    delay.reset();
+    // the sends would otherwise go on sounding after the machines that made
+    // it have stopped.
+    for (Effect *fx : sends) {
+        if (fx != nullptr) fx->reset();
+    }
     limiter.reset();
     panicRamp = 0.0f;
 }

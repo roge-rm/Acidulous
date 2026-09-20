@@ -14,9 +14,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import com.rm.acidulous.model.SEND_SLOTS
+import com.rm.acidulous.model.sendUnit
+import com.rm.acidulous.model.withSend
+import com.rm.acidulous.model.withSendBypass
+import com.rm.acidulous.model.withSendParam
+import com.rm.acidulous.engine.NativeEngine
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -96,10 +105,28 @@ fun MixerPanel(
     }
     // Only once even the floor will not fit does anything scroll.
     val tight = room != Dp.Infinity && room < STRIP_CHROME + FADER_MIN
+    // **Against the right edge, not the left.** The master is the last strip
+    // and the thing you reach for, and with three tracks in a song the row
+    // used to sit in the left third of the screen with two thirds of nothing
+    // beside it - Dan: "the mixer panel should snap to the right side of the
+    // screen, not the left".
+    //
+    // A minimum width of the viewport is what does it: the row is then at
+    // least as wide as what it is in, so `Alignment.End` has somewhere to push
+    // from. Once the strips are wider than that the minimum stops binding and
+    // it scrolls exactly as before.
     Row(
-        Modifier.background(c.panelAlt).horizontalScrollWithBar(rememberScrollState()).padding(6.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        Modifier.background(c.panelAlt).horizontalScrollWithBar(rememberScrollState()).padding(6.dp)
+            .then(if (room == Dp.Infinity) Modifier else Modifier.widthIn(min = maxWidth - 12.dp)),
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
     ) {
+        // What the two send sliders are called on every channel: whatever is
+        // on the send. They said "rev" and "dly" when that was all they could
+        // ever be, and went on saying it after the sends became slots, which
+        // is a label describing the send it used to be.
+        val sendNames = List(SEND_SLOTS) { slot ->
+            song.master.sendAt(slot).type.ifEmpty { "send ${slot + 1}" }.lowercase()
+        }
         song.tracks.forEachIndexed { index, track ->
             // Which of this channel's controls a clip is driving. A lane wins
             // over the fader on every pass, so a channel with one is a channel
@@ -112,7 +139,7 @@ fun MixerPanel(
                     .distinct()
                     .sorted()
             }
-            ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated, faderH, room, tight)
+            ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated, faderH, room, tight, sendNames)
         }
         MasterStrip(song, editor, masterPeak, clickOn, onClick, faderH, room, tight)
     }
@@ -131,11 +158,13 @@ private fun ChannelStrip(
     room: Dp = Dp.Infinity,
     /** Even the shortest usable strip will not fit, so this one scrolls. */
     tight: Boolean = false,
+    /** What the two send sliders are called - the effects that are on them. */
+    sendNames: List<String> = listOf("send 1", "send 2"),
 ) {
     val c = Acid.colors
     var askClear by remember { mutableStateOf(false) }
     val m = track.mixer
-    fun live(name: String, v01: Float) = com.rm.acidulous.engine.NativeEngine.setParam(index, "channel", name, v01)
+    fun live(name: String, v01: Float) = NativeEngine.setParam(index, "channel", name, v01)
     fun gesture(name: String, v01: Float, update: (Mixer) -> Mixer) {
         live(name, v01)
         editor.updateGesture { t -> t.copy(mixer = update(t.mixer)) }
@@ -217,7 +246,7 @@ private fun ChannelStrip(
                 onEnd = { editor.endGesture() },
             )
         }
-        Labeled("rev") {
+        Labeled(sendNames.getOrElse(0) { "send 1" }) {
             MiniSlider(
                 value = m.sendReverb,
                 modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("sendreverb")),
@@ -226,7 +255,7 @@ private fun ChannelStrip(
                 onEnd = { editor.endGesture() },
             )
         }
-        Labeled("dly") {
+        Labeled(sendNames.getOrElse(1) { "send 2" }) {
             MiniSlider(
                 value = m.sendDelay,
                 modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("senddelay")),
@@ -266,7 +295,7 @@ private fun MasterStrip(
 ) {
     val c = Acid.colors
     val master = song.master
-    fun live(name: String, v01: Float) = com.rm.acidulous.engine.NativeEngine.setParam(0, "master", name, v01)
+    fun live(name: String, v01: Float) = NativeEngine.setParam(0, "master", name, v01)
     fun gesture(name: String, v01: Float, update: (Song) -> Song) {
         live(name, v01)
         editor.updateSongGesture(update)
@@ -274,6 +303,10 @@ private fun MasterStrip(
     // The master is rack 0 by convention - it has no rack of its own, and a
     // mapping to it never follows the routing.
     fun map(name: String) = MapTargets.param(0, "master", name)
+
+    // Which send's editor is open, if any.
+    var editing by remember { mutableStateOf<Int?>(null) }
+    editing?.let { slot -> SendDialog(slot, editor) { editing = null } }
 
     Column(
         Modifier.width(MASTER_W).then(if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
@@ -296,60 +329,45 @@ private fun MasterStrip(
                 onChange = { v -> gesture("volume", v) { s -> s.copy(master = s.master.copy(volume = EngineParams.volumeFrom01(v))) } },
                 onEnd = { editor.endSongGesture() },
             )
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                ToggleChip("reverb", master.reverb.on, c.teal, Modifier.mappable(map("reverbon"))) {
-                    editor.editSong { s -> s.copy(master = s.master.copy(reverb = s.master.reverb.copy(on = !s.master.reverb.on))) }
-                }
-                ToggleChip("delay", master.delay.on, c.teal, Modifier.mappable(map("delayon"))) {
-                    editor.editSong { s -> s.copy(master = s.master.copy(delay = s.master.delay.copy(on = !s.master.delay.on))) }
-                }
-                ToggleChip("limiter", master.limiter.on, c.teal, Modifier.mappable(map("limiteron"))) {
-                    editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
-                }
-                ToggleChip("♩ click", clickOn, c.accent) { onClick(!clickOn) }
-            }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Column {
-                Labeled("rev size") {
-                    MiniSlider(master.reverb.size, Modifier.width(88.dp).height(20.dp).mappable(map("reverbsize")),
-                        onStart = { editor.beginSongGesture() },
-                        onChange = { v -> gesture("reverbsize", v) { s -> s.copy(master = s.master.copy(reverb = s.master.reverb.copy(size = v))) } },
-                        onEnd = { editor.endSongGesture() })
-                }
-                Labeled("rev damp") {
-                    MiniSlider(master.reverb.damp, Modifier.width(88.dp).height(20.dp).mappable(map("reverbdamp")),
-                        onStart = { editor.beginSongGesture() },
-                        onChange = { v -> gesture("reverbdamp", v) { s -> s.copy(master = s.master.copy(reverb = s.master.reverb.copy(damp = v))) } },
-                        onEnd = { editor.endSongGesture() })
-                }
-                Labeled("limit drive") {
-                    MiniSlider(master.limiter.drive, Modifier.width(88.dp).height(20.dp).mappable(map("limiterdrive")),
-                        onStart = { editor.beginSongGesture() },
-                        onChange = { v -> gesture("limiterdrive", v) { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(drive = v))) } },
-                        onEnd = { editor.endSongGesture() })
-                }
-            }
-            Column {
-                Labeled("dly time") {
-                    TextButton(onClick = {
-                        editor.editSong { s -> s.copy(master = s.master.copy(delay = s.master.delay.copy(time = (s.master.delay.time + 1) % EngineParams.DELAY_TIMES))) }
-                    }) { Text(EngineParams.DELAY_TIME_NAMES[master.delay.time.coerceIn(0, EngineParams.DELAY_TIMES - 1)], fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
-                }
-                Labeled("dly fb") {
-                    MiniSlider(master.delay.feedback, Modifier.width(88.dp).height(20.dp).mappable(map("delayfeedback")),
-                        onStart = { editor.beginSongGesture() },
-                        onChange = { v -> gesture("delayfeedback", v) { s -> s.copy(master = s.master.copy(delay = s.master.delay.copy(feedback = v))) } },
-                        onEnd = { editor.endSongGesture() })
-                }
-                Labeled("dly tone") {
-                    MiniSlider(master.delay.tone, Modifier.width(88.dp).height(20.dp).mappable(map("delaytone")),
-                        onStart = { editor.beginSongGesture() },
-                        onChange = { v -> gesture("delaytone", v) { s -> s.copy(master = s.master.copy(delay = s.master.delay.copy(tone = v))) } },
-                        onEnd = { editor.endSongGesture() })
+        Labeled("limit drive") {
+            MiniSlider(master.limiter.drive, Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("limiterdrive")),
+                onStart = { editor.beginSongGesture() },
+                onChange = { v -> gesture("limiterdrive", v) { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(drive = v))) } },
+                onEnd = { editor.endSongGesture() })
+        }
+        // **Under the fader, not beside it.** Four chips in a column next to a
+        // thirty-six dp fader made the master strip three times a channel's
+        // width and left the whole row hugging one side of the screen with a
+        // hand's width of nothing on the other - Dan, over a drawing of it
+        // going vertical instead. A strip is a column; this one is now the
+        // same column as its neighbours, the same width, and the chips are
+        // simply more of what is in it.
+        // **The two sends, by the name of whatever is on them.** They
+        // were a `reverb` chip and a `delay` chip because that is all
+        // they could ever be; now the chip says what the slot holds and
+        // a hold opens it - the tap/hold grammar every other slot in
+        // the app already uses.
+        for (slot in 0 until SEND_SLOTS) {
+            val send = master.sendAt(slot)
+            ToggleChip(
+                if (send.isEmpty) "send${slot + 1}" else send.type.lowercase(),
+                !send.isEmpty && !send.bypass,
+                c.teal,
+                Modifier.onLongPress { editing = slot },
+            ) {
+                if (send.isEmpty) editing = slot
+                else {
+                    val bypass = !send.bypass
+                    editor.editSong { s -> s.withSendBypass(slot, bypass) }
+                    NativeEngine.setParam(0, sendUnit(slot), "bypass", if (bypass) 1f else 0f, record = false)
                 }
             }
         }
+        ToggleChip("limiter", master.limiter.on, c.teal, Modifier.mappable(map("limiteron"))) {
+            editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
+        }
+        ToggleChip("♩ click", clickOn, c.accent) { onClick(!clickOn) }
     }
 }
 
@@ -394,7 +412,15 @@ private val PALETTE = listOf(
 )
 
 private val STRIP_W = 76.dp
-private val MASTER_W = 232.dp
+/**
+ * The master strip is a strip.
+ *
+ * It was two hundred and thirty-two dp - a fader with a column of chips beside
+ * it - which is three channels wide for one channel's worth of controls. Now
+ * everything in it is stacked the way a channel stacks its own, so it is the
+ * same width as its neighbours and the row is a row of equal strips.
+ */
+private val MASTER_W = STRIP_W
 /** What a fader is upright, and the most it is anywhere. */
 private val FADER_H = 110.dp
 
@@ -410,3 +436,78 @@ private val FADER_MIN = 56.dp
  * rather than guessed; if a row is added to it, this goes up.
  */
 private val STRIP_CHROME = 204.dp
+// It describes a *channel* strip, which is the one that decides how tall a
+// fader can be; the master carries a chip or two more and scrolls if it must.
+
+
+/**
+ * What is on a send bus, and everything that effect can do.
+ *
+ * **The same window an insert slot opens, in the one place a send belongs
+ * to.** A send is song-wide, so this is reached from the master strip rather
+ * than from a track - hold the chip that names it - and it is the only control
+ * in the mixer that is not a fader, a chip or a slider, which is why it is a
+ * window and not another column of knobs in a strip that is already full.
+ *
+ * `mix` is not offered. The engine pins it fully wet when the effect is
+ * mounted, because a dry path through a send is the track arriving twice.
+ */
+@Composable
+private fun SendDialog(slot: Int, editor: SongEditor, onDismiss: () -> Unit) {
+    val c = Acid.colors
+    val master = editor.song.master
+    val send = master.sendAt(slot)
+    val types = remember { NativeEngine.effectTypes }
+    var menu by remember { mutableStateOf(false) }
+    val info = remember(send.type) {
+        if (send.isEmpty) emptyList()
+        else NativeEngine.effectParamInfo(send.type).filter { it.name != "mix" }
+    }
+    PlainDialog("send ${slot + 1}", onDismiss = onDismiss, dismissLabel = "Done", maxBodyHeight = 420.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = { menu = true }) {
+                    Text(if (send.isEmpty) "none ▾" else "${send.type} ▾", color = c.accent, fontSize = 13.sp)
+                }
+                val menuScroll = rememberScrollState()
+                DropdownMenu(
+                    expanded = menu, onDismissRequest = { menu = false },
+                    modifier = Modifier.scrollbar(menuScroll, color = c.scrollbar), scrollState = menuScroll,
+                ) {
+                    ScaledWindow {
+                        DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
+                            menu = false
+                            editor.editSong { s -> s.withSend(slot, "") }
+                        })
+                        for (t in types) DropdownMenuItem(text = { Text(t, fontSize = 12.sp) }, onClick = {
+                            menu = false
+                            if (t != send.type) editor.editSong { s -> s.withSend(slot, t) }
+                        })
+                    }
+                }
+            }
+            for (p in info) {
+                // The document is what the slider reads, not the engine: a send
+                // has no knob anywhere else to fight with, and a parameter the
+                // song has never touched is the effect's own default rather
+                // than nought.
+                val v = send.params[p.name] ?: p.defaultNormalized
+                Labeled("${p.name}  ${p.format(v)}") {
+                    MiniSlider(
+                        v, Modifier.width(200.dp).height(20.dp),
+                        onStart = { editor.beginSongGesture() },
+                        onChange = { nv ->
+                            NativeEngine.setParam(
+                                0, sendUnit(slot), p.name, nv, record = false,
+                            )
+                            editor.updateSongGesture { s ->
+                                s.withSendParam(slot, p.name, nv)
+                            }
+                        },
+                        onEnd = { editor.endSongGesture() },
+                    )
+                }
+            }
+        }
+    }
+}

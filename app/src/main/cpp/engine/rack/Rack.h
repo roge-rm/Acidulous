@@ -112,8 +112,18 @@ class Rack {
     // Read by the master after render(); post-fader.
     bool soloed() const { return channel.get(Solo) >= 0.5f; }
     bool muted() const { return channel.get(Mute) >= 0.5f; }
-    float sendReverb() const { return channel.get(SendReverb); }
-    float sendDelay() const { return channel.get(SendDelay); }
+    /**
+     * How much of this rack goes to send [slot].
+     *
+     * The two channel parameters are still called `sendreverb` and
+     * `senddelay` - they are addresses, saved in songs and pointed at by
+     * controller mappings, and renaming them would break both - but what is
+     * *on* the two sends is now whichever effect the master is holding. So
+     * the accessor is numbered and the names below are history.
+     */
+    float sendAmount(int32_t slot) const {
+        return channel.get(slot == 0 ? SendReverb : SendDelay);
+    }
     float readPeak() { return peakHold.exchange(0.0f, std::memory_order_relaxed); }
     float channelNormalized(int32_t index) const { return channel.normalized(index); }
 

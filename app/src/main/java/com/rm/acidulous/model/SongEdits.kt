@@ -178,6 +178,33 @@ fun Track.withEffectPatch(slot: Int, params: Map<String, Float>): Track =
 
 /** The unit name the engine addresses a slot by: "effect1", "effect2". */
 fun effectUnit(slot: Int): String = "effect${slot + 1}"
+
+/** The unit a send bus's parameters are addressed under. */
+fun sendUnit(slot: Int): String = "send${slot + 1}"
+
+/** [slot]'s send with [type] on it, keeping nothing of what was there. */
+fun Song.withSend(slot: Int, type: String): Song {
+    if (slot !in 0 until SEND_SLOTS) return this
+    val list = List(SEND_SLOTS) { master.sendAt(it) }.toMutableList()
+    list[slot] = if (type == list[slot].type) list[slot] else UnitSlot(type)
+    return copy(master = master.copy(sends = list))
+}
+
+/** One parameter of [slot]'s send, by the effect's own name for it. */
+fun Song.withSendParam(slot: Int, name: String, v01: Float): Song {
+    if (slot !in 0 until SEND_SLOTS) return this
+    val list = List(SEND_SLOTS) { master.sendAt(it) }.toMutableList()
+    val s = list[slot]
+    list[slot] = s.copy(params = s.params + (name to v01))
+    return copy(master = master.copy(sends = list))
+}
+
+fun Song.withSendBypass(slot: Int, bypass: Boolean): Song {
+    if (slot !in 0 until SEND_SLOTS) return this
+    val list = List(SEND_SLOTS) { master.sendAt(it) }.toMutableList()
+    list[slot] = list[slot].copy(bypass = bypass)
+    return copy(master = master.copy(sends = list))
+}
 fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -> 1; else -> null }
 
 // --- Eventors ---------------------------------------------------------------------------
@@ -218,16 +245,11 @@ fun Song.durationSeconds(): Float {
 fun Song.withMasterParam(name: String, v01: Float): Song = copy(
     master = when (name) {
         "volume" -> master.copy(volume = EngineParams.volumeFrom01(v01))
-        "reverbon" -> master.copy(reverb = master.reverb.copy(on = v01 >= 0.5f))
-        "reverbsize" -> master.copy(reverb = master.reverb.copy(size = v01))
-        "reverbdamp" -> master.copy(reverb = master.reverb.copy(damp = v01))
-        "reverbtone" -> master.copy(reverb = master.reverb.copy(tone = v01))
-        "delayon" -> master.copy(delay = master.delay.copy(on = v01 >= 0.5f))
-        "delaytime" -> master.copy(delay = master.delay.copy(
-            time = Math.round(v01 * (EngineParams.DELAY_TIMES - 1)).coerceIn(0, EngineParams.DELAY_TIMES - 1)))
-        "delayfeedback" -> master.copy(delay = master.delay.copy(feedback = v01))
-        "delaytone" -> master.copy(delay = master.delay.copy(tone = v01))
-        "delaypingpong" -> master.copy(delay = master.delay.copy(pingPong = v01 >= 0.5f))
+        // The reverb and delay names that used to be here are gone: those
+        // parameters belong to whatever is on the send now, and are reached
+        // under the units `send1` and `send2` by the effect's own names for
+        // them - see [Song.withSendParam], which is this function's opposite
+        // number for a slot.
         "limiteron" -> master.copy(limiter = master.limiter.copy(on = v01 >= 0.5f))
         "limiterdrive" -> master.copy(limiter = master.limiter.copy(drive = v01))
         else -> master

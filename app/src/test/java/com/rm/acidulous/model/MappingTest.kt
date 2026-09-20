@@ -125,27 +125,60 @@ class MappingTest {
         // the screen reads it back through currentMaster. If those two ever
         // disagree a mapped fader would jump the moment it was touched.
         val song = DemoSong.build()
-        val names = listOf(
-            "volume", "reverbsize", "reverbdamp", "reverbtone",
-            "delayfeedback", "delaytone", "limiterdrive",
-        )
-        for (name in names) {
+        // The reverb and delay names that used to be in this list are on the
+        // sends now, and are checked below rather than here.
+        for (name in listOf("volume", "limiterdrive")) {
             val next = song.withMasterParam(name, 0.25f)
             assertEquals(name, 0.25f, currentMaster(next.master, name), 1e-3f)
         }
-        for (name in listOf("reverbon", "delayon", "limiteron", "delaypingpong")) {
+        for (name in listOf("limiteron")) {
             assertEquals(name, 1f, currentMaster(song.withMasterParam(name, 1f).master, name), 0f)
             assertEquals(name, 0f, currentMaster(song.withMasterParam(name, 0f).master, name), 0f)
         }
     }
 
     @Test
-    fun `a stepped delay time lands on a step, not between two`() {
+    fun `a send parameter goes in and comes back out`() {
         val song = DemoSong.build()
-        for (i in 0 until EngineParams.DELAY_TIMES) {
-            val v = i.toFloat() / (EngineParams.DELAY_TIMES - 1)
-            assertEquals(i, song.withMasterParam("delaytime", v).master.delay.time)
-        }
+        val next = song.withSendParam(0, "size", 0.25f)
+        assertEquals(0.25f, currentSend(next.master, 0, "size"), 1e-3f)
+        // A name the song has never touched is the effect's own default, not
+        // nought - which is what lets an effect gain a parameter without every
+        // saved song having to be rewritten.
+        assertEquals(0f, currentSend(next.master, 0, "shimmer"), 0f)
+    }
+
+    @Test
+    fun `changing a send's effect does not keep the last one's settings`() {
+        val song = DemoSong.build().withSendParam(0, "size", 0.9f)
+        assertEquals(0.9f, currentSend(song.master, 0, "size"), 1e-3f)
+        val swapped = song.withSend(0, "Chorus")
+        assertEquals("Chorus", swapped.master.sendAt(0).type)
+        assertTrue(swapped.master.sendAt(0).params.isEmpty())
+        // And choosing the type it already is leaves it alone.
+        val same = song.withSend(0, "Reverb")
+        assertEquals(0.9f, currentSend(same.master, 0, "size"), 1e-3f)
+    }
+
+    @Test
+    fun `an old song's two fixed boxes become the two slots`() {
+        // What a song written before the sends were slots carries.
+        val old = Master(
+            reverb = ReverbSettings(on = false, size = 0.7f, damp = 0.3f, tone = 0.25f),
+            delay = DelaySettings(on = true, time = 6, feedback = 0.5f, tone = 0.4f, pingPong = false),
+        )
+        val now = old.migrated()
+        assertEquals("Reverb", now.sendAt(0).type)
+        assertEquals("Delay", now.sendAt(1).type)
+        // Switched off is bypassed, and every knob is where it was.
+        assertTrue(now.sendAt(0).bypass)
+        assertEquals(false, now.sendAt(1).bypass)
+        assertEquals(0.7f, now.sendAt(0).params["size"]!!, 1e-3f)
+        assertEquals(0.3f, now.sendAt(0).params["damp"]!!, 1e-3f)
+        assertEquals(0.5f, now.sendAt(1).params["feedback"]!!, 1e-3f)
+        assertEquals(0f, now.sendAt(1).params["pingpong"]!!, 0f)
+        // The legacy fields are spent, so migrating twice is migrating once.
+        assertEquals(now, now.migrated())
     }
 
     @Test

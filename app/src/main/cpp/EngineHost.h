@@ -33,6 +33,7 @@ class EngineHost {
     void unmountMachine(int rack);
     // Insert effects: two slots per rack. An empty type name clears the slot.
     bool mountEffect(int rack, int slot, const std::string &typeName);
+    bool mountSend(int slot, const std::string &typeName);
     const char *mountedEffect(int rack, int slot) const;
     bool mountEventor(int rack, int slot, const std::string &typeName);
     // Builds anything a machine needs before it can be mounted (Trinity's
@@ -400,6 +401,8 @@ class EngineHost {
     std::atomic<int> mpeZoneMembers{15};
     std::atomic<float> renderSeconds{0.0f}, renderPeak{0.0f};
     std::string mountedEffectType[16][2];
+    /** What is on each send bus, for resolving its parameters by name. */
+    std::string mountedSendType[2];
     std::string mountedEventorType[16][2];
     std::unordered_map<int64_t, std::shared_ptr<const seq::Clip>> clipCache;
 };
