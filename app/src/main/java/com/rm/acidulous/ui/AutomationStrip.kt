@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -114,14 +112,13 @@ fun AutomationStrip(
                     ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
+                    // Turned on its side for the same reason the scale chip
+                    // is: the width belongs to the graph. A stated length
+                    // because this gutter is always eighty-eight dp tall, so
+                    // a hundred and twenty is simply more than enough.
+                    SideText(
                         current?.let { shortOf(it) } ?: "∿ auto",
-                        color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
-                        maxLines = 1, softWrap = false,
-                        // Turned on its side for the same reason the scale chip is:
-                        // the width belongs to the graph.
-                        modifier = Modifier.requiredWidth(120.dp).rotate(-90f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        Acid.colors.accent, 9.sp, length = 120.dp, family = FontFamily.Monospace,
                     )
                 }
             }

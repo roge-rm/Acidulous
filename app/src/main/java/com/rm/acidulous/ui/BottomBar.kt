@@ -8,7 +8,9 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -149,12 +151,29 @@ class BarScope internal constructor(
      * it at 37 dp wide.
      */
     val anchor: Modifier
-        get() = if (vertical) weigh(Modifier.fillMaxWidth(), 1f) else Modifier.width(BarAnchor)
+        get() = if (vertical) Modifier.width(BarAnchor).height(BarPillH) else Modifier.width(BarAnchor)
 
     /** Wide enough for a word - see [BarWord]. */
     val word: Modifier
-        get() = if (vertical) weigh(Modifier.fillMaxWidth(), 1f) else Modifier.width(BarWord)
+        get() = if (vertical) Modifier.width(BarWord).height(BarPillH) else Modifier.width(BarWord)
 }
+
+/**
+ * How tall a pill is when the bar runs down the screen.
+ *
+ * **Portrait's proportions, not a share of the column.** The first turned bar
+ * gave every pill a weighted share of the height, which is how eight of them
+ * fitted two hundred and seventy dp - and it made each one forty-six by
+ * thirty, a flat oval where upright it is a forty-four by forty rounded
+ * rectangle with room for the word "fx" in it. Dan, looking at the two side
+ * by side: the portrait elements had not been faithfully ported.
+ *
+ * So a pill is the shape it is upright, and the *column* gives way instead:
+ * see [BottomBar], which takes another column of pills when they do not all
+ * fit down one. Forty rather than forty-four because that is what Material's
+ * own button measures upright, which is what the portrait row actually shows.
+ */
+val BarPillH = 40.dp
 
 /**
  * [vertical] runs the bar down the screen instead of across it.
@@ -163,23 +182,66 @@ class BarScope internal constructor(
  * and diagnostics, and the column is about as wide as one pill. A screen that
  * wants it sideways places it itself, where there is width for it.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun BottomBar(
     modifier: Modifier = Modifier,
     vertical: Boolean = false,
+    /**
+     * The same pills, standing in somebody else's row.
+     *
+     * Sideways the editor puts its transport in the header beside the clip's
+     * name rather than in a bar of its own - Dan, over a screenshot with an
+     * arrow drawn from the right edge to the top corner: "that's wasted space
+     * in landscape". So: no background, no width taken, no readout, and the
+     * caller owns where it sits. Everything else - which pills, in what
+     * order, at what size - is still this file's, which is the whole point
+     * of the file.
+     */
+    inline: Boolean = false,
     /** Lines above the buttons - the arranger's position and diagnostics. */
     readout: @Composable ColumnScope.() -> Unit = {},
     content: @Composable BarScope.() -> Unit,
 ) {
-    if (vertical) {
-        Column(
-            modifier.fillMaxHeight()
-                .background(Acid.colors.bar)
-                .padding(horizontal = 6.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+    if (inline) {
+        Row(
+            modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
-            BarScope(true) { m, w -> with(this@Column) { m.weight(w) } }.content()
+            // **No weights in here.** A weighted child of a row that was
+            // measured with an unbounded width gets nothing, and "nothing" is
+            // a pill that is not drawn: fx, the view toggle and the draw/select
+            // toggle all vanished from the header, leaving undo onwards. The
+            // header is not a bar across the screen - it is a row as wide as
+            // what is in it - so every pill here is its anchored size.
+            BarScope(false) { m, _ -> m.width(BarAnchor) }.content()
+        }
+        return
+    }
+    if (vertical) {
+        // **The pills keep their shape and the column takes another column.**
+        //
+        // A `FlowColumn` fills top to bottom and then starts again to the
+        // right, so the reading order down the bar is the reading order along
+        // the row upright, and the last pill - play, always play - lands in
+        // the bottom corner nearest the thumb, which is where the row's own
+        // note says it belongs.
+        //
+        // How many fit down one is measured rather than counted, because it
+        // depends on what the keyboard divider was dragged to. `maxItemsInMainAxis`
+        // is the whole mechanism: say how many go in a column and the flow
+        // decides how many columns that needs.
+        BoxWithConstraints(modifier.fillMaxHeight().background(Acid.colors.bar)) {
+            val perColumn = ((maxHeight - 16.dp) / (BarPillH + 4.dp)).toInt().coerceAtLeast(1)
+            FlowColumn(
+                Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                maxItemsInEachColumn = perColumn,
+            ) {
+                BarScope(true) { m, _ -> m.width(BarAnchor).height(BarPillH) }.content()
+            }
         }
         return
     }

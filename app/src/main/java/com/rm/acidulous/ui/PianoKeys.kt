@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -25,7 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -244,16 +242,17 @@ fun SlotChip(
             .pointerInput(on) { detectTapGestures(onLongPress = { onOpen() }, onTap = { onToggle() }) },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text,
-            color = if (on) c.accent else c.textDim,
-            fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            // Laid out long and then turned: rotation does not change a
-            // layout's size, so the width has to be demanded before it spins.
-            modifier = if (vertical) Modifier.requiredWidth(96.dp).rotate(-90f) else Modifier,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        )
+        val tint = if (on) c.accent else c.textDim
+        if (vertical) {
+            SideText(text, tint, 9.sp, length = 96.dp, family = FontFamily.Monospace)
+        } else {
+            Text(
+                text, color = tint,
+                fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+        }
     }
 }
 

@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -16,7 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,9 +40,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
@@ -296,12 +297,33 @@ fun rememberParamBinding(
  * written in it, and this row already holds a machine name, a patch name and
  * four marks. Twenty-two dp each is what let them all fit on a phone.
  */
+private val BarIconV = 16.dp
+
+/**
+ * How far apart two marks stand in the turned header column.
+ *
+ * A turned `BarIcon` is sixteen dp of height, which is a small thing to put a
+ * finger on when the next one begins where it ends: Dan, over the two step
+ * arrows, "these are too close for finger use". Ten dp is what already
+ * separated the fold from them, and he asked for that gap - so it is every
+ * gap between marks now, and the only number in the column that is not one is
+ * the three between the two names, which are meant to read as a pair.
+ *
+ * Upright there is no equivalent and none needed: the marks are twenty-four
+ * dp wide there and a row has width to spare, which a short column has not.
+ */
+private val SideMarkGap = 10.dp
+
 @Composable
 private fun BarIcon(glyph: String, tint: Color, vertical: Boolean = false, onClick: () -> Unit) {
     Box(
-        // Turned, the box turns with it: 24 x 28 is a target measured for a
-        // row of marks, and a column of them wants the long side across.
-        Modifier.size(width = if (vertical) 28.dp else 24.dp, height = if (vertical) 24.dp else 28.dp)
+        // Turned, the box turns with it - 24 x 28 is a target measured for a
+        // row of marks and a column of them wants the long side across - and
+        // it loses four dp of length on the way. Five marks single file is a
+        // hundred and twenty dp of a column that has about two hundred and
+        // forty, and what is left over is the two names above them; at 24 the
+        // patch name came out a character short of "patch".
+        Modifier.size(width = if (vertical) 28.dp else 24.dp, height = if (vertical) BarIconV else 28.dp)
             .clip(RoundedCornerShape(4.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -354,38 +376,96 @@ private fun PatchBar(
     //
     // The fold points at the edge it folds towards rather than up or down:
     // against the left edge, `◂` puts it away and `▸` brings it back.
+    //
+    // **It reads upwards, because the words do.**
+    //
+    // Every label in this column is turned anticlockwise, which puts the
+    // start of a word at the bottom. Run the controls the other way and the
+    // column contradicts itself: the machine's name reads up from the floor
+    // while the bar it belongs to reads down from the ceiling. Dan, looking
+    // at it: "machine name in bottom left corner and then patch selector,
+    // save, load, etc".
+    //
+    // So the portrait row is laid down the left edge with its left-hand end
+    // at the *bottom*. Reading up from the floor you get exactly the row you
+    // get reading left to right upright - the machine, the patch, save,
+    // browse, the two steps, the fold - which is why the gap that separates
+    // the fold from the pair is above the arrows here rather than below.
     if (vertical) {
         Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Column(
-                Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                if (!minimized) {
-                    // The machine's name takes a third and the patch's the
-                    // rest: the patch name is the longer of the two and the
-                    // one that changes.
-                    SideText(type, Acid.colors.text, 12.sp, Modifier.weight(1f))
+            // **The fold stays here and folds something else.** It is at the
+            // head of the column as it is at the end of the row upright, but
+            // what it puts away is the cards to the right of the roll, not
+            // this strip - so it points that way: `▸` sends them off the
+            // right edge, `◂` brings them back. The strip itself is always
+            // there, which is what lets it keep the mark that brings them
+            // back without needing a folded state of its own.
+            BarIcon(if (minimized) "\u25C2" else "\u25B8", Acid.colors.textMid, vertical = true) {
+                onToggleMinimized()
+            }
+            Spacer(Modifier.height(SideMarkGap))
+            BarIcon("\u203A", Acid.colors.accent, vertical = true) { step(1) }
+            Spacer(Modifier.height(SideMarkGap))
+            BarIcon("\u2039", Acid.colors.accent, vertical = true) { step(-1) }
+            // **The names sit together, and the slack is above them.**
+            //
+            // They were a weight each, which spread them to the ends of the
+            // column with a hand's width of nothing between - Dan: "on
+            // portrait the Machine name and Patch pulldown are closer". They
+            // are, and for a reason worth copying rather than a spacing
+            // accident: upright the pair sits inside the weighted half of the
+            // row, so the *pair* absorbs the give and the two names stay
+            // beside each other. Turned, that is a bottom-aligned column of
+            // stated lengths, with what is left over standing above the
+            // marks - which is where the gap is upright, between browse and
+            // the step arrows.
+            // **And each name is as long as its own word.** Giving them a
+            // box each and centring the text in it put the gap back: "patch"
+            // in sixty-four dp of box is twenty-five dp of word and thirty-
+            // nine of air, half of it between the two names. So the lengths
+            // are measured from the text, and only shared out in proportion
+            // when both together will not fit.
+            val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val style = androidx.compose.ui.text.TextStyle(fontSize = SideNameSp)
+            fun want(t: String): Dp = with(density) {
+                measurer.measure(t, style, softWrap = false, maxLines = 1).size.width.toDp()
+            } + 6.dp
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                val forNames = (maxHeight - BarIconV * 2 - SideMarkGap * 2 - 3.dp)
+                    .coerceAtLeast(24.dp)
+                val wantType = want(type)
+                val wantPatch = want(patchLabel(current, edited))
+                val shrink = ((forNames - 3.dp) / (wantType + wantPatch)).coerceAtMost(1f)
+                val typeH = wantType * shrink
+                val patchH = wantPatch * shrink
+                // No `spacedBy` here: the marks want a finger's worth of gap
+                // between them and the two names want to sit together, so the
+                // gaps are written where they differ rather than averaged
+                // into one number that is wrong for both.
+                Column(
+                    Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Bottom,
+                ) {
+                    // The picker puts browse over save over the name, which
+                    // upright is the name, then save, then browse. The two
+                    // names carry the weights, so the give is on them and the
+                    // marks above do not move with the length of a patch
+                    // name - the same rule the row has.
                     PatchPicker(
                         type, patchNames, onSave, onLoad, factoryPatches, userNames, onDelete,
-                        current, edited, vertical = true, modifier = Modifier.weight(1f),
+                        current, edited, vertical = true, modifier = Modifier.height(patchH),
                     )
+                    Spacer(Modifier.height(3.dp))
+                    // Half each. The patch name had two thirds while the
+                    // column was the whole screen; once the keyboard took its
+                    // share a third of what was left came to four characters,
+                    // and a machine called "Subvert" reading "Subv.." next to
+                    // a patch called "patch" with room to spare is the split
+                    // being wrong rather than the column being short.
+                    SideText(type, Acid.colors.text, SideNameSp, Modifier.height(typeH))
                 }
-            }
-            if (!minimized) {
-                // **Two across rather than four down.** Stacked single file
-                // the four marks are ninety-six dp of a column that has about
-                // two hundred and forty, and the two names above them were
-                // left forty-eight dp each - which ellipsises "Trinity". Side
-                // by side they cost half that and the names get it back.
-                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    BarIcon("\u2039", Acid.colors.accent) { step(-1) }
-                    BarIcon("\u203A", Acid.colors.accent) { step(1) }
-                }
-                Spacer(Modifier.height(10.dp))
-            }
-            BarIcon(if (minimized) "\u25B8" else "\u25C2", Acid.colors.textMid, vertical = true) {
-                onToggleMinimized()
             }
         }
         return
@@ -411,40 +491,36 @@ private fun PatchBar(
 }
 
 /**
- * A word written down the screen.
+ * How big the two names in the turned patch column are set.
  *
- * `Modifier.rotate` is a draw-time transform: the node is measured *before* it
- * spins, so the length has to be demanded with `requiredWidth` - a plain
- * `width` would be clamped by the narrow column it sits in and the text would
- * ellipsise at the column's width instead of its own length. The parent still
- * reserves the pre-rotation box, so this must not go inside anything that
- * clips; `Group` does, which is why the patch column is not one.
- *
- * The same idiom as the automation strip's and the note lane's gutter labels,
- * and `SlotChip`, which states the rule outright.
+ * Two points under portrait's eleven, because sideways they are not
+ * competing with a row's width but with a column's height, and the column's
+ * height is whatever the keyboard divider leaves - about eighty dp for the
+ * two names once the marks above them have been paid for. At eleven
+ * "MyPatch" came out "MyP.." while "Trinity" - same seven letters, three of
+ * them narrow - fitted, which is the kind of difference that reads as a bug
+ * rather than as a proportional font; at ten "Subvert" was "Subv..". Nine
+ * sp is what the note lane and automation gutters set their turned labels
+ * at, so it is not a size this app is short of precedent for.
  */
-@Composable
-private fun SideText(
-    text: String,
-    colour: Color,
-    size: androidx.compose.ui.unit.TextUnit,
-    modifier: Modifier = Modifier,
-) {
-    // **The length is measured, not stated.** The other three sites in the
-    // app hard-code 120 dp because they sit in lanes that are always 88, and
-    // a label longer than its box simply overhangs it. This one is in a
-    // column whose height is whatever is left above the keyboard, so a stated
-    // length would run off the bottom on a short screen and sit in the middle
-    // of a tall one. `requiredWidth` still has to be `required`: the column is
-    // forty-four dp wide and a plain `width` would be clamped to that.
-    BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Text(
-            text, color = colour, fontSize = size, maxLines = 1, softWrap = false,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            modifier = Modifier.requiredWidth(maxHeight).rotate(-90f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        )
-    }
+private val SideNameSp = 9.sp
+
+/**
+ * What the patch button says: its name once it has one, or what it is for.
+ *
+ * Shared, because the turned column has to know how long the word is before
+ * it can decide how much of the column to give it, and computing it twice in
+ * two files is how the box and the text it holds come to disagree.
+ */
+internal fun patchLabel(current: String?, edited: Boolean): String {
+    // The name once there is one. "patch" told you what the button was for
+    // and nothing about what you were listening to, and a rack of eight
+    // machines all saying "patch" is a rack that has forgotten where its
+    // sounds came from.
+    // The star is not a warning, it is an accuracy: the sound is no longer
+    // the one that name refers to, and "save as..." is next to it.
+    val shown = current?.ifBlank { null }
+    return (shown ?: "patch") + (if (shown != null && edited) " *" else "")
 }
 
 /**
@@ -473,15 +549,14 @@ internal fun PatchPicker(
     var saving by remember { mutableStateOf(false) }
     var browsing by remember { mutableStateOf(false) }
     var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
-    // The name once there is one. "patch" told you what the button was
-    // for and nothing about what you were listening to, and a rack of
-    // eight machines all saying "patch" is a rack that has forgotten
-    // where its sounds came from.
-    // The star is not a warning, it is an accuracy: the sound is no
-    // longer the one that name refers to, and "save as..." is next to it.
-    val shown = current?.ifBlank { null }
-    val label = (shown ?: "patch") + (if (shown != null && edited) " *" else "")
+    val label = patchLabel(current, edited)
     if (vertical) {
+        // Browse, save, then the name - which is the name, then save, then
+        // browse of the row upright, read from the bottom. See [PatchBar].
+        BarIcon("\u2630", Acid.colors.textMid, true) { browsing = true }
+        Spacer(Modifier.height(SideMarkGap))
+        BarIcon("\u21A7", Acid.colors.textMid, true) { saving = true }
+        Spacer(Modifier.height(SideMarkGap))
         // No Material button around it sideways: one is 58 dp of *width*
         // whatever is in it, and in a column that width is the column.
         Box(
@@ -491,7 +566,7 @@ internal fun PatchPicker(
             // No "▾" after it sideways: the mark costs ten dp of the length
             // the name has, and in a column the thing under your finger is
             // plainly the patch name whether or not it carries an arrow.
-        ) { SideText(label, Acid.colors.accent, 11.sp) }
+        ) { SideText(label, Acid.colors.accent, SideNameSp) }
     } else {
         TextButton(onClick = { menu = true }, contentPadding = PaddingValues(horizontal = 8.dp)) {
             Text(
@@ -507,12 +582,7 @@ internal fun PatchPicker(
     // that also has to hold a machine name, a patch name that can be long,
     // two step arrows and the fold. Down arrow into a line for putting one
     // away, a list for looking through them.
-    if (vertical) {
-        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            BarIcon("\u21A7", Acid.colors.textMid) { saving = true }
-            BarIcon("\u2630", Acid.colors.textMid) { browsing = true }
-        }
-    } else {
+    if (!vertical) {
         BarIcon("\u21A7", Acid.colors.textMid) { saving = true }
         BarIcon("\u2630", Acid.colors.textMid) { browsing = true }
     }
@@ -565,10 +635,31 @@ internal val PanelPink: Color @Composable get() = Acid.colors.pink
 internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal) {
     Knob(
         label = label, value = b.value(name), display = b.display(name), accent = accent,
-        modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
+        modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
     )
 }
+
+/**
+ * How wide a knob stands in a stacked card, so that two fit a line.
+ *
+ * **Stated, because a column of knobs whose dials wander is a list.** Upright
+ * a knob takes its own width - a 52 dp dial or the label above it, whichever
+ * is wider - and in a row that scrolls sideways nobody can tell. Stacked two
+ * to a line the difference lands under your eye: `pw` would be 52 wide and
+ * `density` 40 dp wider, and the second column of dials would move down the
+ * card. Fifty-eight fits the dial with a little air and ellipsises a label at
+ * about ten characters, which is one more than the longest a panel carries.
+ */
+internal val StackedKnobW = 58.dp
+
+/** How many controls a stacked card puts on a line. Dan picked two. */
+internal const val StackedPerLine = 2
+
+/** A stated width stacked; upright a knob is still whatever it needs. */
+@Composable
+internal fun panelKnobWidth(): Modifier =
+    if (LocalPanelStacked.current) Modifier.width(StackedKnobW) else Modifier
 
 @Composable
 internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
@@ -672,9 +763,38 @@ internal fun GroupRow(content: @Composable () -> Unit) {
     ) { content() }
 }
 
+/**
+ * A machine's body: its section tabs, then its cards.
+ *
+ * Upright those are a row of chips over a row of cards and this is a plain
+ * `Column`, which is what every panel wrote before this existed. Sideways the
+ * cards are a column, so the chips stand **down the left edge of them** -
+ * Dan's call, against putting them back across the top: full width they would
+ * be a faithful port of portrait's row, and they would also be twenty-eight
+ * dp of a three-hundred-and-ninety-three dp screen spent on tabs.
+ *
+ * It is a container rather than a flag passed to `SectionChips` because the
+ * two children have to be laid out *together* - the chips beside the cards,
+ * not above them - and only whatever holds them both can say so. Fifteen
+ * panels write `PanelSections { SectionChips(...); GroupRow { ... } }` and
+ * none of them has to know which way the phone is held.
+ */
+@Composable
+internal fun PanelSections(content: @Composable () -> Unit) {
+    if (LocalPanelStacked.current) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) { content() }
+        return
+    }
+    Column { content() }
+}
+
 /** Which group of groups is showing. Only machines too big for one row need it. */
 @Composable
 internal fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    if (LocalPanelStacked.current) {
+        SectionChipsSide(labels, selected, onSelect)
+        return
+    }
     // **Equal shares until there is not room for them.**
     //
     // An equal share is right at four chips and wrong at seven - the note on
@@ -698,12 +818,62 @@ internal fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) -
 }
 
 /**
+ * The same tabs, turned, down the left edge of the cards.
+ *
+ * Every one of them on screen at once, which the horizontal row in a hundred
+ * dp column could not manage - it showed two of Trinity's seven and you
+ * scrolled for the rest, which is what "the portrait elements haven't been
+ * faithfully ported" was about. A tab you cannot see is not a tab.
+ *
+ * So they share the column's height the way portrait's share its width, and
+ * fall through to scrolling by the same measurement when a share would be
+ * too short to read a word in. The chip is the same chip - same colours,
+ * same corner, same equal shares - with its word read bottom to top, which
+ * `SideText` is for.
+ */
+@Composable
+private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    BoxWithConstraints(Modifier.width(SideChipW).fillMaxHeight()) {
+        val share = maxHeight / labels.size.coerceAtLeast(1)
+        val scrolls = share < kChipFloor
+        Column(
+            Modifier.fillMaxHeight()
+                .then(if (scrolls) Modifier.verticalScrollWithBar(rememberScrollState()) else Modifier),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            labels.forEachIndexed { i, l ->
+                val on = i == selected
+                Box(
+                    Modifier.fillMaxWidth()
+                        .then(if (scrolls) Modifier.height(kChipFloor) else Modifier.weight(1f))
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (on) Acid.colors.green else Acid.colors.control)
+                        .clickable { onSelect(i) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    SideText(
+                        l, if (on) Color.White else Acid.colors.textMid, 10.sp,
+                        family = FontFamily.Monospace,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * How wide the turned tab column is: a ten sp line box and room to hit it.
+ */
+private val SideChipW = 22.dp
+
+/**
  * The narrowest a chip may be before the row scrolls instead.
  *
  * Under this a four letter word at ten sp clips, which is what makes a row of
  * them unreadable rather than merely tight.
  */
 private val kChipFloor = 56.dp
+
 
 /**
  * The same, for a label with a word set differently inside it. A separate
@@ -715,6 +885,10 @@ internal fun SectionChipsStyled(
     selected: Int,
     onSelect: (Int) -> Unit,
 ) {
+    if (LocalPanelStacked.current) {
+        SectionChipsSide(labels.map { it.text }, selected, onSelect)
+        return
+    }
     Row(
         Modifier.fillMaxWidth().padding(bottom = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -789,7 +963,7 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
     Knob(
         label = label, value = b.value(name), accent = accent,
         display = labels.getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
-        modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
+        modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
     )
 }
@@ -834,8 +1008,7 @@ private fun PanelActions(vararg actions: Triple<String, Color, () -> Unit>) {
         // group is nothing but these, so the row collapsed onto the text and
         // the cells had a control's worth of nothing to fill. Saying the
         // height outright makes it the intrinsic one too.
-        Modifier.height(PanelControlH)
-            .width(IntrinsicSize.Max)
+        Modifier.height(PanelControlH).width(IntrinsicSize.Max)
             .clip(RoundedCornerShape(4.dp)).background(Acid.colors.card),
         verticalArrangement = Arrangement.spacedBy(1.dp),
     ) {
@@ -879,16 +1052,26 @@ internal fun Group(title: String, content: @Composable () -> Unit) {
         // than written down as a number, so it still holds when the text
         // scale changes the height of a knob's label.
         if (stacked) {
-            // **The cards stack; their contents do not.** A card of six knobs
-            // is six times fifty-six dp and will not fit a column, so the
-            // knobs wrap - and an intrinsic height with a bottom alignment
-            // then means per line, which is what it already meant. Turning
-            // the knobs into a column instead would break the contract
-            // `PanelSwitch` has a scar from: without a stated ceiling,
-            // `fillMaxHeight` inside an intrinsic row measured 490 dp.
-            androidx.compose.foundation.layout.FlowRow(
+            // **The card wraps; the knob does not change.** Dan, over the two
+            // orientations side by side: the portrait elements had not been
+            // faithfully ported. A turned knob - name and value rotated down
+            // either side of the dial - was narrower and it was a different
+            // instrument to look at, and the panel is the place in the app
+            // where knowing where a control is by its shape matters most.
+            //
+            // So a knob sideways is exactly the knob upright, and the *card*
+            // is what gives way: two to a line, wrapping, in a column that
+            // scrolls. Six knobs is three lines rather than one long row.
+            //
+            // No `IntrinsicSize.Max` here: a flow row measures each line from
+            // its own children, which is what the intrinsic height meant in
+            // the single row, and `PanelSwitch` still carries its own ceiling
+            // of `PanelControlH` - the scar from the 490 dp three-way switch.
+            FlowRow(
+                Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                maxItemsInEachRow = StackedPerLine,
             ) { content() }
             return@Column
         }
@@ -1231,7 +1414,7 @@ private fun TrinityPanel(b: ParamBinding) {
     // Too many groups for one row, so the sections pick which groups show.
     // Inside a section it is the same Group-of-knobs row as every machine.
     var section by rememberSaveable { mutableStateOf(0) }
-    Column {
+    PanelSections {
         SectionChips(listOf("osc", "mix", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
         GroupRow {
             when (section) {
@@ -1360,7 +1543,7 @@ val RATIO_DESTS = listOf(
 @Composable
 private fun RatioPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    Column {
+    PanelSections {
         SectionChips(listOf("op", "algo", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
         GroupRow {
             when (section) {
@@ -1499,7 +1682,7 @@ private fun Drawbars(b: ParamBinding, prefix: String, names: List<String>, colou
 @Composable
 private fun ManualPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    Column {
+    PanelSections {
         SectionChips(listOf("bars", "perc", "vib", "rotary", "voice", "wind", "mod", "out"), section) { section = it }
         GroupRow {
             when (section) {
@@ -1753,7 +1936,7 @@ private fun InputListen() {
 @Composable
 private fun CipherPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    Column {
+    PanelSections {
         SectionChips(listOf("bank", "map", "carrier", "voice", "mod", "out"), section) { section = it }
         GroupRow {
             when (section) {
@@ -1901,7 +2084,7 @@ private val CUMULUS_LFO = listOf("sine", "tri", "saw↑", "saw↓", "square", "s
 @Composable
 private fun CumulusPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    Column {
+    PanelSections {
         SectionChips(listOf("cloud", "morph to", "play", "shape", "env", "mod", "out"), section) { section = it }
         GroupRow {
             when (section) {
@@ -2042,7 +2225,7 @@ private fun FormulatePanel(b: ParamBinding, track: Track, trackIndex: Int, edito
     var section by rememberSaveable { mutableStateOf(0) }
     var editing by remember { mutableStateOf(false) }
     val error = com.rm.acidulous.engine.EngineSync.formulaErrors[trackIndex].orEmpty()
-    Column {
+    PanelSections {
         SectionChips(listOf("chip", "formula", "tables", "shape", "env", "out"), section) { section = it }
         GroupRow {
             when (section) {
@@ -2247,7 +2430,7 @@ private fun FormulaDialog(
 @Composable
 private fun GenesisPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    Column {
+    PanelSections {
         SectionChips(listOf("kick", "snare", "toms", "metal", "bus"), section) { section = it }
         GroupRow {
             when (section) {
@@ -2434,7 +2617,7 @@ private fun MoltPanel(
         },
         onDismiss = { recording = false },
     )
-    Column {
+    PanelSections {
         SectionChips(listOf("take", "tune", "voice", "tone"), section) { section = it }
         GroupRow {
             when (section) {
@@ -2535,7 +2718,7 @@ private fun DicePanel(
     val p = pad.coerceIn(0, 15)
     fun n(name: String) = "s%02d_%s".format(p, name)
     val sample = track.machine.settings["sample"].orEmpty()
-    Column {
+    PanelSections {
         SectionChips(listOf("loop", "dice", "slice", "tone"), section) { section = it }
         if (section == 2) {
             Text(
@@ -2652,7 +2835,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
     val c = Acid.colors
     val sample = track.machine.settings["sample"].orEmpty()
     val live = (b.value("source") ?: 0f) >= 0.5f
-    Column {
+    PanelSections {
         SectionChips(listOf("source", "cloud", "spray", "pollen", "tone", "voice"), section) { section = it }
         GroupRow {
             when (section) {
@@ -2820,7 +3003,7 @@ private val FILAMENT_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
 @Composable
 private fun FilamentPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    Column {
+    PanelSections {
         SectionChips(listOf("exciter", "string", "prepare", "around", "mod", "out"), section) { section = it }
         GroupRow {
             when (section) {
@@ -2950,7 +3133,7 @@ private val BRAZEN_MUTES = listOf("open", "straight", "cup", "harmon")
 @Composable
 private fun BrazenPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    Column {
+    PanelSections {
         SectionChips(listOf("horn", "player", "section", "shape", "out"), section) { section = it }
         GroupRow {
             when (section) {
@@ -3046,7 +3229,7 @@ private val TIMBER_REGISTER = listOf("natural", "register", "altissimo")
 @Composable
 private fun TimberPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    Column {
+    PanelSections {
         SectionChips(listOf("pipe", "mouth", "holes", "tongue", "shape", "out"), section) { section = it }
         GroupRow {
             when (section) {
@@ -3148,7 +3331,7 @@ private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
     val patch = remember(track.machine.settings["nexus"]) {
         com.rm.acidulous.model.NexusPatch.decode(track.machine.settings["nexus"])
     }
-    Column {
+    PanelSections {
         SectionChips(listOf("patch", "macros", "voice", "out"), section) { section = it }
         GroupRow {
             when (section) {
@@ -3233,7 +3416,7 @@ private fun MosaicPanel(
     fun putZones(list: List<Zone>) =
         editor.edit(trackIndex) { t -> t.withSetting("zones", if (list.isEmpty()) null else Zones.encode(list)) }
 
-    Column {
+    PanelSections {
         SectionChips(listOf("map", "sample", "grain", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
         if (section == 0) {
             if (sf2.isEmpty()) {

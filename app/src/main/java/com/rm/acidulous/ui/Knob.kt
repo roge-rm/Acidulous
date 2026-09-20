@@ -5,6 +5,13 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,8 +55,7 @@ fun Knob(
     // `c` is the centre point inside the Canvas below, so the palette takes
     // the other name here.
     val col = Acid.colors
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+    val dial: @Composable () -> Unit = {
         Canvas(
             Modifier.size(size).pointerInput(Unit) {
                 awaitEachGesture {
@@ -81,6 +87,18 @@ fun Knob(
             drawLine(col.knobPointer, Offset(c.x + inner * cos(a).toFloat(), c.y + inner * sin(a).toFloat()),
                 Offset(c.x + outer * cos(a).toFloat(), c.y + outer * sin(a).toFloat()), 3f)
         }
-        Text(display, color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+    }
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+            maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
+        dial()
+        Text(
+            display, color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+            maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
     }
 }

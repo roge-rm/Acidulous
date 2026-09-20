@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -26,7 +25,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -222,19 +220,15 @@ fun NoteLane(
                             maxLines = 1, softWrap = false,
                         )
                     } else {
-                        Text(
-                            // "vel" on its own is every note; "vel SD" is the
-                            // snares. The gutter is the only place that can
-                            // say so - the lane itself looks the same either
-                            // way, just emptier.
+                        // "vel" on its own is every note; "vel SD" is the
+                        // snares. The gutter is the only place that can say
+                        // so - the lane itself looks the same either way,
+                        // just emptier. On its side, as the automation
+                        // strip's is: the width belongs to the notes.
+                        SideText(
                             prop.short + (pitchFilter?.let { " " + pitchName(it) } ?: ""),
-                            color = if (pitchFilter != null) c.accent else c.teal,
-                            fontSize = 9.sp, fontFamily = FontFamily.Monospace,
-                            maxLines = 1, softWrap = false,
-                            // On its side, as the automation strip's is: the
-                            // width belongs to the notes.
-                            modifier = Modifier.requiredWidth(120.dp).rotate(-90f),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            if (pitchFilter != null) c.accent else c.teal,
+                            9.sp, length = 120.dp, family = FontFamily.Monospace,
                         )
                     }
                 }

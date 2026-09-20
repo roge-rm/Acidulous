@@ -31,6 +31,10 @@ import com.rm.acidulous.ui.theme.ThemeMode
  * changes it, and everything is stored by name rather than by ordinal - the
  * order of an enum is not a promise.
  */
+/** How little, and how much, of a turned editor the keyboard may take. */
+const val KeysFractionMin = 0.18f
+const val KeysFractionMax = 0.62f
+
 object UiPrefs {
     private var store: SharedPreferences? = null
 
@@ -47,7 +51,56 @@ object UiPrefs {
     var noteLaneFolded by mutableStateOf(true)
 
     /**
-     * The machine panel, and sideways the transport column, folded away.
+     * The same two folds again, for when the phone is turned.
+     *
+     * **A fold is a statement about a shape, not about a habit.** Upright
+     * there are eight hundred and fifty dp of height and a lane costs
+     * eighty-eight of them; turned there are three hundred and ninety-three
+     * and the lane still wanted eighty-eight, which left the roll forty-six -
+     * about four rows of pitch. Dan: "it feels cluttered". Folding a lane
+     * away because the screen is short is not the same decision as folding it
+     * away because you are not drawing velocity today, so it is not the same
+     * flag: turning the phone must not put the lane away upright, and
+     * unfolding it sideways must not open it upright either.
+     *
+     * Both start folded, because sideways the roll is what the height is for.
+     */
+    /**
+     * The keyboard or the drum pads, folded away to their own control row.
+     *
+     * One flag for both orientations, unlike the two lanes above. Those are
+     * folded sideways because the screen is short, which is a fact about the
+     * shape; this is "I am editing rather than playing", which is not. The
+     * performance row stays either way - the scale, the eventors, the octave
+     * and the mark that brings the instrument back all live in it.
+     */
+    var keysFolded by mutableStateOf(false)
+
+    var automationFoldedLand by mutableStateOf(true)
+    var noteLaneFoldedLand by mutableStateOf(true)
+
+    /**
+     * How much of a turned editor the keyboard takes, 0..1.
+     *
+     * Dan asked to be able to drag it: the keys were fifty-nine dp against
+     * portrait's seventy-two, on the screen he had asked to give the
+     * instrument "the entire bottom". A share rather than a stated height so
+     * it means the same thing on a tablet, and remembered because where you
+     * put the divider is how you work.
+     *
+     * Bounded well inside 0..1 by [KeysFractionMin] and [KeysFractionMax] -
+     * a divider dragged to either end would leave one side unusable and
+     * nothing to grab to get it back.
+     */
+    var keysFractionLand by mutableStateOf(0.33f)
+
+    /**
+     * The machine panel folded away.
+     *
+     * The transport had one of these too while it was a column against the
+     * right edge. It has no fold now and no need of one: sideways it stands
+     * in the empty half of the header, which was there whether or not
+     * anything was in it. See EditScreen's landscape branch.
      *
      * The panel's own flag used to be a `rememberSaveable` inside it, which
      * survived a rotation and nothing else. It has to live out here for a
@@ -56,7 +109,6 @@ object UiPrefs {
      * between them - and two composables cannot share a flag one of them owns.
      */
     var panelFolded by mutableStateOf(false)
-    var transportFolded by mutableStateOf(false)
 
     /**
      * Whether a finger is on fill right now.
@@ -203,8 +255,12 @@ object UiPrefs {
         store = p
         automationFolded = p.getBoolean(KEY_AUTO_FOLDED, false)
         noteLaneFolded = p.getBoolean(KEY_NOTE_FOLDED, true)
+        keysFolded = p.getBoolean(KEY_KEYS_FOLDED, false)
+        automationFoldedLand = p.getBoolean(KEY_AUTO_FOLDED_LAND, true)
+        noteLaneFoldedLand = p.getBoolean(KEY_NOTE_FOLDED_LAND, true)
+        keysFractionLand = p.getFloat(KEY_KEYS_FRACTION, 0.33f)
+            .coerceIn(KeysFractionMin, KeysFractionMax)
         panelFolded = p.getBoolean(KEY_PANEL_FOLDED, false)
-        transportFolded = p.getBoolean(KEY_TRANSPORT_FOLDED, false)
         padsFullStrength = p.getBoolean(KEY_PADS_FULL, false)
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
@@ -295,14 +351,36 @@ object UiPrefs {
         store?.edit()?.putBoolean(KEY_PANEL_FOLDED, folded)?.apply()
     }
 
-    fun foldTransport(folded: Boolean) {
-        transportFolded = folded
-        store?.edit()?.putBoolean(KEY_TRANSPORT_FOLDED, folded)?.apply()
-    }
-
     fun foldNoteLane(folded: Boolean) {
         noteLaneFolded = folded
         store?.edit()?.putBoolean(KEY_NOTE_FOLDED, folded)?.apply()
+    }
+
+    fun foldKeys(folded: Boolean) {
+        keysFolded = folded
+        store?.edit()?.putBoolean(KEY_KEYS_FOLDED, folded)?.apply()
+    }
+
+    fun foldAutomationLand(folded: Boolean) {
+        automationFoldedLand = folded
+        store?.edit()?.putBoolean(KEY_AUTO_FOLDED_LAND, folded)?.apply()
+    }
+
+    fun foldNoteLaneLand(folded: Boolean) {
+        noteLaneFoldedLand = folded
+        store?.edit()?.putBoolean(KEY_NOTE_FOLDED_LAND, folded)?.apply()
+    }
+
+    /**
+     * Where the divider above the keyboard was let go.
+     *
+     * Written on every frame of a drag would be a preference file touched
+     * sixty times a second, so the caller stores it once the finger lifts and
+     * holds the live value itself while the drag is running.
+     */
+    fun chooseKeysFraction(f: Float) {
+        keysFractionLand = f.coerceIn(KeysFractionMin, KeysFractionMax)
+        store?.edit()?.putFloat(KEY_KEYS_FRACTION, keysFractionLand)?.apply()
     }
 
     // Not setClipMode: the property's own generated setter already owns
@@ -484,8 +562,11 @@ object UiPrefs {
 
     private const val KEY_AUTO_FOLDED = "automation_folded"
     private const val KEY_NOTE_FOLDED = "note_lane_folded"
+    private const val KEY_KEYS_FOLDED = "keys_folded"
+    private const val KEY_AUTO_FOLDED_LAND = "automation_folded_land"
+    private const val KEY_NOTE_FOLDED_LAND = "note_lane_folded_land"
+    private const val KEY_KEYS_FRACTION = "keys_fraction_land"
     private const val KEY_PANEL_FOLDED = "panel_folded"
-    private const val KEY_TRANSPORT_FOLDED = "transport_folded"
     private const val KEY_PADS_FULL = "pads_full_strength"
     private const val KEY_CLIP_MODE = "clip_mode"
     private const val KEY_LAUNCH_Q = "launch_quantise"
