@@ -207,7 +207,7 @@ Trinity::Voice *Trinity::allocate() {
 }
 
 void Trinity::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger) {
-    const float glideSeconds = paramOf(Glide);
+    const float glideSeconds = targetOf(Glide);
     const bool gliding = glideSeconds > 0.001f && v.used && (stepOf(GlideMode) == 0 || v.gate);
     v.glideFrom = gliding ? v.freq : mtof(static_cast<float>(note));
     v.glidePos = gliding ? 0.0f : 1.0f;
@@ -222,14 +222,14 @@ void Trinity::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigge
     v.freq = v.glideFrom;
     if (retrigger) {
         for (int e = 0; e < kEnvs; ++e) {
-            v.env[e].set(paramOf(EnvBase + e * EnvParams + EDelay), paramOf(EnvBase + e * EnvParams + EAttack),
-                         paramOf(EnvBase + e * EnvParams + EDecay), paramOf(EnvBase + e * EnvParams + ESustain),
-                         paramOf(EnvBase + e * EnvParams + ERelease), paramOf(EnvBase + e * EnvParams + ERepeat) >= 0.5f);
+            v.env[e].set(targetOf(EnvBase + e * EnvParams + EDelay), targetOf(EnvBase + e * EnvParams + EAttack),
+                         targetOf(EnvBase + e * EnvParams + EDecay), targetOf(EnvBase + e * EnvParams + ESustain),
+                         targetOf(EnvBase + e * EnvParams + ERelease), targetOf(EnvBase + e * EnvParams + ERepeat) >= 0.5f);
             v.env[e].trigger();
         }
         for (int l = 0; l < kLfos; ++l) {
             const int32_t b = LfoBase + l * LfoParams;
-            if (paramOf(b + LKeySync) >= 0.5f) v.lfo[l].trigger(paramOf(b + LPhase), paramOf(b + LDelay));
+            if (targetOf(b + LKeySync) >= 0.5f) v.lfo[l].trigger(targetOf(b + LPhase), targetOf(b + LDelay));
         }
         for (int k = 0; k < kOscs; ++k) {
             // Random start phases, not evenly spread ones: evenly spaced saws
@@ -251,8 +251,8 @@ void Trinity::noteOn(uint8_t note, uint8_t velocity) {
     }
     if (mode == 3) {
         const int n = stepOf(UnisonCount);
-        const float detune = paramOf(UnisonDetune) * 25.0f;
-        const float spread = paramOf(UnisonSpread);
+        const float detune = targetOf(UnisonDetune) * 25.0f;
+        const float spread = targetOf(UnisonSpread);
         for (int i = 0; i < n; ++i) {
             Voice *v = allocate();
             if (v == nullptr) break;

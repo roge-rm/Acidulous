@@ -186,22 +186,22 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     };
 
     ++triggers;
-    if (chance(paramOf(Drop))) return; // the roll said nothing
+    if (chance(targetOf(Drop))) return; // the roll said nothing
 
     int32_t slice = asked;
-    if (chance(paramOf(Swap))) slice = static_cast<int32_t>(uniform() * slices) % slices;
+    if (chance(targetOf(Swap))) slice = static_cast<int32_t>(uniform() * slices) % slices;
 
     const bool sliceReversed = static_cast<int32_t>(sliceParam(slice, Direction) + 0.5f) != 0;
-    const bool reversed = sliceReversed != chance(paramOf(Reverse));
+    const bool reversed = sliceReversed != chance(targetOf(Reverse));
 
-    float semis = paramOf(RootPitch) + paramOf(Fine) * 0.01f + sliceParam(slice, Pitch);
-    if (chance(paramOf(Jump))) {
-        const float range = paramOf(JumpRange);
+    float semis = targetOf(RootPitch) + targetOf(Fine) * 0.01f + sliceParam(slice, Pitch);
+    if (chance(targetOf(Jump))) {
+        const float range = targetOf(JumpRange);
         semis += (uniform() < 0.5f ? -1.0f : 1.0f) * std::round(uniform() * range);
     }
 
     int32_t repeats = 0;
-    if (chance(paramOf(Stutter))) repeats = steppedOf(StutterDiv);
+    if (chance(targetOf(Stutter))) repeats = steppedTargetOf(StutterDiv);
 
     Voice *v = allocate();
     v->used = true;
@@ -210,14 +210,14 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->start = bounds[slice];
     v->end = bounds[slice + 1];
     if (v->end <= v->start) v->end = std::min(take->frames, v->start + 64);
-    v->inc = std::pow(2.0f, semis / 12.0f) * paramOf(Rate) * (reversed ? -1.0 : 1.0);
+    v->inc = std::pow(2.0f, semis / 12.0f) * targetOf(Rate) * (reversed ? -1.0 : 1.0);
     v->pos = reversed ? v->end - 1 : v->start;
     const int32_t span = v->end - v->start;
     v->repeatLen = repeats > 0 ? std::max(64, span / repeats) : span;
     v->repeats = repeats;
     v->left = static_cast<int32_t>(v->repeatLen / std::max(0.05, std::fabs(v->inc)));
 
-    const float accent = paramOf(Accent);
+    const float accent = targetOf(Accent);
     const float vel = 1.0f - accent + accent * static_cast<float>(velocity) / 127.0f;
     const float pan = std::clamp(sliceParam(slice, Pan), -1.0f, 1.0f);
     const float angle = (pan + 1.0f) * 0.25f * 3.14159265f;
@@ -234,7 +234,7 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     // exception and means *no* decay: a slicer playing a loop straight must
     // not fade every slice, and four seconds read honestly would take three
     // and a half decibels off a quarter-second slice.
-    const float decay = sliceParam(slice, Decay) * std::max(0.02f, paramOf(Gate));
+    const float decay = sliceParam(slice, Decay) * std::max(0.02f, targetOf(Gate));
     v->envCoeff = decay >= kDecayOff ? 0.0f
                                      : 1.0f - std::exp(-kLn1000 / (decay * sampleRate));
     v->filter.reset();

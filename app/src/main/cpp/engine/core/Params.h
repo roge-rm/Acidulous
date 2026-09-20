@@ -99,6 +99,17 @@ class ParamSet {
     float get(int32_t index) const { return smooth[index].value(); }
     float normalized(int32_t index) const { return norm[index]; }
 
+    /**
+     * Where the parameter is *going*, in unit range, ignoring the smoother.
+     *
+     * This is what anything read once to seed per-note state must use.
+     * `get()` is the smoothed value, so it depends on how long ago the knob
+     * moved - and a note seeded from it sounds different depending on
+     * whether a render started from a panic or carried on from a
+     * performance, which is the one thing an export must not do.
+     */
+    float target(int32_t index) const { return defs[index].map(norm[index]); }
+
     int32_t indexOf(const char *name) const {
         for (int32_t i = 0; i < count; ++i) {
             if (std::strcmp(defs[i].name, name) == 0) return i;

@@ -142,12 +142,12 @@ Timber::Voice *Timber::allocate() {
 constexpr int32_t kFadeFrames = 96;
 
 void Timber::noteOn(uint8_t note, uint8_t velocity) {
-    const bool mono = steppedOf(Mono) != 0;
+    const bool mono = steppedTargetOf(Mono) != 0;
     Voice *vp = mono ? &voices[0] : allocate();
     if (vp == nullptr) return;
     Voice &v = *vp;
 
-    const float glide = paramOf(Glide);
+    const float glide = targetOf(Glide);
     // A slur is a note that arrives without the tongue and without the
     // instrument being restarted; a tongued note is stopped and started
     // again. On a wind instrument that is the difference between two
@@ -184,13 +184,13 @@ void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) 
     v.velocity = static_cast<float>(velocity) / 127.0f;
     v.age = ++ageCounter;
     v.vibratoPhase = 0.0f;
-    v.vibratoLeft = paramOf(VibratoDelay);
+    v.vibratoLeft = targetOf(VibratoDelay);
     // The pads of the keys hitting the body: a real instrument's other
     // sound, and the one a sample library needs a separate layer for.
-    v.keyLeft = paramOf(Keys) > 0.001f ? kKeyClick * sampleRate : 0.0f;
+    v.keyLeft = targetOf(Keys) > 0.001f ? kKeyClick * sampleRate : 0.0f;
     v.keyState = 0.0f; // or a reused voice starts on the last pad's residue
     if (!slurred) {
-        v.tongueLeft = paramOf(TongueTime) * sampleRate;
+        v.tongueLeft = targetOf(TongueTime) * sampleRate;
         // retrigger zeroes the envelope, and the output is the pipe times
         // the envelope - so at this instant the voice is silent whatever
         // its tube holds, and emptying the tube costs nothing audible. It

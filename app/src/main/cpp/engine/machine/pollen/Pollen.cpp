@@ -192,7 +192,7 @@ Pollen::Voice *Pollen::allocate() {
 }
 
 void Pollen::noteOn(uint8_t note, uint8_t velocity) {
-    Voice *v = steppedOf(Mono) != 0 ? &voices[0] : allocate();
+    Voice *v = steppedTargetOf(Mono) != 0 ? &voices[0] : allocate();
     if (v == nullptr) return;
     // Cut the grains still in the air loose from this voice before the new
     // note takes it over.
@@ -214,7 +214,7 @@ void Pollen::noteOn(uint8_t note, uint8_t velocity) {
         }
         v->living = 0;
     }
-    const float glide = paramOf(Glide);
+    const float glide = targetOf(Glide);
     const bool gliding = glide > 0.001f && v->used;
     v->glideFrom = gliding ? v->freq : mtof(static_cast<float>(note));
     v->glidePos = gliding ? 0.0f : 1.0f;

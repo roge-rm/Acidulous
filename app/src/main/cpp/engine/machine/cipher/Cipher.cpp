@@ -238,7 +238,7 @@ void Cipher::noteOn(uint8_t note, uint8_t velocity) {
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     v->target = noteToHz(static_cast<float>(note));
     if (wasIdle) v->freq = v->target;
-    v->amp.set(0.0f, paramOf(AmpAttack), paramOf(AmpDecay), paramOf(AmpSustain), paramOf(AmpRelease), false);
+    v->amp.set(0.0f, targetOf(AmpAttack), targetOf(AmpDecay), targetOf(AmpSustain), targetOf(AmpRelease), false);
     v->amp.retrigger();
 }
 

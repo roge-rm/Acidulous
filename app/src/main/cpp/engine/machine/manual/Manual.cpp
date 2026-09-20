@@ -398,10 +398,10 @@ int32_t Manual::wheelFor(int32_t note, int32_t bar) const {
 }
 
 void Manual::noteOn(uint8_t note, uint8_t velocity) {
-    const int32_t split = static_cast<int32_t>(paramOf(Split) + 0.5f);
-    const int32_t pedSplit = static_cast<int32_t>(paramOf(PedalSplit) + 0.5f);
-    const bool lowerOn = steppedOf(LowerOn) != 0;
-    const bool pedalOn = steppedOf(PedalOn) != 0;
+    const int32_t split = static_cast<int32_t>(targetOf(Split) + 0.5f);
+    const int32_t pedSplit = static_cast<int32_t>(targetOf(PedalSplit) + 0.5f);
+    const bool lowerOn = steppedTargetOf(LowerOn) != 0;
+    const bool pedalOn = steppedTargetOf(PedalOn) != 0;
     int32_t manual = MUpper;
     if (pedalOn && note < pedSplit) manual = MPedal;
     else if (lowerOn && note < split) manual = MLower;
@@ -426,9 +426,9 @@ void Manual::noteOn(uint8_t note, uint8_t velocity) {
     // so every tab setting spoke in the same four milliseconds. A quarter of
     // a second at the top of it is the slow-attack tab, which is the one
     // thing on those organs that is not percussive.
-    float attackSec = paramOf(AmpAttack);
-    if (steppedOf(Model) == Transistor) attackSec += paramOf(ComboAttack) * 0.25f;
-    v->amp.set(0.0f, attackSec, 0.0f, 1.0f, paramOf(AmpRelease), false);
+    float attackSec = targetOf(AmpAttack);
+    if (steppedTargetOf(Model) == Transistor) attackSec += targetOf(ComboAttack) * 0.25f;
+    v->amp.set(0.0f, attackSec, 0.0f, 1.0f, targetOf(AmpRelease), false);
     v->amp.retrigger();
 
     const int bars = manual == MPedal ? kPedalBars : kBars;
@@ -438,7 +438,7 @@ void Manual::noteOn(uint8_t note, uint8_t velocity) {
                           : wheelFor(note, b);
         // The nine contacts under a key do not close together. The spread is
         // small, a couple of milliseconds, and it is the whole of key click.
-        v->contactPhase[b] = b < bars ? (0.2f + 2.4f * paramOf(ContactSpread)) * 0.001f * sampleRate *
+        v->contactPhase[b] = b < bars ? (0.2f + 2.4f * targetOf(ContactSpread)) * 0.001f * sampleRate *
                                             (0.15f + 0.85f * std::fmod(v->rnd * (b + 3) * 7.13f, 1.0f))
                                       : 0.0f;
     }
@@ -446,16 +446,16 @@ void Manual::noteOn(uint8_t note, uint8_t velocity) {
     // take the matrix's block value rather than a per-voice one: the voice
     // does not exist yet. Both were listed as destinations and neither was
     // read, so a routing to either did nothing at all.
-    v->click = clampf(paramOf(Click) + blockMod[DstClick], 0.0f, 1.5f);
+    v->click = clampf(targetOf(Click) + blockMod[DstClick], 0.0f, 1.5f);
     v->clickCoeff = std::exp(-1.0f / (0.0018f * sampleRate));
-    v->chiff = steppedOf(Model) == Pipe ? clampf(paramOf(Chiff) + blockMod[DstChiff], 0.0f, 1.5f) : 0.0f;
+    v->chiff = steppedTargetOf(Model) == Pipe ? clampf(targetOf(Chiff) + blockMod[DstChiff], 0.0f, 1.5f) : 0.0f;
     v->chiffCoeff = std::exp(-1.0f / (0.035f * sampleRate));
 
     // Harmonic percussion fires on the first key of a phrase, not on every
     // key, unless it is asked to be polyphonic.
-    if (steppedOf(PercOn) != 0 && manual == MUpper && (steppedOf(PercPoly) != 0 || wasSilent)) {
-        const float keyScale = 1.0f - paramOf(PercKey) * v->key01;
-        const float decay = paramOf(PercDecay) * (steppedOf(PercFast) != 0 ? 0.35f : 1.0f) * keyScale;
+    if (steppedTargetOf(PercOn) != 0 && manual == MUpper && (steppedTargetOf(PercPoly) != 0 || wasSilent)) {
+        const float keyScale = 1.0f - targetOf(PercKey) * v->key01;
+        const float decay = targetOf(PercDecay) * (steppedTargetOf(PercFast) != 0 ? 0.35f : 1.0f) * keyScale;
         v->perc = 1.0f;
         v->percCoeff = std::exp(-1.0f / (std::fmax(0.01f, decay) * sampleRate));
     } else {

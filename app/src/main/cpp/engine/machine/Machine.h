@@ -82,6 +82,32 @@ class Machine {
         params_.init(defs, n);
     }
     ParamSet params_;
+
+    /**
+     * The three ways to read a parameter, and which to use when.
+     *
+     * `paramOf` is the smoothed value and is what audio should be made from:
+     * a cutoff that jumped to its new value on the block a knob moved would
+     * click, which is what the smoother is for.
+     *
+     * `targetOf` and `steppedTargetOf` are where it is *going*, and are what
+     * anything read **once, at note-on, to seed per-note state** must use -
+     * a glide time, an envelope stage, a voice count, a spread. Seeded from
+     * the smoothed value, a note sounds different depending on how long ago
+     * the knob moved, so the same song exported twice can differ: once from
+     * a panic, once carrying on from whatever was played before it.
+     *
+     * Found 2026-09-13 while working on Brazen and left open until now
+     * because `tools/reset_test.sh` cannot see it - its performance never
+     * moves a parameter, so the smoothed and target values are equal
+     * throughout and both its passes agree. `tools/noteon_check.py` is what
+     * watches this instead.
+     */
+    float paramOfIndex(int32_t p) const { return params_.get(p); }
+    float targetOf(int32_t p) const { return params_.target(p); }
+    int32_t steppedTargetOf(int32_t p) const {
+        return static_cast<int32_t>(params_.target(p) + 0.5f);
+    }
 };
 
 } // namespace acidulous

@@ -135,7 +135,7 @@ void Molt::noteOn(uint8_t note, uint8_t velocity) {
     v->used = true;
     v->gate = true;
     v->note = note;
-    v->velocity = 1.0f - paramOf(VelocityAmount) * (1.0f - static_cast<float>(velocity) / 127.0f);
+    v->velocity = 1.0f - targetOf(VelocityAmount) * (1.0f - static_cast<float>(velocity) / 127.0f);
     v->bend = channelBend;
     v->primed = false;
     v->untilGrain = 0.0f;
@@ -147,7 +147,7 @@ void Molt::noteOn(uint8_t note, uint8_t velocity) {
     if (!running) {
         const audio::Utterance *u = source;
         if (u != nullptr && u->usable()) {
-            head = static_cast<double>(paramOf(Start)) * static_cast<double>(u->frames);
+            head = static_cast<double>(targetOf(Start)) * static_cast<double>(u->frames);
             running = true;
         }
     }

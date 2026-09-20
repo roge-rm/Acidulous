@@ -196,7 +196,7 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
     const bool wasHeld = v.used && v.gate;
     const bool retrigger = !(mode == 2 && wasHeld);
 
-    const float glideSeconds = paramOf(Glide);
+    const float glideSeconds = targetOf(Glide);
     const bool gliding = glideSeconds > 0.001f && v.used && (stepOf(GlideMode) == 0 || v.gate);
     v.glideFrom = gliding ? v.freq : mtof(static_cast<float>(note));
     v.glidePos = gliding ? 0.0f : 1.0f;
@@ -211,8 +211,8 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
 
     // Which layers sound. Scan slides the velocity axis away from the played
     // velocity, so the map can be walked by a knob instead of by playing harder.
-    const float scanAmount = clampf(paramOf(ScanAmount), 0.0f, 1.0f);
-    const float scanValue = clampf(paramOf(LayerScan) + v.mod[DstScan], 0.0f, 1.0f) * 127.0f;
+    const float scanAmount = clampf(targetOf(ScanAmount), 0.0f, 1.0f);
+    const float scanValue = clampf(targetOf(LayerScan) + v.mod[DstScan], 0.0f, 1.0f) * 127.0f;
 
     // Scan spans the playable velocities, 1 to 127: at zero it would fall
     // below every zone and the note would simply not sound.
@@ -221,11 +221,11 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
 
     int32_t zones[kZonesPerVoice];
     float gains[kZonesPerVoice];
-    const int32_t n = map->select(note, static_cast<int>(effectiveVel + 0.5f), paramOf(KeyFade), paramOf(VelFade),
+    const int32_t n = map->select(note, static_cast<int>(effectiveVel + 0.5f), targetOf(KeyFade), targetOf(VelFade),
                                   zones, gains, kZonesPerVoice);
     v.layerCount = n;
-    const float startAt = clampf(paramOf(Start) + v.mod[DstStart], 0.0f, 0.999f);
-    const bool reversed = paramOf(Reverse) >= 0.5f;
+    const float startAt = clampf(targetOf(Start) + v.mod[DstStart], 0.0f, 0.999f);
+    const bool reversed = targetOf(Reverse) >= 0.5f;
     for (int32_t i = 0; i < n; ++i) {
         const MapZone &z = map->zones[static_cast<size_t>(zones[i])];
         Layer &L = v.layer[i];
@@ -293,19 +293,19 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
         const MapZone &z = *v.layer[0].zone;
         v.amp.set(0.0f, z.attack, z.decay, z.sustain, z.release, false);
     } else {
-        v.amp.set(0.0f, paramOf(AmpAttack), paramOf(AmpDecay), paramOf(AmpSustain), paramOf(AmpRelease), false);
+        v.amp.set(0.0f, targetOf(AmpAttack), targetOf(AmpDecay), targetOf(AmpSustain), targetOf(AmpRelease), false);
     }
     v.amp.trigger();
-    v.filterEg.set(0.0f, paramOf(FilterAttack), paramOf(FilterDecay), paramOf(FilterSustain), paramOf(FilterRelease), false);
+    v.filterEg.set(0.0f, targetOf(FilterAttack), targetOf(FilterDecay), targetOf(FilterSustain), targetOf(FilterRelease), false);
     v.filterEg.trigger();
     for (int e = 0; e < kModEgs; ++e) {
         const int32_t b = EgBase + e * EgParams;
-        v.modEg[e].set(0.0f, paramOf(b + EAttack), paramOf(b + EDecay), paramOf(b + ESustain), paramOf(b + ERelease), false);
+        v.modEg[e].set(0.0f, targetOf(b + EAttack), targetOf(b + EDecay), targetOf(b + ESustain), targetOf(b + ERelease), false);
         v.modEg[e].trigger();
     }
     for (int l = 0; l < kLfos; ++l) {
         const int32_t b = LfoBase + l * LfoParams;
-        if (paramOf(b + LKeySync) >= 0.5f) v.lfo[l].trigger(paramOf(b + LPhase), paramOf(b + LDelay));
+        if (targetOf(b + LKeySync) >= 0.5f) v.lfo[l].trigger(targetOf(b + LPhase), targetOf(b + LDelay));
     }
     v.grainOffset = 0.0;
     v.grainTimer = 0.0f;

@@ -127,15 +127,8 @@ class Brazen final : public Machine {
     };
 
     float paramOf(int32_t p) const { return params_.get(p); }
-    /**
-     * A parameter's target, not where its smoother has got to.
-     *
-     * For anything read once at note-on to seed state with. `paramOf` is
-     * smoothed, so its value depends on how long ago the knob moved - which
-     * makes a render that starts from a panic differ from one that does not,
-     * and reset_test says so immediately.
-     */
-    float targetOf(int32_t p) const { return params_.def(p).map(params_.normalized(p)); }
+    // `targetOf` and `steppedTargetOf` come from Machine now - this file had
+    // the only copy, and the rule it states applies to all nineteen.
     int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
     Voice *allocate();
     void startVoice(Voice &v, uint8_t note, uint8_t velocity);

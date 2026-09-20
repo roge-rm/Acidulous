@@ -229,7 +229,7 @@ Ratio::Voice *Ratio::allocate() {
 }
 
 void Ratio::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger) {
-    const float glideSeconds = paramOf(Glide);
+    const float glideSeconds = targetOf(Glide);
     const bool gliding = glideSeconds > 0.001f && v.used && (stepOf(GlideMode) == 0 || v.gate);
     v.glideFrom = gliding ? v.freq : mtof(static_cast<float>(note));
     v.glidePos = gliding ? 0.0f : 1.0f;
@@ -245,21 +245,21 @@ void Ratio::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger)
     if (!retrigger) return;
     for (int o = 0; o < kOps; ++o) {
         const int32_t b = OpBase + o * OpParams;
-        v.env[o].set(0.0f, paramOf(b + OAttack), paramOf(b + ODecay), paramOf(b + OSustain), paramOf(b + ORelease), false);
+        v.env[o].set(0.0f, targetOf(b + OAttack), targetOf(b + ODecay), targetOf(b + OSustain), targetOf(b + ORelease), false);
         v.env[o].trigger();
         v.op[o].phase = 0.0f; // FM wants a fixed phase relationship every note
         v.op[o].out = 0.0f;
     }
     for (int e = 0; e < kModEgs; ++e) {
         const int32_t b = EgBase + e * EgParams;
-        v.modEg[e].set(0.0f, paramOf(b + EAttack), paramOf(b + EDecay), paramOf(b + ESustain), paramOf(b + ERelease), false);
+        v.modEg[e].set(0.0f, targetOf(b + EAttack), targetOf(b + EDecay), targetOf(b + ESustain), targetOf(b + ERelease), false);
         v.modEg[e].trigger();
     }
-    v.filterEg.set(0.0f, paramOf(FilterAttack), paramOf(FilterDecay), paramOf(FilterSustain), paramOf(FilterRelease), false);
+    v.filterEg.set(0.0f, targetOf(FilterAttack), targetOf(FilterDecay), targetOf(FilterSustain), targetOf(FilterRelease), false);
     v.filterEg.trigger();
     for (int l = 0; l < kLfos; ++l) {
         const int32_t b = LfoBase + l * LfoParams;
-        if (paramOf(b + LKeySync) >= 0.5f) v.lfo[l].trigger(paramOf(b + LPhase), paramOf(b + LDelay));
+        if (targetOf(b + LKeySync) >= 0.5f) v.lfo[l].trigger(targetOf(b + LPhase), targetOf(b + LDelay));
     }
 }
 

@@ -115,10 +115,10 @@ Formulate::Voice *Formulate::allocate() {
 }
 
 void Formulate::noteOn(uint8_t note, uint8_t velocity) {
-    const bool mono = steppedOf(Mono) != 0;
+    const bool mono = steppedTargetOf(Mono) != 0;
     Voice *v = mono ? &voices[0] : allocate();
     if (v == nullptr) return;
-    const float glide = paramOf(Glide);
+    const float glide = targetOf(Glide);
     const bool gliding = glide > 0.001f && v->used;
     v->glideFrom = gliding ? v->freq : mtof(static_cast<float>(note));
     v->glidePos = gliding ? 0.0f : 1.0f;
@@ -129,7 +129,7 @@ void Formulate::noteOn(uint8_t note, uint8_t velocity) {
     v->bend = 0.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->age = ++ageCounter;
-    if (steppedOf(TableRetrigger) != 0 || !gliding) {
+    if (steppedTargetOf(TableRetrigger) != 0 || !gliding) {
         v->step = 0;
         v->frameAcc = 0.0f;
         // The formula's clock restarts with the note: bytebeat's shape comes

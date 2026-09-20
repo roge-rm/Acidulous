@@ -134,7 +134,7 @@ Brazen::Voice *Brazen::allocate() {
 }
 
 void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
-    const float glide = paramOf(Glide);
+    const float glide = targetOf(Glide);
     const bool gliding = glide > 0.001f && v.used;
     v.glideFrom = gliding ? v.freq : mtof(static_cast<float>(note));
     v.glidePos = gliding ? 0.0f : 1.0f;
@@ -147,11 +147,11 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     v.velocity = static_cast<float>(velocity) / 127.0f;
     v.age = ++ageCounter;
     v.vibratoPhase = 0.0f;
-    v.vibratoLeft = paramOf(VibratoDelay);
+    v.vibratoLeft = targetOf(VibratoDelay);
 
-    const int32_t players = std::clamp(steppedOf(Players), 1, kPlayers);
-    const float spread = paramOf(Spread);
-    const float scatter = paramOf(Scatter) * 0.001f * sampleRate;
+    const int32_t players = std::clamp(steppedTargetOf(Players), 1, kPlayers);
+    const float spread = targetOf(Spread);
+    const float scatter = targetOf(Scatter) * 0.001f * sampleRate;
     for (int32_t i = 0; i < kPlayers; ++i) {
         Player &p = v.players[i];
         p.rng = rng = rng * 1664525u + 1013904223u;
@@ -190,7 +190,7 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
 }
 
 void Brazen::noteOn(uint8_t note, uint8_t velocity) {
-    Voice *v = steppedOf(Mono) != 0 ? &voices[0] : allocate();
+    Voice *v = steppedTargetOf(Mono) != 0 ? &voices[0] : allocate();
     if (v == nullptr) return;
     startVoice(*v, note, velocity);
 }

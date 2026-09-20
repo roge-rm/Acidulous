@@ -173,7 +173,7 @@ Cumulus::Voice *Cumulus::allocate() {
 }
 
 void Cumulus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
-    const float glide = paramOf(Glide);
+    const float glide = targetOf(Glide);
     const float target = mtof(static_cast<float>(note));
     const bool gliding = glide > 0.001f && v.used;
     v.glideFrom = gliding ? v.freq : target;
@@ -188,10 +188,10 @@ void Cumulus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     v.zone = CloudSet::zoneFor(note);
     v.age = ++ageCounter;
 
-    const int32_t unison = std::clamp(steppedOf(Spread), 1, kUnison);
-    const float detune = paramOf(Detune);
-    const float spreadWidth = paramOf(SpreadWidth);
-    const float scatter = paramOf(Scatter);
+    const int32_t unison = std::clamp(steppedTargetOf(Spread), 1, kUnison);
+    const float detune = targetOf(Detune);
+    const float spreadWidth = targetOf(SpreadWidth);
+    const float scatter = targetOf(Scatter);
     const int32_t size = cloud != nullptr ? cloud->tables[v.zone][0].size : 1;
     for (int i = 0; i < kUnison; ++i) {
         Reader &r = v.readers[i];

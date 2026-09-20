@@ -213,12 +213,12 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     v->damp = 0.0f;
     rngState = rngState * 1664525u + 1013904223u;
     v->pan = ((static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f);
-    const float velAmt = paramOf(VelocityAmount);
+    const float velAmt = targetOf(VelocityAmount);
     v->exciteGain = (1.0f - velAmt + velAmt * v->velocity);
-    const int32_t mode = steppedOf(ExciterMode);
+    const int32_t mode = steppedTargetOf(ExciterMode);
     const float lengthSeconds = mode == Bow || mode == Breath || mode == External
                                     ? 0.0f
-                                    : paramOf(ExcitLength);
+                                    : targetOf(ExcitLength);
     // **A pluck displaces the whole string, so it fills the whole loop.**
     //
     // `length` is the contact time - how long a finger or a pick is against
