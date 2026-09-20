@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      The system splash, flattened.
+
+      Android 12 and up draw a window of their own before the first frame,
+      built from the launcher icon and *masked* - a circle on most phones -
+      so the artwork arrived cropped at the moment it was largest, and there
+      is no way to put text beside it. ui/SplashScreen.kt draws the icon
+      whole with the version under it instead; this makes the window in front
+      of it a flat ground of the same ink, so there is nothing to jump
+      between. It cannot be turned off, only made to show nothing.
+    -->
+    <style name="Theme.Acidulous" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/ink</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowSplashScreenBackground">@color/ink</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+    </style>
+</resources>

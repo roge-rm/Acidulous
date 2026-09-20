@@ -24,3 +24,10 @@ local.properties
 /.idea/
 # Core dumps, which a crash in the C++ harnesses drops in the tree root.
 /core.*
+
+# Release signing. Both the keystore and the properties that name it live in
+# a sibling Keys/ directory, outside this tree entirely, so that no ignore
+# rule has to hold for the life of the project. These two patterns are here
+# in case one ever lands in here by accident.
+*.jks
+*.keystore

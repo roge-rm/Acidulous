@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -17,8 +19,11 @@ android {
         applicationId = "com.rm.acidulous"
         minSdk = 27
         targetSdk = 37
+        // Bumped by hand, and the name is the tag. 0.1.0 is the first
+        // release put out for anybody else to install - see docs and the
+        // repository's tags.
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -47,11 +52,55 @@ android {
         }
     }
 
+    /**
+     * Release signing, from a file that is not in the repository *or beside
+     * it*.
+     *
+     * Both the keystore and the properties that name it live in a sibling
+     * `Keys/` directory - outside the tree entirely, so there is no version
+     * of this repository, public or private, in which a slip could commit
+     * them. Dan: "the old method is not safe enough for me". Gitignoring a
+     * password file that sits in the working tree relies on the ignore rule
+     * holding for the life of the project; a file one directory up does not.
+     *
+     * The path is relative, so it is a true statement about a layout rather
+     * than about one machine, and it resolves to nothing for anybody who
+     * clones this. Absent - a fresh clone, CI, somebody else's machine - no
+     * config is created and a release build comes out unsigned rather than
+     * failing. Anybody can build this; only one person can sign it.
+     *
+     * **Losing the keystore means never being able to update an installed
+     * copy**, so it is Dan's to keep and back up, not the build's.
+     */
+    val keystoreProps = rootProject.file("../Keys/acidulous-keystore.properties")
+    val signing: Properties? = if (keystoreProps.exists()) {
+        Properties().also { p -> keystoreProps.inputStream().use { p.load(it) } }
+    } else {
+        null
+    }
+
+    signingConfigs {
+        if (signing != null) {
+            create("release") {
+                storeFile = file(signing.getProperty("storeFile"))
+                storePassword = signing.getProperty("storePassword")
+                keyAlias = signing.getProperty("keyAlias")
+                keyPassword = signing.getProperty("keyPassword")
+                // v1 as well, because minSdk is 27 and v2-only APKs are not
+                // installable below 24 - and a phone that verifies v1 is one
+                // fewer thing to explain to somebody sideloading a release.
+                enableV1Signing = true
+                enableV2Signing = true
+            }
+        }
+    }
+
     buildTypes {
         release {
             optimization {
                 enable = false
             }
+            if (signing != null) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

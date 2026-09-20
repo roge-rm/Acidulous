@@ -103,6 +103,24 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     App(Modifier.padding(innerPadding))
                 }
+                // **Over the Scaffold, not inside it.** The splash is a
+                // screen rather than a window - see ui/SplashScreen.kt for
+                // why the system's own is made to show nothing - and a
+                // Scaffold's content slot takes one child, so a second one
+                // handed to it is measured and then not drawn. In a Box of
+                // its own it is plainly on top.
+                //
+                // The app is composed underneath it the whole time, so the
+                // three quarters of a second is spent on the engine starting
+                // rather than instead of it.
+                var splashing by androidx.compose.runtime.remember {
+                    androidx.compose.runtime.mutableStateOf(true)
+                }
+                LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(com.rm.acidulous.ui.SplashMillis)
+                    splashing = false
+                }
+                if (splashing) com.rm.acidulous.ui.SplashScreen()
             }
         }
     }
