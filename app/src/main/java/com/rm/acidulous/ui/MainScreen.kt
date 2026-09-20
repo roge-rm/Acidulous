@@ -612,7 +612,7 @@ fun MainScreen(
             startOn = RecorderPage.Library,
             inUse = song.samplesInUse(),
         )
-        Dialog.Settings -> SettingsDialog(song.tracks.map { it.name }, onDismiss = { dialog = null })
+        Dialog.Settings -> SettingsDialog(onDismiss = { dialog = null })
         Dialog.About -> AboutDialog(onDismiss = { dialog = null })
         Dialog.Quantise -> QuantiseDialog(
             current = UiPrefs.launchQuantise,

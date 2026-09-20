@@ -65,14 +65,18 @@ fun MidiDialog(song: Song, onDismiss: () -> Unit) {
         pages = listOf(
             { DevicesTab(context) },
             { InTab(trackNames, mpeHeld) },
-            { OutTab() },
             { MapTab(song) },
+            { OutTab() },
             { SyncTab(context) },
         ),
     )
 }
 
-private val TABS = listOf("devices", "in", "out", "map", "sync")
+// Everything arriving first and together - what is plugged in, where its
+// notes land, what its knobs drive - then what leaves, then the clock, which
+// is the one thing that goes both ways. `map` was on the far side of `out`,
+// which put two halves of the same question either side of an unrelated one.
+private val TABS = listOf("devices", "in", "map", "out", "sync")
 
 /** What is plugged in, and the hunt for what is not. */
 @Composable
@@ -150,8 +154,14 @@ private fun DevicesTab(context: android.content.Context) {
 /** Notes arriving: where they land, and proof that they do. */
 @Composable
 private fun InTab(trackNames: List<String>, mpeHeld: Int) {
+    // **The question, then its answer, then the protocol.** MPE used to sit
+    // in the middle: five controls for a whole specification standing between
+    // "where arriving notes go" and the readout that tells you whether
+    // anything is arriving at all - so with a zone on, the answer to the
+    // first question was below the fold, under settings belonging to a
+    // different one. MPE is an *in* concern and belongs on this tab; it just
+    // does not belong first.
     MidiRoutingSection(trackNames)
-    MpeSection(mpeHeld)
     ListSection("is anything arriving?") {
         Readout(
             if (MidiHub.received == 0) "nothing received yet"
@@ -166,11 +176,8 @@ private fun InTab(trackNames: List<String>, mpeHeld: Int) {
                 Text("test wheel", color = Acid.colors.accent, fontSize = 12.sp)
             }
         }
-        Text(
-            "A middle C, and a sweep of the mod wheel, as though a keyboard had sent them.",
-            color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
-        )
     }
+    MpeSection(mpeHeld)
 }
 
 /** Notes leaving: to whom, how early, and whether they got there in time. */
@@ -304,11 +311,13 @@ private fun MapTab(song: Song) {
                 )
             }
         }
+        // Four lines cut to one. What survives is the half nothing on screen
+        // can tell you: that the mode has a gesture of its own, and where.
+        // The rest - tap a control, then move the knob that should drive it -
+        // is what you find out the moment you turn it on, because every
+        // mappable control lights up and says so.
         Text(
-            "Tap a knob, fader or transport button, then move the control or hit the pad " +
-                "you want to drive it. Long-press one to forget it. A long press on the redo " +
-                "button - ↷, in the header here and at the bottom of the editor - turns the " +
-                "mode on and off from anywhere.",
+            "Also on a long press of redo (↷), anywhere.",
             color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
         )
     }

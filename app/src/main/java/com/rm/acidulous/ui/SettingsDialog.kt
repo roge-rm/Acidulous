@@ -47,7 +47,7 @@ import com.rm.acidulous.ui.theme.ThemeMode
  * the screen's width, minus a margin, up to a tablet-sized limit.
  */
 @Composable
-fun SettingsDialog(trackNames: List<String>, onDismiss: () -> Unit) {
+fun SettingsDialog(onDismiss: () -> Unit) {
     var tab by rememberSaveable { mutableStateOf(0) }
     // The same shell as the machine picker, and for the same reason: the
     // body is as tall as the tallest tab, so the window does not resize and
@@ -60,7 +60,6 @@ fun SettingsDialog(trackNames: List<String>, onDismiss: () -> Unit) {
             { AudioTab() },
             { RecordTab() },
             { NewSongSection() },
-            { MidiRoutingSection(trackNames) },
         ),
         onDismiss = onDismiss,
         spacing = 16.dp,
@@ -68,7 +67,12 @@ fun SettingsDialog(trackNames: List<String>, onDismiss: () -> Unit) {
     )
 }
 
-private val TABS = listOf("display", "audio", "record", "songs", "midi")
+// **No midi tab.** It held one section - where an arriving note lands - and
+// that same section is the first thing in the MIDI window's own `in` tab,
+// which is where somebody goes when a keyboard is not playing what they
+// expect. Two places to change one setting is one place too many, and the
+// other four chips are wider for it.
+private val TABS = listOf("display", "audio", "record", "songs")
 
 @Composable
 private fun DisplayTab() {
