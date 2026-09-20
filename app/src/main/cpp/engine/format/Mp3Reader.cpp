@@ -149,16 +149,28 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
     // audio in it" meant the first time this was written. LAME's own frontend
     // reads 1024 and so does this.
     const size_t chunk = 1024;
-    // From the audio, not from the front of the file - see audioStart.
-    for (size_t off = audioStart(bytes.data(), bytes.size()); off <= bytes.size(); off += chunk) {
-        const size_t len = std::min(chunk, bytes.size() - std::min(off, bytes.size()));
-        int n = hip_decode1_headers(hip, len > 0 ? bytes.data() + off : nullptr,
-                                    len, left.data(), right.data(), &info);
+    // The drain, which has to happen after the *last* chunk as well.
+    //
+    // **This is where a frame went missing.** The feed below used to end with
+    // `off <= bytes.size()` and rely on one extra pass with nothing to give
+    // to flush what mpglib still held - and that pass only happens when the
+    // audio is an exact multiple of the chunk. It usually is not, so the
+    // final frame stayed inside the decoder and the file came back 1152
+    // frames short. It looked like a flake because whether it bites depends
+    // on the file's length, which depends on the bitrate: at 48 kHz stereo,
+    // 128 kbit was short every time and 192, 256 and 320 never were.
+    auto drain = [&](int n) {
         while (n > 0) {
             take(n);
             if (cap > 0 && static_cast<int64_t>(got.ch[0].size()) >= cap) break;
             n = hip_decode1_headers(hip, nullptr, 0, left.data(), right.data(), &info);
         }
+        return n;
+    };
+    // From the audio, not from the front of the file - see audioStart.
+    for (size_t off = audioStart(bytes.data(), bytes.size()); off < bytes.size(); off += chunk) {
+        const size_t len = std::min(chunk, bytes.size() - off);
+        int n = drain(hip_decode1_headers(hip, bytes.data() + off, len, left.data(), right.data(), &info));
         // **An error is not the end.**
         //
         // A file off the internet is not a clean stream of frames: it carries
@@ -171,7 +183,11 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
         // audio came out.
         if (n < 0) ++errors;
         if (cap > 0 && static_cast<int64_t>(got.ch[0].size()) >= cap) break;
-        if (len == 0) break; // the last drain is done
+    }
+    // And once more with nothing, unconditionally, for whatever the last
+    // chunk left inside.
+    if (cap <= 0 || static_cast<int64_t>(got.ch[0].size()) < cap) {
+        if (drain(hip_decode1_headers(hip, nullptr, 0, left.data(), right.data(), &info)) < 0) ++errors;
     }
     hip_decode_exit(hip);
     if (!any || got.ch[0].empty()) {

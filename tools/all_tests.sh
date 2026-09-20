@@ -5,6 +5,16 @@
 # wanted, which meant they were rarely wanted. They take four seconds
 # together; there is no reason not to run them after touching the engine.
 set -u
+# **`pipefail`, and it is not decoration.**
+#
+# Every line below is `harness | tail -2 || fail=1`, and without this the
+# status of that pipeline is `tail`'s - which is nought whatever the harness
+# did. So `|| fail=1` never fired, `fail` was never set, and this script
+# printed "all ok" and exited 0 over the top of failing harnesses. It did
+# exactly that while sink_test was red about an MP3 coming back 2304 frames
+# short, which is how that went from a bug to "an unreproduced flake" in my
+# own notes: the runner was saying it was fine.
+set -o pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"
 DIR=$(mktemp -d)
@@ -46,9 +56,15 @@ echo "--- slice"; "$ROOT/tools/slice_test.sh" | tail -2 || fail=1
 echo "--- forage"; "$ROOT/tools/forage_test.sh" | tail -2 || fail=1
 echo "--- format"; "$ROOT/tools/format_test.sh" | tail -2 || fail=1
 echo "--- edit";  "$ROOT/tools/sampleedit_test.sh" | tail -2 || fail=1
-# Not a harness: it asks whether the milestone table still agrees with the
-# tree. Passes with nothing to say where there is no docs/PLAN.md, which is
-# every checkout but Dan's.
+# Neither of these is a harness; both read the tree and ask it a question.
+#
+# noteon: does anything seed a note from a smoothed parameter? reset_test is
+# the harness for that class of bug and is structurally blind to this instance
+# of it - see the file.
+echo "--- noteon"; python3 "$ROOT/tools/noteon_check.py" | tail -2 || fail=1
+# plan: does the milestone table still agree with the tree? Passes with
+# nothing to say where there is no docs/PLAN.md, which is every checkout but
+# Dan's.
 echo "--- plan";  python3 "$ROOT/tools/plan_check.py" | tail -2 || fail=1
 
 exit $fail
