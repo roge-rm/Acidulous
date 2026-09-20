@@ -35,6 +35,11 @@ class Mosaic final : public Machine {
     enum EnvSource : int32_t { EnvPanel, EnvFile, EnvSourceCount };
 
     enum ModSource : int32_t {
+        // **Nothing may be appended to this.** `m##_src` is a stepped
+        // parameter normalised against `SourceCount`, so growing the list
+        // re-points every saved patch's matrix rows - and `Patch` carries no
+        // version to migrate on. Slide is therefore not a source here; it is
+        // a depth knob, as it is on the five machines that had it first.
         SrcOff, SrcOn, SrcModWheel, SrcPressure, SrcVelocity, SrcKeyTrack, SrcRandom,
         SrcAmpEg, SrcFilterEg, SrcEg1, SrcEg2, SrcLfo1, SrcLfo2, SourceCount
     };
@@ -80,6 +85,8 @@ class Mosaic final : public Machine {
     void channelPressure(uint8_t value) override;
     void pitchBend(int16_t value14) override;
     void noteBend(uint8_t note, float semitones) override;
+    void notePressure(uint8_t note, uint8_t value) override;
+    void noteTimbre(uint8_t note, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
 
@@ -168,6 +175,17 @@ class Mosaic final : public Machine {
         uint32_t age = 0;
         float freq = 440.0f, glideFrom = 440.0f, glidePos = 1.0f;
         float random = 0.0f;
+        /**
+         * This note's own pressure and slide, or -1 for "never told".
+         *
+         * The sentinel is what keeps an ordinary keyboard working: one that
+         * sends a single channel aftertouch never calls `notePressure`, so
+         * every voice stays at -1 and the matrix falls through to the
+         * channel value. A controller that speaks per finger sets it, and
+         * from then on that voice answers to its own. Trinity has done it
+         * this way since M38; this is the same sentinel, not a new idea.
+         */
+        float pressure = -1.0f, timbre = -1.0f;
         Layer layer[kZonesPerVoice];
         int32_t layerCount = 0;
         Grain grain[kGrains];

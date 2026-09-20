@@ -9,7 +9,10 @@
 // unchanged - not approximately, but bit for bit, because the expression
 // either reached the right voice or it did not.
 
+#include <engine/core/SampleMap.h>
+#include <engine/machine/mosaic/Mosaic.h>
 #include <engine/machine/MachineRegistry.h>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -33,10 +36,101 @@ void ok(bool pass, const char *what, const std::string &detail) {
 }
 
 /** Render from a clean start, with whatever expression the caller applies. */
+/**
+ * One looping tone, mapped across the whole keyboard.
+ *
+ * The sample machines render silence with nothing mounted, so without this
+ * they can only be skipped - which is what Mosaic was, while the very thing
+ * being changed was its per-note pressure. A second of a sawish tone at the
+ * root is enough: the test is whether one note's expression reaches one
+ * voice, not what the voice sounds like.
+ *
+ * Static because `swapObject` takes a borrowed pointer and hands the old one
+ * back - the map has to outlive the machine that is pointing at it.
+ */
+const SampleMap &toneMap() {
+    static SampleMap map = [] {
+        SampleMap m;
+        m.name = "tone";
+        SampleData s;
+        s.name = "tone";
+        s.frames = kRate;
+        s.rate = kRate;
+        s.left.resize(static_cast<size_t>(s.frames));
+        for (int32_t i = 0; i < s.frames; ++i) {
+            const float t = static_cast<float>(i) / static_cast<float>(kRate);
+            // 261.63 Hz, the root the zone below declares, so a note plays at
+            // its own pitch rather than at a transposition of somebody else's.
+            const float ph = t * 261.63f;
+            s.left[static_cast<size_t>(i)] = 2.0f * (ph - std::floor(ph)) - 1.0f;
+        }
+        m.samples.push_back(std::move(s));
+        MapZone z;
+        z.sample = 0;
+        z.lowKey = 0;
+        z.highKey = 127;
+        z.rootKey = 60;
+        z.loopStart = 0;
+        z.loopEnd = kRate - 1;
+        m.zones.push_back(z);
+        return m;
+    }();
+    return map;
+}
+
+void mountTone(Machine *m) { m->swapObject(0, const_cast<SampleMap *>(&toneMap())); }
+
+/**
+ * The tone, and a matrix row that makes pressure audible.
+ *
+ * Without this, Mosaic's pressure is routed nowhere by default, so the only
+ * thing the harness could say about it was negative - that pressure for a
+ * note *not* held changes nothing. That passes just as well when pressure
+ * does nothing at all, which is the one thing a test of pressure must not
+ * accept. Row 0 sends it to the amplitude at full depth, so a finger leaning
+ * on the held note is heard and a finger on an unheld one still is not.
+ *
+ * The indices come from Mosaic's own enums rather than being counted by
+ * hand. Counting them by hand is how this was first written and it put the
+ * destination at DstAmp's position in a list six long, when the list is
+ * sixteen - so the row drove a grain rate and the test failed while the code
+ * under it was right.
+ */
+void mountToneAndRoute(Machine *m) {
+    mountTone(m);
+    ParamSet &p = m->params();
+    // `m01`, not `m00`: the slots are numbered from one in their names even
+    // though they are indexed from zero - `put(..., "m%02d_src", m + 1)`.
+    const int32_t src = p.indexOf("m01_src");
+    const int32_t dest = p.indexOf("m01_dest");
+    const int32_t depth = p.indexOf("m01_depth");
+    // **Loudly.** This returned quietly when a name did not resolve, so the
+    // row was never written and the check that pressure is heard failed with
+    // nothing to say why - which read as the machine being broken rather
+    // than the harness asking for a parameter that does not exist.
+    if (src < 0 || dest < 0 || depth < 0) {
+        std::printf("  FAIL %-52s %s\n", "Mosaic: matrix parameters not found",
+                    "m01_src / m01_dest / m01_depth");
+        ++failures;
+        return;
+    }
+    using M = acidulous::machine::Mosaic;
+    p.set(src, static_cast<float>(M::SrcPressure) / (M::SourceCount - 1.0f));
+    p.set(dest, static_cast<float>(M::DstAmp) / (M::DestCount - 1.0f));
+    // The *bottom* of -1..1, not the top. Amplitude sits at full already, so
+    // adding to it saturates and a leaning finger changes nothing audible;
+    // taking away from it is plainly heard. The test is that the voice hears
+    // its own pressure, and quieter proves that as well as louder.
+    p.set(depth, 0.0f);
+    p.jumpAll();
+}
+
 std::vector<float> play(const char *type, const std::vector<uint8_t> &notes,
-                        void (*express)(Machine *), bool bendAll = false) {
+                        void (*express)(Machine *), bool bendAll = false,
+                        void (*mount)(Machine *) = nullptr) {
     Machine *m = MachineRegistry::create(type);
     m->prepare(kRate);
+    if (mount != nullptr) mount(m);
     m->allNotesOff();
     m->reset();
     m->params().jumpAll();
@@ -72,11 +166,11 @@ void slideSixty(Machine *m) { m->noteTimbre(60, 127); }
 void pressUnheld(Machine *m) { m->notePressure(72, 127); }
 void slideUnheld(Machine *m) { m->noteTimbre(72, 127); }
 
-void check(const char *type, bool pressureIsAudible) {
+void check(const char *type, bool pressureIsAudible, void (*mount)(Machine *) = nullptr) {
     const std::vector<uint8_t> one{60};
     const std::vector<uint8_t> two{60, 64};
 
-    const auto alone = play(type, one, nullptr);
+    const auto alone = play(type, one, nullptr, false, mount);
     if (silent(alone)) {
         std::printf("  --   %-52s %s\n", type, "silent without a sample; skipped");
         return;
@@ -85,21 +179,21 @@ void check(const char *type, bool pressureIsAudible) {
     // Reaching. One note, so this holds for a monophonic machine too -
     // Timber is a woodwind and mono by default, and a clarinet cannot play
     // two notes however many channels you send it on.
-    ok(play(type, one, bendSixty) != alone,
+    ok(play(type, one, bendSixty, false, mount) != alone,
        (std::string(type) + ": a bend reaches the note being played").c_str(), "");
 
     // Ownership, which is the whole point. A bend aimed at a note nobody is
     // holding must change nothing at all - before this, every bend moved
     // everything, and that looks identical to a bend that works until you
     // play a second note.
-    const auto plain = play(type, two, nullptr);
-    ok(play(type, two, bendUnheld) == plain,
+    const auto plain = play(type, two, nullptr, false, mount);
+    ok(play(type, two, bendUnheld, false, mount) == plain,
        (std::string(type) + ": a bend for a note not held does nothing").c_str(), "");
-    ok(play(type, one, bendUnheld) == alone,
+    ok(play(type, one, bendUnheld, false, mount) == alone,
        (std::string(type) + ": nor does it disturb the note that is held").c_str(), "");
 
     // And the old way still works, for the keyboard that is not an MPE one.
-    ok(play(type, one, nullptr, true) != alone,
+    ok(play(type, one, nullptr, true, mount) != alone,
        (std::string(type) + ": the channel-wide bend still bends").c_str(), "");
 
     // Pressure and slide: ownership everywhere, audibility only where the
@@ -107,12 +201,12 @@ void check(const char *type, bool pressureIsAudible) {
     // Filament pressure arrives at the voice but goes through the
     // modulation matrix, so a patch with no row for it is silent on purpose
     // - that is the matrix working, not the expression failing.
-    ok(play(type, one, pressUnheld) == alone,
+    ok(play(type, one, pressUnheld, false, mount) == alone,
        (std::string(type) + ": pressure for a note not held does nothing").c_str(), "");
-    ok(play(type, one, slideUnheld) == alone,
+    ok(play(type, one, slideUnheld, false, mount) == alone,
        (std::string(type) + ": slide for a note not held does nothing").c_str(), "");
     if (pressureIsAudible) {
-        ok(play(type, one, pressSixty) != alone,
+        ok(play(type, one, pressSixty, false, mount) != alone,
            (std::string(type) + ": a finger's pressure is heard").c_str(), "");
     }
 }
@@ -149,6 +243,11 @@ int main() {
     check("Filament", false);
     check("Brazen", true);
     check("Timber", true);
+    // Mosaic's matrix was already per-voice and its pressure source was not:
+    // it read the channel's value inside a function handed the voice. Now it
+    // reads the voice's own, with -1 meaning "never told" so an ordinary
+    // keyboard's single aftertouch still moves every note.
+    check("Mosaic", true, mountToneAndRoute);
     // Two that were given per-note pitch and nothing else, to be sure the
     // mechanical half reaches them too.
     check("Cumulus", false);

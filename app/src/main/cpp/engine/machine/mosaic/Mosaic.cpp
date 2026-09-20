@@ -141,6 +141,8 @@ void Mosaic::prepare(int32_t rate) {
 void Mosaic::reset() {
     for (auto &v : voices) {
         v.used = v.gate = false;
+        // Back to "never told", so a reset voice follows the channel again.
+        v.pressure = v.timbre = -1.0f;
         v.layerCount = 0;
         v.amp.kill();
         v.filterEg.kill();
@@ -202,6 +204,9 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
     v.glidePos = gliding ? 0.0f : 1.0f;
     v.freq = v.glideFrom;
     v.used = true;
+    // A new note has not been told a pressure of its own yet, whatever the
+    // voice it is reusing was told.
+    v.pressure = v.timbre = -1.0f;
     v.gate = true;
     v.note = note;
     v.bend = 0.0f;
@@ -338,6 +343,14 @@ void Mosaic::controlChange(uint8_t number, uint8_t value) {
     cc[number & 0x7f] = static_cast<float>(value) / 127.0f;
     if (number == 1) modWheel = static_cast<float>(value) / 127.0f;
 }
+void Mosaic::notePressure(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->pressure = static_cast<float>(value) / 127.0f;
+}
+
+void Mosaic::noteTimbre(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->timbre = static_cast<float>(value) / 127.0f;
+}
+
 void Mosaic::channelPressure(uint8_t value) { pressure = static_cast<float>(value) / 127.0f; }
 void Mosaic::pitchBend(int16_t value14) { bend = static_cast<float>(value14) / 8192.0f; }
 
@@ -345,7 +358,8 @@ float Mosaic::sourceValue(const Voice &v, int src) const {
     switch (src) {
     case SrcOn: return 1.0f;
     case SrcModWheel: return modWheel;
-    case SrcPressure: return pressure;
+    // This voice's own if it has ever been told one, the channel's if not.
+    case SrcPressure: return v.pressure >= 0.0f ? v.pressure : pressure;
     case SrcVelocity: return static_cast<float>(v.velocity) / 127.0f;
     case SrcKeyTrack: return (static_cast<float>(v.note) - 60.0f) / 48.0f;
     case SrcRandom: return v.random;
