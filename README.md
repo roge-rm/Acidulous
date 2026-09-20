@@ -13,6 +13,8 @@ places.
 **Status: in development.** It runs, it makes sound, it saves songs and it
 exports them. It has not been released.
 
+Discussion, issues and suggestions: **[Discord](https://discord.gg/9Wun47jGC6)**.
+
 ---
 
 ## What is in it
@@ -123,6 +125,13 @@ tools/audition.sh bank Trinity            # every patch, and the spread
 tools/audition.sh play Subvert Acid       # one patch
 tools/audition.sh params Mosaic           # the parameter table
 ```
+
+---
+
+## Talk to us
+
+Questions, bug reports, feature ideas and works in progress all go to the
+Discord: **<https://discord.gg/9Wun47jGC6>**.
 
 ---
 
