@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -91,17 +92,21 @@ fun TouchWheel(
             val v = value.coerceIn(0f, 1f)
             // Ridges, so it reads as something that turns rather than a bar.
             val ridge = c.wheelRidge
+            // The pitch of the ridges and the size of the tab below are in dp,
+            // so the wheel is the same wheel at every interface scale rather
+            // than the same drawing on a larger control.
+            val pitch = 7.dp.toPx()
             if (vertical) {
                 var y = 4f
                 while (y < size.height - 4f) {
                     drawLine(ridge, Offset(3f, y), Offset(size.width - 3f, y), 1f)
-                    y += 7f
+                    y += pitch
                 }
             } else {
                 var x = 4f
                 while (x < size.width - 4f) {
                     drawLine(ridge, Offset(x, 3f), Offset(x, size.height - 3f), 1f)
-                    x += 7f
+                    x += pitch
                 }
             }
             if (centreMark) {
@@ -114,7 +119,7 @@ fun TouchWheel(
                 }
             }
             // The tab.
-            val thickness = if (vertical) 14f else 16f
+            val thickness = if (vertical) 5.dp.toPx() else 6.dp.toPx()
             if (vertical) {
                 val y = (1f - v) * (size.height - thickness)
                 drawRoundRect(accent.copy(alpha = 0.85f), Offset(2f, y), Size(size.width - 4f, thickness),
@@ -138,6 +143,20 @@ fun TouchWheel(
     }
 }
 
+/**
+ * What the octave stepper needs: two arrows and the note between them.
+ *
+ * Stated, because a weighted share of the performance row does not cover it -
+ * upright at 1.0 the share came to fifty-eight dp against the seventy-six of
+ * `◀ C4 ▶`, and a `Row` asked for more than it has gives the last child what
+ * is left. What was left was thirteen pixels of the arrow you step *up* with,
+ * and then, once the arrows shared instead, two pixels of the note. Nothing
+ * arranges its way out of a box that is too small; the box has to be the right
+ * size, and the slack comes off the pressure wheel at the other end, which can
+ * spare it.
+ */
+val OctaveW = 80.dp
+
 /** Octave up and down, side by side, with the octave between them. */
 @Composable
 fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Modifier) {
@@ -147,20 +166,37 @@ fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Mod
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        StepArrow("◀", octave > 0) { onOctave(octave - 1) }
+        // **The arrows share what the stepper is given; they do not state a
+        // width and take it.** Stated at thirty-two each they came to more than
+        // the weighted box around them, and a `Row` asked for more than it has
+        // gives the last child what is left - which was thirteen pixels of the
+        // `▶` you step *up* with. This row's own note already said what that
+        // costs: a stepper missing an arrow is a control that does not work.
+        // Sharing, the two are always the same size as each other and always
+        // both there, whatever the row can spare.
+        StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp)) {
+            onOctave(octave - 1)
+        }
         Text(
             "C${octave + 1}", color = Acid.colors.accent, fontSize = 10.sp,
             fontFamily = FontFamily.Monospace, maxLines = 1,
         )
-        StepArrow("▶", octave < 8) { onOctave(octave + 1) }
+        StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp)) {
+            onOctave(octave + 1)
+        }
     }
 }
 
 @Composable
-private fun StepArrow(glyph: String, enabled: Boolean, onClick: () -> Unit) {
+private fun StepArrow(
+    glyph: String,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     val c = Acid.colors
     Box(
-        Modifier.width(32.dp).fillMaxHeight().clickable(enabled = enabled, onClick = onClick),
+        modifier.fillMaxHeight().clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, color = if (enabled) c.text else c.textFaint, fontSize = 12.sp)

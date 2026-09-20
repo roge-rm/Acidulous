@@ -130,22 +130,24 @@ fun AutomationStrip(
             ) { Text(if (collapsed) "▴" else "▾", color = Acid.colors.textMid, fontSize = 11.sp) }
             val menuScroll = rememberScrollState()
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
-                for (k in laneKeys) {
-                    DropdownMenuItem(
-                        text = { Text((if (k in existing) "● " else "  ") + nameOf(k), fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
-                        // A lane is cleared where it is listed, so every lane
-                        // that exists can be got rid of without selecting it first.
-                        trailingIcon = if (k !in existing) null else ({
-                            Text(
-                                "✕", color = Acid.colors.red, fontSize = 13.sp,
-                                modifier = Modifier.clickable { menu = false; onClear(k) }.padding(horizontal = 6.dp, vertical = 2.dp),
-                            )
-                        }),
-                        onClick = { menu = false; onSelect(k) },
-                    )
-                }
-                if (current != null) {
-                    DropdownMenuItem(text = { Text("Clear ${shortOf(current)}") }, onClick = { menu = false; onClear(current) })
+                ScaledWindow {
+                    for (k in laneKeys) {
+                        DropdownMenuItem(
+                            text = { Text((if (k in existing) "● " else "  ") + nameOf(k), fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
+                            // A lane is cleared where it is listed, so every lane
+                            // that exists can be got rid of without selecting it first.
+                            trailingIcon = if (k !in existing) null else ({
+                                Text(
+                                    "✕", color = Acid.colors.red, fontSize = 13.sp,
+                                    modifier = Modifier.clickable { menu = false; onClear(k) }.padding(horizontal = 6.dp, vertical = 2.dp),
+                                )
+                            }),
+                            onClick = { menu = false; onSelect(k) },
+                        )
+                    }
+                    if (current != null) {
+                        DropdownMenuItem(text = { Text("Clear ${shortOf(current)}") }, onClick = { menu = false; onClear(current) })
+                    }
                 }
             }
         }
@@ -207,7 +209,8 @@ fun AutomationStrip(
                 for (pt in lane.points) {
                     if (pt.tick < from || pt.tick > last) continue
                     val p = Offset(xOf(pt.tick), (1f - pt.value) * (size.height - 4f) + 2f)
-                    drawRect(c.accentSoft, Offset(p.x - 3f, p.y - 3f), Size(6f, 6f))
+                    val dot = 3.dp.toPx()
+                    drawRect(c.accentSoft, Offset(p.x - dot / 2, p.y - dot / 2), Size(dot, dot))
                 }
             }
             playheadTick?.let { pt ->

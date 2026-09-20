@@ -249,36 +249,38 @@ fun NoteLane(
                 modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar),
                 scrollState = menuScroll,
             ) {
-                for (p in NoteProp.entries) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                (if (p == prop) "● " else "  ") + p.label,
-                                fontSize = 12.sp, fontFamily = FontFamily.Monospace,
-                            )
-                        },
-                        onClick = { menu = false; onProp(p) },
-                    )
-                }
-                // **Which notes, under which property.** One popup rather
-                // than a second control: the gutter is thirty-four dp wide
-                // and has a name, a fold box and nothing else in it, and a
-                // filter that is only needed on stacked clips should not cost
-                // a permanent button on every clip.
-                val pitches = clip.notes.map { it.pitch }.distinct().sortedDescending()
-                if (pitches.size > 1) {
-                    HorizontalDivider(color = c.line)
-                    for (pitch in listOf(null) + pitches) {
+                ScaledWindow {
+                    for (p in NoteProp.entries) {
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    (if (pitch == pitchFilter) "● " else "  ") +
-                                        (pitch?.let { pitchName(it) } ?: "all notes"),
+                                    (if (p == prop) "● " else "  ") + p.label,
                                     fontSize = 12.sp, fontFamily = FontFamily.Monospace,
                                 )
                             },
-                            onClick = { menu = false; onPitchFilter(pitch) },
+                            onClick = { menu = false; onProp(p) },
                         )
+                    }
+                    // **Which notes, under which property.** One popup rather
+                    // than a second control: the gutter is thirty-four dp wide
+                    // and has a name, a fold box and nothing else in it, and a
+                    // filter that is only needed on stacked clips should not cost
+                    // a permanent button on every clip.
+                    val pitches = clip.notes.map { it.pitch }.distinct().sortedDescending()
+                    if (pitches.size > 1) {
+                        HorizontalDivider(color = c.line)
+                        for (pitch in listOf(null) + pitches) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        (if (pitch == pitchFilter) "● " else "  ") +
+                                            (pitch?.let { pitchName(it) } ?: "all notes"),
+                                        fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+                                    )
+                                },
+                                onClick = { menu = false; onPitchFilter(pitch) },
+                            )
+                        }
                     }
                 }
             }
@@ -408,7 +410,11 @@ fun NoteLane(
                     )
                 }
 
-                val wide = (clip.grid.coerceAtLeast(1) * pxPerTick * 0.7f).coerceIn(3f, 18f)
+                // The clamp in dp rather than in pixels: written as bare
+                // floats, how wide a column came out depended on how dense the
+                // screen was, and did not move when the interface scale did.
+                val wide = (clip.grid.coerceAtLeast(1) * pxPerTick * 0.7f)
+                    .coerceIn(2.dp.toPx(), 7.dp.toPx())
                 for (n in clip.notes) {
                     // **At the note's tick, not where the nudge puts it.**
                     // A column here stands for a note, and a note is where

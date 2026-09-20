@@ -63,6 +63,7 @@ import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.emptyClipFor
+import androidx.compose.ui.layout.onSizeChanged
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -171,6 +172,15 @@ fun EditScreen(
     // per clip: it is how *you* like to work, not a property of the music.
     // Nought means "whatever suits the screen", so a phone turning sideways
     // still gets the sideways defaults until a pinch says otherwise.
+    // The roll's own slot, measured. It is a `weight(1f)` of whatever the
+    // header, the lanes, the panel and the keyboard leave, so only the layout
+    // knows it - the same reason `DrumGrid` measures rather than assumes.
+    var rollPx by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    // How much taller than its stated height the instrument has been dragged,
+    // upright. Live while the finger is down and committed to the store when
+    // it lifts, exactly as the turned editor's divider is.
+    var keysStretch by remember { androidx.compose.runtime.mutableFloatStateOf(UiPrefs.keysStretch) }
+    val scale = LocalUiScale.current
     var zoomRows by rememberSaveable(trackIndex) { mutableStateOf(0f) }
     var zoomTicks by rememberSaveable(trackIndex) { mutableStateOf(0f) }
     var scrollTick by rememberSaveable(trackIndex, sceneId) { mutableStateOf(0f) }
@@ -217,11 +227,25 @@ fun EditScreen(
 
     // Two bars at a time in the roll, one in the step views: any more and the
     // notes are too narrow to grab. The count of pages follows from that.
-    // Fewer rows sideways, because a row shorter than about 11dp loses its
-    // name and a nameless roll is worth less than a shorter one.
-    val defaultRows = if (landscape) ROWS_LAND else ROWS
+    //
+    // **How many rows is worked out from the height there is**, not stated -
+    // see RowTarget. Fewer rows sideways falls out of the same arithmetic,
+    // because a turned phone has less height to share and a row shorter than
+    // about 11dp loses its name. Until the slot has been measured the old
+    // counts stand in for one frame, which is what `DrumGrid` does too.
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val rollDp = with(density) { rollPx.toDp().value }
+    val windowDp = with(density) {
+        androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp().value
+    }
+    // The ceiling is a size written as a count - three octaves is a row of
+    // about four dp - so it is worth the same physically at every setting.
+    val maxRows = (MaxRows / scale).roundToInt().coerceAtLeast(MinRows + 1)
+    val base = if (landscape) ROWS_LAND else ROWS
+    val defaultRows = if (rollPx == 0) base.coerceAtMost(maxRows)
+    else rowsForSlot(rollDp, windowDp, scale, base, MinRows, maxRows)
     val rows = (if (zoomRows > 0f) zoomRows else defaultRows.toFloat())
-        .toInt().coerceIn(MinRows, MaxRows)
+        .toInt().coerceIn(MinRows, maxRows)
     val defaultBars = if (steps) 1 else if (landscape) PAGE_BARS_LAND else PAGE_BARS
     val defaultTicks = (defaultBars * ticksPerBar).toFloat()
     // A pinch never shows less than a beat or more than the whole clip: below
@@ -273,9 +297,15 @@ fun EditScreen(
         // holds the right-hand group where it belongs. Three of them will not
         // fit at that width - eight pills and their gaps is 380dp of a
         // phone's 377 - and only then do they share.
-        // The pad strength toggle counts as one of them: a drum machine has
+        // The strength toggle counts as one of them: a drum machine has
         // only fx on the left otherwise, and this sits in the gap beside it.
+        //
+        // **One pill, for whichever surface this machine plays with.** Keys
+        // read the height of a strike exactly as pads do, and a second pill
+        // saying the same thing about the other surface - the one not on
+        // screen - would be a control for something you cannot see.
         val padToggle = kind == MachineKind.Drums
+        val fullStrength = if (padToggle) UiPrefs.padsFullStrength else UiPrefs.keysFullStrength
         // Fill earns its place only where there is a fill trig to hear. A
         // performance control that is always on this row would cost the seven
         // beside it the width - eight pills and their gaps is already 380 dp
@@ -285,8 +315,7 @@ fun EditScreen(
         val hasFill = clip.notes.any {
             it.trig == com.rm.acidulous.model.Trig.Fill || it.trig == com.rm.acidulous.model.Trig.NotFill
         }
-        val views = 1 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0) + (if (padToggle) 1 else 0) +
-            (if (hasFill) 1 else 0)
+        val views = 2 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0) + (if (hasFill) 1 else 0)
         BottomBar(
             // Sideways it stands in the header, so it is a row again and the
             // header says where. **And it has no fold of its own any more.**
@@ -304,14 +333,15 @@ fun EditScreen(
                 "fx", view,
                 colour = if (panel == 1) Acid.colors.accent else Color.Unspecified,
             ) { panel = if (panel == 1) 0 else 1 }
-            // How hard a pad hits: a wedge for velocity off the height of the
-            // strike, a solid block for the same full strength wherever it
-            // lands. Only where there are pads to say it about.
-            if (padToggle) {
-                BarButton(
-                    if (UiPrefs.padsFullStrength) "\u25A0" else "\u25E2", view,
-                    colour = if (UiPrefs.padsFullStrength) Acid.colors.accent else Color.Unspecified,
-                ) { UiPrefs.choosePadsFullStrength(!UiPrefs.padsFullStrength) }
+            // How hard the instrument hits: a wedge for velocity off the
+            // height of the strike, a solid block for the same full strength
+            // wherever it lands.
+            BarButton(
+                if (fullStrength) "\u25A0" else "\u25E2", view,
+                colour = if (fullStrength) Acid.colors.accent else Color.Unspecified,
+            ) {
+                if (padToggle) UiPrefs.choosePadsFullStrength(!fullStrength)
+                else UiPrefs.chooseKeysFullStrength(!fullStrength)
             }
             if (hasFill) {
                 BarHoldButton(
@@ -331,7 +361,7 @@ fun EditScreen(
             // The gap that holds the transport against the far end. Not in
             // the header, where the row is only as wide as its pills and a
             // weighted spacer would swallow the header.
-            if (!landscape && views < 3) Spacer(Modifier.barWeight())
+            if (!landscape && views < 3) Spacer(Modifier.barSpace())
             BarButton(
                 "\u21B6", anchor, enabled = editor.canUndo(trackIndex),
             ) { selection = emptySet(); editor.undo(trackIndex) }
@@ -547,7 +577,7 @@ fun EditScreen(
             onZoom = { pitchScale, timeScale ->
                 if (pitchScale != 1f) {
                     val was = if (zoomRows > 0f) zoomRows else defaultRows.toFloat()
-                    val want = (was * pitchScale).coerceIn(MinRows.toFloat(), MaxRows.toFloat())
+                    val want = (was * pitchScale).coerceIn(MinRows.toFloat(), maxRows.toFloat())
                     // About the middle of what is on screen, so the row you
                     // were looking at stays put instead of sliding off.
                     val centre = lowestPitch + was.toInt() / 2
@@ -583,7 +613,11 @@ fun EditScreen(
                 editor.updateGestureClip(sceneId) { base -> base.copy(notes = base.notes + Note(tick, length, pitch, 100)) }
             },
             onGestureEnd = { editor.endGesture() },
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            // The slot the rows are shared out over - see RowTarget. Measured
+            // here rather than inside the roll because this is where the count
+            // is worked out, and the roll is handed the answer.
+            modifier = Modifier.fillMaxWidth().weight(1f)
+                .onSizeChanged { rollPx = it.height },
         )
         }
         val noteLaneSlot: @Composable (Dp) -> Unit = { open ->
@@ -787,8 +821,35 @@ fun EditScreen(
             )
         }
         else Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+            // **The whole row is the handle, not only the blank either end of
+            // it.** Sideways there is width going spare beside the wheel and
+            // the stepper and the blank is enough; upright there is none - the
+            // three chips, the stepper's stated width and the fold mark use all
+            // of it, and the wheel fills what is left. So the drag is watched
+            // underneath the row, and what is *in* the row wins where it is:
+            // the wheel and the stepper consume at the slop and cancel this,
+            // and a chip's tap detector never sees a drag at all. See keysGrip.
+            BoxWithConstraints(Modifier.fillMaxWidth().height(26.dp).then(grip)) {
+            // **The words go when the controls either side start starving.**
+            //
+            // Three chips at their written widths - 52, 112 and 52 - plus the
+            // fold mark and the gaps come to 258 dp, and everything left over
+            // is shared between the pressure wheel and the octave stepper.
+            // Upright at 1.0 that leaves them about 59 dp each, which is
+            // already the least either is worth having; at any interface scale
+            // above it the row reports fewer dp, the chips keep their stated
+            // widths, and the two of them are squeezed to a sliver - Dan,
+            // looking at 1.3: "the chord/scale/arp labels are squeezing
+            // everything out, the octave buttons are cut off and there is no
+            // space for a pressure slider on the left".
+            //
+            // So the chips give their words up first, the way the footer's
+            // pills do, and an anchor's width each is enough for a glyph. That
+            // hands about a hundred and twenty dp back to the two controls
+            // that had nothing.
+            val icons = maxWidth < PerfWideMin
             Row(
-                Modifier.fillMaxWidth().height(26.dp),
+                Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -823,7 +884,10 @@ fun EditScreen(
                 // is running; holding opens it. They used to be a button at
                 // the foot of the screen that swapped the whole lower pane,
                 // which is a long way to go to find out if the arp is on.
-                EventorChip("Chord", EV_CHORD, track, trackIndex, editor) { eventorSlot = EV_CHORD }
+                EventorChip(
+                    "Chord", EV_CHORD, track, trackIndex, editor,
+                    icon = if (icons) "\u2261" else null,
+                ) { eventorSlot = EV_CHORD }
                 ScaleChip(
                     label = Scales.labelFor(track),
                     onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
@@ -833,11 +897,21 @@ fun EditScreen(
                     // "scale" to "C Ionian (Major)" and back, and a chip
                     // that grew by half its width each time would shove the
                     // two eventor chips sideways every time it was touched.
-                    modifier = Modifier.width(112.dp).fillMaxHeight(),
+                    modifier = Modifier.width(if (icons) PerfIconW else 112.dp).fillMaxHeight(),
+                    icon = if (icons) "\u266F" else null,
                 )
-                EventorChip("Arp", EV_ARP, track, trackIndex, editor) { eventorSlot = EV_ARP }
+                EventorChip(
+                    "Arp", EV_ARP, track, trackIndex, editor,
+                    icon = if (icons) "\u266B" else null,
+                ) { eventorSlot = EV_ARP }
+                // **Stated, not shared.** The wheel at the other end is the
+                // elastic one: it has a cap and reads as a wheel at any width
+                // over a finger, where the stepper is three things in a row
+                // that each have a size. See OctaveW. It costs the scale chip
+                // its place on the exact centre line, which this row already
+                // decided is the cheaper of the two prices.
                 Box(
-                    Modifier.weight(1f).fillMaxHeight().then(grip),
+                    Modifier.width(OctaveW).fillMaxHeight().then(grip),
                     contentAlignment = Alignment.CenterEnd,
                 ) {
                     OctaveStepper(octave, { octave = it }, Modifier.fillMaxHeight())
@@ -862,9 +936,14 @@ fun EditScreen(
                 // a stepper missing an arrow is a control that does not work.
                 FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
             }
+            }
             if (keysFolded) return@Column
             Row(
-                Modifier.fillMaxWidth().height(height - 30.dp).padding(top = 4.dp),
+                // Thirty is the performance row above these; a `Dp` handed to
+                // `height` may not be negative, and this is a share of a pane
+                // that can be narrow enough to owe it - a turned phone at the
+                // largest interface scale, or a split-screen window.
+                Modifier.fillMaxWidth().height((height - 30.dp).coerceAtLeast(0.dp)).padding(top = 4.dp),
                 // No spacing: the keyboard draws its own three dp either side
                 // and owns them for touch, so a finger that misses the
                 // outermost key by a hair still plays it instead of grabbing
@@ -981,13 +1060,57 @@ fun EditScreen(
                 noteLaneSlot(LaneH)
                 automationSlot(LaneH)
                 panelSlot(true, true)
+                // **Upright the instrument can be dragged taller too**, by the
+                // same handle the turned editor uses - the blank either side of
+                // the performance row, and the gap above the drum pads. What it
+                // takes, it takes from the roll, so the drag stops where the
+                // roll reaches its own floor: the only thing below the keyboard
+                // is the footer, and the only thing above it that can give is
+                // the grid.
+                //
+                // A multiplier on the stated height rather than a share of the
+                // window, because upright the keyboard is one of several stated
+                // heights in a column rather than one of two panes. See
+                // UiPrefs.keysStretch.
+                //
+                // **The roll has first claim on the height, so the instrument
+                // is the piece that does not grow.**
+                //
+                // That is `PADS_H_LAND`'s rule - "the whole screen is about
+                // 360dp tall here and the grid has the first claim on it" -
+                // applied to the one screen where it now bites upright too. At
+                // a larger interface setting every stated `dp` above the
+                // keyboard grows and the roll is the `weight(1f)` that pays for
+                // all of it. Dividing by the scale here leaves the keyboard the
+                // physical size it has always been and hands the roll every dp
+                // the setting would have spent on it - which is what the roll
+                // then turns into taller rows rather than more of them.
+                //
+                // Nothing to prove at 1.0: the divisor is one.
+                val keysBase = (if (kind == MachineKind.Drums) PADS_H else KEYS_H) / scale
+                val keysH = keysBase * keysStretch
                 keysSlot(
                     if (UiPrefs.keysFolded) {
                         if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H
                     } else {
-                        if (kind == MachineKind.Drums) PADS_H else KEYS_H
+                        keysH
                     },
-                    Modifier,
+                    if (UiPrefs.keysFolded) Modifier else keysGrip(
+                        onDrag = { dy ->
+                            // **From the state, not from the composed height.**
+                            // A drag sends a dozen events before the next frame
+                            // and `keysH` is worked out while composing, so
+                            // subtracting from it gives the same answer a dozen
+                            // times and the edge moves once - which is M44's
+                            // rule about zoom, in a different control.
+                            val live = keysBase * keysStretch
+                            // What the roll can spare, and not a dp more.
+                            val spare = (rollDp.dp - RollMinH).coerceAtLeast(0.dp)
+                            val want = (live - dy).coerceAtMost(live + spare)
+                            keysStretch = (want / keysBase).coerceIn(KeysStretchMin, KeysStretchMax)
+                        },
+                        onEnd = { UiPrefs.chooseKeysStretch(keysStretch) },
+                    ),
                 )
             }
             footerSlot()
@@ -1021,7 +1144,36 @@ fun EditScreen(
  * the left edge.
  */
 /** Narrow, because upright the row it ends has about twenty dp to spare. */
+/**
+ * The least roll there is any point leaving.
+ *
+ * What stops the keyboard's drag: below about this the grid is three rows and
+ * a ruler, which is not an editor, and somebody who wants the instrument
+ * bigger than that wants the roll folded rather than starved.
+ */
+private val RollMinH = 96.dp
+
 private val FoldMarkW = 22.dp
+
+/**
+ * What a chip in the performance row costs once it is a glyph.
+ *
+ * An anchor's width, which is the footer's number and the same reason for it:
+ * what sets the floor is a finger, not the text.
+ */
+private val PerfIconW = 44.dp
+
+/**
+ * The narrowest row that can still spell "chord", "scale" and "arp" out.
+ *
+ * The three chips at 52, 112 and 52, the fold mark, the five gaps, the octave
+ * stepper's stated width, and enough left for the pressure wheel to still read
+ * as one. A 393 dp phone clears it by a single dp at 1.0 and misses it at every
+ * setting above, which is the honest shape of a row that was always full: under
+ * this the words go and the glyphs come, and that hands about a hundred and
+ * twenty dp back to the two controls at the ends that had been starving.
+ */
+private val PerfWideMin = 52.dp + 112.dp + 52.dp + FoldMarkW + 20.dp + OctaveW + 32.dp
 
 @Composable
 private fun FoldMark(folded: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
@@ -1111,9 +1263,23 @@ private val LaneH = 88.dp
  */
 private val PressureW = 88.dp
 
-// Sixteen rows rather than two full octaves: tall enough that every row can
-// carry its name and be hit with a finger, which matters more on a phone
-// than seeing the whole range at once. The arrows move the window.
+/**
+ * How many rows the roll shows at the interface's own size.
+ *
+ * Sixteen rather than two full octaves: tall enough that every row can carry
+ * its name and be hit with a finger, which matters more on a phone than seeing
+ * the whole range at once. The arrows move the window. Fewer sideways, because
+ * a row shorter than about 11dp loses its name and a nameless roll is worth
+ * less than a shorter one.
+ *
+ * **A base now rather than the answer.** The chrome around the roll is stated
+ * in `dp` and grows with the interface scale; the roll is the `weight(1f)` that
+ * pays for it, so sixteen rows of a shorter slot would have been sixteen
+ * *smaller* rows at every setting above 1.0 - the one surface the app is for,
+ * made worse by the setting meant to help. `rowsForSlot` in ui/UiScale.kt keeps
+ * the share of the roll these two describe, which is exactly these numbers at
+ * 1.0 and fewer, taller rows above it.
+ */
 private const val ROWS = 16
 private const val ROWS_LAND = 12
 private const val PAGE_BARS = 2
@@ -1229,12 +1395,14 @@ private fun EventorChip(
     track: Track,
     trackIndex: Int,
     editor: SongEditor,
+    /** A glyph in place of the word, when the row cannot afford the word. */
+    icon: String? = null,
     onOpen: () -> Unit,
 ) {
     val ev = track.eventorAt(slot)
     val loaded = ev.type == type
     SlotChip(
-        text = type.lowercase(),
+        text = icon ?: type.lowercase(),
         on = loaded && !ev.bypass,
         onToggle = {
             if (!loaded) {
@@ -1258,6 +1426,8 @@ private fun EventorChip(
             onOpen()
         },
         vertical = false,
-        modifier = Modifier.widthIn(min = 52.dp).fillMaxHeight(),
+        icon = icon != null,
+        modifier = (if (icon != null) Modifier.width(PerfIconW) else Modifier.widthIn(min = 52.dp))
+            .fillMaxHeight(),
     )
 }

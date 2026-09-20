@@ -67,6 +67,10 @@ fun PianoKeys(
     val c = Acid.colors
     val measurer = rememberTextMeasurer()
     var held by remember { mutableStateOf(mapOf<Long, Int>()) }
+    // How hard each sounding note was struck, 0 at the front edge of its key
+    // and 1 at the back. Kept beside `held` and for the same reason: the
+    // gesture owns it, composition only draws it.
+    var strikes by remember { mutableStateOf(mapOf<Int, Float>()) }
     val base = 12 * (octave + 1)
     val scale = scalePitchClasses?.takeIf { it.isNotEmpty() }?.sorted()
 
@@ -84,6 +88,7 @@ fun PianoKeys(
                 // had just lifted was read back out of a stale snapshot and
                 // put down again, and its key stayed lit with nothing on it.
                 val down = HashMap<Long, Int>()
+                val force = HashMap<Int, Float>()
                 try {
                     awaitPointerEventScope {
                         while (true) {
@@ -102,22 +107,41 @@ fun PianoKeys(
                                         Offset(change.position.x - grab, change.position.y),
                                     )
                                     if (down[id] != note) {
-                                        down[id]?.let { NativeEngine.noteOff(rack, it) }
+                                        down[id]?.let { NativeEngine.noteOff(rack, it); force.remove(it) }
                                         if (note != null) {
-                                            NativeEngine.noteOn(rack, note, 100)
+                                            // Hit it high for hard and low for
+                                            // soft, as a pad is. Read once, as
+                                            // the note goes down: a finger that
+                                            // slides afterwards has already
+                                            // played it, and sliding onto the
+                                            // next key plays that one from
+                                            // wherever it crossed - which is
+                                            // what a glissando is.
+                                            val strike = if (UiPrefs.keysFullStrength) 1f else {
+                                                layout.strikeAt(
+                                                    Offset(change.position.x - grab, change.position.y),
+                                                )
+                                            }
+                                            val vel = if (UiPrefs.keysFullStrength) HARD
+                                            else SOFT + (HARD - SOFT) * strike
+                                            NativeEngine.noteOn(rack, note, vel.toInt())
                                             down[id] = note
+                                            force[note] = strike
                                         } else {
                                             down.remove(id)
                                         }
                                         changed = true
                                     }
                                 } else if (down.containsKey(id)) {
-                                    down.remove(id)?.let { NativeEngine.noteOff(rack, it) }
+                                    down.remove(id)?.let { NativeEngine.noteOff(rack, it); force.remove(it) }
                                     changed = true
                                 }
                                 change.consume()
                             }
-                            if (changed) held = HashMap(down)
+                            if (changed) {
+                                held = HashMap(down)
+                                strikes = HashMap(force)
+                            }
                         }
                     }
                 } finally {
@@ -127,13 +151,22 @@ fun PianoKeys(
                     // rather than leaving notes sounding and keys lit.
                     for (note in down.values) NativeEngine.noteOff(rack, note)
                     down.clear()
+                    force.clear()
                     held = emptyMap()
+                    strikes = emptyMap()
                 }
             },
     ) {
         Canvas(Modifier.fillMaxSize().padding(horizontal = EdgeGrab).clip(RoundedCornerShape(3.dp))) {
             val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale)
             val down = held.values.toSet()
+            // How far up a sounding key to light it. **The fill is the only
+            // thing that says which mode you are in once your finger is down**
+            // - that is the drum pads' note about their own highlight, and it
+            // holds here for the same reason - so a key struck softly lights
+            // from its front edge to where the finger landed, and full
+            // strength lights the whole of it.
+            fun lit(note: Int): Float = strikes[note] ?: 1f
             val nameStyle = TextStyle(color = c.keyLabel, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
 
             if (layout.scaleKeys != null) {
@@ -150,7 +183,14 @@ fun PianoKeys(
                         black -> c.keyBlack
                         else -> c.keyWhite
                     }
-                    drawRect(colour, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
+                    if (down.contains(note)) {
+                        val base = if (black) c.keyBlack else c.keyWhite
+                        val fill = size.height * lit(note)
+                        drawRect(base, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
+                        drawRect(colour, Offset(x + 0.5f, size.height - fill), Size(layout.keyW - 1f, fill))
+                    } else {
+                        drawRect(colour, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
+                    }
                     if (black) {
                         drawRect(c.keyEdge, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height),
                             style = Stroke(1f))
@@ -171,8 +211,11 @@ fun PianoKeys(
                 for (i in 0 until layout.whiteCount) {
                     val note = layout.whiteNote(i)
                     val x = i * layout.keyW
-                    val colour = if (down.contains(note)) c.teal else c.keyWhite
-                    drawRect(colour, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
+                    drawRect(c.keyWhite, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
+                    if (down.contains(note)) {
+                        val fill = size.height * lit(note)
+                        drawRect(c.teal, Offset(x + 0.5f, size.height - fill), Size(layout.keyW - 1f, fill))
+                    }
                     if (note % 12 == 0) {
                         val laid = measurer.measure(AnnotatedString(noteName(note, noteSpelling)), nameStyle)
                         if (laid.size.width < layout.keyW - 2f) {
@@ -182,8 +225,11 @@ fun PianoKeys(
                     }
                 }
                 for ((x, note) in layout.blacks()) {
-                    val colour = if (down.contains(note)) c.green else c.blackKey
-                    drawRect(colour, Offset(x, 0f), Size(layout.blackW, layout.blackH))
+                    drawRect(c.blackKey, Offset(x, 0f), Size(layout.blackW, layout.blackH))
+                    if (down.contains(note)) {
+                        val fill = layout.blackH * lit(note)
+                        drawRect(c.green, Offset(x, layout.blackH - fill), Size(layout.blackW, fill))
+                    }
                     drawRect(c.blackKeyEdge, Offset(x, 0f), Size(layout.blackW, layout.blackH), style = Stroke(1f))
                 }
             }
@@ -216,7 +262,17 @@ fun ScaleChip(
     modifier: Modifier = Modifier,
     /** Turned on its side when it stands beside the keys; flat in a strip. */
     vertical: Boolean = true,
-) = SlotChip(label ?: "scale", label != null, onToggle, onOpen, modifier, vertical)
+    /**
+     * A glyph to stand in for the whole label, when the row cannot afford it.
+     *
+     * **And the scale's name goes with the word, not just instead of it.**
+     * "C Ionian (Major)" squeezed into a chip the size of a finger is three
+     * letters and an ellipsis, which says less than nothing. Lit or unlit
+     * already answers the question the chip is there for - is a scale
+     * running - and which scale it is, is what holding it open is for.
+     */
+    icon: String? = null,
+) = SlotChip(icon ?: label ?: "scale", label != null, onToggle, onOpen, modifier, vertical, icon != null)
 
 /**
  * The chip grammar the keyboard strip uses for everything that sits between
@@ -235,6 +291,12 @@ fun SlotChip(
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
     vertical: Boolean = true,
+    /**
+     * The text is a single glyph standing in for a word, so it is drawn at the
+     * size a glyph needs rather than the size three or four letters need - and
+     * never ellipsised, because there is nothing to ellipsise.
+     */
+    icon: Boolean = false,
 ) {
     val c = Acid.colors
     Box(
@@ -248,7 +310,8 @@ fun SlotChip(
         } else {
             Text(
                 text, color = tint,
-                fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
+                fontSize = if (icon) 14.sp else 9.sp,
+                fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
@@ -312,6 +375,13 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
         return out
     }
 
+    /** The black key under a touch, if it is on one. */
+    private fun blackAt(p: Offset): Int? {
+        if (scaleKeys != null || p.y > blackH) return null
+        for ((x, note) in blacks()) if (p.x >= x && p.x <= x + blackW) return note
+        return null
+    }
+
     fun noteAt(p: Offset): Int? {
         // Across, the coerceIn below does the work: a touch in the grab margin
         // beyond either end is the outermost key, which is what a finger that
@@ -321,10 +391,24 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
             val i = (p.x / keyW).toInt().coerceIn(0, keys.size - 1)
             return keys.getOrNull(i)
         }
-        if (p.y <= blackH) {
-            for ((x, note) in blacks()) if (p.x >= x && p.x <= x + blackW) return note
-        }
+        blackAt(p)?.let { return it }
         return whiteNote((p.x / keyW).toInt().coerceIn(0, whiteCount - 1))
+    }
+
+    /**
+     * How far up its own key a touch landed, 0 at the front edge and 1 at the
+     * back. This is the velocity, and the fill that draws it.
+     *
+     * **Up the key it hit, not up the keyboard.** A black key is drawn over
+     * the back two thirds of the whites, so measuring against the whole
+     * keyboard would leave it nothing below a third and no way to play one
+     * softly at all. Against its own length every key has the full range, and
+     * the black keys are simply steeper - which is what they feel like under a
+     * finger anyway.
+     */
+    fun strikeAt(p: Offset): Float {
+        val h = if (blackAt(p) != null) blackH else height
+        return if (h > 0f) (1f - p.y / h).coerceIn(0f, 1f) else 1f
     }
 }
 

@@ -656,54 +656,61 @@ private fun DialogShell(
     // tall it may be, the title, the chips and the footer take what they
     // need, and the body takes what is left by weight. Nothing has to be
     // counted, and nothing can be pushed off the bottom.
-    val cardMax = (windowHeight - DialogEdgeH).coerceAtLeast(200.dp)
+    // **And the floor may not be taller than the window either.** Two hundred
+    // dp is a fair smallest useful window, but a floor that outranks the cap
+    // re-creates the very fault the cap was written for: below about 224 dp -
+    // a turned phone at the largest interface scale - the card was allowed to
+    // be taller than the screen again, with its Done button off the bottom.
+    val cardMax = (windowHeight - DialogEdgeH).coerceAtLeast(minOf(200.dp, windowHeight))
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        androidx.compose.material3.Surface(
-            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp)
-                .heightIn(max = cardMax),
-            shape = RoundedCornerShape(16.dp),
-            color = c.card,
-        ) {
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                Text(title, color = c.text, fontSize = 20.sp)
-                if (chips != null) {
-                    Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) { chips() }
-                } else {
-                    Box(Modifier.padding(top = 10.dp))
-                }
-                Box(
-                    // The position bar is drawn on the outer edge of this
-                    // box, so the content is inset to leave it a gutter -
-                    // without it a chip that reaches the full width has the
-                    // bar drawn straight through it.
-                    // `fill = false` so it is only ever *smaller* than its
-                    // content, never stretched to fill a tall window: a
-                    // short page in a tabbed dialog must not push the button
-                    // to the bottom of the screen.
-                    Modifier.weight(1f, fill = false)
-                        .heightIn(max = maxBodyHeight)
-                        .verticalScrollWithBar(rememberScrollState())
-                        .padding(end = 10.dp),
-                ) {
-                    body()
-                }
-                // An empty dismiss label and no action means no footer at
-                // all - for a window that is reporting rather than asking,
-                // and that must not be dismissed while it works.
-                if (dismissLabel.isNotEmpty() || onConfirm != null) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically,
+        ScaledWindow {
+            androidx.compose.material3.Surface(
+                Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp)
+                    .heightIn(max = cardMax),
+                shape = RoundedCornerShape(16.dp),
+                color = c.card,
+            ) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                    Text(title, color = c.text, fontSize = 20.sp)
+                    if (chips != null) {
+                        Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) { chips() }
+                    } else {
+                        Box(Modifier.padding(top = 10.dp))
+                    }
+                    Box(
+                        // The position bar is drawn on the outer edge of this
+                        // box, so the content is inset to leave it a gutter -
+                        // without it a chip that reaches the full width has the
+                        // bar drawn straight through it.
+                        // `fill = false` so it is only ever *smaller* than its
+                        // content, never stretched to fill a tall window: a
+                        // short page in a tabbed dialog must not push the button
+                        // to the bottom of the screen.
+                        Modifier.weight(1f, fill = false)
+                            .heightIn(max = maxBodyHeight)
+                            .verticalScrollWithBar(rememberScrollState())
+                            .padding(end = 10.dp),
                     ) {
-                        if (dismissLabel.isNotEmpty()) {
-                            TextButton(onClick = onDismiss) { Text(dismissLabel) }
-                        }
-                        if (onConfirm != null) {
-                            Button(onClick = onConfirm, enabled = confirmEnabled) { Text(confirmLabel) }
+                        body()
+                    }
+                    // An empty dismiss label and no action means no footer at
+                    // all - for a window that is reporting rather than asking,
+                    // and that must not be dismissed while it works.
+                    if (dismissLabel.isNotEmpty() || onConfirm != null) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (dismissLabel.isNotEmpty()) {
+                                TextButton(onClick = onDismiss) { Text(dismissLabel) }
+                            }
+                            if (onConfirm != null) {
+                                Button(onClick = onConfirm, enabled = confirmEnabled) { Text(confirmLabel) }
+                            }
                         }
                     }
                 }

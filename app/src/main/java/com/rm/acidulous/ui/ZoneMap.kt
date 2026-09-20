@@ -80,7 +80,8 @@ fun ZoneMapView(
                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = if (on) 2f else 1f))
         }
         // Middle C, the reference everyone reads a map against.
-        drawRect(c.accent, Offset(60 * w, size.height - 3f), Size(w, 3f))
+        val mark = 1.5.dp.toPx()
+        drawRect(c.accent, Offset(60 * w, size.height - mark), Size(w, mark))
     }
 }
 

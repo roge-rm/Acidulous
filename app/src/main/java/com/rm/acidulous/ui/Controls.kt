@@ -60,13 +60,18 @@ fun VerticalFader(
             }
         },
     ) {
-        val trackW = 6f
+        // **In dp, not in pixels.** A `DrawScope` is a `Density`, so a size
+        // written here as a bare float is a size that does not move when the
+        // interface scale does: the fader would grow and its track and cap
+        // would stay the hairline they are on a 440 dpi phone.
+        val trackW = 6.dp.toPx()
+        val capH = 16.dp.toPx()
         val cx = size.width / 2f
         drawRect(c.raised, Offset(cx - trackW / 2, 0f), Size(trackW, size.height))
         val y = (1f - value.coerceIn(0f, 1f)) * size.height
         drawRect(accent, Offset(cx - trackW / 2, y), Size(trackW, size.height - y))
         // the cap
-        drawRect(c.knobPointer, Offset(cx - size.width * 0.4f, y - 8f), Size(size.width * 0.8f, 16f))
+        drawRect(c.knobPointer, Offset(cx - size.width * 0.4f, y - capH / 2), Size(size.width * 0.8f, capH))
     }
 }
 
@@ -97,7 +102,12 @@ fun MiniSlider(
             }
         },
     ) {
-        val h = 6f
+        // In dp for the reason the fader above gives. This is every send and
+        // every pan in the mixer, so a thumb that stayed ten pixels wide would
+        // be the thing hardest to see on a screen somebody asked to enlarge.
+        val h = 6.dp.toPx()
+        val thumbW = 10.dp.toPx()
+        val thumbH = 18.dp.toPx()
         val cy = size.height / 2f
         drawRect(c.raised, Offset(0f, cy - h / 2), Size(size.width, h))
         val x = value.coerceIn(0f, 1f) * size.width
@@ -107,7 +117,7 @@ fun MiniSlider(
         } else {
             drawRect(accent, Offset(0f, cy - h / 2), Size(x, h))
         }
-        drawRect(c.knobPointer, Offset(x - 5f, cy - 9f), Size(10f, 18f))
+        drawRect(c.knobPointer, Offset(x - thumbW / 2, cy - thumbH / 2), Size(thumbW, thumbH))
     }
 }
 

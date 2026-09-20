@@ -80,6 +80,43 @@ class MainActivity : ComponentActivity() {
         )
         goFullScreen()
         setContent {
+            // **One density, above everything.**
+            //
+            // The interface scale is a multiplier on the density rather than
+            // on each of the sizes: every `dp` and every `sp` in the tree
+            // resolves through this one `Density`, so the whole app grows
+            // together and no size has to learn about the setting. Composition
+            // locals reach into a `Dialog`'s subcomposition too, so the windows
+            // come with it.
+            //
+            // Outside `AcidulousTheme` because the splash and the Scaffold's
+            // own insets are inside it and both are sizes somebody asked to be
+            // bigger. Read from `base` every time rather than from
+            // `LocalDensity` after the fact, or the multiplier would compound
+            // on itself on every recomposition.
+            //
+            // What the app then believes is that it has *less* screen - at 1.3
+            // a Pixel 5 reports 302 x 655 dp instead of 393 x 851 - which is
+            // the shape M43 already made every screen survive at 393 dp of
+            // height. ui/UiScale.kt caps the wish against what there is.
+            val base = androidx.compose.ui.platform.LocalDensity.current
+            // Not `window`: that is the Activity's own, wanted a few lines
+            // down for the bar appearance.
+            val windowPx = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+            val scale = com.rm.acidulous.ui.appliedScale(
+                com.rm.acidulous.ui.UiPrefs.uiScale,
+                minOf(windowPx.width, windowPx.height) / base.density,
+                maxOf(windowPx.width, windowPx.height) / base.density,
+            )
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalDensity provides
+                    androidx.compose.ui.unit.Density(base.density * scale, base.fontScale),
+                com.rm.acidulous.ui.LocalUiScale provides scale,
+                // The unscaled one travels too, because every window drawn
+                // over this one is handed a fresh density by Compose and has
+                // to put the scale back itself - see ui/UiScale.kt.
+                com.rm.acidulous.ui.LocalBaseDensity provides base,
+            ) {
             AcidulousTheme(com.rm.acidulous.ui.UiPrefs.theme) {
                 // The bars are hidden, but a swipe brings them back, so their
                 // icons still have to be readable against whichever theme is
@@ -121,6 +158,7 @@ class MainActivity : ComponentActivity() {
                     splashing = false
                 }
                 if (splashing) com.rm.acidulous.ui.SplashScreen()
+            }
             }
         }
     }

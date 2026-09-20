@@ -19,6 +19,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.abs
@@ -189,7 +190,10 @@ fun Waveform(
             drawLine(c.textDim.copy(alpha = 0.4f), Offset(0f, mid), Offset(size.width, mid), 1f)
             for ((x, mark) in listOf(lo to -1, hi to 1)) {
                 if (x < -2f || x > size.width + 2f) continue // off this window
-                drawLine(c.teal, Offset(x, 0f), Offset(x, size.height), if (dragging == mark) 4f else 2f)
+                drawLine(
+                    c.teal, Offset(x, 0f), Offset(x, size.height),
+                    if (dragging == mark) 2.dp.toPx() else 1.dp.toPx(),
+                )
             }
 
             // Where in the sample this window is. The house rule is that

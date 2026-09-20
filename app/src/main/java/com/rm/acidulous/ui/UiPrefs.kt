@@ -35,6 +35,17 @@ import com.rm.acidulous.ui.theme.ThemeMode
 const val KeysFractionMin = 0.18f
 const val KeysFractionMax = 0.62f
 
+/**
+ * How far the instrument may be dragged from its stated height, upright.
+ *
+ * Down to about two thirds, which is where a black key stops being worth
+ * aiming at, and up to three times, which on a phone is most of the screen -
+ * and the roll's own floor stops it before that anyway, because what the
+ * keyboard takes it takes from the roll.
+ */
+const val KeysStretchMin = 0.65f
+const val KeysStretchMax = 3f
+
 object UiPrefs {
     private var store: SharedPreferences? = null
 
@@ -137,6 +148,34 @@ object UiPrefs {
         private set
 
     /**
+     * The same question for the keyboard, and it is a separate answer.
+     *
+     * A key reads the height of the strike exactly as a pad does - low is
+     * soft, high is hard - and the two surfaces are set independently because
+     * they are played differently: a kit is often tapped in at one strength
+     * while a part is played with the hand, or the other way about.
+     *
+     * Off by default, like the pads', which is the mode that carries more
+     * information. Before this the keys sent 100 whatever you did to them.
+     */
+    var keysFullStrength by mutableStateOf(false)
+        private set
+
+    /**
+     * How much taller than its stated height the instrument has been dragged,
+     * upright. One is as written.
+     *
+     * A multiplier rather than the share of the window the turned editor keeps
+     * (see [keysFractionLand]), because upright the keyboard is one of several
+     * stated heights in a column rather than one of two panes: what somebody
+     * means by dragging it is "more than it was", and what it was depends on
+     * whether this machine has keys or pads and on the interface scale. A
+     * multiplier says that and survives all three.
+     */
+    var keysStretch by mutableStateOf(1f)
+        private set
+
+    /**
      * The song grid as a launcher rather than an arranger. A way of working
      * rather than anything about the song, so it follows the person and not
      * the file - open somebody else's song and it is still however you left
@@ -156,6 +195,18 @@ object UiPrefs {
     // --- Appearance ------------------------------------------------------
     /** Auto follows the phone; the other two ignore it. */
     var theme by mutableStateOf(ThemeMode.Dark)
+        private set
+
+    /**
+     * How much larger than stated the interface is drawn, 1.0 for as written.
+     *
+     * A statement about the person's eyes and their screen, not about the
+     * song, so it belongs here beside the theme - and like the theme it is
+     * read once at the root of the composition, where it is turned into a
+     * density every `dp` and `sp` in the app resolves through. See
+     * ui/UiScale.kt for the arithmetic and for why it only ever goes up.
+     */
+    var uiScale by mutableStateOf(1f)
         private set
 
     // --- Audio -----------------------------------------------------------
@@ -274,10 +325,15 @@ object UiPrefs {
             .coerceIn(KeysFractionMin, KeysFractionMax)
         panelFolded = p.getBoolean(KEY_PANEL_FOLDED, false)
         padsFullStrength = p.getBoolean(KEY_PADS_FULL, false)
+        keysFullStrength = p.getBoolean(KEY_KEYS_FULL, false)
+        keysStretch = p.getFloat(KEY_KEYS_STRETCH, 1f)
+            .coerceIn(KeysStretchMin, KeysStretchMax)
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
             .getOrDefault(ThemeMode.Dark)
+        uiScale = p.getFloat(KEY_UI_SCALE, 1f)
+            .coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
         buffer = runCatching { Buffer.valueOf(p.getString(KEY_BUFFER, null) ?: "Balanced") }
             .getOrDefault(Buffer.Balanced)
         voiceLimit = p.getInt(KEY_VOICES, 0)
@@ -348,6 +404,23 @@ object UiPrefs {
         store?.edit()?.putBoolean(KEY_PADS_FULL, on)?.apply()
     }
 
+    fun chooseKeysFullStrength(on: Boolean) {
+        keysFullStrength = on
+        store?.edit()?.putBoolean(KEY_KEYS_FULL, on)?.apply()
+    }
+
+    /**
+     * Where the keyboard's edge was let go, upright.
+     *
+     * Written once the finger lifts, for the reason [chooseKeysFraction]
+     * gives: a preference stored on every frame of a drag is a file written
+     * sixty times a second.
+     */
+    fun chooseKeysStretch(f: Float) {
+        keysStretch = f.coerceIn(KeysStretchMin, KeysStretchMax)
+        store?.edit()?.putFloat(KEY_KEYS_STRETCH, keysStretch)?.apply()
+    }
+
     fun foldAutomation(folded: Boolean) {
         automationFolded = folded
         store?.edit()?.putBoolean(KEY_AUTO_FOLDED, folded)?.apply()
@@ -412,6 +485,16 @@ object UiPrefs {
     fun chooseTheme(mode: ThemeMode) {
         theme = mode
         store?.edit()?.putString(KEY_THEME, mode.name)?.apply()
+    }
+
+    /**
+     * Stored as the multiplier rather than as an index into the steps, so
+     * adding a step later cannot re-point somebody's saved choice - the same
+     * reason everything else here is stored by name and not by ordinal.
+     */
+    fun chooseUiScale(scale: Float) {
+        uiScale = scale.coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
+        store?.edit()?.putFloat(KEY_UI_SCALE, uiScale)?.apply()
     }
 
     fun chooseBuffer(b: Buffer) {
@@ -581,9 +664,12 @@ object UiPrefs {
     private const val KEY_KEYS_FRACTION = "keys_fraction_land"
     private const val KEY_PANEL_FOLDED = "panel_folded"
     private const val KEY_PADS_FULL = "pads_full_strength"
+    private const val KEY_KEYS_FULL = "keys_full_strength"
+    private const val KEY_KEYS_STRETCH = "keys_stretch"
     private const val KEY_CLIP_MODE = "clip_mode"
     private const val KEY_LAUNCH_Q = "launch_quantise"
     private const val KEY_THEME = "theme"
+    private const val KEY_UI_SCALE = "ui_scale"
     private const val KEY_BUFFER = "buffer"
     private const val KEY_VOICES = "voice_limit"
     private const val KEY_QUALITY = "quality_full"

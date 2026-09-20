@@ -42,6 +42,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Action
@@ -130,10 +135,39 @@ val BarWord = 58.dp
 class BarScope internal constructor(
     /** True when the bar runs down the screen. Rarely needed; glyphs use it. */
     val vertical: Boolean,
+    /**
+     * False when the row is too narrow to spell things out, and a pill that
+     * carries a word should show its glyph alone.
+     *
+     * The row has a minimum - everything in it is a stated width - and an
+     * interface scale walks it into that minimum on any phone: at 1.3 a Pixel
+     * 5 lays out in 302 dp and the arranger's row wants 318. A word is the
+     * cheapest thing in it to give up, so this is asked first and the row only
+     * shrinks for whatever is still missing. See [BottomBar].
+     */
+    val words: Boolean = true,
     private val weigh: (Modifier, Float) -> Modifier,
+    private val space: (Modifier, Float) -> Modifier = weigh,
 ) {
-    /** A pill that shares what the fixed ones leave. */
+    /**
+     * A pill that shares what the fixed ones leave.
+     *
+     * **Not the same thing as [barSpace], though both are a weight.** A pill
+     * sharing the slack still *wants* an anchor's width, and the row's fitting
+     * has to know that or it hands the three view toggles whatever is left
+     * after the transport has taken its five - which at a large interface scale
+     * is a few dp each, and reads as three slivers where three buttons were.
+     */
     fun Modifier.barWeight(weight: Float = 1f): Modifier = weigh(this, weight)
+
+    /**
+     * The slack between the two ends of the row, which may be nothing at all.
+     *
+     * What holds the transport against the right edge. Unlike [barWeight] it
+     * is not a control and wants no width of its own, so the row is allowed to
+     * take all of it back before it starts making anything smaller.
+     */
+    fun Modifier.barSpace(weight: Float = 1f): Modifier = space(this, weight)
 
     /**
      * The anchored size, across the bar's own axis.
@@ -153,9 +187,15 @@ class BarScope internal constructor(
     val anchor: Modifier
         get() = if (vertical) Modifier.width(BarAnchor).height(BarPillH) else Modifier.width(BarAnchor)
 
-    /** Wide enough for a word - see [BarWord]. */
+    /**
+     * Wide enough for a word - see [BarWord] - or an anchor's width when
+     * [words] says there is no room for one.
+     */
     val word: Modifier
-        get() = if (vertical) Modifier.width(BarWord).height(BarPillH) else Modifier.width(BarWord)
+        get() {
+            val w = if (words) BarWord else BarAnchor
+            return if (vertical) Modifier.width(w).height(BarPillH) else Modifier.width(w)
+        }
 }
 
 /**
@@ -215,7 +255,7 @@ fun BottomBar(
             // toggle all vanished from the header, leaving undo onwards. The
             // header is not a bar across the screen - it is a row as wide as
             // what is in it - so every pill here is its anchored size.
-            BarScope(false) { m, _ -> m.width(BarAnchor) }.content()
+            BarScope(false, true, { m, _ -> m.width(BarAnchor) }).content()
         }
         return
     }
@@ -240,7 +280,7 @@ fun BottomBar(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 maxItemsInEachColumn = perColumn,
             ) {
-                BarScope(true) { m, _ -> m.width(BarAnchor).height(BarPillH) }.content()
+                BarScope(true, true, { m, _ -> m.width(BarAnchor).height(BarPillH) }).content()
             }
         }
         return
@@ -251,12 +291,97 @@ fun BottomBar(
             .padding(horizontal = 8.dp, vertical = 6.dp),
     ) {
         readout()
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            BarScope(false) { m, w -> with(this@Row) { m.weight(w) } }.content()
+        FittedBarRow(content)
+    }
+}
+
+/**
+ * The pill row, at its stated widths if they fit and as close to them as it
+ * can get if they do not. **One line, always.**
+ *
+ * Everything in the row is a stated width, so the row has a minimum, and this
+ * file already names it: "below a screen of about 382dp the weighted spacer
+ * that holds the transport to the right edge runs out". A 393 dp phone clears
+ * that by eleven, which means an interface scale of any size at all puts the
+ * row under it - at 1.3 a Pixel 5 lays itself out in 302 dp and the arranger's
+ * row wants 318. What over-filling a `Row` looks like is the last children
+ * measured - mix, rec and play - walking off the right edge, and what wrapping
+ * looks like is the transport on a line of its own. Neither is acceptable for
+ * the one row you reach for without looking.
+ *
+ * So it gives things up in order, cheapest first:
+ *
+ * 1. **The words.** A pill carrying a word is fourteen dp wider than an anchor
+ *    and there is only ever one of them in a row, so this is asked first: the
+ *    loop pill becomes its glyph alone.
+ * 2. **The rest, proportionally.** Whatever is still missing comes off the
+ *    whole row at once, by drawing it at a smaller density - so the pills, the
+ *    gaps and the glyphs inside them all shrink together and nothing clips.
+ *    The bar therefore grows with the interface scale as far as there is room
+ *    and then stops growing, rather than breaking.
+ *
+ * **Nothing here binds at 1.0**: every phone this has been built for fits the
+ * row with its words, both tests pass in the first pass and the body is the
+ * row it has always been.
+ *
+ * The natural width is taken by measuring with **no width at all**: a weighted
+ * child of an unbounded row takes nothing, which is exactly the question being
+ * asked - how much do the *fixed* pills need between them.
+ */
+@Composable
+private fun FittedBarRow(content: @Composable BarScope.() -> Unit) {
+    SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
+        val room = constraints.maxWidth
+        val wide = subcompose(BarPass.Wide) { BarProbeRow(true, content) }
+            .first().measure(Constraints()).width
+        val words = wide <= room
+        val need = if (words) wide else {
+            subcompose(BarPass.Narrow) { BarProbeRow(false, content) }
+                .first().measure(Constraints()).width
         }
+        val squeeze = if (need > room && need > 0) room.toFloat() / need else 1f
+        val row = subcompose(BarPass.Body) {
+            val base = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(base.density * squeeze, base.fontScale),
+            ) { BarPillRow(words, content) }
+        }.first().measure(constraints.copy(minWidth = room))
+        layout(row.width, row.height) { row.place(0, 0) }
+    }
+}
+
+private enum class BarPass { Wide, Narrow, Body }
+
+@Composable
+private fun BarPillRow(words: Boolean, content: @Composable BarScope.() -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        BarScope(
+            false, words,
+            weigh = { m, w -> with(this@Row) { m.weight(w) } },
+            space = { m, w -> with(this@Row) { m.weight(w) } },
+        ).content()
+    }
+}
+
+/**
+ * The same row, with every pill at the width it wants and the slack at none.
+ *
+ * This is what gets measured to decide whether the row fits: a weighted child
+ * of an unbounded row takes nothing, so asking the real row how wide it would
+ * like to be answers with the fixed pills alone and says the three view
+ * toggles cost nothing. They cost an anchor each, and here they say so.
+ */
+@Composable
+private fun BarProbeRow(words: Boolean, content: @Composable BarScope.() -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        BarScope(
+            false, words,
+            weigh = { m, _ -> m.width(BarAnchor) },
+            space = { m, _ -> m },
+        ).content()
     }
 }
 

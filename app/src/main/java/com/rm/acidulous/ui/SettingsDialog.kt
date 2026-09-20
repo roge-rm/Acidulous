@@ -81,6 +81,22 @@ private fun DisplayTab() {
         Choice("light", UiPrefs.theme == ThemeMode.Light) { UiPrefs.chooseTheme(ThemeMode.Light) }
         Choice("dark", UiPrefs.theme == ThemeMode.Dark) { UiPrefs.chooseTheme(ThemeMode.Dark) }
     }
+    // The one setting whose effect is the window it is being read in: the
+    // chips grow under the finger that taps them.
+    //
+    // A note only when the screen cannot give what was asked for, which is the
+    // one thing the chips cannot show - see ui/UiScale.kt for the cap. On every
+    // phone this has been built for it says nothing at all.
+    val applied = LocalUiScale.current
+    Section(
+        "interface size",
+        if (applied >= UiPrefs.uiScale - 0.001f) ""
+        else "This screen can give %.2fx of it.".format(applied),
+    ) {
+        UiScaleSteps.forEachIndexed { i, step ->
+            Choice(UiScaleLabels[i], UiPrefs.uiScale == step) { UiPrefs.chooseUiScale(step) }
+        }
+    }
     Section("screen while playing") {
         Choice("stay awake", UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(true) }
         Choice("let it sleep", !UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(false) }

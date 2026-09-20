@@ -141,14 +141,16 @@ private fun SlotRow(
             }
             val menuScroll = rememberScrollState()
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
-                DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
-                    menu = false
-                    editor.edit(trackIndex) { t -> kind.withType(t, slot, "") }
-                })
-                for (t in types) DropdownMenuItem(text = { Text(t, fontSize = 12.sp) }, onClick = {
-                    menu = false
-                    if (t != fx.type) editor.edit(trackIndex) { tr -> kind.withType(tr, slot, t) }
-                })
+                ScaledWindow {
+                    DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
+                        menu = false
+                        editor.edit(trackIndex) { t -> kind.withType(t, slot, "") }
+                    })
+                    for (t in types) DropdownMenuItem(text = { Text(t, fontSize = 12.sp) }, onClick = {
+                        menu = false
+                        if (t != fx.type) editor.edit(trackIndex) { tr -> kind.withType(tr, slot, t) }
+                    })
+                }
             }
             if (!fx.isEmpty) {
                 val on = !fx.bypass

@@ -34,8 +34,20 @@ import com.rm.acidulous.ui.theme.Acid
 // How hard the top and the bottom of a pad hit. Not 1 at the bottom: below
 // about forty most of these machines barely speak, and a pad that can be
 // struck inaudibly reads as a broken pad rather than as a quiet one.
-private const val SOFT = 40f
-private const val HARD = 127f
+/**
+ * What the softest and hardest strike are worth.
+ *
+ * **Both playing surfaces read them**, the pads here and the keys in
+ * ui/PianoKeys.kt: a finger low on a pad and a finger low on a key mean the
+ * same thing, and two surfaces that answer the same gesture differently would
+ * be two instruments to learn rather than one.
+ *
+ * Forty rather than nought at the bottom, because a note you cannot hear is
+ * indistinguishable from a note that did not play, and a playing surface must
+ * always tell you it heard you.
+ */
+internal const val SOFT = 40f
+internal const val HARD = 127f
 
 /**
  * Pads in place of the keyboard for a drum machine: two rows, one per voice.

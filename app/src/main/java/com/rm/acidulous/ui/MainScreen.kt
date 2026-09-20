@@ -44,6 +44,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.ScrollState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.LaunchState
@@ -200,13 +208,19 @@ fun MainScreen(
         if (clipMode) {
             // What a tap waits for. "end" is the musical default: the clip
             // you are replacing finishes what it was doing.
-            BarButton("q: " + quantiseShort(UiPrefs.launchQuantise), Modifier.width(BarWord)) {
-                dialog = Dialog.Quantise
-            }
-        } else {
+            // The "q:" goes before the word does: what the number means is
+            // guessable from a launcher's own corner, and the number is not.
             BarButton(
-                if (loopScene) "\u27F3 scene" else "\u27F3 song",
-                Modifier.width(BarWord).mappable(MapTargets.action(Action.LoopScene.name)),
+                (if (words) "q: " else "") + quantiseShort(UiPrefs.launchQuantise),
+                word,
+            ) { dialog = Dialog.Quantise }
+        } else {
+            // Narrow, it is the glyph alone: which of the two it is reads
+            // from the symbol being lit rather than from the word beside it,
+            // and a row that has run out of width has nowhere to put a word.
+            BarButton(
+                if (!words) "\u27F3" else if (loopScene) "\u27F3 scene" else "\u27F3 song",
+                word.mappable(MapTargets.action(Action.LoopScene.name)),
             ) { onLoopScene(!loopScene) }
         }
     }
@@ -242,7 +256,7 @@ fun MainScreen(
                     // transport on the other, so it reads as neither.
                     Spacer(Modifier.width(HeaderIslandGap))
                 } else {
-                    Spacer(Modifier.barWeight())
+                    Spacer(Modifier.barSpace())
                 }
                 // And the five that end every row in the app, in this order and
                 // at this width - see BarAnchor. Undo and redo are the song's
@@ -335,21 +349,23 @@ fun MainScreen(
                     modifier = Modifier.scrollbar(fileScroll, color = Acid.colors.scrollbar),
                     scrollState = fileScroll,
                 ) {
-                    DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
-                    DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
-                    DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
-                    DropdownMenuItem(text = { Text("Export…") }, onClick = { fileMenu = false; onExport() })
-                    DropdownMenuItem(text = { Text("MIDI…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
-                    DropdownMenuItem(text = { Text("Sound…") }, onClick = { fileMenu = false; dialog = Dialog.Sound })
-                    DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
-                    DropdownMenuItem(text = { Text("About…") }, onClick = { fileMenu = false; dialog = Dialog.About })
-                    // Not the fast path - holding play is - but the only
-                    // thing on screen that *names* it, which is what a
-                    // gesture otherwise has no way to be found by.
-                    DropdownMenuItem(
-                        text = { Text("Panic · stop all sound") },
-                        onClick = { fileMenu = false; panicEverything() },
-                    )
+                    ScaledWindow {
+                        DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
+                        DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
+                        DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
+                        DropdownMenuItem(text = { Text("Export…") }, onClick = { fileMenu = false; onExport() })
+                        DropdownMenuItem(text = { Text("MIDI…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
+                        DropdownMenuItem(text = { Text("Sound…") }, onClick = { fileMenu = false; dialog = Dialog.Sound })
+                        DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
+                        DropdownMenuItem(text = { Text("About…") }, onClick = { fileMenu = false; dialog = Dialog.About })
+                        // Not the fast path - holding play is - but the only
+                        // thing on screen that *names* it, which is what a
+                        // gesture otherwise has no way to be found by.
+                        DropdownMenuItem(
+                            text = { Text("Panic · stop all sound") },
+                            onClick = { fileMenu = false; panicEverything() },
+                        )
+                    }
                 }
             }
             // **The transport, sideways, and last.** Dan: the tempo, save and
@@ -368,11 +384,95 @@ fun MainScreen(
         }
 
         // --- Song section -----------------------------------------------------------------
-        val vScroll = rememberScrollState()
-        val hScroll = rememberScrollState()
-        Row(Modifier.fillMaxWidth().weight(1f).verticalScrollWithBar(vScroll)) {
+        // Saveable, so a rotation keeps where you were and how close in - the
+        // grid lost both before, because these were plain `remember`.
+        val vScroll = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
+        val hScroll = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
+        // **How close in the grid is, nought for "as stated".** Kept the way
+        // the roll keeps its own zoom - saved but not stored in `UiPrefs` -
+        // because it is how you are working rather than anything about the song.
+        var gridZoom by rememberSaveable { mutableStateOf(0f) }
+        val cellW = (CELL_W * (if (gridZoom > 0f) gridZoom else 1f)).coerceIn(CellMinW, CellMaxW)
+        // The factor actually in force, which is the clamped width read back.
+        // Everything else follows it, so a cell keeps its shape.
+        val z = cellW / CELL_W
+        val cell = SongCell(TRACK_W * z, cellW, CELL_H * z, SCENE_H * z)
+        Row(
+            Modifier.fillMaxWidth().weight(1f)
+                // **Two fingers move the grid; one still launches a clip.**
+                //
+                // Watched on the Initial pass, which travels parent to child,
+                // for the drum grid's reason rather than the roll's: every cell
+                // here has a `combinedClickable` or a `detectTapGestures` and
+                // both axes scroll, so all of them would otherwise have taken
+                // the gesture before this saw it. From the moment it commits
+                // everything is eaten, so the finger that landed on a clip does
+                // not launch it on the way up.
+                //
+                // The vocabulary is M44's, unchanged: `TwoFingers` asks the
+                // same questions, and `decideTwoFinger` settles pan against
+                // pinch once one of them is winning by 24px and then holds that
+                // answer until the fingers lift.
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        var second = false
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            val down = event.changes.count { it.pressed }
+                            if (down == 0) break
+                            if (down >= 2) { second = true; break }
+                        }
+                        if (!second) return@awaitEachGesture
+                        val start = TwoFingers.of(currentEvent) ?: return@awaitEachGesture
+                        var last = start
+                        var mode = TwoFingerMode.Undecided
+                        // The live factor, compounded here rather than read
+                        // back out of the composition: a pinch sends a dozen
+                        // events before the next frame, and multiplying a value
+                        // that has not been recomposed yet gives the same answer
+                        // a dozen times over. That is the fault M44 measured on
+                        // the roll - a doubled finger spread moving a row by
+                        // 1.7dp instead of 40.
+                        var live = z
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            event.changes.forEach { it.consume() }
+                            if (event.changes.count { it.pressed } < 2) break
+                            val now = TwoFingers.of(event) ?: continue
+                            if (mode == TwoFingerMode.Undecided) mode = decideTwoFinger(start, now)
+                            when (mode) {
+                                TwoFingerMode.Pan -> {
+                                    // Both axes at once, unlike either editor:
+                                    // the grid is a plane and both of its
+                                    // scrolls are real.
+                                    hScroll.dispatchRawDelta(last.centre.x - now.centre.x)
+                                    vScroll.dispatchRawDelta(last.centre.y - now.centre.y)
+                                }
+                                // Either direction drives the one factor - see
+                                // SongCell - so the two arms are one.
+                                TwoFingerMode.ZoomTime, TwoFingerMode.ZoomPitch -> {
+                                    val wasSpread = if (mode == TwoFingerMode.ZoomTime) last.spreadX else last.spreadY
+                                    val nowSpread = if (mode == TwoFingerMode.ZoomTime) now.spreadX else now.spreadY
+                                    if (wasSpread > TwoFingers.MinSpread && nowSpread > TwoFingers.MinSpread) {
+                                        live *= nowSpread / wasSpread
+                                        gridZoom = live.coerceIn(
+                                            CellMinW / CELL_W, CellMaxW / CELL_W,
+                                        )
+                                        live = gridZoom
+                                    }
+                                }
+                                TwoFingerMode.Undecided -> {}
+                            }
+                            last = now
+                        }
+                    }
+                }
+                .verticalScrollWithBar(vScroll),
+        ) {
+        CompositionLocalProvider(LocalSongCell provides cell) {
             // Track headers, fixed on the left.
-            Column(Modifier.width(TRACK_W)) {
+            Column(Modifier.width(cell.trackW)) {
                 ModeToggle(clipMode, onClipMode)
                 song.tracks.forEachIndexed { index, track ->
                     val row = remember(song, index) { Freeze.track(song, index) }
@@ -392,7 +492,7 @@ fun MainScreen(
                 }
                 OutlinedButton(
                     onClick = { dialog = Dialog.PickMachine(null) },
-                    modifier = Modifier.width(TRACK_W).height(CELL_H).padding(3.dp),
+                    modifier = Modifier.width(cell.trackW).height(cell.cellH).padding(3.dp),
                     contentPadding = PaddingValues(4.dp),
                 ) { Text("+ track", fontSize = 11.sp, maxLines = 1) }
             }
@@ -482,7 +582,7 @@ fun MainScreen(
                     }
                     OutlinedButton(
                         onClick = { editor.editSong { it.addScene() } },
-                        modifier = Modifier.width(CELL_W).height(SCENE_H).padding(3.dp),
+                        modifier = Modifier.width(cell.cellW).height(cell.sceneH).padding(3.dp),
                         contentPadding = PaddingValues(4.dp),
                     ) { Text("+ scene", fontSize = 11.sp, maxLines = 1) }
                 }
@@ -530,6 +630,7 @@ fun MainScreen(
                     }
                 }
             }
+        }
         }
 
         if (showMixer) {
@@ -661,6 +762,7 @@ private fun SceneHeader(
     freezable: Int, frozen: Int,
     onFreeze: () -> Unit, onThaw: () -> Unit,
 ) {
+    val cell = LocalSongCell.current
     var menu by remember { mutableStateOf(false) }
     val pulse by rememberInfiniteTransition(label = "finishing").animateFloat(
         initialValue = 1f, targetValue = 0.25f,
@@ -668,7 +770,7 @@ private fun SceneHeader(
     )
     Box(
         Modifier
-            .width(CELL_W).height(SCENE_H).padding(3.dp)
+            .width(cell.cellW).height(cell.sceneH).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(
                 when {
@@ -716,20 +818,22 @@ private fun SceneHeader(
             modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar),
             scrollState = menuScroll,
         ) {
-            DropdownMenuItem(text = { Text("Loop this scene") }, onClick = { menu = false; onLoopThis() })
-            DropdownMenuItem(text = { Text("Play on from here") }, onClick = { menu = false; onPlayThrough() })
-            DropdownMenuItem(text = { Text("Settings…") }, onClick = { menu = false; onSettings() })
-            if (freezable > 0) {
-                DropdownMenuItem(text = { Text("Freeze scene ($freezable)") }, onClick = { menu = false; onFreeze() })
+            ScaledWindow {
+                DropdownMenuItem(text = { Text("Loop this scene") }, onClick = { menu = false; onLoopThis() })
+                DropdownMenuItem(text = { Text("Play on from here") }, onClick = { menu = false; onPlayThrough() })
+                DropdownMenuItem(text = { Text("Settings…") }, onClick = { menu = false; onSettings() })
+                if (freezable > 0) {
+                    DropdownMenuItem(text = { Text("Freeze scene ($freezable)") }, onClick = { menu = false; onFreeze() })
+                }
+                if (frozen > 0) {
+                    DropdownMenuItem(text = { Text("Thaw scene ($frozen)") }, onClick = { menu = false; onThaw() })
+                }
+                DropdownMenuItem(text = { Text("Insert after") }, onClick = { menu = false; onInsertAfter() })
+                DropdownMenuItem(text = { Text("Duplicate") }, onClick = { menu = false; onDuplicate() })
+                DropdownMenuItem(text = { Text("Move left") }, onClick = { menu = false; onMoveLeft() })
+                DropdownMenuItem(text = { Text("Move right") }, onClick = { menu = false; onMoveRight() })
+                DropdownMenuItem(text = { Text("Delete") }, onClick = { menu = false; onDelete() })
             }
-            if (frozen > 0) {
-                DropdownMenuItem(text = { Text("Thaw scene ($frozen)") }, onClick = { menu = false; onThaw() })
-            }
-            DropdownMenuItem(text = { Text("Insert after") }, onClick = { menu = false; onInsertAfter() })
-            DropdownMenuItem(text = { Text("Duplicate") }, onClick = { menu = false; onDuplicate() })
-            DropdownMenuItem(text = { Text("Move left") }, onClick = { menu = false; onMoveLeft() })
-            DropdownMenuItem(text = { Text("Move right") }, onClick = { menu = false; onMoveRight() })
-            DropdownMenuItem(text = { Text("Delete") }, onClick = { menu = false; onDelete() })
         }
     }
 }
@@ -740,10 +844,11 @@ private fun TrackHeader(
     onChangeMachine: () -> Unit, onRename: () -> Unit, onDuplicate: () -> Unit, onDelete: () -> Unit,
     freezable: Int, frozen: Int, onFreeze: () -> Unit, onThaw: () -> Unit,
 ) {
+    val cell = LocalSongCell.current
     var menu by remember { mutableStateOf(false) }
     Box(
         Modifier
-            .width(TRACK_W).height(CELL_H).padding(3.dp)
+            .width(cell.trackW).height(cell.cellH).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(Acid.colors.control)
             .combinedClickable(onClick = { menu = true }),
@@ -763,16 +868,18 @@ private fun TrackHeader(
             modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar),
             scrollState = menuScroll,
         ) {
-            DropdownMenuItem(text = { Text("Change machine…") }, onClick = { menu = false; onChangeMachine() })
-            DropdownMenuItem(text = { Text("Rename…") }, onClick = { menu = false; onRename() })
-            if (freezable > 0) {
-                DropdownMenuItem(text = { Text("Freeze track ($freezable)") }, onClick = { menu = false; onFreeze() })
+            ScaledWindow {
+                DropdownMenuItem(text = { Text("Change machine…") }, onClick = { menu = false; onChangeMachine() })
+                DropdownMenuItem(text = { Text("Rename…") }, onClick = { menu = false; onRename() })
+                if (freezable > 0) {
+                    DropdownMenuItem(text = { Text("Freeze track ($freezable)") }, onClick = { menu = false; onFreeze() })
+                }
+                if (frozen > 0) {
+                    DropdownMenuItem(text = { Text("Thaw track ($frozen)") }, onClick = { menu = false; onThaw() })
+                }
+                DropdownMenuItem(text = { Text("Duplicate") }, onClick = { menu = false; onDuplicate() })
+                DropdownMenuItem(text = { Text("Delete") }, onClick = { menu = false; onDelete() })
             }
-            if (frozen > 0) {
-                DropdownMenuItem(text = { Text("Thaw track ($frozen)") }, onClick = { menu = false; onThaw() })
-            }
-            DropdownMenuItem(text = { Text("Duplicate") }, onClick = { menu = false; onDuplicate() })
-            DropdownMenuItem(text = { Text("Delete") }, onClick = { menu = false; onDelete() })
         }
     }
 }
@@ -796,6 +903,7 @@ private fun ClipCell(
     // pointerInput keeps the lambdas it was built with, so they are read
     // through rememberUpdatedState or a cell would launch whatever it held
     // when it was first composed.
+    val cell = LocalSongCell.current
     val launchNow by rememberUpdatedState(onLaunch)
     val cancelNow by rememberUpdatedState(onCancelLaunch)
     val openNow by rememberUpdatedState(onOpen)
@@ -814,7 +922,7 @@ private fun ClipCell(
     }
     Box(
         Modifier
-            .width(CELL_W).height(CELL_H).padding(3.dp)
+            .width(cell.cellW).height(cell.cellH).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(Acid.colors.card)
             .border(if (queued || stopping) 2.dp else 1.dp, edge, RoundedCornerShape(6.dp))
@@ -862,7 +970,7 @@ private fun ClipCell(
                 )
                 Box(
                     Modifier.fillMaxHeight().width(2.dp).align(Alignment.CenterStart)
-                        .offset(x = (CELL_W - 6.dp) * progress.coerceIn(0f, 1f))
+                        .offset(x = (cell.cellW - 6.dp) * progress.coerceIn(0f, 1f))
                         .background(Acid.colors.accent),
                 )
             }
@@ -941,10 +1049,11 @@ private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () ->
  */
 @Composable
 private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
+    val cell = LocalSongCell.current
     Box(
         Modifier
             .mappable(MapTargets.action(Action.ClipMode.name))
-            .width(TRACK_W).height(SCENE_H).padding(3.dp)
+            .width(cell.trackW).height(cell.sceneH).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(if (clipMode) Acid.colors.accentDim else Acid.colors.control)
             .clickable { onClipMode(!clipMode) },
@@ -978,3 +1087,31 @@ private val HeaderIslandGap = 16.dp
 private val CELL_W = 84.dp
 private val CELL_H = 56.dp
 private val SCENE_H = 54.dp
+
+/**
+ * How wide a clip cell may be drawn, which is what bounds the pinch.
+ *
+ * Stated as a width rather than as a range of multipliers, which is how
+ * `DrumGrid` bounds its own rows (`MinRow`/`MaxRow` in ui/GridMetrics.kt): the
+ * floor is where a cell stops being worth tapping, and the ceiling is where
+ * one clip is taking a quarter of a phone and the grid has stopped being a
+ * grid. Both scale with the interface setting, because both are `dp`.
+ */
+private val CellMinW = 48.dp
+private val CellMaxW = 168.dp
+
+/**
+ * The four sizes the song grid is drawn at, after a pinch.
+ *
+ * One factor for all of them rather than one per axis, unlike the roll, whose
+ * two axes are pitch and time and genuinely different. A cell here is a tile
+ * with a thumbnail and a corner mark in it, and scaling one side alone turns a
+ * clip into a sliver.
+ *
+ * A composition local rather than four more parameters because the readers are
+ * the four cell composables below and nothing between here and them has an
+ * opinion - the same reason `LocalHeaderBand` and `LocalPanelStacked` exist.
+ */
+private data class SongCell(val trackW: Dp, val cellW: Dp, val cellH: Dp, val sceneH: Dp)
+
+private val LocalSongCell = compositionLocalOf { SongCell(TRACK_W, CELL_W, CELL_H, SCENE_H) }

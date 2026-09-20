@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -54,10 +55,17 @@ fun SplashScreen(modifier: Modifier = Modifier) {
     // Fades in rather than appearing, because the frame before this one is
     // the system's flat ink and a hard cut between them reads as a flicker.
     val shown by animateFloatAsState(1f, tween(durationMillis = 180), label = "splash")
-    Box(
+    BoxWithConstraints(
         modifier.fillMaxSize().background(Acid.colors.bg),
         contentAlignment = Alignment.Center,
     ) {
+        // **Two hundred and fifty-six, or what there is.** The icon is the one
+        // thing in the app with no layout around it to give way, so at the
+        // largest interface scale on a turned phone it asked for more height
+        // than the window had and was cropped - which is the exact fault this
+        // screen exists to avoid. Sixty per cent of the short edge leaves the
+        // version line under it room to sit.
+        val icon = minOf(256.dp, minOf(maxWidth, maxHeight) * 0.6f)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -77,7 +85,7 @@ fun SplashScreen(modifier: Modifier = Modifier) {
             Image(
                 painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = null,
-                modifier = Modifier.size(256.dp),
+                modifier = Modifier.size(icon),
             )
             Text(
                 version,

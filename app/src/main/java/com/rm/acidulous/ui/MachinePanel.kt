@@ -588,7 +588,9 @@ internal fun PatchPicker(
     }
     val menuScroll = rememberScrollState()
     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
-        for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
+        ScaledWindow {
+            for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
+        }
     }
     if (saving) TextInputDialog("Patch name", "", onDismiss = { saving = false }) { name -> onSave(name); saving = false }
     if (browsing) {
@@ -2359,58 +2361,60 @@ private fun FormulaDialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        androidx.compose.material3.Surface(
-            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = c.card,
-        ) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Formula", color = c.text, fontSize = 20.sp)
-                androidx.compose.material3.OutlinedTextField(
-                    value = formula, onValueChange = { formula = it },
-                    label = { Text("expression in t, f, n, v, x, a, b, c, s, r") },
-                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (error.isNotEmpty()) Text(error, color = c.red, fontSize = 12.sp)
-                Text("examples", color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                Column(
-                    Modifier.heightIn(max = 180.dp).verticalScrollWithBar(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    for ((example, what) in FORMULA_EXAMPLES) {
-                        Row(
-                            Modifier.fillMaxWidth().clickable { formula = example }.padding(vertical = 3.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(example, color = c.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-                                modifier = Modifier.weight(1f), maxLines = 1)
-                            Text(what, color = c.textDim, fontSize = 10.sp, maxLines = 1)
+        ScaledWindow {
+            androidx.compose.material3.Surface(
+                Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = c.card,
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Formula", color = c.text, fontSize = 20.sp)
+                    androidx.compose.material3.OutlinedTextField(
+                        value = formula, onValueChange = { formula = it },
+                        label = { Text("expression in t, f, n, v, x, a, b, c, s, r") },
+                        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    if (error.isNotEmpty()) Text(error, color = c.red, fontSize = 12.sp)
+                    Text("examples", color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                    Column(
+                        Modifier.heightIn(max = 180.dp).verticalScrollWithBar(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        for ((example, what) in FORMULA_EXAMPLES) {
+                            Row(
+                                Modifier.fillMaxWidth().clickable { formula = example }.padding(vertical = 3.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Text(example, color = c.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                                    modifier = Modifier.weight(1f), maxLines = 1)
+                                Text(what, color = c.textDim, fontSize = 10.sp, maxLines = 1)
+                            }
                         }
                     }
-                }
-                Text("step tables - values, and | where it loops back", color = c.teal, fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace)
-                androidx.compose.material3.OutlinedTextField(
-                    value = arp, onValueChange = { arp = it }, label = { Text("arp, semitones") },
-                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
-                    singleLine = true, modifier = Modifier.fillMaxWidth(),
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("step tables - values, and | where it loops back", color = c.teal, fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace)
                     androidx.compose.material3.OutlinedTextField(
-                        value = duty, onValueChange = { duty = it }, label = { Text("duty 0-255") },
+                        value = arp, onValueChange = { arp = it }, label = { Text("arp, semitones") },
                         textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
-                        singleLine = true, modifier = Modifier.weight(1f),
+                        singleLine = true, modifier = Modifier.fillMaxWidth(),
                     )
-                    androidx.compose.material3.OutlinedTextField(
-                        value = vol, onValueChange = { vol = it }, label = { Text("volume 0-255") },
-                        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
-                        singleLine = true, modifier = Modifier.weight(1f),
-                    )
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                    TextButton(onClick = { onApply(formula, arp, duty, vol) }) { Text("OK") }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        androidx.compose.material3.OutlinedTextField(
+                            value = duty, onValueChange = { duty = it }, label = { Text("duty 0-255") },
+                            textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                            singleLine = true, modifier = Modifier.weight(1f),
+                        )
+                        androidx.compose.material3.OutlinedTextField(
+                            value = vol, onValueChange = { vol = it }, label = { Text("volume 0-255") },
+                            textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                            singleLine = true, modifier = Modifier.weight(1f),
+                        )
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(onClick = onDismiss) { Text("Cancel") }
+                        TextButton(onClick = { onApply(formula, arp, duty, vol) }) { Text("OK") }
+                    }
                 }
             }
         }
