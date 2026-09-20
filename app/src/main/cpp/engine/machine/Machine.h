@@ -21,6 +21,21 @@ class Machine {
     // Once per block, before render(): the block's tick range and the tempo,
     // for anything a machine syncs to the transport (Trinity's LFOs).
     virtual void onBlock(int64_t /*tickStart*/, int64_t /*tickEnd*/, float /*bpm*/) {}
+    /**
+     * Where the rack is in the arrangement, for a machine that plays the song
+     * rather than notes from it.
+     *
+     * Every machine here is told *when* a block is and nothing about *where*;
+     * a tape has to know which cell it is in and how far through that cell's
+     * own cycle, and only the scheduler can say - it is the one place that
+     * unifies the arranger's single position with the launcher's sixteen.
+     * `cycleTick` counts the repeats, unlike the tick a note is fired against;
+     * see SceneScheduler::rackCycleTick.
+     *
+     * Defaulted, so the nineteen machines that answer notes ignore it.
+     */
+    virtual void onScene(int64_t /*sceneId*/, int64_t /*cycleTick*/, bool /*playing*/,
+                         bool /*clipMuted*/) {}
     virtual void reset() = 0; // silence, forget held notes
     virtual void noteOn(uint8_t note, uint8_t velocity) = 0;
     virtual void noteOff(uint8_t note) = 0;

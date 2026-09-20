@@ -455,6 +455,30 @@ class SceneScheduler {
         return launcher.playing(rack) ? launcherNow - launcher.origin(rack) : 0;
     }
 
+    /**
+     * How far into this rack's *cell* it is, counting the repeats.
+     *
+     * [rackTick] resets to nought at every repeat, which is right for notes -
+     * a one-bar clip in a four-bar scene should come round four times - and
+     * wrong for audio. A take sung across a scene played twice is eight bars
+     * of one performance, and restarting it at the second pass would play the
+     * first four bars again.
+     *
+     * So: the same question the launcher already answers. Its origin is the
+     * start of a **cycle of bars x repeat**, which is exactly this, so clip
+     * mode needs no arithmetic at all and the arranger's line is that same
+     * sentence written out. Both modes then agree on what "how far into this
+     * cell" means, which is what lets one recording serve them both.
+     */
+    int64_t rackCycleTick(int32_t rack) const {
+        if (!launcherActive()) {
+            if (snap == nullptr || snap->scenes.empty()) return lastTickInIteration;
+            const SceneInfo &sc = snap->scenes[static_cast<size_t>(sceneIdx)];
+            return static_cast<int64_t>(repeatIdx) * sc.iterationTicks() + lastTickInIteration;
+        }
+        return launcher.playing(rack) ? launcherNow - launcher.origin(rack) : 0;
+    }
+
     /** The bar a phase is measured against: the scene's, or the song's. */
     int32_t barTicks() const {
         if (snap == nullptr || snap->scenes.empty() || launcherActive() ||

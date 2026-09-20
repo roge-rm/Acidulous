@@ -63,6 +63,8 @@ class Rack {
     // the audio that machine already made. Called before the scheduler fires
     // notes, because a frozen rack is not sent any.
     void updateFrozen(int64_t sceneId, float bpm, bool playing);
+    /** Pass the rack's place in the arrangement to a machine that wants it. */
+    void updateScene(int64_t sceneId, int64_t cycleTick, bool playing);
     bool frozenActive() const { return frozenNow != nullptr; }
     /** Where in the frozen clip this block starts. Called before render(). */
     void syncFrozen(int64_t tickInIteration, float bpm);

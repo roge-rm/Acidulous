@@ -18,6 +18,7 @@
 // What it watches is deliberately the *UI's* view: `Transport::launchState`
 // is the packed word the grid reads, and every fault above was visible in it
 // before it was audible.
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -437,6 +438,39 @@ void aMutedClipIsMutedWhenFrozen() {
     ok("and comes back when it is not", f->racks[0].frozenActive());
 }
 
+/**
+ * A cell's cycle counts its repeats; a note's tick does not.
+ *
+ * `rackTick` goes back to nought at every repeat, which is what makes a
+ * one-bar clip come round four times in a four-bar scene. Audio arranged on
+ * the song cannot work that way: a take sung across a scene played twice is
+ * one performance eight bars long, and restarting it on the second pass would
+ * play the first four bars again. `rackCycleTick` is the same question asked
+ * so that the answer runs on - and in clip mode it is already what the
+ * launcher's own origin means, which is what lets one take serve both modes.
+ */
+void aCellsCycleCountsItsRepeats() {
+    auto f = std::make_unique<Fixture>();
+    f->scene(1, 1, 2); // one bar, played twice: a two-bar cell
+    f->clip(0, 0, 1);
+    f->commit();
+    f->play();
+
+    f->run(f->blocksFor(1.0)); // half way through the first pass
+    const int64_t tick1 = f->scheduler.rackTick(0);
+    const int64_t cycle1 = f->scheduler.rackCycleTick(0);
+    ok("first pass: a tick and a cycle are the same thing", tick1 == cycle1,
+       std::to_string(tick1) + " and " + std::to_string(cycle1));
+
+    f->run(f->blocksFor(2.0)); // the same place in the second pass
+    const int64_t tick2 = f->scheduler.rackTick(0);
+    const int64_t cycle2 = f->scheduler.rackCycleTick(0);
+    ok("second pass: the tick has gone back to where it was",
+       std::llabs(tick2 - tick1) < 8, std::to_string(tick2) + " against " + std::to_string(tick1));
+    ok("and the cycle has carried on", std::llabs(cycle2 - (cycle1 + kBar)) < 8,
+       std::to_string(cycle2) + ", wanted about " + std::to_string(cycle1 + kBar));
+}
+
 } // namespace
 
 int main() {
@@ -451,6 +485,7 @@ int main() {
     sceneRepeatsAdvanceAndWrap();
     nothingIsLeftSounding();
     aMutedClipIsMutedWhenFrozen();
+    aCellsCycleCountsItsRepeats();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

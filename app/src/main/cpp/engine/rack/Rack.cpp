@@ -195,6 +195,14 @@ void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing) {
     frozenCursor = -1;
 }
 
+void Rack::updateScene(int64_t sceneId, int64_t cycleTick, bool playing) {
+    if (machine == nullptr) return;
+    // The clip is the rack's own, set per rack per scene, so the mute is the
+    // right one in both modes - the same reason updateFrozen asks it.
+    const seq::Clip *clip = clipPlayer.clip();
+    machine->onScene(sceneId, cycleTick, playing, clip != nullptr && clip->mute);
+}
+
 void Rack::syncFrozen(int64_t tickInIteration, float bpm) {
     if (frozenNow == nullptr) return;
     const double perTick = static_cast<double>(kSampleRate) * 60.0 / (static_cast<double>(bpm) * kPPQN);
