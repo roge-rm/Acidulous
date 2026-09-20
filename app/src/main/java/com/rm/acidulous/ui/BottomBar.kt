@@ -368,133 +368,41 @@ fun BarReadout(text: String, colour: Color, size: Int = 12) {
 }
 
 /**
- * Panic, and the load meter, in one control.
+ * Stop everything, and mean it.
  *
- * The meter is a ladder of segments lit from the bottom - teal to about half,
- * amber past that, red past four fifths, and the whole ladder when a block
- * has actually been dropped. It is the front of every compressor and mixer
- * ever made, which is the point: a smooth fill creeping up a pill reads as a
- * button highlight, and discrete segments read as a level. They also make a
- * small change visible, where a continuous fill just creeps.
+ * **There is no longer a button for this.** There was: a pill on the
+ * arranger's bar with the load meter drawn behind the word, on the argument
+ * that the thing filling up is the thing you would press. That argument held
+ * while panic was a pill on a bar, and stopped holding the moment the
+ * transport moved into the header - Dan, looking at it up there, "it looks
+ * out of place on the top", and then the better question, why is it a button
+ * at all. So the meter went to every header on its own (`ui/LoadMeter.kt`)
+ * and this became a long press on play/stop: the control your thumb is
+ * already on when something goes wrong, in the same corner of every screen.
  *
- * The thing filling up is the thing you would press, which is the argument
- * for it living here rather than as a number in the corner of a header. It is
- * ornament over a working button, so it stays behind the word and well under
- * full strength - you read the ladder when you look for it, and the rest of
- * the time it is the transport's most-pressed-in-a-hurry control and nothing
- * else.
+ * The two calls belong together and must not drift apart. Panic means nothing
+ * is held any more, so a hub that still believes a note is down will never
+ * send its note-off - and a synth on the other end of a cable would hold that
+ * note until something else happened to it.
  *
- * No border of its own any more. Every other pill's outline is all but
- * invisible against the bar, so a red ring here was the only one on the row
- * you actually saw, and it made panic look like a different kind of control
- * rather than the same kind with a different job. The red word is signal
- * enough.
- *
- * An ordinary OutlinedButton, so it is its neighbours' shape by construction
- * rather than by arithmetic. That took two goes. Material expands a button's
- * layout node to the 48dp touch target while drawing its outline at 40dp, so
- * a fill clipped to the node is a bigger stadium than the border around it;
- * built by hand instead, it came out the right height and the wrong width,
- * because MinWidth is Material's and not mine to restate. So the button stays
- * Material's and the ladder is inset to the outline it actually draws.
+ * Four callers now: the two play pills, the arranger's file menu, and
+ * `Action.Panic` from a mapped controller, which is the real escape hatch for
+ * anybody performing and is unaffected by any of the above.
  */
-@Composable
-fun PanicButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val c = Acid.colors
-    val load = rememberEngineLoad()
-    OutlinedButton(
-        modifier = modifier
-            // Outermost, as on every other mappable control: inside the clip
-            // its highlight is cut away and cannot be seen.
-            .mappable(MapTargets.action(Action.Panic.name))
-            .drawBehind {
-                val level = if (load.dropped) 1f else load.level
-                if (level <= 0.001f) return@drawBehind
-                // The outline Material actually draws, inside the node it
-                // actually occupies.
-                val drawn = ButtonDefaults.MinHeight.toPx()
-                // And inside the outline, not up to it. Material strokes the
-                // border *centred* on the shape's boundary, so a fill drawn to
-                // that same boundary reaches the middle of the stroke and
-                // reads as a meter slightly too big for its own pill. Dan:
-                // "the fill circle doesn't match the pill outline (it is
-                // bigger than the pill)". One stroke width in on every side,
-                // and the corner radius follows the height that is left.
-                val edge = kPanicStroke.toPx()
-                val tall = drawn - edge * 2f
-                val wide = size.width - (edge + kPanicSide.toPx()) * 2f
-                val top = ((size.height - drawn) / 2f).coerceAtLeast(0f) + edge
-                val gap = 1.dp.toPx()
-                val h = (tall - gap * (kLadder - 1)) / kLadder
-                if (h <= 0f || wide <= 0f) return@drawBehind
-                // The rungs are rectangles and the button is a stadium, so
-                // they are clipped to its shape. Without this the bottom one
-                // runs out past the curve at either end and the meter reads
-                // as a spill rather than as a reading.
-                val pill = Path().apply {
-                    addRoundRect(
-                        RoundRect(Rect(Offset(edge + kPanicSide.toPx(), top), Size(wide, tall)), CornerRadius(tall / 2f)),
-                    )
-                }
-                clipPath(pill) {
-                    for (i in 0 until kLadder) {
-                        // Lit once the level reaches the foot of the rung, so
-                        // the count reads as the percentage rather than
-                        // trailing it by one.
-                        if (level < i.toFloat() / kLadder) break
-                        // Colour by where the rung sits on the scale, not by
-                        // the reading: a meter's own scale does not change
-                        // colour as the needle moves.
-                        val at = (i + 0.5f) / kLadder
-                        val colour = when {
-                            load.dropped -> c.red
-                            at > 0.8f -> c.red
-                            at > 0.5f -> c.accent
-                            else -> c.teal
-                        }
-                        drawRect(
-                            colour.copy(alpha = if (load.dropped) 0.55f else 0.40f),
-                            topLeft = Offset(edge + kPanicSide.toPx(), top + (kLadder - 1 - i) * (h + gap)),
-                            size = Size(wide, h),
-                        )
-                    }
-                }
-            },
-        onClick = onClick,
-        contentPadding = PaddingValues(horizontal = 4.dp),
-        // The outline Material draws, stated rather than defaulted, because
-        // the meter above has to know how wide it is to sit inside it.
-        border = BorderStroke(kPanicStroke, ButtonDefaults.outlinedButtonBorder.brush),
-    ) {
-        // Red when it means something. The word was always red, which made it
-        // the loudest thing on a row where nothing was wrong - so red stopped
-        // being a warning and became the name of a button. It now says what
-        // the meter says: past nine tenths of a block's time, or a dropout
-        // already counted.
-        Text(
-            "panic",
-            color = if (load.dropped || load.level > 0.9f) c.red else c.textMid,
-            fontSize = 12.sp, maxLines = 1,
-        )
-    }
+fun panicEverything() {
+    // **And it stops the transport, which the old button did not.** Panic
+    // only ever set the engine's flag - reset every machine, drop every tail
+    // - and left the sequencer running, so holding this while a song played
+    // would silence the rack for a block and then be handed the same notes
+    // again on the next one. That was defensible for a button sitting on its
+    // own; it is not for a gesture on the stop pill, where the whole meaning
+    // is "stop, and mean it".
+    //
+    // The mapped action goes through here too, so `Action.Panic` from a
+    // controller now stops as well. That is the same word meaning the same
+    // thing in both places, which is worth more than the old reading - and
+    // `Action.Stop` is still there for a pad that should only stop.
+    com.rm.acidulous.engine.NativeEngine.transportStop()
+    com.rm.acidulous.engine.NativeEngine.panic()
+    com.rm.acidulous.midi.MidiHub.forgetSounding()
 }
-
-/** Segments in the ladder. Seven of them is 4dp a rung in a 40dp pill. */
-private const val kLadder = 7
-
-/** Material's own outline width, which the meter is inset by. */
-private val kPanicStroke = 1.dp
-
-/**
- * How much narrower the drawn button is than the node it is drawn in.
- *
- * Measured, because Material does not say. The height is easy - the node is
- * the 48 dp touch target and the surface is `MinHeight`, so centring one in
- * the other lands exactly. The width is not: with the meter inset by the
- * border alone it still showed three pixels of green either side of the
- * outline at 2.75x, which is a hair over a decibel... over a *dp*, and two
- * more brings it three pixels inside on both sides instead. Dan saw it before
- * any of this was measured: "I can see green to the left/right of the outside
- * of the panic pill".
- */
-private val kPanicSide = 2.dp

@@ -192,24 +192,11 @@ fun MainScreen(
             BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
     }
 
-    // **Panic stays at the far end from the transport, whichever ends those
-    // are.** Its own note says why it earns the whole width of the row
-    // between itself and play: it is one tap, never behind a menu, and it is
-    // also the one button here you must not hit by accident. Moving the
-    // transport into the header would have parked play five pills away from
-    // it. So the row splits - panic and what the *song* is doing at one end,
-    // the transport at the other - and sideways those ends are opposite
-    // corners of the screen rather than opposite ends of one bar.
+    /** What the *song* is doing, as against what the transport is doing. */
     val songSlot: @Composable BarScope.() -> Unit = {
         // In clip mode stop is a two-stage thing: once to let every clip
         // finish the cycle it is in, again to cut. A launcher that only ever
         // cut would be useless for ending a piece.
-        PanicButton(Modifier.width(BarAnchor)) {
-            NativeEngine.panic()
-            // Panic means nothing is held any more, so the hub must not go
-            // on believing a note is still down somewhere.
-            com.rm.acidulous.midi.MidiHub.forgetSounding()
-        }
         if (clipMode) {
             // What a tap waits for. "end" is the musical default: the clip
             // you are replacing finishes what it was doing.
@@ -250,13 +237,10 @@ fun MainScreen(
                 // the better outcome.
                 songSlot()
                 if (landscape) {
-                    // A stated gap sideways, because there is no slack in a
-                    // row as wide as its contents. It leaves panic five pills
-                    // from play, which is exactly what the editor's header
-                    // leaves between `fx` and play - far enough that the two
-                    // are not one reach, and the whole width of the screen
-                    // still separates them upright.
-                    Spacer(Modifier.width(16.dp))
+                    // An island: what the song is doing, set the same
+                    // distance from the file menu on one side as from the
+                    // transport on the other, so it reads as neither.
+                    Spacer(Modifier.width(HeaderIslandGap))
                 } else {
                     Spacer(Modifier.barWeight())
                 }
@@ -296,6 +280,12 @@ fun MainScreen(
                     if (playing) "\u25A0" else "\u25B6",
                     Modifier.width(BarAnchor).mappable(MapTargets.action(Action.PlayStop.name)),
                     colour = if (anyStopping) Acid.colors.red else Color.Unspecified,
+                    // Hold it to stop *everything* - every voice, every tail,
+                    // every held note - which is what the panic pill used to
+                    // be. Guarded on mapping mode, because `mappable` claims
+                    // a long press there to forget what drives a control, and
+                    // one gesture must not do both.
+                    onLongPress = { if (!UiPrefs.mapMode) panicEverything() },
                 ) {
                     when {
                         !playing -> NativeEngine.transportPlay(if (clipMode) 0 else position.scene)
@@ -334,7 +324,17 @@ fun MainScreen(
             // the button, and the menu drops under it against the right edge.
             Box {
                 HeaderTextButton("file ▾", color = Acid.colors.accent) { fileMenu = true }
-                DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
+                // A position bar, because this menu scrolls - nine items is
+                // taller than a phone held sideways, and until it had one the
+                // last of them looked like the last there was. See
+                // ui/Scrollbar.kt; every scrolling list in the app has one.
+                val fileScroll = rememberScrollState()
+                DropdownMenu(
+                    expanded = fileMenu,
+                    onDismissRequest = { fileMenu = false },
+                    modifier = Modifier.scrollbar(fileScroll, color = Acid.colors.scrollbar),
+                    scrollState = fileScroll,
+                ) {
                     DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
                     DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
                     DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
@@ -343,6 +343,13 @@ fun MainScreen(
                     DropdownMenuItem(text = { Text("Sound…") }, onClick = { fileMenu = false; dialog = Dialog.Sound })
                     DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
                     DropdownMenuItem(text = { Text("About…") }, onClick = { fileMenu = false; dialog = Dialog.About })
+                    // Not the fast path - holding play is - but the only
+                    // thing on screen that *names* it, which is what a
+                    // gesture otherwise has no way to be found by.
+                    DropdownMenuItem(
+                        text = { Text("Panic · stop all sound") },
+                        onClick = { fileMenu = false; panicEverything() },
+                    )
                 }
             }
             // **The transport, sideways, and last.** Dan: the tempo, save and
@@ -350,7 +357,14 @@ fun MainScreen(
             // same place in every screen" - which is the far right of the
             // header, where the editor already puts them. Upright this is
             // empty and the bar at the foot has them.
+            if (landscape) Spacer(Modifier.width(HeaderIslandGap))
             if (landscape) footerSlot()
+            // Last, at the far edge, as it is on the editor and the patch
+            // editor: a reading rather than a control, so it sits past the
+            // things you press. This is the one header that never had it,
+            // because it had the panic pill with the meter drawn behind the
+            // word instead - see panicEverything in ui/BottomBar.kt.
+            LoadMeter()
         }
 
         // --- Song section -----------------------------------------------------------------
@@ -527,7 +541,7 @@ fun MainScreen(
         // dim monospace on the same ground as the grid reads as part of it.
         // Sideways every pill is up in the header and this is the readout
         // alone - which still earns the bar behind it, because two lines of
-        // dim monospace on the same ground as the grid read as part of it.
+        // dim monospace on the grid's own ground read as part of the grid.
         if (landscape) {
             Column(
                 Modifier.fillMaxWidth().background(Acid.colors.bar)
@@ -933,6 +947,17 @@ private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
 }
 
 private val TRACK_W = 96.dp
+/**
+ * What sets the song's own pill apart from its neighbours in the header.
+ *
+ * The same on both sides on purpose - Dan asked for "the gap between them and
+ * the file pulldown the same as the gap between them and the transport
+ * buttons" - so `⟳ song` reads as a thing of its own rather than as the last
+ * of the file controls or the first of the transport. Four dp more than the
+ * row's own spacing would not say it; sixteen does.
+ */
+private val HeaderIslandGap = 16.dp
+
 private val CELL_W = 84.dp
 private val CELL_H = 56.dp
 private val SCENE_H = 54.dp

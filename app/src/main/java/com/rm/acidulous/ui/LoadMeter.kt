@@ -77,13 +77,20 @@ fun loadColour(load: EngineLoad): Color {
 }
 
 /**
- * The bar, for a header with no panic button in it.
+ * The bar. It is in every header now, last, at the far edge.
  *
  * The number that used to sit beside this is gone. It was the widest thing
  * in a run that the header packs around the camera hole, and it changed
  * width as it ticked past 99, which moved the buttons; and what it answered
  * - "how much room is left" - the status line answers too, without costing
  * the header anything. What is left is the part you read at a glance.
+ *
+ * The arranger used to have the panic pill instead, with this same reading
+ * drawn as a ladder behind the word. That pill is gone and this took its
+ * place, so it also took its one behaviour that was not just colour: **a
+ * dropout fills the bar.** Without that, a block dropped at low load is a
+ * short red stub, which is less visible than the thing it replaced - and a
+ * dropout is the one reading here that has already cost you something.
  */
 @Composable
 fun LoadMeter(modifier: Modifier = Modifier) {
@@ -93,7 +100,7 @@ fun LoadMeter(modifier: Modifier = Modifier) {
     Canvas(modifier.padding(horizontal = 3.dp).width(5.dp).height(22.dp)) {
         val radius = CornerRadius(2.dp.toPx())
         drawRoundRect(c.raised, Offset.Zero, size, radius)
-        val h = size.height * load.level
+        val h = size.height * if (load.dropped) 1f else load.level
         drawRoundRect(colour, Offset(0f, size.height - h), Size(size.width, h), radius)
     }
 }

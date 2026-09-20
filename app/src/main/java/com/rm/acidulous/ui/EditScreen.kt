@@ -369,6 +369,11 @@ fun EditScreen(
             BarButton(
                 if (playing) "\u25A0" else "\u25B6",
                 anchor.mappable(MapTargets.action(Action.PlayStop.name)),
+                // Hold it to stop *everything* - every voice, every tail,
+                // every held note. The same gesture on the same pill as the
+                // arranger's, guarded the same way: `mappable` claims a long
+                // press in mapping mode to forget what drives a control.
+                onLongPress = { if (!UiPrefs.mapMode) panicEverything() },
             ) {
                 if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(song.scenes.indexOf(scene))
             }
