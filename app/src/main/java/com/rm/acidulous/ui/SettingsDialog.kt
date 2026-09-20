@@ -160,6 +160,25 @@ private fun NewSongSection() {
         "signature", "${sig.beats}/${sig.unit}", "",
         sigIndex.toFloat(), 0f..(SIGNATURES.size - 1).toFloat(), SIGNATURES.size - 2,
     ) { v -> UiPrefs.chooseNewSignature(SIGNATURES[v.toInt().coerceIn(0, SIGNATURES.size - 1)]) }
+    // What the one track of a new song holds. Hexbeat by default - a new
+    // song is usually a beat before it is anything else - and behind the same
+    // picker the arranger's "+ track" uses, because nineteen machines is not
+    // a row of chips and a second list of them would be a second list to keep
+    // up to date.
+    var pickingMachine by remember { mutableStateOf(false) }
+    Section(
+        "machine",
+        "A new song starts with one ${UiPrefs.newMachine} track: " +
+            com.rm.acidulous.model.MachineUi.describe(UiPrefs.newMachine) + ".",
+    ) {
+        Choice(UiPrefs.newMachine, true) { pickingMachine = true }
+    }
+    if (pickingMachine) {
+        MachinePickerDialog(
+            current = UiPrefs.newMachine,
+            onDismiss = { pickingMachine = false },
+        ) { type -> UiPrefs.chooseNewMachine(type); pickingMachine = false }
+    }
     // The scale a new track starts in: a Scale eventor is fitted to it, so
     // the keyboard and the roll agree with the song from the first note.
     var picking by remember { mutableStateOf(false) }

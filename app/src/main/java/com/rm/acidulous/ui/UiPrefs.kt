@@ -250,6 +250,18 @@ object UiPrefs {
     var newScaleIndex by mutableStateOf(0)
         private set
 
+    /**
+     * The machine a new song's one track starts with.
+     *
+     * Hexbeat rather than Subvert, because a new song is almost always a beat
+     * before it is anything else - you put a pattern down and then write to
+     * it. Settable, because "almost always" is a statement about most people
+     * and somebody who opens the app to write a bassline should not have to
+     * change the machine every time.
+     */
+    var newMachine by mutableStateOf("Hexbeat")
+        private set
+
     fun init(context: Context) {
         val p = context.getSharedPreferences("ui", Context.MODE_PRIVATE)
         store = p
@@ -293,6 +305,7 @@ object UiPrefs {
         newScaleOn = p.getBoolean(KEY_SCALE_ON, false)
         newScaleKey = p.getInt(KEY_SCALE_KEY, 0)
         newScaleIndex = p.getInt(KEY_SCALE_INDEX, 0)
+        newMachine = p.getString(KEY_NEW_MACHINE, "Hexbeat") ?: "Hexbeat"
         MidiHub.routing = runCatching { MidiHub.Routing.valueOf(p.getString(KEY_MIDI_ROUTE, null) ?: "SelectedTrack") }
             .getOrDefault(MidiHub.Routing.SelectedTrack)
         MidiHub.fixedRack = p.getInt(KEY_MIDI_RACK, 0)
@@ -589,6 +602,7 @@ object UiPrefs {
     private const val KEY_SCALE_ON = "new_scale_on"
     private const val KEY_SCALE_KEY = "new_scale_key"
     private const val KEY_SCALE_INDEX = "new_scale_index"
+    private const val KEY_NEW_MACHINE = "new_machine"
     private const val KEY_MIDI_ROUTE = "midi_routing"
     private const val KEY_MPE_ZONE = "mpe_zone"
     private const val KEY_MPE_MEMBERS = "mpe_members"
@@ -620,7 +634,15 @@ object UiPrefs {
         return copy(tracks = tracks.toMutableList().also { it[index] = fitted })
     }
 
-    /** A new song in the tempo, signature and scale the settings ask for. */
+    fun chooseNewMachine(type: String) {
+        newMachine = type
+        store?.edit()?.putString(KEY_NEW_MACHINE, type)?.apply()
+    }
+
+    /**
+     * A new song in the tempo, signature, scale and machine the settings ask
+     * for.
+     */
     fun newSong(name: String): Song =
-        SongStore.blank(name, newTempo, newSignature).withDefaultScale(0)
+        SongStore.blank(name, newTempo, newSignature, newMachine).withDefaultScale(0)
 }

@@ -76,12 +76,28 @@ object SongStore {
 
     fun exists(context: Context, name: String): Boolean = fileFor(context, name).isFile
 
-    /** A new song: one scene, one Subvert track, nothing in it. */
-    fun blank(name: String, tempo: Float = 120f, signature: Signature = Signature()): Song = Song(
+    /**
+     * A new song: one scene, one track, nothing in it.
+     *
+     * The machine is the caller's - `UiPrefs.newSong` passes whatever the
+     * settings say, which is Hexbeat unless it has been changed - and the
+     * track takes the machine's own name, which is what `uniqueTrackName`
+     * gives the first track that uses a machine. So the first track of a new
+     * song and the second track of an old one are named by the same rule,
+     * rather than one of them being called "Bass" whatever is in it.
+     */
+    fun blank(
+        name: String,
+        tempo: Float = 120f,
+        signature: Signature = Signature(),
+        machine: String = "Hexbeat",
+    ): Song = Song(
         name = name,
         tempo = tempo,
         signature = signature,
-        tracks = listOf(Track(id = newId("t"), name = "Bass", machine = Machine("Subvert"))),
+        tracks = listOf(
+            Track(id = newId("t"), name = machine, machine = Machine(machine)),
+        ),
         scenes = listOf(Scene(id = newId("s"), name = "Scene 1")),
     )
 

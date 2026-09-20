@@ -974,7 +974,34 @@ private fun App(modifier: Modifier = Modifier) {
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },
             onSave = { SongStore.save(context, song); Log.i(TAG, "saved ${song.name}") },
             onSaveAs = { name -> val renamed = song.copy(name = name); editor.replace(renamed); SongStore.save(context, renamed); Log.i(TAG, "saved as $name") },
-            onNew = { name -> val fresh = com.rm.acidulous.ui.UiPrefs.newSong(name); editor.replace(fresh); SongStore.save(context, fresh) },
+            onNew = { name ->
+                // **A new song starts stopped.** The transport kept running
+                // through one, which meant the playhead went straight on into
+                // a song with one empty scene in it - and anything ringing at
+                // the moment you asked for it rang on over the top. Dan: "a
+                // new song should always stop the transport and reset things
+                // to a fresh state".
+                //
+                // Stop before the swap, not after: the scheduler is reading
+                // the old song's scenes and the swap is what pulls them out
+                // from under it. Panic after, because that is what clears the
+                // tails the stop leaves ringing, and `forgetSounding` because
+                // a hub that still believes a note is down will never send
+                // its note-off.
+                NativeEngine.transportStop()
+                NativeEngine.queuedScene = -1
+                NativeEngine.stopAtEnd = false
+                val fresh = com.rm.acidulous.ui.UiPrefs.newSong(name)
+                editor.replace(fresh)
+                SongStore.save(context, fresh)
+                NativeEngine.panic()
+                com.rm.acidulous.midi.MidiHub.forgetSounding()
+                playing = false
+                armed = false
+                loopScene = false
+                stopAtEnd = false
+                queuedScene = -1
+            },
             onLoad = { name -> runCatching { SongStore.load(context, name) }.onSuccess { editor.replace(it) }.onFailure { Log.w(TAG, "load failed", it) } },
             onDelete = { name -> SongStore.delete(context, name); Log.i(TAG, "deleted $name") },
             songNames = { SongStore.list(context) },
