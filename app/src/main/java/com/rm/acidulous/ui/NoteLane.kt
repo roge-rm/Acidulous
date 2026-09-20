@@ -2,6 +2,7 @@ package com.rm.acidulous.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -239,7 +240,15 @@ fun NoteLane(
                     .clickable { onToggleCollapse() },
                 contentAlignment = Alignment.Center,
             ) { Text(if (collapsed) "▴" else "▾", color = c.textMid, fontSize = 11.sp) }
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            // A position bar: this grows a row per distinct pitch in the clip, so on a
+            // stacked one it is longer than the screen. See ui/Scrollbar.kt.
+            val menuScroll = rememberScrollState()
+            DropdownMenu(
+                expanded = menu,
+                onDismissRequest = { menu = false },
+                modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar),
+                scrollState = menuScroll,
+            ) {
                 for (p in NoteProp.entries) {
                     DropdownMenuItem(
                         text = {
