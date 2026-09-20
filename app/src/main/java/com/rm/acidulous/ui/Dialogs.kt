@@ -633,12 +633,37 @@ private fun DialogShell(
     body: @Composable () -> Unit,
 ) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
+    // **The cap is the smaller of what was asked for and what there is.**
+    //
+    // `maxBodyHeight` is a statement about how tall a window should be
+    // allowed to get, and five hundred and sixty dp is a fair answer on a
+    // phone held upright, where there are eight hundred and fifty. Turned,
+    // there are three hundred and ninety-three - so the cap never bound, the
+    // body took its full natural height, and the window came out taller than
+    // the screen with its Done button below the bottom edge. The body
+    // scrolls, so nothing was unreachable; the button that closes it was.
+    //
+    // The pieces are counted rather than guessed at because they are known
+    // here: whether there is a chip row, and whether there is a footer, are
+    // both arguments to this function.
+    val windowHeight = with(androidx.compose.ui.platform.LocalDensity.current) {
+        androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp()
+    }
+    // **The card is capped, and the body is what gives.** Counting the chrome
+    // and subtracting it was the first answer and it was arithmetic about a
+    // layout rather than the layout itself - it came out short by a footer,
+    // which is the one piece that had to survive. So the *card* is told how
+    // tall it may be, the title, the chips and the footer take what they
+    // need, and the body takes what is left by weight. Nothing has to be
+    // counted, and nothing can be pushed off the bottom.
+    val cardMax = (windowHeight - DialogEdgeH).coerceAtLeast(200.dp)
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
         androidx.compose.material3.Surface(
-            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp)
+                .heightIn(max = cardMax),
             shape = RoundedCornerShape(16.dp),
             color = c.card,
         ) {
@@ -654,7 +679,12 @@ private fun DialogShell(
                     // box, so the content is inset to leave it a gutter -
                     // without it a chip that reaches the full width has the
                     // bar drawn straight through it.
-                    Modifier.heightIn(max = maxBodyHeight)
+                    // `fill = false` so it is only ever *smaller* than its
+                    // content, never stretched to fill a tall window: a
+                    // short page in a tabbed dialog must not push the button
+                    // to the bottom of the screen.
+                    Modifier.weight(1f, fill = false)
+                        .heightIn(max = maxBodyHeight)
                         .verticalScrollWithBar(rememberScrollState())
                         .padding(end = 10.dp),
                 ) {
@@ -681,6 +711,15 @@ private fun DialogShell(
         }
     }
 }
+
+/**
+ * How much of the screen's height a window leaves alone.
+ *
+ * Twenty-four dp, so the card reads as a card rather than as the screen: an
+ * edge flush against the top and bottom of the display is how a dialog stops
+ * looking like one.
+ */
+private val DialogEdgeH = 24.dp
 
 /** Measures every page, shows one, and takes the height of the biggest. */
 @Composable
