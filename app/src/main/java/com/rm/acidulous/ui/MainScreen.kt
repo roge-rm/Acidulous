@@ -357,6 +357,10 @@ fun MainScreen(
                         DropdownMenuItem(text = { Text("MIDI…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
                         DropdownMenuItem(text = { Text("Sound…") }, onClick = { fileMenu = false; dialog = Dialog.Sound })
                         DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
+                        // Above About, because one of these is a thing you
+                        // need while using the app and the other is a thing you
+                        // read once.
+                        DropdownMenuItem(text = { Text("Help…") }, onClick = { fileMenu = false; dialog = Dialog.Help })
                         DropdownMenuItem(text = { Text("About…") }, onClick = { fileMenu = false; dialog = Dialog.About })
                         // Not the fast path - holding play is - but the only
                         // thing on screen that *names* it, which is what a
@@ -714,6 +718,7 @@ fun MainScreen(
             inUse = song.samplesInUse(),
         )
         Dialog.Settings -> SettingsDialog(onDismiss = { dialog = null })
+        Dialog.Help -> HelpDialog(onDismiss = { dialog = null })
         Dialog.About -> AboutDialog(onDismiss = { dialog = null })
         Dialog.Quantise -> QuantiseDialog(
             current = UiPrefs.launchQuantise,
@@ -747,6 +752,7 @@ private sealed class Dialog {
     object Midi : Dialog()
     object Sound : Dialog()
     object Settings : Dialog()
+    object Help : Dialog()
     object About : Dialog()
     object Quantise : Dialog()
 }

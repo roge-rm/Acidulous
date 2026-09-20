@@ -13,7 +13,9 @@ places.
 **Status: in development.** It runs, it makes sound, it saves songs and it
 exports them. It has not been released.
 
-Discussion, issues and suggestions: **[Discord](https://discord.gg/9Wun47jGC6)**.
+The manual is in [manual/](manual/), and the app carries the same text in its
+own **Help…** window. Discussion, issues and suggestions:
+**[Discord](https://discord.gg/9Wun47jGC6)**.
 
 ---
 

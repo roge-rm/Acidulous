@@ -66,5 +66,8 @@ echo "--- noteon"; python3 "$ROOT/tools/noteon_check.py" | tail -2 || fail=1
 # nothing to say where there is no docs/PLAN.md, which is every checkout but
 # Dan's.
 echo "--- plan";  python3 "$ROOT/tools/plan_check.py" | tail -2 || fail=1
+# The manual and the app's Help window are the same words, and the only thing
+# keeping them that way is that this fails when they are not.
+echo "--- manual"; (cd "$ROOT" && python3 tools/gen_manual.py --check) | tail -2 || fail=1
 
 exit $fail
