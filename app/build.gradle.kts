@@ -29,8 +29,11 @@ android {
         // than a button of its own - and an interface that can be made larger.
         // A tag that no longer describes what people have is worse than no
         // tag, so it is a new one rather than a moved one.
-        versionCode = 2
-        versionName = "0.1.1"
+        //
+        // 0.2.0 is the manual: the first release you can be handed without
+        // also being told how any of it works.
+        versionCode = 3
+        versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
