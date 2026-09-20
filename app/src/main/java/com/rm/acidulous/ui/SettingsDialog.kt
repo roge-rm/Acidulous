@@ -72,23 +72,12 @@ private val TABS = listOf("display", "audio", "record", "songs", "midi")
 
 @Composable
 private fun DisplayTab() {
-    Section(
-        "appearance",
-        when (UiPrefs.theme) {
-            ThemeMode.Auto -> "Follows the phone's own light and dark setting."
-            ThemeMode.Light -> "Always light, whatever the phone is set to."
-            ThemeMode.Dark -> "Always dark, whatever the phone is set to."
-        },
-    ) {
+    Section("theme") {
         Choice("auto", UiPrefs.theme == ThemeMode.Auto) { UiPrefs.chooseTheme(ThemeMode.Auto) }
         Choice("light", UiPrefs.theme == ThemeMode.Light) { UiPrefs.chooseTheme(ThemeMode.Light) }
         Choice("dark", UiPrefs.theme == ThemeMode.Dark) { UiPrefs.chooseTheme(ThemeMode.Dark) }
     }
-    Section(
-        "screen",
-        if (UiPrefs.keepAwake) "The screen stays on while the transport is running."
-        else "The screen sleeps on its own, playing or not.",
-    ) {
+    Section("screen while playing") {
         Choice("stay awake", UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(true) }
         Choice("let it sleep", !UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(false) }
     }
@@ -103,8 +92,8 @@ private fun AudioTab() {
     val ms = frames * 1000f / NativeEngine.sampleRate.coerceAtLeast(1)
     val drops = NativeEngine.xRunCount
     Section(
-        "buffer",
-        "%d frames, about %.0f ms · burst %d · %d dropout%s so far. Tighter is more responsive; safer survives a phone that is busy elsewhere."
+        "audio buffer",
+        "%d frames · %.0f ms · burst %d · %d dropout%s"
             .format(frames, ms, burst, drops, if (drops == 1L) "" else "s"),
     ) {
         for (b in UiPrefs.Buffer.entries) {
@@ -113,10 +102,8 @@ private fun AudioTab() {
     }
 
     Section(
-        "voices",
-        if (UiPrefs.voiceLimit == 0) "Every machine plays as many notes as it was built for."
-        else "At most ${UiPrefs.voiceLimit} notes held per track; the oldest is released to make room. " +
-            "A machine with fewer voices of its own than that is unaffected.",
+        "machine voice limit",
+        if (UiPrefs.voiceLimit == 0) "" else "Per track. The oldest note goes first.",
     ) {
         for (n in listOf(4, 8, 16, 32, 48, 64)) {
             Choice("$n", UiPrefs.voiceLimit == n) { UiPrefs.chooseVoiceLimit(n) }
@@ -126,8 +113,7 @@ private fun AudioTab() {
 
     Section(
         "effect quality",
-        if (UiPrefs.fullQuality) "Full: the master reverb runs eight combs a side, and distortion oversamples."
-        else "Lean: half the reverb, no oversampling. Cheaper, and a little plainer.",
+        if (UiPrefs.fullQuality) "" else "Half the reverb, no oversampling.",
     ) {
         Choice("full", UiPrefs.fullQuality) { UiPrefs.chooseQuality(true) }
         Choice("lean", !UiPrefs.fullQuality) { UiPrefs.chooseQuality(false) }
@@ -136,11 +122,8 @@ private fun AudioTab() {
 
 @Composable
 private fun RecordTab() {
-    Section(
-        "format",
-        if (UiPrefs.recordBits == 24) "Recorded samples and exported songs are 24-bit, 48 kHz."
-        else "16-bit, 48 kHz: half the file, and quiet detail a little coarser.",
-    ) {
+    // 48 kHz either way; only the depth is a choice.
+    Section("recording and export depth") {
         Choice("24-bit", UiPrefs.recordBits == 24) { UiPrefs.chooseRecordBits(24) }
         Choice("16-bit", UiPrefs.recordBits == 16) { UiPrefs.chooseRecordBits(16) }
     }
@@ -150,14 +133,14 @@ private fun RecordTab() {
 private fun NewSongSection() {
     val sig = UiPrefs.newSignature
     SliderSection(
-        "tempo", "%.0f bpm".format(UiPrefs.newTempo), "",
+        "new song tempo", "%.0f bpm".format(UiPrefs.newTempo), "",
         UiPrefs.newTempo, 40f..240f,
     ) { UiPrefs.chooseNewTempo(it) }
     // A slider rather than five chips: it fits all eight signatures where
     // the row fitted five, in the same height.
     val sigIndex = SIGNATURES.indexOf(UiPrefs.newSignature).coerceAtLeast(0)
     SliderSection(
-        "signature", "${sig.beats}/${sig.unit}", "",
+        "new song signature", "${sig.beats}/${sig.unit}", "",
         sigIndex.toFloat(), 0f..(SIGNATURES.size - 1).toFloat(), SIGNATURES.size - 2,
     ) { v -> UiPrefs.chooseNewSignature(SIGNATURES[v.toInt().coerceIn(0, SIGNATURES.size - 1)]) }
     // What the one track of a new song holds. Hexbeat by default - a new
@@ -166,11 +149,7 @@ private fun NewSongSection() {
     // a row of chips and a second list of them would be a second list to keep
     // up to date.
     var pickingMachine by remember { mutableStateOf(false) }
-    Section(
-        "machine",
-        "A new song starts with one ${UiPrefs.newMachine} track: " +
-            com.rm.acidulous.model.MachineUi.describe(UiPrefs.newMachine) + ".",
-    ) {
+    Section("new song machine", com.rm.acidulous.model.MachineUi.describe(UiPrefs.newMachine)) {
         Choice(UiPrefs.newMachine, true) { pickingMachine = true }
     }
     if (pickingMachine) {
@@ -183,13 +162,8 @@ private fun NewSongSection() {
     // the keyboard and the roll agree with the song from the first note.
     var picking by remember { mutableStateOf(false) }
     Section(
-        "scale",
-        if (UiPrefs.newScaleOn) {
-            "Each new track is fitted with a Scale eventor in " +
-                "${Scales.rootName(UiPrefs.newScaleKey, UiPrefs.newScaleIndex)} ${Scales.names[UiPrefs.newScaleIndex]}, so the keys and the roll agree from the first note."
-        } else {
-            "New tracks start chromatic, with no Scale eventor fitted."
-        },
+        // The chips carry the answer either way: "no scale", or the scale.
+        "new track scale",
     ) {
         Choice("no scale", !UiPrefs.newScaleOn) { UiPrefs.chooseNewScale(false) }
         Choice(
@@ -217,12 +191,12 @@ private fun NewSongSection() {
 @Composable
 internal fun MidiRoutingSection(trackNames: List<String>) {
     Section(
-        "routing",
+        "where arriving notes go",
         when (MidiHub.routing) {
-            MidiHub.Routing.SelectedTrack -> "Notes play whichever track is open - what you want while writing."
+            MidiHub.Routing.SelectedTrack -> "Whichever track is open."
             MidiHub.Routing.FixedTrack ->
-                "Notes always play ${trackNames.getOrNull(MidiHub.fixedRack) ?: "track ${MidiHub.fixedRack + 1}"}, whatever is on screen."
-            MidiHub.Routing.ChannelToRack -> "MIDI channel 1 plays track 1, channel 2 track 2, and so on."
+                trackNames.getOrNull(MidiHub.fixedRack) ?: "track ${MidiHub.fixedRack + 1}"
+            MidiHub.Routing.ChannelToRack -> "Channel 1 to track 1, and so on."
         },
     ) {
         Choice("follow", MidiHub.routing == MidiHub.Routing.SelectedTrack) {
@@ -236,7 +210,7 @@ internal fun MidiRoutingSection(trackNames: List<String>) {
         }
     }
     if (MidiHub.routing == MidiHub.Routing.FixedTrack && trackNames.isNotEmpty()) {
-        Section("pinned to", "Devices play this track even while another is open.") {
+        Section("pinned to", "Played even while another track is open.") {
             trackNames.forEachIndexed { i, name ->
                 Choice(name, MidiHub.fixedRack == i) {
                     UiPrefs.chooseMidiRouting(MidiHub.Routing.FixedTrack, i)

@@ -57,21 +57,21 @@ data class ExportOptions(
 }
 
 private fun describeFormat(f: ExportFormat): String = when (f) {
-    ExportFormat.Wav -> "Uncompressed, and what every other program reads."
-    ExportFormat.Aiff -> "Uncompressed, the same audio as a WAV with a different header on it."
-    ExportFormat.Flac -> "Lossless and about half the size. Identical audio to the WAV, not merely close."
+    ExportFormat.Wav -> ""
+    ExportFormat.Aiff -> "A WAV with a different header."
+    ExportFormat.Flac -> "Lossless, about half the size."
     // LAME's own licence asks that its use be acknowledged, and this is where
     // somebody choosing the format will see it.
-    ExportFormat.Mp3 -> "Small, lossy, and playable by everything there is. Encoded by LAME."
-    ExportFormat.Aac -> "Small, and lossy. For sending someone a listen rather than for working on."
-    ExportFormat.Midi -> "The notes, not the sound: every track's clips at their real positions, for another program to play."
-    ExportFormat.Bundle -> "The song and every sample it uses, in one file you can move to another device."
+    ExportFormat.Mp3 -> "Lossy. Encoded by LAME."
+    ExportFormat.Aac -> "Lossy."
+    ExportFormat.Midi -> "The notes, not the sound."
+    ExportFormat.Bundle -> "The song and every sample it uses, in one file."
 }
 
 private fun describeWhat(w: ExportWhat): String = when (w) {
-    ExportWhat.Song -> "Every scene in order, with its repeats, as one file."
-    ExportWhat.Scene -> "Just the scene that is open, once through."
-    ExportWhat.Stems -> "Each track as its own file - after its fader and pan, before the master bus - and the mix beside them."
+    ExportWhat.Song -> "Every scene in order, with its repeats."
+    ExportWhat.Scene -> "The open scene, once through."
+    ExportWhat.Stems -> "One file per track, post-fader, plus the mix."
 }
 
 @Composable
@@ -121,10 +121,9 @@ fun ExportOptionsDialog(
             if (format.lossy) Section(
                 "rate",
                 when (rate) {
-                    128 -> "Small, and it shows on cymbals and reverb tails. For a rough listen."
-                    192 -> "The old default, and fine for most things on most speakers."
-                    320 -> "As much as MP3 has to give. Hard to tell from the master on anything but headphones."
-                    else -> "Transparent enough for almost anybody, at two thirds the size of the top rate."
+                    128 -> "Rough: it shows on cymbals and reverb tails."
+                    320 -> "As much as MP3 has to give."
+                    else -> ""
                 },
             ) {
                 for (kbps in listOf(128, 192, 256, 320)) {
@@ -134,9 +133,9 @@ fun ExportOptionsDialog(
             if (!format.lossy) Section(
                 "depth",
                 when (bits) {
-                    16 -> "Half the size, and what a CD is. Fine for anything you are only going to listen to."
-                    32 -> "Floating point: it cannot clip, so a loud master survives intact for mastering elsewhere."
-                    else -> "The usual choice for a master - more room under the loudest part than 16 gives."
+                    16 -> "Half the size. For listening, not for mastering."
+                    32 -> "Floating point: it cannot clip."
+                    else -> ""
                 },
             ) {
                 Choice("16", bits == 16) { bits = 16 }
@@ -146,9 +145,8 @@ fun ExportOptionsDialog(
                 }
             }
             Section(
-                "tail",
-                if (tail <= 0f) "Stops on the last note, cutting any reverb with it."
-                else "Keeps rendering for %.0f seconds after the end, so reverb and delay finish.".format(tail),
+                "render tail",
+                if (tail <= 0f) "Cuts any reverb on the last note." else "",
             ) {
                 Choice("none", tail <= 0f) { tail = 0f }
                 Choice("2 s", tail > 0f && tail <= 2f) { tail = 2f }

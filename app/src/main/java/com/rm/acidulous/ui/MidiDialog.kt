@@ -115,8 +115,8 @@ private fun DevicesTab(context: android.content.Context) {
 
     ListSection(
         "connected",
-        if (ports.isEmpty()) "Plug something in over USB, or scan for a Bluetooth instrument above."
-        else "Tap one to start or stop listening to it. ⎓ is a cable, ᛒ is Bluetooth.",
+        if (ports.isEmpty()) "Plug in over USB, or scan for Bluetooth above."
+        else "⎓ cable, ᛒ Bluetooth.",
     ) {
         ports.forEach { port ->
             DialogRow(
@@ -131,7 +131,7 @@ private fun DevicesTab(context: android.content.Context) {
     }
 
     if (found.isNotEmpty()) {
-        ListSection("found", "Tap one to open it. It then appears above, like anything plugged in.") {
+        ListSection("found") {
             found.forEach { device ->
                 // A device that actually advertised the MIDI service is worth
                 // saying so about: in a widened scan everything else is a guess.
@@ -178,8 +178,8 @@ private fun InTab(trackNames: List<String>, mpeHeld: Int) {
 private fun OutTab() {
     ListSection(
         "send to",
-        if (MidiHub.destinations.isEmpty()) "Nothing here can be sent to. A keyboard that only plays is input-only."
-        else "Tap one to open it. A track only sends if its own switch says so.",
+        if (MidiHub.destinations.isEmpty()) "A keyboard that only plays is input-only."
+        else "A track only sends if its own switch says so.",
     ) {
         MidiHub.destinations.forEach { dest ->
             DialogRow(
@@ -195,9 +195,8 @@ private fun OutTab() {
     }
 
     ListSection(
-        "ahead by",
-        "Every message is stamped with the time it should sound, this far before the app's own audio. " +
-            "Raise it if the external part drags behind what you hear.",
+        "send ahead by",
+        "Raise it if the external part drags behind what you hear.",
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { UiPrefs.chooseMidiOffset(MidiHub.outOffsetMs - 1) },
@@ -226,21 +225,20 @@ private fun OutTab() {
 private fun SyncTab(context: android.content.Context) {
     Section(
         "clock out",
-        if (MidiHub.clockOut) "Twenty-four pulses a beat go to every open destination, with start, stop and position."
-        else "Nothing is sent. External gear keeps its own time.",
+        if (MidiHub.clockOut) "24 ppq to every open destination, with start, stop and position."
+        else "",
     ) {
         Choice("send clock", MidiHub.clockOut) { UiPrefs.chooseClockOut(true) }
         Choice("off", !MidiHub.clockOut) { UiPrefs.chooseClockOut(false) }
     }
 
     Section(
-        "follow",
+        "follow external clock",
         when {
             com.rm.acidulous.engine.LinkHub.enabled ->
-                "Link has the tempo. Only one thing can: switching this on turns Link off. Link lives behind the tempo in the header."
-            MidiHub.clockIn ->
-                "The song runs at whatever clock arrives. Scene tempo overrides and Smooth ramps do nothing while it does."
-            else -> "The song keeps its own tempo and ignores an incoming clock."
+                "Link has the tempo. Switching this on turns Link off."
+            MidiHub.clockIn -> "Scene tempos and Smooth ramps do nothing meanwhile."
+            else -> ""
         },
     ) {
         Choice("follow clock", MidiHub.clockIn && !com.rm.acidulous.engine.LinkHub.enabled) {
@@ -377,9 +375,9 @@ private fun MpeSection(mpeHeld: Int) {
     Section(
         "mpe",
         when (zone) {
-            1 -> "Channel 1 carries the whole zone; ${MidiHub.mpeMembers} channels above it are fingers."
-            2 -> "Channel 16 carries the whole zone; ${MidiHub.mpeMembers} channels below it are fingers."
-            else -> "Off: every channel is an ordinary channel, and a bend bends everything."
+            1 -> "Channel 1 is the zone; the ${MidiHub.mpeMembers} above it are fingers."
+            2 -> "Channel 16 is the zone; the ${MidiHub.mpeMembers} below it are fingers."
+            else -> ""
         },
     ) {
         Choice("off", zone == 0) { UiPrefs.chooseMpe(zone = 0) }
@@ -389,23 +387,18 @@ private fun MpeSection(mpeHeld: Int) {
     if (zone != 0) {
         SliderSection(
             "member channels", "${MidiHub.mpeMembers}",
-            "How many fingers the controller spreads across. Fifteen unless it says otherwise.",
+            "15 unless the controller says otherwise.",
             (MidiHub.mpeMembers - 1) / 14f, 0f..1f, steps = 13,
         ) { UiPrefs.chooseMpe(members = (it * 14f).toInt() + 1) }
         SliderSection(
             "bend range", "±%.0f st".format(MidiHub.mpeBendSemis),
-            "How far one finger's bend goes. The specification says 48; a lot of controllers " +
-                "ship 24, and getting it wrong makes every slide the wrong size.",
+            "Per finger. The spec says 48; many controllers ship 24.",
             (MidiHub.mpeBendSemis - 1f) / 95f, 0f..1f,
         ) { UiPrefs.chooseMpe(bendSemis = 1f + it * 95f) }
         Section(
-            "slide",
-            if (MidiHub.mpeTimbre) {
-                "CC 74 is taken as a finger moving up and down the key. Each machine's " +
-                    "\"slide\" knob says how much that does."
-            } else {
-                "CC 74 is an ordinary controller, free to be mapped."
-            },
+            "cc 74 is",
+            if (MidiHub.mpeTimbre) "CC 74 drives each machine's slide knob."
+            else "CC 74 is an ordinary controller, free to be mapped.",
         ) {
             Choice("timbre", MidiHub.mpeTimbre) { UiPrefs.chooseMpe(timbre = true) }
             Choice("plain cc", !MidiHub.mpeTimbre) { UiPrefs.chooseMpe(timbre = false) }

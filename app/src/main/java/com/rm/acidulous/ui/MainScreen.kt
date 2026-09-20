@@ -825,7 +825,7 @@ internal fun quantiseShort(bars: Int): String = if (bars <= 0) "end" else "${bar
 @Composable
 private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
     PlainDialog(title = "Launch quantise", onDismiss = onDismiss, dismissLabel = "Close") {
-        Section("clips start on", "A clip waits for this line before it begins, so a stack stays in step.") {
+        Section("clips start on", "A tapped clip waits for this line.") {
             for (bars in listOf(0, 1, 2, 4, 8)) {
                 Choice(quantiseLabel(bars), bars == current) { onPick(bars); onDismiss() }
             }

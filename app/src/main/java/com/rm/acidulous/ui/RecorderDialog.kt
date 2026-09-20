@@ -283,8 +283,7 @@ private fun RecordPage(samples: File, onRecording: (Boolean) -> Unit, onRecorded
         }
     }
 
-    Section("source", note = if (fromInput) "a microphone or whatever is plugged in"
-                            else "the app's own output - play something and capture the result") {
+    Section("source", note = if (fromInput) "" else "Play something and capture the result.") {
         Choice("in", fromInput) { if (!recording) fromInput = true }
         Choice("out (resample)", !fromInput) { if (!recording) fromInput = false }
     }
@@ -312,17 +311,13 @@ private fun RecordPage(samples: File, onRecording: (Boolean) -> Unit, onRecorded
             position = gain / 4f,
             range = 0f..1f,
         ) { gain = it * 4f }
-        Section("monitor", note = "headphones only - a speaker will feed back") {
+        Section("monitor", note = "Headphones only: a speaker will feed back.") {
             Choice("off", !monitor) { monitor = false }
             Choice("on", monitor) { monitor = true }
         }
     }
 
-    Section(
-        "depth",
-        note = if (UiPrefs.recordBits == 16) "half the size, and enough for a sample"
-               else "a recording is a master; 16 is there for a phone short of room",
-    ) {
+    Section("depth", note = if (UiPrefs.recordBits == 16) "Half the size." else "") {
         Choice("16 bit", UiPrefs.recordBits == 16) { if (!recording) UiPrefs.chooseRecordBits(16) }
         Choice("24 bit", UiPrefs.recordBits == 24) { if (!recording) UiPrefs.chooseRecordBits(24) }
     }

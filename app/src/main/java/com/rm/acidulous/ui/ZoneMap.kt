@@ -123,7 +123,7 @@ fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onD
         // Deleting is not the window's action, so it is not the window's
         // button - a third thing beside OK and Cancel is the one you hit by
         // accident.
-        ListSection("remove", "Takes this zone out of the map.") {
+        ListSection("remove") {
             DialogRow(mark = "✕", name = "delete this zone", onClick = onDelete)
         }
     }

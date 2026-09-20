@@ -176,9 +176,7 @@ fun ClipSettingsDialog(
         if (rolls) {
             ListSection(
                 "the dice",
-                "Seeded, this clip plays the same bar every time round, so a take can be recorded and an " +
-                    "export repeats. Free, it rolls again on every pass - and still renders the same twice, " +
-                    "because a render starts from the beginning.",
+                "Seeded rolls the same bar every pass; free rolls again each time.",
             ) {
                 Choice("seeded", !free) { free = false }
                 Choice("free", free) { free = true }
@@ -201,7 +199,7 @@ fun ClipSettingsDialog(
                 Choice("thaw", false, onPick = onThaw)
             }
         } else if (clip.notes.isNotEmpty()) {
-            ListSection("audio", "Freezing renders this clip down: the track stops running its machine.") {
+            ListSection("audio", "Renders the clip down; the machine stops running.") {
                 Choice("freeze", false, onPick = onFreeze)
             }
         }
@@ -443,11 +441,12 @@ private fun LinkPage() {
     val context = androidx.compose.ui.platform.LocalContext.current
     val hub = com.rm.acidulous.engine.LinkHub
     Section(
-        "link",
+        "link tempo sync",
         if (hub.enabled) {
-            "The tempo is the session's, and play waits for its next downbeat. Scene tempo overrides and Smooth ramps do nothing while it does; changing the tempo here offers it to everybody."
+            "The session sets the tempo, and play waits for its downbeat. " +
+                "Scene tempos and Smooth ramps do nothing meanwhile."
         } else {
-            "Off. The song keeps its own tempo."
+            ""
         },
     ) {
         Choice("on", hub.enabled) {
@@ -464,8 +463,7 @@ private fun LinkPage() {
     }
     Section(
         "start and stop",
-        if (hub.startStop) "A peer pressing play starts us, and stopping stops us."
-        else "Only the tempo and the bar line are shared. Starting is ours alone.",
+        if (hub.startStop) "A peer pressing play starts us." else "Tempo and bar line only.",
     ) {
         Choice("shared", hub.startStop) { UiPrefs.chooseLinkStartStop(true) }
         Choice("ours", !hub.startStop) { UiPrefs.chooseLinkStartStop(false) }
@@ -510,24 +508,24 @@ private fun TempoPage(bpm: Float, onBpm: (Float) -> Unit) {
 @Composable
 private fun ClickPage() {
     Section(
-        "sound",
+        "click sound",
         when (UiPrefs.clickVoice) {
-            1 -> "Filtered noise. It sits away from anything tuned, so it stays audible over a busy mix without being loud."
-            2 -> "Two detuned squares. For when the drums are loud enough to hide the other two."
-            else -> "A short decaying sine, higher on the downbeat. The plain one."
+            1 -> "Filtered noise: carries over a busy mix without being loud."
+            2 -> "Detuned squares: for when the drums hide the other two."
+            else -> ""
         },
     ) {
         CLICK_VOICES.forEachIndexed { i, name ->
             Choice(name, UiPrefs.clickVoice == i) { UiPrefs.chooseClickVoice(i) }
         }
     }
-    Section("ticks on") {
+    Section("click ticks on") {
         CLICK_DIVISIONS.forEachIndexed { i, name ->
             Choice(name, UiPrefs.clickDivision == i) { UiPrefs.chooseClickDivision(i) }
         }
     }
     Section(
-        "sounds",
+        "click plays",
         when (UiPrefs.clickWhen) {
             1 -> "Only while the transport is armed."
             2 -> "Never during the song - only to count you in."
@@ -539,11 +537,10 @@ private fun ClickPage() {
         Choice("count-in only", UiPrefs.clickWhen == 2) { UiPrefs.chooseClickWhen(2) }
     }
     SliderSection(
-        "level", "%.0f%%".format(UiPrefs.clickVolume * 100f),
-        "The master gives up this much headroom while the click is on.",
+        "click level", "%.0f%%".format(UiPrefs.clickVolume * 100f), "",
         UiPrefs.clickVolume, 0f..1f,
     ) { UiPrefs.chooseClickVolume(it) }
-    Section("count-in", "Bars of clicks before a take starts - the song's own, so 7/8 counts seven. Only when armed; plain playback starts at once.") {
+    Section("count-in bars", "Only when armed.") {
         for (bars in 0..4) {
             Choice(if (bars == 0) "none" else "$bars", UiPrefs.countInBars == bars) {
                 UiPrefs.chooseCountInBars(bars)
