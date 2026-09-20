@@ -199,6 +199,7 @@ class EngineHost {
     // --- Transport -----------------------------------------------------------
     void transportPlay(int sceneIdx);
     void transportStop();
+    void transportRewind();
     bool isPlaying() const;
     void setLoopScene(bool on);
     void setLoopSong(bool on);

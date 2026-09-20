@@ -34,6 +34,24 @@ class Transport {
     void requestStop() { request.store(Request::Stop, std::memory_order_release); }
 
     /**
+     * Back to the top of the song, without starting it.
+     *
+     * **A flag of its own rather than another `Request`.** The request word
+     * is a state machine about whether the transport is playing, and it
+     * short-circuits when the state it is asked for is the one it is already
+     * in - `if (wanted == playing) return false`. A rewind wants "not
+     * playing", which is the state you are in when you ask for one, so as a
+     * Request it would have been swallowed every single time.
+     *
+     * There was no way to do this at all before: Play resets the clock and
+     * the scene, which is why the readout went back to 1.1.000 when you
+     * started something, and Stop deliberately leaves the playhead where it
+     * stopped so you can read where that was. Nothing rewound while stopped,
+     * so a new song inherited the bar the old one happened to be on.
+     */
+    void requestRewind() { rewindFlag.store(true, std::memory_order_release); }
+
+    /**
      * Carry on from where the playhead is, rather than from the top of a
      * scene. There was no such thing until a master asked for one: Play
      * resets the clock and restarts the scene, which is not what 0xFB means.
@@ -187,6 +205,7 @@ class Transport {
     // --- Audio thread ---------------------------------------------------------
     // Returns true if the state changed this block.
     /** True once, when the scheduler should stop at this repeat boundary. */
+    bool takeRewind() { return rewindFlag.exchange(false, std::memory_order_acquire); }
     bool takeStopAtEnd() { return stopAtEndFlag.exchange(false, std::memory_order_relaxed); }
     int32_t takeQueuedScene() { return queuedScene.exchange(-1, std::memory_order_relaxed); }
 
@@ -265,6 +284,7 @@ class Transport {
     std::atomic<bool> loopSceneFlag{false};
     std::atomic<bool> loopSongFlag{true};
     std::atomic<bool> stopAtEndFlag{false};
+    std::atomic<bool> rewindFlag{false};
     std::atomic<int32_t> queuedScene{-1};
     std::atomic<bool> recordArmed{false};
     std::atomic<bool> launcherFlag{false};

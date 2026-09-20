@@ -761,6 +761,41 @@ private fun App(modifier: Modifier = Modifier) {
         }
         if (result.push) EngineSync.sync(editor.song)
     }
+    /**
+     * Put a different song in front of the engine, from a standing start.
+     *
+     * **Stop before the swap, not after.** The scheduler is reading the old
+     * song's scenes and the swap is what pulls them out from under it; left
+     * running, the playhead carries straight on into a song it has never seen
+     * and plays whatever happens to be at those indices. Panic *after*,
+     * because that is what clears the tails the stop leaves ringing, and
+     * `forgetSounding` because a hub that still believes a note is down will
+     * never send its note-off.
+     *
+     * The screen's own copies of the transport state are cleared too. They
+     * are polled from the engine and would catch up on their own within a
+     * frame, but a play button that shows a stop glyph for one frame at the
+     * exact moment a song changes is a flicker somebody will report.
+     */
+    fun swapSong(next: com.rm.acidulous.model.Song) {
+        NativeEngine.transportStop()
+        NativeEngine.queuedScene = -1
+        NativeEngine.stopAtEnd = false
+        editor.replace(next)
+        // And back to the top, which a stop deliberately does not do: a stop
+        // leaves the playhead where it stopped so you can read where that
+        // was, which is right until the song underneath it changes. Without
+        // this a brand new song opened reading bar 3 of the old one.
+        NativeEngine.transportRewind()
+        NativeEngine.panic()
+        com.rm.acidulous.midi.MidiHub.forgetSounding()
+        playing = false
+        armed = false
+        loopScene = false
+        stopAtEnd = false
+        queuedScene = -1
+    }
+
     // --- Freeze ---------------------------------------------------------
     // The render takes the audio stream down for as long as it runs, so it
     // happens on a worker with the transport stopped, one clip at a time,
@@ -993,34 +1028,22 @@ private fun App(modifier: Modifier = Modifier) {
             onSave = { SongStore.save(context, song); Log.i(TAG, "saved ${song.name}") },
             onSaveAs = { name -> val renamed = song.copy(name = name); editor.replace(renamed); SongStore.save(context, renamed); Log.i(TAG, "saved as $name") },
             onNew = { name ->
-                // **A new song starts stopped.** The transport kept running
-                // through one, which meant the playhead went straight on into
-                // a song with one empty scene in it - and anything ringing at
-                // the moment you asked for it rang on over the top. Dan: "a
-                // new song should always stop the transport and reset things
-                // to a fresh state".
-                //
-                // Stop before the swap, not after: the scheduler is reading
-                // the old song's scenes and the swap is what pulls them out
-                // from under it. Panic after, because that is what clears the
-                // tails the stop leaves ringing, and `forgetSounding` because
-                // a hub that still believes a note is down will never send
-                // its note-off.
-                NativeEngine.transportStop()
-                NativeEngine.queuedScene = -1
-                NativeEngine.stopAtEnd = false
                 val fresh = com.rm.acidulous.ui.UiPrefs.newSong(name)
-                editor.replace(fresh)
+                swapSong(fresh)
                 SongStore.save(context, fresh)
-                NativeEngine.panic()
-                com.rm.acidulous.midi.MidiHub.forgetSounding()
-                playing = false
-                armed = false
-                loopScene = false
-                stopAtEnd = false
-                queuedScene = -1
             },
-            onLoad = { name -> runCatching { SongStore.load(context, name) }.onSuccess { editor.replace(it) }.onFailure { Log.w(TAG, "load failed", it) } },
+            // **The same swap, and for the same reason.** Loading had the
+            // identical fault a new song had: the transport carried straight
+            // on into a song it had never seen, playing whatever scenes
+            // happened to be at those indices, with the old song's tails
+            // ringing over the top. It was left alone when `onNew` was fixed
+            // because only new songs had been asked about; it is the same two
+            // lines and there was never a reason for them to differ.
+            onLoad = { name ->
+                runCatching { SongStore.load(context, name) }
+                    .onSuccess { swapSong(it) }
+                    .onFailure { Log.w(TAG, "load failed", it) }
+            },
             onDelete = { name -> SongStore.delete(context, name); Log.i(TAG, "deleted $name") },
             songNames = { SongStore.list(context) },
             onExport = { if (!playing) exportAsk = true },

@@ -946,6 +946,7 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
 
 void EngineHost::transportPlay(int sceneIdx) { sEngine.transport.requestPlay(sceneIdx); }
 void EngineHost::transportStop() { sEngine.transport.requestStop(); }
+void EngineHost::transportRewind() { sEngine.transport.requestRewind(); }
 bool EngineHost::isPlaying() const { return sEngine.transport.isPlayingForUi(); }
 void EngineHost::setLoopScene(bool on) { sEngine.transport.setLoopScene(on); }
 void EngineHost::setLoopSong(bool on) { sEngine.transport.setLoopSong(on); }

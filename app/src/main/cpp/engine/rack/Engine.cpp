@@ -138,6 +138,15 @@ void Engine::renderBlock(const float *in, float *out) {
                                  ? static_cast<int64_t>(countInFrames / countInPerTick)
                                  : 0);
 
+    // A rewind while stopped: put the playhead back at the top of the song so
+    // the readout says so. Between blocks like everything else here, and
+    // before the start below, so a play that arrives in the same block still
+    // decides where it starts from.
+    if (transport.takeRewind()) {
+        clock.reset();
+        scheduler.start(0);
+    }
+
     if (startPending) {
         if (transport.takeContinued()) {
             scheduler.resume();

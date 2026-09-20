@@ -737,6 +737,9 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLaunchStates(JNIEnv *env, jobjec
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeTransportStop(JNIEnv *, jobject) { host().transportStop(); }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeTransportRewind(JNIEnv *, jobject) { host().transportRewind(); }
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeIsPlaying(JNIEnv *, jobject) {
     return host().isPlaying() ? JNI_TRUE : JNI_FALSE;
