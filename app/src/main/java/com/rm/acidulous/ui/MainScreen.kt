@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.PaddingValues
@@ -131,6 +132,180 @@ fun MainScreen(
     var fileMenu by remember { mutableStateOf(false) }
     var showMixer by remember { mutableStateOf(false) }
 
+    // **Sideways the transport stands in the header** - the same move the
+    // editor makes, and for the same reason: turned, a header is a song
+    // name and six hundred dp of nothing, while the bar at the foot costs
+    // the scene grid a row. Dan: "that will bring parity with the other
+    // screens". The readout stays at the bottom either way; it is two
+    // lines of numbers and there is no room for it up there.
+    val landscape = isLandscape()
+    val scene = song.scenes.getOrNull(position.scene)
+    val ticksPerBar = scene?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
+    val bar = position.tickInIteration / ticksPerBar + 1
+    val beat = (position.tickInIteration % ticksPerBar) / PPQN + 1
+    val tick = position.tickInIteration % PPQN
+    /**
+     * Where the song is, and how the engine is coping.
+     *
+     * Its own slot because upright it rides above the buttons in the
+     * bar and sideways the buttons are not there - they are in the
+     * header - so it is drawn at the foot on its own. Two lines of
+     * numbers is not something the header has room for beside a song
+     * name and eight pills.
+     */
+    val readoutSlot: @Composable ColumnScope.() -> Unit = {
+            BarReadout(
+                if (clipMode) {
+                    // One entry per sounding track: which scene it took its
+                    // clip from and how far through its own cycle it is. Every
+                    // track keeps its own count, which is the whole point, and
+                    // is the only place you can read that as a number.
+                    val live = song.tracks.indices.mapNotNull { t ->
+                        val st = launchStates.getOrElse(t) { LaunchState.idle }
+                        if (!st.playing) {
+                            null
+                        } else {
+                            val tpb = song.scenes.getOrNull(st.scene)
+                                ?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
+                            val sc = song.scenes.getOrNull(st.scene)
+                            val cyc = (song.tracks[t].clips[sc?.id]?.bars ?: 1) * (sc?.repeat ?: 1)
+                            "%d>%d %d.%d/%d".format(t + 1, st.scene + 1,
+                                st.tickInCycle / tpb + 1, (st.tickInCycle % tpb) / PPQN + 1, cyc)
+                        }
+                    }
+                    if (live.isEmpty()) "clip  -  q:" + quantiseShort(UiPrefs.launchQuantise)
+                    else "clip  " + live.joinToString("  ") + "  q:" + quantiseShort(UiPrefs.launchQuantise)
+                } else if (countInBeats > 0) {
+                    // The count replaces the position rather than sitting
+                    // beside it: while it runs there is no position to read,
+                    // and a number counting down is the only thing worth
+                    // looking at.
+                    "counting in\u2026 %d".format(countInBeats)
+                } else {
+                    "S%d/%d %-8s r%d/%d  %d.%d.%03d".format(
+                        position.scene + 1, song.scenes.size, scene?.name ?: "-",
+                        position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
+                    )
+                },
+                if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi,
+            )
+            BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
+    }
+
+    // **Panic stays at the far end from the transport, whichever ends those
+    // are.** Its own note says why it earns the whole width of the row
+    // between itself and play: it is one tap, never behind a menu, and it is
+    // also the one button here you must not hit by accident. Moving the
+    // transport into the header would have parked play five pills away from
+    // it. So the row splits - panic and what the *song* is doing at one end,
+    // the transport at the other - and sideways those ends are opposite
+    // corners of the screen rather than opposite ends of one bar.
+    val songSlot: @Composable BarScope.() -> Unit = {
+        // In clip mode stop is a two-stage thing: once to let every clip
+        // finish the cycle it is in, again to cut. A launcher that only ever
+        // cut would be useless for ending a piece.
+        PanicButton(Modifier.width(BarAnchor)) {
+            NativeEngine.panic()
+            // Panic means nothing is held any more, so the hub must not go
+            // on believing a note is still down somewhere.
+            com.rm.acidulous.midi.MidiHub.forgetSounding()
+        }
+        if (clipMode) {
+            // What a tap waits for. "end" is the musical default: the clip
+            // you are replacing finishes what it was doing.
+            BarButton("q: " + quantiseShort(UiPrefs.launchQuantise), Modifier.width(BarWord)) {
+                dialog = Dialog.Quantise
+            }
+        } else {
+            BarButton(
+                if (loopScene) "\u27F3 scene" else "\u27F3 song",
+                Modifier.width(BarWord).mappable(MapTargets.action(Action.LoopScene.name)),
+            ) { onLoopScene(!loopScene) }
+        }
+    }
+    val footerSlot: @Composable () -> Unit = {
+            BottomBar(
+                inline = landscape,
+                // The readout sits above the buttons, not below them. It is the
+                // one thing that had to move for the two screens' rows to land at
+                // the same height, and of the two the row is what a thumb goes
+                // looking for.
+                readout = readoutSlot,
+            ) {
+                // In clip mode stop is a two-stage thing: once to let every
+                // clip finish the cycle it is in, again to cut. A launcher
+                // that only ever cut would be useless for ending a piece.
+                val anyLaunched = clipMode && launchStates.any { it.playing }
+                val anyStopping = clipMode && launchStates.any { it.stopping }
+                // Upright the whole row is one bar: panic and the song's own
+                // pill at the left end, the transport welded to the right,
+                // and the slack pooled between them.
+                //
+                // `barWeight`, not `Modifier.weight`. This read the latter
+                // and compiled only because the footer stood inside the
+                // screen's outer `Column` - so it was ColumnScope's weight,
+                // applied to a child of a Row, working by the accident that
+                // both write the same parent data. Lifting the bar out of
+                // that Column turned the accident into an error, which is
+                // the better outcome.
+                songSlot()
+                if (landscape) {
+                    // A stated gap sideways, because there is no slack in a
+                    // row as wide as its contents. It leaves panic five pills
+                    // from play, which is exactly what the editor's header
+                    // leaves between `fx` and play - far enough that the two
+                    // are not one reach, and the whole width of the screen
+                    // still separates them upright.
+                    Spacer(Modifier.width(16.dp))
+                } else {
+                    Spacer(Modifier.barWeight())
+                }
+                // And the five that end every row in the app, in this order and
+                // at this width - see BarAnchor. Undo and redo are the song's
+                // here and the clip's in the editor, which is the same rule
+                // either way: the undo for whatever this screen edits.
+                BarButton(
+                    "\u21B6", Modifier.width(BarAnchor), enabled = editor.canUndoSong(),
+                ) { editor.undoSong() }
+                // Mapping mode hangs off a long press of redo rather than a
+                // button of its own. It is a mode you step into for a minute and
+                // nothing here has a button's width to spend on one.
+                BarButton(
+                    "\u21B7",
+                    Modifier.width(BarAnchor).onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
+                    colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
+                    enabled = editor.canRedoSong(),
+                ) { editor.redoSong() }
+                BarButton(
+                    "\u21C5", Modifier.width(BarAnchor),
+                    colour = if (showMixer) Acid.colors.accent else Color.Unspecified,
+                ) { showMixer = !showMixer }
+                BarButton(
+                    // The glyph carries two states, because the pill carries two
+                    // controls: a tap arms, a long press turns the click on, and
+                    // the red ring is already spoken for by the first of them.
+                    // Dan: "it's hard to tell whether just recording is on or
+                    // whether both record and metronome are on".
+                    (if (armed) "\u25CF" else "\u25CB") + if (clickOn) "\u266A" else "",
+                    // Hold it for the click - see the same gesture in the editor.
+                    Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name)),
+                    border = if (armed) Acid.colors.red else null,
+                    onLongPress = { if (!UiPrefs.mapMode) onClick(!clickOn) },
+                ) { onArm(!armed) }
+                BarButton(
+                    if (playing) "\u25A0" else "\u25B6",
+                    Modifier.width(BarAnchor).mappable(MapTargets.action(Action.PlayStop.name)),
+                    colour = if (anyStopping) Acid.colors.red else Color.Unspecified,
+                ) {
+                    when {
+                        !playing -> NativeEngine.transportPlay(if (clipMode) 0 else position.scene)
+                        clipMode && anyLaunched && !anyStopping -> NativeEngine.stopAllClips()
+                        else -> NativeEngine.transportStop()
+                    }
+                }
+            }
+    }
+
     Column(modifier.fillMaxSize().background(Acid.colors.bg)) {
         // --- Header: song, structure undo, file ----------------------------------------
         CutoutRow(
@@ -170,6 +345,12 @@ fun MainScreen(
                     DropdownMenuItem(text = { Text("About…") }, onClick = { fileMenu = false; dialog = Dialog.About })
                 }
             }
+            // **The transport, sideways, and last.** Dan: the tempo, save and
+            // the file menu go to the left of the pills "so the pills are the
+            // same place in every screen" - which is the far right of the
+            // header, where the editor already puts them. Upright this is
+            // empty and the bar at the foot has them.
+            if (landscape) footerSlot()
         }
 
         // --- Song section -----------------------------------------------------------------
@@ -341,131 +522,19 @@ fun MainScreen(
             MixerPanel(song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth())
         }
 
-        // --- Transport ------------------------------------------------------------------------
-        val scene = song.scenes.getOrNull(position.scene)
-        val ticksPerBar = scene?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
-        val bar = position.tickInIteration / ticksPerBar + 1
-        val beat = (position.tickInIteration % ticksPerBar) / PPQN + 1
-        val tick = position.tickInIteration % PPQN
-        BottomBar(
-            // The readout sits above the buttons, not below them. It is the
-            // one thing that had to move for the two screens' rows to land at
-            // the same height, and of the two the row is what a thumb goes
-            // looking for.
-            readout = {
-                BarReadout(
-                    if (clipMode) {
-                        // One entry per sounding track: which scene it took its
-                        // clip from and how far through its own cycle it is. Every
-                        // track keeps its own count, which is the whole point, and
-                        // is the only place you can read that as a number.
-                        val live = song.tracks.indices.mapNotNull { t ->
-                            val st = launchStates.getOrElse(t) { LaunchState.idle }
-                            if (!st.playing) {
-                                null
-                            } else {
-                                val tpb = song.scenes.getOrNull(st.scene)
-                                    ?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
-                                val sc = song.scenes.getOrNull(st.scene)
-                                val cyc = (song.tracks[t].clips[sc?.id]?.bars ?: 1) * (sc?.repeat ?: 1)
-                                "%d>%d %d.%d/%d".format(t + 1, st.scene + 1,
-                                    st.tickInCycle / tpb + 1, (st.tickInCycle % tpb) / PPQN + 1, cyc)
-                            }
-                        }
-                        if (live.isEmpty()) "clip  -  q:" + quantiseShort(UiPrefs.launchQuantise)
-                        else "clip  " + live.joinToString("  ") + "  q:" + quantiseShort(UiPrefs.launchQuantise)
-                    } else if (countInBeats > 0) {
-                        // The count replaces the position rather than sitting
-                        // beside it: while it runs there is no position to read,
-                        // and a number counting down is the only thing worth
-                        // looking at.
-                        "counting in\u2026 %d".format(countInBeats)
-                    } else {
-                        "S%d/%d %-8s r%d/%d  %d.%d.%03d".format(
-                            position.scene + 1, song.scenes.size, scene?.name ?: "-",
-                            position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
-                        )
-                    },
-                    if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi,
-                )
-                BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
-            },
-        ) {
-            // In clip mode stop is a two-stage thing: once to let every
-            // clip finish the cycle it is in, again to cut. A launcher
-            // that only ever cut would be useless for ending a piece.
-            val anyLaunched = clipMode && launchStates.any { it.playing }
-            val anyStopping = clipMode && launchStates.any { it.stopping }
-            // Panic, alone at the left end. A modular makes a runaway easy
-            // to build and a pair of headphones does not forgive one, so it
-            // is one tap and never behind a menu - but it is also the one
-            // button here you must not hit by accident, so it keeps the
-            // whole width of the row between itself and the transport.
-            PanicButton(Modifier.width(BarAnchor)) {
-                NativeEngine.panic()
-                // Panic means nothing is held any more, so the hub must not go
-                // on believing a note is still down somewhere.
-                com.rm.acidulous.midi.MidiHub.forgetSounding()
-            }
-            if (clipMode) {
-                // What a tap waits for. "end" is the musical default: the
-                // clip you are replacing finishes what it was doing.
-                BarButton("q: " + quantiseShort(UiPrefs.launchQuantise), Modifier.width(BarWord)) {
-                    dialog = Dialog.Quantise
-                }
-            } else {
-                BarButton(
-                    if (loopScene) "\u27F3 scene" else "\u27F3 song",
-                    Modifier.width(BarWord).mappable(MapTargets.action(Action.LoopScene.name)),
-                ) { onLoopScene(!loopScene) }
-            }
-            // The slack pools here, between what the song is doing and what
-            // the transport is doing, so the group on the right stays welded
-            // to the edge of the screen whatever size the screen is.
-            Spacer(Modifier.weight(1f))
-            // And the five that end every row in the app, in this order and
-            // at this width - see BarAnchor. Undo and redo are the song's
-            // here and the clip's in the editor, which is the same rule
-            // either way: the undo for whatever this screen edits.
-            BarButton(
-                "\u21B6", Modifier.width(BarAnchor), enabled = editor.canUndoSong(),
-            ) { editor.undoSong() }
-            // Mapping mode hangs off a long press of redo rather than a
-            // button of its own. It is a mode you step into for a minute and
-            // nothing here has a button's width to spend on one.
-            BarButton(
-                "\u21B7",
-                Modifier.width(BarAnchor).onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
-                colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
-                enabled = editor.canRedoSong(),
-            ) { editor.redoSong() }
-            BarButton(
-                "\u21C5", Modifier.width(BarAnchor),
-                colour = if (showMixer) Acid.colors.accent else Color.Unspecified,
-            ) { showMixer = !showMixer }
-            BarButton(
-                // The glyph carries two states, because the pill carries two
-                // controls: a tap arms, a long press turns the click on, and
-                // the red ring is already spoken for by the first of them.
-                // Dan: "it's hard to tell whether just recording is on or
-                // whether both record and metronome are on".
-                (if (armed) "\u25CF" else "\u25CB") + if (clickOn) "\u266A" else "",
-                // Hold it for the click - see the same gesture in the editor.
-                Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name)),
-                border = if (armed) Acid.colors.red else null,
-                onLongPress = { if (!UiPrefs.mapMode) onClick(!clickOn) },
-            ) { onArm(!armed) }
-            BarButton(
-                if (playing) "\u25A0" else "\u25B6",
-                Modifier.width(BarAnchor).mappable(MapTargets.action(Action.PlayStop.name)),
-                colour = if (anyStopping) Acid.colors.red else Color.Unspecified,
-            ) {
-                when {
-                    !playing -> NativeEngine.transportPlay(if (clipMode) 0 else position.scene)
-                    clipMode && anyLaunched && !anyStopping -> NativeEngine.stopAllClips()
-                    else -> NativeEngine.transportStop()
-                }
-            }
+        // Sideways the pills are up in the header and this is the readout
+        // alone - which still earns the bar behind it, because two lines of
+        // dim monospace on the same ground as the grid reads as part of it.
+        // Sideways every pill is up in the header and this is the readout
+        // alone - which still earns the bar behind it, because two lines of
+        // dim monospace on the same ground as the grid read as part of it.
+        if (landscape) {
+            Column(
+                Modifier.fillMaxWidth().background(Acid.colors.bar)
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+            ) { readoutSlot() }
+        } else {
+            footerSlot()
         }
     }
 
