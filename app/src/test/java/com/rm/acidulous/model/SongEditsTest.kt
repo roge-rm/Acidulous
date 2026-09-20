@@ -115,7 +115,10 @@ class SongEditsTest {
         val blank = SongStore.blank("New")
         assertEquals(2f, blank.durationSeconds(), 1e-3f) // one empty bar at 120
         assertEquals(1, blank.tracks.size)
-        assertEquals("Subvert", blank.tracks[0].machine.type)
+        // Hexbeat, not Subvert: a new song is almost always a beat before it is
+        // anything else. `SongStore.blank`'s default moved when the settings
+        // window gained a machine to start with, and this line did not.
+        assertEquals("Hexbeat", blank.tracks[0].machine.type)
     }
 
     @Test
