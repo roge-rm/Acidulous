@@ -3077,6 +3077,16 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                     PanelKnob(b, "monitor", "monitor", PanelPink)
                     InputListen()
                 }
+                // **What the input goes through on its way in - and so what is
+                // printed into the take.** The slots belong to the song rather
+                // than to this track, but this is where the hand is when
+                // somebody decides they want the amp *on* the recording rather
+                // than after it.
+                Group("printed in") {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        InputChainChips(editor)
+                    }
+                }
               }
                 return@GroupRow
             }

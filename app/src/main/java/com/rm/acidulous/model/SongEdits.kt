@@ -207,6 +207,34 @@ fun Song.withSendBypass(slot: Int, bypass: Boolean): Song {
 }
 fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -> 1; else -> null }
 
+// --- The input chain ---------------------------------------------------------------
+
+/** The unit an input effect's parameters are addressed under: "input1", "input2". */
+fun inputUnit(slot: Int): String = "input${slot + 1}"
+
+/** [slot]'s input effect with [type] on it, keeping nothing of what was there. */
+fun Song.withInputFx(slot: Int, type: String): Song {
+    if (slot !in 0 until INPUT_SLOTS) return this
+    val list = List(INPUT_SLOTS) { inputAt(it) }.toMutableList()
+    list[slot] = if (type == list[slot].type) list[slot] else UnitSlot(type)
+    return copy(input = list)
+}
+
+fun Song.withInputFxParam(slot: Int, name: String, v01: Float): Song {
+    if (slot !in 0 until INPUT_SLOTS) return this
+    val list = List(INPUT_SLOTS) { inputAt(it) }.toMutableList()
+    val s = list[slot]
+    list[slot] = s.copy(params = s.params + (name to v01))
+    return copy(input = list)
+}
+
+fun Song.withInputFxBypass(slot: Int, bypass: Boolean): Song {
+    if (slot !in 0 until INPUT_SLOTS) return this
+    val list = List(INPUT_SLOTS) { inputAt(it) }.toMutableList()
+    list[slot] = list[slot].copy(bypass = bypass)
+    return copy(input = list)
+}
+
 // --- Eventors ---------------------------------------------------------------------------
 
 private fun Track.withEventorSlot(slot: Int, f: (UnitSlot) -> UnitSlot): Track {

@@ -49,6 +49,28 @@ the amp is in front of you while you play and the recording stays dry.
 A slot can be bypassed without being emptied, which is the difference between
 comparing and deleting.
 
+## On the way in, and on the way out
+
+There are two more effect slots that do not belong to a track: **the two on the
+input**. They are in the mixer's master strip beside the sends, and on Bias's
+panel under **printed in**.
+
+The difference between them and a track's inserts is the whole reason they
+exist:
+
+- an effect **on the input** runs before anything hears the audio - before the
+  recorder, before the monitor, before any machine that reads the input - so
+  **what it does is printed into the take**;
+- an effect **on the track** runs on playback, so it can be changed, bypassed
+  or swapped afterwards and the recording is untouched.
+
+So: an amp you have decided on goes on the input and is committed to the file.
+An amp you want to keep thinking about goes on the track. Both at once means
+two amps, which is a legitimate thing to want and easy to do by accident.
+
+Unlike a send, an input effect keeps its **mix**, because it is in series with
+the signal rather than beside it.
+
 ## The mixer
 
 The mixer pill opens the strips: one per track and one master.

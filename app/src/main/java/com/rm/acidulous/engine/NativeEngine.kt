@@ -33,6 +33,17 @@ object NativeEngine {
      * addressed as `effect1` and `effect2`.
      */
     fun mountSend(slot: Int, typeName: String): Boolean = nativeMountSend(slot, typeName)
+
+    /**
+     * An effect on the way **in**, before anything hears the input.
+     *
+     * The difference from a track's insert is the whole point: what is here is
+     * **printed into the recording**, because it runs before the capture ever
+     * sees the block. Its parameters are addressed under the units `input1`
+     * and `input2`, exactly as a send's are under `send1` and `send2`.
+     */
+    fun mountInputEffect(slot: Int, typeName: String): Boolean =
+        nativeMountInputEffect(slot, typeName)
     /**
      * Builds what machines need before they can be mounted (Trinity's
      * wavetables, ~0.1 s). Call once on a worker at startup; blocks.
@@ -672,6 +683,7 @@ object NativeEngine {
     private external fun nativeEventorParamInfo(type: String): Array<String>
     private external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     private external fun nativeMountSend(slot: Int, typeName: String): Boolean
+    private external fun nativeMountInputEffect(slot: Int, typeName: String): Boolean
     private external fun nativeEffectTypes(): Array<String>
     private external fun nativeEffectParamInfo(type: String): Array<String>
     private external fun nativeLoadSample(rackId: Int, slot: Int, path: String, maxSeconds: Int): String

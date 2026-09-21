@@ -48,6 +48,13 @@ afterwards exactly as the medium can.
 It is off by default, and on a phone's own speaker it will howl. Headphones, or
 an interface.
 
+**printed in**, beside it, is the other half of the choice. Those two slots are
+effects on the way *in*: what is on them is **recorded into the take**, because
+they run before the recorder sees the audio. An amp there is committed; an amp
+on the track's own **fx** is applied on playback and can be changed for ever
+afterwards. The same two slots appear in the mixer's master strip, because they
+belong to the song rather than to this track.
+
 ## Flattening
 
 **comp** takes the four lanes, their levels, their mutes and their fades, and writes them into one file in lane 1. It does **not** flatten the medium - a patch here is a way of listening and a comp is an edit, so baking one into the other would make it permanent and apply it twice. The recordings it was made from stay in the library.

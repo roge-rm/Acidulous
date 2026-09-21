@@ -357,6 +357,16 @@ const val EFFECT_SLOTS = 2
 
 /** How many send buses the master has; see [Master.sends]. */
 const val SEND_SLOTS = 2
+
+/**
+ * Effects on the way *in*, before anything hears the input.
+ *
+ * Two, like a track's inserts, and the difference between them is the whole
+ * reason these exist: **what is here is printed into the recording**, because
+ * it runs before the recorder ever sees the audio. An amp you want on the take
+ * goes here; an amp you want to keep deciding about goes on the track.
+ */
+const val INPUT_SLOTS = 2
 /** One per eventor - chord, scale, arp - because the keyboard strip gives
  *  each of them a control and all three must be able to run together. */
 const val EVENTOR_SLOTS = 3
@@ -490,11 +500,24 @@ data class Song(
     val scenes: List<Scene> = emptyList(),
     val master: Master = Master(),
     /**
+     * What the incoming audio goes through before anything hears it.
+     *
+     * On the song rather than on a track because there is one input, and
+     * because **what is here is printed into a recording** - which makes it a
+     * property of the session rather than of whichever track happens to be
+     * armed. Empty in every song saved before this existed, which is what the
+     * default is for.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val input: List<UnitSlot> = emptyList(),
+    /**
      * Controller mappings that belong to this music rather than to the room
      * it is played in. These win over the device's own; see [Mappings.find].
      */
     val mappings: List<Mapping> = emptyList(),
 ) {
+    /** Input slot [i], or an empty one: the shape [Master.sendAt] has. */
+    fun inputAt(i: Int): UnitSlot = input.getOrNull(i) ?: UnitSlot("")
+
     fun signatureOf(scene: Scene): Signature = scene.signature ?: signature
 
     /** Derived, exactly as the engine derives it: the longest clip, at least one bar. */

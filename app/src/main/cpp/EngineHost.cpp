@@ -61,6 +61,8 @@ Unit unitFromName(const std::string &u) {
     if (u == "master") return Unit::Master;
     if (u == "send1") return Unit::Send1;
     if (u == "send2") return Unit::Send2;
+    if (u == "input1") return Unit::Input1;
+    if (u == "input2") return Unit::Input2;
     if (u == "performance") return Unit::Performance;
     return Unit::Machine;
 }
@@ -154,6 +156,26 @@ void EngineHost::unmountMachine(int rack) {
  * and once through the return. So if this effect has a `mix`, it is set to
  * fully wet as it is built, and the editor does not offer it.
  */
+bool EngineHost::mountInputEffect(int slot, const std::string &typeName) {
+    if (slot < 0 || slot >= kInputSlots) return false;
+    Effect *fx = nullptr;
+    if (!typeName.empty()) {
+        fx = EffectRegistry::create(typeName.c_str());
+        if (fx == nullptr) {
+            LOGE("unknown input effect '%s'", typeName.c_str());
+            return false;
+        }
+        fx->prepare(kSampleRate);
+    }
+    Mount m;
+    m.kind = Mount::Kind::Input;
+    m.slot = slot;
+    m.object = fx;
+    if (!mountWithRetry(m, deleteAs<Effect>)) return false;
+    mountedInputType[slot] = typeName;
+    return true;
+}
+
 bool EngineHost::mountSend(int slot, const std::string &typeName) {
     if (slot < 0 || slot >= kSendSlots) return false;
     Effect *fx = nullptr;
@@ -791,6 +813,14 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
         return -1;
     }
+    if (u == Unit::Input1 || u == Unit::Input2) {
+        if (name == "bypass") return kEffectBypassIndex;
+        int32_t n = 0;
+        const ParamDef *defs =
+            EffectRegistry::paramDefs(mountedInputType[u == Unit::Input1 ? 0 : 1].c_str(), n);
+        for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
+        return -1;
+    }
     if (u == Unit::Performance) {
         if (name == "mod") return kPerfMod;
         if (name == "pressure") return kPerfPressure;
@@ -836,6 +866,8 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         index = sEngine.master.params().indexOf(name.c_str());
     } else if (u == Unit::Send1 || u == Unit::Send2) {
         index = paramIndex(mountedSendType[u == Unit::Send1 ? 0 : 1], unit, name);
+    } else if (u == Unit::Input1 || u == Unit::Input2) {
+        index = paramIndex(mountedInputType[u == Unit::Input1 ? 0 : 1], unit, name);
     } else if (u == Unit::Effect1 || u == Unit::Effect2) {
         index = paramIndex(mountedEffectType[rack][u == Unit::Effect1 ? 0 : 1], unit, name);
     } else if (u == Unit::Eventor1 || u == Unit::Eventor2 || u == Unit::Eventor3) {

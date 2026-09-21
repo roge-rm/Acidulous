@@ -19,14 +19,45 @@ void Engine::start() {
 }
 void Engine::stop() { retirer.stop(); }
 
+/**
+ * The input chain, on the interleaved block that is about to be published.
+ *
+ * Split out of `renderBlock` because it is the one place in the engine that
+ * deinterleaves and puts back, and burying that in the first ten lines of the
+ * render would make them unreadable.
+ *
+ * The tick range is the *previous* block's, because the clock has not advanced
+ * yet - so a tempo-synced effect on the input is one block behind the same
+ * effect on a track, which is 1.3 ms and not worth reordering the render for.
+ */
+void Engine::runInputChain() {
+    float L[kBlockFrames], R[kBlockFrames];
+    for (int32_t i = 0; i < kBlockFrames; ++i) {
+        L[i] = inputScratch[i * 2];
+        R[i] = inputScratch[i * 2 + 1];
+    }
+    bool stereo = true;
+    for (int32_t s = 0; s < kInputSlots; ++s) {
+        if (inputFx[s] == nullptr) continue;
+        inputFx[s]->onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
+        stereo = inputFx[s]->run(L, R, kBlockFrames, stereo);
+    }
+    for (int32_t i = 0; i < kBlockFrames; ++i) {
+        inputScratch[i * 2] = L[i];
+        inputScratch[i * 2 + 1] = stereo ? R[i] : L[i];
+    }
+}
+
 void Engine::renderBlock(const float *in, float *out) {
     const auto t0 = std::chrono::steady_clock::now();
 
     // Publish the input before anything renders, so a machine reading it
     // sees this block's audio and not the last one's.
     const float gain = inputGain.load(std::memory_order_relaxed);
-    if (in != nullptr && gain != 1.0f) {
+    const bool chained = inputFx[0] != nullptr || inputFx[1] != nullptr;
+    if (in != nullptr && (gain != 1.0f || chained)) {
         for (int32_t i = 0; i < kBlockFrames * 2; ++i) inputScratch[i] = in[i] * gain;
+        if (chained) runInputChain();
         InputBus::get().publish(inputScratch, kBlockFrames);
     } else {
         InputBus::get().publish(in, in != nullptr ? kBlockFrames : 0);
@@ -60,6 +91,13 @@ void Engine::renderBlock(const float *in, float *out) {
             if (Machine *m = racks[r].currentMachine()) { m->reset(); m->params().jumpAll(); }
             for (int32_t s = 0; s < kEffectSlots; ++s) {
                 if (Effect *e = racks[r].currentEffect(s)) { e->reset(); e->params().jumpAll(); }
+            }
+            // The input chain too, once. A delay on the way in would otherwise
+            // keep repeating into a song that has been panicked silent.
+            if (r == 0) {
+                for (Effect *e : inputFx) {
+                    if (e != nullptr) { e->reset(); e->params().jumpAll(); }
+                }
             }
             // The eventors too. They were missed here from the start, and
             // the cost was not obvious: an arpeggiator keeps a step, so a
@@ -731,6 +769,12 @@ void Engine::drainParams() {
                 if (p.index == kEffectBypassIndex) fx->setBypass(p.value >= 0.5f);
                 else fx->params().set(p.index, p.value);
             }
+        } else if (p.unit == Unit::Input1 || p.unit == Unit::Input2) {
+            Effect *fx = inputFx[p.unit == Unit::Input1 ? 0 : 1];
+            if (fx != nullptr) {
+                if (p.index == kEffectBypassIndex) fx->setBypass(p.value >= 0.5f);
+                else fx->params().set(p.index, p.value);
+            }
         } else if (p.rack >= 0 && p.rack < kRackCount) {
             racks[p.rack].setParam(p.unit, p.index, p.value);
             if (p.record && recordingNow()) {
@@ -776,6 +820,15 @@ void Engine::applyMount(const Mount &m) {
     case Mount::Kind::Effect:
         if (m.rack >= 0 && m.rack < kRackCount) {
             retirer.retire(racks[m.rack].swapEffect(m.slot, static_cast<Effect *>(m.object)), deleteAs<Effect>);
+        } else {
+            retirer.retire(m.object, deleteAs<Effect>);
+        }
+        break;
+    case Mount::Kind::Input:
+        if (m.slot >= 0 && m.slot < kInputSlots) {
+            Effect *wasThere = inputFx[m.slot];
+            inputFx[m.slot] = static_cast<Effect *>(m.object);
+            retirer.retire(wasThere, deleteAs<Effect>);
         } else {
             retirer.retire(m.object, deleteAs<Effect>);
         }

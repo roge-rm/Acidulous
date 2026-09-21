@@ -65,6 +65,16 @@ enum class Unit : uint8_t {
      */
     Send1, Send2,
     /**
+     * The two effects on the way *in*.
+     *
+     * The same shape as a send's - a slot holding any effect, with that
+     * effect's own table, belonging to the song rather than to a rack - and
+     * the same reason the rack on the message is ignored. What makes them
+     * different is where they run: before the input is published, so what they
+     * do is **printed into a recording** rather than applied to a playback.
+     */
+    Input1, Input2,
+    /**
      * The performance strip: mod and pressure.
      *
      * Not a unit with parameters of its own - a pseudo-unit, so that the

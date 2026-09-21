@@ -21,7 +21,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import com.rm.acidulous.model.SEND_SLOTS
+import com.rm.acidulous.model.INPUT_SLOTS
+import com.rm.acidulous.model.UnitSlot
+import com.rm.acidulous.model.withInputFxBypass
+import com.rm.acidulous.model.inputUnit
 import com.rm.acidulous.model.sendUnit
+import com.rm.acidulous.model.withInputFx
+import com.rm.acidulous.model.withInputFxParam
 import com.rm.acidulous.model.withSend
 import com.rm.acidulous.model.withSendBypass
 import com.rm.acidulous.model.withSendParam
@@ -364,6 +370,12 @@ private fun MasterStrip(
                 }
             }
         }
+        // **And the two on the way in**, beside the two on the way out, because
+        // they are the same kind of thing: a slot belonging to the song rather
+        // than to a rack. What differs is that these run before the recorder
+        // sees the audio, so they are printed into a take rather than applied
+        // to a playback - which is why they are pink here and the sends teal.
+        InputChainChips(editor)
         ToggleChip("limiter", master.limiter.on, c.teal, Modifier.mappable(map("limiteron"))) {
             editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
         }
@@ -453,17 +465,79 @@ private val STRIP_CHROME = 204.dp
  * mounted, because a dry path through a send is the track arriving twice.
  */
 @Composable
-private fun SendDialog(slot: Int, editor: SongEditor, onDismiss: () -> Unit) {
+private fun SendDialog(slot: Int, editor: SongEditor, onDismiss: () -> Unit) =
+    SongSlotDialog("send ${slot + 1}", slot, ::sendUnit, { s, i -> s.master.sendAt(i) },
+                   Song::withSend, Song::withSendParam,
+                   // A send's dry path is the track arriving twice, so the mix
+                   // is pinned open and not offered.
+                   hideMix = true, editor = editor, onDismiss = onDismiss)
+
+/**
+ * The two effects on the way **in**, as chips that open them.
+ *
+ * Deliberately reachable from the one machine that records - the hand is
+ * already there when somebody decides they want the amp on the take rather
+ * than after it - even though the slots themselves belong to the song and not
+ * to that track.
+ */
+@Composable
+fun InputChainChips(editor: SongEditor) {
     val c = Acid.colors
-    val master = editor.song.master
-    val send = master.sendAt(slot)
+    var editing by remember { mutableStateOf<Int?>(null) }
+    editing?.let { slot ->
+        SongSlotDialog("on the way in ${slot + 1}", slot, ::inputUnit, { s, i -> s.inputAt(i) },
+                       Song::withInputFx, Song::withInputFxParam,
+                       // An input effect is in series with the signal rather
+                       // than beside it, so a dry blend is a real thing to want.
+                       hideMix = false, editor = editor) { editing = null }
+    }
+    for (slot in 0 until INPUT_SLOTS) {
+        val fx = editor.song.inputAt(slot)
+        ToggleChip(
+            if (fx.isEmpty) "in${slot + 1}" else fx.type.lowercase(),
+            !fx.isEmpty && !fx.bypass,
+            c.pink,
+            Modifier.onLongPress { editing = slot },
+        ) {
+            if (fx.isEmpty) editing = slot
+            else {
+                val bypass = !fx.bypass
+                editor.editSong { s -> s.withInputFxBypass(slot, bypass) }
+                NativeEngine.setParam(0, inputUnit(slot), "bypass", if (bypass) 1f else 0f, record = false)
+            }
+        }
+    }
+}
+
+/**
+ * One song-level effect slot: pick the type, turn its knobs.
+ *
+ * Shared by the two sends and the two on the input, because they are the same
+ * thing in two places - a slot that belongs to the song rather than to a rack,
+ * addressed by a unit name, edited as one song gesture. What differs is only
+ * *where the engine runs it*, and that is not this window's business.
+ */
+@Composable
+fun SongSlotDialog(
+    title: String,
+    slot: Int,
+    unitOf: (Int) -> String,
+    at: (Song, Int) -> UnitSlot,
+    withType: (Song, Int, String) -> Song,
+    withParam: (Song, Int, String, Float) -> Song,
+    hideMix: Boolean,
+    editor: SongEditor,
+    onDismiss: () -> Unit,
+) {
+    val c = Acid.colors
+    val send = at(editor.song, slot)
     val types = remember { NativeEngine.effectTypes }
     var menu by remember { mutableStateOf(false) }
-    val info = remember(send.type) {
+    val info = remember(send.type, hideMix) {
         if (send.isEmpty) emptyList()
-        else NativeEngine.effectParamInfo(send.type).filter { it.name != "mix" }
+        else NativeEngine.effectParamInfo(send.type).filter { !hideMix || it.name != "mix" }
     }
-    PlainDialog("send ${slot + 1}", onDismiss = onDismiss, dismissLabel = "Done", maxBodyHeight = 420.dp) {
+    PlainDialog(title, onDismiss = onDismiss, dismissLabel = "Done", maxBodyHeight = 420.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { menu = true }) {
@@ -477,11 +551,11 @@ private fun SendDialog(slot: Int, editor: SongEditor, onDismiss: () -> Unit) {
                     ScaledWindow {
                         DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
                             menu = false
-                            editor.editSong { s -> s.withSend(slot, "") }
+                            editor.editSong { s -> withType(s, slot, "") }
                         })
                         for (t in types) DropdownMenuItem(text = { Text(t, fontSize = 12.sp) }, onClick = {
                             menu = false
-                            if (t != send.type) editor.editSong { s -> s.withSend(slot, t) }
+                            if (t != send.type) editor.editSong { s -> withType(s, slot, t) }
                         })
                     }
                 }
@@ -498,11 +572,9 @@ private fun SendDialog(slot: Int, editor: SongEditor, onDismiss: () -> Unit) {
                         onStart = { editor.beginSongGesture() },
                         onChange = { nv ->
                             NativeEngine.setParam(
-                                0, sendUnit(slot), p.name, nv, record = false,
+                                0, unitOf(slot), p.name, nv, record = false,
                             )
-                            editor.updateSongGesture { s ->
-                                s.withSendParam(slot, p.name, nv)
-                            }
+                            editor.updateSongGesture { s -> withParam(s, slot, p.name, nv) }
                         },
                         onEnd = { editor.endSongGesture() },
                     )

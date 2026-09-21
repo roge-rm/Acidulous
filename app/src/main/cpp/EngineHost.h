@@ -35,6 +35,16 @@ class EngineHost {
     // Insert effects: two slots per rack. An empty type name clears the slot.
     bool mountEffect(int rack, int slot, const std::string &typeName);
     bool mountSend(int slot, const std::string &typeName);
+    /**
+     * An effect on the way *in*, before anything hears the input.
+     *
+     * The difference from a track's insert is the whole point: **what is here
+     * is printed into the recording**, because it runs before the capture ever
+     * sees the block. Unlike a send, the mix is left alone - an input effect is
+     * in series with the signal, not beside it, so a dry blend is a legitimate
+     * thing to want.
+     */
+    bool mountInputEffect(int slot, const std::string &typeName);
     std::string loadReel(int rack, const std::string &spec);
     /**
      * Where converted long takes live, set once at startup.
@@ -466,6 +476,8 @@ class EngineHost {
     std::string mountedEffectType[16][2];
     /** What is on each send bus, for resolving its parameters by name. */
     std::string mountedSendType[2];
+    /** What is on each input slot, for resolving its parameters by name. */
+    std::string mountedInputType[2];
     std::string mountedEventorType[16][2];
     std::unordered_map<int64_t, std::shared_ptr<const seq::Clip>> clipCache;
 };

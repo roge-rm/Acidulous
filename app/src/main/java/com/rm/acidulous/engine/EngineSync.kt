@@ -13,6 +13,8 @@ import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Master
 import com.rm.acidulous.model.Mixer
 import com.rm.acidulous.model.PlayMode
+import com.rm.acidulous.model.INPUT_SLOTS
+import com.rm.acidulous.model.inputUnit
 import com.rm.acidulous.model.SEND_SLOTS
 import com.rm.acidulous.model.BIAS_MACHINE
 import com.rm.acidulous.model.reelSpec
@@ -38,6 +40,7 @@ object EngineSync {
     private val mounted = arrayOfNulls<String>(RACKS)
     private val mountedEffects = Array(RACKS) { arrayOfNulls<String>(EFFECT_SLOTS) }
     private val mountedEventors = Array(RACKS) { arrayOfNulls<String>(EVENTOR_SLOTS) }
+    private val mountedInput = arrayOfNulls<String>(INPUT_SLOTS)
     private val loadedSamples = HashMap<String, String>() // "rack:slot" -> relative path
     private val loadedMaps = arrayOfNulls<String>(RACKS)   // the source string a rack's map was built from
     private val loadedFreezes = arrayOfNulls<String>(RACKS) // which frozen clips a rack has, as one identity string
@@ -187,6 +190,23 @@ object EngineSync {
             if (mountedSends[slot] == want) continue
             if (NativeEngine.mountSend(slot, want ?: "")) mountedSends[slot] = want
             else Log.w(TAG, "could not mount send ${want ?: "(none)"} on slot $slot")
+        }
+    }
+
+    /**
+     * What the incoming audio goes through before anything hears it.
+     *
+     * The same shape as [ensureSends] and mounted the same way; what differs
+     * is only where the engine runs it, which is before the input is
+     * published - so an effect here is **printed into a recording** rather
+     * than applied to a playback.
+     */
+    fun ensureInputFx(song: Song) {
+        for (slot in 0 until INPUT_SLOTS) {
+            val want = song.inputAt(slot).type.ifEmpty { null }
+            if (mountedInput[slot] == want) continue
+            if (NativeEngine.mountInputEffect(slot, want ?: "")) mountedInput[slot] = want
+            else Log.w(TAG, "could not mount input effect ${want ?: "(none)"} on slot $slot")
         }
     }
 
@@ -413,6 +433,7 @@ object EngineSync {
         ensureSamples(song)
         ensureEffects(song)
         ensureSends(song)
+        ensureInputFx(song)
         ensureEventors(song)
         ensureSampleMaps(song)
         ensureNexusPatches(song)
@@ -525,6 +546,7 @@ object EngineSync {
         }
         pushMaster(song.master)
         pushSends(song.master)
+        pushInputFx(song)
         return ok
     }
 
@@ -566,6 +588,10 @@ object EngineSync {
      * the effect is there its parameter names have nothing to resolve against,
      * which is the same order every other slot is pushed in.
      */
+    fun pushInputFx(song: Song) {
+        for (slot in 0 until INPUT_SLOTS) pushSlot(0, inputUnit(slot), song.inputAt(slot))
+    }
+
     fun pushSends(m: Master) {
         for (slot in 0 until SEND_SLOTS) pushSlot(0, sendUnit(slot), m.sendAt(slot))
     }

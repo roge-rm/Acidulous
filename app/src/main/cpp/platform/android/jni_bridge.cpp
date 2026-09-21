@@ -69,6 +69,12 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMountSend(JNIEnv *env, jobject, 
     return host().mountSend(slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMountInputEffect(JNIEnv *env, jobject, jint slot,
+                                                                  jstring typeName) {
+    return host().mountInputEffect(slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
+}
+
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeControlChange(JNIEnv *, jobject, jint rackId, jint cc, jint value,
                                                               jboolean record) {

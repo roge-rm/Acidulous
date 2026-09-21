@@ -97,6 +97,17 @@ class Engine {
     // audio thread; plain atomics because they are single values.
     std::atomic<float> inputGain{1.0f};
     std::atomic<float> monitorLevel{0.0f};
+    /**
+     * The input chain: what the incoming audio goes through before anything
+     * sees it - the recorder, the monitor, and every machine that reads the
+     * input bus.
+     *
+     * Deliberately before `InputBus::publish` rather than anywhere later,
+     * because that is what makes "printed into the take" true without the
+     * capture having to know anything about effects.
+     */
+    Effect *inputFx[kInputSlots] = {nullptr, nullptr};
+
     Capture capture;
     /**
      * Where the song was as the capture was made - see CaptureMarks.
@@ -169,6 +180,8 @@ class Engine {
     int32_t earlyCount = 0;
     double preRollFrames = 0.0;
     float inputScratch[kBlockFrames * 2] = {};
+    /** The input chain, on the block about to be published. */
+    void runInputChain();
 
   private:
     void applyMounts();
