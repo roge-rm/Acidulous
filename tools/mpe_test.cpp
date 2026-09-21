@@ -252,7 +252,7 @@ int main() {
     // mechanical half reaches them too.
     check("Cumulus", false);
     check("Formulate", false);
-    std::printf("\nSubvert is monophonic and implements no pitch bend at all, so there is\n"
+    std::printf("\nReflux is monophonic and implements no pitch bend at all, so there is\n"
                 "nothing here for it to answer. Dice is a slicer and Manual is 91 wheels on\n"
                 "one shaft - neither can bend a note on its own.\n");
 

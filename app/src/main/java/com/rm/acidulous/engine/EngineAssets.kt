@@ -28,6 +28,33 @@ object EngineAssets {
 
     fun install(context: Context) {
         userRoot(context)
+        renamePatchFolders(context)
+    }
+
+    /**
+     * Machines renamed since a build that could have saved patches.
+     *
+     * A user patch lives in a folder named after its machine, so a rename
+     * leaves the old folder behind and the machine's picker shows factory
+     * patches only - the user's own are still on the phone and unreachable.
+     * Moved one file at a time rather than by renaming the folder, so that a
+     * name used by both (an old Subvert patch and a new Reflux one) keeps
+     * both instead of the move failing on a directory that already exists.
+     */
+    private val RENAMED = mapOf("Subvert" to "Reflux")
+
+    private fun renamePatchFolders(context: Context) {
+        val patches = File(userRoot(context), "patches")
+        for ((was, now) in RENAMED) {
+            val from = File(patches, was)
+            if (!from.isDirectory) continue
+            val to = File(patches, now).apply { mkdirs() }
+            for (file in from.listFiles() ?: emptyArray()) {
+                val target = File(to, uniqueIn(to, file.name))
+                if (!file.renameTo(target)) file.copyTo(target, overwrite = false).also { file.delete() }
+            }
+            from.delete()
+        }
     }
 }
 

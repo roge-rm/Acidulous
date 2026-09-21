@@ -98,7 +98,7 @@ class FactoryBanksTest {
 
     @Test
     fun `a factory patch survives being saved and read back`() {
-        val patch = PatchStore.factory("Subvert").first { it.params.isNotEmpty() }
+        val patch = PatchStore.factory("Reflux").first { it.params.isNotEmpty() }
         val text = SongStore.json.encodeToString(Patch.serializer(), patch)
         assertEquals(patch, SongStore.json.decodeFromString(Patch.serializer(), text))
     }

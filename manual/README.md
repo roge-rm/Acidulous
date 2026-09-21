@@ -21,8 +21,8 @@
     - [Nexus](04-the-machines/nexus.md) - a modular whose blocks are this app's own instruments, and whose patch is text.
     - [Pollen](04-the-machines/pollen.md) - granular clouds that seed their own, from a file or from what is coming in live.
     - [Ratio](04-the-machines/ratio.md) - six-operator FM, with the algorithm itself on a knob.
+    - [Reflux](04-the-machines/reflux.md) - the acid bass: one oscillator, one filter that screams, and a line you play rather than program.
     - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring - and hear each other.
-    - [Subvert](04-the-machines/subvert.md) - the acid bass: one oscillator, one filter that screams, and a line you play rather than program.
     - [Timber](04-the-machines/timber.md) - woodwinds by modelling: a reed or a jet of air, a tube, and holes down the side of it.
     - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the one that does everything.
 5. [Effects and mixing](05-effects-and-mixing.md) - two inserts a track, two sends, a master.

@@ -88,7 +88,7 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
         lin(BodyDamp, "bodydamp", 0.0f, 1.0f, 0.5f);
 
         lin(Drive, "drive", 0.0f, 1.0f, 0.1f);
-        // To 1.5, for the same reason Subvert's was raised: the drive law
+        // To 1.5, for the same reason Reflux's was raised: the drive law
         // had been supplying level it should not have been, and Steel could
         // not get it back from a knob that stopped at 1.0.
         lin(Volume, "volume", 0.0f, 1.5f, 0.8f);

@@ -1,4 +1,4 @@
-#include "Subvert.h"
+#include "Reflux.h"
 #include <engine/core/Constants.h>
 
 namespace acidulous::machine {
@@ -27,7 +27,7 @@ namespace {
  */
 constexpr float kHouse = 0.2f;
 
-const ParamDef kDefs[Subvert::Count] = {
+const ParamDef kDefs[Reflux::Count] = {
     {"wave", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},          // 0 saw, 1 pulse
     {"tune", -12.0f, 12.0f, 0.0f, Curve::Linear, 0, "st"},
     {"cutoff", 40.0f, 12000.0f, 700.0f, Curve::Exponential, 0, "Hz"},
@@ -48,14 +48,14 @@ const ParamDef kDefs[Subvert::Count] = {
 };
 } // namespace
 
-Subvert::Subvert() { initParams(); }
+Reflux::Reflux() { initParams(); }
 
-const ParamDef *Subvert::paramDefs(int32_t &count) const {
+const ParamDef *Reflux::paramDefs(int32_t &count) const {
     count = Count;
     return kDefs;
 }
 
-void Subvert::prepare(int32_t sr) {
+void Reflux::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
     osc.setSampleRate(sampleRate);
     sub.setSampleRate(sampleRate);
@@ -70,7 +70,7 @@ void Subvert::prepare(int32_t sr) {
     reset();
 }
 
-void Subvert::reset() {
+void Reflux::reset() {
     stackSize = 0;
     gliding = false;
     accented = false;
@@ -95,7 +95,7 @@ void Subvert::reset() {
     coeffCountdown = 0;
 }
 
-void Subvert::startNote(uint8_t note, bool legato, bool accent) {
+void Reflux::startNote(uint8_t note, bool legato, bool accent) {
     targetPitch = static_cast<float>(note);
     if (legato) {
         // Slide: glide there, keep the envelopes running.
@@ -113,7 +113,7 @@ void Subvert::startNote(uint8_t note, bool legato, bool accent) {
     }
 }
 
-void Subvert::noteOn(uint8_t note, uint8_t velocity) {
+void Reflux::noteOn(uint8_t note, uint8_t velocity) {
     const bool legato = stackSize > 0;
     // Push (or move to top) on the held-note stack.
     int32_t found = -1;
@@ -132,7 +132,7 @@ void Subvert::noteOn(uint8_t note, uint8_t velocity) {
     startNote(note, legato, velocity >= kAccentVelocity);
 }
 
-void Subvert::noteOff(uint8_t note) {
+void Reflux::noteOff(uint8_t note) {
     int32_t found = -1;
     for (int32_t i = 0; i < stackSize; ++i) {
         if (stack[i] == note) { found = i; break; }
@@ -149,12 +149,12 @@ void Subvert::noteOff(uint8_t note) {
     }
 }
 
-void Subvert::allNotesOff() {
+void Reflux::allNotesOff() {
     stackSize = 0;
     ampEnv.gate(false);
 }
 
-bool Subvert::render(float *L, float * /*R*/, int32_t frames) {
+bool Reflux::render(float *L, float * /*R*/, int32_t frames) {
     params_.tick();
     const bool pulse = params_.get(Wave) >= 0.5f;
     const float tune = params_.get(Tune);

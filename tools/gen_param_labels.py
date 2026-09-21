@@ -16,7 +16,7 @@ SRC = pathlib.Path("app/src/main/java/com/rm/acidulous/ui/MachinePanel.kt")
 OUT = pathlib.Path("app/src/main/java/com/rm/acidulous/model/ParamLabels.kt")
 
 PANELS = {
-    "SubvertPanel": "Subvert", "HexbeatPanel": "Hexbeat", "TrinityPanel": "Trinity",
+    "RefluxPanel": "Reflux", "HexbeatPanel": "Hexbeat", "TrinityPanel": "Trinity",
     "RatioPanel": "Ratio", "MosaicPanel": "Mosaic", "ForagePanel": "Forage",
     "ManualPanel": "Manual", "CipherPanel": "Cipher", "FilamentPanel": "Filament",
     "NexusPanel": "Nexus", "CumulusPanel": "Cumulus", "FormulatePanel": "Formulate",

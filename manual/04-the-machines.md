@@ -6,7 +6,7 @@ A track's machine is what it plays. Every track has one, chosen when you make th
 
 ## Bass and lead
 
-- **Subvert** - acid bass. One oscillator, one filter that screams, accent on velocity and slide on legato, so a line is played rather than programmed.
+- **Reflux** - acid bass. One oscillator, one filter that screams, accent on velocity and slide on legato, so a line is played rather than programmed.
 - **Trinity** - the general-purpose poly. Three wavetable oscillators, density and drift, two filters and a mod matrix.
 - **Ratio** - six-operator FM, with the algorithm itself on a knob so it can morph between two of them.
 

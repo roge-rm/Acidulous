@@ -96,10 +96,24 @@ class SongStoreTest {
         assertEquals(0.25f, song.tracks[0].mixer.sendReverb)
         assertEquals(song, SongStore.decode(SongStore.encode(song)))
         // a file from before M5 has no mixer or master: defaults apply
-        val old = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"Subvert"}}],"scenes":[{"id":"s","name":"S"}]}"""
+        val old = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"Reflux"}}],"scenes":[{"id":"s","name":"S"}]}"""
         val decoded = SongStore.decode(old)
         assertEquals(Mixer(), decoded.tracks[0].mixer)
         assertEquals(Master(), decoded.master)
+    }
+
+    @Test
+    fun aRenamedMachineOpens() {
+        // Subvert became Reflux after three tagged releases, so songs saved
+        // by those builds name a machine the registry no longer has. Without
+        // the map the track opens dead: notes on the screen and nothing
+        // played.
+        val was = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"Subvert","params":{"cutoff":0.4}}}],"scenes":[{"id":"s","name":"S"}]}"""
+        val song = SongStore.decode(was)
+        assertEquals("Reflux", song.tracks[0].machine.type)
+        assertTrue(MachineUi.machineGroups.flatMap { it.machines }.contains(song.tracks[0].machine.type))
+        // The rename is the whole change: the patch comes through with it.
+        assertEquals(0.4f, song.tracks[0].machine.params["cutoff"])
     }
 
     @Test
@@ -146,7 +160,7 @@ class SongStoreTest {
         assertEquals("Filter", back.tracks[0].effectAt(0).type)
         assertEquals(0.4f, back.tracks[0].effectAt(0).params["cutoff"])
         assertTrue(back.tracks[0].effectAt(1).bypass)
-        val old = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"Subvert"}}],"scenes":[{"id":"s","name":"S"}]}"""
+        val old = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"Reflux"}}],"scenes":[{"id":"s","name":"S"}]}"""
         assertTrue(SongStore.decode(old).tracks[0].effects.isEmpty())
     }
 

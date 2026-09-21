@@ -436,7 +436,7 @@ void checkBank(const Bank &bank) {
         // it is held rather than what it averages to.
         char warnText[96];
         // Only where 45 Hz is nowhere near the note being played. A bass
-        // machine's sub patches live down there on purpose - Subvert's Sub
+        // machine's sub patches live down there on purpose - Reflux's Sub
         // Drop is 79% below 45 Hz and is called Sub Drop - so this asks
         // whether the *note* is up out of the cellar while a quarter of the
         // sound is still in it. That was Manual's fault exactly: a patch

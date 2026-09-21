@@ -53,7 +53,7 @@ object MachineUi {
     data class MachineGroup(val label: String, val machines: List<String>)
 
     val machineGroups: List<MachineGroup> = listOf(
-        MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
+        MachineGroup("synths", listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup("drums", listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
         MachineGroup("realish", listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
         MachineGroup("beyond", listOf("Cipher", "Nexus", "Bias")),
@@ -61,7 +61,7 @@ object MachineUi {
 
     /** One line per machine: what it is, not what it has. */
     fun describe(type: String): String = when (type) {
-        "Subvert" -> "acid bass - one oscillator, one filter that screams"
+        "Reflux" -> "acid bass - one oscillator, one filter that screams"
         "Trinity" -> "three oscillators, wavetables, dual filters, a mod matrix"
         "Ratio" -> "six-operator FM, with the algorithm itself on a knob"
         "Cumulus" -> "pads by spectrum - bands of partials, morphed"

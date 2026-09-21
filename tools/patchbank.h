@@ -27,7 +27,7 @@
 // The format, in full:
 //
 //     # comments run to the end of the line
-//     machine  Subvert          # or `effect Delay`
+//     machine  Reflux          # or `effect Delay`
 //     role     bass             # the phrase these patches are auditioned with
 //     material none             # what to mount; see audition_material.h
 //     input    none             # what to put on the input bus
@@ -80,7 +80,7 @@ struct BankPatch {
 };
 
 struct Bank {
-    std::string unit;     // "Subvert", or "fx.Delay"
+    std::string unit;     // "Reflux", or "fx.Delay"
     std::string role = "note";
     std::string material = "none";
     std::string input = "none";

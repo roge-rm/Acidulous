@@ -2,7 +2,7 @@
 
 > A modular whose blocks are this app's own instruments, and whose patch is text.
 
-Nexus is the machine for building a machine. Its blocks are not generic oscillators and filters - they are **the app's own instruments**, so a Subvert filter, a Trinity oscillator or a Resonance mode bank can be wired into a graph together.
+Nexus is the machine for building a machine. Its blocks are not generic oscillators and filters - they are **the app's own instruments**, so a Reflux filter, a Trinity oscillator or a Resonance mode bank can be wired into a graph together.
 
 ## The patch is text
 

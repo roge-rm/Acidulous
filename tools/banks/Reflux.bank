@@ -1,4 +1,4 @@
-# Subvert - thirty patches: the classics first, and then what this machine
+# Reflux - thirty patches: the classics first, and then what this machine
 # has that they did not.
 #
 # Thirteen parameters, and eight of them are one idea: a resonant filter with
@@ -16,7 +16,7 @@
 # figure across every machine in the app rather than a number chosen for this
 # bank alone. Getting there took fourteen decibels out of the machine's
 # output rather than out of each patch's volume knob (`kHouse` in
-# Subvert.cpp): every machine here had been levelled against its own bank and
+# Reflux.cpp): every machine here had been levelled against its own bank and
 # none against the others, and the factory had come to span twenty-five
 # decibels, so changing machine changed the volume of the song. Done in the
 # machine, the knob still means the same thing wherever you are and Init
@@ -50,10 +50,10 @@
 # there when it is loaded. Every note of every range now reads within twenty
 # cents and none is on the wrong partial.
 #
-# Values are in each parameter's own units; `audition params Subvert` lists
+# Values are in each parameter's own units; `audition params Reflux` lists
 # them. A patch names only what it changes.
 
-machine Subvert
+machine Reflux
 # Sixteenths with rests, slides and accents, because what this machine is
 # for happens between the notes rather than on them. Eighths showed that a
 # bass machine worked and showed nothing about this one.

@@ -18,7 +18,7 @@ dsp/        Math · Osc (PolyBLEP saw/pulse) · Filter (TPT SVF) · MultiFilter 
             drive) · Envelope · Adsr (DADSR + repeat) · LfoGen · Lfo (note-value phase) ·
             Wavetable · Biquad · DelayLine · Delay · Reverb · Limiter · Click · Fft
 machine/    Machine interface · MachineRegistry, then one directory each:
-            subvert trinity ratio mosaic hexbeat forage genesis resonance cumulus
+            reflux trinity ratio mosaic hexbeat forage genesis resonance cumulus
             pollen dice formulate manual filament brazen timber cipher molt nexus
 effect/     Effect interface (onBlock for tempo, run() with bypass) · EffectRegistry ·
             Delay Reverb Eq Distortion Compressor Filter Bitcrusher Phaser Flanger

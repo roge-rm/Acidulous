@@ -980,7 +980,7 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         if (model == Transistor) x += reedyFilter.process(x) * paramOf(ComboReedy) * 0.5f;
         // The house level. Every machine leaves the same amount of room for
         // the next one, and it is taken out here rather than out of forty
-        // patch volumes. See Subvert's kHouse for why.
+        // patch volumes. See Reflux's kHouse for why.
         // This does not decide how loud the machine is - the bank is levelled
         // to the same target whatever it says - it decides **where in the
         // volume knob's travel the bank sits**. At 0.5 the thinnest stops ran

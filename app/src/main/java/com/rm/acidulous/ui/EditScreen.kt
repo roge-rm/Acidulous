@@ -130,16 +130,16 @@ fun EditScreen(
     var steps by remember(trackIndex, kind) { mutableStateOf(kind == MachineKind.Drums) }
     val voices = MachineUi.voicesOf(track.machine.type, track.machine.settings)
     var selectedPad by remember(trackIndex) { mutableStateOf(0) }
-    // Subvert only. A drum machine opens on its grid and stays there: the
+    // Reflux only. A drum machine opens on its grid and stays there: the
     // grid *is* the editor for one, and a roll of it - sixteen lanes of
     // one-tick notes you cannot name - answers no question the grid does not
-    // answer better. Subvert keeps the choice because its two views are
+    // answer better. Reflux keeps the choice because its two views are
     // genuinely different instruments to edit in, a roll and a step row.
     //
     // Note what this does not do: `steps` still starts true for drums and
     // simply never changes, so the grid is reached the same way it always
     // was. Nothing below has to learn that drums are a special case.
-    val hasSteps = track.machine.type == "Subvert"
+    val hasSteps = track.machine.type == "Reflux"
     var laneKey by remember { mutableStateOf<String?>(null) }
     val slotTypes = track.effects.map { it.type } + track.eventors.map { it.type }
     val laneKeys = remember(track.machine.type, slotTypes) { automationKeysFor(track) }

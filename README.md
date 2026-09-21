@@ -30,7 +30,7 @@ Dan (rm)
 
 | | |
 |---|---|
-| **Subvert** | The signature bass mono. Accent is velocity and slide is legato, so a line is played rather than programmed. |
+| **Reflux** | The signature bass mono. Accent is velocity and slide is legato, so a line is played rather than programmed. |
 | **Trinity** | Three-oscillator poly with wavetables, density, FM and drift. |
 | **Ratio** | Six-operator FM with morphing algorithms and ratios you can snap or skew. |
 | **Manual** | An organ: two manuals and pedals over one shared 91-wheel generator, four models, rotary cabinet. |
@@ -141,7 +141,7 @@ enough on its own.
 
 ```sh
 tools/audition.sh bank Trinity            # every patch, and the spread
-tools/audition.sh play Subvert Acid       # one patch
+tools/audition.sh play Reflux Acid        # one patch
 tools/audition.sh params Mosaic           # the parameter table
 ```
 

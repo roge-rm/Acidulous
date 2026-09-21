@@ -32,7 +32,8 @@ object SongStore {
         // The sends were two fixed boxes before they were slots; an old song
         // still carries them that way and is brought forward here, where every
         // other shape change to a saved song is.
-        @Suppress("NAME_SHADOWING") val song = song.copy(master = song.master.migrated())
+        @Suppress("NAME_SHADOWING") var song = song.copy(master = song.master.migrated())
+        song = renamed(song)
         val home = mapOf("Chord" to 0, "Scale" to 1, "Arp" to 2)
         if (song.tracks.none { t -> (0 until EVENTOR_SLOTS).any { home[t.eventorAt(it).type]?.let { h -> h != it } == true } }) {
             return song
@@ -46,6 +47,27 @@ object SongStore {
                     if (placed[h] == null) placed[h] = ev
                 }
                 track.copy(eventors = List(EVENTOR_SLOTS) { placed[it] ?: UnitSlot() })
+            },
+        )
+    }
+
+    /**
+     * Machines that have been renamed since a song could have been saved.
+     *
+     * A type string is the only thing a saved track says about its machine,
+     * so a rename with nothing here opens the song with a dead track: the
+     * registry does not know the name, no engine machine is made, and the
+     * part is silent with its notes still on the screen. The map is the whole
+     * migration, and it is read on the way in and never written.
+     */
+    private val RENAMED = mapOf("Subvert" to "Reflux")
+
+    private fun renamed(song: Song): Song {
+        if (song.tracks.none { RENAMED.containsKey(it.machine.type) }) return song
+        return song.copy(
+            tracks = song.tracks.map { track ->
+                val now = RENAMED[track.machine.type] ?: return@map track
+                track.copy(machine = track.machine.copy(type = now))
             },
         )
     }

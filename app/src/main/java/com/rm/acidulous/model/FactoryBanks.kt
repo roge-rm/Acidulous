@@ -7,7 +7,7 @@ package com.rm.acidulous.model
 
 internal object FactoryBanks {
     fun of(unit: String): List<Patch> = when (unit) {
-        "Subvert" -> subvert
+        "Reflux" -> reflux
         "Trinity" -> trinity
         "Ratio" -> ratio
         "Manual" -> manual
@@ -45,155 +45,155 @@ internal object FactoryBanks {
         else -> emptyList()
     }
 
-    private fun subvert0() = Patch("Subvert", "Init", emptyMap(),
+    private fun reflux0() = Patch("Reflux", "Init", emptyMap(),
         family = "classic")
 
-    private fun subvert1() = Patch("Subvert", "Classic",
+    private fun reflux1() = Patch("Reflux", "Classic",
         mapOf("cutoff" to 0.408023566f, "resonance" to 0.72f, "envmod" to 0.64f, "decay" to 0.4850184f, "accent" to 0.75f, "slide" to 0.5f, "drive" to 0.16f, "volume" to 0.586666644f),
         family = "classic",
         low = 24, high = 55)
 
-    private fun subvert2() = Patch("Subvert", "Squelch",
+    private fun reflux2() = Patch("Reflux", "Squelch",
         mapOf("cutoff" to 0.369967341f, "resonance" to 0.9f, "envmod" to 0.85f, "decay" to 0.318411052f, "accent" to 0.92f, "slide" to 0.451545f, "drive" to 0.22f, "volume" to 0.599999964f),
         family = "classic",
         low = 24, high = 55)
 
-    private fun subvert3() = Patch("Subvert", "Rubber",
+    private fun reflux3() = Patch("Reflux", "Rubber",
         mapOf("wave" to 1f, "cutoff" to 0.350310653f, "resonance" to 0.75f, "envmod" to 0.7f, "decay" to 0.349485f, "accent" to 0.8f, "slide" to 0.7074866f, "drive" to 0.25f, "volume" to 0.49333334f, "pw" to 0.4111111f),
         family = "classic",
         low = 24, high = 55)
 
-    private fun subvert4() = Patch("Subvert", "Long Sweep",
+    private fun reflux4() = Patch("Reflux", "Long Sweep",
         mapOf("cutoff" to 0.26369825f, "resonance" to 0.72f, "envmod" to 0.95f, "decay" to 0.863499343f, "accent" to 0.45f, "drive" to 0.15f, "volume" to 0.6066667f),
         family = "motion",
         low = 24, high = 55)
 
-    private fun subvert5() = Patch("Subvert", "Slide Line",
+    private fun reflux5() = Patch("Reflux", "Slide Line",
         mapOf("cutoff" to 0.39470154f, "resonance" to 0.68f, "envmod" to 0.6f, "decay" to 0.468926072f, "accent" to 0.7f, "slide" to 0.9621396f, "drive" to 0.14f, "volume" to 0.5933333f),
         family = "motion",
         low = 24, high = 55)
 
-    private fun subvert6() = Patch("Subvert", "Doorstop",
+    private fun reflux6() = Patch("Reflux", "Doorstop",
         mapOf("cutoff" to 0.14217411f, "envmod" to 1f, "decay" to 0.238560632f, "accent" to 0.85f, "slide" to 0.349485f, "drive" to 0.3f, "volume" to 0.653333366f),
         family = "short",
         low = 24, high = 55)
 
-    private fun subvert7() = Patch("Subvert", "Round",
+    private fun reflux7() = Patch("Reflux", "Round",
         mapOf("cutoff" to 0.4496927f, "resonance" to 0f, "envmod" to 0f, "accent" to 0.35f, "slide" to 0.477121264f, "drive" to 0.05f, "volume" to 0.66f),
         family = "classic",
         low = 24, high = 55)
 
-    private fun subvert8() = Patch("Subvert", "Open Saw",
+    private fun reflux8() = Patch("Reflux", "Open Saw",
         mapOf("cutoff" to 0.9495629f, "resonance" to 0.05f, "envmod" to 0f, "decay" to 0.610924363f, "accent" to 0.3f, "drive" to 0f, "volume" to 0.58f),
         family = "classic",
         low = 24, high = 55)
 
-    private fun subvert9() = Patch("Subvert", "Tick",
+    private fun reflux9() = Patch("Reflux", "Tick",
         mapOf("cutoff" to 0.3212923f, "resonance" to 0.8f, "envmod" to 1f, "decay" to 0.08804563f, "accent" to 0.85f, "slide" to 0.30102998f, "drive" to 0.18f, "volume" to 0.613333344f),
         family = "short",
         low = 24, high = 55)
 
-    private fun subvert10() = Patch("Subvert", "Wasp",
+    private fun reflux10() = Patch("Reflux", "Wasp",
         mapOf("cutoff" to 0.6673927f, "resonance" to 0.88f, "envmod" to 0.4f, "decay" to 0.389075637f, "accent" to 0.55f, "slide" to 0.451545f, "volume" to 0.5f),
         family = "dirty",
         low = 36, high = 67)
 
-    private fun subvert11() = Patch("Subvert", "Crawl",
+    private fun reflux11() = Patch("Reflux", "Crawl",
         mapOf("cutoff" to 0.192611188f, "resonance" to 0.7f, "envmod" to 0.85f, "decay" to 0.7821357f, "accent" to 0.4f, "slide" to 0.889075637f, "drive" to 0.12f, "volume" to 0.880000055f),
         family = "motion",
         low = 24, high = 48)
 
-    private fun subvert12() = Patch("Subvert", "Talk",
+    private fun reflux12() = Patch("Reflux", "Talk",
         mapOf("cutoff" to 0.480530232f, "resonance" to 0.6f, "envmod" to 1f, "decay" to 0.5271788f, "accent" to 0.7f, "slide" to 0.573064f, "volume" to 0.566666663f),
         family = "motion",
         low = 24, high = 55)
 
-    private fun subvert13() = Patch("Subvert", "Siren",
+    private fun reflux13() = Patch("Reflux", "Siren",
         mapOf("cutoff" to 0.13215296f, "resonance" to 0.9f, "envmod" to 1f, "decay" to 0.9689261f, "accent" to 0.35f, "slide" to 0.60205996f, "drive" to 0.14f, "volume" to 0.62f),
         family = "motion",
         low = 24, high = 55)
 
-    private fun subvert14() = Patch("Subvert", "Sub Hollow",
+    private fun reflux14() = Patch("Reflux", "Sub Hollow",
         mapOf("wave" to 1f, "cutoff" to 0.298880249f, "resonance" to 0.38f, "envmod" to 0.3f, "decay" to 0.60205996f, "accent" to 0.5f, "drive" to 0.08f, "volume" to 0.6066667f, "pw" to 0.211111113f, "sub" to 0.65f),
         family = "sub",
         low = 24, high = 55)
 
-    private fun subvert15() = Patch("Subvert", "Sub Drop",
+    private fun reflux15() = Patch("Reflux", "Sub Drop",
         mapOf("wave" to 1f, "cutoff" to 0.0981131f, "resonance" to 0.2f, "envmod" to 0.1f, "decay" to 0.7385606f, "accent" to 0.3f, "drive" to 0f, "volume" to 0.973333359f, "sub" to 1f),
         family = "sub",
         low = 24, high = 45)
 
-    private fun subvert16() = Patch("Subvert", "Band Squelch",
+    private fun reflux16() = Patch("Reflux", "Band Squelch",
         mapOf("cutoff" to 0.499284834f, "resonance" to 0.85f, "envmod" to 0.8f, "decay" to 0.30102998f, "accent" to 0.9f, "drive" to 0.55f, "volume" to 1f, "mode" to 1f),
         family = "band",
         low = 24, high = 55)
 
-    private fun subvert17() = Patch("Subvert", "Band Lead",
+    private fun reflux17() = Patch("Reflux", "Band Lead",
         mapOf("cutoff" to 0.588843942f, "resonance" to 0.93f, "envmod" to 0.45f, "decay" to 0.411954373f, "slide" to 0.627636254f, "drive" to 0.35f, "volume" to 0.84f, "mode" to 1f),
         family = "band",
         low = 36, high = 67)
 
-    private fun subvert18() = Patch("Subvert", "Thin Ice",
+    private fun reflux18() = Patch("Reflux", "Thin Ice",
         mapOf("cutoff" to 0.623331666f, "resonance" to 0.97f, "envmod" to 0.15f, "decay" to 0.432650715f, "accent" to 0.4f, "drive" to 0.05f, "volume" to 0.50666666f),
         family = "sub",
         low = 36, high = 67)
 
-    private fun subvert19() = Patch("Subvert", "Buzzsaw",
+    private fun reflux19() = Patch("Reflux", "Buzzsaw",
         mapOf("cutoff" to 0.7682668f, "resonance" to 0.25f, "envmod" to 0.25f, "decay" to 0.562469363f, "accent" to 0.55f, "drive" to 0.85f, "volume" to 0.6066667f),
         family = "dirty",
         low = 24, high = 55)
 
-    private fun subvert20() = Patch("Subvert", "Hollow Pulse",
+    private fun reflux20() = Patch("Reflux", "Hollow Pulse",
         mapOf("wave" to 1f, "decay" to 0.432650715f, "slide" to 0.520696342f, "drive" to 0.12f, "volume" to 0.706666648f, "pw" to 0.03333333f),
         family = "sub",
         low = 24, high = 55)
 
-    private fun subvert21() = Patch("Subvert", "Screamer",
+    private fun reflux21() = Patch("Reflux", "Screamer",
         mapOf("cutoff" to 0.480530232f, "resonance" to 0.8f, "envmod" to 0.75f, "decay" to 0.451545f, "accent" to 0.8f, "slide" to 0.477121264f, "drive" to 1f, "volume" to 0.58f),
         family = "dirty",
         low = 24, high = 55)
 
-    private fun subvert22() = Patch("Subvert", "Ghost",
+    private fun reflux22() = Patch("Reflux", "Ghost",
         mapOf("cutoff" to 0.39470154f, "resonance" to 0.5f, "envmod" to 0.25f, "decay" to 0.8345034f, "accent" to 0.3f, "slide" to 0.7781513f, "volume" to 1f, "mode" to 1f),
         family = "band",
         low = 36, high = 67)
 
-    private fun subvert23() = Patch("Subvert", "Octave Down",
+    private fun reflux23() = Patch("Reflux", "Octave Down",
         mapOf("tune" to 0f, "cutoff" to 0.353257328f, "resonance" to 0.5f, "envmod" to 0.45f, "decay" to 0.573064f, "accent" to 0.5f, "volume" to 0.706666648f, "sub" to 0.55f),
         family = "motion",
         low = 36, high = 60)
 
-    private fun subvert24() = Patch("Subvert", "Reed",
+    private fun reflux24() = Patch("Reflux", "Reed",
         mapOf("wave" to 1f, "cutoff" to 0.4496927f, "resonance" to 0.7f, "decay" to 0.551331162f, "accent" to 0.55f, "slide" to 0.627636254f, "drive" to 0.25f, "volume" to 0.94f, "pw" to 0.9444444f, "mode" to 1f),
         family = "classic",
         low = 36, high = 67)
 
-    private fun subvert25() = Patch("Subvert", "Grind",
+    private fun reflux25() = Patch("Reflux", "Grind",
         mapOf("cutoff" to 0.273177415f, "resonance" to 0.4f, "envmod" to 0.35f, "decay" to 0.650515f, "drive" to 0.9f, "volume" to 0.653333366f, "sub" to 0.4f),
         family = "dirty",
         low = 24, high = 48)
 
-    private fun subvert26() = Patch("Subvert", "Glass",
+    private fun reflux26() = Patch("Reflux", "Glass",
         mapOf("cutoff" to 0.731863f, "resonance" to 0.99f, "envmod" to 0.08f, "decay" to 0.468926072f, "accent" to 0.3f, "slide" to 0.422549f, "drive" to 0.05f, "volume" to 0.413333327f, "mode" to 1f),
         family = "short",
         low = 49, high = 79)
 
-    private fun subvert27() = Patch("Subvert", "Wide",
+    private fun reflux27() = Patch("Reflux", "Wide",
         mapOf("wave" to 1f, "cutoff" to 0.5458685f, "resonance" to 0.15f, "envmod" to 0.1f, "decay" to 0.6839884f, "accent" to 0.4f, "slide" to 0.5f, "drive" to 0.06f, "volume" to 0.68f, "sub" to 1f),
         family = "band",
         low = 24, high = 55)
 
-    private fun subvert28() = Patch("Subvert", "Rasp",
+    private fun reflux28() = Patch("Reflux", "Rasp",
         mapOf("cutoff" to 0.5810506f, "resonance" to 0.5f, "envmod" to 0.3f, "decay" to 0.411954373f, "slide" to 0.477121264f, "drive" to 0.7f, "volume" to 0.613333344f),
         family = "dirty",
         low = 24, high = 55)
 
-    private fun subvert29() = Patch("Subvert", "Pluck",
+    private fun reflux29() = Patch("Reflux", "Pluck",
         mapOf("cutoff" to 0.635427654f, "resonance" to 0.05f, "envmod" to 0.55f, "decay" to 0.282135725f, "accent" to 0.5f, "slide" to 0.389075637f, "drive" to 0.3f, "volume" to 0.6333333f),
         family = "short",
         low = 24, high = 55)
 
-    private val subvert: List<Patch> by lazy { listOf(subvert0(), subvert1(), subvert2(), subvert3(), subvert4(), subvert5(), subvert6(), subvert7(), subvert8(), subvert9(), subvert10(), subvert11(), subvert12(), subvert13(), subvert14(), subvert15(), subvert16(), subvert17(), subvert18(), subvert19(), subvert20(), subvert21(), subvert22(), subvert23(), subvert24(), subvert25(), subvert26(), subvert27(), subvert28(), subvert29()) }
+    private val reflux: List<Patch> by lazy { listOf(reflux0(), reflux1(), reflux2(), reflux3(), reflux4(), reflux5(), reflux6(), reflux7(), reflux8(), reflux9(), reflux10(), reflux11(), reflux12(), reflux13(), reflux14(), reflux15(), reflux16(), reflux17(), reflux18(), reflux19(), reflux20(), reflux21(), reflux22(), reflux23(), reflux24(), reflux25(), reflux26(), reflux27(), reflux28(), reflux29()) }
 
     private fun trinity0() = Patch("Trinity", "Init", emptyMap(),
         family = "keys")

@@ -92,7 +92,7 @@ fun Song.addTrack(machineType: String, name: String? = null): Song {
 
 /**
  * The machine's own name for the first track that uses it, then 2, 3 and so
- * on. One Subvert is just "Subvert"; a number only appears once it means
+ * on. One Reflux is just "Reflux"; a number only appears once it means
  * something.
  */
 fun Song.uniqueTrackName(base: String): String {

@@ -362,7 +362,7 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
         // The house level. A chip is a loud machine - square waves at full
         // scale, no filter in the way by default - and at the 0.5 this used
         // to be, a patch that set nothing arrived ten decibels over the line
-        // every other machine sits on. See Subvert's kHouse for why this is
+        // every other machine sits on. See Reflux's kHouse for why this is
         // one constant rather than forty patch volumes.
         constexpr float kHouse = 0.15f;
         float s = dcPrev * volume * kHouse;

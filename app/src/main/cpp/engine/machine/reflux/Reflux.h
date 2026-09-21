@@ -4,7 +4,7 @@
 #include <engine/dsp/Osc.h>
 #include <engine/machine/Machine.h>
 
-// Subvert - the signature machine, in its first form. Not a copy of the
+// Reflux - the signature machine, in its first form. Not a copy of the
 // classic acid box: the brief is to take it where its own modern descendants
 // went. This is the classic layer only - saw or pulse, a resonant lowpass
 // with envelope-modulated cutoff, decay, accent and slide - voiced by ear,
@@ -15,15 +15,15 @@
 // or above the threshold: more envelope, more level.
 namespace acidulous::machine {
 
-class Subvert final : public Machine {
+class Reflux final : public Machine {
   public:
     enum P : int32_t { Wave, Tune, Cutoff, Resonance, EnvMod, Decay, Accent, Slide, Drive, Volume,
                        // the open layer
                        PulseWidth, Sub, Mode, Count };
 
-    Subvert();
+    Reflux();
 
-    const char *typeName() const override { return "Subvert"; }
+    const char *typeName() const override { return "Reflux"; }
     const ParamDef *paramDefs(int32_t &count) const override;
 
     void prepare(int32_t sampleRate) override;

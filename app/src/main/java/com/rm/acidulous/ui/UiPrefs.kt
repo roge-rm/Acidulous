@@ -304,7 +304,7 @@ object UiPrefs {
     /**
      * The machine a new song's one track starts with.
      *
-     * Hexbeat rather than Subvert, because a new song is almost always a beat
+     * Hexbeat rather than Reflux, because a new song is almost always a beat
      * before it is anything else - you put a pattern down and then write to
      * it. Settable, because "almost always" is a statement about most people
      * and somebody who opens the app to write a bassline should not have to

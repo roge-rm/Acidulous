@@ -196,7 +196,7 @@ fun MachinePanel(
             vertical = vertical,
         )
         if (body && !minimized) when (type) {
-            "Subvert" -> SubvertPanel(binding)
+            "Reflux" -> RefluxPanel(binding)
             "Hexbeat" -> HexbeatPanel(binding)
             "Genesis" -> GenesisPanel(binding)
             "Resonance" -> ResonancePanel(binding, selectedPad)
@@ -482,9 +482,9 @@ private fun PatchBar(
                     // Half each. The patch name had two thirds while the
                     // column was the whole screen; once the keyboard took its
                     // share a third of what was left came to four characters,
-                    // and a machine called "Subvert" reading "Subv.." next to
-                    // a patch called "patch" with room to spare is the split
-                    // being wrong rather than the column being short.
+                    // and a machine called "Formulate" reading "Form.."
+                    // next to a patch called "patch" with room to spare is
+                    // the split being wrong rather than the column short.
                     SideText(type, Acid.colors.text, SideNameSp, Modifier.height(typeH))
                 }
             }
@@ -520,9 +520,10 @@ private fun PatchBar(
  * two names once the marks above them have been paid for. At eleven
  * "MyPatch" came out "MyP.." while "Trinity" - same seven letters, three of
  * them narrow - fitted, which is the kind of difference that reads as a bug
- * rather than as a proportional font; at ten "Subvert" was "Subv..". Nine
- * sp is what the note lane and automation gutters set their turned labels
- * at, so it is not a size this app is short of precedent for.
+ * rather than as a proportional font; at ten the longest machine names
+ * clipped as well. Nine sp is what the note lane and automation gutters
+ * set their turned labels at, so it is not a size this app is short of
+ * precedent for.
  */
 private val SideNameSp = 9.sp
 
@@ -1106,9 +1107,9 @@ internal fun Group(title: String, content: @Composable () -> Unit) {
     }
 }
 
-/** Subvert: the classic layer left to right, the open layer after it. */
+/** Reflux: the classic layer left to right, the open layer after it. */
 @Composable
-private fun SubvertPanel(b: ParamBinding) {
+private fun RefluxPanel(b: ParamBinding) {
     GroupRow {
         Group("osc") { PanelSwitch(b, "wave", listOf("saw", "pulse")); PanelKnob(b, "pw"); PanelKnob(b, "sub"); PanelKnob(b, "tune") }
         Group("filter") { PanelKnob(b, "cutoff", accent = PanelAmber); PanelKnob(b, "resonance", "reso", PanelAmber); PanelKnob(b, "envmod", accent = PanelAmber); PanelKnob(b, "decay", accent = PanelAmber); PanelSwitch(b, "mode", listOf("lp", "bp")) }

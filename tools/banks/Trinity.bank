@@ -774,7 +774,7 @@ patch "Pluck Bass" family=bass  note=36 range=24..55 role=bass
   volume         0.99
 
 patch "Growl Bass" family=bass  note=36 range=24..55 role=bass
-  # The grit table through a driven filter. Where Subvert's drive is a pedal
+  # The grit table through a driven filter. Where Reflux's drive is a pedal
   # after the filter, this one is a waveshape before it.
   o1_wave        #10
   o1_pos         0.4

@@ -416,7 +416,7 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
     }
 
     // The app's house level, so this machine's default lands where every
-    // other machine's does. See Subvert's kHouse for why.
+    // other machine's does. See Reflux's kHouse for why.
     constexpr float kHouse = 0.55f;
     const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * kHouse;
     const float velAmp = 1.0f - paramOf(VelocityAmount) * (1.0f - vel);

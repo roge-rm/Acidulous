@@ -69,7 +69,7 @@ object DemoSong {
                 Track(
                     id = "t-bass",
                     name = "Bass",
-                    machine = Machine(type = "Subvert"),
+                    machine = Machine(type = "Reflux"),
                     clips = mapOf(intro.id to introClip, verse.id to verseClip),
                     mixer = Mixer(sendReverb = 0.25f, sendDelay = 0.2f),
                 ),

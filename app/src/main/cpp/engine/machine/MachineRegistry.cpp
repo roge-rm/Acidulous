@@ -1,7 +1,7 @@
 #include "MachineRegistry.h"
 #include "forage/Forage.h"
 #include "hexbeat/Hexbeat.h"
-#include "subvert/Subvert.h"
+#include "reflux/Reflux.h"
 #include "ratio/Ratio.h"
 #include "mosaic/Mosaic.h"
 #include "trinity/Trinity.h"
@@ -23,13 +23,13 @@
 namespace acidulous {
 
 namespace {
-const char *const kNames[] = {"Subvert", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Bias"};
+const char *const kNames[] = {"Reflux", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Bias"};
 constexpr int32_t kCount = sizeof(kNames) / sizeof(kNames[0]);
 } // namespace
 
 Machine *MachineRegistry::create(const char *typeName) {
     if (std::strcmp(typeName, "Bias") == 0) return new machine::Bias();
-    if (std::strcmp(typeName, "Subvert") == 0) return new machine::Subvert();
+    if (std::strcmp(typeName, "Reflux") == 0) return new machine::Reflux();
     if (std::strcmp(typeName, "Trinity") == 0) return new machine::Trinity();
     if (std::strcmp(typeName, "Ratio") == 0) return new machine::Ratio();
     if (std::strcmp(typeName, "Manual") == 0) return new machine::Manual();
@@ -52,8 +52,8 @@ Machine *MachineRegistry::create(const char *typeName) {
 }
 
 const ParamDef *MachineRegistry::paramDefs(const char *typeName, int32_t &count) {
-    if (std::strcmp(typeName, "Subvert") == 0) {
-        static const machine::Subvert probe;
+    if (std::strcmp(typeName, "Reflux") == 0) {
+        static const machine::Reflux probe;
         return probe.paramDefs(count);
     }
     if (std::strcmp(typeName, "Trinity") == 0) {
