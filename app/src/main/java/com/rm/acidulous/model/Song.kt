@@ -187,6 +187,21 @@ data class Frozen(
     val ticks: Int,
     val frames: Int,
     val peak: Float = 0f,
+    /**
+     * What the track sounded like when this was rendered.
+     *
+     * A freeze bakes in the machine **and both insert effects** - the frozen
+     * branch of `Rack::render` returns buffer audio and never reaches the
+     * machine or the insert loop, which is the whole of the saving. So
+     * changing any of them afterwards leaves the freeze silently out of date:
+     * you turn a knob, hear nothing, and nothing says why.
+     *
+     * Only the tempo was checked, because at first the tempo was the only
+     * thing that could invalidate one. Zero means a freeze written before this
+     * existed, and is treated as matching rather than as stale - an old song
+     * should not open with every frozen clip claiming to be wrong.
+     */
+    val voice: Int = 0,
 )
 
 /**

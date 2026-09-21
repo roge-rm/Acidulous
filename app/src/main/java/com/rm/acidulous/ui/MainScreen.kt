@@ -744,7 +744,7 @@ fun MainScreen(
             startOn = RecorderPage.Library,
             inUse = song.samplesInUse(),
         )
-        Dialog.Settings -> SettingsDialog(onDismiss = { dialog = null })
+        Dialog.Settings -> SettingsDialog(song.tracks.map { it.name }) { dialog = null }
         Dialog.Help -> HelpDialog(onDismiss = { dialog = null })
         Dialog.About -> AboutDialog(onDismiss = { dialog = null })
         Dialog.Quantise -> QuantiseDialog(

@@ -55,7 +55,33 @@ object Freeze {
         val f = clip.frozen ?: return false
         val scene = song.scenes.firstOrNull { it.id == sceneId }
         val tempo = scene?.tempo?.bpm ?: song.tempo
-        return kotlin.math.abs(f.bpm - tempo) >= 0.01f
+        if (kotlin.math.abs(f.bpm - tempo) >= 0.01f) return true
+        // And the voice it was rendered through. A freeze written before this
+        // field existed carries nought and is left alone.
+        if (f.voice == 0) return false
+        val track = song.tracks.firstOrNull { it.clips[sceneId] === clip } ?: return false
+        return f.voice != voiceOf(track)
+    }
+
+    /**
+     * A number that changes when anything the freeze baked in changes: the
+     * machine, its parameters and settings, and both insert slots.
+     *
+     * Not the clip - editing one thaws the freeze outright - and not the
+     * mixer, because the fader, pan, sends and mute stay live over a frozen
+     * track on purpose. That is the line between a freeze and a bounce.
+     */
+    fun voiceOf(track: Track): Int {
+        var h = track.machine.type.hashCode()
+        for ((k, v) in track.machine.params.toSortedMap()) h = h * 31 + k.hashCode() * 31 + v.toBits()
+        for ((k, v) in track.machine.settings.toSortedMap()) h = h * 31 + k.hashCode() * 31 + v.hashCode()
+        for (slot in 0 until EFFECT_SLOTS) {
+            val fx = track.effectAt(slot)
+            h = h * 31 + fx.type.hashCode() + if (fx.bypass) 7 else 0
+            for ((k, v) in fx.params.toSortedMap()) h = h * 31 + k.hashCode() * 31 + v.toBits()
+        }
+        // Nought means "written before this existed", so never return it.
+        return if (h == 0) 1 else h
     }
 
     fun frozenCount(song: Song, targets: List<Target>): Int =
@@ -72,7 +98,7 @@ object Freeze {
         val file = fileFor(context, track.id, scene.id)
         return when (val r = NativeEngine.freezeClip(target.track, scene.engineId, file.absolutePath, TAIL_SECONDS)) {
             is NativeEngine.FreezeResult.Ok ->
-                Frozen(file.name, r.bpm, r.ticks, r.frames, r.peak).also {
+                Frozen(file.name, r.bpm, r.ticks, r.frames, r.peak, voiceOf(track)).also {
                     Log.i(TAG, "${track.name} / ${scene.name}: ${r.frames} frames at ${r.bpm} bpm, peak ${r.peak}")
                 }
             is NativeEngine.FreezeResult.Failed -> {

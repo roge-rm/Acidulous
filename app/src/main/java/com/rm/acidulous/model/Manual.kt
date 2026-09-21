@@ -61,7 +61,9 @@ object Manual {
             ManualBlock(ManualKind.Para, "The number of bars is in the corner, with **1** for a one-shot and **M** for a muted clip. A cell on an audio track also shows its waveform and how many of its four lanes hold a recording - and says so **in amber** when one of them was recorded at a tempo this scene does not play at, since audio does not stretch."),
             ManualBlock(ManualKind.Heading, "Freezing"),
             ManualBlock(ManualKind.Para, "Freezing renders a clip to audio and plays that instead of the machine, which gives the processor back to everything else. Freeze one clip, a whole scene or a whole track from the menus."),
-            ManualBlock(ManualKind.Para, "A freeze is tied to the tempo it was made at. Change the tempo and the frozen clips say so, and can be thawed or re-frozen."),
+            ManualBlock(ManualKind.Para, "**The insert effects are frozen too.** What is rendered is the machine and both of its slots, so a frozen track costs a read from memory and nothing else - that is where the saving comes from. What stays live is the *mixer*: the fader, pan, the two sends and mute all still work over a frozen clip, which is the line between freezing and bouncing."),
+            ManualBlock(ManualKind.Para, "Because they are baked in, changing the machine or either effect makes the freeze out of date, and the clip says so - the same mark it shows when the tempo has moved. Thaw it or freeze it again."),
+            ManualBlock(ManualKind.Para, "**Which track to freeze** is in **Settings · audio**: the worst block, where its time went, and the tracks that cost the most, worst first."),
         )),
         ManualSection("The editor", "Drawing notes, and what one note decides.", listOf(
             ManualBlock(ManualKind.Para, "Opening a clip gives you the grid at the top, the machine's own controls in the middle, and the instrument at the bottom."),

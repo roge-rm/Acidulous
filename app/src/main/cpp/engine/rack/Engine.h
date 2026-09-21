@@ -119,6 +119,19 @@ class Engine : public Rack::ModifiedNoteSink {
      */
     int32_t worstBlockUs() { return blockPeak.exchange(0, std::memory_order_relaxed); }
 
+    /**
+     * The worst single rack, in microseconds, and which one it was.
+     *
+     * Sixteen clock reads a block is twelve thousand a second, which measured
+     * at about three hundredths of one per cent - worth paying, because "the
+     * racks are eighty-seven per cent of the worst block" is only half an
+     * answer and the other half is *which* rack. It is what decides whether to
+     * freeze a track, swap a machine, or leave it alone.
+     */
+    int32_t worstRackUs(int32_t rack) {
+        return rack >= 0 && rack < kRackCount ? rackPeak[rack].exchange(0, std::memory_order_relaxed) : 0;
+    }
+
     /** The same, for the five phases of a block. Cleared by reading. */
     int32_t worstPhaseUs(Phase p) {
         const auto i = static_cast<size_t>(p);
@@ -283,6 +296,7 @@ class Engine : public Rack::ModifiedNoteSink {
     std::atomic<float> load{0.0f};
     std::atomic<int32_t> blockPeak{0};
     std::atomic<int32_t> phasePeak[kPhases]{};
+    std::atomic<int32_t> rackPeak[kRackCount]{};
 
     /** Raise a peak-hold to [us] if it is higher. Relaxed: nothing orders on it. */
     static void keepPeak(std::atomic<int32_t> &slot, int32_t us) {

@@ -49,7 +49,7 @@ import com.rm.acidulous.ui.theme.ThemeMode
  * the screen's width, minus a margin, up to a tablet-sized limit.
  */
 @Composable
-fun SettingsDialog(onDismiss: () -> Unit) {
+fun SettingsDialog(trackNames: List<String> = emptyList(), onDismiss: () -> Unit) {
     var tab by rememberSaveable { mutableStateOf(0) }
     // The same shell as the machine picker, and for the same reason: the
     // body is as tall as the tallest tab, so the window does not resize and
@@ -59,7 +59,7 @@ fun SettingsDialog(onDismiss: () -> Unit) {
         selected = tab,
         pages = listOf(
             { DisplayTab() },
-            { AudioTab() },
+            { AudioTab(trackNames) },
             { RecordTab() },
             { NewSongSection() },
         ),
@@ -105,8 +105,12 @@ private fun DisplayTab() {
     }
 }
 
+/** Mirrors the engine's own two, which are not exported to Kotlin. */
+private const val RACKS = 16
+private const val BLOCK_FRAMES = 64
+
 @Composable
-private fun AudioTab() {
+private fun AudioTab(trackNames: List<String>) {
     // The numbers are the point here: a buffer is a promise about how late
     // the engine may be, and only this phone knows whether it can keep it.
     val burst = NativeEngine.framesPerBurst.coerceAtLeast(1)
@@ -131,6 +135,7 @@ private fun AudioTab() {
     // the window somebody looking at it means.
     var worst by remember { mutableStateOf(0) }
     var phases by remember { mutableStateOf(IntArray(NativeEngine.Phase.entries.size)) }
+    var racks by remember { mutableStateOf(IntArray(RACKS)) }
     LaunchedEffect(Unit) {
         while (true) {
             worst = maxOf(worst, NativeEngine.worstBlockUs)
@@ -139,19 +144,44 @@ private fun AudioTab() {
                 next[p.ordinal] = maxOf(next[p.ordinal], NativeEngine.worstPhaseUs(p))
             }
             phases = next
+            val byRack = racks.copyOf()
+            for (r in 0 until RACKS) byRack[r] = maxOf(byRack[r], NativeEngine.worstRackUs(r))
+            racks = byRack
             delay(120)
         }
     }
+    // **Against the block's budget, not the callback's.** This read "2.46 ms
+    // of 4.00" and meant 2.46 of 1.33: the worst *block* is one 64-frame
+    // render and 4 ms is what a whole 192-frame callback gets, so the figure
+    // that mattered was being flattered by a factor of three.
+    val blockBudgetMs = 1000f * BLOCK_FRAMES / NativeEngine.sampleRate.coerceAtLeast(1)
     Section(
         "worst block",
         "%.2f ms of %.2f · %s".format(
             worst / 1000f,
-            NativeEngine.callbackBudgetUs / 1000f,
+            blockBudgetMs,
             NativeEngine.Phase.entries
                 .joinToString(" ") { "${it.name.lowercase().take(3)} %.2f".format(phases[it.ordinal] / 1000f) },
         ),
     ) {
-        Choice("reset", false) { worst = 0; phases = IntArray(NativeEngine.Phase.entries.size) }
+        Choice("reset", false) {
+            worst = 0
+            phases = IntArray(NativeEngine.Phase.entries.size)
+            racks = IntArray(RACKS)
+        }
+    }
+
+    // **Which track**, because "the racks are most of it" is half an answer.
+    // Only the ones with a machine, sorted by cost, so the list says what to
+    // freeze rather than making somebody work it out.
+    val named = (0 until RACKS)
+        .filter { it < trackNames.size && racks[it] > 0 }
+        .sortedByDescending { racks[it] }
+    if (named.isNotEmpty()) {
+        Section(
+            "worst track",
+            named.take(6).joinToString("  ") { "${trackNames[it]} %.2f".format(racks[it] / 1000f) },
+        ) {}
     }
 
     Section(

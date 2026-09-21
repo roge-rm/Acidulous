@@ -57,5 +57,15 @@ Freezing renders a clip to audio and plays that instead of the machine, which
 gives the processor back to everything else. Freeze one clip, a whole scene or a
 whole track from the menus.
 
-A freeze is tied to the tempo it was made at. Change the tempo and the frozen
-clips say so, and can be thawed or re-frozen.
+**The insert effects are frozen too.** What is rendered is the machine and both
+of its slots, so a frozen track costs a read from memory and nothing else - that
+is where the saving comes from. What stays live is the *mixer*: the fader, pan,
+the two sends and mute all still work over a frozen clip, which is the line
+between freezing and bouncing.
+
+Because they are baked in, changing the machine or either effect makes the
+freeze out of date, and the clip says so - the same mark it shows when the
+tempo has moved. Thaw it or freeze it again.
+
+**Which track to freeze** is in **Settings · audio**: the worst block, where its
+time went, and the tracks that cost the most, worst first.

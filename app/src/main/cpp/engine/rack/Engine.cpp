@@ -344,12 +344,16 @@ void Engine::renderBlock(const float *in, float *out) {
     // back whatever the caller's stack happened to hold.
     for (int32_t r = 0; r < kRackCount; ++r) {
         if (racks[r].isActive()) {
+            const auto tRack = std::chrono::steady_clock::now();
             if (racks[r].frozenActive()) {
                 racks[r].syncFrozen(scheduler.rackTick(r), clock.bpm());
             } else {
                 racks[r].onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
             }
             racks[r].render(kBlockFrames);
+            keepPeak(rackPeak[r], static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+                                                          std::chrono::steady_clock::now() - tRack)
+                                                          .count()));
         }
     }
     const auto tRacks = std::chrono::steady_clock::now();
