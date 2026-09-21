@@ -17,8 +17,11 @@ class FreezeVoiceTest {
     private val song = Fixtures.song()
     private val sceneId = song.scenes[0].id
 
+    /** A second of ring-out, because a freeze without one is by definition old. */
+    private val tail = 48000
+
     private fun frozen(track: Track): Song {
-        val f = Frozen("f.wav", song.tempo, 960, 48000, 0.5f, Freeze.voiceOf(track))
+        val f = Frozen("f.wav", song.tempo, 960, 48000, 0.5f, Freeze.voiceOf(track), tail)
         val withClip = track.copy(clips = track.clips + (sceneId to track.clips[sceneId]!!.copy(frozen = f)))
         return song.copy(tracks = song.tracks.toMutableList().also { it[0] = withClip })
     }
@@ -67,10 +70,23 @@ class FreezeVoiceTest {
     fun aFreezeFromBeforeThisFieldIsLeftAlone() {
         // voice = 0 means "written by a build that did not record it", and an
         // old song must not open with every frozen clip claiming to be wrong.
-        val f = Frozen("f.wav", song.tempo, 960, 48000, 0.5f)
+        val f = Frozen("f.wav", song.tempo, 960, 48000, 0.5f, tail = tail)
         val t = song.tracks[0]
         val withClip = t.copy(clips = t.clips + (sceneId to t.clips[sceneId]!!.copy(frozen = f)))
         val s = song.copy(tracks = song.tracks.toMutableList().also { it[0] = withClip })
         assertFalse(Freeze.stale(s, sceneId, s.tracks[0].clips[sceneId]!!))
+    }
+
+    @Test
+    fun aFreezeWithNoTailIsStale() {
+        // Unlike `voice`, a missing tail is not merely unknown: that renderer
+        // folded two seconds of the clip playing again onto its own opening,
+        // measured at +4.1 dB on the demo's pad. It cannot be left alone the
+        // way an old `voice` can, because what is in the file is wrong.
+        val t = song.tracks[0]
+        val f = Frozen("f.wav", song.tempo, 960, 48000, 0.5f, Freeze.voiceOf(t), tail = 0)
+        val withClip = t.copy(clips = t.clips + (sceneId to t.clips[sceneId]!!.copy(frozen = f)))
+        val s = song.copy(tracks = song.tracks.toMutableList().also { it[0] = withClip })
+        assertTrue(Freeze.stale(s, sceneId, s.tracks[0].clips[sceneId]!!))
     }
 }

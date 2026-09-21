@@ -26,8 +26,13 @@ object Freeze {
 
     private const val TAG = "Acidulous.Freeze"
 
-    /** Two seconds of tail, wrapped back into the head so the loop joins. */
-    private const val TAIL_SECONDS = 2f
+    /**
+     * The most ring-out we will store. Not how much we keep: the render stops
+     * as soon as the sound has gone, so a closed hat costs nothing and a hall
+     * gets what it needs. It was a flat two seconds, which was too little for
+     * the one and pure waste for the other.
+     */
+    private const val TAIL_CAP_SECONDS = 8f
 
     fun fileFor(context: Context, trackId: String, sceneId: String): File =
         File(EngineAssets.freezeRoot(context), "${trackId}__$sceneId.wav")
@@ -56,6 +61,13 @@ object Freeze {
         val scene = song.scenes.firstOrNull { it.id == sceneId }
         val tempo = scene?.tempo?.bpm ?: song.tempo
         if (kotlin.math.abs(f.bpm - tempo) >= 0.01f) return true
+        // A freeze with no tail was written by the old renderer, and that one
+        // folded two seconds of the clip *playing again* onto its own opening -
+        // so it is not merely missing its ring-out, its first two seconds are
+        // doubled. Unlike a changed knob this cannot be heard as a choice, so
+        // these are stale and ask to be rendered again. Every new freeze keeps
+        // at least one block of tail, so nought only ever means "old".
+        if (f.tail == 0) return true
         // And the voice it was rendered through. A freeze written before this
         // field existed carries nought and is left alone.
         if (f.voice == 0) return false
@@ -96,10 +108,16 @@ object Freeze {
         val track = song.tracks.getOrNull(target.track) ?: return null
         val scene = song.scenes.firstOrNull { it.id == target.sceneId } ?: return null
         val file = fileFor(context, track.id, scene.id)
-        return when (val r = NativeEngine.freezeClip(target.track, scene.engineId, file.absolutePath, TAIL_SECONDS)) {
+        return when (
+            val r = NativeEngine.freezeClip(target.track, scene.engineId, file.absolutePath, TAIL_CAP_SECONDS)
+        ) {
             is NativeEngine.FreezeResult.Ok ->
-                Frozen(file.name, r.bpm, r.ticks, r.frames, r.peak, voiceOf(track)).also {
-                    Log.i(TAG, "${track.name} / ${scene.name}: ${r.frames} frames at ${r.bpm} bpm, peak ${r.peak}")
+                Frozen(file.name, r.bpm, r.ticks, r.frames, r.peak, voiceOf(track), r.tail).also {
+                    Log.i(
+                        TAG,
+                        "${track.name} / ${scene.name}: ${r.frames} frames at ${r.bpm} bpm, " +
+                            "peak ${r.peak}, ${"%.2f".format(r.tail / 48000f)} s of tail",
+                    )
                 }
             is NativeEngine.FreezeResult.Failed -> {
                 Log.w(TAG, "${track.name} / ${scene.name}: ${r.reason}")

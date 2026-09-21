@@ -556,15 +556,15 @@ JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeFreezeClip(JNIEnv *env, jobject, jint rack, jlong sceneId,
                                                            jstring path, jfloat tailSeconds) {
     const char *p = env->GetStringUTFChars(path, nullptr);
-    int32_t frames = 0, ticks = 0;
+    int32_t frames = 0, tail = 0, ticks = 0;
     float bpm = 0.0f, peak = 0.0f;
-    const std::string err = host().freezeClip(rack, sceneId, p, tailSeconds, frames, ticks, bpm, peak);
+    const std::string err = host().freezeClip(rack, sceneId, p, tailSeconds, frames, tail, ticks, bpm, peak);
     env->ReleaseStringUTFChars(path, p);
-    // One string, because the alternative is five calls that can disagree:
-    // "ok|frames|ticks|bpm|peak", or the reason it did not happen.
+    // One string, because the alternative is six calls that can disagree:
+    // "ok|frames|ticks|bpm|peak|tail", or the reason it did not happen.
     char out[160];
     if (err.empty()) {
-        std::snprintf(out, sizeof(out), "ok|%d|%d|%.6f|%.6f", frames, ticks, bpm, peak);
+        std::snprintf(out, sizeof(out), "ok|%d|%d|%.6f|%.6f|%d", frames, ticks, bpm, peak, tail);
     } else {
         std::snprintf(out, sizeof(out), "%s", err.c_str());
     }
@@ -573,17 +573,21 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeFreezeClip(JNIEnv *env, jobject,
 
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeLoadFrozen(JNIEnv *env, jobject, jint rack, jlongArray sceneIds,
-                                                           jobjectArray paths, jfloatArray bpms, jintArray ticks) {
+                                                           jobjectArray paths, jfloatArray bpms, jintArray ticks,
+                                                           jintArray tails) {
     const jsize n = env->GetArrayLength(sceneIds);
     std::vector<std::pair<int64_t, std::string>> clips;
     std::vector<float> bpmList;
     std::vector<int32_t> tickList;
+    std::vector<int32_t> tailList;
     std::vector<jlong> ids(static_cast<size_t>(n));
     if (n > 0) env->GetLongArrayRegion(sceneIds, 0, n, ids.data());
     std::vector<jfloat> bs(static_cast<size_t>(n));
     if (n > 0) env->GetFloatArrayRegion(bpms, 0, n, bs.data());
     std::vector<jint> ts(static_cast<size_t>(n));
     if (n > 0) env->GetIntArrayRegion(ticks, 0, n, ts.data());
+    std::vector<jint> tl(static_cast<size_t>(n));
+    if (n > 0) env->GetIntArrayRegion(tails, 0, n, tl.data());
     for (jsize i = 0; i < n; ++i) {
         auto str = static_cast<jstring>(env->GetObjectArrayElement(paths, i));
         const char *p = env->GetStringUTFChars(str, nullptr);
@@ -592,8 +596,9 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadFrozen(JNIEnv *env, jobject,
         env->DeleteLocalRef(str);
         bpmList.push_back(bs[static_cast<size_t>(i)]);
         tickList.push_back(ts[static_cast<size_t>(i)]);
+        tailList.push_back(tl[static_cast<size_t>(i)]);
     }
-    return env->NewStringUTF(host().loadFrozenSet(rack, clips, bpmList, tickList).c_str());
+    return env->NewStringUTF(host().loadFrozenSet(rack, clips, bpmList, tickList, tailList).c_str());
 }
 
 JNIEXPORT void JNICALL

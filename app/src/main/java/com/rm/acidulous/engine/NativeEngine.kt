@@ -412,7 +412,8 @@ object NativeEngine {
     // --- Freeze --------------------------------------------------------------
     /** What a freeze produced, or why it did not happen. */
     sealed class FreezeResult {
-        data class Ok(val frames: Int, val ticks: Int, val bpm: Float, val peak: Float) : FreezeResult()
+        data class Ok(val frames: Int, val ticks: Int, val bpm: Float, val peak: Float, val tail: Int) :
+            FreezeResult()
         data class Failed(val reason: String) : FreezeResult()
     }
 
@@ -420,19 +421,27 @@ object NativeEngine {
      * Render one clip to [path]. Stops the audio stream for the duration, so
      * this belongs on a worker and not while the transport is running.
      */
-    fun freezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float = 2f): FreezeResult {
+    fun freezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float = 8f): FreezeResult {
         val out = nativeFreezeClip(rack, sceneId, path, tailSeconds)
         val parts = out.split("|")
-        return if (parts.size == 5 && parts[0] == "ok") {
-            FreezeResult.Ok(parts[1].toInt(), parts[2].toInt(), parts[3].toFloat(), parts[4].toFloat())
+        return if (parts.size == 6 && parts[0] == "ok") {
+            FreezeResult.Ok(
+                parts[1].toInt(), parts[2].toInt(), parts[3].toFloat(), parts[4].toFloat(), parts[5].toInt(),
+            )
         } else {
             FreezeResult.Failed(out)
         }
     }
 
     /** Give a rack its frozen clips, or none. Returns "" or the reason. */
-    fun loadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray): String =
-        nativeLoadFrozen(rack, sceneIds, paths, bpms, ticks)
+    fun loadFrozen(
+        rack: Int,
+        sceneIds: LongArray,
+        paths: Array<String>,
+        bpms: FloatArray,
+        ticks: IntArray,
+        tails: IntArray,
+    ): String = nativeLoadFrozen(rack, sceneIds, paths, bpms, ticks, tails)
 
     // --- Settings that belong to the device ----------------------------------
     /** Output buffer depth in bursts: 1 tight, 2 default, 4 safe. */
@@ -766,7 +775,14 @@ object NativeEngine {
     private external fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
     private external fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     private external fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
-    private external fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray): String
+    private external fun nativeLoadFrozen(
+        rack: Int,
+        sceneIds: LongArray,
+        paths: Array<String>,
+        bpms: FloatArray,
+        ticks: IntArray,
+        tails: IntArray,
+    ): String
     private external fun nativeSetBufferBursts(bursts: Int)
     private external fun nativeBufferFrames(): Int
     private external fun nativeSetVoiceLimit(notes: Int)

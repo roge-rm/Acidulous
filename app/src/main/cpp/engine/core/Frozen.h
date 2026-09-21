@@ -26,6 +26,19 @@ struct FrozenClip {
     float bpm = 120.0f;
     /** The clip length in ticks, which is what the tempo above turns into frames. */
     int32_t ticks = 0;
+    /**
+     * Frames of ring-out stored *after* the clip, and never part of the loop.
+     *
+     * A clip that ends has to go on sounding, the way the machine would have:
+     * the rack reads this region with a second cursor, once at every loop
+     * point - where it lands over the next pass's beginning - and again when
+     * the clip stops, where it is the whole of what you hear.
+     *
+     * Nought means a freeze written before this existed. Those have their tail
+     * already folded into their head, so `frames` is the whole file and the
+     * rack plays them exactly as it always did.
+     */
+    int32_t tail = 0;
 };
 
 /**

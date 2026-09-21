@@ -343,8 +343,14 @@ class EngineHost {
                        int32_t bits, std::string &error, int32_t startScene, float maxSeconds);
 
   public:
+    /**
+     * [tailSeconds] is the **cap** on the ring-out, not its length: the render
+     * stops as soon as the sound has decayed, and [tailOut] says how much it
+     * kept. The tail is stored after the clip and is never part of the loop.
+     */
     std::string freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,
-                           int32_t &framesOut, int32_t &ticksOut, float &bpmOut, float &peakOut);
+                           int32_t &framesOut, int32_t &tailOut, int32_t &ticksOut, float &bpmOut,
+                           float &peakOut);
 
     /**
      * Flatten one Bias cell's four lanes into one file: a comp.
@@ -367,7 +373,8 @@ class EngineHost {
      * here and handed over as one object. An empty list thaws the rack.
      */
     std::string loadFrozenSet(int rack, const std::vector<std::pair<int64_t, std::string>> &clips,
-                              const std::vector<float> &bpms, const std::vector<int32_t> &ticks);
+                              const std::vector<float> &bpms, const std::vector<int32_t> &ticks,
+                              const std::vector<int32_t> &tails);
 
     // --- Settings that belong to the device -----------------------------
     /** Output buffer depth in bursts: 1 tight, 2 default, 4 safe. */

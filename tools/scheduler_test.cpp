@@ -37,6 +37,9 @@ namespace {
 int checks = 0;
 int failures = 0;
 
+/** Audio, so a hair either side of the number is the same number. */
+bool isAbout(float value, float want) { return std::fabs(value - want) < 1.0e-4f; }
+
 void ok(const char *what, bool cond, const std::string &detail = "") {
     ++checks;
     if (cond) {
@@ -148,13 +151,22 @@ struct Fixture {
         commit();
     }
 
-    /** A freeze of [sceneId] on [rack], rendered at the tempo it will play at. */
-    void freeze(int32_t rack, int64_t sceneId, int32_t ticks) {
+    /**
+     * A freeze of [sceneId] on [rack], rendered at the tempo it will play at.
+     *
+     * The body is a flat 0.5 and the ring-out a flat 0.25, so any sample tells
+     * you which region of the file it came from - and 0.75 says both are
+     * sounding, which is what a loop point is supposed to sound like.
+     */
+    void freeze(int32_t rack, int64_t sceneId, int32_t ticks, int32_t tail = 0,
+                int32_t frames = kSampleRate) {
         auto fc = std::make_shared<FrozenClip>();
-        fc->frames = kSampleRate;
+        fc->frames = frames;
+        fc->tail = tail;
         fc->ticks = ticks;
         fc->bpm = 120.0f;
-        fc->left.assign(static_cast<size_t>(fc->frames), 0.5f);
+        fc->left.assign(static_cast<size_t>(frames), 0.5f);
+        fc->left.resize(static_cast<size_t>(frames + tail), 0.25f);
         fc->right = fc->left;
         frozen.entries.push_back({sceneId, fc});
         racks[rack].swapFrozen(&frozen);
@@ -439,6 +451,64 @@ void aMutedClipIsMutedWhenFrozen() {
 }
 
 /**
+ * A frozen clip rings out past its own end, and over its own next pass.
+ *
+ * A freeze used to be exactly one clip long, with its ring folded into its
+ * head - so a loop joined, and everything else was wrong. The last pass before
+ * a scene change stopped dead at the bar line where the live track would have
+ * gone on sounding; the *first* pass carried a ring no pass had played yet; and
+ * a clip shorter than its own tail wrapped it on twice. The tail is a region
+ * after the clip now, read by a second cursor, which is the only arrangement
+ * that gets all three right at once.
+ *
+ * 0.5 is the body, 0.25 the ring-out, so 0.75 is both at once.
+ */
+void aFrozenClipRingsOutPastItsOwnEnd() {
+    auto f = std::make_unique<Fixture>();
+    f->scene(1, 1);
+    f->clip(0, 0, 1);
+    f->commit();
+    f->play();
+    f->run(2);
+
+    // Rack 1, which has no clip in this scene and so no notes: the only sound
+    // it can make is the frozen audio, which is what every reading below
+    // depends on. Rack 0 is playing, and its machine would be in every number.
+    constexpr int32_t kBody = 256; // four blocks, so the loop point is close
+    constexpr int32_t kTail = 64;  // one block of ring-out
+    f->freeze(1, 1, kBar, kTail, kBody);
+    Rack &r = f->racks[1];
+    r.tapDry = true;
+    f->updateFrozen();
+    ok("frozen audio plays", r.frozenActive());
+
+    r.syncFrozen(0, 120.0f);
+    for (int i = 0; i < 4; ++i) r.render(kBlockFrames); // the whole body
+    ok("the first pass is the clip alone", isAbout(r.dryL[0], 0.5f), std::to_string(r.dryL[0]));
+
+    r.render(kBlockFrames); // round again, with the last pass ringing over it
+    ok("the loop point has both", isAbout(r.dryL[0], 0.75f), std::to_string(r.dryL[0]));
+    r.render(kBlockFrames);
+    ok("and the ring stops when it runs out", isAbout(r.dryL[0], 0.5f), std::to_string(r.dryL[0]));
+
+    // A scene this rack has no clip in: the audio stops, the ring does not.
+    r.updateFrozen(999, 120.0f, true);
+    ok("the clip has stopped", !r.frozenActive());
+    r.render(kBlockFrames);
+    ok("but it is still ringing", isAbout(r.dryL[0], 0.25f), std::to_string(r.dryL[0]));
+    r.render(kBlockFrames);
+    ok("for exactly as long as it was given", isAbout(r.dryL[0], 0.0f), std::to_string(r.dryL[0]));
+
+    // And panic cuts it mid-ring, because panic means silence.
+    r.updateFrozen(1, 120.0f, true);
+    r.updateFrozen(999, 120.0f, true);
+    r.allNotesOff();
+    r.render(kBlockFrames);
+    ok("panic cuts the ring-out", isAbout(r.dryL[0], 0.0f), std::to_string(r.dryL[0]));
+    r.tapDry = false;
+}
+
+/**
  * A cell's cycle counts its repeats; a note's tick does not.
  *
  * `rackTick` goes back to nought at every repeat, which is what makes a
@@ -523,6 +593,7 @@ int main() {
     sceneRepeatsAdvanceAndWrap();
     nothingIsLeftSounding();
     aMutedClipIsMutedWhenFrozen();
+    aFrozenClipRingsOutPastItsOwnEnd();
     aCellsCycleCountsItsRepeats();
     aShortCellsCycleAgreesInBothModes();
     printf("\n%d checks, %d failures\n", checks, failures);

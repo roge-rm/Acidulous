@@ -1701,7 +1701,8 @@ std::string EngineHost::compCell(int rack, int64_t sceneId, int32_t frames, floa
 }
 
 std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,
-                                   int32_t &framesOut, int32_t &ticksOut, float &bpmOut, float &peakOut) {
+                                   int32_t &framesOut, int32_t &tailOut, int32_t &ticksOut, float &bpmOut,
+                                   float &peakOut) {
     // The same flag the audio thread sets, on the thread that renders
     // offline: a tail that flushed live and did not flush here would make
     // an export differ from the performance in the last few dB of every
@@ -1769,25 +1770,70 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
         if (r.currentInputMod(sl) != nullptr) r.currentInputMod(sl)->reset();
     }
 
-    std::vector<float> left(static_cast<size_t>(clipFrames + tailFrames), 0.0f);
-    std::vector<float> right(static_cast<size_t>(clipFrames + tailFrames), 0.0f);
+    std::vector<float> left, right;
+    left.reserve(static_cast<size_t>(clipFrames + tailFrames));
+    right.reserve(static_cast<size_t>(clipFrames + tailFrames));
 
     r.tapDry = true;
     sEngine.transport.requestPlay(sceneIdx);
-    int64_t done = 0;
-    const int64_t total = clipFrames + tailFrames;
-    while (done < total) {
+    for (int64_t done = 0; done < clipFrames;) {
         sEngine.renderBlock(nullptr, scratch);
-        const int64_t n = std::min<int64_t>(kBlockFrames, total - done);
-        for (int64_t i = 0; i < n; ++i) {
-            left[static_cast<size_t>(done + i)] = r.dryL[i];
-            right[static_cast<size_t>(done + i)] = r.dryR[i];
-        }
+        const int64_t n = std::min<int64_t>(kBlockFrames, clipFrames - done);
+        left.insert(left.end(), r.dryL, r.dryL + n);
+        right.insert(right.end(), r.dryR, r.dryR + n);
         done += n;
     }
-    r.tapDry = false;
+
+    // Then the ring-out - and the transport has to be stopped first, or there
+    // is no ring-out to render.
+    //
+    // The scene is set to loop, so that the clip plays to its end without the
+    // arrangement moving on. Which means everything past the clip's end is the
+    // clip **coming round again**, at full level, for as long as we care to
+    // render it. The old two-second tail was two seconds of the clip playing a
+    // second time, folded onto its own opening: measured on the demo's pad,
+    // 0.14 RMS across all of it against the clip's own 0.11, and no decay
+    // anywhere in it. Stopping is what turns that into a tail - a stop is
+    // note-offs, note-offs are releases, and the effects ring on over them,
+    // which is exactly what a clip leaves behind when the next scene has
+    // nothing for this track.
+    //
+    // It then runs until the sound has actually gone - a hundredth of a
+    // decibel short of nothing, held for three blocks so a gap between two
+    // echoes cannot end it early - and the asked-for length is the cap rather
+    // than the answer. A flat two seconds was never long enough for a hall nor
+    // worth storing for a closed hat.
     sEngine.transport.requestStop();
-    sEngine.renderBlock(nullptr, scratch);
+    constexpr float kSilence = 1.0e-4f; // -80 dB
+    constexpr int32_t kQuietBlocks = 3;
+    int32_t quiet = 0;
+    for (int64_t done = 0; done < tailFrames && quiet < kQuietBlocks;) {
+        sEngine.renderBlock(nullptr, scratch);
+        const int64_t n = std::min<int64_t>(kBlockFrames, tailFrames - done);
+        float loudest = 0.0f;
+        for (int64_t i = 0; i < n; ++i) {
+            loudest = std::max(loudest, std::max(std::fabs(r.dryL[i]), std::fabs(r.dryR[i])));
+        }
+        quiet = loudest < kSilence ? quiet + 1 : 0;
+        left.insert(left.end(), r.dryL, r.dryL + n);
+        right.insert(right.end(), r.dryR, r.dryR + n);
+        done += n;
+    }
+    // Whatever the last blocks were, they were under -80 dB; dropping them
+    // keeps a file from carrying a tenth of a second of nothing per freeze.
+    // One is kept, always: a tail of nought frames is how a freeze says it was
+    // written before any of this existed, and a clip that really does end in
+    // silence must not be mistaken for one of those.
+    if (quiet >= kQuietBlocks) {
+        const size_t drop = static_cast<size_t>(kQuietBlocks - 1) * kBlockFrames;
+        if (left.size() >= drop + static_cast<size_t>(clipFrames) + kBlockFrames) {
+            left.resize(left.size() - drop);
+            right.resize(right.size() - drop);
+        }
+    }
+    const int64_t tailOutFrames = static_cast<int64_t>(left.size()) - clipFrames;
+    r.tapDry = false;
+    sEngine.renderBlock(nullptr, scratch); // the transport was stopped for the tail
 
     // And a clean finish, for the same reason as the clean start above.
     //
@@ -1810,18 +1856,17 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     sEngine.transport.setLauncher(launcherBefore);
     if (!sAudio.start()) LOGE("audio failed to restart after a freeze");
 
-    // The tail belongs at the start: a clip loops, so what is still ringing
-    // when it ends is heard over its own beginning. Without this a frozen
-    // clip would cut its own reverb off every bar.
-    for (int64_t i = 0; i < tailFrames; ++i) {
-        const size_t dst = static_cast<size_t>(i % clipFrames);
-        left[dst] += left[static_cast<size_t>(clipFrames + i)];
-        right[dst] += right[static_cast<size_t>(clipFrames + i)];
-    }
-
+    // The tail is kept as its own region after the clip, not folded into its
+    // head. Folding it was cheaper and wrong in three ways at once: the last
+    // pass lost its ring entirely, because a frozen clip is exactly its own
+    // length and simply stopped; the first pass gained a ring that no pass had
+    // played yet; and a clip shorter than its own tail wrapped it on twice.
+    // The rack overlaps it with a second cursor instead, which reproduces all
+    // three cases rather than trading one for another.
+    const int64_t storedFrames = clipFrames + tailOutFrames;
     float peak = 0.0f;
-    std::vector<float> inter(static_cast<size_t>(clipFrames) * 2);
-    for (int64_t i = 0; i < clipFrames; ++i) {
+    std::vector<float> inter(static_cast<size_t>(storedFrames) * 2);
+    for (int64_t i = 0; i < storedFrames; ++i) {
         const float a = left[static_cast<size_t>(i)], b = right[static_cast<size_t>(i)];
         inter[static_cast<size_t>(i) * 2] = a;
         inter[static_cast<size_t>(i) * 2 + 1] = b;
@@ -1835,21 +1880,24 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     // it down. Clamping here would bake in distortion that the live track
     // does not have. Measured on the demo: Hexbeat's bar peaks at 1.84.
     if (!wav.open(path, kSampleRate, 32, error)) return error;
-    wav.write(inter.data(), static_cast<int32_t>(clipFrames));
+    wav.write(inter.data(), static_cast<int32_t>(storedFrames));
     if (!wav.close()) return "could not finish the file";
 
     framesOut = static_cast<int32_t>(clipFrames);
+    tailOut = static_cast<int32_t>(tailOutFrames);
     ticksOut = static_cast<int32_t>(ticks);
     bpmOut = bpm;
     peakOut = peak;
-    LOGI("froze rack %d scene %lld: %lld frames (%.2f s at %.1f bpm), peak %.3f -> %s",
+    LOGI("froze rack %d scene %lld: %lld frames (%.2f s at %.1f bpm) + %.2f s tail, peak %.3f -> %s",
          rack, static_cast<long long>(sceneId), static_cast<long long>(clipFrames),
-         static_cast<double>(clipFrames) / kSampleRate, bpm, peak, path.c_str());
+         static_cast<double>(clipFrames) / kSampleRate, bpm,
+         static_cast<double>(tailOutFrames) / kSampleRate, peak, path.c_str());
     return "";
 }
 
 std::string EngineHost::loadFrozenSet(int rack, const std::vector<std::pair<int64_t, std::string>> &clips,
-                                      const std::vector<float> &bpms, const std::vector<int32_t> &ticks) {
+                                      const std::vector<float> &bpms, const std::vector<int32_t> &ticks,
+                                      const std::vector<int32_t> &tails) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
     auto set = std::make_unique<FrozenSet>();
     for (size_t i = 0; i < clips.size(); ++i) {
@@ -1857,7 +1905,12 @@ std::string EngineHost::loadFrozenSet(int rack, const std::vector<std::pair<int6
         auto data = WavReader::read(clips[i].second, kSampleRate, error);
         if (!data) return clips[i].second + ": " + error;
         auto fc = std::make_shared<FrozenClip>();
-        fc->frames = data->frames;
+        // The file is the clip and then its ring-out. `frames` is the loop, so
+        // the tail comes off the end of it - and a freeze written before tails
+        // existed reports nought and is the whole file, exactly as it was.
+        const int32_t tail = i < tails.size() ? tails[i] : 0;
+        fc->tail = tail > 0 && tail < data->frames ? tail : 0;
+        fc->frames = data->frames - fc->tail;
         fc->left = std::move(data->left);
         fc->right = data->stereo ? std::move(data->right) : fc->left;
         fc->bpm = i < bpms.size() ? bpms[i] : 120.0f;

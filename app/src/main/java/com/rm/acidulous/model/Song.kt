@@ -202,6 +202,19 @@ data class Frozen(
      * should not open with every frozen clip claiming to be wrong.
      */
     val voice: Int = 0,
+    /**
+     * Frames of ring-out stored after the clip in the same file.
+     *
+     * [frames] is the loop; this is what the clip goes on sounding after it,
+     * played over the next pass and over whatever follows the clip - because a
+     * frozen track that stopped dead at the bar line did not sound like the
+     * live one, which rings on.
+     *
+     * Nought means a freeze written before this existed. Those had their tail
+     * folded into their head instead, so the whole file is the loop and the
+     * engine plays them the way it always did.
+     */
+    val tail: Int = 0,
 )
 
 /**

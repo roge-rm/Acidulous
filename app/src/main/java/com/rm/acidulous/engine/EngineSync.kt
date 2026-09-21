@@ -280,7 +280,9 @@ object EngineSync {
                 val f = track?.clips?.get(scene.id)?.frozen ?: return@mapNotNull null
                 Triple(scene.engineId, f, java.io.File(root, f.file))
             }.filter { it.third.isFile }
-            val identity = frozen.joinToString(";") { "${it.first}:${it.second.file}:${it.second.bpm}:${it.second.ticks}" }
+            val identity = frozen.joinToString(";") {
+                "${it.first}:${it.second.file}:${it.second.bpm}:${it.second.ticks}:${it.second.tail}"
+            }
             if (loadedFreezes[rack] == identity) continue
             loadedFreezes[rack] = identity
             mapLoader.execute {
@@ -290,6 +292,7 @@ object EngineSync {
                     frozen.map { it.third.absolutePath }.toTypedArray(),
                     frozen.map { it.second.bpm }.toFloatArray(),
                     frozen.map { it.second.ticks }.toIntArray(),
+                    frozen.map { it.second.tail }.toIntArray(),
                 )
                 if (error.isNotEmpty()) {
                     Log.w(TAG, "frozen clips for rack $rack: $error")

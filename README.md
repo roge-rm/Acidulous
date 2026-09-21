@@ -91,7 +91,8 @@ sixteen**, chosen and edited from the master strip.
   swung song is stored straight.
 - Automation lanes, performance lanes (mod and pressure), and per-note
   expression.
-- Clip freeze: render a clip to audio, pre-fader.
+- Clip freeze: render a clip to audio, pre-fader, with its ring-out kept after
+  the clip so a frozen track goes on sounding where a live one would.
 - **Two effect slots on the input**, at the top of the recording window: they
   run before the recorder does, so an amp is printed into the take rather than
   only applied over it afterwards.

@@ -66,17 +66,22 @@ is where the saving comes from. What stays live is the *mixer*: the fader, pan,
 the two sends and mute all still work over a frozen clip, which is the line
 between freezing and bouncing.
 
-A clip loops, so what is still ringing at its end is heard over its own
-beginning. Freezing renders **two seconds past the clip** and folds that back
-onto the head, which is why a frozen clip does not chop its own reverb off at
-every bar line. Two seconds is the limit: a decay longer than that is cut where
-it runs out. If you want a long tail, put the reverb on a send - the sends stay
-live over a frozen clip, so nothing about them is baked in and nothing is
-shortened.
+**The ring-out is frozen too, and it is kept separate.** What the clip is still
+sounding when it ends is rendered past the end and stored after it, not mixed
+into it - so it plays over the top of the clip's next pass the way it did when
+the machine was running, and when the clip *stops* it goes on ringing instead of
+cutting off at the bar line. That matters most where there is nothing else to
+cover it: a one-shot, the last scene a track plays in, the end of the song.
+
+How much is kept is decided by the sound rather than by a number: the render
+carries on until the decay has gone, up to eight seconds. A closed hat stores
+nothing and a hall stores what it needs.
 
 Because they are baked in, changing the machine or either effect makes the
 freeze out of date, and the clip says so - the same mark it shows when the
-tempo has moved. Thaw it or freeze it again.
+tempo has moved. Thaw it or freeze it again. A freeze made before this version
+says the same thing, because the version before this one got the ring-out
+wrong: freeze those again and they will be right.
 
 ## When it cannot keep up
 

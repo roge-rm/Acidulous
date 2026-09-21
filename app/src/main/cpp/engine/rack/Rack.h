@@ -111,6 +111,9 @@ class Rack {
         const FrozenSet *old = frozenSet;
         frozenSet = next;
         frozenNow = nullptr; // re-decided at the next block
+        // And nothing may go on ringing out of a set that is about to be
+        // retired - the clip the tail cursor points into belongs to it.
+        tailClip = nullptr;
         return old;
     }
 
@@ -211,6 +214,17 @@ class Rack {
     const FrozenSet *frozenSet = nullptr;
     const FrozenClip *frozenNow = nullptr;
     int64_t frozenCursor = 0;
+    /**
+     * The ring-out, read alongside the loop and after it.
+     *
+     * It carries its own clip pointer because what is ringing is usually the
+     * clip we have just left - at a scene change it is the one thing left of
+     * it. One cursor, so a loop shorter than its own tail rings the newest
+     * pass rather than stacking every pass; live they would stack, and the
+     * newest is both the loudest and the one worth spending a read on.
+     */
+    const FrozenClip *tailClip = nullptr;
+    int64_t tailCursor = 0;
 
     Machine *machine = nullptr;
     Effect *effects[kEffectSlots]{};

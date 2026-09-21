@@ -162,6 +162,9 @@ void Rack::allNotesOff() {
         if (modifiers[s] != nullptr) modifiers[s]->allNotesOff(sinks[s]);
     }
     if (machine != nullptr) machine->allNotesOff();
+    // Panic reaches the rack through here, and panic means silence - so the
+    // frozen ring-out stops with everything else that was still sounding.
+    tailClip = nullptr;
     heldCount = 0;
 }
 
@@ -206,6 +209,19 @@ void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing) {
         if (c != nullptr && c->frames > 0 && std::fabs(c->bpm - bpm) < 0.01f) want = c;
     }
     if (want == frozenNow) return;
+    // A frozen clip is exactly its own length, so when it stops it stops - and
+    // what the machine would have done is go on ringing. That is what the tail
+    // is for: hand it to the second cursor on the way out and the scene change
+    // sounds like the live track did, reverb and releases and all.
+    //
+    // On a stop as well as on a scene change, because a stop is note-offs and
+    // note-offs are a release: a live track goes quiet over a second or two
+    // rather than at the instant the button is pressed, and the tail is by
+    // construction exactly that long. Panic is the one that cuts.
+    if (frozenNow != nullptr && want == nullptr && frozenNow->tail > 0) {
+        tailClip = frozenNow;
+        tailCursor = frozenNow->frames;
+    }
     // Crossing in either direction: whatever the machine was holding has to
     // stop, or it hangs while the audio takes over and after it hands back.
     if (machine != nullptr) machine->allNotesOff();
@@ -237,7 +253,18 @@ void Rack::render(int32_t frames) {
         const FrozenClip *f = frozenNow;
         int64_t at = frozenCursor < 0 ? 0 : frozenCursor;
         for (int32_t i = 0; i < frames; ++i) {
-            if (at >= f->frames) at = 0; // the loop, which the render wrapped its tail into
+            if (at >= f->frames) {
+                at = 0;
+                // Round again, and the pass that just ended starts ringing over
+                // the top of this one - which is the whole reason a loop of a
+                // frozen clip does not cut its own reverb off at the bar line.
+                // It is started here rather than from the tick, because this is
+                // the one place that knows the audio itself came round.
+                if (f->tail > 0) {
+                    tailClip = f;
+                    tailCursor = f->frames;
+                }
+            }
             bufL[i] = f->left[static_cast<size_t>(at)];
             bufR[i] = f->right[static_cast<size_t>(at)];
             ++at;
@@ -247,12 +274,35 @@ void Rack::render(int32_t frames) {
     } else if (machine == nullptr) {
         for (int32_t i = 0; i < frames; ++i) bufL[i] = bufR[i] = 0.0f;
         stereo = false;
-        return;
+        // Nothing to render - but a tail may still be ringing out of a clip
+        // this rack was playing before its machine was taken away, so the
+        // shortcut only holds when there is truly nothing left to hear.
+        if (tailClip == nullptr) return;
     } else {
         stereo = machine->render(bufL, bufR, frames);
         for (int32_t s = 0; s < kEffectSlots; ++s) {
             if (effects[s] != nullptr) stereo = effects[s]->run(bufL, bufR, frames, stereo);
         }
+    }
+    // The ring-out, over the top of all three cases above: over the next pass
+    // of a loop, over whatever live clip the next scene brought, or over
+    // silence when this track has nothing more to play. It is the rack's own
+    // sound, so it goes in before the dry tap and before the channel strip -
+    // the fader still moves it and freezing a track still captures it.
+    if (tailClip != nullptr) {
+        const FrozenClip *t = tailClip;
+        const int64_t end = static_cast<int64_t>(t->frames) + t->tail;
+        if (!stereo) {
+            for (int32_t i = 0; i < frames; ++i) bufR[i] = bufL[i];
+            stereo = true;
+        }
+        int64_t at = tailCursor;
+        for (int32_t i = 0; i < frames && at < end; ++i, ++at) {
+            bufL[i] += t->left[static_cast<size_t>(at)];
+            bufR[i] += t->right[static_cast<size_t>(at)];
+        }
+        tailCursor = at;
+        if (at >= end) tailClip = nullptr; // rung out
     }
     if (tapDry) {
         for (int32_t i = 0; i < frames; ++i) {
