@@ -1,6 +1,7 @@
 #include "AudioDriver.h"
 
 #include <chrono>
+#include <engine/dsp/Denormals.h>
 #include <algorithm>
 #include <android/log.h>
 #include <cmath>
@@ -201,6 +202,15 @@ int64_t AudioDriver::getXRunCount() const {
 oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStream,
                                                    void *audioData,
                                                    int32_t numFrames) {
+    // **Before anything else this thread does.** A denormal is what the inside
+    // of every decaying tail is made of, and on a CPU that takes the slow path
+    // for them a block full of releases costs many times a block full of
+    // notes. Measured on the harness: the amp's idle tail went from 841 us to
+    // 52, which is 63% of a block's budget down to 4%, for one bit in a
+    // register. It is set here rather than at thread start because this thread
+    // is AAudio's, not ours - the guard makes it one branch a callback.
+    acidulous::dsp::flushDenormalsOnce();
+
     const auto tCallback = std::chrono::steady_clock::now();
     const int64_t cpu0 = threadCpuUs();
     auto *out = static_cast<float *>(audioData);

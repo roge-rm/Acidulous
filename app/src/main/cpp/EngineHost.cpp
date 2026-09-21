@@ -1,4 +1,6 @@
 #include "EngineHost.h"
+
+#include <engine/dsp/Denormals.h>
 #include <engine/machine/molt/Molt.h>
 #include <engine/core/Settings.h>
 #include <engine/machine/nexus/Nexus.h>
@@ -887,6 +889,12 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
 
 bool EngineHost::renderSong(const std::string &path, float tailSeconds, AudioFormat format, int32_t bits,
                             std::string &error, int32_t startScene, float maxSeconds) {
+    // The same flag the audio thread sets, on the thread that renders
+    // offline: a tail that flushed live and did not flush here would make
+    // an export differ from the performance in the last few dB of every
+    // decay. Inaudible, and still a difference this engine does not allow.
+    dsp::flushDenormals();
+
     return renderTargets({RenderTarget{path, -1}}, tailSeconds, format, bits, error, startScene, maxSeconds);
 }
 
@@ -1694,6 +1702,12 @@ std::string EngineHost::compCell(int rack, int64_t sceneId, int32_t frames, floa
 
 std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,
                                    int32_t &framesOut, int32_t &ticksOut, float &bpmOut, float &peakOut) {
+    // The same flag the audio thread sets, on the thread that renders
+    // offline: a tail that flushed live and did not flush here would make
+    // an export differ from the performance in the last few dB of every
+    // decay. Inaudible, and still a difference this engine does not allow.
+    dsp::flushDenormals();
+
     if (!running) return "engine not running";
     if (rack < 0 || rack >= kRackCount) return "no such rack";
     if (sEngine.transport.isPlaying()) return "stop the transport first";

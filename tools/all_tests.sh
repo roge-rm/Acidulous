@@ -53,6 +53,9 @@ echo "--- gate";  "$ROOT/tools/gate_test.sh" | tail -2 || fail=1
 echo "--- tuner"; "$ROOT/tools/tuner_test.sh" | tail -2 || fail=1
 echo "--- swing"; "$ROOT/tools/swing_test.sh" | tail -2 || fail=1
 echo "--- inputmod"; "$ROOT/tools/inputmod_test.sh" | tail -2 || fail=1
+# Not a pass/fail: the cost table is read, not asserted, because a threshold
+# would only be true of the machine that set it. Run it when touching DSP.
+echo "--- cost"; "$ROOT/tools/cpu_test.sh" | tail -3 || fail=1
 # The banks: every factory patch names real parameters, makes a sound, does
 # not clip fifty times over, and plays the same twice.
 echo "--- bank";  "$ROOT/tools/bank_test.sh"  | tail -2 || fail=1
