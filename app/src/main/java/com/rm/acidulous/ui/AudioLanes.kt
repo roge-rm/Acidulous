@@ -116,7 +116,7 @@ object BiasArm {
 
 /** Which end of which lane a finger has hold of. */
 private data class LaneDrag(val lane: Int, val part: Part, val take: TakeRef) {
-    enum class Part { Body, Head, Tail }
+    enum class Part { Body, Head, Tail, FadeIn, FadeOut }
 }
 
 @Composable
@@ -277,6 +277,20 @@ fun AudioLanes(
                                              to.coerceIn(1f, size.width - 1f))) {
                                 drawLine(c.teal, Offset(x, 0f), Offset(x, size.height), 2f)
                             }
+                            // The fades, drawn as the slopes they are: a line
+                            // from the corner of the region up to where the
+                            // envelope reaches full. Dragged from the bottom
+                            // half of the same two edges, which is why they
+                            // are drawn from the bottom corners.
+                            val perFrame = if (take.frames > 0) span / take.frames else 0f
+                            if (take.fadeIn > 0) {
+                                val x = from + take.fadeIn * perFrame
+                                drawLine(c.teal, Offset(from, size.height), Offset(x, 0f), 1.5f)
+                            }
+                            if (take.fadeOut > 0) {
+                                val x = to - take.fadeOut * perFrame
+                                drawLine(c.teal, Offset(x, 0f), Offset(to, size.height), 1.5f)
+                            }
                         }
                     }
                     if (take == null) {
@@ -323,9 +337,24 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
         // nowhere else.
         val from = (w * stored.startTick / total).coerceIn(0f, w - 1f)
         val to = (w * stored.startTick / total + w * stored.lengthTicks() / total).coerceIn(1f, w - 1f)
+        // **Which half of the lane a finger is in decides what the ends do.**
+        // The top half trims and the bottom half fades, so both live on the
+        // same two edges without a mode anywhere: a take has two ends and two
+        // things you do at each of them, and the one you want is the one you
+        // reach for.
+        val fading = down.position.y > size.height * 0.5f
+        // **A fade-out needs an end you can see.** A take longer than the cell
+        // has its end off the right of the screen, and a fade measured from
+        // there is a control that slams to its limit on the first drag and is
+        // inaudible if it does not - the take is cut off by the cycle long
+        // before the fade begins. So on an overrunning take both halves of the
+        // right edge trim, which is the thing to do first anyway.
+        val endsInView = w * (stored.startTick + stored.lengthTicks()) / total <= w - 1f
         val part = when {
-            abs(down.position.x - from) <= handleGrabPx -> LaneDrag.Part.Head
-            abs(down.position.x - to) <= handleGrabPx -> LaneDrag.Part.Tail
+            abs(down.position.x - from) <= handleGrabPx ->
+                if (fading) LaneDrag.Part.FadeIn else LaneDrag.Part.Head
+            abs(down.position.x - to) <= handleGrabPx ->
+                if (fading && endsInView) LaneDrag.Part.FadeOut else LaneDrag.Part.Tail
             down.position.x in from..to -> LaneDrag.Part.Body
             else -> return@awaitEachGesture
         }
@@ -344,8 +373,8 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
             change.consume()
             val atTick = (change.position.x / w * total).roundToInt()
             val dTicks = when (part) {
-                LaneDrag.Part.Head -> atTick - head
-                LaneDrag.Part.Tail -> atTick - tail
+                LaneDrag.Part.Head, LaneDrag.Part.FadeIn -> atTick - head
+                LaneDrag.Part.Tail, LaneDrag.Part.FadeOut -> atTick - tail
                 LaneDrag.Part.Body -> ((change.position.x - down.position.x) / w * total).roundToInt()
             }
             latest = apply(stored, part, dTicks, total, grid, fileFrames())
@@ -353,6 +382,19 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
         }
         onCommit(latest)
     }
+}
+
+/**
+ * A fade can never be longer than the take it is on.
+ *
+ * `fadeAt` is safe either way - it takes the smaller of the two ramps - but a
+ * trim that leaves a two-second fade on a one-second take is a number nobody
+ * can make sense of afterwards, so a trim brings them with it.
+ */
+private fun TakeRef.withFadesInside(): TakeRef {
+    val half = (frames / 2).coerceAtLeast(0)
+    return if (fadeIn <= half && fadeOut <= half) this
+    else copy(fadeIn = fadeIn.coerceAtMost(half), fadeOut = fadeOut.coerceAtMost(half))
 }
 
 /** The arithmetic of one drag, kept apart from the gesture so it can be read. */
@@ -379,14 +421,23 @@ private fun apply(take: TakeRef, part: LaneDrag.Part, dTicks: Int, total: Int, g
                 offset = take.offset + d,
                 frames = take.frames - d,
                 startTick = (take.startTick + dTicks).coerceAtLeast(0),
-            )
+            ).withFadesInside()
         }
         // The tail is the end of the recording, and cannot pass the end of the
         // file: there is nothing there to play.
         LaneDrag.Part.Tail -> {
             val room = (fileFrames - take.offset).coerceAtLeast(1)
             take.copy(frames = (take.frames + frames(dTicks)).coerceIn(frames(PPQN / 8), room))
+                .withFadesInside()
         }
+        // **A fade is dragged inwards from the end it belongs to**, so the
+        // handle starts where the take does and the distance is the length.
+        // Neither may eat more than half the take, because two fades that
+        // overlap is an envelope with no take in the middle of it.
+        LaneDrag.Part.FadeIn ->
+            take.copy(fadeIn = frames(dTicks).coerceIn(0, take.frames / 2))
+        LaneDrag.Part.FadeOut ->
+            take.copy(fadeOut = (-frames(dTicks)).coerceIn(0, take.frames / 2))
     }
 }
 

@@ -40,7 +40,7 @@ fun Track.hasAudio(): Boolean =
 /**
  * What the engine is told, a line per region:
  *
- *     sceneId|lane|absPath|offset|frames|startTick|ticks|bpm|loop
+ *     sceneId|lane|absPath|offset|frames|startTick|ticks|bpm|loop|fadeIn|fadeOut
  *
  * Absolute, because the engine has no root; scene *engine* ids, because that
  * is what the scheduler hands the machine back. A missing file is dropped
@@ -59,6 +59,7 @@ fun reelSpec(song: Song, track: Track, root: File): String = buildString {
             append(take.offset).append('|').append(take.frames).append('|')
             append(take.startTick).append('|').append(take.ticks).append('|')
             append(take.bpm).append('|').append(if (take.loop) '1' else '0')
+            append('|').append(take.fadeIn).append('|').append(take.fadeOut)
             append('\n')
         }
     }

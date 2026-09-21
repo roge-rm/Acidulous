@@ -554,6 +554,48 @@ void aTakeCanFollowTheSong() {
     }
 }
 
+/**
+ * Fades, and the crossfade that is two of them.
+ *
+ * The claim worth testing is the *equal-power* one: two lanes, one going out
+ * while the other comes in, must hold a steady level between them. A linear
+ * pair dips three decibels in the middle, and that dip is the sound of an
+ * edit - which is exactly what a crossfade exists to hide.
+ */
+void fadesAreEqualPowerSoACrossfadeHolds() {
+    printf("- a fade, and the crossfade that is two of them\n");
+    constexpr int32_t kLen = 4800; // 100 ms
+    Reel::Region a;
+    a.frames = kLen;
+    a.fadeOut = kLen;
+    Reel::Region b;
+    b.frames = kLen;
+    b.fadeIn = kLen;
+
+    ok("a fade starts at nothing and ends at one",
+       a.fadeAt(kLen) < 1e-6f && std::fabs(a.fadeAt(0) - 1.0f) < 1e-6f,
+       std::to_string(a.fadeAt(0)) + " .. " + std::to_string(a.fadeAt(kLen)));
+
+    // The two together, everywhere: the squares sum to one, which is what
+    // equal power means and what keeps the level up.
+    double worst = 0.0;
+    int32_t worstAt = -1;
+    for (int32_t i = 0; i <= kLen; i += 37) {
+        const float x = a.fadeAt(i), y = b.fadeAt(i);
+        const double sum = static_cast<double>(x) * x + static_cast<double>(y) * y;
+        if (std::fabs(sum - 1.0) > worst) { worst = std::fabs(sum - 1.0); worstAt = i; }
+    }
+    ok("and two of them crossing hold a steady level", worst < 0.002,
+       "worst " + std::to_string(worst) + " at " + std::to_string(worstAt));
+
+    // A take with no fades is untouched, which is every take until somebody
+    // drags a handle.
+    Reel::Region plain;
+    plain.frames = kLen;
+    ok("a take with no fades is not touched",
+       plain.fadeAt(0) == 1.0f && plain.fadeAt(kLen / 2) == 1.0f && plain.fadeAt(kLen) == 1.0f);
+}
+
 } // namespace
 
 int main() {
@@ -574,6 +616,7 @@ int main() {
     theMediumColoursAndDirectDoesNot();
     aLongTakeIsMappedAndReadsTheSame();
     aTakeCanFollowTheSong();
+    fadesAreEqualPowerSoACrossfadeHolds();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

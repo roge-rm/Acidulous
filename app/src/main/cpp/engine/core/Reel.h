@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <engine/core/Mapping.h>
@@ -140,6 +141,31 @@ struct Reel {
         int32_t ticks = 0;     // the cycle it was recorded against
         float bpm = 120.0f;    // the tempo it was recorded at
         bool loop = false;     // wrap within the region rather than falling silent
+        /**
+         * How long this take takes to arrive and to go, in frames.
+         *
+         * Equal-power, so **one lane fading out under another fading in holds
+         * a steady level** - which is what makes a crossfade between two takes
+         * nothing more than two of these overlapping. A linear pair would dip
+         * three decibels in the middle, and that dip is the sound of an edit.
+         */
+        int32_t fadeIn = 0;
+        int32_t fadeOut = 0;
+
+        /** The envelope at [at] frames into the region: 0..1. */
+        float fadeAt(int64_t at) const {
+            float g = 1.0f;
+            if (fadeIn > 0 && at < fadeIn) g = static_cast<float>(at) / static_cast<float>(fadeIn);
+            if (fadeOut > 0 && at > frames - fadeOut) {
+                const float k = static_cast<float>(frames - at) / static_cast<float>(fadeOut);
+                g = g < k ? g : k;
+            }
+            if (g <= 0.0f) return 0.0f;
+            if (g >= 1.0f) return 1.0f;
+            // Equal power: sin of a quarter turn, whose square sums to one
+            // against its mirror.
+            return std::sin(g * 1.5707963f);
+        }
     };
 
     /** One cell: the lanes that have anything on them. */

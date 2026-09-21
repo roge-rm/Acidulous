@@ -1440,6 +1440,10 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
         r.ticks = std::atoi(f[6].c_str());
         r.bpm = static_cast<float>(std::atof(f[7].c_str()));
         r.loop = f[8] == "1";
+        // Older specs stop at `loop`; a take with no fades is the ordinary
+        // case and nought is what it means.
+        r.fadeIn = f.size() > 9 ? std::atoi(f[9].c_str()) : 0;
+        r.fadeOut = f.size() > 10 ? std::atoi(f[10].c_str()) : 0;
     }
 
     // **Ask for the head of every region while still on the loader thread.**

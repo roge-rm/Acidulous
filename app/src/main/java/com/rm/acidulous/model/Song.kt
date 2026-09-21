@@ -200,6 +200,20 @@ data class TakeRef(
     @EncodeDefault(EncodeDefault.Mode.NEVER) val startTick: Int = 0,
     @EncodeDefault(EncodeDefault.Mode.NEVER) val loop: Boolean = false,
     @EncodeDefault(EncodeDefault.Mode.NEVER) val label: String = "",
+    /**
+     * How long the take takes to arrive and to go, in frames.
+     *
+     * **A crossfade between two takes is two of these overlapping**, which is
+     * why there is no separate crossfade anywhere: four lanes already sum, so
+     * one lane's fade-out across another's fade-in *is* the crossfade, and it
+     * is equal-power so the two together hold a steady level rather than
+     * dipping in the middle.
+     *
+     * They also do the ordinary job: a take trimmed mid-word clicks, and a few
+     * milliseconds of fade is the difference between an edit and a fault.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val fadeIn: Int = 0,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val fadeOut: Int = 0,
     /** A coarse shape for the grid to draw, so a cell costs no disk. */
     @EncodeDefault(EncodeDefault.Mode.NEVER) val peaks: List<Float> = emptyList(),
 )

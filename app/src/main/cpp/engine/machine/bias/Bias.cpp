@@ -207,8 +207,13 @@ bool Bias::render(float *L, float *R, int32_t frames) {
                 taken, frames, src.lp, r.offset,
                 r.offset + (r.frames < src.frames - r.offset ? r.frames : src.frames - r.offset),
                 rate);
+            // The fade is measured in the take's own frames, so a stretched
+            // take fades over the same *audio* rather than the same seconds -
+            // which is what makes a crossfade hold together when the tempo
+            // moves.
+            const int64_t base = stretcher[lane].sourcePosition() - r.offset;
             for (int32_t i = 0; i < got; ++i) {
-                const float v = taken[i];
+                const float v = taken[i] * r.fadeAt(base + static_cast<int64_t>(i * rate));
                 L[i] += v * level;
                 R[i] += v * level;
                 if (bleeding) {
@@ -249,9 +254,10 @@ bool Bias::render(float *L, float *R, int32_t frames) {
             if (s >= 0 && s < src.frames) {
                 // Through the pointers, so a take held in memory and a take
                 // mapped from a cache file are the same two lines here.
-                const float l = static_cast<float>(src.lp[static_cast<size_t>(s)]) * (1.0f / 32768.0f);
+                const float env = r.fadeAt(at);
+                const float l = static_cast<float>(src.lp[static_cast<size_t>(s)]) * (1.0f / 32768.0f) * env;
                 const float rr = src.stereo
-                                     ? static_cast<float>(src.rp[static_cast<size_t>(s)]) * (1.0f / 32768.0f)
+                                     ? static_cast<float>(src.rp[static_cast<size_t>(s)]) * (1.0f / 32768.0f) * env
                                      : l;
                 L[i] += l * level;
                 R[i] += rr * level;
