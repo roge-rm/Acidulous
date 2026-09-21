@@ -29,6 +29,19 @@ constexpr int32_t kMaxReelSeconds = 300;
 /** How many lanes a tape has. Four, because that is what a four-track is. */
 constexpr int32_t kReelLanes = 4;
 
+/**
+ * Float to int16, clamped, with the rounding a converter owes its input.
+ *
+ * A take can legitimately sit above full scale - the channel strip is what
+ * brings it down, which is the same argument the freeze render makes for
+ * writing float - so this clamps rather than wrapping, because wrapping is a
+ * click and clamping is a loud moment.
+ */
+inline int16_t toI16(float v) {
+    const float x = v < -1.0f ? -1.0f : (v > 1.0f ? 1.0f : v);
+    return static_cast<int16_t>(x * 32767.0f + (x >= 0.0f ? 0.5f : -0.5f));
+}
+
 struct Reel {
     /**
      * One decoded file, shared by every region that reads it.

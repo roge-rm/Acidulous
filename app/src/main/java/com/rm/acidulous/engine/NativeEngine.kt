@@ -353,6 +353,20 @@ object NativeEngine {
     fun loadTake(rack: Int, path: String): String = nativeLoadTake(rack, path)
 
     /**
+     * What an audio track is holding, a line per region:
+     *
+     *     sceneId|lane|absPath|offset|frames|startTick|ticks|bpm|loop
+     *
+     * One line per lane per cell, so a take sung across four scenes is four
+     * lines naming one file - and the engine decodes each distinct file once
+     * however many lines mention it. An empty spec clears the reel.
+     */
+    fun loadReel(rack: Int, spec: String): String = nativeLoadReel(rack, spec)
+
+    /** How long one take may be, which the engine refuses to exceed. */
+    const val REEL_SECONDS = 300
+
+    /**
      * A sung take for a Molt. Decoding and pitch-marking happen on the caller's
      * thread - a worker - so this must never be called from the main one; an
      * empty path clears what is mounted.
@@ -615,6 +629,7 @@ object NativeEngine {
     private external fun nativeChannelPressure(rackId: Int, value: Int, record: Boolean)
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
     private external fun nativeLoadTake(rack: Int, path: String): String
+    private external fun nativeLoadReel(rack: Int, spec: String): String
     private external fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
     private external fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     private external fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String

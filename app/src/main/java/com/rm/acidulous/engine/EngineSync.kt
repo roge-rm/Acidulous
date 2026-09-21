@@ -14,6 +14,8 @@ import com.rm.acidulous.model.Master
 import com.rm.acidulous.model.Mixer
 import com.rm.acidulous.model.PlayMode
 import com.rm.acidulous.model.SEND_SLOTS
+import com.rm.acidulous.model.TAPE_MACHINE
+import com.rm.acidulous.model.reelSpec
 import com.rm.acidulous.model.sendUnit
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.laneParam
@@ -42,6 +44,7 @@ object EngineSync {
     private val builtClouds = arrayOfNulls<String>(RACKS)   // the spectrum a rack's Cumulus tables were built from
     private val loadedFormulas = arrayOfNulls<String>(RACKS) // the text a rack's Formulate was compiled from
     private val loadedTakes = arrayOfNulls<String>(RACKS)    // the file a rack's Pollen is granulating
+    private val loadedReels = arrayOfNulls<String>(RACKS)    // the spec a rack's Tape was built from
 
     /**
      * What the last compile said, by rack: empty when it read, the reason
@@ -276,6 +279,46 @@ object EngineSync {
     }
 
     /**
+     * What an audio track is holding: a window into a file per scene, per lane.
+     *
+     * Unlike every other machine's sample, a tape's material lives in the
+     * *clips* rather than in `Machine.settings`, so there is nothing for
+     * [ensureSamples] or [ensureTakes] to find. The spec is built from the whole
+     * track and is its own identity - see `model/Tape.kt` for why - so this
+     * sends nothing at all until a take is added, trimmed or moved.
+     *
+     * Off-thread for the same reason as a sample map, and more so: five minutes
+     * of audio is the largest decode in the app.
+     */
+    fun ensureReels(song: Song) {
+        val root = sampleRoot ?: return
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            val wanted = when {
+                track == null || track.machine.type != TAPE_MACHINE -> ""
+                mounted[rack] != TAPE_MACHINE -> continue // wait for the machine
+                else -> reelSpec(song, track, root)
+            }
+            // Never loaded and nothing to load: the fifteen racks that are not
+            // tapes must not each send an empty spec on the first sync.
+            if (loadedReels[rack] == null && wanted.isEmpty()) { loadedReels[rack] = ""; continue }
+            if (loadedReels[rack] == wanted) continue
+            loadedReels[rack] = wanted
+            mapLoader.execute {
+                mapStatus = if (wanted.isEmpty()) "" else "Reading audio..."
+                val error = NativeEngine.loadReel(rack, wanted)
+                mapStatus = ""
+                if (error.isNotEmpty()) {
+                    problem("The audio on this track would not load - $error.")
+                    loadedReels[rack] = null // let a retry happen
+                } else if (wanted.isNotEmpty()) {
+                    Log.i(TAG, "rack $rack holds ${wanted.count { it == '\n' }} audio region(s)")
+                }
+            }
+        }
+    }
+
+    /**
      * Cumulus's tables. Its spectrum parameters are not knobs in the usual
      * sense - each one means an inverse transform of a quarter of a million
      * points - so they are watched here and rebuilt off-thread when they
@@ -376,6 +419,7 @@ object EngineSync {
         ensureClouds(song)
         ensureFormulas(song)
         ensureTakes(song)
+        ensureReels(song)
         ensureFrozen(song)
         return push(song)
     }

@@ -78,7 +78,7 @@ object Manual {
             ManualBlock(ManualKind.Heading, "Folding"),
             ManualBlock(ManualKind.Para, "The lanes, the machine panel and the instrument each fold away with the small chevron at their edge, and the grid takes the height. On a phone that is the difference between four rows of pitch and fourteen."),
         )),
-        ManualSection("The machines", "Nineteen instruments, and what each is for.", listOf(
+        ManualSection("The machines", "Nineteen instruments, a four-track for your recordings, and what each is for.", listOf(
             ManualBlock(ManualKind.Para, "Every machine here was written for this app. None is sampled from anything else, and none is a copy of anything: they stand in familiar places and are their own designs. Tap a rack's machine name to change it."),
             ManualBlock(ManualKind.Heading, "Bass and lead"),
             ManualBlock(ManualKind.Bullet, "**Subvert** - the signature bass mono. Accent is velocity and slide is legato, so a line is played rather than programmed: hold one note into the next to slide, hit it hard to accent."),
@@ -106,6 +106,8 @@ object Manual {
             ManualBlock(ManualKind.Heading, "Anything else"),
             ManualBlock(ManualKind.Bullet, "**Formulate** - an 8-bit machine with tracker tables and a small expression language, so a waveform is something you write rather than something you pick."),
             ManualBlock(ManualKind.Bullet, "**Nexus** - a modular whose blocks are this app's own instruments and whose patch is text you can read."),
+            ManualBlock(ManualKind.Heading, "Audio"),
+            ManualBlock(ManualKind.Bullet, "**Tape** - a four-track that runs along the song. Where every other machine plays the notes in a cell, Tape plays the *recording* in a cell: four lanes, and they sound together, so choosing between three takes is muting two of them and doubling a vocal is unmuting a second. **audio…** on a lane puts a recording there, and it belongs to that cell - a take that crosses four scenes is four cells naming the same file, so no second timeline exists and scenes of different lengths need nothing said about them. The level and the mute on each lane are ordinary parameters, which is the whole reason they are there rather than on the recording: they automate in the strip under the grid, they map to a pad or a knob, and they record while you play. A muted section is a mute drawn in that cell. Audio does not stretch. A take enters on the bar wherever it is put, and runs at the speed it was recorded at; when that is not the tempo the scene plays at, the lane says so in amber."),
             ManualBlock(ManualKind.Heading, "Patches"),
             ManualBlock(ManualKind.Para, "Every machine ships with patches, shelved by family. **patch** at the top of the panel opens the browser; your own saved patches get a tab of their own and are the only ones you can delete."),
         )),

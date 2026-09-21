@@ -69,11 +69,28 @@ inline std::unique_ptr<SampleData> assemble(DecodedAudio &in, const std::string 
     const size_t slash = path.find_last_of('/');
     out->name = slash == std::string::npos ? path : path.substr(slash + 1);
 
-    if (targetRate <= 0) {
+    // Nothing to resample: either the caller wants the file's own rate, or the
+    // file is already at the rate it asked for - which is the ordinary case,
+    // since almost everything anyone records is 48 kHz.
+    //
+    // **The planes are moved, not copied**, and that is the point of this
+    // branch. Measured on 2026-09-20 with a five-minute mono take on a Tape
+    // track: the peak was 118 MB above the resident 28 MB, because the file's
+    // bytes, the decoder's float planes and the assembled copy were all alive
+    // at once - and the copy was made by interpolating fourteen million
+    // samples at a ratio of exactly one. A move deletes both the pass and its
+    // 58 MB. What remains - the slurped file plus one set of planes - is the
+    // chunked reader's problem, and it is named in the plan rather than
+    // scheduled.
+    if (targetRate <= 0 || targetRate == in.rate) {
         out->rate = in.rate;
         out->frames = in.frames;
-        out->left.assign(in.ch[0].begin(), in.ch[0].begin() + in.frames);
-        if (out->stereo) out->right.assign(in.ch[1].begin(), in.ch[1].begin() + in.frames);
+        out->left = std::move(in.ch[0]);
+        out->left.resize(static_cast<size_t>(in.frames));
+        if (out->stereo) {
+            out->right = std::move(in.ch[1]);
+            out->right.resize(static_cast<size_t>(in.frames));
+        }
         out->measure();
         return out;
     }

@@ -15,6 +15,7 @@
 #include <engine/format/WavReader.h>
 #include <engine/dsp/Wavetable.h>
 #include <engine/format/WavWriter.h>
+#include <engine/core/Reel.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/eventor/EventorRegistry.h>
 #include <engine/machine/MachineRegistry.h>
@@ -1266,6 +1267,8 @@ void EngineHost::snapshotAbandon(int64_t handle) { delete fromHandle(handle); }
 int32_t EngineHost::sampleRate() const { return sAudio.getSampleRate(); }
 
 namespace {
+
+
 /**
  * A machine is mounted through a queue the audio thread drains, so a worker
  * that asks for it in the same breath as the UI mounted it can arrive
@@ -1281,6 +1284,105 @@ Machine *awaitMachine(Engine &engine, int rack, const char *type) {
     return nullptr;
 }
 } // namespace
+
+/**
+ * What an audio track is holding, as a line per region.
+ *
+ *   sceneId|lane|absPath|offset|frames|startTick|ticks|bpm|loop
+ *
+ * The house's own shape for anything that is a list rather than a number - the
+ * zone map and the Nexus patch arrive the same way. One line per lane per
+ * cell, so a take sung across four scenes is four lines naming one file.
+ *
+ * **Each distinct file is decoded once**, however many lines mention it. A
+ * take that runs the length of a song is a dozen regions, and decoding it a
+ * dozen times is the difference between twenty-nine megabytes and three
+ * hundred and fifty. They are converted to int16 here, and a mono file stays
+ * mono; see engine/core/Reel.h for why that is the decision the feature rests
+ * on.
+ *
+ * An empty spec clears the reel.
+ */
+std::string EngineHost::loadReel(int rack, const std::string &spec) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (awaitMachine(sEngine, rack, "Tape") == nullptr) return "that rack is not a tape";
+
+    auto reel = std::make_unique<audio::Reel>();
+    std::string error;
+    // Distinct paths, decoded once each. Not a member: a reel owns its
+    // sources, and two racks holding the same file is two decodes rather than
+    // a cache that has to outlive both of them.
+    std::unordered_map<std::string, std::shared_ptr<const audio::Reel::Source>> decoded;
+    int64_t totalFrames = 0;
+
+    std::istringstream lines(spec);
+    std::string line;
+    while (std::getline(lines, line)) {
+        if (line.empty()) continue;
+        std::vector<std::string> f;
+        std::string part;
+        std::istringstream fields(line);
+        while (std::getline(fields, part, '|')) f.push_back(part);
+        if (f.size() < 9) {
+            LOGE("reel: %zu fields, wanted 9: %s", f.size(), line.c_str());
+            continue;
+        }
+        const int64_t sceneId = std::strtoll(f[0].c_str(), nullptr, 10);
+        const int32_t lane = std::atoi(f[1].c_str());
+        if (lane < 0 || lane >= audio::kReelLanes) continue;
+
+        auto &src = decoded[f[2]];
+        if (src == nullptr) {
+            auto data = WavReader::read(f[2], kSampleRate, error, audio::kMaxReelSeconds);
+            if (!data) {
+                LOGE("reel: %s: %s", f[2].c_str(), error.c_str());
+                continue;
+            }
+            auto made = std::make_shared<audio::Reel::Source>();
+            made->frames = data->frames;
+            made->stereo = data->stereo;
+            made->left.resize(static_cast<size_t>(data->frames));
+            for (int32_t i = 0; i < data->frames; ++i) made->left[static_cast<size_t>(i)] = audio::toI16(data->left[static_cast<size_t>(i)]);
+            if (data->stereo) {
+                made->right.resize(static_cast<size_t>(data->frames));
+                for (int32_t i = 0; i < data->frames; ++i) made->right[static_cast<size_t>(i)] = audio::toI16(data->right[static_cast<size_t>(i)]);
+            }
+            totalFrames += data->frames * (data->stereo ? 2 : 1);
+            src = made;
+        }
+
+        audio::Reel::Cell *cell = nullptr;
+        for (auto &c : reel->cells) {
+            if (c.sceneId == sceneId) { cell = &c; break; }
+        }
+        if (cell == nullptr) {
+            reel->cells.emplace_back();
+            cell = &reel->cells.back();
+            cell->sceneId = sceneId;
+        }
+        audio::Reel::Region &r = cell->lanes[lane];
+        r.source = src;
+        r.offset = std::atoi(f[3].c_str());
+        r.frames = std::atoi(f[4].c_str());
+        r.startTick = std::atoi(f[5].c_str());
+        r.ticks = std::atoi(f[6].c_str());
+        r.bpm = static_cast<float>(std::atof(f[7].c_str()));
+        r.loop = f[8] == "1";
+    }
+
+    LOGI("reel on rack %d: %zu cells, %zu files, %.1f MB", rack, reel->cells.size(), decoded.size(),
+         static_cast<double>(totalFrames) * sizeof(int16_t) / (1024.0 * 1024.0));
+
+    Mount mount;
+    mount.kind = Mount::Kind::Object;
+    mount.rack = rack;
+    mount.slot = 0;
+    mount.object = reel.get();
+    mount.deleter = deleteAs<audio::Reel>;
+    if (!mountObjectWithRetry(mount)) return "mount queue full";
+    reel.release();
+    return "";
+}
 
 std::string EngineHost::buildCloud(int rack, const float *spectrum01, int32_t count) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";

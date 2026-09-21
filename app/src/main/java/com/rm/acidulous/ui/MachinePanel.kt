@@ -56,6 +56,10 @@ import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withPatch
 import com.rm.acidulous.model.samplesInUse
+import com.rm.acidulous.model.TAPE_LANES
+import com.rm.acidulous.model.bpmOf
+import com.rm.acidulous.model.takeForWholeFile
+import com.rm.acidulous.model.withTake
 import com.rm.acidulous.model.withSetting
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
@@ -107,6 +111,15 @@ fun MachinePanel(
     onOpenPatch: () -> Unit = {},
     /** Pollen holds one sample of its own, under the plain key. */
     onImportOneSample: () -> Unit = {},
+    /**
+     * Which cell is open, for the one machine whose material is in the clips.
+     *
+     * Every other panel here is about the machine and the same whichever cell
+     * is showing. A tape's takes belong to the clip - four windows into files,
+     * per scene - so its panel has to know which scene it is looking at. Empty
+     * for every other machine, which asks nothing of it.
+     */
+    sceneId: String = "",
     /**
      * Which half to draw.
      *
@@ -194,6 +207,7 @@ fun MachinePanel(
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
+            "Tape" -> TapePanel(binding, track, trackIndex, sceneId, editor)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(
                 binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
@@ -2985,6 +2999,92 @@ private fun MomentaryButton(b: ParamBinding, name: String, label: String) {
         b.set(name, 1f)
         scope.launch { delay(120); b.set(name, 0f) }
     }) { Text(label, color = Acid.colors.accent, fontSize = 12.sp) }
+}
+
+// --- Tape -------------------------------------------------------------------------
+
+/**
+ * The four-track's face: a card per lane, and a lane's card is where its
+ * recording lives.
+ *
+ * **The one panel in the app that is partly about this cell rather than about
+ * the machine**, and the split down the middle of each card is the machine
+ * itself: the level and the mute are parameters, so they automate, map to a
+ * pad and record into a lane; the take is the document, so it arranges. A
+ * level that lived on the recording would have been a second kind of level,
+ * invisible to all three.
+ *
+ * Four cards and no section chips, because four lanes are what a tape has.
+ */
+@Composable
+private fun TapePanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: String, editor: SongEditor) {
+    var picking by remember { mutableStateOf(-1) }
+    val scope = rememberCoroutineScope()
+    val c = Acid.colors
+    val song = editor.song
+    val clip = track.clips[sceneId]
+    val sceneBpm = if (sceneId.isEmpty()) song.tempo else song.bpmOf(sceneId)
+    PanelSections {
+        GroupRow {
+            for (lane in 0 until TAPE_LANES) {
+                val take = clip?.audio?.lane(lane)
+                Group("lane ${lane + 1}") {
+                    Column(Modifier.widthIn(min = 116.dp, max = 200.dp)) {
+                        Text(
+                            take?.file?.substringAfterLast('/') ?: "empty",
+                            color = if (take == null) c.textDim else c.textHi,
+                            fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        )
+                        // The tempo it was sung at, and only when that is not
+                        // the tempo it is being played at. Audio does not
+                        // stretch yet, so this is the one number that says why
+                        // a take drifts away from the beat.
+                        if (take != null && kotlin.math.abs(take.bpm - sceneBpm) > 0.05f) {
+                            Text(
+                                "%.1f bpm".format(take.bpm), color = c.accent,
+                                fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                            )
+                        }
+                        Row {
+                            TextButton(onClick = { picking = lane }) {
+                                Text("audio…", color = c.textMid, fontSize = 11.sp)
+                            }
+                            if (take != null) TextButton(onClick = {
+                                editor.editClip(trackIndex, sceneId) { cl -> cl.withTake(lane, null) }
+                            }) { Text("clear", color = c.textMid, fontSize = 11.sp) }
+                        }
+                    }
+                    PanelKnob(b, "lane${lane + 1}", "level")
+                    PanelSwitch(b, "mute${lane + 1}", listOf("on", "mute"), "lane")
+                }
+            }
+            Group("out") { PanelKnob(b, "gain", "gain", PanelAmber) }
+        }
+    }
+    if (picking >= 0) {
+        val lane = picking
+        RecorderDialog(
+            startOn = RecorderPage.Library,
+            inUse = song.samplesInUse(),
+            onPick = { rel ->
+                picking = -1
+                // Off the main thread: the length comes from the file, and the
+                // file may be five minutes long.
+                scope.launch {
+                    val root = com.rm.acidulous.engine.EngineSync.sampleRoot
+                    val path = java.io.File(root, rel).absolutePath
+                    val info = withContext(Dispatchers.Default) { NativeEngine.fileInfo(path) }
+                    val frames = info.split('|').getOrNull(1)?.toIntOrNull() ?: 0
+                    if (frames <= 0) return@launch
+                    editor.editClip(trackIndex, sceneId) { cl ->
+                        cl.withTake(lane, song.takeForWholeFile(sceneId, cl, rel, frames))
+                    }
+                }
+            },
+            onDismiss = { picking = -1 },
+        )
+    }
 }
 
 // --- Filament ---------------------------------------------------------------

@@ -34,6 +34,7 @@ class EngineHost {
     // Insert effects: two slots per rack. An empty type name clears the slot.
     bool mountEffect(int rack, int slot, const std::string &typeName);
     bool mountSend(int slot, const std::string &typeName);
+    std::string loadReel(int rack, const std::string &spec);
     const char *mountedEffect(int rack, int slot) const;
     bool mountEventor(int rack, int slot, const std::string &typeName);
     // Builds anything a machine needs before it can be mounted (Trinity's

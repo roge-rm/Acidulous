@@ -162,6 +162,53 @@ data class Frozen(
     val peak: Float = 0f,
 )
 
+/**
+ * One lane's recording, as one cell refers to it: a window into a file.
+ *
+ * [offset] and [frames] are why a take sung across four scenes is four clips
+ * and *one* file. The split at the scene lines costs no audio at all - each
+ * cell points a little further into the same recording.
+ *
+ * [bpm] is the tempo it was sung at. Audio does not stretch, so a song at
+ * another tempo plays it anyway rather than going silent: a take is a
+ * performance and there is no live machine behind it to fall back to, which is
+ * the one way this differs from [Frozen]. It enters on the bar and runs at its
+ * own rate, and the cell says so.
+ *
+ * [startTick] is where in the cycle it begins, which is nought unless somebody
+ * punched in part way through.
+ */
+@Serializable
+data class TakeRef(
+    /** Relative to the user root, as every other recording is: "samples/take 3.wav". */
+    val file: String,
+    val offset: Int,
+    val frames: Int,
+    val bpm: Float,
+    /** The cycle it was recorded against - bars x repeat, in ticks. */
+    val ticks: Int,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val startTick: Int = 0,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val loop: Boolean = false,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val label: String = "",
+    /** A coarse shape for the grid to draw, so a cell costs no disk. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val peaks: List<Float> = emptyList(),
+)
+
+/**
+ * What a tape holds in one cell: four lanes, and they sound together.
+ *
+ * The index is the lane and a null is a lane with nothing here, which is
+ * ordinary - nobody sings every lane over every scene. Level and mute are not
+ * in here: they are the machine's own parameters, which is what makes them
+ * automatable, mappable and recordable without any of that being written
+ * twice.
+ */
+@Serializable
+data class ClipAudio(val lanes: List<TakeRef?> = emptyList()) {
+    fun lane(i: Int): TakeRef? = lanes.getOrNull(i)
+    val isEmpty: Boolean get() = lanes.all { it == null }
+}
+
 /** One track's material for one scene. */
 @Serializable
 data class Clip(
@@ -190,6 +237,8 @@ data class Clip(
     val automation: Map<String, Lane> = emptyMap(),
     /** Set while this clip plays as audio rather than as notes. */
     val frozen: Frozen? = null,
+    /** What a Tape track recorded here. Null on every other kind of track. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val audio: ClipAudio? = null,
 ) {
     /**
      * Instance identity as a number. Lives outside the constructor on purpose:
@@ -215,10 +264,12 @@ data class Clip(
  * clip that kept its frozen audio would sit there silent-looking and still
  * making a sound, which is the one outcome nobody could explain.
  */
-fun Clip.cleared(): Clip = copy(notes = emptyList(), automation = emptyMap(), frozen = null)
+fun Clip.cleared(): Clip =
+    copy(notes = emptyList(), automation = emptyMap(), frozen = null, audio = null)
 
 /** Is there anything in this clip to clear? */
-fun Clip.hasContent(): Boolean = notes.isNotEmpty() || automation.isNotEmpty() || frozen != null
+fun Clip.hasContent(): Boolean =
+    notes.isNotEmpty() || automation.isNotEmpty() || frozen != null || audio?.isEmpty == false
 
 object ClipRev {
     private val counter = AtomicLong(1)

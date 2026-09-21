@@ -46,7 +46,7 @@ object MachineUi {
         MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup("drums", listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
         MachineGroup("realish", listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
-        MachineGroup("beyond", listOf("Cipher", "Nexus")),
+        MachineGroup("beyond", listOf("Cipher", "Nexus", "Tape")),
     )
 
     /** One line per machine: what it is, not what it has. */
@@ -70,6 +70,7 @@ object MachineUi {
         "Molt" -> "a sung take, tuned by the notes you draw"
         "Cipher" -> "a vocoder whose band map is the instrument"
         "Nexus" -> "a modular whose blocks are the other machines"
+        "Tape" -> "a four-track: recordings arranged along the song"
         else -> ""
     }
 
@@ -195,6 +196,17 @@ fun Song.samplesInUse(): Set<String> = buildSet {
             if (value.isEmpty()) continue
             if (key == "sample" || key == "slice_sample" || key.endsWith("_sample")) add(value)
             if (key == "zones") Zones.decode(value).forEach { if (it.path.isNotEmpty()) add(it.path) }
+        }
+        // **And the takes, which are not in settings.** Every other reference
+        // to a recording is a machine setting; a tape's are on its clips, one
+        // per lane per cell. Miss them and the library's delete page offers to
+        // remove the vocal the song is playing - which is the exact failure
+        // this set exists to prevent.
+        for (clip in t.clips.values) {
+            val audio = clip.audio ?: continue
+            for (take in audio.lanes) {
+                if (take != null && take.file.isNotEmpty()) add(take.file)
+            }
         }
     }
 }

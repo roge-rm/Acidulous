@@ -770,6 +770,7 @@ fun EditScreen(
                 editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), rel) }
             },
             onOpenPatch = onOpenPatch,
+            sceneId = sceneId,
             bar = bar, body = body, vertical = landscape,
             modifier = Modifier.fillMaxWidth()
                 .then(if (landscape) Modifier.fillMaxHeight() else Modifier.padding(top = 4.dp)),
