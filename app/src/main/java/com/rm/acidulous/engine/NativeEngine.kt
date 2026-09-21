@@ -363,6 +363,15 @@ object NativeEngine {
      */
     fun loadReel(rack: Int, spec: String): String = nativeLoadReel(rack, spec)
 
+    /**
+     * Where a take too long to hold is converted to, set once at startup.
+     *
+     * Unset, a long take is held in memory up to the resident ceiling instead
+     * of being mapped: nowhere to put a cache is a reason to do less, not a
+     * reason to refuse.
+     */
+    fun setCacheRoot(path: String) = nativeSetCacheRoot(path)
+
     /** How long one take may be, which the engine refuses to exceed. */
     const val REEL_SECONDS = 300
 
@@ -668,6 +677,7 @@ object NativeEngine {
     private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
     private external fun nativeLoadTake(rack: Int, path: String): String
     private external fun nativeLoadReel(rack: Int, spec: String): String
+    private external fun nativeSetCacheRoot(path: String)
     private external fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
     private external fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     private external fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String

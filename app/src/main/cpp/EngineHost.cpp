@@ -13,6 +13,9 @@
 #include <engine/core/Constants.h>
 #include <engine/core/Frozen.h>
 #include <engine/format/WavReader.h>
+#include <engine/core/ReelCache.h>
+#include <engine/format/WavStream.h>
+#include <sys/stat.h>
 #include <engine/dsp/Wavetable.h>
 #include <engine/format/WavWriter.h>
 #include <engine/core/Reel.h>
@@ -1314,6 +1317,77 @@ Machine *awaitMachine(Engine &engine, int rack, const char *type) {
  *
  * An empty spec clears the reel.
  */
+/**
+ * One file, as a source: held if it is short, mapped if it is long.
+ *
+ * The ceiling is `kResidentSeconds`. Under it nothing changes and nothing new
+ * happens; over it the file is converted once into `cache/reel` and mapped, so
+ * what a twenty-minute vocal costs in memory is the part of it the song is
+ * actually playing rather than the whole of it.
+ *
+ * Returns null and logs when a file cannot be read, so one bad line in a spec
+ * loses one lane rather than the reel.
+ */
+std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::string &path,
+                                                                int64_t &residentFrames,
+                                                                int &mappedCount) {
+    std::string error;
+    auto made = std::make_shared<audio::Reel::Source>();
+
+    WavStream probe;
+    const bool probed = probe.open(path, error);
+    const double seconds = probed && probe.rate() > 0
+                               ? static_cast<double>(probe.frames()) / probe.rate()
+                               : 0.0;
+    const bool longTake = probed && seconds > audio::kResidentSeconds;
+    probe.close();
+
+    if (longTake && !cacheRoot.empty()) {
+        const std::string dest = cacheRoot + "/" + audio::ReelCache::nameFor(path);
+        bool stereo = false;
+        int64_t frames = 0;
+        struct stat st {};
+        if (::stat(dest.c_str(), &st) == 0 && st.st_size > 0) {
+            // Converted before. The name carries the source's size and mtime,
+            // so a file that has been edited since has a different one.
+            WavStream again;
+            if (again.open(path, error)) {
+                stereo = again.channels() == 2;
+                frames = static_cast<int64_t>(static_cast<double>(again.frames()) *
+                                              kSampleRate / again.rate());
+            }
+        } else {
+            frames = audio::ReelCache::convert(path, dest, stereo, error);
+        }
+        auto map = std::make_shared<audio::Mapping>();
+        if (frames > 0 && map->open(dest) &&
+            made->point(map, static_cast<int32_t>(frames), stereo)) {
+            ++mappedCount;
+            LOGI("reel: %s mapped, %.0f s%s", path.c_str(), seconds, stereo ? " stereo" : " mono");
+            return made;
+        }
+        LOGE("reel: %s would not map (%s); holding it instead", path.c_str(), error.c_str());
+    }
+
+    auto data = WavReader::read(path, kSampleRate, error, audio::kResidentSeconds);
+    if (!data) {
+        LOGE("reel: %s: %s", path.c_str(), error.c_str());
+        return nullptr;
+    }
+    // Planar, in one allocation, in the layout `Source` reads: left then right.
+    const int32_t n = data->frames;
+    std::vector<int16_t> planes(static_cast<size_t>(n) * (data->stereo ? 2 : 1));
+    for (int32_t i = 0; i < n; ++i) planes[static_cast<size_t>(i)] = audio::toI16(data->left[static_cast<size_t>(i)]);
+    if (data->stereo) {
+        for (int32_t i = 0; i < n; ++i) {
+            planes[static_cast<size_t>(n + i)] = audio::toI16(data->right[static_cast<size_t>(i)]);
+        }
+    }
+    residentFrames += static_cast<int64_t>(planes.size());
+    made->hold(std::move(planes), n, data->stereo);
+    return made;
+}
+
 std::string EngineHost::loadReel(int rack, const std::string &spec) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
     if (awaitMachine(sEngine, rack, "Bias") == nullptr) return "that rack is not a Bias";
@@ -1325,6 +1399,7 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
     // a cache that has to outlive both of them.
     std::unordered_map<std::string, std::shared_ptr<const audio::Reel::Source>> decoded;
     int64_t totalFrames = 0;
+    int mapped = 0;
 
     std::istringstream lines(spec);
     std::string line;
@@ -1344,22 +1419,8 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
 
         auto &src = decoded[f[2]];
         if (src == nullptr) {
-            auto data = WavReader::read(f[2], kSampleRate, error, audio::kMaxReelSeconds);
-            if (!data) {
-                LOGE("reel: %s: %s", f[2].c_str(), error.c_str());
-                continue;
-            }
-            auto made = std::make_shared<audio::Reel::Source>();
-            made->frames = data->frames;
-            made->stereo = data->stereo;
-            made->left.resize(static_cast<size_t>(data->frames));
-            for (int32_t i = 0; i < data->frames; ++i) made->left[static_cast<size_t>(i)] = audio::toI16(data->left[static_cast<size_t>(i)]);
-            if (data->stereo) {
-                made->right.resize(static_cast<size_t>(data->frames));
-                for (int32_t i = 0; i < data->frames; ++i) made->right[static_cast<size_t>(i)] = audio::toI16(data->right[static_cast<size_t>(i)]);
-            }
-            totalFrames += data->frames * (data->stereo ? 2 : 1);
-            src = made;
+            src = sourceFor(f[2], totalFrames, mapped);
+            if (src == nullptr) continue;
         }
 
         audio::Reel::Cell *cell = nullptr;
@@ -1381,7 +1442,21 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
         r.loop = f[8] == "1";
     }
 
-    LOGI("reel on rack %d: %zu cells, %zu files, %.1f MB", rack, reel->cells.size(), decoded.size(),
+    // **Ask for the head of every region while still on the loader thread.**
+    //
+    // A mapped take's first block is the one that can take a major page fault,
+    // and a major fault on the audio thread is an xrun. A second of each
+    // region is bounded - it is per cell, not per file - and `MADV_WILLNEED`
+    // is a hint, so it costs nothing at all when the kernel declines or when
+    // the cell is never reached.
+    for (const auto &cell : reel->cells) {
+        for (const auto &r : cell.lanes) {
+            if (r.source) r.source->willNeed(r.offset, kSampleRate);
+        }
+    }
+
+    LOGI("reel on rack %d: %zu cells, %zu files (%d mapped), %.1f MB resident", rack,
+         reel->cells.size(), decoded.size(), mapped,
          static_cast<double>(totalFrames) * sizeof(int16_t) / (1024.0 * 1024.0));
 
     Mount mount;

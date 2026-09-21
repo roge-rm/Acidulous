@@ -180,9 +180,11 @@ bool Bias::render(float *L, float *R, int32_t frames) {
             }
             const int64_t s = r.offset + at;
             if (s >= 0 && s < src.frames) {
-                const float l = static_cast<float>(src.left[static_cast<size_t>(s)]) * (1.0f / 32768.0f);
+                // Through the pointers, so a take held in memory and a take
+                // mapped from a cache file are the same two lines here.
+                const float l = static_cast<float>(src.lp[static_cast<size_t>(s)]) * (1.0f / 32768.0f);
                 const float rr = src.stereo
-                                     ? static_cast<float>(src.right[static_cast<size_t>(s)]) * (1.0f / 32768.0f)
+                                     ? static_cast<float>(src.rp[static_cast<size_t>(s)]) * (1.0f / 32768.0f)
                                      : l;
                 L[i] += l * level;
                 R[i] += rr * level;

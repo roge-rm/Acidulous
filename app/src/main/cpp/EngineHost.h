@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <sequencer/Clip.h>
+#include <engine/core/Reel.h>
 #include <engine/core/SampleEdit.h>
 #include <engine/format/AudioSink.h>
 #include <string>
@@ -35,6 +36,14 @@ class EngineHost {
     bool mountEffect(int rack, int slot, const std::string &typeName);
     bool mountSend(int slot, const std::string &typeName);
     std::string loadReel(int rack, const std::string &spec);
+    /**
+     * Where converted long takes live, set once at startup.
+     *
+     * Empty means there is nowhere to put them, and a long take is then held
+     * in memory up to the resident ceiling rather than refused - a missing
+     * cache directory is a reason to do less, not a reason to fail.
+     */
+    void setCacheRoot(const std::string &path) { cacheRoot = path; }
     const char *mountedEffect(int rack, int slot) const;
     bool mountEventor(int rack, int slot, const std::string &typeName);
     // Builds anything a machine needs before it can be mounted (Trinity's
@@ -425,6 +434,11 @@ class EngineHost {
     bool mountObjectWithRetry(struct Mount &m);
 
   private:
+    /** One file as a source: held if it is short, mapped if it is long. */
+    std::shared_ptr<const audio::Reel::Source> sourceFor(const std::string &path,
+                                                         int64_t &residentFrames, int &mappedCount);
+    /** Where converted long takes live. Empty means nowhere; see setCacheRoot. */
+    std::string cacheRoot;
 
     bool running = false;
     std::string mountedType[16];

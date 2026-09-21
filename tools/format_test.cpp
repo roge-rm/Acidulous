@@ -17,6 +17,8 @@
 #include <engine/format/FlacWriter.h>
 #include <engine/format/Mp3Reader.h>
 #include <engine/format/Mp3Writer.h>
+#include <engine/format/WavReader.h>
+#include <engine/format/WavStream.h>
 #include <engine/format/WavWriter.h>
 
 using namespace acidulous;
@@ -95,6 +97,70 @@ float rmsOf(const std::vector<float> &s) {
 }
 } // namespace
 
+/**
+ * The chunked reader, against the slurping one.
+ *
+ * `WavStream` exists so that a twenty-minute take does not have to be three
+ * copies of itself in memory at once, and the only thing worth asserting about
+ * it is that it says **the same numbers** the reader everybody already trusts
+ * says - at an offset, across a chunk boundary, and at every depth.
+ */
+void streamMatchesTheReader(const std::string &dir, const std::vector<float> &s) {
+    for (const int bits : {16, 24, 32}) {
+        const std::string path = dir + "/stream" + std::to_string(bits) + ".wav";
+        WavWriter w;
+        if (!writeWith(w, path, bits, s)) {
+            check(false, "stream" + std::to_string(bits) + " wrote");
+            continue;
+        }
+        std::string error;
+        // The file's own rate, so the two are comparing the same samples
+        // rather than two resamplings of them.
+        const auto whole = WavReader::read(path, 0, error, kMaxSliceSeconds);
+        WavStream stream;
+        if (!whole || !stream.open(path, error)) {
+            check(false, "stream" + std::to_string(bits) + " opened (" + error + ")");
+            continue;
+        }
+        check(stream.frames() == whole->frames && stream.channels() == (whole->stereo ? 2 : 1) &&
+                  stream.rate() == whole->rate,
+              "stream" + std::to_string(bits) + " agrees about the shape");
+
+        // Three windows: the top, an odd offset well in, and the tail - which
+        // is where a reader that trusts its own arithmetic runs off the end.
+        const int64_t n = whole->frames;
+        bool same = true;
+        int64_t worstAt = -1;
+        for (const int64_t from : {static_cast<int64_t>(0), n / 3 + 37, n - 64}) {
+            std::vector<float> got(256, 0.0f);
+            const int64_t k = stream.read(from, 0, got.data(), 256);
+            for (int64_t i = 0; i < k; ++i) {
+                if (std::fabs(got[static_cast<size_t>(i)] -
+                              whole->left[static_cast<size_t>(from + i)]) > 1e-6f) {
+                    same = false;
+                    if (worstAt < 0) worstAt = from + i;
+                }
+            }
+        }
+        check(same, "stream" + std::to_string(bits) + " reads what the reader read" +
+                        (worstAt < 0 ? "" : " (first differing frame " + std::to_string(worstAt) + ")"));
+
+        // Past the end is nothing, not a crash and not a guess.
+        std::vector<float> tail(16, 1.0f);
+        check(stream.read(n, 0, tail.data(), 16) == 0, "stream" + std::to_string(bits) +
+                                                           " reads nothing past the end");
+        // And the right channel is the right channel.
+        std::vector<float> right(64, 0.0f);
+        const int64_t k = stream.read(100, 1, right.data(), 64);
+        bool rightOk = whole->stereo && k == 64;
+        for (int64_t i = 0; i < k && rightOk; ++i) {
+            rightOk = std::fabs(right[static_cast<size_t>(i)] -
+                                whole->right[static_cast<size_t>(100 + i)]) < 1e-6f;
+        }
+        check(rightOk, "stream" + std::to_string(bits) + " reads the other channel");
+    }
+}
+
 int main(int argc, char **argv) {
     const std::string dir = argc > 1 ? argv[1] : ".";
     const std::vector<float> s = signalFor();
@@ -107,6 +173,7 @@ int main(int argc, char **argv) {
     // size over 32768, which at full scale is another whole step. Asking for
     // one step would be asking the formats to be something they are not.
     const float step16 = 1.5f / 32768.0f, step24 = 1.5f / 8388608.0f;
+    streamMatchesTheReader(dir, s);
     { WavWriter w;  lossless("wav16",  w, dir + "/rt16.wav",  16, AudioFormat::Wav,  s, step16); }
     { WavWriter w;  lossless("wav24",  w, dir + "/rt24.wav",  24, AudioFormat::Wav,  s, step24); }
     { WavWriter w;  lossless("wav32",  w, dir + "/rt32.wav",  32, AudioFormat::Wav,  s, 1e-7f); }

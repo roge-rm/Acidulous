@@ -20,6 +20,11 @@
 #include <vector>
 
 #include <engine/core/Reel.h>
+#include <engine/core/Mapping.h>
+#include <engine/core/ReelCache.h>
+#include <engine/format/WavReader.h>
+#include <engine/format/WavWriter.h>
+#include <sys/stat.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/bias/Bias.h>
 
@@ -63,19 +68,19 @@ float expectRamp(int32_t frame) { return static_cast<float>(ramp(frame)) / 32768
 /** A source of [frames], ramped inside [from, to) and poisoned everywhere else. */
 std::shared_ptr<Reel::Source> ramped(int32_t frames, int32_t from, int32_t to) {
     auto s = std::make_shared<Reel::Source>();
-    s->frames = frames;
-    s->stereo = false;
-    s->left.assign(static_cast<size_t>(frames), kPoison);
-    for (int32_t i = from; i < to && i < frames; ++i) s->left[static_cast<size_t>(i)] = ramp(i);
+    // Through `hold`, as the host builds it: a source is read through its
+    // pointers now, because the same two lines in the render have to serve a
+    // take held in memory and one mapped from a converted file.
+    std::vector<int16_t> planes(static_cast<size_t>(frames), kPoison);
+    for (int32_t i = from; i < to && i < frames; ++i) planes[static_cast<size_t>(i)] = ramp(i);
+    s->hold(std::move(planes), frames, false);
     return s;
 }
 
 /** A source that is one value all the way through, for the summing tests. */
 std::shared_ptr<Reel::Source> flat(int32_t frames, int16_t value) {
     auto s = std::make_shared<Reel::Source>();
-    s->frames = frames;
-    s->stereo = false;
-    s->left.assign(static_cast<size_t>(frames), value);
+    s->hold(std::vector<int16_t>(static_cast<size_t>(frames), value), frames, false);
     return s;
 }
 
@@ -372,6 +377,96 @@ void theMediumColoursAndDirectDoesNot() {
     }
 }
 
+/**
+ * A take too long to hold, converted and mapped - and reading the same numbers.
+ *
+ * This is the whole of step 10 in one check. The resident path and the mapped
+ * path must be indistinguishable to the render, because the render has two
+ * lines and no idea which it is looking at; anything else here would be a
+ * fault nobody finds until they record something long.
+ */
+void aLongTakeIsMappedAndReadsTheSame() {
+    printf("- a take too long to hold, converted once and mapped\n");
+    const std::string dir = std::string(std::getenv("TMPDIR") != nullptr ? std::getenv("TMPDIR") : "/tmp");
+    const std::string wav = dir + "/reelsrc.wav";
+    const std::string cache = dir + "/reelsrc.i16";
+    std::remove(cache.c_str());
+
+    // Three seconds of something with a shape to it, written as a real file.
+    constexpr int32_t kFrames = kRate * 3;
+    {
+        WavWriter w;
+        std::string error;
+        if (!w.open(wav, kRate, 24, error)) {
+            ok("the source wav was written", false, error);
+            return;
+        }
+        std::vector<float> block(1024 * 2);
+        for (int32_t at = 0; at < kFrames; at += 1024) {
+            const int32_t n = std::min(1024, kFrames - at);
+            for (int32_t i = 0; i < n; ++i) {
+                const float v = 0.5f * std::sin(6.2831853f * 220.0f *
+                                                static_cast<float>(at + i) / kRate);
+                block[static_cast<size_t>(i) * 2] = v;
+                block[static_cast<size_t>(i) * 2 + 1] = -v; // so the channels differ
+            }
+            w.write(block.data(), n);
+        }
+        w.close();
+    }
+
+    std::string error;
+    bool stereo = false;
+    const int64_t frames = ReelCache::convert(wav, cache, stereo, error);
+    ok("the conversion says how long it is", frames == kFrames && stereo,
+       std::to_string(frames) + (stereo ? " stereo" : " mono") + " " + error);
+    if (frames <= 0) return;
+
+    // Planar int16: left plane then right, and nothing else in the file.
+    struct stat st {};
+    ::stat(cache.c_str(), &st);
+    ok("and the file is exactly that, planar int16",
+       st.st_size == static_cast<long>(frames) * 2 * static_cast<long>(sizeof(int16_t)),
+       std::to_string(static_cast<long long>(st.st_size)));
+
+    auto map = std::make_shared<Mapping>();
+    Reel::Source mapped;
+    ok("it maps", map->open(cache) && mapped.point(map, static_cast<int32_t>(frames), stereo));
+    if (mapped.lp == nullptr) return;
+
+    // And says what the reader everybody trusts says.
+    const auto whole = WavReader::read(wav, kRate, error, kMaxSliceSeconds);
+    if (!whole) {
+        ok("the reader read it too", false, error);
+        return;
+    }
+    double worst = 0.0;
+    int64_t worstAt = -1;
+    for (int32_t i = 0; i < kFrames; i += 7) {
+        const double l = mapped.lp[i] / 32768.0;
+        const double r = mapped.rp[i] / 32768.0;
+        const double dl = std::fabs(l - whole->left[static_cast<size_t>(i)]);
+        const double dr = std::fabs(r - whole->right[static_cast<size_t>(i)]);
+        if (std::max(dl, dr) > worst) { worst = std::max(dl, dr); worstAt = i; }
+    }
+    // One step of sixteen-bit rounding and no more.
+    ok("and reads what the reader read, both channels", worst < 1.0 / 32768.0,
+       "worst " + std::to_string(worst) + " at frame " + std::to_string(worstAt));
+
+    // The right plane is the right plane and not a copy of the left, which a
+    // planar layout gets wrong silently if the two offsets are confused.
+    ok("the channels are not the same plane", mapped.rp == mapped.lp + frames);
+
+    // Converting again reuses nothing here, but the *name* must be stable for
+    // the same file and different once it changes.
+    const std::string first = ReelCache::nameFor(wav);
+    ok("the cache name is stable for one file", first == ReelCache::nameFor(wav), first);
+    ok("and is not the name of another file", first != ReelCache::nameFor(cache));
+
+    std::remove(cache.c_str());
+    std::remove(wav.c_str());
+}
+
 } // namespace
 
 int main() {
@@ -390,6 +485,7 @@ int main() {
     printf("- nothing\n");
     nothingToPlay();
     theMediumColoursAndDirectDoesNot();
+    aLongTakeIsMappedAndReadsTheSame();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

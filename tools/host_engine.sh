@@ -19,6 +19,7 @@ mkdir -p "$OUT"
 SRC=$(find "$CPP/engine/machine" "$CPP/engine/dsp" "$CPP/engine/effect" -name '*.cpp')
 # Molt's analyser, the onsets Dice and Pollen read, and our own file writing.
 SRC="$SRC $CPP/engine/core/Utterance.cpp $CPP/engine/core/Take.cpp $CPP/engine/core/SampleEdit.cpp"
+SRC="$SRC $CPP/engine/core/ReelCache.cpp $CPP/engine/format/WavStream.cpp"
 SRC="$SRC $CPP/engine/format/WavWriter.cpp $CPP/engine/format/WavReader.cpp"
 SRC="$SRC $CPP/engine/format/Decoded.cpp $CPP/engine/format/AiffReader.cpp $CPP/engine/format/FlacReader.cpp"
 SRC="$SRC $CPP/engine/format/AudioDecoder.cpp"

@@ -461,6 +461,13 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeGetSampleRate(JNIEnv *, jobject)
     return host().sampleRate();
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetCacheRoot(JNIEnv *env, jobject, jstring path) {
+    const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
+    host().setCacheRoot(p);
+    if (path != nullptr) env->ReleaseStringUTFChars(path, p);
+}
+
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeLoadReel(JNIEnv *env, jobject, jint rack, jstring spec) {
     const char *p = spec != nullptr ? env->GetStringUTFChars(spec, nullptr) : "";

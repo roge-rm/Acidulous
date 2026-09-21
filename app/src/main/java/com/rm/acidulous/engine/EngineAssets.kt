@@ -15,6 +15,17 @@ object EngineAssets {
      */
     fun freezeRoot(context: Context): File = File(context.filesDir, "freeze").apply { mkdirs() }
 
+    /**
+     * Where a take too long to hold in memory is converted to, once.
+     *
+     * In `cacheDir` and not beside the songs, because that is exactly what it
+     * is: everything in here can be made again from the recording it came
+     * from, so the system may throw it away when it needs the space and
+     * nothing is lost but the second or two it takes to rebuild.
+     */
+    fun reelCache(context: Context): File =
+        File(context.cacheDir, "reel").apply { mkdirs() }
+
     fun install(context: Context) {
         userRoot(context)
     }

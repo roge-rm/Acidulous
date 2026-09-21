@@ -28,6 +28,7 @@ g++ -O1 -g -std=c++17 -fsanitize=address,undefined -fno-omit-frame-pointer \
     "$CPP/engine/format/AiffWriter.cpp" "$CPP/engine/format/FlacWriter.cpp" \
     "$CPP/engine/format/Mp3Writer.cpp" \
     "$CPP/engine/format/Decoded.cpp" "$CPP/engine/format/WavReader.cpp" \
+    "$CPP/engine/format/WavStream.cpp" \
     "$CPP/engine/format/AiffReader.cpp" "$CPP/engine/format/FlacReader.cpp" \
     "$CPP/engine/format/Mp3Reader.cpp" "$CPP/engine/format/AudioDecoder.cpp" \
     "$ARCHIVE" -lm -o "$DIR/format_test" || exit 1

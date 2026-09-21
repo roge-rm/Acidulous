@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <cstdlib>
+#include <engine/core/Mapping.h>
 #include <memory>
 #include <vector>
 
@@ -23,8 +24,25 @@
 // new one arrives by being swapped in.
 namespace acidulous::audio {
 
-/** How long one take may be. See the note in Reel::Source. */
-constexpr int32_t kMaxReelSeconds = 300;
+/**
+ * How long a take may be **and be held in memory**: two minutes.
+ *
+ * Under this it is decoded into vectors as it always was, which is the simple
+ * path and covers a verse, a chorus and nearly every overdub anybody makes.
+ */
+constexpr int32_t kResidentSeconds = 120;
+
+/**
+ * How long a take may be at all: half an hour, and it is mapped rather than
+ * held.
+ *
+ * The point of an audio track is a voice that runs the length of a song, and a
+ * song is longer than five minutes - which is what this used to say. Above
+ * [kResidentSeconds] a take is converted once to the engine's own flat format
+ * and memory-mapped, so what it costs in RAM is what the song is actually
+ * playing rather than the whole of it. See `audio::Mapping`.
+ */
+constexpr int32_t kMaxReelSeconds = 1800;
 
 /** How many lanes Bias has. Four, because that is what a four-track is. */
 constexpr int32_t kReelLanes = 4;
@@ -59,9 +77,58 @@ struct Reel {
      * difference between 29 MB and 350.
      */
     struct Source {
-        std::vector<int16_t> left, right; // right empty means mono
+        /**
+         * **Read through the pointers, never through the vectors.**
+         *
+         * A source is held one of two ways - decoded into `own` under the
+         * resident ceiling, or mapped from a converted cache file above it -
+         * and the render must not care which. So the two pointers are the
+         * interface and the storage below them is an implementation detail;
+         * `lp` and `rp` are set by whichever of the two filled it.
+         *
+         * Planar, and mono stays mono, which is why the mapped file is planar
+         * too: one layout means one access path, and a mono take is half the
+         * file rather than a duplicated channel.
+         */
+        const int16_t *lp = nullptr;
+        const int16_t *rp = nullptr;
         int32_t frames = 0;
         bool stereo = false;
+
+        std::vector<int16_t> own;   // resident: the samples themselves
+        std::shared_ptr<Mapping> map; // mapped: the file they live in
+
+        /** Resident, from planar channels already in hand. */
+        void hold(std::vector<int16_t> &&planes, int32_t n, bool isStereo) {
+            own = std::move(planes);
+            frames = n;
+            stereo = isStereo;
+            lp = own.data();
+            rp = isStereo ? own.data() + n : own.data();
+        }
+
+        /** Mapped, from a converted cache file: left plane then right. */
+        bool point(std::shared_ptr<Mapping> m, int32_t n, bool isStereo) {
+            const size_t want = static_cast<size_t>(n) * (isStereo ? 2 : 1) * sizeof(int16_t);
+            if (!m || !m->valid() || m->size() < want) return false;
+            map = std::move(m);
+            frames = n;
+            stereo = isStereo;
+            lp = reinterpret_cast<const int16_t *>(map->data());
+            rp = isStereo ? lp + n : lp;
+            return true;
+        }
+
+        /** Ask the kernel for the frames a cell is about to play. A hint. */
+        void willNeed(int32_t from, int32_t count) const {
+            if (!map) return;
+            const size_t unit = sizeof(int16_t);
+            map->willNeed(static_cast<size_t>(from) * unit, static_cast<size_t>(count) * unit);
+            if (stereo) {
+                map->willNeed(static_cast<size_t>(frames + from) * unit,
+                              static_cast<size_t>(count) * unit);
+            }
+        }
     };
 
     /** One lane of one cell: which file, which part of it, and when. */

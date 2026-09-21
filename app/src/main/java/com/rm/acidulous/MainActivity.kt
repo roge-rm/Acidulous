@@ -753,6 +753,7 @@ private fun App(modifier: Modifier = Modifier) {
     DisposableEffect(Unit) {
         EngineSync.sampleRoot = EngineAssets.userRoot(context)
         EngineSync.freezeRoot = EngineAssets.freezeRoot(context)
+        NativeEngine.setCacheRoot(EngineAssets.reelCache(context).absolutePath)
         // Trinity's wavetables take a moment to build; do it off the main
         // thread now rather than stalling the first mount.
         Thread { NativeEngine.prewarm() }.start()
