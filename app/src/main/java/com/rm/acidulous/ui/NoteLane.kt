@@ -243,13 +243,8 @@ fun NoteLane(
             // A position bar: this grows a row per distinct pitch in the clip, so on a
             // stacked one it is longer than the screen. See ui/Scrollbar.kt.
             val menuScroll = rememberScrollState()
-            DropdownMenu(
-                expanded = menu,
-                onDismissRequest = { menu = false },
-                modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar),
-                scrollState = menuScroll,
-            ) {
-                ScaledWindow {
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                ScaledMenu(menuScroll) {
                     for (p in NoteProp.entries) {
                         DropdownMenuItem(
                             text = {

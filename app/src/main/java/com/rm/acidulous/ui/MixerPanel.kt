@@ -544,11 +544,8 @@ fun SongSlotDialog(
                     Text(if (send.isEmpty) "none ▾" else "${send.type} ▾", color = c.accent, fontSize = 13.sp)
                 }
                 val menuScroll = rememberScrollState()
-                DropdownMenu(
-                    expanded = menu, onDismissRequest = { menu = false },
-                    modifier = Modifier.scrollbar(menuScroll, color = c.scrollbar), scrollState = menuScroll,
-                ) {
-                    ScaledWindow {
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    ScaledMenu(menuScroll) {
                         DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
                             menu = false
                             editor.editSong { s -> withType(s, slot, "") }

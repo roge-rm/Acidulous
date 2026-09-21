@@ -32,8 +32,8 @@ android {
         //
         // 0.2.0 is the manual: the first release you can be handed without
         // also being told how any of it works.
-        versionCode = 3
-        versionName = "0.2.0"
+        versionCode = 4
+        versionName = "0.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

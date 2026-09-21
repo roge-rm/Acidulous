@@ -11,6 +11,7 @@
 #include <engine/core/Messages.h>
 #include <engine/core/RtQueue.h>
 #include <engine/core/Timebase.h>
+#include <engine/core/Tuner.h>
 #include <sequencer/RecordQueue.h>
 #include <sequencer/SceneScheduler.h>
 #include <sequencer/TickClock.h>
@@ -96,6 +97,16 @@ class Engine {
     // Input, monitoring and recording. Set from the UI thread, read on the
     // audio thread; plain atomics because they are single values.
     std::atomic<float> inputGain{1.0f};
+    /**
+     * The tuner, which listens to the input before anything touches it.
+     *
+     * Before the gain and before the input chain on purpose: you tune an
+     * instrument, not a recording, and the chain may hold a gate that has
+     * shut on a string being plucked gently or an amp that has buried the
+     * fundamental under a cabinet. Off until the record window asks, and
+     * while it is off `push` returns on its first line.
+     */
+    audio::Tuner tuner;
     std::atomic<float> monitorLevel{0.0f};
     /**
      * The input chain: what the incoming audio goes through before anything

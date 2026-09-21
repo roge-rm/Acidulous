@@ -7,10 +7,18 @@ One window does all of it, and it opens wherever audio is wanted - a pad on the
 sample machine, a loop for the slicer, a buffer for the granular, a take to
 sing into the voice machine.
 
-- **Record** - choose which input, watch the level, and capture. **printed into
-  the recording**, at the top, holds two effects that go into the file as it
-  records: that is how a guitar amp gets onto a take rather than over it.
+- **Record** - choose which input, watch the level, and capture. The **tuner**
+  at the top names whatever is being played and says how far off it is; under
+  it, **printed into the recording** holds two effects that go into the file as
+  it records, which is how a guitar amp gets onto a take rather than over it.
   Effects on a *track* are the other thing, and can be changed at any time.
+
+  The tuner listens to the input *before* those two effects, because you tune an
+  instrument rather than a recording - a gate set to shut on a quietly plucked
+  string would otherwise leave the tuner with nothing to hear. It shows the
+  nearest note, the needle's distance to it in cents over fifty either way, and
+  goes green within four. It names nothing at all unless it is sure, so a room
+  or a hand across the strings reads as no note rather than as a wrong one.
 - **Edit** - trim the ends, set the level, and take the rumble off the bottom
   with a low cut.
 - **Library** - everything you have recorded or imported, to use again.

@@ -1162,4 +1162,106 @@ bool Harmonizer::process(float *L, float *R, int32_t frames, bool stereoIn) {
     return true;
 }
 
+// --- Gate -------------------------------------------------------------------------
+
+const ParamDef *Gate::paramDefs(int32_t &count) const {
+    static const ParamDef defs[Count] = {
+        {"threshold", -80.0f, 0.0f, -45.0f, Curve::Linear, 0, "dB"},
+        {"hyst", 0.0f, 24.0f, 4.0f, Curve::Linear, 0, "dB"},
+        {"attack", 0.05f, 50.0f, 1.0f, Curve::Exponential, 0, "ms"},
+        {"hold", 0.0f, 500.0f, 40.0f, Curve::Linear, 0, "ms"},
+        {"release", 5.0f, 2000.0f, 150.0f, Curve::Exponential, 0, "ms"},
+        {"duck", -90.0f, 0.0f, -90.0f, Curve::Linear, 0, "dB"},
+        {"key", 20.0f, 2000.0f, 20.0f, Curve::Exponential, 0, "Hz"},
+        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+    };
+    count = Count;
+    return defs;
+}
+
+void Gate::prepare(int32_t sampleRate) {
+    sr = static_cast<float>(sampleRate);
+    for (auto &k : key) k.setSampleRate(sr);
+    keyHz = -1.0f;
+    reset();
+}
+
+void Gate::reset() {
+    env = 0.0f;
+    // **Closed, not open.** A gate that resets open passes whatever is
+    // sitting in the input for as long as its release takes, which on a
+    // panic is the one moment the engine has promised silence.
+    gain = 0.0f;
+    holdLeft = 0.0f;
+    open = false;
+    for (auto &k : key) k.reset();
+}
+
+bool Gate::process(float *L, float *R, int32_t frames, bool stereoIn) {
+    const auto &p = params_;
+    const float openAt = dbToGain(p.get(Threshold));
+    const float shutAt = dbToGain(p.get(Threshold) - p.get(Hyst));
+    const float atk = dsp::onePoleCoeff(p.get(Attack) * 0.001f, sr);
+    const float rel = dsp::onePoleCoeff(p.get(Release) * 0.001f, sr);
+    const float shut = dbToGain(p.get(Duck));
+    const float holdSamples = p.get(Hold) * 0.001f * sr;
+
+    const float hz = p.get(Key);
+    if (hz != keyHz) {
+        keyHz = hz;
+        for (auto &k : key) k.set(hz, 0.0f);
+    }
+
+    /**
+     * How fast the *detector* lets go, which is not how fast the gate does.
+     *
+     * This was thirty milliseconds first, reasoning that a rectified sine
+     * falls to nothing twice a cycle and a follower quicker than the lowest
+     * note's period would decide the string had stopped. It does stop the
+     * chatter, and it also makes **`hold` do nothing below about 30 ms**: a
+     * 20 ms gap never got the envelope down to the threshold at all, so a
+     * gate set to close immediately held on through it just as one set to
+     * wait did. A control that cannot be heard over the bottom half of its
+     * range is worse than the fault it was hiding.
+     *
+     * Two milliseconds, then, and the dips are `hold`'s problem - which is
+     * what hold is for and how a real gate does it. Every peak over the
+     * threshold re-arms the timer, so a note at 82 Hz re-arms every 12 ms
+     * and the default 40 ms never runs out, while a gate set to zero shuts
+     * the moment a drum stops.
+     */
+    static constexpr float kDetectRelease = 0.002f;
+    const float detRel = dsp::onePoleCoeff(kDetectRelease, sr);
+
+    for (int32_t i = 0; i < frames; ++i) {
+        const float inL = L[i], inR = stereoIn ? R[i] : L[i];
+        // The key filter runs on the audio, per channel, and the rectifier
+        // comes after it: filtering a signal that has already been rectified
+        // would be filtering the envelope, which is a different instrument.
+        const float kL = std::fabs(key[0].step(inL).hp);
+        const float kR = std::fabs(key[1].step(inR).hp);
+        const float det = kL > kR ? kL : kR;
+        env = det > env ? det : dsp::undenormal(env + (det - env) * detRel);
+
+        if (env > openAt) {
+            open = true;
+            holdLeft = holdSamples;
+        } else if (env < shutAt) {
+            if (holdLeft > 0.0f) holdLeft -= 1.0f;
+            else open = false;
+        }
+        // Between the two thresholds nothing is decided: that band is the
+        // hysteresis, and it is there because a signal sitting on one number
+        // crosses it hundreds of times a second.
+
+        const float want = open ? 1.0f : shut;
+        const float c = want > gain ? atk : rel;
+        gain = dsp::undenormal(gain + (want - gain) * c);
+
+        L[i] = inL * gain;
+        if (stereoIn) R[i] = inR * gain;
+    }
+    return stereoIn;
+}
+
 } // namespace acidulous::effect

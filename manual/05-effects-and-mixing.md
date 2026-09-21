@@ -6,11 +6,36 @@
 Each track has two insert slots. **fx** in the editor's bottom bar swaps the
 panel under the grid for them.
 
-Fifteen effects: delay, reverb, equaliser, distortion, compressor, filter,
-bitcrusher, phaser, flanger, chorus, tremolo, width, pitch shifter, harmonizer
-and **amp**. Each has the controls you expect **and one more that you do not** -
+Sixteen effects: delay, reverb, equaliser, distortion, compressor, filter,
+bitcrusher, phaser, flanger, chorus, tremolo, width, pitch shifter, harmonizer,
+**amp** and **gate**. Each has the controls you expect **and one more that you do not** -
 the extra is marked in the accent colour, so the familiar set stays
 recognisable and the addition is never a surprise.
+
+## The gate
+
+**Gate** shuts below a level and opens above it. The four you expect are
+**threshold**, **attack**, **hold** and **release**; **hyst** is how far *below*
+the threshold the signal has to fall before it is willing to shut, which is what
+stops a note sitting on the threshold from flapping it open and closed.
+
+Two are not on a pedal:
+
+- **key** filters the *detector*, not the sound. A gate in front of a loud amp
+  is listening to a pickup that hears mains hum, a room and a hand as well as
+  the string, and all of those are low. Slide `key` up and the gate opens for a
+  pick rather than for a building, while the note it passes keeps its bottom
+  end.
+- **duck** is how far down "closed" is. All the way is a gate; twelve decibels
+  is what drums want, where silence between hits is a hole and the room going
+  quiet is a tightening.
+
+There is no wet/dry `mix`, on purpose: half a gate is the noise at half level.
+
+**Where to put it.** Before the amp it kills the hiss your pickups bring in;
+after the amp it kills the hiss the amp makes, which is usually far more. On an
+input slot in the record window it is printed into the take, so the take itself
+is quiet.
 
 ## The amp
 

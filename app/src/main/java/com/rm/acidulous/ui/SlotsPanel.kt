@@ -140,8 +140,8 @@ private fun SlotRow(
                 Text(if (fx.isEmpty) "none ▾" else "${fx.type} ▾", color = Acid.colors.accent, fontSize = 12.sp)
             }
             val menuScroll = rememberScrollState()
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
-                ScaledWindow {
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                ScaledMenu(menuScroll) {
                     DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
                         menu = false
                         editor.edit(trackIndex) { t -> kind.withType(t, slot, "") }
@@ -270,6 +270,7 @@ private val EXTRA = mapOf(
     // colour and the four M53 added were not - which is the one thing that
     // colour exists to prevent. The duplicate is gone and the six are here.
     "Amp" to setOf("size", "cone"), // the cabinet you can resize
+    "Gate" to setOf("key", "duck"), // the detector's own filter, and how far down shut is
     "Eq" to setOf("tilt"),
     "Distortion" to setOf("mode", "bias"),
     "Compressor" to setOf("pump", "pumprate"),

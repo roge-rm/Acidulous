@@ -292,6 +292,14 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSetInputGain(JNIEnv *, jobject, 
 }
 
 JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetTunerOn(JNIEnv *, jobject, jboolean on) {
+    host().setTunerOn(on == JNI_TRUE);
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeTunerHz(JNIEnv *, jobject) { return host().tunerHz(); }
+
+JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSetMonitorLevel(JNIEnv *, jobject, jfloat level) {
     host().setMonitorLevel(level);
 }

@@ -316,6 +316,56 @@ class Flanger final : public Effect {
     int64_t tick = 0;
 };
 
+/**
+ * Gate - the one an amp asks for, and the sixteenth insert.
+ *
+ * A gate is four knobs everybody knows: shut below a level, open fast, stay
+ * open a while, and fall away. Two things here are not on a pedal.
+ *
+ * **`key`** filters the *detector* and not the audio. A gate in front of a
+ * guitar amp is listening to a pickup that hears mains hum, a room and a
+ * player's hand as well as the string, and all of those are low. Sliding the
+ * detector's high-pass up means the gate opens for a pick and not for a
+ * building, while the note it lets through keeps its bottom end - which is
+ * the difference between a gate and a high-pass filter with attitude.
+ *
+ * **`duck`** is how far down closed is. All the way is what a gate does;
+ * 12 dB down is what you want on drums, where silence between hits is a
+ * hole and the room going quiet is a tightening.
+ *
+ * There is deliberately **no `mix`**. Every other insert has one and it
+ * would be an anti-control here: half a gate is the noise at half level,
+ * which is the thing the gate was added to remove. Without one the base
+ * class leaves it alone on a send bus, where gating the send is exactly what
+ * the knob would have been asked for anyway.
+ *
+ * **Not a parameter: a threshold that learns the hiss.** It was designed and
+ * dropped. Making `threshold` mean dBFS with the learning off and dB above a
+ * measured floor with it on is one knob with two units, and a knob that
+ * needs a sentence under it to say which one it is in is the fault the house
+ * rule about help text exists to catch.
+ */
+class Gate final : public Effect {
+  public:
+    enum P { Threshold, Hyst, Attack, Hold, Release, Duck, Key, Gain, Count };
+    Gate() { initParams(); }
+    ACIDULOUS_EFFECT_COMMON(Gate)
+  private:
+    /**
+     * One detector for the pair, always.
+     *
+     * Two independent gates on a stereo signal open at slightly different
+     * moments, and what that sounds like is the image stepping sideways at
+     * every note onset. Nobody has ever wanted that, so the detector takes
+     * the louder of the two and both channels get the same gain.
+     */
+    float env = 0.0f, gain = 0.0f, sr = 48000.0f;
+    float holdLeft = 0.0f; // seconds still to run before the release starts
+    bool open = false;
+    dsp::Svf key[2];
+    float keyHz = -1.0f; // what the key filters are set to, so they are not rebuilt per block
+};
+
 #undef ACIDULOUS_EFFECT_COMMON
 
 } // namespace acidulous::effect

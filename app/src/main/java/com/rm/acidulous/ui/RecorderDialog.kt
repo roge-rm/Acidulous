@@ -177,6 +177,7 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
     var message by remember { mutableStateOf("") }
     var lastFile by remember { mutableStateOf<File?>(null) }
     var opened by remember { mutableStateOf("") }
+    var tunerHz by remember { mutableStateOf(0f) }
 
     val granted =
         context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -200,6 +201,23 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
     LaunchedEffect(monitor, gain) {
         NativeEngine.setMonitorLevel(if (monitor) 1f else 0f)
         NativeEngine.setInputGain(gain)
+    }
+    // The tuner only listens while this page is showing it, and stops when
+    // the window closes: while it is on, the audio thread copies every input
+    // block into its ring.
+    DisposableEffect(fromInput, havePermission) {
+        NativeEngine.setTunerOn(fromInput && havePermission)
+        onDispose { NativeEngine.setTunerOn(false) }
+    }
+    LaunchedEffect(fromInput, havePermission) {
+        if (!fromInput || !havePermission) { tunerHz = 0f; return@LaunchedEffect }
+        while (true) {
+            // **Off the drawing thread.** A reading is an autocorrelation over
+            // half a second of audio and costs about a millisecond; done here
+            // it would be a millisecond taken out of every eighth frame.
+            tunerHz = withContext(Dispatchers.Default) { NativeEngine.tunerHz() }
+            delay(120)
+        }
     }
     LaunchedEffect(Unit) {
         while (true) {
@@ -313,6 +331,14 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
         } else if (opened.isNotEmpty()) {
             Readout(opened, good = true)
         }
+    }
+
+    if (fromInput && havePermission) {
+        // Above the input effects, because tuning comes before anything else
+        // a person does after plugging in - and because the effects below it
+        // are printed into the take, which is a decision worth arriving at
+        // with the instrument already in tune.
+        Section("tuner") { TunerStrip(tunerHz) }
     }
 
     if (fromInput) {

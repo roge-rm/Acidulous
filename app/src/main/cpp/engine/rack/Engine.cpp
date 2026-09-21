@@ -51,6 +51,10 @@ void Engine::runInputChain() {
 void Engine::renderBlock(const float *in, float *out) {
     const auto t0 = std::chrono::steady_clock::now();
 
+    // The tuner hears it first, at the level it arrived at and with nothing
+    // applied. Costs one branch when it is off, which is almost always.
+    tuner.push(in, in != nullptr ? kBlockFrames : 0);
+
     // Publish the input before anything renders, so a machine reading it
     // sees this block's audio and not the last one's.
     const float gain = inputGain.load(std::memory_order_relaxed);

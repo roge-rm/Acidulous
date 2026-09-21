@@ -129,8 +129,8 @@ fun AutomationStrip(
                 contentAlignment = Alignment.Center,
             ) { Text(if (collapsed) "▴" else "▾", color = Acid.colors.textMid, fontSize = 11.sp) }
             val menuScroll = rememberScrollState()
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
-                ScaledWindow {
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                ScaledMenu(menuScroll) {
                     for (k in laneKeys) {
                         DropdownMenuItem(
                             text = { Text((if (k in existing) "● " else "  ") + nameOf(k), fontSize = 12.sp, fontFamily = FontFamily.Monospace) },

@@ -518,6 +518,21 @@ object NativeEngine {
      * two meters on screen at once agree with each other.
      */
     fun inputPeak(): Float = nativeInputPeak()
+
+    /**
+     * The tuner: on only while something is showing it, because while it is
+     * on the audio thread copies every input block into its ring.
+     */
+    fun setTunerOn(on: Boolean) = nativeSetTunerOn(on)
+
+    /**
+     * The note in the last half second, in hertz, or 0 for none.
+     *
+     * **Does the analysis on the calling thread**, which costs about a
+     * millisecond, so it is called from a background dispatcher and not from
+     * the one drawing the window.
+     */
+    fun tunerHz(): Float = nativeTunerHz()
     fun setInputGain(gain: Float) = nativeSetInputGain(gain)
     fun setMonitorLevel(level: Float) = nativeSetMonitorLevel(level)
 
@@ -630,6 +645,8 @@ object NativeEngine {
     private external fun nativeInputRunning(): Boolean
     private external fun nativeInputPeak(): Float
     private external fun nativeSetInputGain(gain: Float)
+    private external fun nativeSetTunerOn(on: Boolean)
+    private external fun nativeTunerHz(): Float
     private external fun nativeSetMonitorLevel(level: Float)
     private external fun nativeStartCapture(path: String, source: Int): String
     private external fun nativeStopCapture()

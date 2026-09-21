@@ -609,8 +609,8 @@ internal fun PatchPicker(
         BarIcon("\u2630", Acid.colors.textMid) { browsing = true }
     }
     val menuScroll = rememberScrollState()
-    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar), scrollState = menuScroll) {
-        ScaledWindow {
+    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+        ScaledMenu(menuScroll) {
             for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
         }
     }

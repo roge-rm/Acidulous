@@ -3,8 +3,11 @@ package com.rm.acidulous.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 
 /**
  * How much larger than stated the whole interface is drawn.
@@ -163,4 +166,39 @@ fun ScaledWindow(content: @Composable () -> Unit) {
         LocalDensity provides Density(base.density * scale, base.fontScale),
         content = content,
     )
+}
+
+/**
+ * A dropdown's contents: at the app's scale, and never taller than the screen.
+ *
+ * `ScaledWindow` alone is not enough inside a menu, and the sixteenth effect
+ * is what proved it. `DropdownMenu` measures how tall it is allowed to be at
+ * the density *outside* it and then scrolls its own column if the content
+ * overruns. Wrap the content in a scale and the two numbers stop agreeing:
+ * the menu decides seventeen rows fit, because at the outer density they very
+ * nearly do, and then draws them larger and clips the last one against the
+ * bottom of the screen. Nothing scrolls, because as far as the menu is
+ * concerned nothing overflowed.
+ *
+ * So the bound and the scrolling move *inside* the scale, where the rows are
+ * the size they will actually be drawn at. The menu's own `scrollState` is
+ * not used; this is the one that moves.
+ */
+@Composable
+fun ScaledMenu(scroll: androidx.compose.foundation.ScrollState, content: @Composable () -> Unit) {
+    val base = LocalBaseDensity.current ?: LocalDensity.current
+    val scale = LocalUiScale.current
+    // The window's height in the scale's own dp: the screen is this many of
+    // the outer kind, and each of ours is `scale` times as big.
+    val screenDp = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp / scale
+    CompositionLocalProvider(LocalDensity provides Density(base.density * scale, base.fontScale)) {
+        androidx.compose.foundation.layout.Column(
+            androidx.compose.ui.Modifier
+                // Not the whole screen: a menu is anchored to the control that
+                // opened it and has to fit between that and an edge.
+                .heightIn(max = (screenDp * 0.72f).dp)
+                .verticalScroll(scroll)
+                .scrollbar(scroll, color = com.rm.acidulous.ui.theme.Acid.colors.scrollbar),
+        ) { content() }
+    }
 }

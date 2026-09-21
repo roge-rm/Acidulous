@@ -404,6 +404,16 @@ class EngineHost {
     float inputPeak();
     void setInputGain(float gain);
     void setMonitorLevel(float level);
+    /**
+     * The tuner: switched on while the record window is showing it, and
+     * asked for a reading whenever the UI wants one.
+     *
+     * `tunerHz` does the analysis on the calling thread, so the caller
+     * chooses the rate and pays for it. It is not called from the audio
+     * thread and must not be.
+     */
+    void setTunerOn(bool on);
+    float tunerHz();
     /** Record either what is coming in or what is going out. */
     std::string startCapture(const std::string &path, int source);
     void stopCapture();

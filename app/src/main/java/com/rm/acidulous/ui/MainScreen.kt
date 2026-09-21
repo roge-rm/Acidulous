@@ -347,13 +347,8 @@ fun MainScreen(
                 // last of them looked like the last there was. See
                 // ui/Scrollbar.kt; every scrolling list in the app has one.
                 val fileScroll = rememberScrollState()
-                DropdownMenu(
-                    expanded = fileMenu,
-                    onDismissRequest = { fileMenu = false },
-                    modifier = Modifier.scrollbar(fileScroll, color = Acid.colors.scrollbar),
-                    scrollState = fileScroll,
-                ) {
-                    ScaledWindow {
+                DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
+                    ScaledMenu(fileScroll) {
                         DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
                         DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
                         DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
@@ -826,13 +821,8 @@ private fun SceneHeader(
         // A position bar, as every scrolling list in the app has - eleven items
         // is taller than a phone held sideways. See ui/Scrollbar.kt.
         val menuScroll = rememberScrollState()
-        DropdownMenu(
-            expanded = menu,
-            onDismissRequest = { menu = false },
-            modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar),
-            scrollState = menuScroll,
-        ) {
-            ScaledWindow {
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            ScaledMenu(menuScroll) {
                 DropdownMenuItem(text = { Text("Loop this scene") }, onClick = { menu = false; onLoopThis() })
                 DropdownMenuItem(text = { Text("Play on from here") }, onClick = { menu = false; onPlayThrough() })
                 DropdownMenuItem(text = { Text("Settings…") }, onClick = { menu = false; onSettings() })
@@ -876,13 +866,8 @@ private fun TrackHeader(
         // the scene menu but freeze and thaw come and go, so how tall it is
         // depends on the song. See ui/Scrollbar.kt.
         val menuScroll = rememberScrollState()
-        DropdownMenu(
-            expanded = menu,
-            onDismissRequest = { menu = false },
-            modifier = Modifier.scrollbar(menuScroll, color = Acid.colors.scrollbar),
-            scrollState = menuScroll,
-        ) {
-            ScaledWindow {
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            ScaledMenu(menuScroll) {
                 DropdownMenuItem(text = { Text("Change machine…") }, onClick = { menu = false; onChangeMachine() })
                 DropdownMenuItem(text = { Text("Rename…") }, onClick = { menu = false; onRename() })
                 if (freezable > 0) {

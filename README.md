@@ -51,14 +51,16 @@ Dan (rm)
 | **Nexus** | A modular, whose blocks are this app's own instruments and whose patch is text. |
 | **Bias** | A four-track that runs along the song. Four lanes of recordings per cell, sounding together; record over the song and the take is cut at the scene lines. |
 
-### Fifteen effects
+### Sixteen effects
 
 Amp, Bitcrusher, Chorus, Compressor, Delay, Distortion, EQ, Filter, Flanger,
-Harmonizer, Phaser, Reverb, Shifter, Tremolo, Width — each with one classic
-behaviour and one extra. **Amp** is a modelled guitar amplifier and cabinet:
-preamp, an interactive tone stack, a power stage that sags, and a speaker you
-can resize continuously between a combo and a stack. Two insert slots per rack, and **the song's two send
-buses hold any of the same fourteen**, chosen and edited from the master strip.
+Gate, Harmonizer, Phaser, Reverb, Shifter, Tremolo, Width — each with one
+classic behaviour and one extra. **Amp** is a modelled guitar amplifier and
+cabinet: preamp, an interactive tone stack, a power stage that sags, and a
+speaker you can resize continuously between a combo and a stack. **Gate** keys
+its detector off its own filter, so it opens for a pick rather than for a room.
+Two insert slots per rack, and **the song's two send buses hold any of the
+same sixteen**, chosen and edited from the master strip.
 
 ### Sequencing
 

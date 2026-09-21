@@ -292,7 +292,15 @@ std::vector<float> effectSource() {
         const float env = std::exp(-std::fmod(t, 0.5f) / 0.12f);
         const float tone = (std::sin(2.0f * static_cast<float>(M_PI) * 220.0f * t) +
                             0.5f * std::sin(2.0f * static_cast<float>(M_PI) * 331.0f * t)) * 0.35f;
-        const float v = tone * env + rng.next() * 0.04f;
+        // **The floor is a floor.** It was 0.04 - twenty-eight decibels under
+        // full scale, and only nineteen under the tone, which is not a noise
+        // floor but a layer of grit. Nothing noticed until the gate arrived
+        // and two patches with thresholds thirty decibels apart rendered
+        // identically, because the harness's own hiss held every one of them
+        // wide open for the whole take. At -54 dB it is what a converter and
+        // an amplifier actually leave behind, and a threshold set anywhere a
+        // person would set one now has something to be above and below.
+        const float v = tone * env + rng.next() * 0.002f;
         out[i * 2] = v;
         out[i * 2 + 1] = v * 0.97f;
     }

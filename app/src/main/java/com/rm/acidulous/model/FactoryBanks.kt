@@ -42,6 +42,7 @@ internal object FactoryBanks {
         "fx.Shifter" -> fx_shifter
         "fx.Harmonizer" -> fx_harmonizer
         "fx.Amp" -> fx_amp
+        "fx.Gate" -> fx_gate
         else -> emptyList()
     }
 
@@ -3288,4 +3289,57 @@ internal object FactoryBanks {
         family = "character")
 
     private val fx_amp: List<Patch> by lazy { listOf(fx_amp0(), fx_amp1(), fx_amp2(), fx_amp3(), fx_amp4(), fx_amp5(), fx_amp6(), fx_amp7(), fx_amp8(), fx_amp9(), fx_amp10(), fx_amp11(), fx_amp12(), fx_amp13(), fx_amp14(), fx_amp15()) }
+
+    private fun fx_gate0() = Patch("fx.Gate", "Init", emptyMap(),
+        family = "clean")
+
+    private fun fx_gate1() = Patch("fx.Gate", "Hush",
+        mapOf("threshold" to 0.35f, "hyst" to 0.333333343f, "attack" to 0.333333343f, "hold" to 0.5f, "release" to 0.7313782f),
+        family = "guitar")
+
+    private fun fx_gate2() = Patch("fx.Gate", "HighGain",
+        mapOf("threshold" to 0.625f, "hyst" to 0.333333343f, "attack" to 0.333333343f, "hold" to 0.2f, "release" to 0.598104f, "key" to 0.437530637f),
+        family = "guitar")
+
+    private fun fx_gate3() = Patch("fx.Gate", "Palm",
+        mapOf("threshold" to 0.575f, "hyst" to 0.25f, "attack" to 0.259383738f, "hold" to 0.06f, "release" to 0.4147411f, "key" to 0.326606274f),
+        family = "guitar")
+
+    private fun fx_gate4() = Patch("fx.Gate", "Snare",
+        mapOf("threshold" to 0.65f, "hyst" to 0.25f, "attack" to 0.100343332f, "hold" to 0.18f, "release" to 0.5304302f, "key" to 0.588045657f),
+        family = "drums")
+
+    private fun fx_gate5() = Patch("fx.Gate", "Tighten",
+        mapOf("threshold" to 0.625f, "hyst" to 0.208333328f, "attack" to 0.200686663f, "hold" to 0.12f, "release" to 0.598104f, "duck" to 0.8666667f),
+        family = "drums")
+
+    private fun fx_gate6() = Patch("fx.Gate", "Gated",
+        mapOf("threshold" to 0.675f, "attack" to 0.100343332f, "hold" to 0.28f, "release" to 0.07844553f),
+        family = "drums")
+
+    private fun fx_gate7() = Patch("fx.Gate", "Noise",
+        mapOf("threshold" to 0.275f, "hyst" to 0.416666657f, "attack" to 0.53402f, "hold" to 0.8f, "release" to 0.799052f, "duck" to 0.6666667f),
+        family = "clean")
+
+    private fun fx_gate8() = Patch("fx.Gate", "Breath",
+        mapOf("threshold" to 0.375f, "hyst" to 0.375f, "attack" to 0.6666667f, "hold" to 0.6f, "release" to 0.7686218f, "duck" to 0.8f),
+        family = "clean")
+
+    private fun fx_gate9() = Patch("fx.Gate", "Room",
+        mapOf("threshold" to 0.55f, "hyst" to 0.333333343f, "attack" to 0.5927171f, "hold" to 0.4f, "release" to 0.824780345f, "duck" to 0.8333333f),
+        family = "clean")
+
+    private fun fx_gate10() = Patch("fx.Gate", "Stutter",
+        mapOf("threshold" to 0.775f, "hyst" to 0.0833333358f, "attack" to 0.100343332f, "hold" to 0.02f, "release" to 0.1833629f),
+        family = "tight")
+
+    private fun fx_gate11() = Patch("fx.Gate", "Chop",
+        mapOf("threshold" to 0.825f, "hyst" to 0.0416666679f, "attack" to 0f, "hold" to 0.01f, "release" to 0.07844553f),
+        family = "tight")
+
+    private fun fx_gate12() = Patch("fx.Gate", "Pluck",
+        mapOf("threshold" to 0.7f, "hyst" to 0.125f, "attack" to 0f, "hold" to 0.04f, "release" to 0.347067326f, "key" to 0.548455f),
+        family = "tight")
+
+    private val fx_gate: List<Patch> by lazy { listOf(fx_gate0(), fx_gate1(), fx_gate2(), fx_gate3(), fx_gate4(), fx_gate5(), fx_gate6(), fx_gate7(), fx_gate8(), fx_gate9(), fx_gate10(), fx_gate11(), fx_gate12()) }
 }
