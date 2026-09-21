@@ -311,6 +311,7 @@ void Engine::renderBlock(const float *in, float *out) {
     // their own monitor path printed into the sample.
     const InputBus &bus = InputBus::get();
     if (capture.armed()) {
+        const int64_t framesBefore = capture.pushed();
         if (capture.source() != Capture::FromInput) {
             capture.push(out, kBlockFrames);
         } else if (bus.live()) {
@@ -322,6 +323,24 @@ void Engine::renderBlock(const float *in, float *out) {
             // the one recording nobody wanted, and it arrived named as the
             // one they asked for. The screen reads `deaf()` and can tell them.
             capture.pushSilence(kBlockFrames);
+        }
+        // **Where the song was, stamped as the frames go in.**
+        //
+        // After the push, not before it: a mark names the frame the cell
+        // *starts* at, and that is the ring's index once this block has been
+        // accepted into it minus this block - which is to say the index as it
+        // was. Taken before the push it would be right; taken after, it would
+        // be one block late on every boundary. So the count is read first.
+        //
+        // The ring dropping anything ends the matter: every frame index after
+        // a drop names the wrong moment in the song, and a split built on them
+        // would put somebody's second verse under their first.
+        const int32_t armed = armedRack.load(std::memory_order_relaxed);
+        if (armed >= 0 && armed < kRackCount) {
+            if (capture.overflowed()) marks.poison();
+            marks.observe(framesBefore, scheduler.rackSceneId(armed),
+                          scheduler.rackCycleTick(armed), scheduler.rackCycleTicks(armed),
+                          clock.bpm());
         }
     }
     // After the capture, like the monitor and for the same reason: hearing

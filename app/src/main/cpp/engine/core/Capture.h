@@ -26,6 +26,16 @@ class Capture {
     bool armed() const { return running.load(std::memory_order_acquire); }
     Source source() const { return which; }
     int64_t frames() const { return written.load(std::memory_order_relaxed); }
+    /**
+     * Frames **accepted into the ring**, which is the audio thread's own count
+     * and the one a mark is stamped with.
+     *
+     * [frames] is the writer thread's and lags it by up to four seconds, so a
+     * boundary stamped with it would name a moment the file has not reached.
+     * This one is exact: the drain writes everything between the two indices,
+     * so what has been accepted is what the file will hold.
+     */
+    int64_t pushed() const { return writeIndex.load(std::memory_order_relaxed); }
     float peak() const { return peakLevel.load(std::memory_order_relaxed); }
     bool overflowed() const { return overflow.load(std::memory_order_relaxed); }
     /**

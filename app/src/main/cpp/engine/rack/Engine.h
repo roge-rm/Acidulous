@@ -14,6 +14,7 @@
 #include <sequencer/RecordQueue.h>
 #include <sequencer/SceneScheduler.h>
 #include <sequencer/TickClock.h>
+#include <sequencer/CaptureMarks.h>
 #include <sequencer/Transport.h>
 
 // The engine: everything the audio thread owns, and the queues by which the
@@ -97,6 +98,17 @@ class Engine {
     std::atomic<float> inputGain{1.0f};
     std::atomic<float> monitorLevel{0.0f};
     Capture capture;
+    /**
+     * Where the song was as the capture was made - see CaptureMarks.
+     *
+     * The rack is what makes it meaningful: in clip mode every rack is
+     * somewhere else, so "where the song is" is only a question about one of
+     * them. `kNoRack` means nobody is armed and nothing is stamped, which is
+     * every recording made before audio tracks existed.
+     */
+    static constexpr int32_t kNoRack = -1;
+    seq::CaptureMarks marks;
+    std::atomic<int32_t> armedRack{kNoRack};
     /** Playing one file to hear what it is - see engine/core/Audition.h. */
     Audition audition;
 

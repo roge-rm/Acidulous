@@ -494,6 +494,22 @@ class SceneScheduler {
         return launcher.playing(rack) ? launcherNow - launcher.origin(rack) : 0;
     }
 
+    /**
+     * How long the cycle [rackCycleTick] counts within is, in ticks.
+     *
+     * The other half of the same answer, and needed wherever the tick alone is
+     * not enough to say *where* - a recording being split has to write down
+     * the cell it was made against as well as how far into it, because a
+     * region outlives the song's current shape.
+     */
+    int32_t rackCycleTicks(int32_t rack) const {
+        if (!launcherActive()) {
+            if (snap == nullptr || snap->scenes.empty()) return 0;
+            return static_cast<int32_t>(cycleTicks(rack, sceneIdx));
+        }
+        return launcher.playing(rack) ? static_cast<int32_t>(launcher.cycle(rack)) : 0;
+    }
+
     /** The bar a phase is measured against: the scene's, or the song's. */
     int32_t barTicks() const {
         if (snap == nullptr || snap->scenes.empty() || launcherActive() ||
