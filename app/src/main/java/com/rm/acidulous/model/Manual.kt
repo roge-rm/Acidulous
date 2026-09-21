@@ -35,6 +35,9 @@ object Manual {
             ManualBlock(ManualKind.Para, "Clips in one scene need not be the same length. A one-bar drum clip under a four-bar chord clip simply repeats four times, which is how most parts are written anyway."),
             ManualBlock(ManualKind.Heading, "Saving"),
             ManualBlock(ManualKind.Para, "The song you are working on is saved continuously and comes back when you next open the app, so nothing is lost by closing it. **save** in the header writes it under its own name; **file** offers a new song, a copy under another name, and the songs you already have."),
+            ManualBlock(ManualKind.Heading, "The demo song"),
+            ManualBlock(ManualKind.Para, "The song that opens the first time is a demo, and it is there to be taken apart: nine machines across four scenes, with an example of most of what the app does - a filter that opens across the verse, percussion that is never the same bar twice, a one-shot brass figure, a bend on the lead's last note."),
+            ManualBlock(ManualKind.Para, "**file · Demo song** builds a fresh copy of it whenever you want one, so pulling it to pieces costs nothing. It replaces what is open, the same way opening a song does, and it is not saved until you save it - so a song of your own called \"Demo\" is left where it is."),
         )),
         ManualSection("The song grid", "The arranger, the launcher, and freezing.", listOf(
             ManualBlock(ManualKind.Para, "The grid does two jobs, and the square in its top left corner says which one it is doing."),

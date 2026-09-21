@@ -41,3 +41,15 @@ The song you are working on is saved continuously and comes back when you next
 open the app, so nothing is lost by closing it. **save** in the header writes it
 under its own name; **file** offers a new song, a copy under another name, and
 the songs you already have.
+
+## The demo song
+
+The song that opens the first time is a demo, and it is there to be taken apart:
+nine machines across four scenes, with an example of most of what the app does -
+a filter that opens across the verse, percussion that is never the same bar
+twice, a one-shot brass figure, a bend on the lead's last note.
+
+**file · Demo song** builds a fresh copy of it whenever you want one, so pulling
+it to pieces costs nothing. It replaces what is open, the same way opening a song
+does, and it is not saved until you save it - so a song of your own called
+"Demo" is left where it is.

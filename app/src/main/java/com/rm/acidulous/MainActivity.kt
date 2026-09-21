@@ -1194,6 +1194,12 @@ private fun App(modifier: Modifier = Modifier) {
                 swapSong(fresh)
                 SongStore.save(context, fresh)
             },
+            // Rebuilt, not reloaded: it comes from `DemoSong.build()` every
+            // time, so it is the demo this build ships rather than whatever an
+            // older one happened to write to Demo.json. Deliberately not saved
+            // either - if it is worth keeping, Save as says so, and until then
+            // a saved song of somebody's own called "Demo" is left alone.
+            onDemo = { swapSong(DemoSong.build()) },
             // **The same swap, and for the same reason.** Loading had the
             // identical fault a new song had: the transport carried straight
             // on into a song it had never seen, playing whatever scenes

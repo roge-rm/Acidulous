@@ -119,6 +119,8 @@ fun MainScreen(
     onSave: () -> Unit,
     onSaveAs: (String) -> Unit,
     onNew: (String) -> Unit,
+    /** A fresh copy of the demo song, replacing whatever is open. */
+    onDemo: () -> Unit,
     onLoad: (String) -> Unit,
     onDelete: (String) -> Unit,
     songNames: () -> List<String>,
@@ -350,6 +352,14 @@ fun MainScreen(
                 DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
                     ScaledMenu(fileScroll) {
                         DropdownMenuItem(text = { Text("New song…") }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
+                        // **The only way back to it.** The demo was built on a
+                        // first run and never again - edit it, or simply open
+                        // something else, and the one song that demonstrates
+                        // the app was gone until the app's data was cleared.
+                        // No dialog and no confirmation, because this replaces
+                        // the open song exactly as loading one from Songs does,
+                        // and that has never asked either.
+                        DropdownMenuItem(text = { Text("Demo song") }, onClick = { fileMenu = false; onDemo() })
                         DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
                         DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
                         DropdownMenuItem(text = { Text("Export…") }, onClick = { fileMenu = false; onExport() })
