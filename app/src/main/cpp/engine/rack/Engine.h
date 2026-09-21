@@ -107,6 +107,14 @@ class Engine {
      * while it is off `push` returns on its first line.
      */
     audio::Tuner tuner;
+    /**
+     * Which pair the swing bends: `Swing::kSixteenths` or `kEighths`.
+     *
+     * Song-wide, because it is a feel rather than a setting - a song that
+     * shuffles its eighths and its sixteenths at once is two songs. The
+     * amount is per track and rides the channel; only the unit lives here.
+     */
+    std::atomic<int64_t> swingPair{seq::Swing::kSixteenths};
     std::atomic<float> monitorLevel{0.0f};
     /**
      * The input chain: what the incoming audio goes through before anything

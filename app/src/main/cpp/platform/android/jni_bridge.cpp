@@ -292,6 +292,11 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSetInputGain(JNIEnv *, jobject, 
 }
 
 JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetSwingUnit(JNIEnv *, jobject, jint unit) {
+    host().setSwingUnit(unit);
+}
+
+JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSetTunerOn(JNIEnv *, jobject, jboolean on) {
     host().setTunerOn(on == JNI_TRUE);
 }

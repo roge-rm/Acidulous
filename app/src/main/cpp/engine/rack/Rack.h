@@ -17,7 +17,16 @@ namespace acidulous {
 
 class Rack {
   public:
-    enum ChannelParam : int32_t { Gain, Pan, Mute, Solo, SendReverb, SendDelay, MidiMode, MidiChannel, ChannelCount };
+    enum ChannelParam : int32_t { Gain, Pan, Mute, Solo, SendReverb, SendDelay, MidiMode, MidiChannel, Swing, ChannelCount };
+
+    /**
+     * A channel parameter where it is going, not where it has smoothed to.
+     *
+     * For the ones that are decisions rather than levels: the scheduler asks
+     * for the swing once a block, and a swing that ramped would slide the
+     * offbeats across a bar and make an export unrepeatable.
+     */
+    float channelTarget(ChannelParam p) const { return channel.target(p); }
 
     /** internal: the machine only. both: and the hardware. midi: the
      *  hardware only, and the machine is not asked - which is the point,

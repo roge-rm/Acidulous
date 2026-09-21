@@ -572,15 +572,15 @@ fun EditScreen(
             playheadTick = playhead,
             lowestPitch = lowestPitch,
             rows = rows,
-            scalePitchClasses = Scales.activeFor(track),
-            noteSpelling = Scales.spellingFor(track),
+            scalePitchClasses = Scales.activeFor(song, track),
+            noteSpelling = Scales.spellingFor(song, track),
             scaleView = scaleView,
             firstTick = firstTick,
             visibleTicks = pageTicks.toInt(),
             onCycleScaleView = {
                 // Dim and fit need a scale to dim or fit to, so before one is
                 // set the corner does the only useful thing: asks for one.
-                if (Scales.activeFor(track) == null) scaleDialog = true
+                if (Scales.activeFor(song, track) == null) scaleDialog = true
                 else scaleView = when (scaleView) {
                     ScaleView.Chromatic -> ScaleView.Dim
                     ScaleView.Dim -> ScaleView.Fold
@@ -672,7 +672,7 @@ fun EditScreen(
             // spelled the way the roll's own gutter spells it.
             pitchName = { p ->
                 voices.firstOrNull { it.note == p }?.short
-                    ?: noteName(p, Scales.spellingFor(track))
+                    ?: noteName(p, Scales.spellingFor(song, track))
             },
             onGestureBegin = { editor.beginGesture(trackIndex) },
             // Absolute, not relative: the gesture is applied to the base the
@@ -995,9 +995,9 @@ fun EditScreen(
                     modifier = Modifier.width(26.dp).fillMaxHeight(),
                 ) { v -> mod = v; NativeEngine.controlChange(trackIndex, 1, (v * 127f).toInt()) }
                 PianoKeys(
-                    trackIndex, Scales.activeFor(track), Scales.rootFor(track), octave,
+                    trackIndex, Scales.activeFor(song, track), Scales.rootFor(song, track), octave,
                     Modifier.weight(1f).fillMaxHeight(),
-                    noteSpelling = Scales.spellingFor(track),
+                    noteSpelling = Scales.spellingFor(song, track),
                 )
                 // Bend springs back, so it is the one wheel you can let go of
                 // in a hurry and know where it landed.

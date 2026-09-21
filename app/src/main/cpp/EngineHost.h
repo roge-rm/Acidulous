@@ -412,6 +412,8 @@ class EngineHost {
      * chooses the rate and pays for it. It is not called from the audio
      * thread and must not be.
      */
+    /** Sixteenths (0) or eighths (1): which pair the swing bends. */
+    void setSwingUnit(int32_t unit);
     void setTunerOn(bool on);
     float tunerHz();
     /** Record either what is coming in or what is going out. */

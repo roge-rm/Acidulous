@@ -34,6 +34,10 @@ object SongStore {
         // other shape change to a saved song is.
         @Suppress("NAME_SHADOWING") var song = song.copy(master = song.master.migrated())
         song = renamed(song)
+        // A song written before swing existed carries the old default of
+        // nought in a field that now means a percentage, and nought is not a
+        // swing at all - fifty is. Read on the way in, like the rest.
+        if (song.swing < SWING_STRAIGHT) song = song.copy(swing = SWING_STRAIGHT)
         val home = mapOf("Chord" to 0, "Scale" to 1, "Arp" to 2)
         if (song.tracks.none { t -> (0 until EVENTOR_SLOTS).any { home[t.eventorAt(it).type]?.let { h -> h != it } == true } }) {
             return song

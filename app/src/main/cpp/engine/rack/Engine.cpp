@@ -240,6 +240,7 @@ void Engine::renderBlock(const float *in, float *out) {
     // and borrows the limiter's headroom for them while it does.
     master.setCountingIn(counting);
     if (playing && !counting) {
+        scheduler.setSwingPair(swingPair.load(std::memory_order_relaxed));
         if (!scheduler.process(clock.blockStart(), clock.blockEnd())) {
             scheduler.allNotesOff();
             transport.stopFromAudioThread();

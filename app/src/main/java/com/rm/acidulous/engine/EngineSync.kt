@@ -1,6 +1,9 @@
 package com.rm.acidulous.engine
 
 import android.util.Log
+import com.rm.acidulous.model.SWING_MAX
+import com.rm.acidulous.model.SWING_STRAIGHT
+import com.rm.acidulous.model.swingOf
 import com.rm.acidulous.model.EFFECT_SLOTS
 import com.rm.acidulous.model.EngineParams
 import com.rm.acidulous.model.effectSlotOf
@@ -533,12 +536,15 @@ object EngineSync {
         }
 
         NativeEngine.tempo = song.tempo
+        // The unit is the song's; the amount is per track and rides the
+        // channel, resolved here so the engine never sees "follow the song".
+        NativeEngine.setSwingUnit(song.swingUnit)
         NativeEngine.setLoopSong(song.loopSong)
         Log.d(TAG, "push: ${song.scenes.size} scenes, $cached clips cached, $marshalled marshalled")
         val ok = NativeEngine.snapshotCommit(handle) // consumes the handle either way
         song.tracks.forEachIndexed { rack, track ->
             if (rack < RACKS) {
-                pushChannel(rack, track.mixer)
+                pushChannel(rack, track.mixer, song.swingOf(track))
                 pushMachineParams(rack, track.machine.params)
                 for (slot in 0 until EFFECT_SLOTS) pushSlot(rack, effectUnit(slot), track.effectAt(slot))
                 for (slot in 0 until EVENTOR_SLOTS) pushSlot(rack, eventorUnit(slot), track.eventorAt(slot))
@@ -564,7 +570,7 @@ object EngineSync {
 
     // --- Mixer parameters: cheap enough to send whole on every push ------------------
 
-    fun pushChannel(rack: Int, m: Mixer) {
+    fun pushChannel(rack: Int, m: Mixer, swing: Float = SWING_STRAIGHT) {
         NativeEngine.setParam(rack, "channel", "gain", EngineParams.volume01(m.volume), record = false)
         NativeEngine.setParam(rack, "channel", "pan", EngineParams.pan01(m.pan), record = false)
         NativeEngine.setParam(rack, "channel", "mute", EngineParams.bool01(m.mute), record = false)
@@ -573,6 +579,11 @@ object EngineSync {
         NativeEngine.setParam(rack, "channel", "solo", EngineParams.bool01(m.solo), record = false)
         NativeEngine.setParam(rack, "channel", "sendreverb", EngineParams.unit01(m.sendReverb), record = false)
         NativeEngine.setParam(rack, "channel", "senddelay", EngineParams.unit01(m.sendDelay), record = false)
+        // 50..75 as 0..1, the range the engine's own table states.
+        NativeEngine.setParam(
+            rack, "channel", "swing",
+            ((swing - SWING_STRAIGHT) / (SWING_MAX - SWING_STRAIGHT)).coerceIn(0f, 1f), record = false,
+        )
     }
 
     fun pushMaster(m: Master) {

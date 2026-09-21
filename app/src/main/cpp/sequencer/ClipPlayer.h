@@ -1,5 +1,6 @@
 #pragma once
 #include "Clip.h"
+#include "Swing.h"
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
@@ -59,6 +60,16 @@ class ClipPlayer {
 
     /** Whether Fill trigs may sound. The transport owns it; the gate reads it. */
     void setFill(bool on) { fill_ = on; }
+
+    /**
+     * How this track's offbeats sit, set once a block like the fill.
+     *
+     * Applied to the *clip-relative* tick, so a clip swings the same way
+     * wherever it is launched and whatever bar the song has reached - and so
+     * that a scene whose origin is not a whole number of pairs cannot put a
+     * track's swing out of phase with the one next to it.
+     */
+    void setSwing(float percent, int64_t pair) { swingPercent_ = percent; swingPair_ = pair; }
     const Clip *clip() const { return clip_; }
 
     // Fire everything due in absolute tick range [start, end). `origin` is the
@@ -120,7 +131,9 @@ class ClipPlayer {
 
             bool prevPlayed = false; // the chain starts again every pass
             for (const ClipNote &note : clip_->notes) {
-                const int64_t t = base + note.tick;
+                // Swung, and still sorted: the map is monotonic, so the break
+                // below is as safe as it was when this was an addition.
+                const int64_t t = base + swung(note.tick);
                 if (t >= end) {
                     break; // notes are sorted, and no sub-hit precedes its note
                 }
@@ -146,13 +159,19 @@ class ClipPlayer {
                 const int32_t full = note.length > 0 ? note.length : 1;
                 const int32_t span = std::min<int32_t>(full, static_cast<int32_t>(len) - note.tick);
                 const int32_t step = rat > 1 ? std::max(1, span / rat) : span;
+                // The end of the note goes through the same map as its start,
+                // so a note written to meet the next one still meets it. Put
+                // the raw length on a swung start instead and every legato
+                // join in a swung part opens or overlaps by the swing amount.
+                const int64_t tail = base + swung(note.tick + span);
                 for (int32_t j = 0; j < rat; ++j) {
-                    const int64_t h = t + static_cast<int64_t>(j) * step;
+                    const int64_t h = base + swung(note.tick + static_cast<int64_t>(j) * step);
                     if (h >= end) break;
                     if (h < start) continue; // an earlier block fired it
+                    const int64_t next = base + swung(note.tick + static_cast<int64_t>(j + 1) * step);
                     const int64_t off = rat > 1
-                                            ? std::max<int64_t>(h + 1, std::min<int64_t>(h + step, t + span))
-                                            : t + span;
+                                            ? std::max<int64_t>(h + 1, std::min<int64_t>(next, tail))
+                                            : tail;
                     releaseIfSounding(note.pitch, sink);
                     sink(0x90, note.pitch, note.velocity);
                     onCount.fetch_add(1, std::memory_order_relaxed);
@@ -238,6 +257,12 @@ class ClipPlayer {
     uint32_t notesOff() const { return offCount.load(std::memory_order_relaxed); }
 
   private:
+    /** Where a clip-relative tick sounds. The identity while the song is straight. */
+    int64_t swung(int64_t tick) const { return Swing::at(tick, swingPercent_, swingPair_); }
+
+    float swingPercent_ = Swing::kStraight;
+    int64_t swingPair_ = Swing::kSixteenths;
+
     struct PendingOff {
         int64_t tick = 0;
         uint8_t pitch = 0;

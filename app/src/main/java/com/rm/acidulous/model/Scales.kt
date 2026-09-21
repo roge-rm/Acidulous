@@ -175,6 +175,31 @@ object Scales {
         return null
     }
 
+    /**
+     * The pitch classes this track's roll should treat as in key.
+     *
+     * The track's own Scale eventor first, because a track that has chosen a
+     * scale has chosen it; the song's key only where the track is silent on
+     * the subject. That order matters: the song's key is a statement about
+     * the song, and a track set to something else is a deliberate
+     * disagreement rather than an oversight to be corrected.
+     */
+    fun activeFor(song: Song, track: Track): Set<Int>? =
+        activeFor(track) ?: song.key?.let { k ->
+            intervals.getOrNull(k.scale)?.map { (it + k.root) % 12 }?.toSet()
+        }
+
+    /** The tonic the roll should mark, from the track or failing that the song. */
+    fun rootFor(song: Song, track: Track): Int? = rootFor(track) ?: song.key?.root?.rem(12)
+
+    /** How to write a note, from the track's scale or failing that the song's key. */
+    fun spellingFor(song: Song, track: Track): Map<Int, String> {
+        val own = spellingFor(track)
+        if (own.isNotEmpty()) return own
+        val k = song.key ?: return emptyMap()
+        return spelling(k.root, k.scale)
+    }
+
     /** The scale's tonic as a pitch class, or null when no scale is active. */
     fun rootFor(track: Track): Int? {
         for (slot in 0 until EVENTOR_SLOTS) {

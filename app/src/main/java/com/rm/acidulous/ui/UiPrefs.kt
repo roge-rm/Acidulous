@@ -710,11 +710,18 @@ object UiPrefs {
      * surprise, not a convenience.
      */
     fun Song.withDefaultScale(index: Int): Song {
-        if (!newScaleOn) return this
+        // **The song's key wins over the setting.** The setting says what a
+        // new song should start in; once a song has said what key it is in,
+        // that is the answer, and a track fitted from the preference instead
+        // would disagree with the roll it is drawn on.
+        val songKey = key
+        if (songKey == null && !newScaleOn) return this
         val track = tracks.getOrNull(index) ?: return this
+        val root = songKey?.root ?: newScaleKey
+        val scale = songKey?.scale ?: newScaleIndex
         val fitted = track.withEventor(0, "Scale")
-            .withEventorParam(0, "key", newScaleKey / 11f)
-            .withEventorParam(0, "scale", newScaleIndex / (Scales.names.size - 1f))
+            .withEventorParam(0, "key", root / 11f)
+            .withEventorParam(0, "scale", scale / (Scales.names.size - 1f))
             .withEventorParam(0, "mode", 0f)
             .withEventorBypass(0, false)
         return copy(tracks = tracks.toMutableList().also { it[index] = fitted })

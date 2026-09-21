@@ -699,8 +699,10 @@ fun MainScreen(
             editor.editSong { it.renameTrack(d.index, name) }
             dialog = null
         }
-        Dialog.Tempo -> TempoDialog(song.tempo, onDismiss = { dialog = null }) { t ->
-            editor.editSong { it.copy(tempo = t) }
+        Dialog.Tempo -> TempoDialog(song, onDismiss = { dialog = null }) { edited ->
+            // The whole of the window's page comes back as one edit, so the
+            // tempo, the bar, the swing and the key are one undo between them.
+            editor.editSong { edited }
             dialog = null
         }
         Dialog.Songs -> SongBrowserDialog(

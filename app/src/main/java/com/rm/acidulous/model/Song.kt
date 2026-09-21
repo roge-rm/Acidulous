@@ -17,6 +17,13 @@ import java.util.concurrent.atomic.AtomicLong
 
 const val PPQN = 240
 
+/** Swing at which nothing moves. The value a straight song holds. */
+const val SWING_STRAIGHT = 50f
+/** As far as swing goes: the offbeat three quarters of the way through the pair. */
+const val SWING_MAX = 75f
+/** Two against three, which is the shuffle everybody means. */
+const val SWING_TRIPLET = 66.667f
+
 /**
  * The rate the engine runs at, and the rate every decoded file is resampled to.
  *
@@ -26,6 +33,16 @@ const val PPQN = 240
  * with it.
  */
 const val ENGINE_RATE = 48000
+
+/**
+ * The key and scale a song is in.
+ *
+ * [root] is a pitch class, 0 being C. [scale] indexes `Scales.names`, which
+ * is the same order the Scale eventor uses, so the two can be handed to each
+ * other without a translation table.
+ */
+@Serializable
+data class SongKey(val root: Int = 0, val scale: Int = 0)
 
 @Serializable
 data class Signature(val beats: Int = 4, val unit: Int = 4) {
@@ -398,6 +415,16 @@ data class Track(
     val id: String,
     val name: String,
     val machine: Machine,
+    /**
+     * This track's own swing, or null to follow the song's.
+     *
+     * Null rather than a sentinel percentage, because "the same as the song"
+     * is not a number: a track that follows a song at sixty per cent has to
+     * change when the song does, and one holding sixty would not. The engine
+     * never sees the null - the push resolves it - so nothing on the audio
+     * thread has to know what following means.
+     */
+    val swing: Float? = null,
     /** Keyed by [Scene.id]. A missing entry is silence in that scene. */
     val clips: Map<String, Clip> = emptyMap(),
     val mixer: Mixer = Mixer(),
@@ -491,7 +518,33 @@ data class Song(
     val version: Int = 1,
     val name: String,
     val tempo: Float = 120f,
-    val swing: Float = 0f,
+    /**
+     * How late the offbeats sit, as a percentage of the pair.
+     *
+     * Fifty is straight; two thirds of the way - 66.7 - is the shuffle
+     * everybody means; seventy-five is as far as it goes. A track may
+     * disagree, and says so in its own [Track.swing].
+     *
+     * **It was nought and dead for a long time.** The field was declared with
+     * the rest of the song and read by nothing at all, so every saved song
+     * carried a number that did nothing. Fifty is the value that means
+     * straight, so the default moves with it - and a song written before this
+     * arrives with nought, which `SongStore` reads as straight rather than as
+     * a swing of minus fifty.
+     */
+    val swing: Float = SWING_STRAIGHT,
+    /** Which pair the swing bends: 0 a pair of sixteenths, 1 a pair of eighths. */
+    val swingUnit: Int = 0,
+    /**
+     * What key the song is in, or null for none.
+     *
+     * A fact about the song rather than an instruction to it: the roll shades
+     * the rows that are not in it and a new track is fitted with a matching
+     * Scale eventor, but nothing already written is moved and no track is
+     * forced. A track that wants a different scale says so in its own Scale
+     * eventor, which is where it always said it.
+     */
+    val key: SongKey? = null,
     val signature: Signature = Signature(),
     val loopSong: Boolean = true,
     /** Index is the rack id. */

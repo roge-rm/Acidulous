@@ -3,6 +3,7 @@
 #include "Launcher.h"
 #include "Song.h"
 #include "TickClock.h"
+#include "Swing.h"
 #include "Transport.h"
 #include <algorithm>
 #include <cstdint>
@@ -30,6 +31,9 @@ namespace acidulous::seq {
 
 class SceneScheduler {
   public:
+    /** Sixteenths or eighths: which pair the swing bends. Song-wide. */
+    void setSwingPair(int64_t pair) { swingPair = pair >= 2 ? pair : Swing::kSixteenths; }
+
     void bind(Rack *racks, int32_t rackCount, TickClock *clock, Transport *transport) {
         this->racks = racks;
         this->rackCount = rackCount;
@@ -332,6 +336,12 @@ class SceneScheduler {
         const bool filling = transport != nullptr && transport->fill();
         for (int32_t r = 0; r < rackCount; ++r) {
             racks[r].clipPlayer.setFill(filling);
+            // And the swing, from the same place and for the same reason: one
+            // read a block, so every track agrees about where the beat is for
+            // the whole of it. `target` rather than the smoothed value - a
+            // swing that ramps would slide the offbeats across a bar, which
+            // is a thing nobody asked for and an export could not repeat.
+            racks[r].clipPlayer.setSwing(racks[r].channelTarget(Rack::Swing), swingPair);
         }
         // Entering clip mode while the song is running: hand the launcher the
         // scene every rack is already playing, in phase, so nothing stops.
@@ -761,6 +771,7 @@ class SceneScheduler {
     int32_t sceneIdx = 0;
     int32_t repeatIdx = 0;
     int64_t iterationOrigin = 0;
+    int64_t swingPair = Swing::kSixteenths;
     int64_t lastTickInIteration = 0;
 };
 

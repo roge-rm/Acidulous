@@ -17,6 +17,17 @@ const ParamDef kChannelDefs[Rack::ChannelCount] = {
     // switch must not ramp through the middle on its way across.
     {"midimode", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},
     {"midichannel", 0.0f, 15.0f, 0.0f, Curve::Stepped, 16, ""},
+    /**
+     * How late this track's offbeats are, as a percentage of the pair.
+     *
+     * Fifty is straight and is what every track gets unless the document
+     * says otherwise: the song's own value is resolved on the way in, so
+     * the engine never has to know what "follow the song" means. It sits on
+     * the channel for the same reason `midimode` does - it belongs to the
+     * track rather than to any machine, and arriving as a parameter means
+     * it can be automated and recorded without a second path.
+     */
+    {"swing", 50.0f, 75.0f, 50.0f, Curve::Linear, 0, "%"},
 };
 } // namespace
 

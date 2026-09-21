@@ -124,9 +124,40 @@ Some things are worth more on a send than in a track's own slot: a pitch shifter
 fed a little from several tracks is a chorus of octaves nobody is playing, and a
 bitcrusher on a send is a second, ruined copy of the mix sitting behind it.
 
-## Tempo, signature and the click
+## Tempo, and what else the song is
 
-The tempo is in the song header. Tapping it opens the signature and the
-metronome: which sound the click makes, what it counts, how loud it is, whether
-it plays always or only while recording, and how many bars to count in before
-recording starts.
+The tempo is in the song header, and tapping it opens everything the song is
+counted in.
+
+- **beats a minute** - a number you can type, with a step either side. Under it
+  is **tap**: tap four times in time and it takes the average of the gaps.
+- **bar** - the time signature, from 4/4 through 7/8. A scene can be given its
+  own; this is the one the rest of the song counts in.
+- **swing** - how late the offbeats sit. Straight is straight; **triplet** is
+  the shuffle everybody means; the far end is further than any record. **swing
+  on** chooses whether it bends pairs of sixteenths or pairs of eighths - a
+  groovebox feel or a jazz one.
+- **key** - what key the song is in, and which scale. It shades the notes that
+  are not in it in the piano roll, and fits a new track with a matching scale.
+  It moves nothing already written and overrides no track that has chosen its
+  own scale: it is a statement about the song rather than an instruction to it.
+
+The **click** and **link** pages are behind the same window.
+
+### What swing does, and what it does not
+
+Swing bends time rather than delaying notes: each pair of subdivisions is
+mapped onto itself with its midpoint moved late. Two notes a tick apart stay a
+tick apart and stay in order, so a part played in loosely swings with
+everything else instead of scattering.
+
+A **track can disagree** with the song - the drums shuffling while the bass
+stays straight is most of what swing is for.
+
+**What you play in is stored straight.** Playing against a swung song means
+playing swung times, so those times are put back through the swing before they
+are written. The roll shows where you meant the notes, the song plays them
+where you played them, and turning the swing down afterwards leaves a straight
+part rather than a limping one.
+
+The **click stays straight**, because it is what you are playing against.

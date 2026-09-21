@@ -519,6 +519,9 @@ object NativeEngine {
      */
     fun inputPeak(): Float = nativeInputPeak()
 
+    /** Which pair the swing bends: 0 sixteenths, 1 eighths. Song-wide. */
+    fun setSwingUnit(unit: Int) = nativeSetSwingUnit(unit)
+
     /**
      * The tuner: on only while something is showing it, because while it is
      * on the audio thread copies every input block into its ring.
@@ -645,6 +648,7 @@ object NativeEngine {
     private external fun nativeInputRunning(): Boolean
     private external fun nativeInputPeak(): Float
     private external fun nativeSetInputGain(gain: Float)
+    private external fun nativeSetSwingUnit(unit: Int)
     private external fun nativeSetTunerOn(on: Boolean)
     private external fun nativeTunerHz(): Float
     private external fun nativeSetMonitorLevel(level: Float)

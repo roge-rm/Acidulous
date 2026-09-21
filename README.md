@@ -69,6 +69,9 @@ same sixteen**, chosen and edited from the master strip.
 - Piano roll and drum grid, both views over the same clip.
 - **Eventors** — Scale, Chord and Arp — as per-rack processors rather than
   edits, so the notes underneath stay as you played them.
+- **Swing** as a time warp rather than a delay, per song with a per-track
+  override, and the inverse applied on the way in so a part played against a
+  swung song is stored straight.
 - Automation lanes, performance lanes (mod and pressure), and per-note
   expression.
 - Clip freeze: render a clip to audio, pre-fader.

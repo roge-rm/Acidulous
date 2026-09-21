@@ -35,6 +35,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.hasContent
 import com.rm.acidulous.model.PPQN
@@ -42,6 +49,12 @@ import com.rm.acidulous.model.PlayMode
 import com.rm.acidulous.model.Scene
 import com.rm.acidulous.model.SceneTempo
 import com.rm.acidulous.model.Signature
+import com.rm.acidulous.model.SWING_MAX
+import com.rm.acidulous.model.SWING_STRAIGHT
+import com.rm.acidulous.model.SWING_TRIPLET
+import com.rm.acidulous.model.Scales
+import com.rm.acidulous.model.Song
+import com.rm.acidulous.model.SongKey
 
 /**
  * The scene's "4/4 × 1" chip, expanded: name, signature, repeat, tempo, fades.
@@ -411,8 +424,12 @@ private val TEMPO_TABS = listOf("tempo", "click", "link")
  * nothing about them.
  */
 @Composable
-fun TempoDialog(tempo: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit) {
-    var bpm by remember { mutableStateOf(tempo) }
+fun TempoDialog(song: Song, onDismiss: () -> Unit, onConfirm: (Song) -> Unit) {
+    var bpm by remember { mutableStateOf(song.tempo) }
+    var signature by remember { mutableStateOf(song.signature) }
+    var swing by remember { mutableStateOf(song.swing) }
+    var swingUnit by remember { mutableStateOf(song.swingUnit) }
+    var key by remember { mutableStateOf(song.key) }
     var tab by rememberSaveable { mutableStateOf(0) }
     TabbedDialog(
         title = "Tempo",
@@ -420,10 +437,27 @@ fun TempoDialog(tempo: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit)
         onDismiss = onDismiss,
         dismissLabel = "Cancel",
         confirmLabel = "OK",
-        onConfirm = { onConfirm(bpm) },
+        onConfirm = {
+            onConfirm(
+                song.copy(
+                    tempo = bpm, signature = signature,
+                    swing = swing, swingUnit = swingUnit, key = key,
+                ),
+            )
+        },
         spacing = 16.dp,
         chips = { SectionChips(TEMPO_TABS, tab) { tab = it } },
-        pages = listOf({ TempoPage(bpm) { bpm = it } }, { ClickPage() }, { LinkPage() }),
+        pages = listOf(
+            {
+                TempoPage(
+                    bpm, signature, swing, swingUnit, key,
+                    onBpm = { bpm = it }, onSignature = { signature = it },
+                    onSwing = { swing = it }, onSwingUnit = { swingUnit = it }, onKey = { key = it },
+                )
+            },
+            { ClickPage() },
+            { LinkPage() },
+        ),
     )
 }
 
@@ -491,19 +525,164 @@ private fun LinkPage() {
 }
 
 @Composable
-private fun TempoPage(bpm: Float, onBpm: (Float) -> Unit) {
-    SliderSection(
-        "beats a minute", "%.0f".format(bpm), "",
-        bpm, 40f..240f,
-    ) { onBpm(it) }
-    // The tempos people actually count in, so an exact 128 is one tap
-    // rather than a careful drag.
-    Section("") {
-        for (preset in listOf(80f, 90f, 100f, 110f, 120f, 128f, 140f, 174f)) {
-            Choice("%.0f".format(preset), kotlin.math.abs(bpm - preset) < 0.5f) { onBpm(preset) }
+private fun TempoPage(
+    bpm: Float, signature: Signature, swing: Float, swingUnit: Int, key: SongKey?,
+    onBpm: (Float) -> Unit, onSignature: (Signature) -> Unit,
+    onSwing: (Float) -> Unit, onSwingUnit: (Int) -> Unit, onKey: (SongKey?) -> Unit,
+) {
+    BpmRow(bpm, onBpm)
+    TapTempo(onBpm)
+    Section("bar") {
+        for (sig in SIGNATURES) {
+            Choice("${sig.beats}/${sig.unit}", sig == signature) { onSignature(sig) }
+        }
+    }
+    SwingSection(swing, swingUnit, onSwing, onSwingUnit)
+    KeySection(key, onKey)
+}
+
+/**
+ * The tempo: a number you can type, with a step either side.
+ *
+ * It was a slider and eight preset chips. A slider over two hundred values
+ * cannot reliably land on one of them, which is what the chips were for - and
+ * chips only cover the tempos somebody thought of. A field types any of them
+ * and the arrows walk to the one next door, which between them is every way
+ * anybody sets a tempo.
+ */
+@Composable
+private fun BpmRow(bpm: Float, onBpm: (Float) -> Unit) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    // What has been typed, while it is being typed. Held separately so a
+    // half-finished number - "1", or an empty field mid-delete - does not
+    // become the tempo and snap the field back under the finger.
+    var typed by remember(bpm) { mutableStateOf(formatBpm(bpm)) }
+    Section("beats a minute") {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StepButton("\u2212") { onBpm((bpm - 1f).coerceIn(BPM_MIN, BPM_MAX)) }
+            OutlinedTextField(
+                value = typed,
+                onValueChange = { text ->
+                    typed = text.filter { it.isDigit() || it == '.' }.take(6)
+                    typed.toFloatOrNull()?.let { if (it in BPM_MIN..BPM_MAX) onBpm(it) }
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                textStyle = LocalTextStyle.current.copy(
+                    fontSize = 20.sp, fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center,
+                ),
+                modifier = Modifier.width(120.dp),
+            )
+            StepButton("+") { onBpm((bpm + 1f).coerceIn(BPM_MIN, BPM_MAX)) }
         }
     }
 }
+
+@Composable
+private fun StepButton(label: String, onClick: () -> Unit) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    Box(
+        Modifier.size(44.dp).clip(RoundedCornerShape(6.dp)).background(c.control).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(label, color = c.accent, fontSize = 20.sp) }
+}
+
+/**
+ * Four taps in time, and the tempo is the average of the gaps between them.
+ *
+ * The average rather than the last gap: a person's taps scatter by twenty
+ * milliseconds either way, which at 120 is four beats a minute of jitter, and
+ * a tempo that jumps around while you are still tapping is one you cannot
+ * aim. Gaps longer than two seconds start again, because that is somebody
+ * coming back to it rather than counting thirty.
+ */
+@Composable
+private fun TapTempo(onBpm: (Float) -> Unit) {
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    val taps = remember { mutableStateListOf<Long>() }
+    var shown by remember { mutableStateOf(0f) }
+    Section("") {
+        Box(
+            Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(8.dp))
+                .background(c.control)
+                .clickable {
+                    val now = android.os.SystemClock.elapsedRealtime()
+                    if (taps.isNotEmpty() && now - taps.last() > 2000L) taps.clear()
+                    taps.add(now)
+                    while (taps.size > 8) taps.removeAt(0)
+                    if (taps.size >= 2) {
+                        val span = (taps.last() - taps.first()).toFloat() / (taps.size - 1)
+                        if (span > 1f) {
+                            val found = (60000f / span).coerceIn(BPM_MIN, BPM_MAX)
+                            shown = found
+                            onBpm(found)
+                        }
+                    }
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                if (taps.size < 2) "tap" else "tap  ${formatBpm(shown)}",
+                color = c.accent, fontSize = 15.sp, fontFamily = FontFamily.Monospace,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SwingSection(swing: Float, unit: Int, onSwing: (Float) -> Unit, onUnit: (Int) -> Unit) {
+    SliderSection(
+        "swing",
+        if (swing <= SWING_STRAIGHT + 0.05f) "straight" else "%.0f%%".format(swing),
+        "",
+        (swing - SWING_STRAIGHT) / (SWING_MAX - SWING_STRAIGHT),
+        0f..1f,
+    ) { onSwing(SWING_STRAIGHT + it * (SWING_MAX - SWING_STRAIGHT)) }
+    // Two rows, because they are two questions. One chip row holding the
+    // unit and two amounts would have a title that was true of half of it.
+    Section("swing on") {
+        Choice("1/16", unit == 0) { onUnit(0) }
+        Choice("1/8", unit == 1) { onUnit(1) }
+    }
+    Section("feel") {
+        Choice("straight", swing <= SWING_STRAIGHT + 0.05f) { onSwing(SWING_STRAIGHT) }
+        Choice("triplet", kotlin.math.abs(swing - SWING_TRIPLET) < 0.5f) { onSwing(SWING_TRIPLET) }
+    }
+}
+
+/**
+ * The key the song is in - which nothing is forced into.
+ *
+ * It shades the rows a note cannot use in the roll and fits a new track with
+ * a matching scale. It deliberately does not move anything already written or
+ * reach into a track that has chosen its own: a song setting that silently
+ * retuned sixteen tracks would be a thing people turned off and left off.
+ */
+@Composable
+private fun KeySection(key: SongKey?, onKey: (SongKey?) -> Unit) {
+    Section("key") {
+        Choice("none", key == null) { onKey(null) }
+        // Spelled against the chosen scale, so E flat major is E♭ and not D♯:
+        // `Scales.rootName` is the same walk the roll's own labels use, and a
+        // chooser that disagreed with the notes it sets would be its own bug.
+        for (i in 0 until 12) {
+            Choice(Scales.rootName(i, key?.scale ?: 0), key?.root == i) { onKey(SongKey(i, key?.scale ?: 0)) }
+        }
+    }
+    if (key != null) {
+        Section("scale") {
+            for ((i, name) in Scales.names.withIndex()) {
+                Choice(name, key.scale == i) { onKey(key.copy(scale = i)) }
+            }
+        }
+    }
+}
+
+private const val BPM_MIN = 20f
+private const val BPM_MAX = 300f
+
+private fun formatBpm(bpm: Float): String =
+    if (kotlin.math.abs(bpm - bpm.toInt()) < 0.05f) "%.0f".format(bpm) else "%.1f".format(bpm)
 
 @Composable
 private fun ClickPage() {

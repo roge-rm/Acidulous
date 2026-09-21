@@ -6,6 +6,9 @@ import com.rm.acidulous.model.Lane
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.trimmedTo
 import com.rm.acidulous.model.Song
+import com.rm.acidulous.model.Swing
+import com.rm.acidulous.model.swingOf
+import com.rm.acidulous.model.swingPair
 import com.rm.acidulous.model.laneKey
 import com.rm.acidulous.model.updateClip
 import com.rm.acidulous.model.addNote
@@ -142,7 +145,20 @@ class Recorder {
         val len = song.clipLengthTicks(sceneId, clip)
         if (len <= 0) return null
 
-        val raw = (on.tickInIteration % len).toInt()
+        // **Put the performance back into straight time first.**
+        //
+        // A part is played against what is already sounding, and what is
+        // sounding is swung - so the times that arrive are swung times. Kept
+        // as they arrive, they are swung a second time on the way out, and
+        // the harder the setting the further the recording walks away from
+        // what the player heard themselves do. The document has always held
+        // straight time; this is what keeps it that way.
+        //
+        // Before the quantise, not after: a swung offbeat rounds to the
+        // *wrong* grid line, because it is nearer the next one than the one
+        // it was played on.
+        val heard = (on.tickInIteration % len).toInt()
+        val raw = Swing.from(heard, song.swingOf(track), song.swingPair)
         val tick = if (quantise) {
             val g = clip.grid.coerceAtLeast(1)
             (((raw + g / 2) / g) * g) % len // rounding past the end lands at the top of the loop
@@ -222,7 +238,18 @@ class Recorder {
         )
         /** Unit::Performance's two indices; see kPerfMod in Messages.h. */
         val PERF_PARAMS = listOf("mod", "pressure")
-        val CHANNEL_PARAMS = listOf("gain", "pan", "mute", "solo", "sendreverb", "senddelay")
+        /**
+         * Mirrors `kChannelDefs` in `Rack.cpp`, **by index**.
+         *
+         * It had drifted: the engine grew `midimode` and `midichannel` and
+         * this list stopped at `senddelay`, so those two recorded as nothing
+         * at all. Harmless while nothing after them existed, and not harmless
+         * the moment something did - `swing` at index eight would have been
+         * named `midimode` if the two before it were still missing.
+         */
+        val CHANNEL_PARAMS = listOf(
+            "gain", "pan", "mute", "solo", "sendreverb", "senddelay", "midimode", "midichannel", "swing",
+        )
         const val EFFECT_BYPASS_INDEX = -2 // mirrors kEffectBypassIndex
     }
 }

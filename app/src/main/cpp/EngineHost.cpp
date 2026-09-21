@@ -1885,6 +1885,9 @@ bool EngineHost::captureDeaf() const { return sEngine.capture.deaf(); }
 float EngineHost::inputPeak() { return sAudio.readInputPeak(); }
 void EngineHost::setInputGain(float gain) { sEngine.inputGain.store(gain, std::memory_order_relaxed); }
 void EngineHost::setMonitorLevel(float level) { sEngine.monitorLevel.store(level, std::memory_order_relaxed); }
+void EngineHost::setSwingUnit(int32_t unit) {
+    sEngine.swingPair.store(unit == 1 ? seq::Swing::kEighths : seq::Swing::kSixteenths, std::memory_order_relaxed);
+}
 void EngineHost::setTunerOn(bool on) { sEngine.tuner.setEnabled(on); }
 float EngineHost::tunerHz() {
     const int32_t sr = sAudio.getSampleRate() > 0 ? sAudio.getSampleRate() : kSampleRate;
