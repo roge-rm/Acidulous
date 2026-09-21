@@ -186,9 +186,29 @@ void Resonance::buildPad(int32_t pad) {
         // the full correction b0 *rose* threefold up the series: a
         // glockenspiel's fundamental was the quietest thing in it and the kit
         // measured as 99.7% treble.
-        m.b0 = std::sqrt(std::sin(w)) * node / std::pow(static_cast<float>(k + 1), 0.7f) * decayTrim;
+        m.b0Base = std::sqrt(std::sin(w)) / std::pow(static_cast<float>(k + 1), 0.7f) * decayTrim;
+        m.b0 = m.b0Base * node;
     }
     for (int32_t k = want; k < kMaxModes; ++k) p.modes[k].clear();
+}
+
+/**
+ * The same pad, struck somewhere else.
+ *
+ * Everything an object is - its partial ratios, its decays, its pole pair -
+ * is unchanged by where the stick lands; only which modes are excited is.
+ * `buildPad` above computes both and this computes the second alone, which is
+ * what a note-on needs and is one sine a mode instead of six libm calls.
+ */
+void Resonance::restrike(int32_t pad) {
+    Pad &p = pads[pad];
+    const float hit = hitOf(pad);
+    p.builtHit = hit;
+    for (int32_t k = 0; k < p.modeCount; ++k) {
+        const float node =
+            std::fabs(std::sin(kTwoPi * 0.5f * (k + 1) * std::clamp(hit, 0.02f, 0.98f)));
+        p.modes[k].b0 = p.modes[k].b0Base * node;
+    }
 }
 
 void Resonance::noteOn(uint8_t note, uint8_t velocity) {
@@ -272,11 +292,15 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
         Pad &p = pads[pad];
         // Rebuilt only when the object itself changed: two dozen cosines is
         // not something to do per block for eight pads.
+        // The object, and then the strike. Split because they change at very
+        // different rates: the object when somebody turns a knob, the strike
+        // on every single note.
         if (p.builtKind != padStep(pad, Kind) || p.builtTune != padParam(pad, Tune) ||
             p.builtDecay != padParam(pad, Decay) || p.builtDamp != padParam(pad, Damp) ||
-            p.builtInharm != padParam(pad, Inharm) || p.builtHit != hitOf(pad) ||
-            p.builtModes != wantModes) {
+            p.builtInharm != padParam(pad, Inharm) || p.builtModes != wantModes) {
             buildPad(pad);
+        } else if (p.builtHit != hitOf(pad)) {
+            restrike(pad);
         }
     }
 

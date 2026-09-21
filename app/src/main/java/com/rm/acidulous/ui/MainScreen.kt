@@ -39,6 +39,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -610,12 +613,21 @@ fun MainScreen(
                                 ticksPerBar = song.signatureOf(scene).ticksPerBar,
                                 colour = trackColour(trackIndex),
                                 playing = playing && live,
-                                progress = if (playing && live && clip != null && !clip.mute) {
-                                    val len = song.clipLengthTicks(scene.id, clip)
-                                    // In clip mode the tick is the track's own,
-                                    // because every track is somewhere else.
-                                    val at = if (clipMode) launch.tickInCycle else position.tickInIteration
-                                    if (len > 0) (at % len).toFloat() / len else null
+                                // Whether it draws a playhead is a composition
+                                // decision and changes rarely; where the head
+                                // *is* changes constantly and is read in the
+                                // draw, so it costs no recomposition here.
+                                progress = if (playing && live && clip != null && !clip.mute &&
+                                    song.clipLengthTicks(scene.id, clip) > 0
+                                ) {
+                                    {
+                                        val len = song.clipLengthTicks(scene.id, clip)
+                                        // In clip mode the tick is the track's
+                                        // own, because every track is somewhere
+                                        // else.
+                                        val at = if (clipMode) launch.tickInCycle else position.tickInIteration
+                                        (at % len).toFloat() / len
+                                    }
                                 } else {
                                     null
                                 },
@@ -898,8 +910,19 @@ private fun TrackHeader(
 @Composable
 private fun ClipCell(
     clip: com.rm.acidulous.model.Clip?, ticksPerBar: Int, colour: Color, playing: Boolean,
-    /** How far through its own loop this clip is, 0..1, or null when silent. */
-    progress: Float?,
+    /**
+     * How far through its own loop this clip is, 0..1, or null when silent.
+     *
+     * **A lambda, read in the draw phase.** As a plain `Float` it changed on
+     * every position update - twelve times a second - and every visible cell
+     * recomposed and re-laid-out for it, because the two boxes that drew it
+     * used `fillMaxWidth(fraction)` and `offset(x: Dp)`, which are both layout
+     * modifiers. Nine tracks across four scenes is thirty-six cells doing that
+     * at once, on the same small cores the audio thread is trying to meet a
+     * four-millisecond deadline on. Deferred like this, a moving playhead
+     * costs a redraw and nothing above it.
+     */
+    progress: (() -> Float)?,
     onOpen: () -> Unit, onSettings: () -> Unit,
     frozen: Boolean = false,
     /** Frozen, but at another tempo, so the machine is playing after all. */
@@ -978,14 +1001,18 @@ private fun ClipCell(
             // A clip shorter than its scene comes round more than once, so
             // the scene's progress bar cannot speak for it.
             if (progress != null) {
+                // One draw, no layout: the shade behind the played part and
+                // the line at the head of it, both from a value read here
+                // rather than passed in.
+                val overlay = Acid.colors.overlay
+                val head = Acid.colors.accent
                 Box(
-                    Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f))
-                        .background(Acid.colors.overlay),
-                )
-                Box(
-                    Modifier.fillMaxHeight().width(2.dp).align(Alignment.CenterStart)
-                        .offset(x = (cell.cellW - 6.dp) * progress.coerceIn(0f, 1f))
-                        .background(Acid.colors.accent),
+                    Modifier.matchParentSize().drawBehind {
+                        val at = progress().coerceIn(0f, 1f)
+                        drawRect(overlay, size = Size(size.width * at, size.height))
+                        val x = (size.width - 6.dp.toPx()) * at
+                        drawRect(head, topLeft = Offset(x, 0f), size = Size(2.dp.toPx(), size.height))
+                    },
                 )
             }
             Text(

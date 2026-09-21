@@ -54,6 +54,21 @@ class Resonance final : public Machine {
     /** One mode: a two-pole resonator, which is all a mode is. */
     struct Mode {
         float a1 = 0.0f, a2 = 0.0f, b0 = 0.0f;
+        /**
+         * `b0` without the strike in it: the part that belongs to the object.
+         *
+         * A pad is rebuilt whenever anything it is made of changes, and one of
+         * those things is **where it was hit** - which moves on every note,
+         * because the humanise that makes two hits sound different moves it on
+         * purpose. So every note-on was rebuilding all eight pads from
+         * scratch: twenty-four modes each of `pow`, `exp`, `cos`, `sin`,
+         * `sqrt` and `pow` again.
+         *
+         * Only the node gain depends on the strike, and it is one sine. Keep
+         * the rest here and a restrike is six libm calls a mode cheaper, with
+         * exactly the same numbers coming out.
+         */
+        float b0Base = 0.0f;
         float y1 = 0.0f, y2 = 0.0f;
         float step(float x) {
             const float y = b0 * x + a1 * y1 + a2 * y2;
@@ -92,6 +107,8 @@ class Resonance final : public Machine {
     float padParam(int32_t pad, int32_t which) const { return params_.get(PadBase + pad * PadParamCount + which); }
     int32_t padStep(int32_t pad, int32_t which) const { return static_cast<int32_t>(padParam(pad, which) + 0.5f); }
     void buildPad(int32_t pad);
+    /** The node gains alone, for when only the strike has moved. */
+    void restrike(int32_t pad);
     /**
      * Where a pad is struck, humanise included.
      *

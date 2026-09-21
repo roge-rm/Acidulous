@@ -96,9 +96,14 @@ struct Player {
     int32_t step = 0;
     void tick(Machine *m, int32_t block) {
         if (block != next) return;
-        const uint8_t pitch = static_cast<uint8_t>(48 + (step % 8) * 2);
+        // **36 upward, one semitone at a time.** The first version played 48
+        // and up in whole tones, which is a fine melodic range and misses
+        // every drum machine in the app: the pads of Hexbeat, Genesis, Forage
+        // and Resonance all start at 36 and run eight or thirteen semitones,
+        // so four machines were being timed with no note ever reaching them.
+        const uint8_t pitch = static_cast<uint8_t>(36 + (step % 8));
         if (step % 2 == 0) m->noteOn(pitch, 100);
-        else m->noteOff(static_cast<uint8_t>(48 + ((step - 1) % 8) * 2));
+        else m->noteOff(static_cast<uint8_t>(36 + ((step - 1) % 8)));
         ++step;
         next = block + 16; // a note every ~21 ms
     }
@@ -187,7 +192,7 @@ Result timeTail(const std::string &name, bool isEffect) {
     double phase = 0.0;
     // Half a second of sound, so anything with a long attack has spoken.
     const int32_t excite = kSr / 2 / kBlock;
-    if (m != nullptr) m->noteOn(60, 110);
+    if (m != nullptr) m->noteOn(38, 110);
     for (int32_t b = 0; b < excite; ++b) {
         for (int32_t i = 0; i < kBlock; ++i) {
             phase += 220.0 / kSr;
@@ -199,7 +204,7 @@ Result timeTail(const std::string &name, bool isEffect) {
         if (m != nullptr) m->render(L.data(), R.data(), kBlock);
         else fx->run(L.data(), R.data(), kBlock, true);
     }
-    if (m != nullptr) m->noteOff(60);
+    if (m != nullptr) m->noteOff(38);
 
     // And then nothing at all, for two seconds.
     const int32_t tail = 2 * kSr / kBlock;
