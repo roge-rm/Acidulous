@@ -33,6 +33,39 @@ class Biquad {
         b0 = (1.0f - alpha) / a0; b1 = -2.0f * c / a0; b2 = 1.0f; a1 = b1; a2 = b0;
     }
 
+    /**
+     * What this section does to a partial at [w] radians a sample.
+     *
+     * The same arithmetic `Pipe::Section::at` has carried since Timber, lifted
+     * here because three things now want it: the amp's cabinet, which trims
+     * itself against its own measured response rather than against a table of
+     * fudge factors; the harness, which asserts a filter chain's magnitude
+     * without rendering audio or running an FFT; and Timber.
+     */
+    void at(float w, float &re, float &im) const {
+        const float c1 = std::cos(w), s1 = std::sin(w);
+        const float c2 = std::cos(2.0f * w), s2 = std::sin(2.0f * w);
+        const float nr = b0 + b1 * c1 + b2 * c2, ni = -(b1 * s1 + b2 * s2);
+        const float dr = 1.0f + a1 * c1 + a2 * c2, di = -(a1 * s1 + a2 * s2);
+        const float den = dr * dr + di * di + 1e-20f;
+        re = (nr * dr + ni * di) / den;
+        im = (ni * dr - nr * di) / den;
+    }
+
+    /** The magnitude alone, which is what most callers want. */
+    float magnitudeAt(float hz, float sr) const {
+        float re = 0.0f, im = 0.0f;
+        at(kTwoPi * hz / sr, re, im);
+        return std::sqrt(re * re + im * im);
+    }
+
+    /** How long this section rings, from its poles: the t60, in seconds. */
+    float ringSeconds(float sr) const {
+        const float r = std::sqrt(a2 < 0.0f ? -a2 : a2);
+        if (r <= 0.0f || r >= 1.0f) return 0.0f;
+        return -6.9078f / (sr * std::log(r));
+    }
+
   private:
     void shelf(float hz, float dB, float sr, bool low) {
         const float A = std::pow(10.0f, dB / 40.0f), w = kTwoPi * clampf(hz, 20.0f, sr * 0.45f) / sr;

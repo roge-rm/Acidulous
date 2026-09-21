@@ -47,6 +47,7 @@ echo "--- bias";  "$ROOT/tools/bias_test.sh" | tail -2 || fail=1
 echo "--- marks"; "$ROOT/tools/marks_test.sh" | tail -2 || fail=1
 echo "--- stretch"; "$ROOT/tools/stretch_test.sh" | tail -2 || fail=1
 echo "--- oversample"; "$ROOT/tools/oversample_test.sh" | tail -2 || fail=1
+echo "--- amp";  "$ROOT/tools/amp_test.sh" | tail -2 || fail=1
 # The banks: every factory patch names real parameters, makes a sound, does
 # not clip fifty times over, and plays the same twice.
 echo "--- bank";  "$ROOT/tools/bank_test.sh"  | tail -2 || fail=1
