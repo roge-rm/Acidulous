@@ -146,3 +146,68 @@ fun Song.takeTempoDiffers(sceneId: String, clip: Clip): Boolean {
  */
 fun TakeRef.lengthTicks(): Int =
     (frames.toDouble() / ENGINE_RATE * (bpm / 60.0) * PPQN).toInt().coerceAtLeast(1)
+
+// --- Splitting a take --------------------------------------------------------
+
+/**
+ * One boundary the recording crossed, as the engine stamped it.
+ *
+ * See `sequencer/CaptureMarks.h`: the audio thread wrote these down as it went,
+ * so nothing here has to know how long a scene is, how many times it repeats,
+ * or what tempo it was playing at. That is the whole reason the split is safe.
+ */
+data class Mark(
+    val frame: Long, val sceneId: Long, val tick: Int, val cycleTicks: Int, val bpm: Float,
+)
+
+/** The engine's flat array of longs, five to a mark, as marks. */
+fun marksFrom(raw: LongArray, count: Int): List<Mark> = (0 until count).map { i ->
+    Mark(
+        frame = raw[i * 5],
+        sceneId = raw[i * 5 + 1],
+        tick = raw[i * 5 + 2].toInt(),
+        cycleTicks = raw[i * 5 + 3].toInt(),
+        bpm = raw[i * 5 + 4] / 1000f,
+    )
+}
+
+/**
+ * A segment shorter than this is not a take, it is the edge of one.
+ *
+ * Crossing into a cell in the last moments of a recording leaves a sliver -
+ * a few hundred frames of a held note - and a cell holding forty milliseconds
+ * of somebody's last syllable is worse than a cell holding nothing.
+ */
+const val MIN_TAKE_FRAMES = ENGINE_RATE / 4
+
+/**
+ * Consecutive marks pair into segments, and each segment is one cell's take.
+ *
+ * **No audio is copied**: one file, N cells, each a window into it. The last
+ * segment runs to [totalFrames], which is where the recording stopped.
+ *
+ * [sceneIdOf] turns the engine's hashed scene id back into the document's,
+ * because the engine has never heard of the document's string ids. A mark for
+ * a scene that has since been deleted is dropped rather than guessed at.
+ */
+fun splitTake(
+    marks: List<Mark>,
+    totalFrames: Long,
+    file: String,
+    sceneIdOf: (Long) -> String?,
+): Map<String, TakeRef> {
+    val out = LinkedHashMap<String, TakeRef>()
+    for ((i, m) in marks.withIndex()) {
+        val end = if (i + 1 < marks.size) marks[i + 1].frame else totalFrames
+        val frames = (end - m.frame).toInt()
+        if (frames < MIN_TAKE_FRAMES) continue
+        val sceneId = sceneIdOf(m.sceneId) ?: continue
+        // Last one wins: a scene crossed twice in one pass of the record button
+        // is somebody going round again, and the second time is the keeper.
+        out[sceneId] = TakeRef(
+            file = file, offset = m.frame.toInt(), frames = frames,
+            bpm = m.bpm, ticks = m.cycleTicks, startTick = m.tick,
+        )
+    }
+    return out
+}

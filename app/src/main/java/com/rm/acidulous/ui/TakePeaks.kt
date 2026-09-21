@@ -69,6 +69,38 @@ object TakePeaks {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Survey>) = size > KEEP
     }
 
+    /**
+     * One region's coarse shape, taken out of the whole file's.
+     *
+     * A take split into five cells wants five shapes, and five calls to
+     * [survey] would decode the file five times - which for a five-minute
+     * recording is five seconds of work and five peaks of over a hundred
+     * megabytes, to draw two hundred columns. The file is read once and each
+     * cell's columns are averaged out of it.
+     */
+    fun slice(whole: Survey, offset: Int, frames: Int, columns: Int = TAKE_PEAK_COLUMNS): List<Float> {
+        if (whole.frames <= 0 || frames <= 0) return emptyList()
+        val all = whole.peaks.size / 2
+        if (all <= 0) return emptyList()
+        val out = ArrayList<Float>(columns * 2)
+        for (i in 0 until columns) {
+            val from = offset.toLong() + frames.toLong() * i / columns
+            val to = offset.toLong() + frames.toLong() * (i + 1) / columns
+            var a = (all * from / whole.frames).toInt().coerceIn(0, all - 1)
+            val b = (all * to / whole.frames).toInt().coerceIn(a + 1, all)
+            var lo = 0f
+            var hi = 0f
+            while (a < b) {
+                lo = minOf(lo, whole.peaks[a * 2])
+                hi = maxOf(hi, whole.peaks[a * 2 + 1])
+                ++a
+            }
+            out.add(lo)
+            out.add(hi)
+        }
+        return out
+    }
+
     /** Cached, or null when it has not been read yet. Never reads here. */
     @Synchronized
     fun cached(relative: String): Survey? = cache[relative]

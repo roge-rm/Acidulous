@@ -505,7 +505,21 @@ class SceneScheduler {
     int32_t rackCycleTicks(int32_t rack) const {
         if (!launcherActive()) {
             if (snap == nullptr || snap->scenes.empty()) return 0;
-            return static_cast<int32_t>(cycleTicks(rack, sceneIdx));
+            const int64_t own = cycleTicks(rack, sceneIdx);
+            if (own > 0) return static_cast<int32_t>(own);
+            // **A cell that does not exist yet still has a length.**
+            //
+            // `cycleTicks` answers nought for a rack with no clip in this
+            // scene, which is right where it is used - the launcher must not
+            // launch a clip that is not there. It is wrong here: a recording
+            // being made across a song reaches scenes the track has nothing in
+            // *yet*, and those are exactly the cells the split is about to
+            // create. Answering nought made the marks skip them, so a take
+            // sung over a whole song landed entirely in whichever scene the
+            // track happened to have a clip in. Found on 2026-09-20 by
+            // recording over the demo song and getting one cell back.
+            const SceneInfo &sc = snap->scenes[static_cast<size_t>(sceneIdx)];
+            return static_cast<int32_t>(sc.iterationTicks() * std::max(1, sc.repeat));
         }
         return launcher.playing(rack) ? static_cast<int32_t>(launcher.cycle(rack)) : 0;
     }

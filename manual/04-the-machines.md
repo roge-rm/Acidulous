@@ -81,6 +81,10 @@ These are solved rather than sampled, so they respond to how you play them.
   the strip under the grid, they map to a pad or a knob, and they record while
   you play. A muted section is a mute drawn in that cell.
 
+  Recording onto it is in [Recording and samples](08-recording-and-samples.md):
+  arm a lane, press record, press play, and what you sing is cut at the scene
+  lines when you stop.
+
   Opening a Bias cell gives you the lanes themselves, along this cell's whole
   cycle - both passes of a scene set to repeat, because that is what a
   four-track plays. Drag a lane's body to move where it comes in; drag either

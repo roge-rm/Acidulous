@@ -44,6 +44,13 @@ or opens a clip, so nothing is in the way of playing.
 Hold a clip for its settings: how many bars it is, whether it is muted, and the
 grid it snaps to.
 
+## What a cell tells you
+
+The number of bars is in the corner, with **1** for a one-shot and **M** for a
+muted clip. A cell on an audio track also shows its waveform and how many of
+its four lanes hold a recording - and says so **in amber** when one of them was
+recorded at a tempo this scene does not play at, since audio does not stretch.
+
 ## Freezing
 
 Freezing renders a clip to audio and plays that instead of the machine, which

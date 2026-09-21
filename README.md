@@ -21,7 +21,7 @@ own **Help…** window. Discussion, issues and suggestions:
 
 ## What is in it
 
-### Nineteen machines
+### Twenty machines
 
 | | |
 |---|---|
@@ -44,6 +44,7 @@ own **Help…** window. Discussion, issues and suggestions:
 | **Cipher** | A vocoder. The band map between analysis and synthesis is the instrument. |
 | **Molt** | A voice you write for: a sung take turned into an instrument, with pitch and formant moved independently. |
 | **Nexus** | A modular, whose blocks are this app's own instruments and whose patch is text. |
+| **Bias** | A four-track that runs along the song. Four lanes of recordings per cell, sounding together; record over the song and the take is cut at the scene lines. |
 
 ### Fourteen effects
 
@@ -62,6 +63,8 @@ buses hold any of the same fourteen**, chosen and edited from the master strip.
 - Automation lanes, performance lanes (mod and pressure), and per-note
   expression.
 - Clip freeze: render a clip to audio, pre-fader.
+- **Audio tracks**, on the same sixteen racks: record over the song and the
+  take is split into cells, with no second timeline in either view.
 
 ### Playing and syncing
 
@@ -105,7 +108,8 @@ seconds together:
 tools/all_tests.sh
 ```
 
-They cover the sequencer's launcher and song position, MIDI clock in and out,
+They cover the sequencer's launcher and song position, where a recording's
+boundaries fall when it is cut into cells, MIDI clock in and out,
 the metronome, MPE, Ableton Link's arithmetic (and, where the network allows
 it, two real Link peers in one process), the audio file writers, Molt's
 analysis, the expression language, and a reset-determinism pass that plays

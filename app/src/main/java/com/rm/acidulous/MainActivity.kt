@@ -45,6 +45,14 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.rm.acidulous.engine.EngineAssets
+import com.rm.acidulous.engine.uniqueIn
+import com.rm.acidulous.model.emptyClipFor
+import com.rm.acidulous.model.marksFrom
+import com.rm.acidulous.model.splitTake
+import com.rm.acidulous.model.updateClip
+import com.rm.acidulous.model.withTake
+import com.rm.acidulous.ui.BiasArm
+import com.rm.acidulous.ui.TakePeaks
 import com.rm.acidulous.engine.EngineSync
 import com.rm.acidulous.engine.LaunchState
 import com.rm.acidulous.engine.NativeEngine
@@ -305,6 +313,8 @@ private fun App(modifier: Modifier = Modifier) {
     // failures from a worker, so this hops to the main thread before it
     // touches Compose state.
     var problem by remember { mutableStateOf<String?>(null) }
+    /** The file the microphone is writing to while a Bias lane is armed. */
+    var biasTakeFile by remember { mutableStateOf<java.io.File?>(null) }
     DisposableEffect(Unit) {
         EngineSync.onProblem = { message ->
             android.os.Handler(android.os.Looper.getMainLooper()).post { problem = message }
@@ -870,9 +880,122 @@ private fun App(modifier: Modifier = Modifier) {
         }
     }
 
+    /**
+     * The record button, and - when a Bias lane is armed - the microphone too.
+     *
+     * **One button.** Arming a lane and then hunting for a second control to
+     * start it would be two ways of saying the same thing, and the one you
+     * press while the song is already playing has to be the one already under
+     * your thumb.
+     *
+     * The capture runs from the moment it is armed rather than from the moment
+     * the transport starts, so nothing is lost while somebody is getting ready
+     * - the seconds before play belong to no cell, the engine stamps no mark
+     * for them, and the split simply leaves them out.
+     */
+    fun startBiasCapture() {
+        // The input has to be open before the capture will take it, and it is
+        // not open by default - the microphone is not something to hold when
+        // nobody asked. Opened here and left open; stopping the capture is
+        // what ends the recording, not closing the stream.
+        NativeEngine.startInput(com.rm.acidulous.ui.UiPrefs.inputDevice)
+        val root = java.io.File(EngineAssets.userRoot(context), "samples").apply { mkdirs() }
+        val target = java.io.File(root, uniqueIn(root, "take.wav"))
+        val error = NativeEngine.startCapture(target.absolutePath, 0)
+        if (error.isNotEmpty()) {
+            problem = "Recording did not start - $error."
+            BiasArm.clear()
+            return
+        }
+        biasTakeFile = target
+    }
+
+    /**
+     * Stop the microphone and cut what was recorded into cells.
+     *
+     * No audio is copied: one file, N cells, each a window into it. The shapes
+     * are taken out of one decode - see `TakePeaks.slice` - because a take
+     * across five scenes read five times is five peaks of a hundred megabytes
+     * to draw two hundred columns.
+     */
+    fun finishBiasCapture() {
+        val file = biasTakeFile ?: return
+        val track = BiasArm.track
+        val lane = BiasArm.lane
+        biasTakeFile = null
+        NativeEngine.stopCapture()
+        val raw = LongArray(NativeEngine.MAX_MARKS * NativeEngine.MARK_LONGS)
+        val count = NativeEngine.captureMarks(raw)
+        val frames = NativeEngine.capturedFrames
+        if (count < 0) {
+            // The ring dropped frames, so every index after the drop names the
+            // wrong moment. The recording is kept - it is in the library and
+            // can be placed by hand - but it must not be cut up.
+            problem = "The recording has a gap in it, so it was not split. " +
+                "It is in the sound library."
+            return
+        }
+        if (count == 0 || track < 0 || lane < 0) {
+            problem = "Nothing was recorded against a scene. The take is in the sound library."
+            return
+        }
+        val rel = "samples/" + file.name
+        // Worth a line in the log: a split that goes wrong is silent, and the
+        // marks are the only place the answer can be read afterwards.
+        Log.i(TAG, "bias split: $count mark(s) over $frames frames: " +
+            marksFrom(raw, count).take(8)
+                .joinToString(" ") { "${it.frame}@${it.sceneId}+${it.tick}/${it.cycleTicks}" })
+        val takes = splitTake(marksFrom(raw, count), frames, rel, sceneIdOf)
+        if (takes.isEmpty()) {
+            problem = "That take was too short to place. It is in the sound library."
+            return
+        }
+        scope.launch {
+            val whole = withContext(Dispatchers.Default) { TakePeaks.load(EngineSync.sampleRoot, rel) }
+            var next = editor.song
+            for ((sceneId, take) in takes) {
+                val drawn = if (whole == null) take
+                            else take.copy(peaks = TakePeaks.slice(whole, take.offset, take.frames))
+                next = next.updateClip(track, sceneId, { next.emptyClipFor(sceneId) }) { c ->
+                    c.withTake(lane, drawn)
+                }
+            }
+            // One document edit for the whole take, so undoing a recording is
+            // one press rather than one per scene it crossed.
+            editor.edit(track, push = true) { next.tracks[track] }
+            EngineSync.sync(editor.song)
+        }
+    }
+
+    /**
+     * Asked for at the moment it is needed, which is the first time a lane is
+     * armed and record is pressed.
+     *
+     * The recorder window has its own button for this; arriving there to be
+     * told to go somewhere else is the version of this that does not respect
+     * anybody's time.
+     */
+    val askToRecord = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { ok ->
+        if (ok) startBiasCapture()
+        else problem = "Recording needs permission to use the microphone."
+    }
+    fun mayRecord(): Boolean = context.checkSelfPermission(
+        android.Manifest.permission.RECORD_AUDIO,
+    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
     val onArm: (Boolean) -> Unit = { on ->
         NativeEngine.recordArmed = on
-        if (!on) applyRecorded(recorder.flush(song, sceneIdOf))
+        if (on) {
+            if (BiasArm.any) {
+                if (mayRecord()) startBiasCapture()
+                else askToRecord.launch(android.Manifest.permission.RECORD_AUDIO)
+            }
+        } else {
+            applyRecorded(recorder.flush(song, sceneIdOf))
+            finishBiasCapture()
+        }
     }
     val onLoopScene: (Boolean) -> Unit = { on ->
         loopScene = on

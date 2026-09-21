@@ -339,6 +339,26 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeFileShape(JNIEnv *env, jobject, 
     return n;
 }
 
+JNIEXPORT jlong JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCapturedFrames(JNIEnv *, jobject) {
+    return host().capturedFrames();
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeArmCapture(JNIEnv *, jobject, jint rack) {
+    host().armCapture(rack);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureMarks(JNIEnv *env, jobject, jlongArray out) {
+    const jsize max = env->GetArrayLength(out) / 5;
+    if (max <= 0) return 0;
+    jlong *data = env->GetLongArrayElements(out, nullptr);
+    const int32_t n = host().captureMarks(reinterpret_cast<int64_t *>(data), max);
+    env->ReleaseLongArrayElements(out, data, 0);
+    return n;
+}
+
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeFileSurvey(JNIEnv *env, jobject, jstring path,
                                                            jfloatArray out) {

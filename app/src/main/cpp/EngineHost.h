@@ -374,8 +374,30 @@ class EngineHost {
     void stopCapture();
     bool capturing() const;
     float capturedSeconds() const;
+    /** How long the finished file is, exactly. Seconds as a float loses frames. */
+    int64_t capturedFrames() const;
     float capturedPeak() const;
     bool captureOverflowed() const;
+
+    /**
+     * Which rack a recording is being made *for*, or -1 for none.
+     *
+     * Only an armed rack has its boundaries stamped - see `CaptureMarks` - and
+     * only one can be, because there is one capture. Arming resets the marks,
+     * so a second take does not inherit the first one's boundaries.
+     */
+    void armCapture(int rack);
+    /**
+     * The boundaries the last recording crossed, five longs each:
+     *
+     *     frame, sceneId, tick, cycleTicks, millibpm
+     *
+     * The tempo goes over as thousandths so that the whole record is one
+     * array of longs rather than two arrays that have to be kept in step.
+     * Returns how many marks were written, or **-1 when the capture dropped
+     * frames**, which means the split has to refuse.
+     */
+    int32_t captureMarks(int64_t *out, int32_t max) const;
 
     /** Stop everything and silence every tail. Safe from any thread. */
     void panic();

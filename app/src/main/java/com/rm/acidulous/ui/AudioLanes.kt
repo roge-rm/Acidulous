@@ -80,6 +80,40 @@ private val GutterW = 34.dp
 private val RulerH = 16.dp
 private val HandleGrab = 22.dp
 
+/**
+ * Which lane the next recording goes onto, if any.
+ *
+ * **One capture exists, so one lane records at a time.** That is an engine
+ * fact rather than a interface choice - see `Engine::armedRack` - and arming a
+ * second lane disarms the first rather than being refused, because being
+ * refused is the answer nobody wants when they have already decided.
+ *
+ * Session state, not a preference: what you were about to record is not
+ * something to remember until tomorrow.
+ */
+object BiasArm {
+    var track by mutableStateOf(-1)
+        private set
+    var lane by mutableStateOf(-1)
+        private set
+
+    fun armed(t: Int, l: Int): Boolean = track == t && lane == l
+    val any: Boolean get() = track >= 0 && lane >= 0
+
+    fun arm(t: Int, l: Int) {
+        val off = armed(t, l)
+        track = if (off) -1 else t
+        lane = if (off) -1 else l
+        NativeEngine.armCapture(track)
+    }
+
+    fun clear() {
+        track = -1
+        lane = -1
+        NativeEngine.armCapture(-1)
+    }
+}
+
 /** Which end of which lane a finger has hold of. */
 private data class LaneDrag(val lane: Int, val part: Part, val take: TakeRef) {
     enum class Part { Body, Head, Tail }
@@ -143,20 +177,36 @@ fun AudioLanes(
                 Modifier.fillMaxWidth().weight(1f).padding(bottom = 1.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(
-                    Modifier.width(GutterW).fillMaxHeight()
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(if (isMuted) c.card else c.control)
-                        .clickable { b.set("mute${lane + 1}", if (isMuted) 0f else 1f) },
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        "${lane + 1}",
-                        color = if (isMuted) c.textFaint else c.textHi,
-                        fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-                    )
-                    if (isMuted) Text("M", color = c.red, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                // **The gutter is two buttons, not one with a mode.** The top
+                // half is the lane and mutes it; the bottom half is the record
+                // dot and arms it. Both are things you reach for while a song
+                // is playing, so neither may be behind the other.
+                val isArmed = BiasArm.armed(trackIndex, lane)
+                Column(Modifier.width(GutterW).fillMaxHeight()) {
+                    Box(
+                        Modifier.fillMaxWidth().weight(1f)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(if (isMuted) c.card else c.control)
+                            .clickable { b.set("mute${lane + 1}", if (isMuted) 0f else 1f) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            if (isMuted) "M" else "${lane + 1}",
+                            color = if (isMuted) c.red else c.textHi,
+                            fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                        )
+                    }
+                    Box(
+                        Modifier.fillMaxWidth().weight(1f).padding(top = 1.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(if (isArmed) c.red.copy(alpha = 0.35f) else c.card)
+                            .clickable { BiasArm.arm(trackIndex, lane) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "\u25CF", color = if (isArmed) c.red else c.textFaint, fontSize = 11.sp,
+                        )
+                    }
                 }
                 Box(
                     Modifier.weight(1f).fillMaxHeight()

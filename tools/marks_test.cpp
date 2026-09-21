@@ -252,6 +252,38 @@ void aLauncherSequence() {
        r.marks.at(1).tick <= 2 && r.marks.at(2).tick <= 2, r.report());
 }
 
+/**
+ * Recording across scenes the track has nothing in yet.
+ *
+ * Which is the ordinary case, not an edge one: you add an audio track, you
+ * sing over the whole song, and the cells are made *by* the recording. The
+ * scheduler's `cycleTicks` answers nought for a rack with no clip - right for
+ * the launcher, which must not launch a clip that is not there - and taking
+ * that at face value here made a take sung over a whole song land entirely in
+ * whichever scene the track happened to have a clip in.
+ */
+void recordingOntoScenesWithNoClipYet() {
+    printf("- a take sung across scenes the track has nothing in yet\n");
+    Rig r;
+    r.scene(11, 4);
+    r.scene(22, 4);
+    r.scene(33, 4);
+    r.clip(0, 0, 4); // the armed rack has a clip in the first scene only
+    r.commit();
+    r.play();
+    r.run(26.0); // eight-second scenes: all three, and round again
+
+    ok("every scene is marked, not just the one with a clip", r.marks.count() == 4, r.report());
+    if (r.marks.count() < 4) return;
+    ok("in the order they played",
+       r.marks.at(0).sceneId == 11 && r.marks.at(1).sceneId == 22 &&
+           r.marks.at(2).sceneId == 33 && r.marks.at(3).sceneId == 11,
+       r.report());
+    ok("and each says the cycle it would be made against",
+       r.marks.at(1).cycleTicks == 4 * kBar && r.marks.at(2).cycleTicks == 4 * kBar,
+       std::to_string(r.marks.at(1).cycleTicks));
+}
+
 /** A dropped ring poisons the lot: every later frame names the wrong moment. */
 void anOverflowPoisonsTheSplit() {
     printf("- a capture that dropped frames cannot be split\n");
@@ -287,6 +319,7 @@ int main() {
     aPunchIn();
     aSceneWithItsOwnTempo();
     aLauncherSequence();
+    recordingOntoScenesWithNoClipYet();
     anOverflowPoisonsTheSplit();
     tooManyBoundaries();
     printf("\n%d checks, %d failures\n", checks, failures);

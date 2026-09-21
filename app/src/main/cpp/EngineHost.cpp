@@ -1736,10 +1736,31 @@ std::string EngineHost::startCapture(const std::string &path, int source) {
     return "";
 }
 void EngineHost::stopCapture() { sEngine.capture.stop(); }
+
+void EngineHost::armCapture(int rack) {
+    sEngine.marks.reset();
+    sEngine.armedRack.store(rack >= 0 && rack < kRackCount ? rack : Engine::kNoRack,
+                            std::memory_order_relaxed);
+}
+
+int32_t EngineHost::captureMarks(int64_t *out, int32_t max) const {
+    if (sEngine.marks.poisoned()) return -1;
+    const int32_t n = std::min(sEngine.marks.count(), max);
+    for (int32_t i = 0; i < n; ++i) {
+        const seq::CaptureMark &m = sEngine.marks.at(i);
+        out[i * 5 + 0] = m.frame;
+        out[i * 5 + 1] = m.sceneId;
+        out[i * 5 + 2] = m.tick;
+        out[i * 5 + 3] = m.cycleTicks;
+        out[i * 5 + 4] = static_cast<int64_t>(m.bpm * 1000.0f + 0.5f);
+    }
+    return n;
+}
 bool EngineHost::capturing() const { return sEngine.capture.armed(); }
 float EngineHost::capturedSeconds() const {
     return static_cast<float>(sEngine.capture.frames()) / static_cast<float>(kSampleRate);
 }
+int64_t EngineHost::capturedFrames() const { return sEngine.capture.frames(); }
 float EngineHost::capturedPeak() const { return sEngine.capture.peak(); }
 bool EngineHost::captureOverflowed() const { return sEngine.capture.overflowed(); }
 

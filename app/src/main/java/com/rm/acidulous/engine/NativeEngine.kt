@@ -506,10 +506,33 @@ object NativeEngine {
     fun stopCapture() = nativeStopCapture()
     val capturing: Boolean get() = nativeCapturing()
     val capturedSeconds: Float get() = nativeCapturedSeconds()
+    /** The finished file's length, exactly: seconds as a float loses frames. */
+    val capturedFrames: Long get() = nativeCapturedFrames()
     val capturedPeak: Float get() = nativeCapturedPeak()
     val captureOverflowed: Boolean get() = nativeCaptureOverflowed()
     /** True once an input capture has run with nothing arriving at all. */
     val captureDeaf: Boolean get() = nativeCaptureDeaf()
+
+    /**
+     * Which rack the next recording is being made for, or -1 for none.
+     *
+     * Only an armed rack has the song's boundaries stamped against the frames
+     * being written, and only one can be, because there is one capture. This
+     * also resets the marks, so a second take starts with a clean sheet.
+     */
+    fun armCapture(rack: Int) = nativeArmCapture(rack)
+
+    /**
+     * The boundaries the recording crossed, five longs each:
+     * `frame, sceneId, tick, cycleTicks, millibpm`.
+     *
+     * Returns how many were written, or **-1 if the capture dropped frames** -
+     * in which case every index after the drop names the wrong moment and the
+     * take must not be split. [MARK_LONGS] is the stride.
+     */
+    fun captureMarks(out: LongArray): Int = nativeCaptureMarks(out)
+    const val MARK_LONGS = 5
+    const val MAX_MARKS = 512
 
     // --- A file on disk, rather than a mounted pad -----------------------
 
@@ -583,6 +606,9 @@ object NativeEngine {
     private external fun nativeCapturedPeak(): Float
     private external fun nativeCaptureOverflowed(): Boolean
     private external fun nativeCaptureDeaf(): Boolean
+    private external fun nativeCapturedFrames(): Long
+    private external fun nativeArmCapture(rack: Int)
+    private external fun nativeCaptureMarks(out: LongArray): Int
     private external fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int
     private external fun nativeFileInfo(path: String): String
     private external fun nativeFileSurvey(path: String, out: FloatArray): String
