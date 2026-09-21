@@ -474,7 +474,22 @@ class SceneScheduler {
         if (!launcherActive()) {
             if (snap == nullptr || snap->scenes.empty()) return lastTickInIteration;
             const SceneInfo &sc = snap->scenes[static_cast<size_t>(sceneIdx)];
-            return static_cast<int64_t>(repeatIdx) * sc.iterationTicks() + lastTickInIteration;
+            const int64_t iter = std::max<int64_t>(1, sc.iterationTicks());
+            const int64_t absolute = static_cast<int64_t>(repeatIdx) * iter + lastTickInIteration;
+            // **Wrapped onto the clip's own cycle, which is what the launcher
+            // counts.** The two modes disagree about what a cycle is the moment
+            // a clip is shorter than its scene: the launcher gives that clip
+            // `lengthTicks() * repeat` and the arranger would give it the whole
+            // scene, so the same cell would read different frames in each mode
+            // - and "one recording serves both" is the whole design. Taking the
+            // clip's cycle here makes the arranger say what the launcher says.
+            //
+            // A cell as long as its scene - which is every cell nobody has
+            // deliberately shortened, since a clip is created at its scene's
+            // length - has `len == iter * repeat`, so `absolute` never reaches
+            // it and the wrap costs nothing.
+            const int64_t len = cycleTicks(rack, sceneIdx);
+            return len > 0 ? absolute % len : absolute;
         }
         return launcher.playing(rack) ? launcherNow - launcher.origin(rack) : 0;
     }

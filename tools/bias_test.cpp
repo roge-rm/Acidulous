@@ -1,4 +1,4 @@
-// The tape, asked where it is and made to say what it read.
+// Bias, asked where it is and made to say what it read.
 //
 // Two things here are worth a harness rather than an ear. The first is that a
 // region is a *window*: a take sung across four scenes is one file and four
@@ -20,7 +20,7 @@
 
 #include <engine/core/Reel.h>
 #include <engine/machine/MachineRegistry.h>
-#include <engine/machine/tape/Tape.h>
+#include <engine/machine/bias/Bias.h>
 
 using namespace acidulous;
 using namespace acidulous::audio;
@@ -80,26 +80,26 @@ std::shared_ptr<Reel::Source> flat(int32_t frames, int16_t value) {
 
 /** The machine, built the way the rack builds it. */
 struct Rig {
-    std::unique_ptr<machine::Tape> tape{
-        static_cast<machine::Tape *>(MachineRegistry::create("Tape"))};
+    std::unique_ptr<machine::Bias> bias{
+        static_cast<machine::Bias *>(MachineRegistry::create("Bias"))};
     Reel reel;
     float L[256]{}, R[256]{};
 
-    Rig() { tape->prepare(kRate); }
+    Rig() { bias->prepare(kRate); }
 
-    void mount() { tape->swapObject(0, &reel); }
+    void mount() { bias->swapObject(0, &reel); }
 
     /** One block at a place in the cell, and what the left channel held. */
     float readAt(int64_t sceneId, int64_t cycleTick, bool muted = false) {
-        tape->onScene(sceneId, cycleTick, true, muted);
-        tape->render(L, R, 1);
+        bias->onScene(sceneId, cycleTick, true, muted);
+        bias->render(L, R, 1);
         return L[0];
     }
 
     /** The same, having first jumped elsewhere so the cursor cannot coast. */
     float probe(int64_t sceneId, int64_t cycleTick, bool muted = false) {
-        tape->onScene(0, 0, true, false); // no cell: invalidates every cursor
-        tape->render(L, R, 1);
+        bias->onScene(0, 0, true, false); // no cell: invalidates every cursor
+        bias->render(L, R, 1);
         return readAt(sceneId, cycleTick, muted);
     }
 };
@@ -160,7 +160,7 @@ void aRegionIsAWindowIntoItsFile() {
  * The second pass of a repeated scene carries on through the take.
  *
  * This is the machine's half of `rackCycleTick`: the scheduler counts the
- * repeats, and the tape has to read that far into the region rather than
+ * repeats, and Bias has to read that far into the region rather than
  * treating the bar as the whole of it.
  */
 void aRepeatedSceneCarriesOn() {
@@ -198,13 +198,13 @@ void fourLanesSum() {
     ok("four lanes are the sum of four lanes", near(rig.probe(1, 0), one * (1 + 2 + 3 + 4)),
        std::to_string(rig.probe(1, 0)));
 
-    rig.tape->params().set(machine::Tape::Mute2, 1.0f);
-    rig.tape->params().jumpAll();
+    rig.bias->params().set(machine::Bias::Mute2, 1.0f);
+    rig.bias->params().jumpAll();
     ok("a muted lane is not in it", near(rig.probe(1, 0), one * (1 + 3 + 4)));
 
-    rig.tape->params().set(machine::Tape::Mute2, 0.0f);
-    rig.tape->params().set(machine::Tape::Lane3, 0.5f);
-    rig.tape->params().jumpAll();
+    rig.bias->params().set(machine::Bias::Mute2, 0.0f);
+    rig.bias->params().set(machine::Bias::Lane3, 0.5f);
+    rig.bias->params().jumpAll();
     ok("and a lane at half is in it by half", near(rig.probe(1, 0), one * (1 + 2 + 1.5f + 4)));
 }
 

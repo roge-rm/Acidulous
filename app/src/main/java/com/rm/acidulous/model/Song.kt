@@ -247,7 +247,7 @@ data class Clip(
     val automation: Map<String, Lane> = emptyMap(),
     /** Set while this clip plays as audio rather than as notes. */
     val frozen: Frozen? = null,
-    /** What a Tape track recorded here. Null on every other kind of track. */
+    /** What a Bias track recorded here. Null on every other kind of track. */
     @EncodeDefault(EncodeDefault.Mode.NEVER) val audio: ClipAudio? = null,
 ) {
     /**

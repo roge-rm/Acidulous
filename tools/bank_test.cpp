@@ -579,10 +579,10 @@ int main(int argc, char **argv) {
     std::vector<std::string> units;
     for (int32_t i = 0; i < MachineRegistry::count(); ++i) {
         const std::string name = MachineRegistry::name(i);
-        // **A tape has no sound of its own.** Every other machine here makes
+        // **Bias has no sound of its own.** Every other machine here makes
         // one out of nothing and can be judged on what it does the first time
         // you tap it, which is what a bank is for and what this harness
-        // measures. A tape plays what you recorded onto it: with nothing
+        // measures. Bias plays what you recorded onto it: with nothing
         // mounted it renders silence, so every patch would read as silent and
         // the only thing a "patch" could carry is four levels and four mutes,
         // which is a mix and not a sound.
@@ -590,7 +590,7 @@ int main(int argc, char **argv) {
         // Deliberately not on the known-fault list above: that list means "a
         // bank somebody still has to write", and it is empty because M45
         // finished. This is a bank that should not exist.
-        if (name == "Tape") continue;
+        if (name == "Bias") continue;
         units.emplace_back(name);
     }
     for (int32_t i = 0; i < EffectRegistry::count(); ++i) units.emplace_back(std::string("fx.") + EffectRegistry::name(i));

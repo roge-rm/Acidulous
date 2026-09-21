@@ -188,10 +188,49 @@ Result checkEffect(const char *name) {
     return r;
 }
 
+/**
+ * Every registered machine can be reached by name for its parameters.
+ *
+ * `MachineRegistry` says a machine's name in three places - the name table,
+ * `create`, and `paramDefs` - and a machine added to the first two but not the
+ * third **has no working knobs at all**, silently. `EngineHost::setParam` looks
+ * its index up through `paramDefs`, finds nothing, and returns false; the panel
+ * draws every control at zero, the document's values are refused on every push,
+ * and the machine plays on at its built-in defaults, which is exactly loud
+ * enough to look like it is working.
+ *
+ * Bias shipped that way on 2026-09-20 and was found by tapping a mute that did
+ * nothing. One loop over the names is the whole defence.
+ */
+int registryIsComplete() {
+    int missing = 0;
+    for (int32_t i = 0; i < MachineRegistry::count(); ++i) {
+        const char *name = MachineRegistry::name(i);
+        int32_t n = 0;
+        const ParamDef *defs = MachineRegistry::paramDefs(name, n);
+        Machine *m = MachineRegistry::create(name);
+        int32_t own = 0;
+        if (m != nullptr) m->paramDefs(own);
+        delete m;
+        if (defs == nullptr || n <= 0) {
+            std::printf("  FAIL %-12s has no parameter table in MachineRegistry::paramDefs\n", name);
+            ++missing;
+        } else if (own != n) {
+            std::printf("  FAIL %-12s: the registry says %d parameters, the machine says %d\n", name, n, own);
+            ++missing;
+        }
+    }
+    std::printf("%d of %d machines are missing their parameter table.\n", missing,
+                MachineRegistry::count());
+    return missing;
+}
+
 } // namespace
 
 int main() {
-    std::printf("reset() determinism: render, panic, render the same again\n");
+    std::printf("every machine can be reached by name for its parameters\n");
+    const int missing = registryIsComplete();
+    std::printf("\nreset() determinism: render, panic, render the same again\n");
     std::printf("%-12s  %-10s  %-12s  %-12s  %s\n",
                 "machine", "verdict", "peak", "worst diff", "first differing sample");
 
@@ -230,5 +269,5 @@ int main() {
         std::printf("%d rendered silence (they need a mounted sample to make a sound);\n"
                     "their verdict covers every other piece of state they carry.\n", silent);
     }
-    return failed == 0 ? 0 : 1;
+    return (failed == 0 && missing == 0) ? 0 : 1;
 }

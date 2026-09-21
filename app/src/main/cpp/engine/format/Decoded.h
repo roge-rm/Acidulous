@@ -74,7 +74,7 @@ inline std::unique_ptr<SampleData> assemble(DecodedAudio &in, const std::string 
     // since almost everything anyone records is 48 kHz.
     //
     // **The planes are moved, not copied**, and that is the point of this
-    // branch. Measured on 2026-09-20 with a five-minute mono take on a Tape
+    // branch. Measured on 2026-09-20 with a five-minute mono take on a Bias
     // track: the peak was 118 MB above the resident 28 MB, because the file's
     // bytes, the decoder's float planes and the assembled copy were all alive
     // at once - and the copy was made by interpolating fourteen million

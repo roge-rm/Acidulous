@@ -13,13 +13,13 @@ import java.io.File
  */
 
 /** How many takes sound together in one cell. Mirrors `kReelLanes`. */
-const val TAPE_LANES = 4
+const val BIAS_LANES = 4
 
 /** The machine that plays them. Named once, since several places ask. */
-const val TAPE_MACHINE = "Tape"
+const val BIAS_MACHINE = "Bias"
 
 /** How long one take may be, which the engine refuses to exceed. */
-const val TAPE_MAX_SECONDS = 300
+const val BIAS_MAX_SECONDS = 300
 
 /**
  * How many min/max pairs a take stores for drawing itself.
@@ -35,7 +35,7 @@ private fun Track.audioLanes(sceneId: String): ClipAudio? =
 
 /** True if this track holds any audio at all - what the sync loop asks first. */
 fun Track.hasAudio(): Boolean =
-    machine.type == TAPE_MACHINE && clips.values.any { it.audio?.isEmpty == false }
+    machine.type == BIAS_MACHINE && clips.values.any { it.audio?.isEmpty == false }
 
 /**
  * What the engine is told, a line per region:
@@ -50,7 +50,7 @@ fun Track.hasAudio(): Boolean =
 fun reelSpec(song: Song, track: Track, root: File): String = buildString {
     for (scene in song.scenes) {
         val audio = track.audioLanes(scene.id) ?: continue
-        for (lane in 0 until TAPE_LANES) {
+        for (lane in 0 until BIAS_LANES) {
             val take = audio.lane(lane) ?: continue
             val file = File(root, take.file)
             if (!file.isFile) continue
@@ -83,8 +83,8 @@ fun reelSpec(song: Song, track: Track, root: File): String = buildString {
  * long on disk.
  */
 fun Clip.withTake(lane: Int, take: TakeRef?): Clip {
-    if (lane !in 0 until TAPE_LANES) return this
-    val lanes = MutableList<TakeRef?>(TAPE_LANES) { audio?.lane(it) }
+    if (lane !in 0 until BIAS_LANES) return this
+    val lanes = MutableList<TakeRef?>(BIAS_LANES) { audio?.lane(it) }
     lanes[lane] = take
     val next = ClipAudio(lanes.dropLastWhile { it == null })
     return copy(audio = if (next.isEmpty) null else next)

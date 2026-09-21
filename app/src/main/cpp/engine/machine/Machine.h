@@ -26,7 +26,7 @@ class Machine {
      * rather than notes from it.
      *
      * Every machine here is told *when* a block is and nothing about *where*;
-     * a tape has to know which cell it is in and how far through that cell's
+     * Bias has to know which cell it is in and how far through that cell's
      * own cycle, and only the scheduler can say - it is the one place that
      * unifies the arranger's single position with the launcher's sixteen.
      * `cycleTick` counts the repeats, unlike the tick a note is fired against;

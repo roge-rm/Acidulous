@@ -5,7 +5,15 @@ package com.rm.acidulous.model
  * whether it is played from a keyboard or pads, and what the pads are called.
  * Mirrors the voice order and base note in engine/machine/hexbeat/Hexbeat.h.
  */
-enum class MachineKind { Keyboard, Drums }
+/**
+ * What a track is played with, which decides what the editor shows.
+ *
+ * [Audio] is the odd one and the reason this is an enum rather than a boolean:
+ * a tape has no keyboard, no pads and no notes at all. Every `== Drums` in
+ * EditScreen used to mean "pads rather than keys", and each one had to be read
+ * again as "pads, keys, or neither".
+ */
+enum class MachineKind { Keyboard, Drums, Audio }
 
 /**
  * One pad, as the pads and the grid draw it.
@@ -19,10 +27,12 @@ enum class MachineKind { Keyboard, Drums }
 data class DrumVoice(val note: Int, val name: String, val short: String, val loaded: Boolean = true)
 
 object MachineUi {
-    fun kindOf(type: String): MachineKind =
-        if (type == "Hexbeat" || type == "Forage" || type == "Resonance" || type == "Dice" ||
-            type == "Genesis") MachineKind.Drums
-        else MachineKind.Keyboard
+    fun kindOf(type: String): MachineKind = when {
+        type == "Bias" -> MachineKind.Audio
+        type == "Hexbeat" || type == "Forage" || type == "Resonance" || type == "Dice" ||
+            type == "Genesis" -> MachineKind.Drums
+        else -> MachineKind.Keyboard
+    }
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
     /**
@@ -46,7 +56,7 @@ object MachineUi {
         MachineGroup("synths", listOf("Subvert", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup("drums", listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
         MachineGroup("realish", listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
-        MachineGroup("beyond", listOf("Cipher", "Nexus", "Tape")),
+        MachineGroup("beyond", listOf("Cipher", "Nexus", "Bias")),
     )
 
     /** One line per machine: what it is, not what it has. */
@@ -70,7 +80,7 @@ object MachineUi {
         "Molt" -> "a sung take, tuned by the notes you draw"
         "Cipher" -> "a vocoder whose band map is the instrument"
         "Nexus" -> "a modular whose blocks are the other machines"
-        "Tape" -> "a four-track: recordings arranged along the song"
+        "Bias" -> "a four-track: recordings arranged along the song"
         else -> ""
     }
 

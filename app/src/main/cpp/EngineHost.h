@@ -126,7 +126,7 @@ class EngineHost {
     /**
      * [fileInfo] and [fileShape] in one decode.
      *
-     * Both of those read the whole file, and a take being put on a tape lane
+     * Both of those read the whole file, and a take being put on one of Bias's lanes
      * wants both answers about the same file at the same moment - so asking
      * separately decodes five minutes of audio twice, for two numbers and forty
      * pairs. The peak transient is the reason this exists rather than tidiness:

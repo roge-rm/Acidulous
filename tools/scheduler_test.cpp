@@ -471,6 +471,44 @@ void aCellsCycleCountsItsRepeats() {
        std::to_string(cycle2) + ", wanted about " + std::to_string(cycle1 + kBar));
 }
 
+/**
+ * The claim that one recording serves both modes, put where it can fail.
+ *
+ * A cell shorter than its scene is the case the two modes used to disagree
+ * about: the launcher gives a clip `lengthTicks() * repeat` and the arranger
+ * used to give it the whole scene, so the same take would have read different
+ * frames depending on which button was pressed. Four bars of scene, one bar of
+ * clip, played twice - so the clip's cycle is two bars and the scene's
+ * iteration is four.
+ */
+void aShortCellsCycleAgreesInBothModes() {
+    printf("- a cell shorter than its scene reads the same in both modes\n");
+    const int64_t at = kBar + kBar / 2; // a bar and a half in: past one cycle
+
+    auto song = std::make_unique<Fixture>();
+    song->scene(1, 4, 2);
+    song->clip(0, 0, 1);
+    song->commit();
+    song->play();
+    song->run(song->blocksFor(3.0)); // three seconds: a bar and a half
+    const int64_t arranger = song->scheduler.rackCycleTick(0);
+
+    auto clips = std::make_unique<Fixture>();
+    clips->scene(1, 4, 2);
+    clips->clip(0, 0, 1);
+    clips->commit();
+    clips->transport.setLauncher(true);
+    clips->transport.launchClip(0, 1);
+    clips->play(0);
+    clips->run(clips->blocksFor(3.0));
+    const int64_t launcher = clips->scheduler.rackCycleTick(0);
+
+    ok("the arranger wraps onto the clip's cycle", std::llabs(arranger - at) < 16,
+       std::to_string(arranger) + ", wanted about " + std::to_string(at));
+    ok("and clip mode says the same", std::llabs(launcher - arranger) < 16,
+       std::to_string(launcher) + " against " + std::to_string(arranger));
+}
+
 } // namespace
 
 int main() {
@@ -486,6 +524,7 @@ int main() {
     nothingIsLeftSounding();
     aMutedClipIsMutedWhenFrozen();
     aCellsCycleCountsItsRepeats();
+    aShortCellsCycleAgreesInBothModes();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -1316,7 +1316,7 @@ Machine *awaitMachine(Engine &engine, int rack, const char *type) {
  */
 std::string EngineHost::loadReel(int rack, const std::string &spec) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
-    if (awaitMachine(sEngine, rack, "Tape") == nullptr) return "that rack is not a tape";
+    if (awaitMachine(sEngine, rack, "Bias") == nullptr) return "that rack is not a Bias";
 
     auto reel = std::make_unique<audio::Reel>();
     std::string error;

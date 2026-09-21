@@ -68,8 +68,8 @@ These are solved rather than sampled, so they respond to how you play them.
 
 ## Audio
 
-- **Tape** - a four-track that runs along the song. Where every other machine
-  plays the notes in a cell, Tape plays the *recording* in a cell: four lanes,
+- **Bias** - a four-track that runs along the song. Where every other machine
+  plays the notes in a cell, Bias plays the *recording* in a cell: four lanes,
   and they sound together, so choosing between three takes is muting two of
   them and doubling a vocal is unmuting a second. **audio…** on a lane puts a
   recording there, and it belongs to that cell - a take that crosses four
@@ -80,6 +80,12 @@ These are solved rather than sampled, so they respond to how you play them.
   whole reason they are there rather than on the recording: they automate in
   the strip under the grid, they map to a pad or a knob, and they record while
   you play. A muted section is a mute drawn in that cell.
+
+  Opening a Bias cell gives you the lanes themselves, along this cell's whole
+  cycle - both passes of a scene set to repeat, because that is what a
+  four-track plays. Drag a lane's body to move where it comes in; drag either
+  end to trim the recording without moving it; tap the number at the left to
+  mute the lane. An empty lane is a tap away from the library.
 
   Audio does not stretch. A take enters on the bar wherever it is put, and runs
   at the speed it was recorded at; when that is not the tempo the scene plays

@@ -1,6 +1,6 @@
 #!/bin/bash
-# The tape machine, read back off a reel built out of a ramp. See
-# tools/tape_test.cpp.
+# Bias, the four-track, read back off a reel built out of a ramp. See
+# tools/bias_test.cpp.
 #
 # Links the host-engine archive for the registry, as scheduler_test does, but
 # needs no Rack: what is being asked here is what the machine reads when it is
@@ -13,6 +13,6 @@ trap 'rm -rf "$DIR"' EXIT
 
 LIB=$("$ROOT/tools/host_engine.sh") || exit 1
 g++ -O1 -g -std=c++17 -fsanitize=address,undefined -fno-omit-frame-pointer \
-    -I "$CPP" "$ROOT/tools/tape_test.cpp" "$LIB" \
-    -o "$DIR/tape_test" || exit 1
-"$DIR/tape_test"
+    -I "$CPP" "$ROOT/tools/bias_test.cpp" "$LIB" \
+    -o "$DIR/bias_test" || exit 1
+"$DIR/bias_test"

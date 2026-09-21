@@ -44,6 +44,7 @@ import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
 import com.rm.acidulous.model.Action
 import com.rm.acidulous.model.MachineKind
+import com.rm.acidulous.model.audioLaneCount
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Scales
 import com.rm.acidulous.model.EVENTOR_SLOTS
@@ -225,6 +226,21 @@ fun EditScreen(
         position.tickInIteration % clipLen
     } else null
 
+    /**
+     * The same position, counted across the repeats rather than reset at each.
+     *
+     * What a tape plays against - `SceneScheduler::rackCycleTick` - and so what
+     * its editor has to draw against. The scene's own iteration is what the
+     * repeat counts in, and the clip's cycle is what the answer wraps onto,
+     * exactly as the scheduler does it; the two agree for every cell nobody has
+     * deliberately made shorter than its scene.
+     */
+    val cycleTicks = (clipLen * scene.repeat).coerceAtLeast(1)
+    val cyclePlayhead = playhead?.let {
+        val iteration = song.barsOf(scene) * ticksPerBar
+        ((position.repeat.toLong() * iteration + position.tickInIteration) % cycleTicks).toInt()
+    }
+
     // Two bars at a time in the roll, one in the step views: any more and the
     // notes are too narrow to grab. The count of pages follows from that.
     //
@@ -305,6 +321,8 @@ fun EditScreen(
         // saying the same thing about the other surface - the one not on
         // screen - would be a control for something you cannot see.
         val padToggle = kind == MachineKind.Drums
+        // Neither pads nor keys, so nothing whose strength there is to read.
+        val hasStrength = kind != MachineKind.Audio
         val fullStrength = if (padToggle) UiPrefs.padsFullStrength else UiPrefs.keysFullStrength
         // Fill earns its place only where there is a fill trig to hear. A
         // performance control that is always on this row would cost the seven
@@ -315,7 +333,8 @@ fun EditScreen(
         val hasFill = clip.notes.any {
             it.trig == com.rm.acidulous.model.Trig.Fill || it.trig == com.rm.acidulous.model.Trig.NotFill
         }
-        val views = 2 + (if (hasSteps) 1 else 0) + (if (!steps) 1 else 0) + (if (hasFill) 1 else 0)
+        val views = 1 + (if (hasStrength) 1 else 0) + (if (hasSteps) 1 else 0) +
+            (if (!steps) 1 else 0) + (if (hasFill) 1 else 0)
         BottomBar(
             // Sideways it stands in the header, so it is a row again and the
             // header says where. **And it has no fold of its own any more.**
@@ -336,7 +355,7 @@ fun EditScreen(
             // How hard the instrument hits: a wedge for velocity off the
             // height of the strike, a solid block for the same full strength
             // wherever it lands.
-            BarButton(
+            if (hasStrength) BarButton(
                 if (fullStrength) "\u25A0" else "\u25E2", view,
                 colour = if (fullStrength) Acid.colors.accent else Color.Unspecified,
             ) {
@@ -444,7 +463,10 @@ fun EditScreen(
             // the header and it did nothing; on a phone held one-handed the
             // arrow alone is a small target at the far corner.
             Text(
-                "${track.name} · ${scene.name} · ${clip.bars}b · ${clip.notes.size}n" +
+                "${track.name} · ${scene.name} · ${clip.bars}b · " +
+                    // A tape holds takes, not notes, and "0n" beside four lanes
+                    // of audio is a reading of the wrong thing.
+                    (if (kind == MachineKind.Audio) "${clip.audioLaneCount()} lane" else "${clip.notes.size}n") +
                     (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a") +
                     // The selection count reads here rather than in the bar.
                     // It is a reading, and this line is where this screen's
@@ -491,7 +513,18 @@ fun EditScreen(
         // each is written once here and placed below.
         var octave by rememberSaveable(trackIndex) { mutableStateOf(3) }
         val gridSlot: @Composable ColumnScope.() -> Unit = {
-        if (steps && kind == MachineKind.Drums) DrumGrid(
+        if (kind == MachineKind.Audio) AudioLanes(
+            clip = clip,
+            ticksPerBar = ticksPerBar,
+            // The cycle, not one pass: a tape plays straight through the
+            // scene's repeats and its editor has to show all of them.
+            cycleTicks = cycleTicks,
+            playheadTick = cyclePlayhead,
+            trackIndex = trackIndex,
+            sceneId = sceneId,
+            editor = editor,
+            modifier = Modifier.fillMaxWidth().weight(1f),
+        ) else if (steps && kind == MachineKind.Drums) DrumGrid(
             clip = clip,
             ticksPerBar = ticksPerBar,
             voices = voices,
@@ -797,7 +830,13 @@ fun EditScreen(
         // sideways, where there is no divider to move.
         val keysSlot: @Composable (Dp, Modifier) -> Unit = { height, grip ->
         val keysFolded = UiPrefs.keysFolded
-        if (kind == MachineKind.Drums) Column(Modifier.fillMaxWidth().height(height)) {
+        // **A tape has no instrument, so it is given none.** Not a folded
+        // keyboard, not an empty strip: the lanes take the whole screen, which
+        // is the point of having an editor of their own. Everything the
+        // performance row carries - the wheels, the octave, the three eventor
+        // chips - belongs to notes, and there are no notes here.
+        if (kind == MachineKind.Audio) Unit
+        else if (kind == MachineKind.Drums) Column(Modifier.fillMaxWidth().height(height)) {
             // The pads have no row of their own to hide a handle in, so the
             // gap above them is it: the same gap that was always there, wide
             // enough to catch a finger and still drawing nothing.
@@ -1011,7 +1050,10 @@ fun EditScreen(
                 // apply - and there is nothing to drag, so the grip goes too.
                 val keysFolded = UiPrefs.keysFolded
                 val foldedH = if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H
-                val keysH = if (keysFolded) foldedH else total * frac
+                // No instrument means no share of the height for one: the
+                // lanes take what a keyboard would have had.
+                val keysH = if (kind == MachineKind.Audio) 0.dp
+                            else if (keysFolded) foldedH else total * frac
                 // A lane open sideways gets a quarter of what is left above
                 // the keyboard rather than a stated eighty-eight, with a
                 // floor at the height a finger needs to set a value in.
@@ -1032,7 +1074,10 @@ fun EditScreen(
                         ) { panelSlot(true, false) }
                         Column(Modifier.weight(1f).fillMaxHeight()) {
                             gridSlot()
-                            noteLaneSlot(laneH)
+                            // A tape has no notes, so there is nothing for the
+                            // note lane to be a lane of. The mutes it does
+                            // automate are in the strip below, which stays.
+                            if (kind != MachineKind.Audio) noteLaneSlot(laneH)
                             automationSlot(laneH)
                         }
                         // The cards own their own scrolling now - see
@@ -1058,7 +1103,7 @@ fun EditScreen(
             // its margins.
             Column(Modifier.fillMaxWidth().weight(1f).then(pad)) {
                 gridSlot()
-                noteLaneSlot(LaneH)
+                if (kind != MachineKind.Audio) noteLaneSlot(LaneH)
                 automationSlot(LaneH)
                 panelSlot(true, true)
                 // **Upright the instrument can be dragged taller too**, by the
@@ -1089,7 +1134,7 @@ fun EditScreen(
                 //
                 // Nothing to prove at 1.0: the divisor is one.
                 val keysBase = (if (kind == MachineKind.Drums) PADS_H else KEYS_H) / scale
-                val keysH = keysBase * keysStretch
+                val keysH = if (kind == MachineKind.Audio) 0.dp else keysBase * keysStretch
                 keysSlot(
                     if (UiPrefs.keysFolded) {
                         if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H

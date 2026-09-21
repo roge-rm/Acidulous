@@ -68,18 +68,7 @@ fun ClipThumbnail(clip: Clip, ticksPerBar: Int, accent: Color, modifier: Modifie
                 if (width <= 0f) continue
                 val all = take.peaks.size / 2
                 val columns = (all * width / span).toInt().coerceIn(1, all)
-                val colW = width / columns
-                for (i in 0 until columns) {
-                    val lo = take.peaks[i * 2].coerceIn(-1f, 1f)
-                    val hi = take.peaks[i * 2 + 1].coerceIn(-1f, 1f)
-                    val top = mid - hi * half
-                    val bottom = mid - lo * half
-                    drawRect(
-                        accent.copy(alpha = alpha),
-                        Offset(from + i * colW, top),
-                        Size(max(1f, colW), max(1f, bottom - top)),
-                    )
-                }
+                drawShape(take.peaks, 0, columns, from, from + width, mid, half, accent.copy(alpha = alpha))
             }
         }
         if (clip.notes.isEmpty()) return@Canvas

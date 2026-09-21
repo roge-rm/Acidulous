@@ -17,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,37 @@ import kotlin.math.min
 @Immutable
 data class WaveView(val from: Double = 0.0, val span: Double = 1.0) {
     val zoomed: Boolean get() = span < 0.999
+}
+
+/**
+ * Min/max pairs into a box, and the one loop in the app that draws a sound.
+ *
+ * Three places draw waveforms now - the trimmer above, a grid cell, and a tape
+ * lane - and they disagree about the axis: the trimmer's is the file, a cell's
+ * is the scene's cycle, a lane's is the cycle with the take somewhere in it.
+ * What they cannot be allowed to disagree about is the *picture*, so the axis
+ * stays with each caller and the columns come here.
+ *
+ * [c0] until [c1] are the columns of [shape] to use, laid across [x0] until
+ * [x1]. Drawn as rectangles rather than lines because a column wider than a
+ * pixel is a block, and a one-pixel line with a fat stroke is the same block
+ * drawn less predictably at the ends.
+ */
+fun DrawScope.drawShape(
+    shape: List<Float>, c0: Int, c1: Int, x0: Float, x1: Float, mid: Float, half: Float, colour: Color,
+) {
+    val columns = c1 - c0
+    if (columns <= 0 || x1 <= x0 || shape.size < 2) return
+    val colW = (x1 - x0) / columns
+    for (i in 0 until columns) {
+        val k = (c0 + i) * 2
+        if (k + 1 >= shape.size) break
+        val lo = shape[k].coerceIn(-1f, 1f)
+        val hi = shape[k + 1].coerceIn(-1f, 1f)
+        val top = mid - hi * half
+        val bottom = mid - lo * half
+        drawRect(colour, Offset(x0 + i * colW, top), Size(max(1f, colW), max(1f, bottom - top)))
+    }
 }
 
 @Composable

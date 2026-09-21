@@ -18,17 +18,17 @@
 #include "brazen/Brazen.h"
 #include "timber/Timber.h"
 #include "molt/Molt.h"
-#include "tape/Tape.h"
+#include "bias/Bias.h"
 
 namespace acidulous {
 
 namespace {
-const char *const kNames[] = {"Subvert", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Tape"};
+const char *const kNames[] = {"Subvert", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Bias"};
 constexpr int32_t kCount = sizeof(kNames) / sizeof(kNames[0]);
 } // namespace
 
 Machine *MachineRegistry::create(const char *typeName) {
-    if (std::strcmp(typeName, "Tape") == 0) return new machine::Tape();
+    if (std::strcmp(typeName, "Bias") == 0) return new machine::Bias();
     if (std::strcmp(typeName, "Subvert") == 0) return new machine::Subvert();
     if (std::strcmp(typeName, "Trinity") == 0) return new machine::Trinity();
     if (std::strcmp(typeName, "Ratio") == 0) return new machine::Ratio();
@@ -126,6 +126,10 @@ const ParamDef *MachineRegistry::paramDefs(const char *typeName, int32_t &count)
     }
     if (std::strcmp(typeName, "Molt") == 0) {
         static const machine::Molt probe;
+        return probe.paramDefs(count);
+    }
+    if (std::strcmp(typeName, "Bias") == 0) {
+        static const machine::Bias probe;
         return probe.paramDefs(count);
     }
     count = 0;

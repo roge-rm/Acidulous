@@ -56,7 +56,7 @@ import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withPatch
 import com.rm.acidulous.model.samplesInUse
-import com.rm.acidulous.model.TAPE_LANES
+import com.rm.acidulous.model.BIAS_LANES
 import com.rm.acidulous.model.bpmOf
 import com.rm.acidulous.model.takeForWholeFile
 import com.rm.acidulous.model.withTake
@@ -207,7 +207,7 @@ fun MachinePanel(
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
-            "Tape" -> TapePanel(binding, track, trackIndex, sceneId, editor)
+            "Bias" -> BiasPanel(binding, track, trackIndex, sceneId, editor)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(
                 binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
@@ -3001,7 +3001,7 @@ private fun MomentaryButton(b: ParamBinding, name: String, label: String) {
     }) { Text(label, color = Acid.colors.accent, fontSize = 12.sp) }
 }
 
-// --- Tape -------------------------------------------------------------------------
+// --- Bias -------------------------------------------------------------------------
 
 /**
  * The four-track's face: a card per lane, and a lane's card is where its
@@ -3017,7 +3017,7 @@ private fun MomentaryButton(b: ParamBinding, name: String, label: String) {
  * Four cards and no section chips, because four lanes are what a tape has.
  */
 @Composable
-private fun TapePanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: String, editor: SongEditor) {
+private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: String, editor: SongEditor) {
     var picking by remember { mutableStateOf(-1) }
     val scope = rememberCoroutineScope()
     val c = Acid.colors
@@ -3026,7 +3026,7 @@ private fun TapePanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
     val sceneBpm = if (sceneId.isEmpty()) song.tempo else song.bpmOf(sceneId)
     PanelSections {
         GroupRow {
-            for (lane in 0 until TAPE_LANES) {
+            for (lane in 0 until BIAS_LANES) {
                 val take = clip?.audio?.lane(lane)
                 Group("lane ${lane + 1}") {
                     Column(Modifier.widthIn(min = 116.dp, max = 200.dp)) {
@@ -3062,31 +3062,7 @@ private fun TapePanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
             Group("out") { PanelKnob(b, "gain", "gain", PanelAmber) }
         }
     }
-    if (picking >= 0) {
-        val lane = picking
-        RecorderDialog(
-            startOn = RecorderPage.Library,
-            inUse = song.samplesInUse(),
-            onPick = { rel ->
-                picking = -1
-                // Off the main thread: the length and the shape both come from
-                // decoding the file, and the file may be five minutes long.
-                scope.launch {
-                    val root = com.rm.acidulous.engine.EngineSync.sampleRoot
-                    val survey = withContext(Dispatchers.Default) { TakePeaks.survey(root, rel) }
-                        ?: return@launch
-                    editor.editClip(trackIndex, sceneId) { cl ->
-                        cl.withTake(
-                            lane,
-                            song.takeForWholeFile(sceneId, cl, rel, survey.frames)
-                                .copy(peaks = survey.peaks),
-                        )
-                    }
-                }
-            },
-            onDismiss = { picking = -1 },
-        )
-    }
+    if (picking >= 0) TakePicker(trackIndex, sceneId, picking, editor, scope) { picking = -1 }
 }
 
 // --- Filament ---------------------------------------------------------------

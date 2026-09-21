@@ -1,11 +1,11 @@
-#include "Tape.h"
+#include "Bias.h"
 #include <cmath>
 #include <engine/core/Constants.h>
 #include <engine/dsp/Math.h>
 
 namespace acidulous::machine {
 
-const ParamDef *Tape::paramDefs(int32_t &count) const {
+const ParamDef *Bias::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
         // The four lanes. A level and a mute apiece, and both are parameters
         // rather than fields on the recording - which is what puts them in the
@@ -25,12 +25,12 @@ const ParamDef *Tape::paramDefs(int32_t &count) const {
     return defs;
 }
 
-void Tape::prepare(int32_t rate) {
+void Bias::prepare(int32_t rate) {
     sampleRate = static_cast<float>(rate);
     reset();
 }
 
-void Tape::reset() {
+void Bias::reset() {
     for (auto &c : cursors) c.invalidate();
     cell = nullptr;
     cycleTick = 0;
@@ -39,7 +39,7 @@ void Tape::reset() {
     params_.jumpAll();
 }
 
-void *Tape::swapObject(int32_t slot, void *object) {
+void *Bias::swapObject(int32_t slot, void *object) {
     if (slot != 0) return object; // nothing else is mounted here; retire it
     auto *old = const_cast<audio::Reel *>(reel);
     reel = static_cast<const audio::Reel *>(object);
@@ -49,7 +49,7 @@ void *Tape::swapObject(int32_t slot, void *object) {
     return old;
 }
 
-void Tape::onScene(int64_t sceneId, int64_t tick, bool isPlaying, bool clipMuted) {
+void Bias::onScene(int64_t sceneId, int64_t tick, bool isPlaying, bool clipMuted) {
     playing = isPlaying;
     muted = clipMuted;
     cycleTick = tick;
@@ -61,7 +61,7 @@ void Tape::onScene(int64_t sceneId, int64_t tick, bool isPlaying, bool clipMuted
     for (auto &c : cursors) c.invalidate();
 }
 
-bool Tape::render(float *L, float *R, int32_t frames) {
+bool Bias::render(float *L, float *R, int32_t frames) {
     params_.tick();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (cell == nullptr || !playing || muted) return true;

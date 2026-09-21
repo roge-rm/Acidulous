@@ -26,7 +26,7 @@ namespace acidulous::audio {
 /** How long one take may be. See the note in Reel::Source. */
 constexpr int32_t kMaxReelSeconds = 300;
 
-/** How many lanes a tape has. Four, because that is what a four-track is. */
+/** How many lanes Bias has. Four, because that is what a four-track is. */
 constexpr int32_t kReelLanes = 4;
 
 /**

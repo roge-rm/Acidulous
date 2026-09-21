@@ -2,7 +2,7 @@
 #include <engine/core/Reel.h>
 #include <engine/machine/Machine.h>
 
-// Tape - a four-track running the length of the song.
+// Bias - a four-track running the length of the song.
 //
 // Every other machine here answers notes. This one answers the *arrangement*:
 // it is told which cell the rack is in and how far through that cell's cycle,
@@ -28,7 +28,7 @@
 //     not was trimmed on purpose.
 namespace acidulous::machine {
 
-class Tape final : public Machine {
+class Bias final : public Machine {
   public:
     enum P : int32_t {
         Lane1, Lane2, Lane3, Lane4,
@@ -36,9 +36,9 @@ class Tape final : public Machine {
         Gain, Count
     };
 
-    Tape() { initParams(); }
+    Bias() { initParams(); }
 
-    const char *typeName() const override { return "Tape"; }
+    const char *typeName() const override { return "Bias"; }
     const ParamDef *paramDefs(int32_t &count) const override;
     void prepare(int32_t sampleRate) override;
     void reset() override;
@@ -49,7 +49,7 @@ class Tape final : public Machine {
     /** Slot 0 is the reel. Nothing else is mounted here. */
     void *swapObject(int32_t slot, void *object) override;
 
-    // A tape is not played from the keyboard. The notes in its clip are not
+    // Bias is not played from the keyboard. The notes in its clip are not
     // its business either - what it plays is decided by where the song is.
     void noteOn(uint8_t, uint8_t) override {}
     void noteOff(uint8_t) override {}
