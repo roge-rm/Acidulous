@@ -340,6 +340,20 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeFileShape(JNIEnv *env, jobject, 
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeFileSurvey(JNIEnv *env, jobject, jstring path,
+                                                           jfloatArray out) {
+    const jsize max = env->GetArrayLength(out);
+    if (max < 2) return env->NewStringUTF("");
+    const char *p = env->GetStringUTFChars(path, nullptr);
+    jfloat *data = env->GetFloatArrayElements(out, nullptr);
+    const std::string info =
+        host().fileSurvey(p != nullptr ? p : "", data, static_cast<int32_t>(max / 2));
+    env->ReleaseFloatArrayElements(out, data, 0);
+    if (p != nullptr) env->ReleaseStringUTFChars(path, p);
+    return env->NewStringUTF(info.c_str());
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeAuditionFile(JNIEnv *env, jobject, jstring path) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     const std::string out = host().auditionFile(p != nullptr ? p : "");

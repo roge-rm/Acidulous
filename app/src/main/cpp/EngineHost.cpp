@@ -326,6 +326,17 @@ std::string EngineHost::fileInfo(const std::string &path) const {
     return out;
 }
 
+std::string EngineHost::fileSurvey(const std::string &path, float *dest, int32_t columns) const {
+    std::string error;
+    const std::unique_ptr<SampleData> s = WavReader::read(path, kSampleRate, error, kMaxSliceSeconds);
+    if (s == nullptr || s->frames <= 0) return "";
+    shapeOf(*s, dest, columns, 0, 0);
+    char out[256];
+    std::snprintf(out, sizeof(out), "%s|%d|%d|%d|%.4f", s->name.c_str(), s->frames,
+                  s->stereo ? 2 : 1, s->rate, static_cast<double>(s->peak));
+    return out;
+}
+
 std::string EngineHost::auditionFile(const std::string &path) {
     if (path.empty()) {
         sEngine.audition.stop();

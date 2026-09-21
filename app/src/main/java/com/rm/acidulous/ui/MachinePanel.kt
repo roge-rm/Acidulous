@@ -3069,16 +3069,18 @@ private fun TapePanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
             inUse = song.samplesInUse(),
             onPick = { rel ->
                 picking = -1
-                // Off the main thread: the length comes from the file, and the
-                // file may be five minutes long.
+                // Off the main thread: the length and the shape both come from
+                // decoding the file, and the file may be five minutes long.
                 scope.launch {
                     val root = com.rm.acidulous.engine.EngineSync.sampleRoot
-                    val path = java.io.File(root, rel).absolutePath
-                    val info = withContext(Dispatchers.Default) { NativeEngine.fileInfo(path) }
-                    val frames = info.split('|').getOrNull(1)?.toIntOrNull() ?: 0
-                    if (frames <= 0) return@launch
+                    val survey = withContext(Dispatchers.Default) { TakePeaks.survey(root, rel) }
+                        ?: return@launch
                     editor.editClip(trackIndex, sceneId) { cl ->
-                        cl.withTake(lane, song.takeForWholeFile(sceneId, cl, rel, frames))
+                        cl.withTake(
+                            lane,
+                            song.takeForWholeFile(sceneId, cl, rel, survey.frames)
+                                .copy(peaks = survey.peaks),
+                        )
                     }
                 }
             },

@@ -529,6 +529,17 @@ object NativeEngine {
     fun fileInfo(path: String): String = nativeFileInfo(path)
 
     /**
+     * [fileInfo] and [fileShape] in one decode: fills [out] with min/max pairs
+     * for the whole file and returns the same string [fileInfo] does.
+     *
+     * Putting a take on a tape lane wants both answers about the same file, and
+     * asking separately decodes it twice - which for a five-minute recording is
+     * two peaks of well over a hundred megabytes. A worker, never the audio
+     * thread and never the main one.
+     */
+    fun fileSurvey(path: String, out: FloatArray): String = nativeFileSurvey(path, out)
+
+    /**
      * Play a file once, to hear what it is. An empty path stops it.
      *
      * Outside the song entirely: not recorded into a take, not exported, not
@@ -574,6 +585,7 @@ object NativeEngine {
     private external fun nativeCaptureDeaf(): Boolean
     private external fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int
     private external fun nativeFileInfo(path: String): String
+    private external fun nativeFileSurvey(path: String, out: FloatArray): String
     private external fun nativeAuditionFile(path: String): String
     private external fun nativeAuditioning(): Boolean
     private external fun nativeEditSample(src: String, dst: String, ops: FloatArray): String

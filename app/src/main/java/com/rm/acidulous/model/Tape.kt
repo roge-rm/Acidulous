@@ -21,6 +21,15 @@ const val TAPE_MACHINE = "Tape"
 /** How long one take may be, which the engine refuses to exceed. */
 const val TAPE_MAX_SECONDS = 300
 
+/**
+ * How many min/max pairs a take stores for drawing itself.
+ *
+ * Enough for a grid cell and no more: the shape is measured once, when the take
+ * is made, and kept on the take so that scrolling the grid reads no files. See
+ * `ui/TakePeaks`.
+ */
+const val TAKE_PEAK_COLUMNS = 40
+
 private fun Track.audioLanes(sceneId: String): ClipAudio? =
     clips[sceneId]?.audio?.takeIf { !it.isEmpty }
 
@@ -109,3 +118,31 @@ fun Song.takeForWholeFile(sceneId: String, clip: Clip, relative: String, frames:
         file = relative, offset = 0, frames = frames,
         bpm = bpmOf(sceneId), ticks = cycleTicks(sceneId, clip),
     )
+
+/** How many of this cell's four lanes hold something. */
+fun Clip.audioLaneCount(): Int = audio?.lanes?.count { it != null } ?: 0
+
+/**
+ * Whether any take here was recorded at a tempo the scene does not play at.
+ *
+ * The same question `Freeze.stale` asks of a frozen clip, and worth asking for
+ * the same reason: the audio is going to sound anyway, and the player is owed
+ * the one fact that explains why it drifts away from the beat. Audio does not
+ * stretch until M55.
+ */
+fun Song.takeTempoDiffers(sceneId: String, clip: Clip): Boolean {
+    val bpm = bpmOf(sceneId)
+    return clip.audio?.lanes?.any { it != null && kotlin.math.abs(it.bpm - bpm) > 0.05f } == true
+}
+
+/**
+ * How long a take is, in ticks **of the tempo it was recorded at**.
+ *
+ * Which is the tempo that decides where it ends in a cell, because audio does
+ * not stretch: a take sung at 100 bpm and dropped into a 140 bpm scene runs for
+ * the same number of seconds and therefore fewer bars. The cell draws it to
+ * this length, and a cell narrower than this is a take that is cut off by its
+ * own cycle rather than trimmed.
+ */
+fun TakeRef.lengthTicks(): Int =
+    (frames.toDouble() / ENGINE_RATE * (bpm / 60.0) * PPQN).toInt().coerceAtLeast(1)

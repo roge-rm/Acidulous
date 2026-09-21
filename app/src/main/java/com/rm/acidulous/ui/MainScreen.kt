@@ -64,7 +64,10 @@ import com.rm.acidulous.model.samplesInUse
 import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.addScene
+import androidx.compose.ui.text.withStyle
 import com.rm.acidulous.model.Freeze
+import com.rm.acidulous.model.audioLaneCount
+import com.rm.acidulous.model.takeTempoDiffers
 import com.rm.acidulous.model.cleared
 import com.rm.acidulous.model.addTrack
 import com.rm.acidulous.ui.UiPrefs.withDefaultScale
@@ -614,6 +617,8 @@ fun MainScreen(
                                 onSettings = { dialog = Dialog.ClipSettings(trackIndex, scene.id) },
                                 frozen = clip?.frozen != null,
                                 stale = clip != null && Freeze.stale(song, scene.id, clip),
+                                audioLanes = clip?.audioLaneCount() ?: 0,
+                                audioStale = clip != null && song.takeTempoDiffers(scene.id, clip),
                                 clipMode = clipMode,
                                 queued = clipMode && launch.pending == sceneIndex,
                                 stopping = clipMode && launch.stopping && launch.scene == sceneIndex,
@@ -899,6 +904,9 @@ private fun ClipCell(
     frozen: Boolean = false,
     /** Frozen, but at another tempo, so the machine is playing after all. */
     stale: Boolean = false,
+    /** How many tape lanes hold a recording here, and whether any is off-tempo. */
+    audioLanes: Int = 0,
+    audioStale: Boolean = false,
     clipMode: Boolean = false,
     /** Waiting its turn, and playing-but-asking-to-be-let-go. */
     queued: Boolean = false,
@@ -981,10 +989,22 @@ private fun ClipCell(
                 )
             }
             Text(
-                buildString {
+                androidx.compose.ui.text.buildAnnotatedString {
                     append("${clip.bars}b")
                     if (clip.playMode == com.rm.acidulous.model.PlayMode.OneShot) append(" 1")
                     if (clip.mute) append(" M")
+                    // How many takes are layered here, and - in amber, the
+                    // colour this app uses for "this will sound, but not the
+                    // way you expect" - whether one of them was recorded at
+                    // another tempo. Audio does not stretch.
+                    if (audioLanes > 0) {
+                        append(" ")
+                        withStyle(
+                            androidx.compose.ui.text.SpanStyle(
+                                color = if (audioStale) Acid.colors.accent else Acid.colors.teal,
+                            ),
+                        ) { append("\u266A$audioLanes") }
+                    }
                 },
                 color = Acid.colors.textHi, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                 modifier = Modifier.align(Alignment.TopEnd).padding(3.dp),

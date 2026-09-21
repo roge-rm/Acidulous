@@ -124,6 +124,16 @@ class EngineHost {
     /** "name|frames|channels|rate|peak" for a file on disk, "" if unreadable. */
     std::string fileInfo(const std::string &path) const;
     /**
+     * [fileInfo] and [fileShape] in one decode.
+     *
+     * Both of those read the whole file, and a take being put on a tape lane
+     * wants both answers about the same file at the same moment - so asking
+     * separately decodes five minutes of audio twice, for two numbers and forty
+     * pairs. The peak transient is the reason this exists rather than tidiness:
+     * see the note in `assemble`.
+     */
+    std::string fileSurvey(const std::string &path, float *dest, int32_t columns) const;
+    /**
      * Read [src], apply [ops], write [dst]. "" or a reason.
      *
      * [dst] may be [src], which is the overwrite. Written to a temporary and

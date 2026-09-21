@@ -17,6 +17,16 @@ import java.util.concurrent.atomic.AtomicLong
 
 const val PPQN = 240
 
+/**
+ * The rate the engine runs at, and the rate every decoded file is resampled to.
+ *
+ * Here because it is the other fixed number the document needs to turn frames
+ * into musical time - a take's length in ticks, a freeze's in seconds. It was
+ * written as a bare 48000 in eight places before anything had to do arithmetic
+ * with it.
+ */
+const val ENGINE_RATE = 48000
+
 @Serializable
 data class Signature(val beats: Int = 4, val unit: Int = 4) {
     val ticksPerBar: Int get() = beats * 4 * PPQN / unit
