@@ -40,6 +40,25 @@ OPEN, CLOSE = "<!-- contents -->", "<!-- /contents -->"
 
 HEADING, PARA, BULLET, STEP = 0, 1, 2, 3
 
+# A Markdown link, which the manual is written with and the app's reader has
+# no way to draw.
+#
+# The reader's subset is deliberately small, and a link is the one piece of
+# Markdown where that costs the *source* something: written plainly, a section
+# page cannot point at its own sub-pages, so anybody reading the manual as
+# files has to guess that `05-effects-and-mixing/delay.md` exists. Written as a
+# link it came out in the app as a literal `[Delay](05-...)`, brackets and all.
+#
+# So the link is resolved here instead: the file keeps it, the app gets the
+# text. The app has its own way to reach a sub-page - the tappable rows under
+# "in detail" - and does not need the link, only the words.
+LINK = re.compile(r"\[([^\]]+)\]\([^)]+\)")
+
+
+def unlink(text):
+    """`[Delay](delay.md)` -> `Delay`, for a reader that cannot draw one."""
+    return LINK.sub(r"\1", text)
+
 
 def parse(path):
     """One file into (title, summary, blocks)."""
@@ -125,9 +144,9 @@ def kotlin(sections):
     kinds = {HEADING: "Heading", PARA: "Para", BULLET: "Bullet", STEP: "Step"}
 
     def emit(title, summary, blocks, kids, pad):
-        out.append(f"{pad}ManualSection({q(title)}, {q(summary)}, listOf(")
+        out.append(f"{pad}ManualSection({q(unlink(title))}, {q(unlink(summary))}, listOf(")
         for kind, text in blocks:
-            out.append(f"{pad}    ManualBlock(ManualKind.{kinds[kind]}, {q(text)}),")
+            out.append(f"{pad}    ManualBlock(ManualKind.{kinds[kind]}, {q(unlink(text))}),")
         if not kids:
             out.append(f"{pad})),")
             return

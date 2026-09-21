@@ -16,50 +16,50 @@ and the knob that puts it back should always be in the same place.
 
 ## Time
 
-- **Delay** - echoes on a note value, with a duck that gets out of the way
+- [**Delay**](05-effects-and-mixing/delay.md) - echoes on a note value, with a duck that gets out of the way
   while you are playing.
-- **Reverb** - a room, and four things a room cannot do: freeze it, gate it,
+- [**Reverb**](05-effects-and-mixing/reverb.md) - a room, and four things a room cannot do: freeze it, gate it,
   send it up an octave, or make it out of eight-bit memory.
 
 ## Tone
 
-- **Eq** - three bands, and a tilt that trades top for bottom on one knob.
-- **Filter** - low, band or high pass, swept by an LFO on a note value or by
+- [**Eq**](05-effects-and-mixing/eq.md) - three bands, and a tilt that trades top for bottom on one knob.
+- [**Filter**](05-effects-and-mixing/filter.md) - low, band or high pass, swept by an LFO on a note value or by
   the signal's own envelope.
-- **Width** - the stereo image: wider, narrower, mono below a frequency, or
+- [**Width**](05-effects-and-mixing/width.md) - the stereo image: wider, narrower, mono below a frequency, or
   turned.
 
 ## Drive
 
-- **Distortion** - four clipping characters, and a bias that makes the two
+- [**Distortion**](05-effects-and-mixing/distortion.md) - four clipping characters, and a bias that makes the two
   halves of the wave behave differently.
-- **Amp** - a guitar amplifier as a chain, with a **modelled** cabinet you can
+- [**Amp**](05-effects-and-mixing/amp.md) - a guitar amplifier as a chain, with a **modelled** cabinet you can
   resize continuously.
-- **Bitcrusher** - fewer bits and a lower rate, with a jitter that makes the
+- [**Bitcrusher**](05-effects-and-mixing/bitcrusher.md) - fewer bits and a lower rate, with a jitter that makes the
   clock unsteady.
 
 ## Level
 
-- **Compressor** - the classic four, and a pump in time with the transport that
+- [**Compressor**](05-effects-and-mixing/compressor.md) - the classic four, and a pump in time with the transport that
   needs no sidechain routing.
-- **Gate** - shut below a level, with a filter on its own detector so it opens
+- [**Gate**](05-effects-and-mixing/gate.md) - shut below a level, with a filter on its own detector so it opens
   for a pick and not for a room.
 
 ## Movement
 
-- **Chorus** - two to four detuned voices, and a drift that stops them agreeing
+- [**Chorus**](05-effects-and-mixing/chorus.md) - two to four detuned voices, and a drift that stops them agreeing
   about the tuning.
-- **Flanger** - one short sweeping delay, and inverted feedback for the hollow
+- [**Flanger**](05-effects-and-mixing/flanger.md) - one short sweeping delay, and inverted feedback for the hollow
   version.
-- **Phaser** - allpass notches sweeping, from two stages to eight.
-- **Tremolo** - amplitude on an LFO, and the same lever turned into an auto-
+- [**Phaser**](05-effects-and-mixing/phaser.md) - allpass notches sweeping, from two stages to eight.
+- [**Tremolo**](05-effects-and-mixing/tremolo.md) - amplitude on an LFO, and the same lever turned into an auto-
   pan.
 
 ## Pitch
 
-- **Shifter** - frequency shifting, which moves everything by the same number
+- [**Shifter**](05-effects-and-mixing/shifter.md) - frequency shifting, which moves everything by the same number
   of hertz rather than the same interval.
-- **Harmonizer** - two added voices at scale degrees, so the harmony stays in
+- [**Harmonizer**](05-effects-and-mixing/harmonizer.md) - two added voices at scale degrees, so the harmony stays in
   key.
 
 ## On the way in, and on the way out
