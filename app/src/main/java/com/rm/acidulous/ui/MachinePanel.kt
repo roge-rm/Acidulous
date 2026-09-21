@@ -217,7 +217,8 @@ fun MachinePanel(
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
             "Forage" -> ForagePanel(
                 binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
-                onImportKit, onImportSlice, onOpenSample, onClearKit, inUse = editor.song.samplesInUse(),
+                onImportKit, onImportSlice, onOpenSample, onClearKit,
+                inUse = editor.song.samplesInUse(), editor = editor,
                 // How many pads the slice covers, so the pads and the grid can
                 // say which of them are playing a piece of it.
                 onSliceApplied = { count ->
@@ -1138,7 +1139,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                         onClear: (Int) -> Unit, onAssign: (Int, String) -> Unit,
                         onImportKit: (Int) -> Unit, onImportSlice: () -> Unit,
                         onOpenSample: (Int) -> Unit, onClearKit: () -> Unit,
-                        onSliceApplied: (Int) -> Unit, inUse: Set<String>) {
+                        onSliceApplied: (Int) -> Unit, inUse: Set<String>, editor: SongEditor) {
     val p = pad.coerceIn(0, 12)
     fun n(name: String) = "p%02d_%s".format(p, name)
     val rel = track.machine.settings[n("sample")]
@@ -1259,6 +1260,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         },
     )
     if (picking) RecorderDialog(
+        editor = editor,
         startOn = RecorderPage.Library,
         inUse = inUse,
         onPick = { rel -> picking = false; resetTrim(p); onAssign(p, rel) },
@@ -2633,6 +2635,7 @@ private fun MoltPanel(
     val c = Acid.colors
     val sample = track.machine.settings["sample"].orEmpty()
     if (recording) RecorderDialog(
+        editor = editor,
         startOn = RecorderPage.Record,
         inUse = editor.song.samplesInUse(),
         onPick = { rel ->
@@ -2722,6 +2725,7 @@ private fun MoltPanel(
         }
     }
     if (picking) RecorderDialog(
+        editor = editor,
         startOn = RecorderPage.Library,
         inUse = editor.song.samplesInUse(),
         onPick = { rel ->
@@ -2826,6 +2830,7 @@ private fun DicePanel(
         }
     }
     if (picking) RecorderDialog(
+        editor = editor,
         startOn = RecorderPage.Library,
         inUse = editor.song.samplesInUse(),
         onPick = { rel ->
@@ -2983,6 +2988,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
         }
     }
     if (picking) RecorderDialog(
+        editor = editor,
         startOn = RecorderPage.Library,
         inUse = editor.song.samplesInUse(),
         onPick = { rel ->
@@ -3082,6 +3088,9 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                 // than to this track, but this is where the hand is when
                 // somebody decides they want the amp *on* the recording rather
                 // than after it.
+                // Named for what happens to the file, so it needs no note -
+                // the same four words the record window uses, shortened to fit
+                // a card title.
                 Group("printed in") {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         InputChainChips(editor)
@@ -3555,6 +3564,7 @@ private fun MosaicPanel(
     // A sample recorded in the app is added as a zone the same way an
     // imported one is; a SoundFont owns the whole map, so it steps aside.
     if (pickingZone) RecorderDialog(
+        editor = editor,
         startOn = RecorderPage.Library,
         inUse = editor.song.samplesInUse(),
         onPick = { rel ->

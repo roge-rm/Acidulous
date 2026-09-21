@@ -7,7 +7,10 @@ One window does all of it, and it opens wherever audio is wanted - a pad on the
 sample machine, a loop for the slicer, a buffer for the granular, a take to
 sing into the voice machine.
 
-- **Record** - choose which input, watch the level, and capture.
+- **Record** - choose which input, watch the level, and capture. **printed into
+  the recording**, at the top, holds two effects that go into the file as it
+  records: that is how a guitar amp gets onto a take rather than over it.
+  Effects on a *track* are the other thing, and can be changed at any time.
 - **Edit** - trim the ends, set the level, and take the rumble off the bottom
   with a low cut.
 - **Library** - everything you have recorded or imported, to use again.

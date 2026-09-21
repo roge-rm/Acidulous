@@ -36,6 +36,7 @@ import com.rm.acidulous.engine.nextTakeName
 import com.rm.acidulous.engine.safeFileName
 import com.rm.acidulous.engine.uniqueIn
 import com.rm.acidulous.engine.NativeEngine
+import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.ui.theme.Acid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -70,6 +71,15 @@ fun RecorderDialog(
     startOn: RecorderPage = RecorderPage.Record,
     /** What the song is playing, so the library can say so before deleting. */
     inUse: Set<String> = emptySet(),
+    /**
+     * The song, for the two effect slots on the input.
+     *
+     * They belong to the song rather than to a track, and they belong on this
+     * window rather than in the mixer: what they do is done to the recording
+     * as it is made, so the place to decide about them is the place where the
+     * recording is being made.
+     */
+    editor: SongEditor,
     /** Supplied when a machine opened this and is waiting for a file. */
     onPick: ((String) -> Unit)? = null,
 ) {
@@ -110,6 +120,7 @@ fun RecorderDialog(
             {
                 RecordPage(
                     samples = samples,
+                    editor = editor,
                     onRecording = { recording = it },
                     onRecorded = { file ->
                         chosen = file
@@ -150,7 +161,8 @@ fun RecorderDialog(
 // --- page one: making one --------------------------------------------------
 
 @Composable
-private fun RecordPage(samples: File, onRecording: (Boolean) -> Unit, onRecorded: (File) -> Unit) {
+private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean) -> Unit,
+                       onRecorded: (File) -> Unit) {
     val context = LocalContext.current
     val c = Acid.colors
 
@@ -304,6 +316,16 @@ private fun RecordPage(samples: File, onRecording: (Boolean) -> Unit, onRecorded
     }
 
     if (fromInput) {
+        // **The title is the explanation.** Three lines of prose under these
+        // chips said what they do to a recording, which is the shape the house
+        // rule exists to prevent: if a note is needed, the title is wrong.
+        // Naming them for what happens to the file says it in four words, and
+        // it says it where somebody reading the page finds it rather than
+        // where somebody who already stopped would.
+        //
+        // They are first on the page for the same reason: everything else here
+        // decides how the take is captured, and these decide what is in it.
+        Section("printed into the recording") { InputChainChips(editor) }
         SliderSection(
             title = "gain",
             value = "%.2f".format(gain),

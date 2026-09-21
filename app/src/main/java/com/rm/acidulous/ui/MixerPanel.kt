@@ -370,12 +370,12 @@ private fun MasterStrip(
                 }
             }
         }
-        // **And the two on the way in**, beside the two on the way out, because
-        // they are the same kind of thing: a slot belonging to the song rather
-        // than to a rack. What differs is that these run before the recorder
-        // sees the audio, so they are printed into a take rather than applied
-        // to a playback - which is why they are pink here and the sends teal.
-        InputChainChips(editor)
+        // **The two on the way in are not here.** They were, beside the sends,
+        // on the grounds that both belong to the song rather than to a rack -
+        // and that put them where a mix is made rather than where a recording
+        // is. Dan: "they are applied on the recordings themselves as they go
+        // in". They live in the record window now, where what they do to a
+        // take is the thing you are already looking at.
         ToggleChip("limiter", master.limiter.on, c.teal, Modifier.mappable(map("limiteron"))) {
             editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
         }

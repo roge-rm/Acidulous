@@ -52,8 +52,8 @@ comparing and deleting.
 ## On the way in, and on the way out
 
 There are two more effect slots that do not belong to a track: **the two on the
-input**. They are in the mixer's master strip beside the sends, and on Bias's
-panel under **printed in**.
+input**. They are at the top of the recording window's **record** page, under
+**printed into the recording**, and on Bias's panel under **printed in**.
 
 The difference between them and a track's inserts is the whole reason they
 exist:

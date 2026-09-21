@@ -52,8 +52,8 @@ an interface.
 effects on the way *in*: what is on them is **recorded into the take**, because
 they run before the recorder sees the audio. An amp there is committed; an amp
 on the track's own **fx** is applied on playback and can be changed for ever
-afterwards. The same two slots appear in the mixer's master strip, because they
-belong to the song rather than to this track.
+afterwards. They are the same two slots the recording window shows, because
+they belong to the session rather than to this track.
 
 ## Flattening
 

@@ -720,6 +720,7 @@ fun MainScreen(
         // question to answer. A machine opens it on record or on library and
         // supplies `onPick`.
         Dialog.Sound -> RecorderDialog(
+            editor = editor,
             onDismiss = { dialog = null },
             startOn = RecorderPage.Library,
             inUse = song.samplesInUse(),

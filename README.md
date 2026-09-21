@@ -70,8 +70,9 @@ buses hold any of the same fourteen**, chosen and edited from the master strip.
 - Automation lanes, performance lanes (mod and pressure), and per-note
   expression.
 - Clip freeze: render a clip to audio, pre-fader.
-- **Two effect slots on the input**, which run before the recorder does — so an
-  amp can be printed into a take rather than only applied after it.
+- **Two effect slots on the input**, at the top of the recording window: they
+  run before the recorder does, so an amp is printed into the take rather than
+  only applied over it afterwards.
 - **Audio tracks**, on the same sixteen racks: record over the song and the
   take is split into cells, with no second timeline in either view.
 

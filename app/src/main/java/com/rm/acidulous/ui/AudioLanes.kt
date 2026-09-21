@@ -537,6 +537,7 @@ fun TakePicker(
 ) {
     val song = editor.song
     RecorderDialog(
+        editor = editor,
         startOn = RecorderPage.Library,
         inUse = song.samplesInUse(),
         onPick = { rel ->
