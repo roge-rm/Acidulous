@@ -169,6 +169,7 @@ const ParamDef *Trinity::paramDefs(int32_t &count) const {
 
 void Trinity::prepare(int32_t rate) {
     sampleRate = static_cast<float>(rate);
+    invSampleRate = sampleRate > 0.0f ? 1.0f / sampleRate : 0.0f;
     bank = &WavetableBank::instance(); // builds the tables on this thread, once per process
     for (auto &v : voices) {
         for (auto &e : v.env) e.setSampleRate(sampleRate);
@@ -365,6 +366,18 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
         int wave, table, density, mip, frame;
         bool needed;
         float frac, level, pw, sync, hardK, drift, pitchMul, detuneMul[kDensity];
+        /**
+         * `1 / sqrt(density)`, and the reason it is here rather than there.
+         *
+         * It was computed inside the sample loop, so a stacked oscillator paid
+         * for a square root on every sample - up to three a voice, sixteen
+         * voices, forty-eight thousand times a second. It depends on nothing
+         * that changes inside a block.
+         */
+        float densityNorm;
+        /** The pair `WavetableBank::between` reads, refreshed with the mip. */
+        const float *rowA;
+        const float *rowB;
     } cfg[kOscs];
 
     const float ring12 = clampf(paramOf(MixBase + MRing12) + v.mod[DstRing12], 0.0f, 1.0f);
@@ -383,6 +396,9 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
         c.wave = stepOf(b + OWave);
         c.table = c.wave - WFirstTable;
         c.density = stepOf(b + ODensity);
+        c.densityNorm = c.density > 1 ? 1.0f / std::sqrt(static_cast<float>(c.density)) : 1.0f;
+        c.rowA = nullptr;
+        c.rowB = nullptr;
         c.level = clampf(paramOf(b + OLevel) + v.mod[DstLevel1 + k], 0.0f, 2.0f);
         c.pw = clampf(paramOf(b + OPw) + v.mod[DstPw1 + k] * 0.5f, 0.02f, 0.98f);
         c.sync = clampf(paramOf(b + OSync) + v.mod[DstSync1 + k], 0.0f, 1.0f);
@@ -470,7 +486,11 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
             if (std::fabs(st.drift - st.driftTarget) < 0.01f) st.driftTarget = rnd(v.rng) * 2.0f - 1.0f;
             const float hz = clampf(v.freq * c.pitchMul * (1.0f + st.drift * c.drift * 0.0046f), 1.0f,
                                     sampleRate * 0.49f);
-            const float baseInc = hz / sampleRate;
+            // Multiply by the reciprocal, not divide. A divide is several
+            // times the cost of a multiply on the cores this has to run on,
+            // and this one is in the innermost loop there is: per oscillator,
+            // per voice, per sample.
+            const float baseInc = hz * invSampleRate;
             const float inc = baseInc * (1.0f + c.sync * 3.0f);
             if (c.sync > 0.0f) {
                 st.syncPhase += baseInc;
@@ -479,7 +499,10 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
                     for (int d = 0; d < c.density; ++d) st.phase[d] = 0.0f;
                 }
             }
-            if (c.wave >= WFirstTable && (i & 15) == 0) c.mip = WavetableBank::mipFor(hz * (1.0f + c.sync * 3.0f));
+            if (c.wave >= WFirstTable && (i & 15) == 0) {
+                c.mip = WavetableBank::mipFor(hz * (1.0f + c.sync * 3.0f));
+                bank->rowsFor(c.table, c.frame, c.mip, c.rowA, c.rowB);
+            }
             const float fmIn = k == 0 ? o[1] * fm21 : (k == 1 ? o[2] * fm32 : 0.0f);
             float sum = 0.0f;
             for (int d = 0; d < c.density; ++d) {
@@ -490,12 +513,12 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
                 case WSquare: sum += pulseAt(ph, inc, c.pw); break;
                 case WTriangle: sum += triangleAt(ph); break;
                 case WSine: sum += std::sin(ph * kTwoPi); break;
-                default: sum += bank->sample(c.table, c.frame, c.frac, c.mip, ph); break;
+                default: sum += WavetableBank::between(c.rowA, c.rowB, c.frac, ph); break;
                 }
                 st.phase[d] += inc * c.detuneMul[d];
                 if (st.phase[d] >= 1.0f) st.phase[d] -= 1.0f;
             }
-            if (c.density > 1) sum *= 1.0f / std::sqrt(static_cast<float>(c.density));
+            if (c.density > 1) sum *= c.densityNorm;
             st.hardZ += (sum - st.hardZ) * c.hardK;
             o[k] = st.hardZ;
         }

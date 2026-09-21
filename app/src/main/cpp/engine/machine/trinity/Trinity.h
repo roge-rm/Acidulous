@@ -135,6 +135,7 @@ class Trinity final : public Machine {
     Voice voices[kVoices];
     const dsp::WavetableBank *bank = nullptr;
     float sampleRate = 48000.0f;
+    float invSampleRate = 1.0f / 48000.0f;
     uint32_t ageCounter = 1;
     float modWheel = 0.0f, aftertouch = 0.0f, bend = 0.0f, bpm = 120.0f;
     float noiseZ = 0.0f;

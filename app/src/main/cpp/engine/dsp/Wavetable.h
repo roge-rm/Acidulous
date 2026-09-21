@@ -32,6 +32,32 @@ class WavetableBank {
     }
 
     // frame is 0..kFrames-1 with `frac` between it and the next; phase in [0,1).
+    /**
+     * The two rows a read interpolates between, for a caller that knows they
+     * do not change every sample.
+     *
+     * `table`, `frame` and `mip` are fixed for at least sixteen samples at a
+     * time, but `sample` below worked them out on every call - two address
+     * computations of three multiplies each, per oscillator, per voice, per
+     * sample. A caller that fetches the pair once and keeps it pays neither.
+     */
+    void rowsFor(int table, int frame, int mip, const float *&a, const float *&b) const {
+        a = row(table, frame, mip);
+        b = row(table, frame + 1 < kFrames ? frame + 1 : frame, mip);
+    }
+
+    /** The interpolation alone, given the pair from `rowsFor`. */
+    static float between(const float *a, const float *b, float frac, float phase) {
+        const float x = phase * static_cast<float>(kSize);
+        int i = static_cast<int>(x);
+        if (i < 0) i = 0;
+        else if (i >= kSize) i = kSize - 1;
+        const float f = x - static_cast<float>(i);
+        const float va = a[i] + (a[i + 1] - a[i]) * f;
+        const float vb = b[i] + (b[i + 1] - b[i]) * f;
+        return va + (vb - va) * frac;
+    }
+
     float sample(int table, int frame, float frac, int mip, float phase) const {
         const float *a = row(table, frame, mip);
         const float *b = row(table, frame + 1 < kFrames ? frame + 1 : frame, mip);
