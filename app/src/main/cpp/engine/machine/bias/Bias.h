@@ -1,5 +1,6 @@
 #pragma once
 #include "Colour.h"
+#include <engine/dsp/Wsola.h>
 #include <engine/core/Reel.h>
 #include <engine/machine/Machine.h>
 
@@ -38,6 +39,16 @@ class Bias final : public Machine {
         // The medium. See bias/Colour.h: these colour what comes *out* and
         // never the recordings, which is what makes a Bias patch a way of
         // listening rather than an edit.
+        /**
+         * Whether the takes follow the song rather than their own tempo.
+         *
+         * Off, a take enters on the bar and runs at the speed it was recorded
+         * at, which is what M54 shipped and what "audio does not stretch"
+         * meant. On, each lane is read through `dsp::Wsola` at the ratio
+         * between the song's tempo and the take's, so the take lasts as long
+         * as the cell does **and sings the same notes**.
+         */
+        Stretch,
         Hiss, HissTone, LowCut, HighCut, Bump, BumpFreq,
         Sat, Comp, Wow, Flutter, Speed, Bleed, Drop,
         Bits, Rate, Smear, Width,
@@ -52,6 +63,8 @@ class Bias final : public Machine {
     void reset() override;
 
     void onScene(int64_t sceneId, int64_t cycleTick, bool playing, bool clipMuted) override;
+    /** The song's tempo, which is half of what a stretch ratio is made of. */
+    void onBlock(int64_t, int64_t, float bpm) override { songBpm = bpm; }
     bool render(float *L, float *R, int32_t frames) override;
 
     /** Slot 0 is the reel. Nothing else is mounted here. */
@@ -68,6 +81,12 @@ class Bias final : public Machine {
 
     bias::Colour colour;
     dsp::Biquad bleedHp[2];
+    /** One stretcher a lane, seeded at the top of every cycle. */
+    dsp::Wsola stretcher[audio::kReelLanes];
+    float songBpm = 120.0f;
+    int64_t lastCycleTick = -1;
+    /** Set when a cycle comes round; the one moment a stretcher may be moved. */
+    bool reseed = true;
     const audio::Reel *reel = nullptr;
     const audio::Reel::Cell *cell = nullptr;
     audio::FrameCursor cursors[audio::kReelLanes];

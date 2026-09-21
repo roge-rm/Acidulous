@@ -67,6 +67,7 @@ import com.rm.acidulous.model.addScene
 import androidx.compose.ui.text.withStyle
 import com.rm.acidulous.model.Freeze
 import com.rm.acidulous.model.audioLaneCount
+import com.rm.acidulous.model.followsTempo
 import com.rm.acidulous.model.takeTempoDiffers
 import com.rm.acidulous.model.cleared
 import com.rm.acidulous.model.addTrack
@@ -618,7 +619,8 @@ fun MainScreen(
                                 frozen = clip?.frozen != null,
                                 stale = clip != null && Freeze.stale(song, scene.id, clip),
                                 audioLanes = clip?.audioLaneCount() ?: 0,
-                                audioStale = clip != null && song.takeTempoDiffers(scene.id, clip),
+                                audioStale = clip != null && !track.followsTempo() &&
+                                    song.takeTempoDiffers(scene.id, clip),
                                 clipMode = clipMode,
                                 queued = clipMode && launch.pending == sceneIndex,
                                 stopping = clipMode && launch.stopping && launch.scene == sceneIndex,

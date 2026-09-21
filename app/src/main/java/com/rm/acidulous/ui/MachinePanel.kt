@@ -59,6 +59,7 @@ import com.rm.acidulous.model.withPatch
 import com.rm.acidulous.model.samplesInUse
 import com.rm.acidulous.model.BIAS_LANES
 import com.rm.acidulous.model.bpmOf
+import com.rm.acidulous.model.followsTempo
 import com.rm.acidulous.model.takeForWholeFile
 import com.rm.acidulous.model.withTake
 import com.rm.acidulous.model.withSetting
@@ -3034,9 +3035,10 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
         // Two sections and no more: what is on the tape, and what the tape is.
         // The patch bar above chooses the second of those wholesale, and these
         // are what it moved.
-        SectionChips(listOf("lanes", "medium"), section) { section = it }
+        SectionChips(listOf("lanes", "medium", "tempo"), section) { section = it }
         GroupRow {
-            if (section == 1) {
+            if (section >= 1) {
+              if (section == 1) {
                 Group("band") {
                     PanelKnob(b, "lowcut", "low cut", PanelAmber)
                     PanelKnob(b, "highcut", "high cut", PanelAmber)
@@ -3067,6 +3069,11 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                     PanelKnob(b, "width", "width")
                     PanelKnob(b, "gain", "gain", PanelAmber)
                 }
+            } else if (section == 2) {
+                Group("tempo") {
+                    PanelSwitch(b, "stretch", listOf("as sung", "follow"), "takes")
+                }
+              }
                 return@GroupRow
             }
             for (lane in 0 until BIAS_LANES) {
@@ -3083,7 +3090,8 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                         // the tempo it is being played at. Audio does not
                         // stretch yet, so this is the one number that says why
                         // a take drifts away from the beat.
-                        if (take != null && kotlin.math.abs(take.bpm - sceneBpm) > 0.05f) {
+                        if (take != null && !track.followsTempo() &&
+                            kotlin.math.abs(take.bpm - sceneBpm) > 0.05f) {
                             Text(
                                 "%.1f bpm".format(take.bpm), color = c.accent,
                                 fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,

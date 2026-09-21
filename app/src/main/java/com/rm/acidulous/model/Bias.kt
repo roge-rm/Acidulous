@@ -211,3 +211,14 @@ fun splitTake(
     }
     return out
 }
+
+/**
+ * Whether this track's takes follow the song's tempo.
+ *
+ * The amber "recorded at another tempo" marks exist to warn that a take will
+ * drift. Following, it does not drift, so the warning is not a warning any
+ * more - it is a fact about where the audio came from, and the place for that
+ * is the lane's own name rather than a colour that means something is wrong.
+ */
+fun Track.followsTempo(): Boolean =
+    machine.type == BIAS_MACHINE && (machine.params["stretch"] ?: 0f) >= 0.5f

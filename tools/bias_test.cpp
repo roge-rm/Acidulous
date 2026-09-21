@@ -467,6 +467,93 @@ void aLongTakeIsMappedAndReadsTheSame() {
     std::remove(wav.c_str());
 }
 
+/**
+ * A take that follows the song rather than its own tempo.
+ *
+ * The claim in one sentence: **a take recorded at one tempo covers the same
+ * musical length at any other**, which is the whole of why the stretch is
+ * here.
+ *
+ * One second recorded at 120 bpm is two beats. Played at 60, two beats last
+ * two seconds - so off, the take stops half way through and leaves a hole;
+ * on, it covers the whole of it and sings the same notes while doing so.
+ *
+ * **The tick and the frame count have to agree**, or the test proves nothing:
+ * an earlier version of this walked the tick fast and rendered few frames, so
+ * the stretcher never got near the end of the take and the assertion passed
+ * for no reason at all.
+ */
+float playForSeconds(Rig &rig, double seconds, float songBpm, bool stretch) {
+    rig.bias->onBlock(0, 0, songBpm);
+    rig.bias->params().set(machine::Bias::Stretch, stretch ? 1.0f : 0.0f);
+    rig.bias->params().jumpAll();
+    const double perTick = kRate * 60.0 / (songBpm * kPPQN);
+    const auto blocks = static_cast<int64_t>(seconds * kRate / 64);
+    float last = 0.0f;
+    for (int64_t b = 0; b < blocks; ++b) {
+        const auto tick = static_cast<int64_t>(static_cast<double>(b * 64) / perTick);
+        rig.bias->onScene(7, tick, true, false);
+        rig.bias->render(rig.L, rig.R, 64);
+        last = 0.0f;
+        for (int32_t i = 0; i < 64; ++i) last = std::fabs(rig.L[i]) > std::fabs(last) ? rig.L[i] : last;
+    }
+    return last;
+}
+
+std::unique_ptr<Rig> oneSecondTakeAt120() {
+    auto rig = std::make_unique<Rig>();
+    rig->reel.cells.emplace_back();
+    Reel::Cell &c = rig->reel.cells.back();
+    c.sceneId = 7;
+    c.lanes[0] = region(flat(kRate, 8000), 0, kRate, 4 * kPPQN);
+    c.lanes[0].bpm = 120.0f;
+    rig->mount();
+    return rig;
+}
+
+void aTakeCanFollowTheSong() {
+    printf("- a take that follows the song rather than its own tempo\n");
+    const float want = 8000.0f / 32768.0f;
+
+    // At the tempo it was recorded at, both answers are the same answer.
+    {
+        auto rig = oneSecondTakeAt120();
+        const float at120 = playForSeconds(*rig, 0.8, 120.0f, true);
+        ok("at its own tempo, switching it on changes nothing",
+           std::fabs(at120 - want) < want * 0.05f, std::to_string(at120));
+    }
+
+    // Half the tempo: two beats now last two seconds.
+    {
+        auto rig = oneSecondTakeAt120();
+        const float off = playForSeconds(*rig, 1.8, 60.0f, false);
+        ok("off, the take has run out half way through the bar", std::fabs(off) < 1e-6,
+           std::to_string(off));
+    }
+    {
+        auto rig = oneSecondTakeAt120();
+        const float on = playForSeconds(*rig, 1.8, 60.0f, true);
+        ok("on, it is still sounding at the end of it",
+           std::fabs(on - want) < want * 0.25f,
+           std::to_string(on) + ", wanted about " + std::to_string(want));
+    }
+
+    // And the other way: at twice the tempo the cell is half as long, so a
+    // take that used to overrun now ends with it.
+    {
+        auto rig = oneSecondTakeAt120();
+        const float on = playForSeconds(*rig, 0.45, 240.0f, true);
+        ok("at twice the tempo it is still sounding at the half-way point",
+           std::fabs(on - want) < want * 0.25f, std::to_string(on));
+    }
+    {
+        auto rig = oneSecondTakeAt120();
+        const float past = playForSeconds(*rig, 0.8, 240.0f, true);
+        ok("and has finished by the end of the two beats", std::fabs(past) < 1e-6,
+           std::to_string(past));
+    }
+}
+
 } // namespace
 
 int main() {
@@ -486,6 +573,7 @@ int main() {
     nothingToPlay();
     theMediumColoursAndDirectDoesNot();
     aLongTakeIsMappedAndReadsTheSame();
+    aTakeCanFollowTheSong();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

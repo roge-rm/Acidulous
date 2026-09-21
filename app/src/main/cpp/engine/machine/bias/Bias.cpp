@@ -20,6 +20,9 @@ const ParamDef *Bias::paramDefs(int32_t &count) const {
         {"mute3", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         {"mute4", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        // Off by default: a take plays at the speed it was recorded at, which
+        // is what somebody expects of a recording until they ask otherwise.
+        {"stretch", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         // The medium. Every default is "nothing at all", so a fresh track
         // plays a file back untouched and the Init patch is what the machine
         // already is rather than a setting that undoes something.
@@ -48,6 +51,7 @@ const ParamDef *Bias::paramDefs(int32_t &count) const {
 void Bias::prepare(int32_t rate) {
     sampleRate = static_cast<float>(rate);
     colour.prepare(sampleRate);
+    for (auto &w : stretcher) w.prepare();
     // A shelf that cuts everything below rather than a corner: what crosses
     // between two strips of one tape thins out, it does not stop.
     bleedHp[0].lowShelf(300.0f, -18.0f, sampleRate);
@@ -97,6 +101,8 @@ void Bias::reset() {
     bleedHp[0].reset();
     bleedHp[1].reset();
     for (auto &c : cursors) c.invalidate();
+    for (auto &w : stretcher) w.reset();
+    lastCycleTick = -1;
     cell = nullptr;
     cycleTick = 0;
     playing = false;
@@ -117,9 +123,20 @@ void *Bias::swapObject(int32_t slot, void *object) {
 void Bias::onScene(int64_t sceneId, int64_t tick, bool isPlaying, bool clipMuted) {
     playing = isPlaying;
     muted = clipMuted;
+    // **A cycle that has come round is the only place a stretcher may be
+    // moved.** Seeking one mid-phrase throws away the overlap it is in the
+    // middle of, which is a click; free-running between cycles is safe because
+    // the clock is exact, so the musical position cannot drift even though
+    // which samples are copied moves about within a few milliseconds.
+    const bool wrapped = tick < lastCycleTick;
+    lastCycleTick = tick;
     cycleTick = tick;
     const audio::Reel::Cell *want = (reel != nullptr) ? reel->find(sceneId) : nullptr;
-    if (want == cell) return;
+    if (want == cell) {
+        if (wrapped) reseed = true;
+        return;
+    }
+    reseed = true;
     // Crossing into another cell: every lane starts again from where the new
     // cell says, rather than from where the last one had got to.
     cell = want;
@@ -148,6 +165,7 @@ bool Bias::render(float *L, float *R, int32_t frames) {
     // patch has no bleed in it, which is every patch but two.
     const float bleed = paramOfIndex(Bleed);
     const bool bleeding = bleed > 0.001f;
+    const bool stretching = steppedTargetOf(Stretch) >= 1;
     float bleedL[kBlockFrames] = {0.0f};
     float bleedR[kBlockFrames] = {0.0f};
 
@@ -160,18 +178,67 @@ bool Bias::render(float *L, float *R, int32_t frames) {
         if (level <= 0.0f && !bleeding) continue;
 
         const audio::Reel::Region &r = cell->lanes[lane];
-        // Where in the region this block begins. The region's own tempo, not
-        // the song's: audio does not stretch, so what the tempo decides is
-        // where the *entry* falls and nothing about the rate.
-        const double perTick =
-            static_cast<double>(sampleRate) * 60.0 / (static_cast<double>(r.bpm) * kPPQN);
+        const audio::Reel::Source &src = *r.source;
         const int64_t into = cycleTick - r.startTick;
         if (into < 0) continue; // a punch-in the song has not reached yet
+
+        // **The take follows the song, or the song leaves it behind.**
+        //
+        // Off, this is what M54 shipped: the entry lands on the bar and the
+        // take runs at the speed it was recorded at, so at another tempo it
+        // drifts and the cell says so in amber. On, the ratio between the two
+        // tempos is a rate, and `dsp::Wsola` reads the take at that rate
+        // without moving its pitch - so the take lasts exactly as long as the
+        // cell and sings the same notes.
+        if (stretching && r.bpm > 1.0f && std::fabs(songBpm / r.bpm - 1.0f) > 0.002f) {
+            const float rate = songBpm / r.bpm;
+            // Seeded at the top of the cycle and free-running after it; the
+            // clock inside the stretcher is exact, so nothing drifts.
+            if (reseed) {
+                // Where in the take the cycle begins, at the *song's* tempo,
+                // because that is the clock the cell is measured in now.
+                const double perSongTick =
+                    static_cast<double>(sampleRate) * 60.0 / (static_cast<double>(songBpm) * kPPQN);
+                const auto out = static_cast<int64_t>(static_cast<double>(into) * perSongTick);
+                stretcher[lane].seek(r.offset + static_cast<int64_t>(out * rate));
+            }
+            float taken[kBlockFrames] = {0.0f};
+            const int32_t got = stretcher[lane].fill(
+                taken, frames, src.lp, r.offset,
+                r.offset + (r.frames < src.frames - r.offset ? r.frames : src.frames - r.offset),
+                rate);
+            for (int32_t i = 0; i < got; ++i) {
+                const float v = taken[i];
+                L[i] += v * level;
+                R[i] += v * level;
+                if (bleeding) {
+                    bleedL[i] += v * raw;
+                    bleedR[i] += v * raw;
+                }
+            }
+            continue;
+        }
+
+        // Where in the region this block begins, in **real time since the
+        // entry** - which is what not stretching means.
+        //
+        // **This used to use the take's own tempo and it juddered.** The
+        // anchor said "at song tick T you are at T times the take's frames a
+        // tick", while the cursor between anchors advances one frame per
+        // frame; at any other tempo those two disagree by the ratio, the drift
+        // passes `FrameCursor`'s 256 frames every couple of ticks, and the
+        // read position is yanked backwards over and over. The amber warning
+        // on the cell promised a drift and what it delivered was a stutter.
+        // The song's tempo is the right one here precisely *because* the audio
+        // does not stretch: seconds since the entry is the whole of it, and
+        // the take's own tempo now decides one thing only, which is the
+        // stretch ratio above.
+        const double perTick =
+            static_cast<double>(sampleRate) * 60.0 / (static_cast<double>(songBpm) * kPPQN);
         const int64_t want = static_cast<int64_t>(static_cast<double>(into) * perTick);
         if (!r.loop && want >= r.frames) continue; // past the end: silent, not wrapped
         cursors[lane].anchor(r.loop && r.frames > 0 ? want % r.frames : want);
 
-        const audio::Reel::Source &src = *r.source;
         int64_t at = cursors[lane].at;
         for (int32_t i = 0; i < frames; ++i) {
             if (at >= r.frames) {
@@ -210,6 +277,7 @@ bool Bias::render(float *L, float *R, int32_t frames) {
     }
 
     if (spec.any) colour.process(L, R, frames);
+    reseed = false;
     return true; // always stereo: four lanes may disagree about it
 }
 

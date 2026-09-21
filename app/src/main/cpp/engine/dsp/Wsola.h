@@ -39,14 +39,29 @@ class Wsola {
     static constexpr int32_t kHop = kWindow / 2;
     static constexpr int32_t kSearch = kHop / 2;
 
+    /**
+     * The Hann window, built once for the whole app.
+     *
+     * Every stretcher's window is the same numbers, and four lanes across
+     * sixteen racks is sixty-four copies of an identical table - a third of a
+     * megabyte of cosine nobody needs twice.
+     */
+    static const float *hann() {
+        static const std::vector<float> w = [] {
+            std::vector<float> v(static_cast<size_t>(kWindow));
+            for (int32_t i = 0; i < kWindow; ++i) {
+                // The halves sum to one at this overlap, so a rate of exactly
+                // one with no search is the input back again.
+                v[static_cast<size_t>(i)] = 0.5f - 0.5f * std::cos(6.2831853f * static_cast<float>(i) /
+                                                                  static_cast<float>(kWindow));
+            }
+            return v;
+        }();
+        return w.data();
+    }
+
     void prepare() {
-        window.resize(static_cast<size_t>(kWindow));
-        for (int32_t i = 0; i < kWindow; ++i) {
-            // Hann, and the halves sum to one at this overlap, so a rate of
-            // exactly one with no search is the input back again.
-            window[static_cast<size_t>(i)] =
-                0.5f - 0.5f * std::cos(6.2831853f * static_cast<float>(i) / static_cast<float>(kWindow));
-        }
+        window = hann();
         out.resize(static_cast<size_t>(kWindow + kHop));
         reset();
     }
@@ -78,7 +93,7 @@ class Wsola {
      * written; short means the source ran out.
      */
     int32_t fill(float *dst, int32_t n, const int16_t *src, int64_t first, int64_t last, float rate) {
-        if (src == nullptr || last - first < kWindow) return 0;
+        if (src == nullptr || window == nullptr || last - first < kWindow) return 0;
         int32_t made = 0;
         while (made < n) {
             if (taken >= have) {
@@ -127,7 +142,7 @@ class Wsola {
 
         for (int32_t i = 0; i < kWindow; ++i) {
             const float v = static_cast<float>(src[want + i]) * (1.0f / 32768.0f);
-            out[static_cast<size_t>(i)] += v * window[static_cast<size_t>(i)];
+            out[static_cast<size_t>(i)] += v * window[i];
         }
         // The *output* advances by a hop; the *source* advances by a hop times
         // the rate. That difference is the whole of the stretch.
@@ -163,7 +178,7 @@ class Wsola {
         return best;
     }
 
-    std::vector<float> window;
+    const float *window = nullptr;
     std::vector<float> out;
     int32_t have = 0, taken = 0;
     double readPos = 0.0;
