@@ -16,7 +16,7 @@ format/     reading and writing files, all ours except LAME:
             Sf2Reader · AudioSink (the interface the four writers implement)
 dsp/        Math · Osc (PolyBLEP saw/pulse) · Filter (TPT SVF) · MultiFilter (12 slopes +
             drive) · Envelope · Adsr (DADSR + repeat) · LfoGen · Lfo (note-value phase) ·
-            Wavetable · Biquad · DelayLine · Delay · Reverb · Limiter · Click · Fft
+            Wavetable · Biquad · DelayLine · Delay · Limiter · Click · Fft
 machine/    Machine interface · MachineRegistry, then one directory each:
             reflux trinity ratio mosaic hexbeat forage genesis resonance cumulus
             pollen dice formulate manual filament brazen timber cipher molt nexus

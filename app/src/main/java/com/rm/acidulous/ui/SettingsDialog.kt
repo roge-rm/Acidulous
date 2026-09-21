@@ -164,9 +164,19 @@ private fun AudioTab() {
         Choice("all", UiPrefs.voiceLimit == 0) { UiPrefs.chooseVoiceLimit(0) }
     }
 
+    // **What it says is now what it does.** This read "Half the reverb, no
+    // oversampling" while the reverb half was dead code - the one with the
+    // branch in it had not been included by anything since the sends became
+    // ordinary effect slots - and the oversampling half reached the
+    // distortion only, never the amp, which is the dearest thing here.
     Section(
-        "effect quality",
-        if (UiPrefs.fullQuality) "" else "Half the reverb, no oversampling.",
+        "quality",
+        if (UiPrefs.fullQuality) {
+            ""
+        } else {
+            "Amp and distortion alias instead of oversampling, the reverb is " +
+                "half a room, and struck objects keep half their partials."
+        },
     ) {
         Choice("full", UiPrefs.fullQuality) { UiPrefs.chooseQuality(true) }
         Choice("lean", !UiPrefs.fullQuality) { UiPrefs.chooseQuality(false) }

@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <engine/core/Constants.h>
+#include <engine/core/Settings.h>
 #include <engine/dsp/Denormals.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
@@ -243,6 +244,12 @@ int main(int argc, char **argv) {
     const std::string only = argc > 1 ? argv[1] : "";
     // Off with ACIDULOUS_NO_FTZ=1, so the cost of denormals can be measured
     // rather than argued about.
+    // Lean quality with ACIDULOUS_LEAN=1, so what the setting buys is a
+    // measurement rather than a claim.
+    if (getenv("ACIDULOUS_LEAN") != nullptr) {
+        EngineSettings::get().quality.store(0, std::memory_order_relaxed);
+        printf("quality: lean\n");
+    }
     const bool ftz = getenv("ACIDULOUS_NO_FTZ") == nullptr;
     if (ftz) dsp::flushDenormals();
     printf("flush-to-zero: %s\n", ftz ? "on" : "off");

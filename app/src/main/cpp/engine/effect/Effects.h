@@ -61,8 +61,11 @@ class Reverb final : public Effect {
   private:
     struct Comb { dsp::DelayLine line; float store = 0.0f; int32_t len = 1; };
     struct Allpass { dsp::DelayLine line; int32_t len = 1; };
-    Comb combs[2][8];
-    Allpass aps[2][4];
+    /** Eight combs and four allpasses a side at full quality, half at lean. */
+    static constexpr int32_t kCombs = 8;
+    static constexpr int32_t kAps = 4;
+    Comb combs[2][kCombs];
+    Allpass aps[2][kAps];
     dsp::DelayLine pre[2];
     /** The shimmer's own line: the tail, re-read an octave up. */
     dsp::DelayLine shimmerLine[2];

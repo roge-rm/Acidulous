@@ -248,6 +248,19 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float wobbleDepth = wobble * sr * 0.0015f;
     const bool wobbling = wobbleDepth > 0.0f;
 
+    // **Half the room at lean quality**, which is what the setting has claimed
+    // in the interface for a long time and has never done: the reverb with the
+    // branch in it was `dsp/Reverb.h`, which nothing has included since the
+    // sends became ordinary effect slots. Half the combs and half the
+    // allpasses is a thinner tail and a cheaper one, and the density it loses
+    // is the density a small phone was never going to pay for.
+    //
+    // The sum is scaled by how many combs are in it, or a lean room would
+    // arrive four decibels quieter than a full one and read as a bug.
+    const int32_t nCombs = fullQuality() ? kCombs : kCombs / 2;
+    const int32_t nAps = fullQuality() ? kAps : kAps / 2;
+    const float combScale = static_cast<float>(kCombs) / static_cast<float>(nCombs);
+
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
         pre[0].write(inL);
@@ -258,7 +271,8 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
             const float x = dry[c] * inGain;
             float acc = 0.0f;
             int combIndex = 0;
-            for (auto &comb : combs[c]) {
+            for (int32_t ci = 0; ci < nCombs; ++ci) {
+                Comb &comb = combs[c][ci];
                 // Each comb wobbles on its own phase; without the offset they
                 // would all lengthen together, which is a pitch bend rather
                 // than a room that will not sit still.
@@ -296,11 +310,13 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
                 acc += y;
                 ++combIndex;
             }
-            for (auto &ap : aps[c]) {
+            for (int32_t ai = 0; ai < nAps; ++ai) {
+                Allpass &ap = aps[c][ai];
                 const float y = ap.line.read(static_cast<float>(ap.len));
                 ap.line.write(acc + y * 0.5f);
                 acc = y - acc;
             }
+            acc *= combScale;
             lp[c] += (acc - lp[c]) * toneCoeff;
             float t = lp[c];
 

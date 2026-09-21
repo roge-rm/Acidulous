@@ -1,4 +1,6 @@
 #include "Resonance.h"
+
+#include <engine/core/Settings.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -121,7 +123,8 @@ void Resonance::buildPad(int32_t pad) {
     const float damp = padParam(pad, Damp);
     const float inharm = padParam(pad, Inharm);
     const float hit = hitOf(pad);
-    const int32_t want = std::clamp(static_cast<int32_t>(params_.get(Modes) + 0.5f), 1, kMaxModes);
+    const int32_t want = std::clamp(static_cast<int32_t>(params_.get(Modes) + 0.5f), 1,
+                                    fullQuality() ? kMaxModes : kMaxModes / 2);
 
     p.modeCount = want;
     p.builtKind = kind;
@@ -286,7 +289,12 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
     const float coupling = params_.get(Coupling);
     const float volume = params_.get(Volume);
     const float masterPan = params_.get(MasterPan);
-    const int32_t wantModes = std::clamp(static_cast<int32_t>(params_.get(Modes) + 0.5f), 1, kMaxModes);
+    // Half the partials at lean quality. A mode is a two-pole resonator per
+    // pad per sample, so this is the one knob on this machine that is purely
+    // a cost - the ones that are left are the loud ones, because the series
+    // is rolled off up the spectrum.
+    const int32_t modeCap = fullQuality() ? kMaxModes : kMaxModes / 2;
+    const int32_t wantModes = std::clamp(static_cast<int32_t>(params_.get(Modes) + 0.5f), 1, modeCap);
 
     for (int32_t pad = 0; pad < kPads; ++pad) {
         Pad &p = pads[pad];

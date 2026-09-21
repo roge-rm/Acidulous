@@ -1,4 +1,6 @@
 #include "Amp.h"
+
+#include <cstring>
 #include <engine/core/Settings.h>
 
 namespace acidulous::effect {
@@ -107,8 +109,19 @@ bool Amp::process(float *L, float *R, int32_t frames, bool stereoIn) {
             s.dryAt = s.dryAt + 1 >= kDry ? 0 : s.dryAt + 1;
             dry[i] = s.dry[static_cast<size_t>((s.dryAt + kDry - 1 - dsp::Oversampler::kLatency) % kDry)];
         }
-        s.os.up(buf, frames, up);
-        for (int32_t i = 0; i < frames * 2; ++i) {
+        // **At lean quality the chain runs at the base rate.**
+        //
+        // Two nonlinear stages with a cabinet after them is the most
+        // aliasing-prone thing in the app, which is why the oversampler was
+        // written; it is also the dearest effect here, and on a phone that
+        // cannot afford it, an amp that aliases is better than an amp that
+        // stutters. The dry delay above is unconditional, so this switch does
+        // not change the latency and cannot click when it is thrown.
+        const bool over = acidulous::fullQuality();
+        const int32_t n = over ? frames * 2 : frames;
+        if (over) s.os.up(buf, frames, up);
+        else std::memcpy(up, buf, static_cast<size_t>(frames) * sizeof(float));
+        for (int32_t i = 0; i < n; ++i) {
             float x = s.inHp.highpass(up[i]);
             x = s.bright.process(s.inShelf.process(x));
             x = stageA(x, g1, biasOff);
@@ -121,7 +134,8 @@ bool Amp::process(float *L, float *R, int32_t frames, bool stereoIn) {
             x = s.presence.process(x);
             up[i] = s.power.process(x);
         }
-        s.os.down(up, frames, buf);
+        if (over) s.os.down(up, frames, buf);
+        else std::memcpy(buf, up, static_cast<size_t>(frames) * sizeof(float));
         if (cabOn) {
             for (int32_t i = 0; i < frames; ++i) buf[i] = s.cab.process(buf[i]);
         }
