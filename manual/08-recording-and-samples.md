@@ -38,6 +38,13 @@ reached.
 The whole recording stays in the sound library under its own name, so a split
 you did not want can be thrown away and the audio placed by hand instead.
 
+**A take may be half an hour long.** Anything under two minutes is held in
+memory as it always was; past that it is converted once, in the background, and
+read from storage as it plays - so a vocal that runs the length of a song costs
+no more memory than a chorus does. You will not notice either happening, except
+that the first time a long recording is used there is a moment while it is
+converted.
+
 One lane records at a time, because there is one recorder. Arming a second lane
 lets the first one go.
 

@@ -114,7 +114,8 @@ tools/all_tests.sh
 ```
 
 They cover the sequencer's launcher and song position, where a recording's
-boundaries fall when it is cut into cells, MIDI clock in and out,
+boundaries fall when it is cut into cells, reading a long file a piece at a
+time, MIDI clock in and out,
 the metronome, MPE, Ableton Link's arithmetic (and, where the network allows
 it, two real Link peers in one process), the audio file writers, Molt's
 analysis, the expression language, and a reset-determinism pass that plays
