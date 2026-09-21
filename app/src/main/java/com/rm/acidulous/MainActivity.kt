@@ -792,6 +792,12 @@ private fun App(modifier: Modifier = Modifier) {
     var lateAt by remember { mutableStateOf(0L) }
     var stalledAt by remember { mutableStateOf(0L) }
     var xrunsAt by remember { mutableStateOf(0L) }
+    var lateSeen by remember { mutableStateOf(0L) }
+    var strainUntil by remember { mutableStateOf(0L) }
+    /** True while the engine is missing its deadline, right now. */
+    var straining by remember { mutableStateOf(false) }
+    /** Which tracks are a large enough share of a block to be worth freezing. */
+    var rackHot by remember { mutableStateOf(BooleanArray(16)) }
     var lateCallbacks by remember { mutableStateOf(0L) }
     var stalled by remember { mutableStateOf(0L) }
     var playing by remember { mutableStateOf(false) }
@@ -1129,6 +1135,39 @@ private fun App(modifier: Modifier = Modifier) {
                 launchStates = launchPacked.map { LaunchState.unpack(it) }
             }
             rackPeaks = FloatArray(16) { i -> if (i < song.tracks.size) NativeEngine.readRackPeak(i) else 0f }
+            // **Struggling now, not struggling ever.** A cumulative count says
+            // a song dropped out once an hour ago; what a light on the screen
+            // has to answer is whether it is happening as you watch. So it is
+            // the change since the last poll, held for a moment so a single
+            // late callback is visible rather than a flicker too short to see - and
+            // long enough that a burst of them reads as one steady state and not
+            // as blinking, which on a track you are watching would be an alarm.
+            val lateNow = NativeEngine.lateCallbacks
+            if (lateNow > lateSeen) strainUntil = System.currentTimeMillis() + 2500
+            lateSeen = lateNow
+            straining = playing && System.currentTimeMillis() < strainUntil
+            // **Worked out here, not in composition.** As a `val` up there it
+            // was read once before the engine had opened a stream, when the
+            // sample rate is still nought - so the budget came out as sixty-four
+            // million microseconds and nothing was ever a large enough share of
+            // it to mark. A rate that is not known yet is not a rate to divide
+            // by.
+            val rate = NativeEngine.sampleRate
+            val blockBudgetUs = if (rate > 0) 1_000_000f * 64f / rate else 0f
+            // **Hysteresis, or it blinks.** The cost decays continuously, so a
+            // track sitting near the line crosses it several times a second
+            // and the grid flickers between different tracks - which reads as
+            // a fault in the app rather than as a fault in the song. It takes
+            // a third of a block to light and has to fall to under a quarter
+            // to go out again.
+            rackHot = BooleanArray(16) { i ->
+                if (blockBudgetUs <= 0f || i >= song.tracks.size) {
+                    false
+                } else {
+                    val share = NativeEngine.rackCostUs(i) / blockBudgetUs
+                    if (rackHot[i]) share > 0.22f else share > 0.33f
+                }
+            }
             if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf))
             delay(80)
         }
@@ -1225,6 +1264,7 @@ private fun App(modifier: Modifier = Modifier) {
             loopScene = loopScene, stopAtEnd = stopAtEnd, queuedScene = queuedScene,
             bpm = bpm, diagnostics = diagnostics,
             rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn,
+            straining = straining, rackHot = rackHot,
             onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onArm = onArm, onLoopScene = onLoopScene,
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },

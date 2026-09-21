@@ -113,6 +113,17 @@ fun MainScreen(
     bpm: Float,
     diagnostics: String,
     rackPeaks: FloatArray,
+    /**
+     * Whether the engine is missing its deadline **right now**, and what each
+     * track is costing as a fraction of one block's budget.
+     *
+     * Together they are the whole of the warning: a track is only marked when
+     * the engine is actually in trouble *and* that track is a large part of
+     * why. On a phone that copes, nothing is ever marked - which is the point.
+     * Nothing about it interrupts: no dialog, no sound, no stopping.
+     */
+    straining: Boolean = false,
+    rackHot: BooleanArray = BooleanArray(16),
     masterPeak: Float,
     clickOn: Boolean,
     onClick: (Boolean) -> Unit,
@@ -496,6 +507,7 @@ fun MainScreen(
                         song.scenes.count { track.clips[it.id]?.frozen != null }
                     }
                     TrackHeader(
+                        hot = straining && rackHot.getOrElse(index) { false },
                         name = track.name, machine = track.machine.type, colour = trackColour(index),
                         onChangeMachine = { dialog = Dialog.PickMachine(index) },
                         onRename = { dialog = Dialog.RenameTrack(index) },
@@ -868,20 +880,32 @@ private fun SceneHeader(
 
 @Composable
 private fun TrackHeader(
+    /** Costing a large share of a block while the engine is late. Glows. */
+    hot: Boolean = false,
     name: String, machine: String, colour: Color,
     onChangeMachine: () -> Unit, onRename: () -> Unit, onDuplicate: () -> Unit, onDelete: () -> Unit,
     freezable: Int, frozen: Int, onFreeze: () -> Unit, onThaw: () -> Unit,
 ) {
     val cell = LocalSongCell.current
     var menu by remember { mutableStateOf(false) }
+    // Breathing rather than blinking. A hard flash on a track you are looking
+    // at while playing is an alarm, and this is not an emergency - it is the
+    // app pointing at the track to freeze. It fades in and out so it reads as
+    // a state rather than an event, and it never stops anything.
+    val glow by rememberInfiniteTransition(label = "hot").animateFloat(
+        initialValue = 0.18f,
+        targetValue = 0.42f,
+        animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
+        label = "glow",
+    )
     Box(
         Modifier
             .width(cell.trackW).height(cell.cellH).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(Acid.colors.control)
+            .background(if (hot) Acid.colors.red.copy(alpha = glow) else Acid.colors.control)
             .combinedClickable(onClick = { menu = true }),
     ) {
-        Box(Modifier.width(4.dp).fillMaxHeight().background(colour))
+        Box(Modifier.width(4.dp).fillMaxHeight().background(if (hot) Acid.colors.red else colour))
         Column(Modifier.padding(start = 10.dp, top = 4.dp, end = 4.dp)) {
             Text(name, color = Acid.colors.text, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(machine, color = Acid.colors.textMid, fontSize = 10.sp, maxLines = 1)

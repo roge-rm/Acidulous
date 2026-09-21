@@ -351,11 +351,19 @@ void Engine::renderBlock(const float *in, float *out) {
                 racks[r].onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
             }
             racks[r].render(kBlockFrames);
-            keepPeak(rackPeak[r], static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(
-                                                          std::chrono::steady_clock::now() - tRack)
-                                                          .count()));
+            const auto rackUs = static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+                                                         std::chrono::steady_clock::now() - tRack)
+                                                         .count());
+            keepPeak(rackPeak[r], rackUs);
+            keepDecaying(rackRecent[r], rackUs);
         }
     }
+    // A rack that has gone quiet is not costing anything, and its light must
+    // go out - so the ones that did not render this block decay too.
+    for (int32_t r = 0; r < kRackCount; ++r) {
+        if (!racks[r].isActive()) keepDecaying(rackRecent[r], 0);
+    }
+
     const auto tRacks = std::chrono::steady_clock::now();
 
     // The same tick range the racks hand their own inserts, so a tempo-synced

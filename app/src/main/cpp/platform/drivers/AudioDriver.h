@@ -89,6 +89,8 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     int64_t getXRunCount() const;
     /** Worst callback since the last read, in microseconds. Reading clears it. */
     int32_t readCallbackPeakUs() { return callbackPeakUs.exchange(0, std::memory_order_relaxed); }
+    /** The decaying one: read as often as you like, by as many as you like. */
+    int32_t recentCallbackUs() const { return callbackRecentUs.load(std::memory_order_relaxed); }
     /** The CPU time of the worst callback. Far below the wall figure means preemption. */
     int32_t readCallbackCpuPeakUs() { return callbackCpuPeakUs.exchange(0, std::memory_order_relaxed); }
     /** Of the late callbacks, those that were late without doing the work. */
@@ -194,6 +196,16 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
      * exactly what happens after a dropout bad enough to disconnect.
      */
     std::atomic<int32_t> callbackPeakUs{0};
+    /**
+     * The same peak, falling by itself instead of being cleared by whoever
+     * asks first.
+     *
+     * `callbackPeakUs` is right for "the worst since you pressed play" and
+     * useless for a meter, because a clearing read means two readers see half
+     * the spikes each. This one decays on the audio thread, so the status line
+     * and the load meter can both watch without robbing each other.
+     */
+    std::atomic<int32_t> callbackRecentUs{0};
     std::atomic<int32_t> callbackCpuPeakUs{0};
     std::atomic<int64_t> lateCallbacks{0};
     std::atomic<int64_t> stalledCallbacks{0};

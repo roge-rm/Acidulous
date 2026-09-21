@@ -45,10 +45,24 @@ fun rememberEngineLoad(): EngineLoad {
         var lastXruns = NativeEngine.xRunCount
         var lit = 0
         while (true) {
+            // **The worse of the average and the worst case.**
+            //
+            // The average alone was what this meter showed, and on a phone
+            // dropping audio it read six per cent - because it is a one-pole
+            // with a 27 ms memory and a spike has decayed out of it long
+            // before a 200 ms poll arrives. A meter that says "comfortable"
+            // while the sound breaks up is worse than no meter.
+            //
+            // So the worst callback since the last look is measured against
+            // its own budget and taken if it is higher. That number is the one
+            // a dropout is actually about, and on a device with room to spare
+            // it sits below the average and changes nothing.
+            val budget = NativeEngine.callbackBudgetUs.coerceAtLeast(1)
+            val worst = NativeEngine.recentCallbackUs * 100f / budget
+            val now = maxOf(NativeEngine.loadAvg, worst)
             // A slow follower upward and a slower one down: the raw figure
             // flickers by several percent a block, and a meter that will
             // not sit still cannot be read at all.
-            val now = NativeEngine.loadAvg
             load += (now - load) * (if (now > load) 0.6f else 0.2f)
             val xruns = NativeEngine.xRunCount
             if (xruns != lastXruns) { lastXruns = xruns; lit = 15 }

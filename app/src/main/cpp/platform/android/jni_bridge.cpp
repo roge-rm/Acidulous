@@ -662,6 +662,16 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeWorstRackUs(JNIEnv *, jobject, j
 }
 
 JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeRecentCallbackUs(JNIEnv *, jobject) {
+    return host().recentCallbackUs();
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeRackCostUs(JNIEnv *, jobject, jint rack) {
+    return host().rackCostUs(rack);
+}
+
+JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeWorstCallbackCpuUs(JNIEnv *, jobject) {
     return host().worstCallbackCpuUs();
 }

@@ -67,5 +67,17 @@ Because they are baked in, changing the machine or either effect makes the
 freeze out of date, and the clip says so - the same mark it shows when the
 tempo has moved. Thaw it or freeze it again.
 
-**Which track to freeze** is in **Settings · audio**: the worst block, where its
-time went, and the tracks that cost the most, worst first.
+## When it cannot keep up
+
+If the engine starts missing its deadline while you play, the app says so
+without stopping anything: **the tracks costing the most glow red**, and the
+load meter in the header goes with them. Nothing is interrupted, nothing asks
+you a question, and on a device with room to spare nothing ever lights up.
+
+A track glows when two things are true at once - the engine is late *right now*,
+and that track is a large share of one block on its own. So it is not a warning
+that a track is expensive, it is a warning that this track is why, which makes
+freezing it the obvious next thing to do.
+
+For the numbers behind it, **Settings · audio** has the worst block, where its
+time went, and every track's cost worst-first.

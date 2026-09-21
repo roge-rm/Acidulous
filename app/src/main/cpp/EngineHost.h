@@ -396,7 +396,9 @@ class EngineHost {
     int32_t worstCallbackUs();
     int32_t worstPhaseUs(int32_t phase);
     int32_t worstRackUs(int32_t rack);
+    int32_t rackCostUs(int32_t rack) const;
     int32_t worstCallbackCpuUs();
+    int32_t recentCallbackUs() const;
     int64_t lateCallbacks() const;
     int64_t stalledCallbacks() const;
     int32_t callbackBudgetUs() const;

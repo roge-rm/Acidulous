@@ -63,7 +63,10 @@ object Manual {
             ManualBlock(ManualKind.Para, "Freezing renders a clip to audio and plays that instead of the machine, which gives the processor back to everything else. Freeze one clip, a whole scene or a whole track from the menus."),
             ManualBlock(ManualKind.Para, "**The insert effects are frozen too.** What is rendered is the machine and both of its slots, so a frozen track costs a read from memory and nothing else - that is where the saving comes from. What stays live is the *mixer*: the fader, pan, the two sends and mute all still work over a frozen clip, which is the line between freezing and bouncing."),
             ManualBlock(ManualKind.Para, "Because they are baked in, changing the machine or either effect makes the freeze out of date, and the clip says so - the same mark it shows when the tempo has moved. Thaw it or freeze it again."),
-            ManualBlock(ManualKind.Para, "**Which track to freeze** is in **Settings · audio**: the worst block, where its time went, and the tracks that cost the most, worst first."),
+            ManualBlock(ManualKind.Heading, "When it cannot keep up"),
+            ManualBlock(ManualKind.Para, "If the engine starts missing its deadline while you play, the app says so without stopping anything: **the tracks costing the most glow red**, and the load meter in the header goes with them. Nothing is interrupted, nothing asks you a question, and on a device with room to spare nothing ever lights up."),
+            ManualBlock(ManualKind.Para, "A track glows when two things are true at once - the engine is late *right now*, and that track is a large share of one block on its own. So it is not a warning that a track is expensive, it is a warning that this track is why, which makes freezing it the obvious next thing to do."),
+            ManualBlock(ManualKind.Para, "For the numbers behind it, **Settings · audio** has the worst block, where its time went, and every track's cost worst-first."),
         )),
         ManualSection("The editor", "Drawing notes, and what one note decides.", listOf(
             ManualBlock(ManualKind.Para, "Opening a clip gives you the grid at the top, the machine's own controls in the middle, and the instrument at the bottom."),

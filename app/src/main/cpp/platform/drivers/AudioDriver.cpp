@@ -281,6 +281,11 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
     int32_t seen = callbackPeakUs.load(std::memory_order_relaxed);
     while (us > seen && !callbackPeakUs.compare_exchange_weak(seen, us, std::memory_order_relaxed)) {
     }
+    // Falls by about a third every half second at this rate, which is slow
+    // enough to read off a meter and quick enough to follow a scene change.
+    const int32_t wasRecent = callbackRecentUs.load(std::memory_order_relaxed);
+    const int32_t faded = static_cast<int32_t>(static_cast<int64_t>(wasRecent) * 49 / 50);
+    callbackRecentUs.store(us > faded ? us : faded, std::memory_order_relaxed);
     int32_t seenCpu = callbackCpuPeakUs.load(std::memory_order_relaxed);
     while (cpuUs > seenCpu &&
            !callbackCpuPeakUs.compare_exchange_weak(seenCpu, cpuUs, std::memory_order_relaxed)) {

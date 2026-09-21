@@ -485,6 +485,12 @@ object NativeEngine {
     /** The worst this rack has cost since last asked, in microseconds. Reading clears it. */
     fun worstRackUs(rack: Int): Int = nativeWorstRackUs(rack)
 
+    /** What this rack costs lately, in microseconds. Falls by itself; reading does not clear it. */
+    fun rackCostUs(rack: Int): Int = nativeRackCostUs(rack)
+
+    /** The worst recent callback, decaying. Safe for any number of readers. */
+    val recentCallbackUs: Int get() = nativeRecentCallbackUs()
+
     /** Peak absolute sample since the last call, then reset. 0.0 means silence. */
     fun readPeakLevel(): Float = nativeReadPeakLevel()
     fun readRackPeak(rackId: Int): Float = nativeReadRackPeak(rackId)
@@ -775,6 +781,8 @@ object NativeEngine {
     private external fun nativeWorstCallbackUs(): Int
     private external fun nativeWorstPhaseUs(phase: Int): Int
     private external fun nativeWorstRackUs(rack: Int): Int
+    private external fun nativeRackCostUs(rack: Int): Int
+    private external fun nativeRecentCallbackUs(): Int
     private external fun nativeWorstCallbackCpuUs(): Int
     private external fun nativeLateCallbacks(): Long
     private external fun nativeStalledCallbacks(): Long

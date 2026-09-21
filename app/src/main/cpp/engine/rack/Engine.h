@@ -132,6 +132,21 @@ class Engine : public Rack::ModifiedNoteSink {
         return rack >= 0 && rack < kRackCount ? rackPeak[rack].exchange(0, std::memory_order_relaxed) : 0;
     }
 
+    /**
+     * What this rack has been costing lately, in microseconds - read without
+     * clearing, so anything may ask as often as it likes.
+     *
+     * The peak-hold above is cleared by reading, which is right for "the worst
+     * since you opened this page" and wrong for a light on the screen: two
+     * readers would rob each other and the grid would flicker against the
+     * settings page. This one decays on the audio thread instead, a fixed
+     * amount per block, so it falls at the same rate no matter who is looking
+     * or how often.
+     */
+    int32_t rackCostUs(int32_t rack) const {
+        return rack >= 0 && rack < kRackCount ? rackRecent[rack].load(std::memory_order_relaxed) : 0;
+    }
+
     /** The same, for the five phases of a block. Cleared by reading. */
     int32_t worstPhaseUs(Phase p) {
         const auto i = static_cast<size_t>(p);
@@ -297,6 +312,19 @@ class Engine : public Rack::ModifiedNoteSink {
     std::atomic<int32_t> blockPeak{0};
     std::atomic<int32_t> phasePeak[kPhases]{};
     std::atomic<int32_t> rackPeak[kRackCount]{};
+    std::atomic<int32_t> rackRecent[kRackCount]{};
+
+    /**
+     * A peak that falls by itself: `max(now, previous * k)`.
+     *
+     * 249/250 a block is about half a second to fall to a third, which is slow
+     * enough to see and fast enough to follow a scene change.
+     */
+    static void keepDecaying(std::atomic<int32_t> &slot, int32_t us) {
+        const int32_t was = slot.load(std::memory_order_relaxed);
+        const int32_t faded = static_cast<int32_t>(static_cast<int64_t>(was) * 249 / 250);
+        slot.store(us > faded ? us : faded, std::memory_order_relaxed);
+    }
 
     /** Raise a peak-hold to [us] if it is higher. Relaxed: nothing orders on it. */
     static void keepPeak(std::atomic<int32_t> &slot, int32_t us) {

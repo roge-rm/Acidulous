@@ -1880,7 +1880,9 @@ int32_t EngineHost::worstPhaseUs(int32_t phase) {
     return sEngine.worstPhaseUs(static_cast<Engine::Phase>(phase));
 }
 int32_t EngineHost::worstCallbackCpuUs() { return sAudio.readCallbackCpuPeakUs(); }
+int32_t EngineHost::recentCallbackUs() const { return sAudio.recentCallbackUs(); }
 int32_t EngineHost::worstRackUs(int32_t rack) { return sEngine.worstRackUs(rack); }
+int32_t EngineHost::rackCostUs(int32_t rack) const { return sEngine.rackCostUs(rack); }
 int64_t EngineHost::lateCallbacks() const { return sAudio.getLateCallbacks(); }
 int64_t EngineHost::stalledCallbacks() const { return sAudio.getStalledCallbacks(); }
 int32_t EngineHost::callbackBudgetUs() const { return sAudio.callbackBudgetUs(); }
