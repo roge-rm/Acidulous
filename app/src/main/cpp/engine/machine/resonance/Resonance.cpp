@@ -296,6 +296,23 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
     const int32_t modeCap = fullQuality() ? kMaxModes : kMaxModes / 2;
     const int32_t wantModes = std::clamp(static_cast<int32_t>(params_.get(Modes) + 0.5f), 1, modeCap);
 
+    // **Nothing ringing, nothing on the frame: nothing to do.**
+    //
+    // A quiet pad is skipped below only when the coupling is off, and that
+    // has to be so: with coupling on a silent object still has to be run, or
+    // it could never be set going by its neighbours. But if *no* pad is
+    // ringing there is nothing on the bus to receive and nothing that can
+    // start anything - and the machine was running eight pads of
+    // twenty-four two-pole resonators, every sample, for ever, to make
+    // silence. It showed up as a track glowing red in a scene where it has no
+    // clip at all, which is exactly what that light is for.
+    bool anyRinging = false;
+    for (int32_t pad = 0; pad < kPads && !anyRinging; ++pad) anyRinging = pads[pad].ringing;
+    if (!anyRinging && std::fabs(knockBus) < 1e-6f && std::fabs(ringBus) < 1e-6f) {
+        knockBus = ringBus = 0.0f;
+        return true; // L and R were cleared above
+    }
+
     for (int32_t pad = 0; pad < kPads; ++pad) {
         Pad &p = pads[pad];
         // Rebuilt only when the object itself changed: two dozen cosines is
@@ -316,11 +333,21 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
         float mixL = 0.0f, mixR = 0.0f;
         const float knockIn = knockBus, ringIn = ringBus;
         float knockOut = 0.0f, ringOut = 0.0f;
+        // **How much of the frame this pad could actually feel.**
+        //
+        // A silent pad has to run while there is energy on the bus, because
+        // that is how a neighbour sets it going - so it cannot simply be
+        // skipped when coupling is on, and it was not. But what reaches it is
+        // the bus *times its own coupling*, and when that product is far below
+        // anything audible the pad is being handed nothing and answering with
+        // nothing. Both defaults are non-zero, so every patch that does not
+        // say otherwise was running all eight pads of resonators for ever.
+        const float busLevel = std::fabs(knockIn) + std::fabs(ringIn);
 
         for (int32_t pad = 0; pad < kPads; ++pad) {
             Pad &p = pads[pad];
             const float couple = padParam(pad, Couple) * coupling;
-            if (!p.ringing && couple <= 0.0001f) continue;
+            if (!p.ringing && couple * busLevel < 1e-5f) continue;
 
             // The strike: a burst somewhere between a click and a puff of
             // noise, shaped by how hard and how soft the beater is.
