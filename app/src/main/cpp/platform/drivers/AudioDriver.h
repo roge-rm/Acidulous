@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include <ctime>
 #include <engine/core/Constants.h>
 #include <functional>
 #include <oboe/Oboe.h>
@@ -86,6 +87,20 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     int32_t getFramesPerBurst() const { return actualFramesPerBurst; }
     bool isLowLatency() const { return actualLowLatency; }
     int64_t getXRunCount() const;
+    /** Worst callback since the last read, in microseconds. Reading clears it. */
+    int32_t readCallbackPeakUs() { return callbackPeakUs.exchange(0, std::memory_order_relaxed); }
+    /** The CPU time of the worst callback. Far below the wall figure means preemption. */
+    int32_t readCallbackCpuPeakUs() { return callbackCpuPeakUs.exchange(0, std::memory_order_relaxed); }
+    /** Of the late callbacks, those that were late without doing the work. */
+    int64_t getStalledCallbacks() const { return stalledCallbacks.load(std::memory_order_relaxed); }
+    /** Callbacks that overran their own budget, since the engine started. */
+    int64_t getLateCallbacks() const { return lateCallbacks.load(std::memory_order_relaxed); }
+    /** The callback's budget in microseconds, from the stream's own rate and burst. */
+    int32_t callbackBudgetUs() const {
+        const int32_t rate = actualSampleRate > 0 ? actualSampleRate : acidulous::kSampleRate;
+        const int32_t frames = actualFramesPerBurst > 0 ? actualFramesPerBurst : acidulous::kBlockFrames;
+        return static_cast<int32_t>(static_cast<int64_t>(frames) * 1000000 / rate);
+    }
 
     /**
      * When the audio being written now will actually be heard.
@@ -163,6 +178,38 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     };
     Anchor anchors[2];
     std::atomic<int32_t> anchorSlot{0};
+
+    /**
+     * How long the callback took, and how often it ran out of time.
+     *
+     * The engine times its own render; this times the thing that actually has
+     * a deadline. At a burst of 192 the callback renders three engine blocks
+     * and then does its own work - the input pump, a memcpy out of the carry
+     * buffer and a peak loop over every sample - and none of that was inside
+     * any measurement. A callback can miss while all three of its blocks look
+     * cheap.
+     *
+     * `lateCallbacks` is ours and cumulative. Oboe's xrun counter is the
+     * stream's, and it resets whenever the stream is reopened, which is
+     * exactly what happens after a dropout bad enough to disconnect.
+     */
+    std::atomic<int32_t> callbackPeakUs{0};
+    std::atomic<int32_t> callbackCpuPeakUs{0};
+    std::atomic<int64_t> lateCallbacks{0};
+    std::atomic<int64_t> stalledCallbacks{0};
+
+    /** This thread's own CPU time, in microseconds. Not the wall clock. */
+    static int64_t threadCpuUs() {
+        timespec ts{};
+        if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) != 0) return 0;
+        return static_cast<int64_t>(ts.tv_sec) * 1000000 + ts.tv_nsec / 1000;
+    }
+
+    /** What [frames] of audio is worth, at the rate the stream actually opened. */
+    int32_t budgetFor(int32_t frames) const {
+        const int32_t rate = actualSampleRate > 0 ? actualSampleRate : acidulous::kSampleRate;
+        return static_cast<int32_t>(static_cast<int64_t>(frames) * 1000000 / rate);
+    }
 
     int32_t engineBlockFrames = 0;
     int32_t bufferBursts = 2;

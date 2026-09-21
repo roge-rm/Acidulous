@@ -785,6 +785,11 @@ private fun App(modifier: Modifier = Modifier) {
     }
 
     var peak by remember { mutableStateOf(0f) }
+    /** The worst callback seen since the transport last started. See the poll below. */
+    var worstUs by remember { mutableStateOf(0) }
+    var worstCpuUs by remember { mutableStateOf(0) }
+    var lateCallbacks by remember { mutableStateOf(0L) }
+    var stalled by remember { mutableStateOf(0L) }
     var playing by remember { mutableStateOf(false) }
     var bpm by remember { mutableStateOf(120f) }
     var armed by remember { mutableStateOf(false) }
@@ -1086,6 +1091,13 @@ private fun App(modifier: Modifier = Modifier) {
             notesOff = NativeEngine.notesOff(0)
             load = NativeEngine.loadAvg
             xruns = NativeEngine.xRunCount
+            // Peak-hold, and reading clears them, so this is the only place
+            // that may ask. Held across polls rather than shown raw: at 80 ms
+            // a reading would flick past before it could be read off a screen.
+            worstUs = maxOf(worstUs, NativeEngine.worstCallbackUs)
+            worstCpuUs = maxOf(worstCpuUs, NativeEngine.worstCallbackCpuUs)
+            lateCallbacks = NativeEngine.lateCallbacks
+            stalled = NativeEngine.stalledCallbacks
             fade = NativeEngine.masterFade
             stopAtEnd = NativeEngine.stopAtEnd
             queuedScene = NativeEngine.queuedScene
@@ -1124,9 +1136,17 @@ private fun App(modifier: Modifier = Modifier) {
     // used to be fifth and sixth in a line that is one ellipsised row, so on
     // a phone they were cut off the end - which mattered once the header
     // stopped showing the number and this became the only place it lives.
-    val diagnostics = "%s · load %.0f%% · xruns %d · peak %.3f · fade %.2f · on %d off %d%s"
+    // `worst` is the number a dropout is actually about: the longest a single
+    // callback took, against the time that callback had. `load` beside it is a
+    // smoothed average - useful for "is it working hard", useless for "why did
+    // it click", because a block over budget decays out of it in 27 ms and
+    // this line is redrawn every 80.
+    val budgetUs = NativeEngine.callbackBudgetUs.coerceAtLeast(1)
+    val diagnostics = ("%s · load %.0f%% · worst %.1f/%.1fms cpu %.1f · late %d/%d · xruns %d · " +
+        "peak %.3f · fade %.2f · on %d off %d%s")
         .format(
-            status, load, xruns, peak, fade, notesOn, notesOff,
+            status, load, worstUs / 1000f, budgetUs / 1000f, worstCpuUs / 1000f,
+            stalled, lateCallbacks, xruns, peak, fade, notesOn, notesOff,
             // Only while Link is on, and only the number that matters when
             // it is: how many machines are keeping this time.
             if (com.rm.acidulous.engine.LinkHub.enabled) {

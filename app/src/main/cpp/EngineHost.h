@@ -386,6 +386,19 @@ class EngineHost {
     bool lowLatency() const;
     int64_t xRunCount() const;
     float loadPercent() const;
+    /**
+     * What a dropout actually needs: worst case, not average.
+     *
+     * Every one of these is peak-hold and **cleared by reading**, so two
+     * readers would rob each other. There is one, the diagnostics poll.
+     */
+    int32_t worstBlockUs();
+    int32_t worstCallbackUs();
+    int32_t worstPhaseUs(int32_t phase);
+    int32_t worstCallbackCpuUs();
+    int64_t lateCallbacks() const;
+    int64_t stalledCallbacks() const;
+    int32_t callbackBudgetUs() const;
     float peakLevel() const;
     float rackPeak(int rack) const;
     float masterFade() const;

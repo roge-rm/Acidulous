@@ -1860,6 +1860,15 @@ int32_t EngineHost::framesPerBurst() const { return sAudio.getFramesPerBurst(); 
 bool EngineHost::lowLatency() const { return sAudio.isLowLatency(); }
 int64_t EngineHost::xRunCount() const { return sAudio.getXRunCount(); }
 float EngineHost::loadPercent() const { return sEngine.loadPercent(); }
+int32_t EngineHost::worstBlockUs() { return sEngine.worstBlockUs(); }
+int32_t EngineHost::worstCallbackUs() { return sAudio.readCallbackPeakUs(); }
+int32_t EngineHost::worstPhaseUs(int32_t phase) {
+    return sEngine.worstPhaseUs(static_cast<Engine::Phase>(phase));
+}
+int32_t EngineHost::worstCallbackCpuUs() { return sAudio.readCallbackCpuPeakUs(); }
+int64_t EngineHost::lateCallbacks() const { return sAudio.getLateCallbacks(); }
+int64_t EngineHost::stalledCallbacks() const { return sAudio.getStalledCallbacks(); }
+int32_t EngineHost::callbackBudgetUs() const { return sAudio.callbackBudgetUs(); }
 float EngineHost::peakLevel() const { return sEngine.master.readPeak(); }
 float EngineHost::rackPeak(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].readPeak() : 0.0f;

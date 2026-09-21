@@ -453,6 +453,35 @@ object NativeEngine {
     val xRunCount: Long get() = nativeGetXRunCount()
     val loadAvg: Float get() = nativeGetLoadAvg()
 
+    /**
+     * The worst block and the worst callback since this was last read, in
+     * microseconds, and how many callbacks have overrun.
+     *
+     * **Reading clears the two peaks**, so exactly one thing may poll them -
+     * the diagnostics loop. [loadAvg] is a smoothed average and stays what it
+     * is: it answers "how hard is it working", and these answer "how close did
+     * it come to missing", which is the only question a dropout asks.
+     */
+    val worstBlockUs: Int get() = nativeWorstBlockUs()
+    val worstCallbackUs: Int get() = nativeWorstCallbackUs()
+    val worstCallbackCpuUs: Int get() = nativeWorstCallbackCpuUs()
+    val lateCallbacks: Long get() = nativeLateCallbacks()
+
+    /**
+     * Late callbacks that were late **without doing the work** - descheduled
+     * rather than slow. If this tracks [lateCallbacks] the device is not short
+     * of CPU, it is short of priority, and no amount of cheaper DSP will help.
+     */
+    val stalledCallbacks: Long get() = nativeStalledCallbacks()
+
+    /** One callback's worth of audio in microseconds, from the stream's own rate. */
+    val callbackBudgetUs: Int get() = nativeCallbackBudgetUs()
+
+    /** Mirrors `Engine::Phase`, in order. */
+    enum class Phase { Input, Sequencer, Racks, Master, Capture }
+
+    fun worstPhaseUs(phase: Phase): Int = nativeWorstPhaseUs(phase.ordinal)
+
     /** Peak absolute sample since the last call, then reset. 0.0 means silence. */
     fun readPeakLevel(): Float = nativeReadPeakLevel()
     fun readRackPeak(rackId: Int): Float = nativeReadRackPeak(rackId)
@@ -739,6 +768,13 @@ object NativeEngine {
     private external fun nativeIsLowLatency(): Boolean
     private external fun nativeGetXRunCount(): Long
     private external fun nativeGetLoadAvg(): Float
+    private external fun nativeWorstBlockUs(): Int
+    private external fun nativeWorstCallbackUs(): Int
+    private external fun nativeWorstPhaseUs(phase: Int): Int
+    private external fun nativeWorstCallbackCpuUs(): Int
+    private external fun nativeLateCallbacks(): Long
+    private external fun nativeStalledCallbacks(): Long
+    private external fun nativeCallbackBudgetUs(): Int
     private external fun nativeReadPeakLevel(): Float
     private external fun nativeReadRackPeak(rackId: Int): Float
     private external fun nativeGetMasterFade(): Float

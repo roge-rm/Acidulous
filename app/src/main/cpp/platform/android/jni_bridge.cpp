@@ -641,6 +641,41 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeGetLoadAvg(JNIEnv *, jobject) {
     return host().loadPercent();
 }
 
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeWorstBlockUs(JNIEnv *, jobject) {
+    return host().worstBlockUs();
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeWorstCallbackUs(JNIEnv *, jobject) {
+    return host().worstCallbackUs();
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeWorstPhaseUs(JNIEnv *, jobject, jint phase) {
+    return host().worstPhaseUs(phase);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeWorstCallbackCpuUs(JNIEnv *, jobject) {
+    return host().worstCallbackCpuUs();
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLateCallbacks(JNIEnv *, jobject) {
+    return host().lateCallbacks();
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeStalledCallbacks(JNIEnv *, jobject) {
+    return host().stalledCallbacks();
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCallbackBudgetUs(JNIEnv *, jobject) {
+    return host().callbackBudgetUs();
+}
+
 JNIEXPORT jfloat JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeReadPeakLevel(JNIEnv *, jobject) {
     return host().peakLevel();

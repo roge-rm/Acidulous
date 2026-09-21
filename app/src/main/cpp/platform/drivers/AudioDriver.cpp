@@ -1,4 +1,6 @@
 #include "AudioDriver.h"
+
+#include <chrono>
 #include <algorithm>
 #include <android/log.h>
 #include <cmath>
@@ -199,6 +201,8 @@ int64_t AudioDriver::getXRunCount() const {
 oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStream,
                                                    void *audioData,
                                                    int32_t numFrames) {
+    const auto tCallback = std::chrono::steady_clock::now();
+    const int64_t cpu0 = threadCpuUs();
     auto *out = static_cast<float *>(audioData);
     int32_t written = 0;
     pumpInput(numFrames);
@@ -248,6 +252,39 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
     if (peak > previous) {
         peakLevel.store(peak, std::memory_order_relaxed);
     }
+
+    // Everything above is inside the measurement, which is the point: the
+    // engine already times its own render and it is not the thing with the
+    // deadline.
+    const auto us = static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+                                             std::chrono::steady_clock::now() - tCallback)
+                                             .count());
+    // **Wall clock and CPU time, both.** They answer different questions and
+    // only the pair is diagnostic. Wall says how long the callback took, which
+    // is what the deadline is measured against. CPU says how much of that we
+    // actually spent computing. When the two agree the engine is genuinely
+    // slow and the fix is DSP; when wall is far larger the thread was taken
+    // off its core and no amount of optimising will help - that is a
+    // scheduling problem, and it wants priority and a performance hint
+    // instead. Told apart by an average, the two look identical.
+    const auto cpuUs = static_cast<int32_t>(threadCpuUs() - cpu0);
+    int32_t seen = callbackPeakUs.load(std::memory_order_relaxed);
+    while (us > seen && !callbackPeakUs.compare_exchange_weak(seen, us, std::memory_order_relaxed)) {
+    }
+    int32_t seenCpu = callbackCpuPeakUs.load(std::memory_order_relaxed);
+    while (cpuUs > seenCpu &&
+           !callbackCpuPeakUs.compare_exchange_weak(seenCpu, cpuUs, std::memory_order_relaxed)) {
+    }
+    // A callback that ran long in wall time while barely using the CPU was
+    // descheduled, not slow. Counted apart, because the two have different
+    // cures and a single "late" number hides which one this device has.
+    if (us > budgetFor(numFrames) && cpuUs * 2 < us) {
+        stalledCallbacks.fetch_add(1, std::memory_order_relaxed);
+    }
+    // The budget is this callback's own frames at this stream's own rate, not
+    // a constant: Oboe may open at a rate we did not ask for and may hand a
+    // different frame count than the burst.
+    if (us > budgetFor(numFrames)) lateCallbacks.fetch_add(1, std::memory_order_relaxed);
 
     return oboe::DataCallbackResult::Continue;
 }

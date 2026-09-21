@@ -70,6 +70,8 @@ void Engine::renderBlock(const float *in, float *out) {
         InputBus::get().publish(in, in != nullptr ? kBlockFrames : 0);
     }
 
+    const auto tInput = std::chrono::steady_clock::now();
+
     // Panic first, before anything else runs: whatever is happening, the
     // next thing that leaves this engine should be silence.
     if (panicFlag.exchange(false, std::memory_order_acq_rel)) {
@@ -334,6 +336,8 @@ void Engine::renderBlock(const float *in, float *out) {
         }
     }
 
+    const auto tSeq = std::chrono::steady_clock::now();
+
     // And the sound itself. This loop and the master call under it were
     // deleted by an over-long slice edit in M35, which took the scene fade
     // with them: `out` was then never written at all, so every block handed
@@ -348,9 +352,13 @@ void Engine::renderBlock(const float *in, float *out) {
             racks[r].render(kBlockFrames);
         }
     }
+    const auto tRacks = std::chrono::steady_clock::now();
+
     // The same tick range the racks hand their own inserts, so a tempo-synced
     // effect behaves the same whether it is on a track or on a send.
     master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade, clock.blockStart(), clock.blockEnd());
+
+    const auto tMaster = std::chrono::steady_clock::now();
 
     // Monitoring is after the master so it is heard at the master's level,
     // and deliberately not recorded when capturing the input: nobody wants
@@ -408,9 +416,24 @@ void Engine::renderBlock(const float *in, float *out) {
     framesRendered += kBlockFrames;
 
     // Block budget at 48 kHz / 64 frames is 1333 us.
-    const auto us = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - t0).count();
+    const auto tEnd = std::chrono::steady_clock::now();
+    const auto us = std::chrono::duration_cast<std::chrono::microseconds>(tEnd - t0).count();
     const float pct = static_cast<float>(us) / 1333.3f * 100.0f;
     load.store(load.load(std::memory_order_relaxed) * 0.95f + pct * 0.05f, std::memory_order_relaxed);
+
+    // And the same span again, kept rather than averaged. The EMA above has a
+    // 27 ms memory and is read every 80 ms, so the block that caused a dropout
+    // has decayed out of it before anybody looks; this is the one that answers
+    // "how bad did it get".
+    keepPeak(blockPeak, static_cast<int32_t>(us));
+    const auto span = [](auto a, auto b) {
+        return static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(b - a).count());
+    };
+    keepPeak(phasePeak[static_cast<size_t>(Phase::Input)], span(t0, tInput));
+    keepPeak(phasePeak[static_cast<size_t>(Phase::Sequencer)], span(tInput, tSeq));
+    keepPeak(phasePeak[static_cast<size_t>(Phase::Racks)], span(tSeq, tRacks));
+    keepPeak(phasePeak[static_cast<size_t>(Phase::Master)], span(tRacks, tMaster));
+    keepPeak(phasePeak[static_cast<size_t>(Phase::Capture)], span(tMaster, tEnd));
 }
 
 /**

@@ -14,6 +14,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -119,6 +121,37 @@ private fun AudioTab() {
         for (b in UiPrefs.Buffer.entries) {
             Choice(b.label, UiPrefs.buffer == b) { UiPrefs.chooseBuffer(b) }
         }
+    }
+
+    // **Where the time actually went.** The buffer above says how long the
+    // engine has; this says how long it took, worst case, and which part of it
+    // was slow. Both peaks are cleared by reading, and this is a second reader
+    // after the diagnostics line - which is fine and deliberate: opening this
+    // page zeroes them, so what it shows is "since you opened it", which is
+    // the window somebody looking at it means.
+    var worst by remember { mutableStateOf(0) }
+    var phases by remember { mutableStateOf(IntArray(NativeEngine.Phase.entries.size)) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            worst = maxOf(worst, NativeEngine.worstBlockUs)
+            val next = phases.copyOf()
+            for (p in NativeEngine.Phase.entries) {
+                next[p.ordinal] = maxOf(next[p.ordinal], NativeEngine.worstPhaseUs(p))
+            }
+            phases = next
+            delay(120)
+        }
+    }
+    Section(
+        "worst block",
+        "%.2f ms of %.2f · %s".format(
+            worst / 1000f,
+            NativeEngine.callbackBudgetUs / 1000f,
+            NativeEngine.Phase.entries
+                .joinToString(" ") { "${it.name.lowercase().take(3)} %.2f".format(phases[it.ordinal] / 1000f) },
+        ),
+    ) {
+        Choice("reset", false) { worst = 0; phases = IntArray(NativeEngine.Phase.entries.size) }
     }
 
     Section(

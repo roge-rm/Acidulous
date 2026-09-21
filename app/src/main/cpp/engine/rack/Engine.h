@@ -92,7 +92,38 @@ class Engine : public Rack::ModifiedNoteSink {
     }
     Retirer retirer;
 
+    /**
+     * Where a block's time went, coarsely.
+     *
+     * Five, not sixteen. A `steady_clock::now()` per rack would be its own
+     * measurement cost paid twelve thousand times a second, and the question
+     * this has to answer is only ever "which part of the engine", which five
+     * answers and sixteen answers no better.
+     */
+    enum class Phase : int32_t { Input, Sequencer, Racks, Master, Capture, Count };
+    static constexpr size_t kPhases = static_cast<size_t>(Phase::Count);
+
     float loadPercent() const { return load.load(std::memory_order_relaxed); }
+
+    /**
+     * The worst block since somebody last asked, in microseconds.
+     *
+     * **Peak-hold, and reading it clears it**, exactly as the output meter
+     * behaves - because the question a dropout asks is "how bad did it get",
+     * and an average cannot answer it. `load` above is a one-pole with a
+     * 27 ms memory, polled every 80 ms and smoothed again on the way to the
+     * screen: a block that took four times its budget moves it by a few
+     * points and has decayed before anybody looks. That is the right shape
+     * for a level ladder and the wrong shape for finding a spike, so both
+     * exist and neither pretends to be the other.
+     */
+    int32_t worstBlockUs() { return blockPeak.exchange(0, std::memory_order_relaxed); }
+
+    /** The same, for the five phases of a block. Cleared by reading. */
+    int32_t worstPhaseUs(Phase p) {
+        const auto i = static_cast<size_t>(p);
+        return i < kPhases ? phasePeak[i].exchange(0, std::memory_order_relaxed) : 0;
+    }
 
     // Input, monitoring and recording. Set from the UI thread, read on the
     // audio thread; plain atomics because they are single values.
@@ -250,6 +281,15 @@ class Engine : public Rack::ModifiedNoteSink {
     int64_t framesRendered = 0;
     int64_t lastClockTick = -1;
     std::atomic<float> load{0.0f};
+    std::atomic<int32_t> blockPeak{0};
+    std::atomic<int32_t> phasePeak[kPhases]{};
+
+    /** Raise a peak-hold to [us] if it is higher. Relaxed: nothing orders on it. */
+    static void keepPeak(std::atomic<int32_t> &slot, int32_t us) {
+        int32_t seen = slot.load(std::memory_order_relaxed);
+        while (us > seen && !slot.compare_exchange_weak(seen, us, std::memory_order_relaxed)) {
+        }
+    }
 };
 
 } // namespace acidulous
