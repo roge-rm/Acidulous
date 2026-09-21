@@ -1788,6 +1788,23 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     r.tapDry = false;
     sEngine.transport.requestStop();
     sEngine.renderBlock(nullptr, scratch);
+
+    // And a clean finish, for the same reason as the clean start above.
+    //
+    // Stopping only sends note-offs, so at this point the machine's voices are
+    // in their release stages and both inserts are full of the render - two
+    // seconds of tail, since that is what a freeze deliberately renders. The
+    // stream is down while all of that happens, so none of it is heard until
+    // the line below reopens it, and then it is: a short blurt of the clip's
+    // own ending, once per clip, which is what freezing a whole track sounded
+    // like. The master too, because the racks fed the sends the entire time.
+    r.allNotesOff();
+    if (r.currentMachine() != nullptr) r.currentMachine()->reset();
+    for (int32_t sl = 0; sl < kEffectSlots; ++sl) {
+        if (r.currentEffect(sl) != nullptr) r.currentEffect(sl)->reset();
+    }
+    sEngine.master.panic();
+
     sEngine.transport.setLoopSong(loopSongBefore);
     sEngine.transport.setLoopScene(loopSceneBefore);
     sEngine.transport.setLauncher(launcherBefore);

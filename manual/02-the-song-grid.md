@@ -15,6 +15,9 @@ says, and then the next one starts. Press play and it plays the song.
   move it left or right.
 - The loop pill at the left of the bottom bar loops the whole song or the scene
   that is playing.
+- Stop means stop: the next play starts the song from the top. There is no
+  pause here - in the launcher every track keeps its own place instead, so stop
+  leaves it where it is.
 
 ## As a launcher
 
@@ -62,6 +65,14 @@ of its slots, so a frozen track costs a read from memory and nothing else - that
 is where the saving comes from. What stays live is the *mixer*: the fader, pan,
 the two sends and mute all still work over a frozen clip, which is the line
 between freezing and bouncing.
+
+A clip loops, so what is still ringing at its end is heard over its own
+beginning. Freezing renders **two seconds past the clip** and folds that back
+onto the head, which is why a frozen clip does not chop its own reverb off at
+every bar line. Two seconds is the limit: a decay longer than that is cut where
+it runs out. If you want a long tail, put the reverb on a send - the sends stay
+live over a frozen clip, so nothing about them is baked in and nothing is
+shortened.
 
 Because they are baked in, changing the machine or either effect makes the
 freeze out of date, and the clip says so - the same mark it shows when the

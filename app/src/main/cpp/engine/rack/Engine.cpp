@@ -168,6 +168,20 @@ void Engine::renderBlock(const float *in, float *out) {
             scheduler.stopLauncher();
             transport.clearLaunchRequests();
             linkWaiting = false;
+            // **Stop means stop, not pause.** The playhead stayed where it
+            // was, and the header's play button starts from the scene the
+            // readout is showing - so a stop half way through a song and a
+            // press of play carried on from there. There is no separate
+            // pause, so the one control has to be the one people expect, and
+            // what they expect of a stop button is the top of the song.
+            //
+            // The launcher is left alone: there is no "beginning" to go back
+            // to when every track is somewhere of its own, and stopping there
+            // already has its own two-stage meaning.
+            if (!transport.launcherMode()) {
+                clock.reset();
+                scheduler.start(0);
+            }
         }
         playing = transport.isPlaying();
         emitTransport(playing);
