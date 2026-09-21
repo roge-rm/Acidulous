@@ -3073,6 +3073,10 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                 Group("tempo") {
                     PanelSwitch(b, "stretch", listOf("as sung", "follow"), "takes")
                 }
+                Group("input") {
+                    PanelKnob(b, "monitor", "monitor", PanelPink)
+                    InputListen()
+                }
               }
                 return@GroupRow
             }

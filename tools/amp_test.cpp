@@ -11,8 +11,12 @@
 #include <vector>
 
 #include <engine/effect/amp/Cabinet.h>
+#include <engine/dsp/Oversampler.h>
+#include <engine/effect/amp/Amp.h>
+#include <engine/effect/amp/Stages.h>
 
 using namespace acidulous;
+using namespace acidulous::effect;
 
 namespace {
 int checks = 0, failures = 0;
@@ -208,6 +212,187 @@ void theLevelHoldsAcrossTheGrid() {
        std::to_string(hi - lo) + " dB spread");
 }
 
+// --- The amp around it -----------------------------------------------------------
+
+/** And `stack` chooses *how hard* they fight, not just where. */
+void theStacksDifferInHowHardTheyFight(const double *depth) {
+    ok("the British stack scoops harder than the modern one",
+       depth[amp::Uk] > depth[amp::Modern] + 2.0,
+       std::to_string(depth[amp::Uk]) + " dB against " + std::to_string(depth[amp::Modern]));
+}
+
+/**
+ * The tone stack interacts, which is what tells it from an equaliser.
+ *
+ * Three independent shelves would leave the mid where it is when bass and
+ * treble go up. A real passive stack scoops, because it can only attenuate -
+ * and the scoop runs on the **product** of the two, so turning either one down
+ * fills the mid back in.
+ */
+void theToneStackInteracts() {
+    printf("- the tone stack fights with itself\n");
+    double depth[amp::StackCount] = {0.0};
+    for (int32_t k = 0; k < amp::StackCount; ++k) {
+        const amp::Voicing v = amp::voicingOf(k);
+        amp::ToneStack both, neither;
+        both.prepare(kRate);
+        neither.prepare(kRate);
+        both.set(v, 1.0f, 0.0f, 1.0f);    // bass and treble up, mid down
+        neither.set(v, 0.0f, 0.0f, 0.0f); // everything down
+
+        const float midHz = v.midRef;
+        const double scooped = dB(both.magnitudeAt(midHz)) - dB(both.magnitudeAt(100.0f));
+        const double flat = dB(neither.magnitudeAt(midHz)) - dB(neither.magnitudeAt(100.0f));
+        // Three decibels for all three, because **the modern voicing scoops
+        // least on purpose** - a high-gain amp does its scooping with gain
+        // structure and its stack is flatter. That the three differ is
+        // asserted separately below; that they all scoop is the shared claim.
+        ok((std::string("stack ") + std::to_string(k) + ": bass and treble up scoops the mid").c_str(),
+           scooped < flat - 3.0,
+           std::to_string(scooped) + " dB against " + std::to_string(flat));
+        depth[k] = flat - scooped;
+    }
+    theStacksDifferInHowHardTheyFight(depth);
+}
+
+/** And it can never go unstable, whatever anybody automates it to. */
+void theToneStackIsAlwaysStable() {
+    printf("- no setting of it misbehaves\n");
+    double loudest = -1e9;
+    bool finite = true;
+    for (int32_t k = 0; k < amp::StackCount; ++k) {
+        const amp::Voicing v = amp::voicingOf(k);
+        for (int32_t b = 0; b <= 4; ++b) {
+            for (int32_t m = 0; m <= 4; ++m) {
+                for (int32_t t = 0; t <= 4; ++t) {
+                    amp::ToneStack s;
+                    s.prepare(kRate);
+                    s.set(v, b / 4.0f, m / 4.0f, t / 4.0f);
+                    for (int32_t i = 0; i < 40; ++i) {
+                        const float hz = 30.0f * std::pow(2.0f, static_cast<float>(i) * 0.25f);
+                        if (hz > 20000.0f) break;
+                        const double g = dB(s.magnitudeAt(hz));
+                        if (!std::isfinite(g)) finite = false;
+                        loudest = g > loudest ? g : loudest;
+                    }
+                }
+            }
+        }
+    }
+    ok("every setting is finite", finite);
+    ok("and none of them gains more than fourteen decibels", loudest < 14.0,
+       std::to_string(loudest) + " dB at the loudest");
+}
+
+/**
+ * Sag droops and comes back, and does not oscillate.
+ *
+ * The failure it guards: detecting on the stage's *output* instead of its
+ * input gives a limiter loop with a twelve millisecond attack and a loop gain
+ * above one, which motorboats at thirty to eighty hertz - and gets blamed on
+ * the cab.
+ */
+void sagDroopsAndRecovers() {
+    printf("- the supply sags under load and comes back\n");
+    amp::PowerStage stage;
+    stage.prepare(kRate);
+    stage.set(1.0f, 1.0f, 1.0f);
+
+    std::vector<float> rail;
+    for (int32_t i = 0; i < static_cast<int32_t>(kRate * 2); ++i) {
+        stage.process(0.4f * std::sin(2.0f * static_cast<float>(M_PI) * 220.0f * i / kRate));
+        rail.push_back(stage.rail());
+    }
+    const double early = rail[static_cast<size_t>(kRate * 0.2f)];
+    ok("it has drooped within two hundred milliseconds", dB(early) < -1.5,
+       std::to_string(dB(early)) + " dB of rail");
+
+    // Over the last second it must be steady: a rail that keeps moving is one
+    // that is oscillating.
+    double lo = 1e9, hi = -1e9;
+    for (int32_t i = static_cast<int32_t>(kRate); i < static_cast<int32_t>(kRate * 2); ++i) {
+        const double r = rail[static_cast<size_t>(i)];
+        lo = r < lo ? r : lo;
+        hi = r > hi ? r : hi;
+    }
+    ok("and then holds still rather than pumping", dB(hi) - dB(lo) < 0.5,
+       std::to_string(dB(hi) - dB(lo)) + " dB of movement");
+
+    // Quiet in, no sag.
+    amp::PowerStage quiet;
+    quiet.prepare(kRate);
+    quiet.set(1.0f, 1.0f, 1.0f);
+    for (int32_t i = 0; i < static_cast<int32_t>(kRate); ++i) {
+        quiet.process(0.01f * std::sin(2.0f * static_cast<float>(M_PI) * 220.0f * i / kRate));
+    }
+    ok("a quiet passage does not sag at all", dB(quiet.rail()) > -0.3,
+       std::to_string(dB(quiet.rail())) + " dB");
+}
+
+/**
+ * The whole effect, end to end.
+ *
+ * Two claims a chain this long can break quietly: that `mix` at nought is the
+ * input back again - which also proves the dry path is delayed by exactly the
+ * oversampler's latency, because a dry path that is not would show up here as
+ * a difference - and that it makes a sound at all.
+ */
+void theWholeAmp() {
+    printf("- the amp, end to end\n");
+    Amp fx;
+    fx.prepare(static_cast<int32_t>(kRate));
+
+    std::vector<float> in(1024);
+    for (size_t i = 0; i < in.size(); ++i) {
+        in[i] = 0.3f * std::sin(2.0 * M_PI * 220.0 * i / kRate) +
+                0.1f * std::sin(2.0 * M_PI * 1870.0 * i / kRate);
+    }
+
+    // mix = 0: bit for bit what went in.
+    {
+        const int32_t mix = fx.params().indexOf("mix");
+        fx.params().set(mix, 0.0f);
+        fx.params().jumpAll();
+        std::vector<float> l = in, r = in;
+        for (size_t at = 0; at < in.size(); at += 64) {
+            fx.run(l.data() + at, r.data() + at, 64, true);
+        }
+        // Bit for bit, **delayed by the oversampler's latency** - which is the
+        // claim worth making, because it proves the dry path is compensated by
+        // exactly that and not approximately.
+        bool same = true;
+        int32_t firstBad = -1;
+        for (size_t i = dsp::Oversampler::kLatency; i < in.size(); ++i) {
+            if (l[i] != in[i - dsp::Oversampler::kLatency]) {
+                same = false;
+                if (firstBad < 0) firstBad = static_cast<int32_t>(i);
+            }
+        }
+        ok("mix at nought is bit for bit the input, delayed by the latency", same,
+           firstBad < 0 ? "" : "first differs at " + std::to_string(firstBad));
+    }
+
+    // And with it up, something happens - and stays finite.
+    {
+        fx.reset();
+        fx.params().set(fx.params().indexOf("mix"), 1.0f);
+        fx.params().set(fx.params().indexOf("drive"), 0.8f);
+        fx.params().jumpAll();
+        std::vector<float> l = in, r = in;
+        double peak = 0.0;
+        bool finite = true;
+        for (size_t at = 0; at < in.size(); at += 64) {
+            fx.run(l.data() + at, r.data() + at, 64, true);
+            for (int32_t i = 0; i < 64; ++i) {
+                finite = finite && std::isfinite(l[at + i]);
+                peak = std::fabs(l[at + i]) > peak ? std::fabs(l[at + i]) : peak;
+            }
+        }
+        ok("driven, it makes a sound and stays finite", finite && peak > 0.01 && peak < 4.0,
+           "peak " + std::to_string(peak));
+    }
+}
+
 } // namespace
 
 int main() {
@@ -216,6 +401,10 @@ int main() {
     everyKnobIsMonotonic();
     theCabinetDoesNotRing();
     theLevelHoldsAcrossTheGrid();
+    theToneStackInteracts();
+    theToneStackIsAlwaysStable();
+    sagDroopsAndRecovers();
+    theWholeAmp();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -1,6 +1,7 @@
 #include "Bias.h"
 #include <cmath>
 #include <engine/core/Constants.h>
+#include <engine/core/InputBus.h>
 #include <engine/dsp/Math.h>
 
 namespace acidulous::machine {
@@ -23,6 +24,7 @@ const ParamDef *Bias::paramDefs(int32_t &count) const {
         // Off by default: a take plays at the speed it was recorded at, which
         // is what somebody expects of a recording until they ask otherwise.
         {"stretch", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+        {"monitor", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         // The medium. Every default is "nothing at all", so a fresh track
         // plays a file back untouched and the Init patch is what the machine
         // already is rather than a setting that undoes something.
@@ -153,6 +155,22 @@ bool Bias::render(float *L, float *R, int32_t frames) {
         // A muted or empty cell still runs the medium, because a tape with
         // nothing on it is not silent - it is hiss. Skipped entirely when
         // there is no medium, which is the default.
+        //
+        // **And it still monitors.** A track with nothing recorded on it yet is
+        // exactly the track somebody is about to plug a guitar into, so going
+        // deaf here would make the rig work only after the first take.
+        const float mon = paramOfIndex(Monitor);
+        if (mon > 0.0001f) {
+            const InputBus &bus = InputBus::get();
+            if (bus.live()) {
+                const float *in = bus.block();
+                const int32_t n = bus.frames() < frames ? bus.frames() : frames;
+                for (int32_t i = 0; i < n; ++i) {
+                    L[i] += in[static_cast<size_t>(i) * 2] * mon;
+                    R[i] += in[static_cast<size_t>(i) * 2 + 1] * mon;
+                }
+            }
+        }
         if (spec.any) colour.process(L, R, frames);
         return true;
     }
@@ -283,6 +301,21 @@ bool Bias::render(float *L, float *R, int32_t frames) {
         }
     }
 
+    // **What is coming in, before the inserts and before the medium.** The
+    // medium is a tape and a live guitar is not on it yet, so the monitor sits
+    // where the tape's output does and goes through everything after it.
+    const float monitor = paramOfIndex(Monitor);
+    if (monitor > 0.0001f) {
+        const InputBus &bus = InputBus::get();
+        if (bus.live()) {
+            const float *in = bus.block();
+            const int32_t n = bus.frames() < frames ? bus.frames() : frames;
+            for (int32_t i = 0; i < n; ++i) {
+                L[i] += in[static_cast<size_t>(i) * 2] * monitor;
+                R[i] += in[static_cast<size_t>(i) * 2 + 1] * monitor;
+            }
+        }
+    }
     if (spec.any) colour.process(L, R, frames);
     reseed = false;
     return true; // always stereo: four lanes may disagree about it

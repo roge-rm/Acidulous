@@ -19,24 +19,10 @@
 machine Bias
 
 patch Init family=clean
-  # Nothing at all: the recording, played back. Every value here is the machine
-  # default, written out so the browser has something to come back to - and the
-  # whole colour section is skipped rather than run at neutral, which is what
-  # makes a stem export of a Bias track sample-identical to the file.
-  hiss           0
-  lowcut         20 Hz
-  highcut        20000 Hz
-  bump           0 dB
-  sat            0
-  comp           0
-  wow            0
-  flutter        0
-  bleed          0
-  drop           0
-  bits           #20
-  rate           1
-  smear          0
-  width          1
+  # Nothing at all: the recording, played back. It sets no value, the way every
+  # bank's first patch does - so the whole colour section is skipped rather
+  # than run at neutral, which is what makes a stem export of a Bias track
+  # sample-identical to the file.
 
 patch Warm family=clean
   # A transfer that was made carefully onto something good. The only thing

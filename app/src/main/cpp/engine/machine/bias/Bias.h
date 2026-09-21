@@ -49,6 +49,21 @@ class Bias final : public Machine {
          * as the cell does **and sings the same notes**.
          */
         Stretch,
+        /**
+         * Hear what is coming in, through this track.
+         *
+         * An effect processes its rack's *machine*, so without this the only
+         * way to put a guitar through `fx.Amp` was a Nexus patch with an audio
+         * input block - which works and is a silly thing to ask of anybody.
+         * Mixed in here, before the inserts, the whole rig falls out: plug in,
+         * arm a lane, hear the amp through the track's inserts and strip,
+         * record, and the **recording is dry**, because the capture takes the
+         * input bus and not the rack. So the amp can be changed afterwards.
+         *
+         * Off by default. An open microphone nobody asked for is the fault
+         * `Capture::pushSilence` was written to expose.
+         */
+        Monitor,
         Hiss, HissTone, LowCut, HighCut, Bump, BumpFreq,
         Sat, Comp, Wow, Flutter, Speed, Bleed, Drop,
         Bits, Rate, Smear, Width,

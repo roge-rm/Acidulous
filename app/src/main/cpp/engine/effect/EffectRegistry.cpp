@@ -1,5 +1,6 @@
 #include "EffectRegistry.h"
 #include "Effects.h"
+#include "amp/Amp.h"
 #include <cstring>
 
 namespace acidulous {
@@ -23,6 +24,7 @@ const Entry kEntries[] = {
     {"Width", make<effect::Width>},
     {"Shifter", make<effect::Shifter>},
     {"Harmonizer", make<effect::Harmonizer>},
+    {"Amp", make<effect::Amp>},
 };
 constexpr int32_t kCount = sizeof(kEntries) / sizeof(kEntries[0]);
 

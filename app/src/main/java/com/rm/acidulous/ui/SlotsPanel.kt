@@ -265,7 +265,11 @@ private val EXTRA = mapOf(
     "Width" to setOf("below", "haas"),
     "Shifter" to setOf("spread", "feedback"),
     "Harmonizer" to setOf("scale", "key"),
-    "Reverb" to setOf("freeze", "gate"),
+    // **This key used to be written twice.** The later entry won, so of the
+    // reverb's six extras only `freeze` and `gate` were drawn in the accent
+    // colour and the four M53 added were not - which is the one thing that
+    // colour exists to prevent. The duplicate is gone and the six are here.
+    "Amp" to setOf("size", "cone"), // the cabinet you can resize
     "Eq" to setOf("tilt"),
     "Distortion" to setOf("mode", "bias"),
     "Compressor" to setOf("pump", "pumprate"),
@@ -327,6 +331,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "shape" && type == "Tremolo" -> listOf("sine", "tri", "square")
     name == "voices" && type == "Chorus" -> listOf("2", "3", "4")
     name == "mode" && type == "Filter" -> listOf("LP", "BP", "HP")
+    name == "stack" && type == "Amp" -> listOf("us", "uk", "modern")
     name == "stages" -> listOf("2", "4", "6", "8")
     name == "pumprate" -> NOTE_RATES.take(4)
     name == "lforate" || name == "rate" -> NOTE_RATES

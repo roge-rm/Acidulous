@@ -37,6 +37,17 @@ The level and the mute on each lane are ordinary **machine parameters**, which i
 
 **tempo › takes** decides whether a take runs at the speed it was recorded at or follows the song. Following, it is read at the ratio between the two tempos **without its pitch moving**, so a take recorded at one tempo covers the same musical length at any other. Not following, it enters on the bar and runs at its own speed, and the cell says so in amber.
 
+## Playing a guitar through it
+
+**monitor**, under **tempo**, mixes what is coming in into this track's own
+output - before its inserts, so an **amp** in slot one is in front of you while
+you play. Record with it up and the *recording is still dry*, because the
+recorder takes the input and not the track, so the amp can be changed
+afterwards exactly as the medium can.
+
+It is off by default, and on a phone's own speaker it will howl. Headphones, or
+an interface.
+
 ## Flattening
 
 **comp** takes the four lanes, their levels, their mutes and their fades, and writes them into one file in lane 1. It does **not** flatten the medium - a patch here is a way of listening and a comp is an edit, so baking one into the other would make it permanent and apply it twice. The recordings it was made from stay in the library.

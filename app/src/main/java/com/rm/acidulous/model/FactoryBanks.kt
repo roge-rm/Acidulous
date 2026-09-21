@@ -41,6 +41,7 @@ internal object FactoryBanks {
         "fx.Width" -> fx_width
         "fx.Shifter" -> fx_shifter
         "fx.Harmonizer" -> fx_harmonizer
+        "fx.Amp" -> fx_amp
         else -> emptyList()
     }
 
@@ -3222,4 +3223,69 @@ internal object FactoryBanks {
         family = "fx")
 
     private val fx_harmonizer: List<Patch> by lazy { listOf(fx_harmonizer0(), fx_harmonizer1(), fx_harmonizer2(), fx_harmonizer3(), fx_harmonizer4(), fx_harmonizer5(), fx_harmonizer6(), fx_harmonizer7(), fx_harmonizer8()) }
+
+    private fun fx_amp0() = Patch("fx.Amp", "Init", emptyMap(),
+        family = "clean")
+
+    private fun fx_amp1() = Patch("fx.Amp", "Blackface",
+        mapOf("drive" to 0.18f, "bass" to 0.7f, "mid" to 0.25f, "treble" to 0.75f, "stack" to 0f, "presence" to 0.45f, "master" to 0.3f, "sag" to 0.45f, "size" to 0.38f, "cone" to 0.35f, "mic" to 0.3f, "edge" to 0.25f, "room" to 0.25f, "gain" to 0.5555556f),
+        family = "clean")
+
+    private fun fx_amp2() = Patch("fx.Amp", "Chime",
+        mapOf("drive" to 0.24f, "bass" to 0.35f, "treble" to 0.85f, "stack" to 0f, "presence" to 0.6f, "master" to 0.28f, "sag" to 0.5f, "size" to 0.12f, "cone" to 0.62f, "mic" to 0.15f, "edge" to 0.1f, "room" to 0.2f, "gain" to 0.475000024f),
+        family = "clean")
+
+    private fun fx_amp3() = Patch("fx.Amp", "Jazz",
+        mapOf("drive" to 0.1f, "bass" to 0.65f, "mid" to 0.6f, "treble" to 0.25f, "stack" to 0f, "presence" to 0.1f, "master" to 0.25f, "sag" to 0.35f, "size" to 0.55f, "cone" to 0.2f, "mic" to 0.7f, "edge" to 0.05f, "room" to 0.3f, "gain" to 0.5277778f),
+        family = "clean")
+
+    private fun fx_amp4() = Patch("fx.Amp", "Plexi",
+        mapOf("drive" to 0.55f, "bass" to 0.55f, "mid" to 0.6f, "treble" to 0.7f, "presence" to 0.55f, "master" to 0.6f, "sag" to 0.55f, "size" to 0.72f, "cone" to 0.6f, "mic" to 0.2f, "edge" to 0.3f, "gain" to 0.5416667f),
+        family = "crunch")
+
+    private fun fx_amp5() = Patch("fx.Amp", "Tweed",
+        mapOf("drive" to 0.62f, "bias" to 0.55f, "bass" to 0.45f, "mid" to 0.65f, "treble" to 0.45f, "stack" to 0f, "presence" to 0.25f, "master" to 0.7f, "sag" to 0.8f, "size" to 0.2f, "cone" to 0.3f, "mic" to 0.35f, "edge" to 0.2f, "room" to 0.2f, "gain" to 0.466666639f),
+        family = "crunch")
+
+    private fun fx_amp6() = Patch("fx.Amp", "Combo",
+        mapOf("drive" to 0.48f, "mid" to 0.55f, "treble" to 0.6f, "presence" to 0.4f, "master" to 0.45f, "sag" to 0.4f, "cone" to 0.55f, "mic" to 0.12f, "edge" to 0.35f, "room" to 0.1f, "gain" to 0.5027778f),
+        family = "crunch")
+
+    private fun fx_amp7() = Patch("fx.Amp", "Hotrod",
+        mapOf("drive" to 0.8f, "mid" to 0.75f, "treble" to 0.6f, "presence" to 0.6f, "master" to 0.55f, "sag" to 0.35f, "size" to 0.75f, "cone" to 0.7f, "mic" to 0.2f, "edge" to 0.25f, "room" to 0.12f, "gain" to 0.50555557f),
+        family = "lead")
+
+    private fun fx_amp8() = Patch("fx.Amp", "Modern",
+        mapOf("drive" to 0.92f, "bass" to 0.55f, "mid" to 0.4f, "treble" to 0.7f, "stack" to 1f, "presence" to 0.7f, "master" to 0.5f, "sag" to 0.12f, "size" to 0.78f, "cone" to 0.75f, "mic" to 0.18f, "edge" to 0.2f, "room" to 0.08f, "gain" to 0.469444424f),
+        family = "lead")
+
+    private fun fx_amp9() = Patch("fx.Amp", "Solo",
+        mapOf("drive" to 0.6f, "bass" to 0.45f, "mid" to 0.8f, "treble" to 0.55f, "presence" to 0.5f, "master" to 0.85f, "sag" to 0.6f, "size" to 0.68f, "cone" to 0.6f, "mic" to 0.28f, "room" to 0.22f, "gain" to 0.525f),
+        family = "lead")
+
+    private fun fx_amp10() = Patch("fx.Amp", "Fridge",
+        mapOf("drive" to 0.3f, "bass" to 0.7f, "treble" to 0.4f, "stack" to 1f, "presence" to 0.2f, "master" to 0.4f, "sag" to 0.4f, "size" to 1f, "cone" to 0.25f, "mic" to 0.2f, "edge" to 0.1f, "room" to 0.1f, "gain" to 0.491666675f),
+        family = "bass")
+
+    private fun fx_amp11() = Patch("fx.Amp", "Fliptop",
+        mapOf("drive" to 0.5f, "bias" to 0.35f, "bass" to 0.65f, "mid" to 0.6f, "treble" to 0.35f, "stack" to 0f, "presence" to 0.2f, "master" to 0.7f, "sag" to 0.75f, "size" to 0.88f, "cone" to 0.3f, "mic" to 0.3f, "room" to 0.18f, "gain" to 0.50555557f),
+        family = "bass")
+
+    private fun fx_amp12() = Patch("fx.Amp", "Grind",
+        mapOf("drive" to 0.78f, "bass" to 0.6f, "mid" to 0.7f, "treble" to 0.55f, "stack" to 1f, "presence" to 0.5f, "master" to 0.5f, "sag" to 0.2f, "size" to 0.92f, "cone" to 0.8f, "mic" to 0.1f, "edge" to 0.3f, "room" to 0.05f, "gain" to 0.4722222f),
+        family = "bass")
+
+    private fun fx_amp13() = Patch("fx.Amp", "Radio",
+        mapOf("drive" to 0.55f, "bass" to 0.2f, "mid" to 0.8f, "treble" to 0.3f, "stack" to 0f, "presence" to 0.15f, "master" to 0.45f, "sag" to 0.5f, "size" to 0f, "cone" to 0.45f, "mic" to 0.85f, "edge" to 0.6f, "room" to 0.75f, "gain" to 0.422222227f),
+        family = "character")
+
+    private fun fx_amp14() = Patch("fx.Amp", "Blown",
+        mapOf("drive" to 0.85f, "bias" to 0.9f, "bass" to 0.6f, "mid" to 0.45f, "stack" to 0f, "master" to 0.9f, "sag" to 0.95f, "size" to 0.15f, "cone" to 0.95f, "mic" to 0.4f, "edge" to 0.95f, "room" to 0.3f, "gain" to 0.547222257f),
+        family = "character")
+
+    private fun fx_amp15() = Patch("fx.Amp", "Cranked",
+        mapOf("drive" to 1f, "bass" to 1f, "mid" to 1f, "treble" to 1f, "presence" to 1f, "master" to 1f, "sag" to 1f, "cab" to 0f, "gain" to 0.366666675f),
+        family = "character")
+
+    private val fx_amp: List<Patch> by lazy { listOf(fx_amp0(), fx_amp1(), fx_amp2(), fx_amp3(), fx_amp4(), fx_amp5(), fx_amp6(), fx_amp7(), fx_amp8(), fx_amp9(), fx_amp10(), fx_amp11(), fx_amp12(), fx_amp13(), fx_amp14(), fx_amp15()) }
 }
