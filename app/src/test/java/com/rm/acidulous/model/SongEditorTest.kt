@@ -10,7 +10,7 @@ class SongEditorTest {
 
     private class Spy {
         val pushes = ArrayList<Boolean>()
-        val editor = SongEditor(DemoSong.build()) { _, pushNow -> pushes += pushNow }
+        val editor = SongEditor(Fixtures.song()) { _, pushNow -> pushes += pushNow }
     }
 
     private val verse get() = "s-verse"
@@ -71,7 +71,7 @@ class SongEditorTest {
 
     @Test
     fun undoStacksAreIndependentPerTrack() {
-        val two = DemoSong.build().let { d -> d.copy(tracks = d.tracks + d.tracks[0].copy(id = "t-two", name = "Two")) }
+        val two = Fixtures.song().let { d -> d.copy(tracks = d.tracks + d.tracks[0].copy(id = "t-two", name = "Two")) }
         val pushes = ArrayList<Boolean>()
         val editor = SongEditor(two) { _, p -> pushes += p }
         editor.editClip(0, verse) { it.copy(mute = true) }

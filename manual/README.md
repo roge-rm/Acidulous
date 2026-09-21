@@ -26,6 +26,22 @@
     - [Timber](04-the-machines/timber.md) - woodwinds by modelling: a reed or a jet of air, a tube, and holes down the side of it.
     - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the one that does everything.
 5. [Effects and mixing](05-effects-and-mixing.md) - two inserts a track, two sends, a master.
+    - [Amp](05-effects-and-mixing/amp.md) - a guitar amplifier as a chain, with a modelled cabinet you can resize continuously.
+    - [Bitcrusher](05-effects-and-mixing/bitcrusher.md) - fewer bits and a lower rate, with a jitter that makes the clock unsteady.
+    - [Chorus](05-effects-and-mixing/chorus.md) - two to four detuned voices, and a drift that stops them agreeing about the tuning.
+    - [Compressor](05-effects-and-mixing/compressor.md) - the classic four, and a pump in time with the transport that needs no sidechain routing.
+    - [Delay](05-effects-and-mixing/delay.md) - echoes on a note value, with a duck that gets out of the way while you are playing.
+    - [Distortion](05-effects-and-mixing/distortion.md) - four clipping characters, and a bias that makes the two halves of the wave behave differently.
+    - [Eq](05-effects-and-mixing/eq.md) - three bands, and a tilt that trades top for bottom on one knob.
+    - [Filter](05-effects-and-mixing/filter.md) - low, band or high pass, swept by an LFO on a note value or by the signal's own envelope.
+    - [Flanger](05-effects-and-mixing/flanger.md) - one short sweeping delay, and inverted feedback for the hollow version.
+    - [Gate](05-effects-and-mixing/gate.md) - shut below a level, with a filter on its own detector so it opens for a pick and not for a room.
+    - [Harmonizer](05-effects-and-mixing/harmonizer.md) - two added voices at scale degrees, so the harmony stays in key.
+    - [Phaser](05-effects-and-mixing/phaser.md) - allpass notches sweeping, from two stages to eight.
+    - [Reverb](05-effects-and-mixing/reverb.md) - a room, and four things a room cannot do.
+    - [Shifter](05-effects-and-mixing/shifter.md) - frequency shifting, which moves everything by the same number of hertz rather than the same interval.
+    - [Tremolo](05-effects-and-mixing/tremolo.md) - amplitude on an LFO, and the same lever turned into an auto-pan.
+    - [Width](05-effects-and-mixing/width.md) - the stereo image: wider, narrower, mono below a frequency, or turned.
 6. [Modifiers](06-modifiers.md) - what a note becomes on its way in.
 7. [MIDI and playing with others](07-midi-and-sync.md) - keyboards, clock, MPE and Link.
 8. [Recording and samples](08-recording-and-samples.md) - getting audio in, and what to do with it.

@@ -53,14 +53,30 @@ Dan (rm)
 
 ### Sixteen effects
 
-Amp, Bitcrusher, Chorus, Compressor, Delay, Distortion, EQ, Filter, Flanger,
-Gate, Harmonizer, Phaser, Reverb, Shifter, Tremolo, Width — each with one
-classic behaviour and one extra. **Amp** is a modelled guitar amplifier and
-cabinet: preamp, an interactive tone stack, a power stage that sags, and a
-speaker you can resize continuously between a combo and a stack. **Gate** keys
-its detector off its own filter, so it opens for a pick rather than for a room.
-Two insert slots per rack, and **the song's two send buses hold any of the
-same sixteen**, chosen and edited from the master strip.
+Each with one classic behaviour and one extra, and a page of its own in the
+manual.
+
+| | |
+|---|---|
+| **Delay** | Echoes on a note value, with a duck that gets out of the way while you are playing. |
+| **Reverb** | A room, and four things a room cannot do: freeze it, gate it, send it up an octave, or make it out of eight-bit memory. |
+| **Eq** | Three bands, and a tilt that trades top for bottom on one knob. |
+| **Filter** | Low, band or high pass, swept by an LFO on a note value or by the signal's own envelope. |
+| **Width** | The stereo image: wider, narrower, mono below a frequency, or turned. |
+| **Distortion** | Four clipping characters, and a bias that makes the two halves of the wave behave differently. |
+| **Amp** | A guitar amplifier as a chain — preamp, an interactive tone stack, a power stage that sags — with a **modelled** cabinet you can resize continuously between a combo and a stack. |
+| **Bitcrusher** | Fewer bits and a lower rate, with a jitter that makes the clock unsteady. |
+| **Compressor** | The classic four, and a pump in time with the transport that needs no sidechain routing. |
+| **Gate** | Shut below a level, with a filter on its own detector so it opens for a pick and not for a room. |
+| **Chorus** | Two to four detuned voices, and a drift that stops them agreeing about the tuning. |
+| **Flanger** | One short sweeping delay, and inverted feedback for the hollow version. |
+| **Phaser** | Allpass notches sweeping, from two stages to eight. |
+| **Tremolo** | Amplitude on an LFO, and the same lever turned into an auto-pan. |
+| **Shifter** | Frequency shifting — everything moves by the same number of hertz rather than the same interval, so a harmonic sound stops being one. |
+| **Harmonizer** | Two added voices at scale degrees, so the harmony stays in key. |
+
+Two insert slots per rack, and **the song's two send buses hold any of the same
+sixteen**, chosen and edited from the master strip.
 
 ### Sequencing
 

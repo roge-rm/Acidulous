@@ -52,7 +52,12 @@ constexpr Algorithm kAlgorithms[kAlgorithmCount] = {
 
     // --- Pairs
     {"6-5 : 4-3 : 2-1 (wide)", car(5, 3, 1), 3, {{5, 4}, {3, 2}, {1, 0}}},
-    {"6-5 4-5 : 3-2 : 1", car(5, 3, 1), 4, {{5, 4}, {3, 4}, {2, 1}}},
+    // Three edges, and it said four. The fourth was never written, so the
+    // engine read the array's own zero-initialised pair as `{0, 0}` and added
+    // a full-strength edge from operator one to itself - a self-modulation
+    // nobody asked for, on every voice that reached this algorithm or morphed
+    // towards it. The count is the loop bound; it has to match the list.
+    {"6-5 4-5 : 3-2 : 1", car(5, 3, 1), 3, {{5, 4}, {3, 4}, {2, 1}}},
     {"6-4 5-3 : 2-1", car(4, 3, 1), 3, {{5, 3}, {4, 2}, {1, 0}}},
     {"6-3 5-2 4-1", car(1, 2, 3), 3, {{5, 2}, {4, 1}, {3, 0}}},
 

@@ -6,73 +6,61 @@
 Each track has two insert slots. **fx** in the editor's bottom bar swaps the
 panel under the grid for them.
 
-Sixteen effects: delay, reverb, equaliser, distortion, compressor, filter,
-bitcrusher, phaser, flanger, chorus, tremolo, width, pitch shifter, harmonizer,
-**amp** and **gate**. Each has the controls you expect **and one more that you do not** -
-the extra is marked in the accent colour, so the familiar set stays
-recognisable and the addition is never a surprise.
+Sixteen effects. Each has the controls you expect **and one more that you do
+not** - the extra is marked in the accent colour, so the familiar set stays
+recognisable and the addition is never a surprise. Every one ends with **gain**,
+a plain output trim in decibels, because a wet/dry mix does not preserve level
+and the knob that puts it back should always be in the same place.
 
-## The gate
+**Each has a page of its own below** with what it does and how to get the best from it; this page is for finding the one you want.
 
-**Gate** shuts below a level and opens above it. The four you expect are
-**threshold**, **attack**, **hold** and **release**; **hyst** is how far *below*
-the threshold the signal has to fall before it is willing to shut, which is what
-stops a note sitting on the threshold from flapping it open and closed.
+## Time
 
-Two are not on a pedal:
+- **Delay** - echoes on a note value, with a duck that gets out of the way
+  while you are playing.
+- **Reverb** - a room, and four things a room cannot do: freeze it, gate it,
+  send it up an octave, or make it out of eight-bit memory.
 
-- **key** filters the *detector*, not the sound. A gate in front of a loud amp
-  is listening to a pickup that hears mains hum, a room and a hand as well as
-  the string, and all of those are low. Slide `key` up and the gate opens for a
-  pick rather than for a building, while the note it passes keeps its bottom
-  end.
-- **duck** is how far down "closed" is. All the way is a gate; twelve decibels
-  is what drums want, where silence between hits is a hole and the room going
-  quiet is a tightening.
+## Tone
 
-There is no wet/dry `mix`, on purpose: half a gate is the noise at half level.
+- **Eq** - three bands, and a tilt that trades top for bottom on one knob.
+- **Filter** - low, band or high pass, swept by an LFO on a note value or by
+  the signal's own envelope.
+- **Width** - the stereo image: wider, narrower, mono below a frequency, or
+  turned.
 
-**Where to put it.** Before the amp it kills the hiss your pickups bring in;
-after the amp it kills the hiss the amp makes, which is usually far more. On an
-input slot in the record window it is printed into the take, so the take itself
-is quiet.
+## Drive
 
-## The amp
+- **Distortion** - four clipping characters, and a bias that makes the two
+  halves of the wave behave differently.
+- **Amp** - a guitar amplifier as a chain, with a **modelled** cabinet you can
+  resize continuously.
+- **Bitcrusher** - fewer bits and a lower rate, with a jitter that makes the
+  clock unsteady.
 
-**Amp** is a guitar amplifier, and it is a chain rather than a distortion: a
-preamp that clips lopsidedly, a tone stack whose three controls fight each
-other, a power stage whose supply sags when you dig in, and a speaker in a box.
-The order is the point - the tone stack sits *between* the two nonlinear stages,
-so it shapes what the second one distorts.
+## Level
 
-- **drive** and **bias** - the preamp. Bias is the tube sense: at nothing the
-  clipping is symmetrical, and turning it up makes the two halves of the wave
-  behave differently, which is most of what "old and woolly" means.
-- **bass**, **mid**, **treble** and **stack**. They interact the way a real
-  passive stack does: **bass and treble up scoops the mid**, and turning either
-  of them back fills it in again. `stack` - us, uk or modern - changes how hard
-  they fight, and also what reaches the first stage and how tightly the two
-  stages are coupled, which is far more of the difference between two amps than
-  their tone controls are.
-- **presence** and **master** - the power stage. Presence sits inside its
-  feedback loop rather than after it, so it makes the output stage work harder
-  rather than just adding treble.
-- **sag** - the supply drooping under load and taking a fifth of a second to
-  come back. It is what makes an amp feel alive under the hands, and it is the
-  control most simulations bury.
-- **cab** with **size**, **cone**, **mic**, **edge** and **room**. The cabinet
-  is modelled rather than sampled, and **that is what makes `size` and `cone`
-  continuous**: you can sit between a practice combo, a four-by-twelve and a
-  bass eight-by-ten, between cabinets that do not exist. `mic` walks off axis,
-  `edge` moves from the centre of the cone to its rim, and `room` steps back
-  from it. Switch `cab` off if you have your own.
+- **Compressor** - the classic four, and a pump in time with the transport that
+  needs no sidechain routing.
+- **Gate** - shut below a level, with a filter on its own detector so it opens
+  for a pick and not for a room.
 
-To play a guitar through it, see [Bias](04-the-machines/bias.md): a Bias track
-with its **monitor** up puts what is coming in through the track's inserts, so
-the amp is in front of you while you play and the recording stays dry.
+## Movement
 
-A slot can be bypassed without being emptied, which is the difference between
-comparing and deleting.
+- **Chorus** - two to four detuned voices, and a drift that stops them agreeing
+  about the tuning.
+- **Flanger** - one short sweeping delay, and inverted feedback for the hollow
+  version.
+- **Phaser** - allpass notches sweeping, from two stages to eight.
+- **Tremolo** - amplitude on an LFO, and the same lever turned into an auto-
+  pan.
+
+## Pitch
+
+- **Shifter** - frequency shifting, which moves everything by the same number
+  of hertz rather than the same interval.
+- **Harmonizer** - two added voices at scale degrees, so the harmony stays in
+  key.
 
 ## On the way in, and on the way out
 
@@ -144,7 +132,7 @@ counted in.
 
 The **click** and **link** pages are behind the same window.
 
-### What swing does, and what it does not
+## What swing does, and what it does not
 
 Swing bends time rather than delaying notes: each pair of subdivisions is
 mapped onto itself with its midpoint moved late. Two notes a tick apart stay a

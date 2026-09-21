@@ -9,7 +9,7 @@ import org.junit.Test
 
 class SongEditsTest {
 
-    private val demo = DemoSong.build()
+    private val demo = Fixtures.song()
 
     @Test
     fun addSceneAppendsOrInsertsAfter() {

@@ -75,7 +75,7 @@ class SwingTest {
 
     @Test
     fun aTrackFollowsTheSongUnlessItSaysOtherwise() {
-        val song = DemoSong.build().copy(swing = SWING_TRIPLET)
+        val song = Fixtures.song().copy(swing = SWING_TRIPLET)
         val follower = song.tracks[0]
         assertEquals(SWING_TRIPLET, song.swingOf(follower))
         val straight = follower.copy(swing = SWING_STRAIGHT)

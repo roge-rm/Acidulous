@@ -8,7 +8,7 @@ class SongStoreTest {
 
     @Test
     fun demoSongSurvivesJsonRoundTrip() {
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         val text = SongStore.encode(song)
         val back = SongStore.decode(text)
         assertEquals(song, back)
@@ -16,7 +16,7 @@ class SongStoreTest {
 
     @Test
     fun derivedSceneLengthIsLongestClip() {
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         assertEquals(1, song.barsOf(song.scenes[0]))
         assertEquals(2, song.barsOf(song.scenes[1]))
     }
@@ -28,7 +28,7 @@ class SongStoreTest {
      */
     @Test
     fun `a note without expression writes no expression`() {
-        val text = SongStore.encode(DemoSong.build())
+        val text = SongStore.encode(Fixtures.song())
         assertTrue(text.contains("\"pitch\""))
         assertTrue("bend appears in a song that has none", !text.contains("\"bend\""))
         assertTrue(!text.contains("\"pressure\""))
@@ -37,7 +37,7 @@ class SongStoreTest {
 
     @Test
     fun `a note with expression survives the round trip`() {
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         val curved = Note(
             tick = 0, length = 480, pitch = 60, velocity = 100,
             bend = Lane(points = listOf(LanePoint(0, 0.5f), LanePoint(240, 0.75f))),
@@ -58,14 +58,14 @@ class SongStoreTest {
     @Test
     fun `a song written before expression still opens`() {
         // Exactly what an older build wrote: no curve fields at all.
-        val text = SongStore.encode(DemoSong.build())
+        val text = SongStore.encode(Fixtures.song())
         val back = SongStore.decode(text)
         assertTrue(back.tracks.flatMap { it.clips.values }.flatMap { it.notes }.none { it.hasExpression })
     }
 
     @Test
     fun unknownKeysAreTolerated() {
-        val text = SongStore.encode(DemoSong.build()).replaceFirst("\"name\"", "\"futureField\": 42, \"name\"")
+        val text = SongStore.encode(Fixtures.song()).replaceFirst("\"name\"", "\"futureField\": 42, \"name\"")
         assertTrue(text.contains("futureField"))
         assertEquals("Demo", SongStore.decode(text).name)
     }
@@ -75,13 +75,13 @@ class SongStoreTest {
         val a = Clip(notes = listOf(Note(0, 50, 36, 100)))
         val same = a                       // carried along: same rev
         val edited = a.copy(bars = 2)      // an edit: new rev
-        val loaded = SongStore.decode(SongStore.encode(DemoSong.build())).tracks[0].clips.values.first()
+        val loaded = SongStore.decode(SongStore.encode(Fixtures.song())).tracks[0].clips.values.first()
         assertEquals(a.rev, same.rev)
         assertTrue(edited.rev != a.rev)
         assertTrue(loaded.rev != a.rev)
         // and rev never leaks into equality or the file
         assertEquals(a, a.copy())
-        assertTrue(!SongStore.encode(DemoSong.build()).contains("\"rev\""))
+        assertTrue(!SongStore.encode(Fixtures.song()).contains("\"rev\""))
     }
 
     @Test
@@ -92,7 +92,7 @@ class SongStoreTest {
 
     @Test
     fun mixerAndMasterRoundTripAndDefault() {
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         assertEquals(0.25f, song.tracks[0].mixer.sendReverb)
         assertEquals(song, SongStore.decode(SongStore.encode(song)))
         // a file from before M5 has no mixer or master: defaults apply
@@ -136,7 +136,7 @@ class SongStoreTest {
         assertEquals(2, replaced.points.size)
         assertEquals(0.25f, replaced.valueAt(480), 1e-6f)
         val clip = Clip(automation = mapOf(laneKey("machine", "cutoff") to lane))
-        assertEquals(clip, SongStore.decode(SongStore.encode(DemoSong.build().let { d ->
+        assertEquals(clip, SongStore.decode(SongStore.encode(Fixtures.song().let { d ->
             d.copy(tracks = listOf(d.tracks[0].copy(clips = mapOf("s-intro" to clip))))
         })).tracks[0].clips["s-intro"])
     }
@@ -151,7 +151,7 @@ class SongStoreTest {
 
     @Test
     fun effectsRoundTripAndOldFilesHaveNone() {
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         val withFx = song.copy(tracks = song.tracks.mapIndexed { i, t ->
             if (i == 0) t.withEffect(0, "Filter").withEffectParam(0, "cutoff", 0.4f).withEffect(1, "Delay").withEffectBypass(1, true) else t
         })
@@ -168,7 +168,7 @@ class SongStoreTest {
     fun modifiersRoundTrip() {
         // In their home slots already - chord 0, scale 1, arp 2 - so loading
         // gives back exactly what was saved.
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         val withEv = song.copy(tracks = song.tracks.mapIndexed { i, t ->
             if (i == 0) {
                 t.withModifier(1, "Scale").withModifierParam(1, "scale", 0.5f)
@@ -194,7 +194,7 @@ class SongStoreTest {
         // own slot now, so a song written earlier is migrated as it loads -
         // otherwise the chord chip reads the scale's slot as empty and the
         // first tap quietly replaces it.
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         val old = song.copy(tracks = song.tracks.mapIndexed { i, t ->
             if (i == 0) t.withModifier(0, "Scale").withModifier(1, "Arp") else t
         })

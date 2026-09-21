@@ -17,7 +17,7 @@ class MappingTest {
     private val cutoff = Mapping(cc = 74, unit = "machine", name = "cutoff")
     private val play = Mapping(note = 36, action = Action.PlayStop.name)
 
-    private fun songWith(vararg m: Mapping) = DemoSong.build().copy(mappings = m.toList())
+    private fun songWith(vararg m: Mapping) = Fixtures.song().copy(mappings = m.toList())
 
     @Test
     fun `the song wins over the device for the same controller`() {
@@ -113,7 +113,7 @@ class MappingTest {
         // which is what every song saved before today looks like.
         // The field is last in the object, so its comma goes with it or the
         // fixture is malformed JSON rather than an old song.
-        val old = SongStore.encode(DemoSong.build())
+        val old = SongStore.encode(Fixtures.song())
             .replace(Regex(",\\s*\"mappings\":\\s*\\[[^\\]]*\\]"), "")
         assertTrue("the key should be gone from the fixture", "\"mappings\"" !in old)
         assertEquals(emptyList<Mapping>(), SongStore.decode(old).mappings)
@@ -124,7 +124,7 @@ class MappingTest {
         // A mapped controller reaches the master through withMasterParam and
         // the screen reads it back through currentMaster. If those two ever
         // disagree a mapped fader would jump the moment it was touched.
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         // The reverb and delay names that used to be in this list are on the
         // sends now, and are checked below rather than here.
         for (name in listOf("volume", "limiterdrive")) {
@@ -139,7 +139,7 @@ class MappingTest {
 
     @Test
     fun `a send parameter goes in and comes back out`() {
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         val next = song.withSendParam(0, "size", 0.25f)
         assertEquals(0.25f, currentSend(next.master, 0, "size"), 1e-3f)
         // A name the song has never touched is the effect's own default, not
@@ -150,7 +150,7 @@ class MappingTest {
 
     @Test
     fun `changing a send's effect does not keep the last one's settings`() {
-        val song = DemoSong.build().withSendParam(0, "size", 0.9f)
+        val song = Fixtures.song().withSendParam(0, "size", 0.9f)
         assertEquals(0.9f, currentSend(song.master, 0, "size"), 1e-3f)
         val swapped = song.withSend(0, "Chorus")
         assertEquals("Chorus", swapped.master.sendAt(0).type)
@@ -183,7 +183,7 @@ class MappingTest {
 
     @Test
     fun `an unknown master name changes nothing`() {
-        val song = DemoSong.build()
+        val song = Fixtures.song()
         assertEquals(song.master, song.withMasterParam("nosuchthing", 1f).master)
     }
 
@@ -191,7 +191,7 @@ class MappingTest {
     fun `a note toggles the mixer switches and sets everything else`() {
         // The engine's channel and master tables do not come over the bridge,
         // so this list is the only thing that knows a mute is a switch.
-        val track = DemoSong.build().tracks.first()
+        val track = Fixtures.song().tracks.first()
         assertTrue(mappedIsSwitch(track, "channel", "mute"))
         assertTrue(mappedIsSwitch(track, "channel", "solo"))
         assertTrue(mappedIsSwitch(null, "master", "limiteron"))

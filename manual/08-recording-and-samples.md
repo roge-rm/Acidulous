@@ -52,7 +52,7 @@ you did not want can be thrown away and the audio placed by hand instead.
 Everything you do to a take afterwards - trimming it, fading it, crossfading
 one lane into another, flattening four lanes into one, and whether it follows
 the song's tempo or runs at the speed it was sung at - is on
-[Bias](04-the-machines/bias.md), and none of it touches the file.
+**Bias**'s own page, and none of it touches the file.
 
 **A take may be half an hour long.** Anything under two minutes is held in
 memory as it always was; past that it is converted once, in the background, and
@@ -80,4 +80,4 @@ transport never played, nothing was recorded against a scene and it says so.
 - **Cipher** and **Filament** can both take the live input as their source.
 - **Bias** - four lanes of recordings, along the length of the song. Unlike the
   rest of these, its material belongs to the cells rather than to the machine;
-  see [The machines](04-the-machines.md).
+  see its page under **The machines**.
