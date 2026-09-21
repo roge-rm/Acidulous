@@ -74,15 +74,19 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
     // The read position glides to a new note value: a pitch swoop, not a splice.
     const float glide = dsp::onePoleCoeff(0.05f, sr);
     const float wobbleInc = 0.9f / sr, wobbleDepth = wobble * 70.0f;
+    const bool wobbling = wobbleDepth > 0.0f;
 
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
         readSamples += (target - readSamples) * glide;
         wobblePhase += wobbleInc;
         if (wobblePhase >= 1.0f) wobblePhase -= 1.0f;
-        // Two incommensurate sines: tape flutter rather than a vibrato.
-        const float drift = wobbleDepth * (0.6f * std::sin(wobblePhase * dsp::kTwoPi) +
-                                           0.4f * std::sin(wobblePhase * dsp::kTwoPi * 2.71f));
+        // Two incommensurate sines: tape flutter rather than a vibrato. Skipped
+        // entirely at nought, where they were computed and then multiplied to
+        // nothing - two sines a sample for a control that was off.
+        const float drift = wobbling ? wobbleDepth * (0.6f * std::sin(wobblePhase * dsp::kTwoPi) +
+                                                      0.4f * std::sin(wobblePhase * dsp::kTwoPi * 2.71f))
+                                     : 0.0f;
         const float rd = readSamples + drift;
         const float tapL = line[0].read(rd), tapR = line[1].read(rd);
         lp[0] += (tapL - lp[0]) * toneCoeff;
@@ -242,6 +246,7 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
     // the tail never settles into a fixed comb pattern.
     const float wobbleInc = 0.23f / sr;
     const float wobbleDepth = wobble * sr * 0.0015f;
+    const bool wobbling = wobbleDepth > 0.0f;
 
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
@@ -257,9 +262,19 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
                 // Each comb wobbles on its own phase; without the offset they
                 // would all lengthen together, which is a pitch bend rather
                 // than a room that will not sit still.
-                const float ph = wobblePhase + static_cast<float>(combIndex) * 0.125f +
-                                 (c == 1 ? 0.5f : 0.0f);
-                const float drift = wobbleDepth * std::sin((ph - std::floor(ph)) * dsp::kTwoPi);
+                // **Only when there is wobble to compute.** This is sixteen
+                // sines and sixteen floors a sample - a thousand of each per
+                // block per channel - and it ran at every setting including
+                // nought, where `wobbleDepth` multiplied the answer away and
+                // the arithmetic had already been paid for. A reverb is on a
+                // send for the whole song, so this was a fixed slice of every
+                // block in every song that has one.
+                float drift = 0.0f;
+                if (wobbling) {
+                    const float ph = wobblePhase + static_cast<float>(combIndex) * 0.125f +
+                                     (c == 1 ? 0.5f : 0.0f);
+                    drift = wobbleDepth * std::sin((ph - std::floor(ph)) * dsp::kTwoPi);
+                }
                 const float y = comb.line.read(static_cast<float>(comb.len) * stretch + drift);
                 comb.store = undenormal(y * (1.0f - damp) + comb.store * damp);
                 // The shimmer is fed back out of the room's own gain budget,
