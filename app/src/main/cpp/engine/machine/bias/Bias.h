@@ -1,4 +1,5 @@
 #pragma once
+#include "Colour.h"
 #include <engine/core/Reel.h>
 #include <engine/machine/Machine.h>
 
@@ -33,7 +34,14 @@ class Bias final : public Machine {
     enum P : int32_t {
         Lane1, Lane2, Lane3, Lane4,
         Mute1, Mute2, Mute3, Mute4,
-        Gain, Count
+        Gain,
+        // The medium. See bias/Colour.h: these colour what comes *out* and
+        // never the recordings, which is what makes a Bias patch a way of
+        // listening rather than an edit.
+        Hiss, HissTone, LowCut, HighCut, Bump, BumpFreq,
+        Sat, Comp, Wow, Flutter, Speed, Bleed, Drop,
+        Bits, Rate, Smear, Width,
+        Count
     };
 
     Bias() { initParams(); }
@@ -56,6 +64,10 @@ class Bias final : public Machine {
     void allNotesOff() override {}
 
   private:
+    bias::ColourSpec colourOf();
+
+    bias::Colour colour;
+    dsp::Biquad bleedHp[2];
     const audio::Reel *reel = nullptr;
     const audio::Reel::Cell *cell = nullptr;
     audio::FrameCursor cursors[audio::kReelLanes];

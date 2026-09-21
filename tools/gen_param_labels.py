@@ -22,6 +22,7 @@ PANELS = {
     "NexusPanel": "Nexus", "CumulusPanel": "Cumulus", "FormulatePanel": "Formulate",
     "PollenPanel": "Pollen", "ResonancePanel": "Resonance", "DicePanel": "Dice", "GenesisPanel": "Genesis",
     "BrazenPanel": "Brazen", "TimberPanel": "Timber", "MoltPanel": "Molt",
+    "BiasPanel": "Bias",
 }
 # Some panels name every control for the *selected* pad, so one panel
 # describes a whole machine's worth of parameters.
@@ -74,8 +75,17 @@ def label_of(args):
     return None
 
 
+# Constants a loop bound may be written as, rather than as a number. Kept here
+# rather than parsed out of Kotlin because there are two of them.
+LOOP_CONSTS = {"BIAS_LANES": 4}
+
+
 def expand(text, var, value):
-    out = text.replace("${%s}" % var, str(value)).replace("$" + var, str(value))
+    # "${lane + 1}" as well as "${lane}": a loop that counts from nought and a
+    # control that counts from one is the ordinary case, not a special one.
+    out = re.sub(r"\$\{%s\s*\+\s*(\d+)\}" % var,
+                 lambda m: str(value + int(m.group(1))), text)
+    out = out.replace("${%s}" % var, str(value)).replace("$" + var, str(value))
     return out.replace("%02d", "%02d" % value).replace("%d", str(value))
 
 
@@ -92,6 +102,15 @@ def harvest():
             fm = re.search(r'for\s*\(\s*(\w+)\s+in\s+(\d+)\.\.(\d+)\s*\)', stripped)
             if fm:
                 loop = (fm.group(1), int(fm.group(2)), int(fm.group(3)))
+            # `for (lane in 0 until BIAS_LANES)` - the half-open form, which is
+            # what a loop over slots rather than over musical numbers looks like.
+            um = re.search(r'for\s*\(\s*(\w+)\s+in\s+(\d+)\s+until\s+(\w+)\s*\)', stripped)
+            if um:
+                hi = LOOP_CONSTS.get(um.group(3))
+                if hi is None and um.group(3).isdigit():
+                    hi = int(um.group(3))
+                if hi is not None:
+                    loop = (um.group(1), int(um.group(2)), hi - 1)
             pm = re.search(r'val\s+p\s*=\s*"([^"]*)"', stripped)
             if pm:
                 prefix_tpl = pm.group(1)

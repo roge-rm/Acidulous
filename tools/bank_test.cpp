@@ -579,17 +579,21 @@ int main(int argc, char **argv) {
     std::vector<std::string> units;
     for (int32_t i = 0; i < MachineRegistry::count(); ++i) {
         const std::string name = MachineRegistry::name(i);
-        // **Bias has no sound of its own.** Every other machine here makes
-        // one out of nothing and can be judged on what it does the first time
-        // you tap it, which is what a bank is for and what this harness
-        // measures. Bias plays what you recorded onto it: with nothing
-        // mounted it renders silence, so every patch would read as silent and
-        // the only thing a "patch" could carry is four levels and four mutes,
-        // which is a mix and not a sound.
+        // **Bias has no sound of its own**, and `tools/banks/Bias.bank` does
+        // not change that. Every other machine here makes a sound out of
+        // nothing and can be judged on what it does the first time you tap it,
+        // which is what this harness measures. Bias plays what you recorded
+        // onto it, and its patches are *recording media* - so with nothing
+        // mounted, Init, DAT and MiniDisc render exact silence, which is
+        // correct and which this would report as seven dead patches.
+        //
+        // What the bank is worth is still measurable: `tools/audition.sh bank
+        // Bias` reads each medium's noise floor and its colour, which is the
+        // one thing a medium has without a recording in it.
         //
         // Deliberately not on the known-fault list above: that list means "a
         // bank somebody still has to write", and it is empty because M45
-        // finished. This is a bank that should not exist.
+        // finished. This is a bank this harness cannot judge.
         if (name == "Bias") continue;
         units.emplace_back(name);
     }

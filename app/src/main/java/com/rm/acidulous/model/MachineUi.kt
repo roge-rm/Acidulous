@@ -84,6 +84,19 @@ object MachineUi {
         else -> ""
     }
 
+    /**
+     * Parameters a patch does not own, by machine.
+     *
+     * Loading a patch replaces every parameter, which is right almost
+     * everywhere: what a preset does not mention it wants at the machine's
+     * default. Bias is the exception, because **a Bias patch is a medium and
+     * not a mix** - its four lane levels and four mutes are where your take
+     * sits against the others, and trying a different tape must not wipe that.
+     */
+    fun patchKeeps(type: String): Set<String> =
+        if (type != "Bias") emptySet()
+        else (1..4).flatMap { listOf("lane$it", "mute$it") }.toSet()
+
     /** Machines that play a whole multisample map rather than one-shot pads. */
     fun acceptsSampleMap(type: String): Boolean = type == "Mosaic"
 

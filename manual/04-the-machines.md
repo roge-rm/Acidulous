@@ -95,6 +95,15 @@ These are solved rather than sampled, so they respond to how you play them.
   at the speed it was recorded at; when that is not the tempo the scene plays
   at, the lane says so in amber.
 
+  **Its patches are recording media.** Bias is the signal a tape machine mixes
+  into its record head, and setting it is how you choose between a clean
+  transfer and a compressed, rolled-off one - so a patch here is a cassette, a
+  fifteen-ips reel, a Portastudio, a MiniDisc, a telephone line, a wax
+  cylinder. They colour what comes out and **never the recordings**, so trying
+  one costs nothing and undoes itself; **Init** is the default and plays the
+  file back untouched. A patch carries the medium only, so trying a different
+  tape does not disturb your four lane levels.
+
 ## Patches
 
 Every machine ships with patches, shelved by family. **patch** at the top of the

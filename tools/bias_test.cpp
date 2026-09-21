@@ -13,6 +13,7 @@
 // wanders off the end of one announces itself instead of sounding plausible.
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -266,6 +267,111 @@ void nothingToPlay() {
     ok("and a scene that is not on the reel is too", near(rig.probe(99, 0), 0.0f));
 }
 
+// --- The medium ------------------------------------------------------------------
+
+/**
+ * The colour section, which is what a Bias patch is.
+ *
+ * Four claims, and the first is the one the whole design rests on: **Direct
+ * changes nothing**. A patch here is a way of listening, so there has to be a
+ * way of not listening that way, and it has to be exact rather than nearly.
+ */
+void theMediumColoursAndDirectDoesNot() {
+    printf("- the medium: what a patch does, and what Direct does not\n");
+    constexpr int32_t kN = 512;
+    float in[kN];
+    for (int32_t i = 0; i < kN; ++i) {
+        // Something with a top end to lose and a transient to squash.
+        in[i] = 0.3f * std::sin(6.2831853f * 800.0f * static_cast<float>(i) / kRate) +
+                0.2f * std::sin(6.2831853f * 9000.0f * static_cast<float>(i) / kRate);
+    }
+
+    machine::bias::Colour colour;
+    colour.prepare(static_cast<float>(kRate));
+
+    // Nothing at all: bit for bit, which is what the sample-identical stem
+    // export depends on.
+    {
+        float l[kN], r[kN];
+        std::memcpy(l, in, sizeof(in));
+        std::memcpy(r, in, sizeof(in));
+        machine::bias::ColourSpec spec; // every default
+        colour.setBlock(spec);
+        colour.process(l, r, kN);
+        bool same = true;
+        for (int32_t i = 0; i < kN; ++i) same = same && l[i] == in[i] && r[i] == in[i];
+        ok("Init is bit for bit what went in", same);
+    }
+
+    // A noise floor, and the same noise floor twice: two exports of one song
+    // have to match, and a generator seeded from anything that moves is the
+    // one way to break that silently.
+    {
+        float a[kN] = {0.0f}, b[kN] = {0.0f}, a2[kN] = {0.0f}, b2[kN] = {0.0f};
+        machine::bias::ColourSpec spec;
+        spec.hiss = 0.8f;
+        spec.any = true;
+        colour.reset();
+        colour.setBlock(spec);
+        colour.process(a, b, kN);
+        colour.reset();
+        colour.setBlock(spec);
+        colour.process(a2, b2, kN);
+        double peak = 0.0;
+        bool identical = true;
+        for (int32_t i = 0; i < kN; ++i) {
+            peak = std::max(peak, static_cast<double>(std::fabs(a[i])));
+            identical = identical && a[i] == a2[i] && b[i] == b2[i];
+        }
+        ok("hiss is audible on a silent tape", peak > 0.001, std::to_string(peak));
+        ok("and identical after a reset, so two exports match", identical);
+    }
+
+    // The band is most of what tells a telephone from a reel.
+    {
+        float l[kN], r[kN];
+        std::memcpy(l, in, sizeof(in));
+        std::memcpy(r, in, sizeof(in));
+        machine::bias::ColourSpec spec;
+        spec.highCut = 2000.0f;
+        spec.any = true;
+        colour.reset();
+        colour.setBlock(spec);
+        colour.process(l, r, kN);
+        // The 9 kHz half should be gone; measure what is left above the
+        // fundamental by differencing against a one-sample delay, which is a
+        // crude high pass and enough to tell an octave of difference.
+        double before = 0.0, after = 0.0;
+        for (int32_t i = 256; i < kN; ++i) {
+            before += std::fabs(in[i] - in[i - 1]);
+            after += std::fabs(l[i] - l[i - 1]);
+        }
+        ok("a narrow band loses the top", after < before * 0.5,
+           std::to_string(after) + " against " + std::to_string(before));
+    }
+
+    // The digital media quantise, and a quantiser that does not is a knob
+    // that does nothing.
+    {
+        float l[kN], r[kN];
+        std::memcpy(l, in, sizeof(in));
+        std::memcpy(r, in, sizeof(in));
+        machine::bias::ColourSpec spec;
+        spec.bits = 5.0f;
+        spec.any = true;
+        colour.reset();
+        colour.setBlock(spec);
+        colour.process(l, r, kN);
+        const float step = 1.0f / std::pow(2.0f, 4.0f);
+        bool onGrid = true;
+        for (int32_t i = 0; i < kN; ++i) {
+            const float k = l[i] / step;
+            onGrid = onGrid && std::fabs(k - std::round(k)) < 1e-4f;
+        }
+        ok("five bits puts every sample on a sixteenth", onGrid);
+    }
+}
+
 } // namespace
 
 int main() {
@@ -283,6 +389,7 @@ int main() {
     aPunchInWaits();
     printf("- nothing\n");
     nothingToPlay();
+    theMediumColoursAndDirectDoesNot();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

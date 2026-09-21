@@ -26,6 +26,7 @@ internal object FactoryBanks {
         "Dice" -> dice
         "Mosaic" -> mosaic
         "Molt" -> molt
+        "Bias" -> bias
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -2558,19 +2559,19 @@ internal object FactoryBanks {
         family = "tune")
 
     private fun molt1() = Patch("Molt", "Natural",
-        mapOf("tune" to 0f, "volume" to 0.5733333f),
+        mapOf("tune" to 0f, "volume" to 0.5f),
         family = "tune")
 
     private fun molt2() = Patch("Molt", "Correct",
-        mapOf("tune" to 0.78f, "rate" to 0.15f, "volume" to 0.56f),
+        mapOf("tune" to 0.78f, "rate" to 0.15f, "volume" to 0.599999964f),
         family = "tune")
 
     private fun molt3() = Patch("Molt", "Hard",
-        mapOf("rate" to 0f, "cutoff" to 0.845404565f, "drive" to 0.3f, "volume" to 0.453333348f),
+        mapOf("rate" to 0f, "cutoff" to 0.845404565f, "drive" to 0.3f, "volume" to 0.393333316f),
         family = "tune")
 
     private fun molt4() = Patch("Molt", "Catch Up",
-        mapOf("tune" to 0.95f, "rate" to 0.625f, "volume" to 0.586666644f),
+        mapOf("tune" to 0.95f, "rate" to 0.625f, "volume" to 0.62f),
         family = "tune")
 
     private fun molt5() = Patch("Molt", "Robot",
@@ -2590,70 +2591,139 @@ internal object FactoryBanks {
         family = "robot")
 
     private fun molt9() = Patch("Molt", "Giant",
-        mapOf("formant" to 0.166666672f, "volume" to 0.66f),
+        mapOf("formant" to 0.166666672f, "volume" to 0.813333333f),
         family = "size")
 
     private fun molt10() = Patch("Molt", "Child",
-        mapOf("formant" to 0.7916667f, "cutoff" to 0.8865413f, "volume" to 0.64f),
+        mapOf("formant" to 0.7916667f, "cutoff" to 0.8865413f, "volume" to 0.4466667f),
         family = "size")
 
     private fun molt11() = Patch("Molt", "Chest",
-        mapOf("formant" to 0.333333343f, "cutoff" to 0.670188f, "volume" to 0.566666663f),
+        mapOf("formant" to 0.333333343f, "cutoff" to 0.670188f, "volume" to 0.5933333f),
         family = "size")
 
     private fun molt12() = Patch("Molt", "Megaphone",
-        mapOf("mega" to 0.8f, "cutoff" to 0.593254864f, "resonance" to 0.3f, "filtertype" to 0.727272749f, "volume" to 1f),
+        mapOf("mega" to 0.8f, "cutoff" to 0.593254864f, "resonance" to 0.3f, "filtertype" to 0.727272749f, "volume" to 0.6066667f),
         family = "size")
 
     private fun molt13() = Patch("Molt", "Telephone",
-        mapOf("cutoff" to 0.5424868f, "resonance" to 0.35f, "filtertype" to 0.8181818f, "drive" to 0.18f, "volume" to 0.8666666f),
+        mapOf("cutoff" to 0.5424868f, "resonance" to 0.35f, "filtertype" to 0.8181818f, "drive" to 0.18f, "volume" to 0.686666667f),
         family = "tone")
 
     private fun molt14() = Patch("Molt", "Dark Room",
-        mapOf("cutoff" to 0.50963974f, "resonance" to 0.12f, "filtertype" to 0.272727281f, "volume" to 0.653333366f),
+        mapOf("cutoff" to 0.50963974f, "resonance" to 0.12f, "filtertype" to 0.272727281f, "volume" to 0.793333352f),
         family = "tone")
 
     private fun molt15() = Patch("Molt", "Air",
-        mapOf("formant" to 0.5833333f, "cutoff" to 0.368505567f, "filtertype" to 0.363636374f, "volume" to 0.766666651f),
+        mapOf("formant" to 0.5833333f, "cutoff" to 0.368505567f, "filtertype" to 0.363636374f, "volume" to 0.72f),
         family = "tone")
 
     private fun molt16() = Patch("Molt", "Driven",
-        mapOf("cutoff" to 0.7903287f, "drive" to 0.62f, "volume" to 0.32f),
+        mapOf("cutoff" to 0.7903287f, "drive" to 0.62f, "volume" to 0.36f),
         family = "tone")
 
     private fun molt17() = Patch("Molt", "Swell",
-        mapOf("ampattack" to 0.8949457f, "ampdecay" to 0.854839f, "ampsustain" to 0.9f, "amprelease" to 0.789853036f, "volume" to 0.599999964f),
+        mapOf("ampattack" to 0.8949457f, "ampdecay" to 0.854839f, "ampsustain" to 0.9f, "amprelease" to 0.789853036f, "volume" to 0.6933333f),
         family = "shape")
 
     private fun molt18() = Patch("Molt", "Pluck",
-        mapOf("ampattack" to 0.182385489f, "ampdecay" to 0.687695742f, "ampsustain" to 0.34f, "amprelease" to 0.5772201f, "volume" to 0.933333337f),
+        mapOf("ampattack" to 0.182385489f, "ampdecay" to 0.687695742f, "ampsustain" to 0.34f, "amprelease" to 0.5772201f, "volume" to 1f),
         family = "shape")
 
     private fun molt19() = Patch("Molt", "Gated",
-        mapOf("ampattack" to 0.0911927447f, "ampdecay" to 0.471666247f, "ampsustain" to 0.75f, "amprelease" to 0.361190528f, "volume" to 0.7733333f),
+        mapOf("ampattack" to 0.0911927447f, "ampdecay" to 0.471666247f, "ampsustain" to 0.75f, "amprelease" to 0.361190528f, "volume" to 0.826666653f),
         family = "shape")
 
     private fun molt20() = Patch("Molt", "Held",
-        mapOf("loop" to 1f, "ampattack" to 0.5386656f, "amprelease" to 0.8895244f, "volume" to 0.5466667f),
+        mapOf("loop" to 1f, "ampattack" to 0.5386656f, "amprelease" to 0.8895244f, "volume" to 0.62f),
         family = "shape")
 
     private fun molt21() = Patch("Molt", "Glide",
-        mapOf("tune" to 0.9f, "rate" to 0.075f, "glide" to 0.15f, "volume" to 0.5733333f),
+        mapOf("tune" to 0.9f, "rate" to 0.075f, "glide" to 0.15f, "volume" to 0.62f),
         family = "play")
 
     private fun molt22() = Patch("Molt", "Octave Down",
-        mapOf("formant" to 0.6666667f, "octave" to 0.333333343f, "volume" to 0.586666644f),
+        mapOf("formant" to 0.6666667f, "octave" to 0.333333343f, "volume" to 0.5266667f),
         family = "play")
 
     private fun molt23() = Patch("Molt", "Wide Bend",
-        mapOf("tune" to 0.85f, "rate" to 0.125f, "bendrange" to 0.5f, "volume" to 0.56f),
+        mapOf("tune" to 0.85f, "rate" to 0.125f, "bendrange" to 0.5f, "volume" to 0.599999964f),
         family = "play")
 
     private fun molt24() = Patch("Molt", "Whisper",
-        mapOf("start" to 0.18f, "cutoff" to 0.82017225f, "velocity" to 0.9f, "drive" to 0.1f, "volume" to 0.553333342f),
+        mapOf("start" to 0.18f, "cutoff" to 0.82017225f, "velocity" to 0.9f, "drive" to 0.1f, "volume" to 0.7f),
         family = "play")
 
     private val molt: List<Patch> by lazy { listOf(molt0(), molt1(), molt2(), molt3(), molt4(), molt5(), molt6(), molt7(), molt8(), molt9(), molt10(), molt11(), molt12(), molt13(), molt14(), molt15(), molt16(), molt17(), molt18(), molt19(), molt20(), molt21(), molt22(), molt23(), molt24()) }
+
+    private fun bias0() = Patch("Bias", "Init", emptyMap(),
+        family = "clean")
+
+    private fun bias1() = Patch("Bias", "Warm",
+        mapOf("highcut" to 0.9648298f, "bump" to 0.444444448f, "bumpfreq" to 0.365368128f, "sat" to 0.35f),
+        family = "clean")
+
+    private fun bias2() = Patch("Bias", "Wide",
+        mapOf("bump" to 0.5f, "bumpfreq" to 0.21372664f, "sat" to 0.15f, "width" to 0.65f),
+        family = "clean")
+
+    private fun bias3() = Patch("Bias", "Cassette",
+        mapOf("hiss" to 0.35f, "hisstone" to 0.55f, "lowcut" to 0.219831035f, "highcut" to 0.86879915f, "bump" to 0.5f, "bumpfreq" to 0.60759443f, "sat" to 0.4f, "comp" to 0.3f, "wow" to 0.25f, "flutter" to 0.3f, "width" to 0.475f),
+        family = "tape")
+
+    private fun bias4() = Patch("Bias", "Portastudio",
+        mapOf("hiss" to 0.5f, "hisstone" to 0.6f, "lowcut" to 0.297817349f, "highcut" to 0.8004371f, "bump" to 0.5555556f, "bumpfreq" to 0.6848713f, "sat" to 0.5f, "comp" to 0.55f, "wow" to 0.3f, "flutter" to 0.4f, "bleed" to 0.45f, "width" to 0.45f),
+        family = "tape")
+
+    private fun bias5() = Patch("Bias", "Reel",
+        mapOf("hiss" to 0.12f, "hisstone" to 0.35f, "lowcut" to 0.0604908764f, "highcut" to 0.9739758f, "bump" to 0.4722222f, "bumpfreq" to 0.177359477f, "sat" to 0.28f, "comp" to 0.15f, "wow" to 0.1f, "flutter" to 0.08f, "speed" to 0.315758616f),
+        family = "tape")
+
+    private fun bias6() = Patch("Bias", "Cartridge",
+        mapOf("hiss" to 0.42f, "hisstone" to 0.45f, "lowcut" to 0.339605272f, "highcut" to 0.7334516f, "bump" to 0.5277778f, "bumpfreq" to 0.660349846f, "sat" to 0.45f, "comp" to 0.4f, "wow" to 0.5f, "flutter" to 0.35f, "bleed" to 0.3f, "drop" to 0.15f),
+        family = "tape")
+
+    private fun bias7() = Patch("Bias", "Micro",
+        mapOf("hiss" to 0.7f, "hisstone" to 0.75f, "lowcut" to 0.7516073f, "highcut" to 0.479042947f, "sat" to 0.6f, "comp" to 0.8f, "wow" to 0.55f, "flutter" to 0.6f, "speed" to 0.711999238f, "drop" to 0.25f, "width" to 0f),
+        family = "tape")
+
+    private fun bias8() = Patch("Bias", "MiniDisc",
+        mapOf("highcut" to 0.921313941f, "bits" to 0.6f, "smear" to 0.35f, "width" to 0.4f),
+        family = "digital")
+
+    private fun bias9() = Patch("Bias", "DAT",
+        mapOf("highcut" to 0.991548657f, "sat" to 0.05f, "bits" to 0.6f),
+        family = "digital")
+
+    private fun bias10() = Patch("Bias", "Sampler",
+        mapOf("highcut" to 0.903969347f, "sat" to 0.2f, "bits" to 0.4f, "rate" to 0.6f),
+        family = "digital")
+
+    private fun bias11() = Patch("Bias", "Phone",
+        mapOf("lowcut" to 0.7341119f, "highcut" to 0.4085063f, "sat" to 0.3f, "comp" to 0.6f, "bits" to 0.2f, "width" to 0f),
+        family = "broadcast")
+
+    private fun bias12() = Patch("Bias", "Shortwave",
+        mapOf("hiss" to 0.55f, "hisstone" to 0.6f, "lowcut" to 0.695319355f, "highcut" to 0.3667258f, "comp" to 0.5f, "wow" to 0.35f, "speed" to 0.7843759f, "drop" to 0.4f, "width" to 0f),
+        family = "broadcast")
+
+    private fun bias13() = Patch("Bias", "AM",
+        mapOf("hiss" to 0.3f, "hisstone" to 0.45f, "lowcut" to 0.485719174f, "highcut" to 0.550335765f, "sat" to 0.25f, "comp" to 0.55f, "width" to 0f),
+        family = "broadcast")
+
+    private fun bias14() = Patch("Bias", "Shellac",
+        mapOf("hiss" to 0.6f, "hisstone" to 0.3f, "lowcut" to 0.650033534f, "highcut" to 0.388269275f, "sat" to 0.35f, "comp" to 0.35f, "wow" to 0.6f, "speed" to 0.25f, "drop" to 0.55f, "width" to 0f),
+        family = "worn")
+
+    private fun bias15() = Patch("Bias", "Wire",
+        mapOf("hiss" to 0.65f, "lowcut" to 0.695319355f, "highcut" to 0.52361685f, "sat" to 0.4f, "wow" to 0.45f, "flutter" to 0.5f, "speed" to 0.6213567f, "drop" to 0.3f, "width" to 0f),
+        family = "worn")
+
+    private fun bias16() = Patch("Bias", "Wax",
+        mapOf("hiss" to 0.5f, "hisstone" to 0.25f, "lowcut" to 0.7758998f, "highcut" to 0.318957537f, "sat" to 0.45f, "comp" to 0.4f, "wow" to 0.75f, "speed" to 0.121356696f, "drop" to 0.4f, "width" to 0f),
+        family = "worn")
+
+    private val bias: List<Patch> by lazy { listOf(bias0(), bias1(), bias2(), bias3(), bias4(), bias5(), bias6(), bias7(), bias8(), bias9(), bias10(), bias11(), bias12(), bias13(), bias14(), bias15(), bias16()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

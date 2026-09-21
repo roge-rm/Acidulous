@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
+import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.Zone
@@ -146,7 +147,11 @@ fun MachinePanel(
     Column(modifier.background(Acid.colors.panel).padding(6.dp)) {
         val loadPatch: (String) -> Unit = { name ->
             onLoadPatch(name)?.let { patch ->
-                val params = patch.params
+                // What this machine keeps across a patch change - see
+                // MachineUi.patchKeeps. Empty for everything but Bias.
+                val keep = MachineUi.patchKeeps(type)
+                val params = if (keep.isEmpty()) patch.params
+                             else patch.params + track.machine.params.filterKeys { it in keep }
                 editor.edit(trackIndex) { t ->
                     var next = t.withPatch(params)
                     for ((k, v) in patch.settings) next = next.withSetting(k, v)
@@ -3018,6 +3023,7 @@ private fun MomentaryButton(b: ParamBinding, name: String, label: String) {
  */
 @Composable
 private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: String, editor: SongEditor) {
+    var section by rememberSaveable { mutableStateOf(0) }
     var picking by remember { mutableStateOf(-1) }
     val scope = rememberCoroutineScope()
     val c = Acid.colors
@@ -3025,7 +3031,44 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
     val clip = track.clips[sceneId]
     val sceneBpm = if (sceneId.isEmpty()) song.tempo else song.bpmOf(sceneId)
     PanelSections {
+        // Two sections and no more: what is on the tape, and what the tape is.
+        // The patch bar above chooses the second of those wholesale, and these
+        // are what it moved.
+        SectionChips(listOf("lanes", "medium"), section) { section = it }
         GroupRow {
+            if (section == 1) {
+                Group("band") {
+                    PanelKnob(b, "lowcut", "low cut", PanelAmber)
+                    PanelKnob(b, "highcut", "high cut", PanelAmber)
+                    PanelKnob(b, "bump", "head bump")
+                    PanelKnob(b, "bumpfreq", "· at")
+                }
+                Group("noise") {
+                    PanelKnob(b, "hiss", "hiss", PanelPink)
+                    PanelKnob(b, "hisstone", "· tone")
+                    PanelKnob(b, "drop", "dropouts", PanelPink)
+                    PanelKnob(b, "bleed", "bleed", PanelPink)
+                }
+                Group("transport") {
+                    PanelKnob(b, "wow", "wow", PanelAmber)
+                    PanelKnob(b, "flutter", "flutter", PanelAmber)
+                    PanelKnob(b, "speed", "· rate")
+                }
+                Group("level") {
+                    PanelKnob(b, "sat", "saturate", PanelPink)
+                    PanelKnob(b, "comp", "squash", PanelPink)
+                }
+                Group("digital") {
+                    PanelStepKnob(b, "bits", (4..24).map { "$it" }, "bits", PanelPink)
+                    PanelKnob(b, "rate", "rate", PanelPink)
+                    PanelKnob(b, "smear", "smear")
+                }
+                Group("out") {
+                    PanelKnob(b, "width", "width")
+                    PanelKnob(b, "gain", "gain", PanelAmber)
+                }
+                return@GroupRow
+            }
             for (lane in 0 until BIAS_LANES) {
                 val take = clip?.audio?.lane(lane)
                 Group("lane ${lane + 1}") {
@@ -3056,10 +3099,12 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                         }
                     }
                     PanelKnob(b, "lane${lane + 1}", "level")
-                    PanelSwitch(b, "mute${lane + 1}", listOf("on", "mute"), "lane")
+                    // Labelled for the automation list rather than for the
+                    // card: inside a card already titled "lane 2", the lane
+                    // list would otherwise read "lane 2 lane".
+                    PanelSwitch(b, "mute${lane + 1}", listOf("on", "mute"), "mute")
                 }
             }
-            Group("out") { PanelKnob(b, "gain", "gain", PanelAmber) }
         }
     }
     if (picking >= 0) TakePicker(trackIndex, sceneId, picking, editor, scope) { picking = -1 }
