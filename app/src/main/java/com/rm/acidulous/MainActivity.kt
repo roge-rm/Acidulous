@@ -788,6 +788,10 @@ private fun App(modifier: Modifier = Modifier) {
     /** The worst callback seen since the transport last started. See the poll below. */
     var worstUs by remember { mutableStateOf(0) }
     var worstCpuUs by remember { mutableStateOf(0) }
+    var wasPlaying by remember { mutableStateOf(false) }
+    var lateAt by remember { mutableStateOf(0L) }
+    var stalledAt by remember { mutableStateOf(0L) }
+    var xrunsAt by remember { mutableStateOf(0L) }
     var lateCallbacks by remember { mutableStateOf(0L) }
     var stalled by remember { mutableStateOf(0L) }
     var playing by remember { mutableStateOf(false) }
@@ -1090,14 +1094,31 @@ private fun App(modifier: Modifier = Modifier) {
             notesOn = NativeEngine.notesOn(0)
             notesOff = NativeEngine.notesOff(0)
             load = NativeEngine.loadAvg
-            xruns = NativeEngine.xRunCount
             // Peak-hold, and reading clears them, so this is the only place
             // that may ask. Held across polls rather than shown raw: at 80 ms
             // a reading would flick past before it could be read off a screen.
+            // **Pressing play zeroes them.** They are cumulative and they were
+            // not, which made two readings taken in one session - the same
+            // song at two quality settings, say - impossible to compare: the
+            // second contained the first. A play-through is the unit somebody
+            // measures in, so it is the unit these count in.
+            if (playing && !wasPlaying) {
+                worstUs = 0
+                worstCpuUs = 0
+                lateAt = NativeEngine.lateCallbacks
+                stalledAt = NativeEngine.stalledCallbacks
+                xrunsAt = NativeEngine.xRunCount
+                NativeEngine.worstCallbackUs // reading clears the peak-hold
+                NativeEngine.worstCallbackCpuUs
+            }
+            wasPlaying = playing
             worstUs = maxOf(worstUs, NativeEngine.worstCallbackUs)
             worstCpuUs = maxOf(worstCpuUs, NativeEngine.worstCallbackCpuUs)
-            lateCallbacks = NativeEngine.lateCallbacks
-            stalled = NativeEngine.stalledCallbacks
+            // Ours are cumulative and Oboe's belongs to the stream, so all
+            // three are shown as a delta from the last time play was pressed.
+            lateCallbacks = NativeEngine.lateCallbacks - lateAt
+            stalled = NativeEngine.stalledCallbacks - stalledAt
+            xruns = NativeEngine.xRunCount - xrunsAt
             fade = NativeEngine.masterFade
             stopAtEnd = NativeEngine.stopAtEnd
             queuedScene = NativeEngine.queuedScene
@@ -1142,11 +1163,11 @@ private fun App(modifier: Modifier = Modifier) {
     // it click", because a block over budget decays out of it in 27 ms and
     // this line is redrawn every 80.
     val budgetUs = NativeEngine.callbackBudgetUs.coerceAtLeast(1)
-    val diagnostics = ("%s · load %.0f%% · worst %.1f/%.1fms cpu %.1f · late %d/%d · xruns %d · " +
+    val diagnostics = ("%s · load %.0f%% · worst %.1f/%.1fms cpu %.1f · late %d stall %d · xruns %d · " +
         "peak %.3f · fade %.2f · on %d off %d%s")
         .format(
             status, load, worstUs / 1000f, budgetUs / 1000f, worstCpuUs / 1000f,
-            stalled, lateCallbacks, xruns, peak, fade, notesOn, notesOff,
+            lateCallbacks, stalled, xruns, peak, fade, notesOn, notesOff,
             // Only while Link is on, and only the number that matters when
             // it is: how many machines are keeping this time.
             if (com.rm.acidulous.engine.LinkHub.enabled) {

@@ -25,17 +25,45 @@ class MultiFilter {
         return n[d < 0 ? 0 : (d >= DriveCount ? DriveCount - 1 : d)];
     }
 
-    void setSampleRate(float sr) { sampleRate = sr; a.setSampleRate(sr); b.setSampleRate(sr); }
+    void setSampleRate(float sr) {
+        sampleRate = sr;
+        a.setSampleRate(sr);
+        b.setSampleRate(sr);
+        lastFc = -1.0f; // the coefficients below are about to mean something else
+    }
     void reset() { a.reset(); b.reset(); z = 0.0f; }
 
+    /**
+     * Coefficients, and three things not to do.
+     *
+     * This is `exp2` in the caller plus two `tan` and an `exp` here, and every
+     * machine with a filter per voice calls it four times a block per voice -
+     * a hundred and ninety-two libm calls a block for Ratio's twelve, two
+     * hundred and fifty-six for Trinity's sixteen. So:
+     *
+     *  - **nothing is recomputed when nothing moved.** The cutoff only moves
+     *    if something is modulating it; with the filter envelope at nought it
+     *    is the same number four times a block, for ever;
+     *  - `b` is the second pole pair and only three of the thirteen types
+     *    have one;
+     *  - `onePole` is the six-decibel path and only four types use it.
+     *
+     * The drive is stored before any of that, because it changes on its own.
+     */
     void set(float cutoffHz, float resonance01, int type, int drive, float driveAmount) {
         this->type = type < 0 ? 0 : (type >= TypeCount ? TypeCount - 1 : type);
         this->drive = drive;
         this->driveAmount = driveAmount;
         const float fc = clampf(cutoffHz, 20.0f, sampleRate * 0.45f);
+        if (fc == lastFc && resonance01 == lastRes && this->type == lastType) return;
+        lastFc = fc;
+        lastRes = resonance01;
+        lastType = this->type;
         a.set(fc, resonance01);
-        b.set(fc, 0.0f);
-        onePole = clampf(1.0f - std::exp(-kTwoPi * fc / sampleRate), 0.0f, 1.0f);
+        if (this->type == LP24 || this->type == HP24 || this->type == BP12) b.set(fc, 0.0f);
+        if (this->type == LP6 || this->type == LP18 || this->type == HP6 || this->type == HP18) {
+            onePole = clampf(1.0f - std::exp(-kTwoPi * fc / sampleRate), 0.0f, 1.0f);
+        }
     }
 
     float process(float x) {
@@ -57,6 +85,9 @@ class MultiFilter {
     }
 
   private:
+    float lastFc = -1.0f, lastRes = -1.0f;
+    int lastType = -1;
+
     float lp1(float x) { z += (x - z) * onePole; return z; }
     float shape(float x) {
         if (drive == Clean || driveAmount <= 0.0f) return x;
