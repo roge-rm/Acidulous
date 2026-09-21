@@ -146,7 +146,8 @@ void Bias::onScene(int64_t sceneId, int64_t tick, bool isPlaying, bool clipMuted
 bool Bias::render(float *L, float *R, int32_t frames) {
     params_.tick();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
-    const bias::ColourSpec spec = colourOf();
+    bias::ColourSpec spec = colourOf();
+    if (colourBypass) spec.any = false;
     colour.setBlock(spec);
     if (cell == nullptr || !playing || muted) {
         // A muted or empty cell still runs the medium, because a tape with

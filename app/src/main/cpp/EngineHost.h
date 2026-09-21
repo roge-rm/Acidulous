@@ -337,6 +337,22 @@ class EngineHost {
                            int32_t &framesOut, int32_t &ticksOut, float &bpmOut, float &peakOut);
 
     /**
+     * Flatten one Bias cell's four lanes into one file: a comp.
+     *
+     * Not the freeze renderer, which would drive the whole scheduler and bake
+     * the track's inserts in as well. A cell's audio does not depend on the
+     * transport at all - it depends on where in the cycle it is - so this
+     * simply walks the cycle and asks the machine for it, with the medium
+     * switched off: **a comp flattens the lanes and not the tape they are
+     * played through.**
+     *
+     * [frames] and [bpm] are the cell's own, which the document knows and the
+     * engine would have to go looking for. Returns "" or the reason.
+     */
+    std::string compCell(int rack, int64_t sceneId, int32_t frames, float bpm,
+                         const std::string &path, float &peakOut);
+
+    /**
      * Give a rack its frozen clips: pairs of scene id and WAV path, read
      * here and handed over as one object. An empty list thaws the rack.
      */

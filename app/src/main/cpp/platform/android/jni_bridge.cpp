@@ -344,6 +344,20 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeCapturedFrames(JNIEnv *, jobject
     return host().capturedFrames();
 }
 
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeCompCell(JNIEnv *env, jobject, jint rack,
+                                                         jlong sceneId, jint frames, jfloat bpm,
+                                                         jstring path, jfloatArray peakOut) {
+    const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
+    float peak = 0.0f;
+    const std::string out = host().compCell(rack, sceneId, frames, bpm, p, peak);
+    if (path != nullptr) env->ReleaseStringUTFChars(path, p);
+    if (peakOut != nullptr && env->GetArrayLength(peakOut) > 0) {
+        env->SetFloatArrayRegion(peakOut, 0, 1, &peak);
+    }
+    return env->NewStringUTF(out.c_str());
+}
+
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeArmCapture(JNIEnv *, jobject, jint rack) {
     host().armCapture(rack);

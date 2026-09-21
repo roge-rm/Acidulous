@@ -67,6 +67,17 @@ class Bias final : public Machine {
     void onBlock(int64_t, int64_t, float bpm) override { songBpm = bpm; }
     bool render(float *L, float *R, int32_t frames) override;
 
+    /**
+     * Render the lanes without the medium, for a comp.
+     *
+     * **A comp flattens the four lanes and not the tape they are played
+     * back through.** The medium is a way of listening - that is the whole of
+     * what a Bias patch is - so baking it into a comp would make it
+     * permanent *and* leave the patch applying it a second time on top. Set
+     * only offline, with the transport stopped.
+     */
+    void setColourBypass(bool on) { colourBypass = on; }
+
     /** Slot 0 is the reel. Nothing else is mounted here. */
     void *swapObject(int32_t slot, void *object) override;
 
@@ -87,6 +98,7 @@ class Bias final : public Machine {
     int64_t lastCycleTick = -1;
     /** Set when a cycle comes round; the one moment a stretcher may be moved. */
     bool reseed = true;
+    bool colourBypass = false;
     const audio::Reel *reel = nullptr;
     const audio::Reel::Cell *cell = nullptr;
     audio::FrameCursor cursors[audio::kReelLanes];

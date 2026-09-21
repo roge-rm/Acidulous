@@ -3076,6 +3076,11 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
               }
                 return@GroupRow
             }
+            if (sceneId.isNotEmpty()) Group("flatten") {
+                CompButton(trackIndex, sceneId, editor, scope) {
+                    com.rm.acidulous.engine.EngineSync.onProblem?.invoke(it)
+                }
+            }
             for (lane in 0 until BIAS_LANES) {
                 val take = clip?.audio?.lane(lane)
                 Group("lane ${lane + 1}") {

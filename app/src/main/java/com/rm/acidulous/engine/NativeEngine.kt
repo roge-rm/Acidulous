@@ -529,6 +529,18 @@ object NativeEngine {
      * being written, and only one can be, because there is one capture. This
      * also resets the marks, so a second take starts with a clean sheet.
      */
+    /**
+     * Flatten one Bias cell's four lanes into one file: a comp.
+     *
+     * The medium is left off, because a comp is an edit and a patch is a way
+     * of listening - baking the cassette in would make it permanent and leave
+     * the patch applying it a second time on top. Offline and faster than real
+     * time, with the transport stopped. Returns "" or the reason.
+     */
+    fun compCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String,
+                 peakOut: FloatArray): String =
+        nativeCompCell(rack, sceneId, frames, bpm, path, peakOut)
+
     fun armCapture(rack: Int) = nativeArmCapture(rack)
 
     /**
@@ -616,6 +628,8 @@ object NativeEngine {
     private external fun nativeCaptureOverflowed(): Boolean
     private external fun nativeCaptureDeaf(): Boolean
     private external fun nativeCapturedFrames(): Long
+    private external fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float,
+                                        path: String, peakOut: FloatArray): String
     private external fun nativeArmCapture(rack: Int)
     private external fun nativeCaptureMarks(out: LongArray): Int
     private external fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int

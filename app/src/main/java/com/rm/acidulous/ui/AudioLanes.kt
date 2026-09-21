@@ -38,6 +38,9 @@ import com.rm.acidulous.engine.EngineSync
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.ENGINE_RATE
+import com.rm.acidulous.model.audioLaneCount
+import com.rm.acidulous.model.cycleTicks
+import com.rm.acidulous.model.bpmOf
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.BIAS_LANES
 import com.rm.acidulous.model.SongEditor
@@ -311,6 +314,75 @@ fun AudioLanes(
     }
     if (picking >= 0) {
         TakePicker(trackIndex, sceneId, picking, editor, scope) { picking = -1 }
+    }
+}
+
+/**
+ * Four lanes into one: a comp.
+ *
+ * **What it flattens is the lanes, their levels, their mutes and their fades -
+ * and not the medium.** A patch is a way of listening and a comp is an edit;
+ * baking the cassette in would make it permanent *and* leave the patch
+ * applying it a second time on top of itself.
+ *
+ * The four takes are replaced by one, in lane 1, and the file goes into the
+ * sound library under its own name - so the original recordings are still
+ * there and a comp you did not want is undone by putting them back.
+ */
+@Composable
+fun CompButton(
+    trackIndex: Int, sceneId: String, editor: SongEditor,
+    scope: kotlinx.coroutines.CoroutineScope,
+    onProblem: (String) -> Unit,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val c = Acid.colors
+    val song = editor.song
+    val clip = song.tracks.getOrNull(trackIndex)?.clips?.get(sceneId)
+    val lanes = clip?.audioLaneCount() ?: 0
+    androidx.compose.material3.TextButton(
+        enabled = lanes > 0,
+        onClick = {
+            val theClip = clip ?: return@TextButton
+            val scene = song.scenes.firstOrNull { it.id == sceneId } ?: return@TextButton
+            val bpm = song.bpmOf(sceneId)
+            val ticks = song.cycleTicks(sceneId, theClip)
+            val frames = (ticks.toDouble() / PPQN * 60.0 / bpm * ENGINE_RATE).toInt()
+            val root = java.io.File(
+                com.rm.acidulous.engine.EngineAssets.userRoot(context), "samples",
+            ).apply { mkdirs() }
+            val file = java.io.File(root, com.rm.acidulous.engine.uniqueIn(root, "comp.wav"))
+            scope.launch {
+                val peak = FloatArray(1)
+                val error = withContext(Dispatchers.Default) {
+                    NativeEngine.compCell(trackIndex, scene.engineId, frames, bpm,
+                                          file.absolutePath, peak)
+                }
+                if (error.isNotEmpty()) {
+                    onProblem("That cell would not flatten - $error.")
+                    file.delete()
+                    return@launch
+                }
+                val rel = "samples/" + file.name
+                val survey = withContext(Dispatchers.Default) {
+                    TakePeaks.survey(EngineSync.sampleRoot, rel)
+                } ?: return@launch
+                editor.editClip(trackIndex, sceneId) { cl ->
+                    // One take, in the first lane, and the other three emptied:
+                    // what the comp says is that these four are now this one.
+                    var next = cl
+                    for (l in 0 until BIAS_LANES) next = next.withTake(l, null)
+                    next.withTake(
+                        0,
+                        song.takeForWholeFile(sceneId, cl, rel, survey.frames)
+                            .copy(peaks = survey.peaks),
+                    )
+                }
+                EngineSync.sync(editor.song)
+            }
+        },
+    ) {
+        Text("comp", color = if (lanes > 0) c.textMid else c.textFaint, fontSize = 11.sp)
     }
 }
 

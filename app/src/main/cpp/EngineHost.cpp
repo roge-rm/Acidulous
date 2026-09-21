@@ -14,6 +14,7 @@
 #include <engine/core/Frozen.h>
 #include <engine/format/WavReader.h>
 #include <engine/core/ReelCache.h>
+#include <engine/machine/bias/Bias.h>
 #include <engine/format/WavStream.h>
 #include <sys/stat.h>
 #include <engine/dsp/Wavetable.h>
@@ -1610,6 +1611,54 @@ std::string EngineHost::loadFormula(int rack, const std::string &formula, const 
 }
 
 // --- Freeze -----------------------------------------------------------------------
+
+std::string EngineHost::compCell(int rack, int64_t sceneId, int32_t frames, float bpm,
+                                 const std::string &path, float &peakOut) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (sEngine.transport.isPlaying()) return "stop the transport first";
+    if (frames <= 0) return "that cell has no length";
+    Machine *m = awaitMachine(sEngine, rack, "Bias");
+    if (m == nullptr) return "that rack is not a Bias";
+    auto *bias = static_cast<machine::Bias *>(m);
+
+    WavWriter writer;
+    std::string error;
+    if (!writer.open(path, kSampleRate, 24, error)) return error;
+
+    // The medium is a way of listening and a comp is an edit, so the two must
+    // not be baked together - and the patch will still be applied to what this
+    // writes, which would be the cassette twice over.
+    bias->setColourBypass(true);
+    bias->reset();
+    bias->params().jumpAll();
+    bias->onBlock(0, 0, bpm);
+
+    const double perTick = static_cast<double>(kSampleRate) * 60.0 / (static_cast<double>(bpm) * kPPQN);
+    float L[kBlockFrames], R[kBlockFrames];
+    std::vector<float> block(static_cast<size_t>(kBlockFrames) * 2);
+    float peak = 0.0f;
+    for (int32_t at = 0; at < frames; at += kBlockFrames) {
+        const int32_t n = frames - at < kBlockFrames ? frames - at : kBlockFrames;
+        const auto tick = static_cast<int64_t>(static_cast<double>(at) / perTick);
+        bias->onScene(sceneId, tick, true, false);
+        bias->render(L, R, n);
+        for (int32_t i = 0; i < n; ++i) {
+            block[static_cast<size_t>(i) * 2] = L[i];
+            block[static_cast<size_t>(i) * 2 + 1] = R[i];
+            peak = std::fmax(peak, std::fmax(std::fabs(L[i]), std::fabs(R[i])));
+        }
+        writer.write(block.data(), n);
+    }
+    writer.close();
+    bias->setColourBypass(false);
+    bias->reset();
+    bias->params().jumpAll();
+    peakOut = peak;
+    if (peak <= 0.0f) return "there is nothing in that cell to flatten";
+    LOGI("comped rack %d scene %lld: %d frames, peak %.3f", rack, static_cast<long long>(sceneId),
+         frames, static_cast<double>(peak));
+    return "";
+}
 
 std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,
                                    int32_t &framesOut, int32_t &ticksOut, float &bpmOut, float &peakOut) {
