@@ -1,9 +1,9 @@
 package com.rm.acidulous.model
 
 /**
- * The scale table, mirroring engine/eventor/Scales.h - same names, same
+ * The scale table, mirroring engine/inputmod/Scales.h - same names, same
  * order, same intervals. The engine owns the sound; this copy exists so the
- * keyboard can show which notes a Scale eventor will let through.
+ * keyboard can show which notes a Scale modifier will let through.
  */
 object Scales {
     val names: List<String> = listOf(
@@ -137,21 +137,21 @@ object Scales {
     }
 
     /**
-     * The pitch classes a Scale eventor on [track] lets through, or null when
-     * the track has no Scale eventor, it is bypassed, or it is in degree mode
+     * The pitch classes a Scale modifier on [track] lets through, or null when
+     * the track has no Scale modifier, it is bypassed, or it is in degree mode
      * (where every key is in the scale by construction).
      */
     /**
-     * How this track's running Scale eventor writes its notes, by pitch
+     * How this track's running Scale modifier writes its notes, by pitch
      * class - empty when there is no scale to spell against.
      *
      * The same walk as [activeFor], because they answer two halves of one
-     * question and reading the eventor twice is cheaper than passing a pair
+     * question and reading the modifier twice is cheaper than passing a pair
      * through every caller.
      */
     fun spellingFor(track: Track): Map<Int, String> {
-        for (slot in 0 until EVENTOR_SLOTS) {
-            val ev = track.eventorAt(slot)
+        for (slot in 0 until MODIFIER_SLOTS) {
+            val ev = track.modifierAt(slot)
             if (ev.type != "Scale" || ev.bypass) continue
             if ((ev.params["mode"] ?: 0f) >= 0.5f) return emptyMap() // degree mode
             val key = Math.round((ev.params["key"] ?: 0f) * 11f)
@@ -162,8 +162,8 @@ object Scales {
     }
 
     fun activeFor(track: Track): Set<Int>? {
-        for (slot in 0 until EVENTOR_SLOTS) {
-            val ev = track.eventorAt(slot)
+        for (slot in 0 until MODIFIER_SLOTS) {
+            val ev = track.modifierAt(slot)
             if (ev.type != "Scale" || ev.bypass) continue
             // Parameters are normalised; these mirror the ranges in Scale's table.
             if ((ev.params["mode"] ?: 0f) >= 0.5f) return null // degree mode
@@ -178,7 +178,7 @@ object Scales {
     /**
      * The pitch classes this track's roll should treat as in key.
      *
-     * The track's own Scale eventor first, because a track that has chosen a
+     * The track's own Scale modifier first, because a track that has chosen a
      * scale has chosen it; the song's key only where the track is silent on
      * the subject. That order matters: the song's key is a statement about
      * the song, and a track set to something else is a deliberate
@@ -202,8 +202,8 @@ object Scales {
 
     /** The scale's tonic as a pitch class, or null when no scale is active. */
     fun rootFor(track: Track): Int? {
-        for (slot in 0 until EVENTOR_SLOTS) {
-            val ev = track.eventorAt(slot)
+        for (slot in 0 until MODIFIER_SLOTS) {
+            val ev = track.modifierAt(slot)
             if (ev.type != "Scale" || ev.bypass) continue
             return Math.round((ev.params["key"] ?: 0f) * 11f) % 12
         }
@@ -212,8 +212,8 @@ object Scales {
 
     /** "C Ionian (Major)" for the label, or null when no scale is active. */
     fun labelFor(track: Track): String? {
-        for (slot in 0 until EVENTOR_SLOTS) {
-            val ev = track.eventorAt(slot)
+        for (slot in 0 until MODIFIER_SLOTS) {
+            val ev = track.modifierAt(slot)
             if (ev.type != "Scale" || ev.bypass) continue
             val key = Math.round((ev.params["key"] ?: 0f) * 11f)
             val index = Math.round((ev.params["scale"] ?: 0f) * (names.size - 1))

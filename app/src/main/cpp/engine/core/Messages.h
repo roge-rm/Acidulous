@@ -54,7 +54,7 @@ constexpr uint8_t kNoChannel = 0xff;
 // Automation lanes are keyed by unit *name* in the document, so a new unit
 // costs nothing to songs already written.
 enum class Unit : uint8_t {
-    Machine, Effect1, Effect2, Eventor1, Eventor2, Eventor3, Channel, Master,
+    Machine, Effect1, Effect2, Mod1, Mod2, Mod3, Channel, Master,
     /**
      * The two send buses' effects.
      *

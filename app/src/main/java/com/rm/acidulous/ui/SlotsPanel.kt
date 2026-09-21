@@ -38,12 +38,12 @@ import com.rm.acidulous.model.EFFECT_SLOTS
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.PatchStore
 import com.rm.acidulous.model.withEffectPatch
-import com.rm.acidulous.model.withEventorParam
-import com.rm.acidulous.model.withEventorBypass
-import com.rm.acidulous.model.withEventor
-import com.rm.acidulous.model.eventorUnit
+import com.rm.acidulous.model.withModifierParam
+import com.rm.acidulous.model.withModifierBypass
+import com.rm.acidulous.model.withModifier
+import com.rm.acidulous.model.modifierUnit
 import com.rm.acidulous.model.UnitSlot
-import com.rm.acidulous.model.EVENTOR_SLOTS
+import com.rm.acidulous.model.MODIFIER_SLOTS
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.effectUnit
@@ -53,7 +53,7 @@ import com.rm.acidulous.model.withEffectParam
 import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.roundToInt
 
-/** What a slot panel edits: the track's insert effects or its eventors. */
+/** What a slot panel edits: the track's insert effects or its modifiers. */
 enum class SlotKind(
     val label: String, val slots: Int,
     val types: () -> List<String>, val paramInfo: (String) -> List<com.rm.acidulous.engine.ParamInfo>,
@@ -61,7 +61,7 @@ enum class SlotKind(
     val withType: (Track, Int, String) -> Track, val withParam: (Track, Int, String, Float) -> Track, val withBypass: (Track, Int, Boolean) -> Track,
     /**
      * How a unit of this kind is keyed in the patch store, or null when it
-     * has no presets. Eventors would take them for almost nothing - an arp
+     * has no presets. Modifiers would take them for almost nothing - an arp
      * pattern is exactly the sort of thing to keep - but that is a different
      * milestone, and this is the seam it will use.
      */
@@ -71,8 +71,8 @@ enum class SlotKind(
     Effects("FX", EFFECT_SLOTS, { NativeEngine.effectTypes }, { NativeEngine.effectParamInfo(it) }, ::effectUnit, { t, s -> t.effectAt(s) },
         { t, s, ty -> t.withEffect(s, ty) }, { t, s, n, v -> t.withEffectParam(s, n, v) }, { t, s, b -> t.withEffectBypass(s, b) },
         patchKey = PatchStore::effectKey, loadPatch = { t, s, p -> t.withEffectPatch(s, p) }),
-    Eventors("EV", EVENTOR_SLOTS, { NativeEngine.eventorTypes }, { NativeEngine.eventorParamInfo(it) }, ::eventorUnit, { t, s -> t.eventorAt(s) },
-        { t, s, ty -> t.withEventor(s, ty) }, { t, s, n, v -> t.withEventorParam(s, n, v) }, { t, s, b -> t.withEventorBypass(s, b) }),
+    Modifiers("MOD", MODIFIER_SLOTS, { NativeEngine.inputModTypes }, { NativeEngine.inputModParamInfo(it) }, ::modifierUnit, { t, s -> t.modifierAt(s) },
+        { t, s, ty -> t.withModifier(s, ty) }, { t, s, n, v -> t.withModifierParam(s, n, v) }, { t, s, b -> t.withModifierBypass(s, b) }),
 }
 
 /**
@@ -129,7 +129,7 @@ private fun SlotRow(
     val fx = kind.at(track, slot)
     var menu by remember { mutableStateOf(false) }
     // Per slot, and kept across a rotation, the same as a machine panel's.
-    // Two effects and an eventor can fill a phone between them, and most of
+    // Two effects and an modifier can fill a phone between them, and most of
     // the time what you want from a slot you are not editing is the one line
     // that says what it is and whether it is on.
     var minimized by rememberSaveable(kind.label, slot) { mutableStateOf(false) }
@@ -283,7 +283,7 @@ private val EXTRA = mapOf(
     "Arp" to setOf("ratchet", "ratchetchance", "chance", "shift", "cycles", "humanise", "latch"),
 )
 
-// Mirrors engine/eventor/Scales.h - same order.
+// Mirrors engine/inputmod/Scales.h - same order.
 val SCALE_NAMES = listOf(
     "Ionian (Major)", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian (Minor)", "Locrian",
     "Harmonic Minor", "Melodic Minor",

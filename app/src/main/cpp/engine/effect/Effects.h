@@ -269,7 +269,7 @@ class Shifter final : public Effect {
  * it listens for what note is arriving, finds that note's place in the scale,
  * counts up the degrees you asked for, and shifts by whatever that turns out
  * to be - a major third here, a minor third there, the way a second singer
- * would. The thirty-three scales are the ones the eventors already know, so a
+ * would. The thirty-three scales are the ones the modifiers already know, so a
  * part harmonised here agrees with a part quantised there.
  *
  * Two voices, because two is what a harmony part is and four is a chorus.

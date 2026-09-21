@@ -21,7 +21,7 @@
 //     so it settles instead of piling up.
 //   - **Harmonic scatter.** The per-grain pitch random is quantised - to
 //     octaves, fifths, a triad, or any of the thirty-three scales the
-//     eventors already know. A spray becomes a chord.
+//     modifiers already know. A spray becomes a chord.
 //   - **Onset snap.** The buffer's transients are found (on a worker for a
 //     file, as it records for the live ring) and grains land on them by an
 //     amount. A slicer feeding the cloud.

@@ -22,7 +22,7 @@
 // rest of the app talks to it. renderBlock() is the audio thread's entry.
 namespace acidulous {
 
-class Engine {
+class Engine : public Rack::ModifiedNoteSink {
   public:
     Engine();
     ~Engine();
@@ -201,6 +201,7 @@ class Engine {
     float inputScratch[kBlockFrames * 2] = {};
     /** The input chain, on the block about to be published. */
     void runInputChain();
+    void onModifiedNote(int32_t rack, uint8_t status, uint8_t d1, uint8_t d2) override;
 
   private:
     void applyMounts();

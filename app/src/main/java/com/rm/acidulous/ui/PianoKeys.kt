@@ -279,7 +279,7 @@ fun ScaleChip(
  * what you play and what sounds: **a tap turns it on or off, a long press
  * opens it**. The common question - is this running? - costs one tap and is
  * answerable at a glance; choosing and configuring is rare and lives a level
- * down. The scale chip established it; the eventor chips either side of it
+ * down. The scale chip established it; the modifier chips either side of it
  * follow it exactly, because two controls doing the same job should not want
  * two different gestures.
  */
@@ -419,7 +419,7 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
 // families they belong to. The row of twelve dots shows the shape of whatever
 // is selected, so an unfamiliar name still tells you something.
 
-/** How a Scale eventor is set up, as the dialog sees it. */
+/** How a Scale modifier is set up, as the dialog sees it. */
 data class ScaleSetting(val on: Boolean, val key: Int, val scale: Int, val degree: Boolean, val snap: Int)
 
 private val ScaleGroups = listOf(

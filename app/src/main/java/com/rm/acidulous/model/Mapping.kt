@@ -110,7 +110,7 @@ fun mappedParamInfo(track: Track, unit: String, name: String): com.rm.acidulous.
     val list = when {
         unit == "machine" -> engine.machineParamInfo(track.machine.type)
         unit.startsWith("effect") -> effectSlotOf(unit)?.let { engine.effectParamInfo(track.effectAt(it).type) }
-        unit.startsWith("eventor") -> eventorSlotOf(unit)?.let { engine.eventorParamInfo(track.eventorAt(it).type) }
+        unit.startsWith("mod") -> modifierSlotOf(unit)?.let { engine.inputModParamInfo(track.modifierAt(it).type) }
         else -> null
     } ?: return null
     return list.firstOrNull { it.name == name }
@@ -123,7 +123,7 @@ fun mappedParamInfo(track: Track, unit: String, name: String): com.rm.acidulous.
 fun currentMapped(track: Track, unit: String, name: String): Float = when {
     unit == "machine" -> track.machine.params[name]
     unit.startsWith("effect") -> effectSlotOf(unit)?.let { track.effectAt(it).params[name] }
-    unit.startsWith("eventor") -> eventorSlotOf(unit)?.let { track.eventorAt(it).params[name] }
+    unit.startsWith("mod") -> modifierSlotOf(unit)?.let { track.modifierAt(it).params[name] }
     unit == "channel" -> when (name) {
         "gain" -> EngineParams.volume01(track.mixer.volume)
         "pan" -> EngineParams.pan01(track.mixer.pan)

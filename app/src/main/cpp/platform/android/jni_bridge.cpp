@@ -2,7 +2,7 @@
 #include <android/log.h>
 #include <cstdio>
 #include <engine/effect/EffectRegistry.h>
-#include <engine/eventor/EventorRegistry.h>
+#include <engine/inputmod/InputModRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <jni.h>
 #include <string>
@@ -91,17 +91,17 @@ JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativePrewarm(JNIEnv *, jobject) { acidulous::EngineHost::prewarm(); }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMountEventor(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
-    return host().mountEventor(rackId, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
+Java_com_rm_acidulous_engine_NativeEngine_nativeMountInputMod(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
+    return host().mountInputMod(rackId, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeEventorTypes(JNIEnv *env, jobject) {
-    const int32_t n = acidulous::EventorRegistry::count();
+Java_com_rm_acidulous_engine_NativeEngine_nativeInputModTypes(JNIEnv *env, jobject) {
+    const int32_t n = acidulous::InputModRegistry::count();
     jclass stringClass = env->FindClass("java/lang/String");
     jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
     for (int32_t i = 0; i < n; ++i) {
-        jstring s = env->NewStringUTF(acidulous::EventorRegistry::name(i));
+        jstring s = env->NewStringUTF(acidulous::InputModRegistry::name(i));
         env->SetObjectArrayElement(out, i, s);
         env->DeleteLocalRef(s);
     }
@@ -990,9 +990,9 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamInfo(JNIEnv *env, jo
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeEventorParamInfo(JNIEnv *env, jobject, jstring type) {
+Java_com_rm_acidulous_engine_NativeEngine_nativeInputModParamInfo(JNIEnv *env, jobject, jstring type) {
     int32_t n = 0;
-    const acidulous::ParamDef *defs = acidulous::EventorRegistry::paramDefs(toStdString(env, type).c_str(), n);
+    const acidulous::ParamDef *defs = acidulous::InputModRegistry::paramDefs(toStdString(env, type).c_str(), n);
     return paramInfoArray(env, defs, n);
 }
 

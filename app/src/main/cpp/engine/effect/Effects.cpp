@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <engine/core/Settings.h>
-#include <engine/eventor/Scales.h>
+#include <engine/inputmod/Scales.h>
 
 namespace acidulous::effect {
 

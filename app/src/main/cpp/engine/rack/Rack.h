@@ -6,11 +6,11 @@
 #include <engine/core/Params.h>
 #include <engine/core/Settings.h>
 #include <engine/effect/Effect.h>
-#include <engine/eventor/Eventor.h>
+#include <engine/inputmod/InputMod.h>
 #include <engine/machine/Machine.h>
 #include <sequencer/ClipPlayer.h>
 
-// One rack: clip player -> eventors -> machine -> effects -> channel strip.
+// One rack: clip player -> modifiers -> machine -> effects -> channel strip.
 // Renders one block into bufL/bufR. Audio thread only, apart from swap*()
 // being called from the audio thread by the Engine when a Mount arrives.
 namespace acidulous {
@@ -40,16 +40,45 @@ class Rack {
     bool isActive() const { return machine != nullptr; }
     Machine *currentMachine() const { return machine; }
     Effect *currentEffect(int32_t slot) const { return (slot >= 0 && slot < kEffectSlots) ? effects[slot] : nullptr; }
-    Eventor *currentEventor(int32_t slot) const { return (slot >= 0 && slot < kEventorSlots) ? eventors[slot] : nullptr; }
+    InputMod *currentInputMod(int32_t slot) const { return (slot >= 0 && slot < kInputModSlots) ? modifiers[slot] : nullptr; }
 
-    // Live or sequenced MIDI enters here and runs the eventor chain.
+    /**
+     * Where a note that has been through the modifiers goes to be written down.
+     *
+     * The engine implements it. A modifier turns what somebody played into
+     * what is heard, and what is heard is what the clip keeps - so the tap
+     * for recording is here, at the end of the chain, rather than on the raw
+     * message as it arrives.
+     */
+    struct ModifiedNoteSink {
+        virtual ~ModifiedNoteSink() = default;
+        virtual void onModifiedNote(int32_t rack, uint8_t status, uint8_t d1, uint8_t d2) = 0;
+    };
+    void setModifiedNoteSink(ModifiedNoteSink *sink) { modifiedSink = sink; }
+
+    /**
+     * Live MIDI - a finger, a controller - enters here and runs the modifier
+     * chain. Whatever comes out the far end is played and, while recording,
+     * written down.
+     */
     void handleMidi(uint8_t status, uint8_t d1, uint8_t d2);
+
+    /**
+     * A note from a clip: straight to the machine, past the modifiers.
+     *
+     * **The modifiers are not in the playback path at all.** They act on the
+     * way in, once, and what they produced is in the clip; running the clip
+     * back through them would apply them a second time - an arpeggio of an
+     * arpeggio, a chord of a chord. It is also why a clip now plays exactly
+     * what the roll shows, which is the whole point of the change.
+     */
+    void playSequenced(uint8_t status, uint8_t d1, uint8_t d2);
     void allNotesOff();
 
     /**
      * Expression belonging to one note, straight to the machine.
      *
-     * Straight, and not through the eventor chain, on purpose: an
+     * Straight, and not through the modifier chain, on purpose: an
      * arpeggiator turns one note into a run of others and there is no
      * honest answer to which of them a finger's pressure belongs to. The
      * note is transformed; the expression follows the note that was played.
@@ -98,7 +127,7 @@ class Rack {
     // Return the displaced object for the caller to retire.
     Machine *swapMachine(Machine *next);
     Effect *swapEffect(int32_t slot, Effect *next);
-    Eventor *swapEventor(int32_t slot, Eventor *next);
+    InputMod *swapInputMod(int32_t slot, InputMod *next);
 
     void setParam(Unit unit, int32_t index, float v01);
 
@@ -155,7 +184,7 @@ class Rack {
   private:
     struct Sink final : MidiSink {
         Rack *rack = nullptr;
-        int32_t stage = 0; // which eventor slot output this is
+        int32_t stage = 0; // which modifier slot output this is
         void send(uint8_t status, uint8_t d1, uint8_t d2) override;
     };
 
@@ -167,8 +196,10 @@ class Rack {
 
     void deliver(int32_t fromStage, uint8_t status, uint8_t d1, uint8_t d2);
     // Everything bound for the machine goes through here, so the voice limit
-    // has one place to stand and eventor-generated notes are counted too.
-    void toMachine(uint8_t status, uint8_t d1, uint8_t d2);
+    // has one place to stand and modifier-generated notes are counted too.
+    /** [live] says it came through the modifier chain, and so may be recorded. */
+    void toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live);
+    ModifiedNoteSink *modifiedSink = nullptr;
     void forgetHeld(uint8_t note);
 
     // Held notes, oldest first. Room for more than the largest limit on
@@ -183,8 +214,8 @@ class Rack {
 
     Machine *machine = nullptr;
     Effect *effects[kEffectSlots]{};
-    Eventor *eventors[kEventorSlots]{};
-    Sink sinks[kEventorSlots + 1];
+    InputMod *modifiers[kInputModSlots]{};
+    Sink sinks[kInputModSlots + 1];
 
     ParamSet channel;
     bool stereo = false;

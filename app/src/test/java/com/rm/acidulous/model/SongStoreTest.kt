@@ -165,43 +165,43 @@ class SongStoreTest {
     }
 
     @Test
-    fun eventorsRoundTrip() {
+    fun modifiersRoundTrip() {
         // In their home slots already - chord 0, scale 1, arp 2 - so loading
         // gives back exactly what was saved.
         val song = DemoSong.build()
         val withEv = song.copy(tracks = song.tracks.mapIndexed { i, t ->
             if (i == 0) {
-                t.withEventor(1, "Scale").withEventorParam(1, "scale", 0.5f)
-                    .withEventor(2, "Arp").withEventorBypass(2, true)
+                t.withModifier(1, "Scale").withModifierParam(1, "scale", 0.5f)
+                    .withModifier(2, "Arp").withModifierBypass(2, true)
             } else {
                 t
             }
         })
         val back = SongStore.decode(SongStore.encode(withEv))
         assertEquals(withEv, back)
-        assertEquals("Arp", back.tracks[0].eventorAt(2).type)
-        assertTrue(back.tracks[0].eventorAt(2).bypass)
-        assertEquals(0.5f, back.tracks[0].eventorAt(1).params["scale"])
+        assertEquals("Arp", back.tracks[0].modifierAt(2).type)
+        assertTrue(back.tracks[0].modifierAt(2).bypass)
+        assertEquals(0.5f, back.tracks[0].modifierAt(1).params["scale"])
         assertTrue(back.tracks[0].effects.isEmpty()) // the other kind untouched
-        assertEquals("eventor2", eventorUnit(1))
-        assertEquals(1, eventorSlotOf("eventor2"))
+        assertEquals("mod2", modifierUnit(1))
+        assertEquals(1, modifierSlotOf("mod2"))
     }
 
     @Test
-    fun oldSongsHaveTheirEventorsMovedHome() {
-        // Before M34 an eventor went wherever there was room, because only
+    fun oldSongsHaveTheirModifiersMovedHome() {
+        // Before M34 an modifier went wherever there was room, because only
         // two of the three could run at once. Each has its own chip and its
         // own slot now, so a song written earlier is migrated as it loads -
         // otherwise the chord chip reads the scale's slot as empty and the
         // first tap quietly replaces it.
         val song = DemoSong.build()
         val old = song.copy(tracks = song.tracks.mapIndexed { i, t ->
-            if (i == 0) t.withEventor(0, "Scale").withEventor(1, "Arp") else t
+            if (i == 0) t.withModifier(0, "Scale").withModifier(1, "Arp") else t
         })
         val back = SongStore.decode(SongStore.encode(old))
-        assertEquals("", back.tracks[0].eventorAt(0).type) // the chord's, left free
-        assertEquals("Scale", back.tracks[0].eventorAt(1).type)
-        assertEquals("Arp", back.tracks[0].eventorAt(2).type)
+        assertEquals("", back.tracks[0].modifierAt(0).type) // the chord's, left free
+        assertEquals("Scale", back.tracks[0].modifierAt(1).type)
+        assertEquals("Arp", back.tracks[0].modifierAt(2).type)
     }
 
 }

@@ -15,6 +15,6 @@ LIB=$("$ROOT/tools/host_engine.sh") || exit 1
 g++ -O1 -g -std=c++17 -fno-omit-frame-pointer \
     -I "$CPP" "$ROOT/tools/inputfx_test.cpp" \
     "$CPP/engine/rack/Engine.cpp" "$CPP/engine/rack/Rack.cpp" "$CPP/engine/rack/MasterBus.cpp" \
-    "$CPP/engine/core/Capture.cpp" "$CPP"/engine/eventor/*.cpp \
+    "$CPP/engine/core/Capture.cpp" "$CPP"/engine/inputmod/*.cpp \
     "$LIB" -o "$DIR/inputfx_test" || exit 1
 TMPDIR="$DIR" "$DIR/inputfx_test"

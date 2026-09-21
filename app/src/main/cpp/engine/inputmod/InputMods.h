@@ -1,12 +1,12 @@
 #pragma once
 #include <cstdint>
-#include <engine/eventor/Eventor.h>
-#include <engine/eventor/Scales.h>
+#include <engine/inputmod/InputMod.h>
+#include <engine/inputmod/Scales.h>
 
-// The play-page features as eventors: Scale, Chord, Arp.
-namespace acidulous::eventor {
+// The play-page features as modifiers: Scale, Chord, Arp.
+namespace acidulous::modifier {
 
-#define ACIDULOUS_EVENTOR_COMMON(Name)                                                  \
+#define ACIDULOUS_INPUTMOD_COMMON(Name)                                                  \
     const char *typeName() const override { return #Name; }                            \
     const ParamDef *paramDefs(int32_t &count) const override;                           \
     void reset() override;                                                              \
@@ -30,22 +30,22 @@ struct OutputNotes {
     }
 };
 
-class Scale final : public Eventor {
+class Scale final : public InputMod {
   public:
     enum P { Key, ScaleType, Mode, Snap, Transpose, Octave, Count };
     Scale() { initParams(); }
-    ACIDULOUS_EVENTOR_COMMON(Scale)
+    ACIDULOUS_INPUTMOD_COMMON(Scale)
   private:
     int map(int note) const;
     int16_t outOf[128]; // output pitch per sounding input, -1 when silent
     OutputNotes outs;
 };
 
-class Chord final : public Eventor {
+class Chord final : public InputMod {
   public:
     enum P { Mode, Type, Key, ScaleType, Voicing, Inversion, Spread, Bass, Strum, StrumDir, VelSpread, Count };
     Chord() { initParams(); }
-    ACIDULOUS_EVENTOR_COMMON(Chord)
+    ACIDULOUS_INPUTMOD_COMMON(Chord)
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm, MidiSink &out) override;
   private:
     static constexpr int kMaxTones = 8, kPending = 32;
@@ -59,7 +59,7 @@ class Chord final : public Eventor {
     float bpm = 120.0f;
 };
 
-class Arp final : public Eventor {
+class Arp final : public InputMod {
   public:
     enum P {
         Rate, Gate, Swing, Mode, Octaves, OctMode, Length,
@@ -67,7 +67,7 @@ class Arp final : public Eventor {
         Ratchet, RatchetChance, Chance, VelMode, Accent, Latch, Shift, Cycles, Sync, Humanise, Count
     };
     Arp() { initParams(); }
-    ACIDULOUS_EVENTOR_COMMON(Arp)
+    ACIDULOUS_INPUTMOD_COMMON(Arp)
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm, MidiSink &out) override;
   private:
     static constexpr int kMaxHeld = 16, kMaxSeq = 64, kPending = 64;
@@ -94,6 +94,6 @@ class Arp final : public Eventor {
     int nextIndex();
 };
 
-#undef ACIDULOUS_EVENTOR_COMMON
+#undef ACIDULOUS_INPUTMOD_COMMON
 
-} // namespace acidulous::eventor
+} // namespace acidulous::modifier

@@ -37,7 +37,7 @@ import com.rm.acidulous.engine.NativeEngine
  * most Android apps make you run a separate bridge app. There is no need.
  *
  * Everything that arrives is re-addressed to a rack and pushed through the
- * same engine entry the on-screen keyboard uses, so recording, eventors and
+ * same engine entry the on-screen keyboard uses, so recording, modifiers and
  * the machine's own handling all behave identically whichever you play.
  */
 object MidiHub {

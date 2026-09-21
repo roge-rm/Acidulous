@@ -12,9 +12,9 @@ import com.rm.acidulous.model.Scales
 import com.rm.acidulous.model.Signature
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongStore
-import com.rm.acidulous.model.withEventor
-import com.rm.acidulous.model.withEventorBypass
-import com.rm.acidulous.model.withEventorParam
+import com.rm.acidulous.model.withModifier
+import com.rm.acidulous.model.withModifierBypass
+import com.rm.acidulous.model.withModifierParam
 import com.rm.acidulous.ui.theme.ThemeMode
 
 /**
@@ -82,7 +82,7 @@ object UiPrefs {
      * One flag for both orientations, unlike the two lanes above. Those are
      * folded sideways because the screen is short, which is a fact about the
      * shape; this is "I am editing rather than playing", which is not. The
-     * performance row stays either way - the scale, the eventors, the octave
+     * performance row stays either way - the scale, the modifiers, the octave
      * and the mark that brings the instrument back all live in it.
      */
     var keysFolded by mutableStateOf(false)
@@ -704,9 +704,9 @@ object UiPrefs {
     // --- What a new song and a new track start as ------------------------
 
     /**
-     * Fit [index]'s track with a Scale eventor set to the default scale, so
+     * Fit [index]'s track with a Scale modifier set to the default scale, so
      * a new track agrees with the song from its first note. Does nothing
-     * when no default is set - an unasked-for eventor in slot 1 would be a
+     * when no default is set - an unasked-for modifier in slot 1 would be a
      * surprise, not a convenience.
      */
     fun Song.withDefaultScale(index: Int): Song {
@@ -719,11 +719,11 @@ object UiPrefs {
         val track = tracks.getOrNull(index) ?: return this
         val root = songKey?.root ?: newScaleKey
         val scale = songKey?.scale ?: newScaleIndex
-        val fitted = track.withEventor(0, "Scale")
-            .withEventorParam(0, "key", root / 11f)
-            .withEventorParam(0, "scale", scale / (Scales.names.size - 1f))
-            .withEventorParam(0, "mode", 0f)
-            .withEventorBypass(0, false)
+        val fitted = track.withModifier(0, "Scale")
+            .withModifierParam(0, "key", root / 11f)
+            .withModifierParam(0, "scale", scale / (Scales.names.size - 1f))
+            .withModifierParam(0, "mode", 0f)
+            .withModifierBypass(0, false)
         return copy(tracks = tracks.toMutableList().also { it[index] = fitted })
     }
 

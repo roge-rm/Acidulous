@@ -21,7 +21,7 @@
 #include <engine/format/WavWriter.h>
 #include <engine/core/Reel.h>
 #include <engine/effect/EffectRegistry.h>
-#include <engine/eventor/EventorRegistry.h>
+#include <engine/inputmod/InputModRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/format/Sf2Reader.h>
 #include <engine/core/Slices.h>
@@ -54,9 +54,9 @@ LinkTimebase sLink;
 Unit unitFromName(const std::string &u) {
     if (u == "effect1") return Unit::Effect1;
     if (u == "effect2") return Unit::Effect2;
-    if (u == "eventor1") return Unit::Eventor1;
-    if (u == "eventor2") return Unit::Eventor2;
-    if (u == "eventor3") return Unit::Eventor3;
+    if (u == "mod1") return Unit::Mod1;
+    if (u == "mod2") return Unit::Mod2;
+    if (u == "mod3") return Unit::Mod3;
     if (u == "channel") return Unit::Channel;
     if (u == "master") return Unit::Master;
     if (u == "send1") return Unit::Send1;
@@ -100,7 +100,7 @@ void EngineHost::stop() {
     sEngine.stop();
     for (auto &t : mountedType) t.clear();
     for (auto &r : mountedEffectType) for (auto &t : r) t.clear();
-    for (auto &r : mountedEventorType) for (auto &t : r) t.clear();
+    for (auto &r : mountedModifierType) for (auto &t : r) t.clear();
     LOGI("engine stopped");
 }
 
@@ -223,25 +223,25 @@ bool EngineHost::mountEffect(int rack, int slot, const std::string &typeName) {
     return true;
 }
 
-bool EngineHost::mountEventor(int rack, int slot, const std::string &typeName) {
-    if (rack < 0 || rack >= kRackCount || slot < 0 || slot >= kEventorSlots) return false;
-    Eventor *ev = nullptr;
+bool EngineHost::mountInputMod(int rack, int slot, const std::string &typeName) {
+    if (rack < 0 || rack >= kRackCount || slot < 0 || slot >= kInputModSlots) return false;
+    InputMod *ev = nullptr;
     if (!typeName.empty()) {
-        ev = EventorRegistry::create(typeName.c_str());
+        ev = InputModRegistry::create(typeName.c_str());
         if (ev == nullptr) {
-            LOGE("unknown eventor '%s'", typeName.c_str());
+            LOGE("unknown modifier '%s'", typeName.c_str());
             return false;
         }
         ev->reset();
     }
     Mount m;
-    m.kind = Mount::Kind::Eventor;
+    m.kind = Mount::Kind::InputMod;
     m.rack = rack;
     m.slot = slot;
     m.object = ev;
-    if (!mountWithRetry(m, deleteAs<Eventor>)) return false;
-    mountedEventorType[rack][slot] = typeName;
-    LOGI("queued eventor '%s' for rack %d slot %d", typeName.c_str(), rack, slot);
+    if (!mountWithRetry(m, deleteAs<InputMod>)) return false;
+    mountedModifierType[rack][slot] = typeName;
+    LOGI("queued modifier '%s' for rack %d slot %d", typeName.c_str(), rack, slot);
     return true;
 }
 
@@ -833,10 +833,10 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
         return -1;
     }
-    if (u == Unit::Eventor1 || u == Unit::Eventor2 || u == Unit::Eventor3) {
-        if (name == "bypass") return kEventorBypassIndex;
+    if (u == Unit::Mod1 || u == Unit::Mod2 || u == Unit::Mod3) {
+        if (name == "bypass") return kInputModBypassIndex;
         int32_t n = 0;
-        const ParamDef *defs = EventorRegistry::paramDefs(machineType.c_str(), n); // the eventor's type here
+        const ParamDef *defs = InputModRegistry::paramDefs(machineType.c_str(), n); // the modifier's type here
         for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
         return -1;
     }
@@ -870,8 +870,8 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         index = paramIndex(mountedInputType[u == Unit::Input1 ? 0 : 1], unit, name);
     } else if (u == Unit::Effect1 || u == Unit::Effect2) {
         index = paramIndex(mountedEffectType[rack][u == Unit::Effect1 ? 0 : 1], unit, name);
-    } else if (u == Unit::Eventor1 || u == Unit::Eventor2 || u == Unit::Eventor3) {
-        index = paramIndex(mountedEventorType[rack][u == Unit::Eventor1 ? 0 : 1], unit, name);
+    } else if (u == Unit::Mod1 || u == Unit::Mod2 || u == Unit::Mod3) {
+        index = paramIndex(mountedModifierType[rack][u == Unit::Mod1 ? 0 : 1], unit, name);
     }
     if (index == -1) return false;
     ParamMessage p;
@@ -1741,7 +1741,7 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     // This resets by hand rather than through the panic flag, so everything a
     // panic would have rewound has to be named here - and two things were
     // missing. The clip player carries a pass count and, in a free-rolling
-    // clip, the dice; and the eventors carry a step, which is exactly the
+    // clip, the dice; and the modifiers carry a step, which is exactly the
     // fault Engine::renderBlock records for song renders. Without them a
     // freeze captures whatever the track happened to be part way through.
     Rack &r = sEngine.racks[rack];
@@ -1751,8 +1751,8 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     for (int32_t sl = 0; sl < kEffectSlots; ++sl) {
         if (r.currentEffect(sl) != nullptr) r.currentEffect(sl)->reset();
     }
-    for (int32_t sl = 0; sl < kEventorSlots; ++sl) {
-        if (r.currentEventor(sl) != nullptr) r.currentEventor(sl)->reset();
+    for (int32_t sl = 0; sl < kInputModSlots; ++sl) {
+        if (r.currentInputMod(sl) != nullptr) r.currentInputMod(sl)->reset();
     }
 
     std::vector<float> left(static_cast<size_t>(clipFrames + tailFrames), 0.0f);
@@ -1951,14 +1951,14 @@ float EngineHost::paramNormalized(int rack, const std::string &unit, const std::
     if (rack < 0 || rack >= kRackCount) return -1.0f;
     const Unit u = unitFromName(unit);
     const bool isFx = u == Unit::Effect1 || u == Unit::Effect2;
-    const bool isEv = u == Unit::Eventor1 || u == Unit::Eventor2 || u == Unit::Eventor3;
-    const int slot = (u == Unit::Effect1 || u == Unit::Eventor1) ? 0 : 1;
-    const int index = paramIndex(isFx ? mountedEffectType[rack][slot] : (isEv ? mountedEventorType[rack][slot] : mountedType[rack]), unit, name);
+    const bool isEv = u == Unit::Mod1 || u == Unit::Mod2 || u == Unit::Mod3;
+    const int slot = (u == Unit::Effect1 || u == Unit::Mod1) ? 0 : 1;
+    const int index = paramIndex(isFx ? mountedEffectType[rack][slot] : (isEv ? mountedModifierType[rack][slot] : mountedType[rack]), unit, name);
     if (index == -1) return -1.0f;
     if (isEv) {
-        Eventor *ev = sEngine.racks[rack].currentEventor(slot);
+        InputMod *ev = sEngine.racks[rack].currentInputMod(slot);
         if (ev == nullptr) return -1.0f;
-        return index == kEventorBypassIndex ? (ev->bypassed() ? 1.0f : 0.0f) : ev->params().normalized(index);
+        return index == kInputModBypassIndex ? (ev->bypassed() ? 1.0f : 0.0f) : ev->params().normalized(index);
     }
     if (isFx) {
         Effect *fx = sEngine.racks[rack].currentEffect(slot);

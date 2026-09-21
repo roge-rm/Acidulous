@@ -23,9 +23,9 @@ machine/    Machine interface · MachineRegistry, then one directory each:
 effect/     Effect interface (onBlock for tempo, run() with bypass) · EffectRegistry ·
             Delay Reverb Eq Distortion Compressor Filter Bitcrusher Phaser Flanger
             Chorus Tremolo Width Shifter Harmonizer
-eventor/    Eventor interface + MidiSink · EventorRegistry · Scales.h (33 scales,
-            25 chords) · Eventors: Scale Chord Arp
-rack/       Rack (clip player -> eventors -> machine -> effects -> channel strip) ·
+modifier/    InputMod interface + MidiSink · InputModRegistry · Scales.h (33 scales,
+            25 chords) · InputMods: Scale Chord Arp
+rack/       Rack (clip player -> modifiers -> machine -> effects -> channel strip) ·
             MasterBus (sum, peak, sends, limiter) · Engine (the render loop)
 ../sequencer/  TickClock · Transport · Clip · ClipPlayer · Song · SceneScheduler ·
                Launcher · RecordQueue · ClockFollower · LinkFollower

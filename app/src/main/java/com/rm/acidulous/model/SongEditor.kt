@@ -69,11 +69,11 @@ class SongEditor(
             return
         }
         val before = song.tracks.getOrNull(trackIndex) ?: return
-        val slot = effectSlotOf(unit) ?: eventorSlotOf(unit)
+        val slot = effectSlotOf(unit) ?: modifierSlotOf(unit)
         val after = when {
             unit == "machine" -> before.withParam(name, v01)
             unit.startsWith("effect") && slot != null -> before.withEffectParam(slot, name, v01)
-            unit.startsWith("eventor") && slot != null -> before.withEventorParam(slot, name, v01)
+            unit.startsWith("mod") && slot != null -> before.withModifierParam(slot, name, v01)
             unit == "channel" -> before.withMixerParam(name, v01)
             else -> before
         }

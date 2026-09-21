@@ -47,11 +47,11 @@ import com.rm.acidulous.model.MachineKind
 import com.rm.acidulous.model.audioLaneCount
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Scales
-import com.rm.acidulous.model.EVENTOR_SLOTS
-import com.rm.acidulous.model.eventorUnit
-import com.rm.acidulous.model.withEventor
-import com.rm.acidulous.model.withEventorBypass
-import com.rm.acidulous.model.withEventorParam
+import com.rm.acidulous.model.MODIFIER_SLOTS
+import com.rm.acidulous.model.modifierUnit
+import com.rm.acidulous.model.withModifier
+import com.rm.acidulous.model.withModifierBypass
+import com.rm.acidulous.model.withModifierParam
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -75,7 +75,7 @@ import com.rm.acidulous.ui.theme.AcidColors
  * The edit screen, phone-sized: header, piano roll, footer, and the
  * machine panel under the roll.
  */
-// One slot per eventor, in the order the notes travel through them.
+// One slot per modifier, in the order the notes travel through them.
 private const val EV_CHORD = 0
 private const val EV_SCALE = 1
 private const val EV_ARP = 2
@@ -141,11 +141,11 @@ fun EditScreen(
     // was. Nothing below has to learn that drums are a special case.
     val hasSteps = track.machine.type == "Reflux"
     var laneKey by remember { mutableStateOf<String?>(null) }
-    val slotTypes = track.effects.map { it.type } + track.eventors.map { it.type }
+    val slotTypes = track.effects.map { it.type } + track.modifiers.map { it.type }
     val laneKeys = remember(track.machine.type, slotTypes) { automationKeysFor(track) }
     var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 the mixer - in the same space
-    // Which eventor the chips have opened, if any.
-    var eventorSlot by remember { mutableStateOf(-1) }
+    // Which modifier the chips have opened, if any.
+    var modifierSlot by remember { mutableStateOf(-1) }
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var scaleDialog by remember { mutableStateOf(false) }
     // Folding the strip is a preference, not a property of this clip, so it
@@ -186,8 +186,8 @@ fun EditScreen(
     var zoomTicks by rememberSaveable(trackIndex) { mutableStateOf(0f) }
     var scrollTick by rememberSaveable(trackIndex, sceneId) { mutableStateOf(0f) }
 
-    // The scale lives in a Scale eventor; the chip and its dialog are only a
-    // shortcut to the one eventor worth reaching while playing.
+    // The scale lives in a Scale modifier; the chip and its dialog are only a
+    // shortcut to the one modifier worth reaching while playing.
     // One slot each, fixed, left to right as the chips are: chord builds the
     // notes, scale corrects them, arp sequences what comes out. Before this
     // the scale took whichever slot was free, which was fine while two of
@@ -195,7 +195,7 @@ fun EditScreen(
     fun scaleSlot(): Int = EV_SCALE
 
     fun currentScale(): ScaleSetting {
-        val ev = track.eventorAt(scaleSlot())
+        val ev = track.modifierAt(scaleSlot())
         return ScaleSetting(
             on = ev.type == "Scale" && !ev.bypass,
             key = Math.round((ev.params["key"] ?: 0f) * 11f),
@@ -208,12 +208,12 @@ fun EditScreen(
     fun applyScale(s: ScaleSetting) {
         val slot = scaleSlot()
         editor.edit(trackIndex) { t ->
-            (if (t.eventorAt(slot).type == "Scale") t else t.withEventor(slot, "Scale"))
-                .withEventorParam(slot, "key", s.key / 11f)
-                .withEventorParam(slot, "scale", s.scale / 32f)
-                .withEventorParam(slot, "mode", if (s.degree) 1f else 0f)
-                .withEventorParam(slot, "snap", s.snap / 2f)
-                .withEventorBypass(slot, !s.on)
+            (if (t.modifierAt(slot).type == "Scale") t else t.withModifier(slot, "Scale"))
+                .withModifierParam(slot, "key", s.key / 11f)
+                .withModifierParam(slot, "scale", s.scale / 32f)
+                .withModifierParam(slot, "mode", if (s.degree) 1f else 0f)
+                .withModifierParam(slot, "snap", s.snap / 2f)
+                .withModifierBypass(slot, !s.on)
         }
     }
     var lowestPitch by remember {
@@ -833,7 +833,7 @@ fun EditScreen(
         // **A tape has no instrument, so it is given none.** Not a folded
         // keyboard, not an empty strip: the lanes take the whole screen, which
         // is the point of having an editor of their own. Everything the
-        // performance row carries - the wheels, the octave, the three eventor
+        // performance row carries - the wheels, the octave, the three modifier
         // chips - belongs to notes, and there are no notes here.
         if (kind == MachineKind.Audio) Unit
         else if (kind == MachineKind.Drums) Column(Modifier.fillMaxWidth().height(height)) {
@@ -918,16 +918,16 @@ fun EditScreen(
                         modifier = Modifier.widthIn(max = PressureW).fillMaxHeight(),
                     ) { v -> pressure = v; NativeEngine.channelPressure(trackIndex, (v * 127f).toInt()) }
                 }
-                // The eventors sit either side of the scale chip because
+                // The modifiers sit either side of the scale chip because
                 // they do the same job: they are what happens to a note
                 // between playing it and hearing it. A tap says whether one
                 // is running; holding opens it. They used to be a button at
                 // the foot of the screen that swapped the whole lower pane,
                 // which is a long way to go to find out if the arp is on.
-                EventorChip(
+                ModifierChip(
                     "Chord", EV_CHORD, track, trackIndex, editor,
                     icon = if (icons) "\u2261" else null,
-                ) { eventorSlot = EV_CHORD }
+                ) { modifierSlot = EV_CHORD }
                 ScaleChip(
                     label = Scales.labelFor(track),
                     onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
@@ -936,14 +936,14 @@ fun EditScreen(
                     // A fixed width, not a minimum: the label goes from
                     // "scale" to "C Ionian (Major)" and back, and a chip
                     // that grew by half its width each time would shove the
-                    // two eventor chips sideways every time it was touched.
+                    // two modifier chips sideways every time it was touched.
                     modifier = Modifier.width(if (icons) PerfIconW else 112.dp).fillMaxHeight(),
                     icon = if (icons) "\u266F" else null,
                 )
-                EventorChip(
+                ModifierChip(
                     "Arp", EV_ARP, track, trackIndex, editor,
                     icon = if (icons) "\u266B" else null,
-                ) { eventorSlot = EV_ARP }
+                ) { modifierSlot = EV_ARP }
                 // **Stated, not shared.** The wheel at the other end is the
                 // elastic one: it has a cap and reads as a wheel at any width
                 // over a finger, where the stepper is three things in a row
@@ -1163,11 +1163,11 @@ fun EditScreen(
         }
     }
 
-    if (eventorSlot >= 0) {
+    if (modifierSlot >= 0) {
         SlotDialog(
-            SlotKind.Eventors, track, trackIndex, eventorSlot, editor,
-            fixedType = if (eventorSlot == EV_CHORD) "Chord" else "Arp",
-        ) { eventorSlot = -1 }
+            SlotKind.Modifiers, track, trackIndex, modifierSlot, editor,
+            fixedType = if (modifierSlot == EV_CHORD) "Chord" else "Arp",
+        ) { modifierSlot = -1 }
     }
 
     if (scaleDialog) {
@@ -1278,7 +1278,7 @@ private val PadsGrip = 18.dp
  * What is left of the bottom when the instrument is folded away.
  *
  * Its own control row and nothing else: for the keyboard the performance
- * strip - the wheel, the eventors, the scale, the octave and the mark that
+ * strip - the wheel, the modifiers, the scale, the octave and the mark that
  * brings it back - which is six dp of top padding and a twenty-six dp row;
  * for the pads the strip above them, which is all they have. The roll takes
  * everything else, which is the point of folding it.
@@ -1421,21 +1421,21 @@ private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
 }
 
 /**
- * One eventor, as a chip that knows what it is.
+ * One modifier, as a chip that knows what it is.
  *
- * There are three eventors and three controls, so nothing is ever chosen
+ * There are three modifiers and three controls, so nothing is ever chosen
  * from a list: chord on the left, scale in the middle, arp on the right,
  * each pinned to its own slot. A tap switches it on or off, a long press
  * opens it - the grammar the scale chip between them already uses.
  *
- * Switching is a *parameter*: bypass is a pseudo-parameter on the eventor
+ * Switching is a *parameter*: bypass is a pseudo-parameter on the modifier
  * unit, so a tap saves, undoes and automates like anything else, and the
- * flag goes straight to the running eventor as well as into the document.
+ * flag goes straight to the running modifier as well as into the document.
  * Note the inversion - the field is `bypass`, so lit means `bypass == false`.
  * An empty slot is filled on the first tap rather than asking.
  */
 @Composable
-private fun EventorChip(
+private fun ModifierChip(
     type: String,
     slot: Int,
     track: Track,
@@ -1445,7 +1445,7 @@ private fun EventorChip(
     icon: String? = null,
     onOpen: () -> Unit,
 ) {
-    val ev = track.eventorAt(slot)
+    val ev = track.modifierAt(slot)
     val loaded = ev.type == type
     SlotChip(
         text = icon ?: type.lowercase(),
@@ -1454,12 +1454,12 @@ private fun EventorChip(
             if (!loaded) {
                 // Nothing there yet: the first tap is what puts it there,
                 // switched on, because that is plainly what was meant.
-                editor.edit(trackIndex) { t -> t.withEventor(slot, type).withEventorBypass(slot, false) }
-                NativeEngine.setParam(trackIndex, eventorUnit(slot), "bypass", 0f, record = true)
+                editor.edit(trackIndex) { t -> t.withModifier(slot, type).withModifierBypass(slot, false) }
+                NativeEngine.setParam(trackIndex, modifierUnit(slot), "bypass", 0f, record = true)
             } else {
                 val bypass = !ev.bypass
-                editor.edit(trackIndex) { t -> t.withEventorBypass(slot, bypass) }
-                NativeEngine.setParam(trackIndex, eventorUnit(slot), "bypass", if (bypass) 1f else 0f, record = true)
+                editor.edit(trackIndex) { t -> t.withModifierBypass(slot, bypass) }
+                NativeEngine.setParam(trackIndex, modifierUnit(slot), "bypass", if (bypass) 1f else 0f, record = true)
             }
         },
         onOpen = {
@@ -1467,7 +1467,7 @@ private fun EventorChip(
             // empty slot too - bypassed, because holding is "let me look",
             // not "turn it on".
             if (!loaded) {
-                editor.edit(trackIndex) { t -> t.withEventor(slot, type).withEventorBypass(slot, true) }
+                editor.edit(trackIndex) { t -> t.withModifier(slot, type).withModifierBypass(slot, true) }
             }
             onOpen()
         },

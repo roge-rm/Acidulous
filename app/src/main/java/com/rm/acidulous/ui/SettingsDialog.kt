@@ -178,7 +178,7 @@ private fun NewSongSection() {
             onDismiss = { pickingMachine = false },
         ) { type -> UiPrefs.chooseNewMachine(type); pickingMachine = false }
     }
-    // The scale a new track starts in: a Scale eventor is fitted to it, so
+    // The scale a new track starts in: a Scale modifier is fitted to it, so
     // the keyboard and the roll agree with the song from the first note.
     var picking by remember { mutableStateOf(false) }
     Section(

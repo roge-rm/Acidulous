@@ -31,7 +31,7 @@
 # Stepped parameters are written as `#n`:
 #   window    #0 Hann  #1 Tukey  #2 percussive  #3 reversed
 #   scatter   #0 free  #1 octaves  #2 fifths  #3 triad  #4 in scale
-#   scale     #1 Dorian (the list the eventors use); key #0 is C
+#   scale     #1 Dorian (the list the modifiers use); key #0 is C
 #   source    #0 the mounted file  #1 the live ring
 #   filtertype #0 LP6 #1 LP12 #2 LP18 #3 LP24  #4 HP6 ... #7 HP24
 #              #8 BP6 #9 BP12 #10 notch #11 peak

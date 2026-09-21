@@ -10,7 +10,7 @@
 #include <engine/dsp/MultiFilter.h>
 #include <engine/dsp/Osc.h>
 #include <engine/dsp/Wavetable.h>
-#include <engine/eventor/Scales.h>
+#include <engine/inputmod/Scales.h>
 #include <engine/machine/filament/Waveguide.h>
 #include <engine/machine/manual/Rotary.h>
 #include <engine/machine/manual/Wheels.h>

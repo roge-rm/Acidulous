@@ -8,7 +8,7 @@ package com.rm.acidulous.model
  * the person choosing one. The machine panels already spell their own
  * parameters out, so [PANEL_LABELS] carries that wording (generated from the
  * panels by tools/gen_param_labels.py); everything else - the effects and
- * eventors, which are drawn from the registry without a hand-made face, and
+ * modifiers, which are drawn from the registry without a hand-made face, and
  * any parameter no panel shows - goes through [humanise], which expands the
  * abbreviations the engine uses.
  *
@@ -58,7 +58,7 @@ fun laneUnitLabel(track: Track, key: String): String = when (val unit = laneUnit
         val slot = unit.takeLast(1).toIntOrNull()?.minus(1) ?: 0
         when {
             unit.startsWith("effect") -> (track.effectAt(slot).type.ifEmpty { "effect" }) + " fx${slot + 1}"
-            unit.startsWith("eventor") -> (track.eventorAt(slot).type.ifEmpty { "eventor" }) + " ev${slot + 1}"
+            unit.startsWith("mod") -> (track.modifierAt(slot).type.ifEmpty { "modifier" }) + " mod${slot + 1}"
             else -> unit
         }
     }

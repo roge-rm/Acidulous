@@ -38,7 +38,7 @@ const val ENGINE_RATE = 48000
  * The key and scale a song is in.
  *
  * [root] is a pitch class, 0 being C. [scale] indexes `Scales.names`, which
- * is the same order the Scale eventor uses, so the two can be handed to each
+ * is the same order the Scale modifier uses, so the two can be handed to each
  * other without a translation table.
  */
 @Serializable
@@ -354,7 +354,7 @@ data class Machine(
 )
 
 /**
- * One of a track's slots - an insert effect after the machine, or an eventor
+ * One of a track's slots - an insert effect after the machine, or an modifier
  * (Scale, Chord, Arp) ahead of it. An empty [type] is an empty slot. Params are
  * normalised 0..1 like a machine's; [bypass] keeps the unit and its state but
  * takes it out of the path.
@@ -384,9 +384,9 @@ const val SEND_SLOTS = 2
  * goes here; an amp you want to keep deciding about goes on the track.
  */
 const val INPUT_SLOTS = 2
-/** One per eventor - chord, scale, arp - because the keyboard strip gives
+/** One per modifier - chord, scale, arp - because the keyboard strip gives
  *  each of them a control and all three must be able to run together. */
-const val EVENTOR_SLOTS = 3
+const val MODIFIER_SLOTS = 3
 
 /** A track's channel strip. Units are musical (gain 0..1.5, pan -1..1, sends 0..1). */
 @Serializable
@@ -430,11 +430,11 @@ data class Track(
     val mixer: Mixer = Mixer(),
     /** Insert effects, in signal order after the machine. Always [EFFECT_SLOTS] long when read through [effectAt]. */
     val effects: List<UnitSlot> = emptyList(),
-    /** Eventors, in order ahead of the machine: notes pass eventor 1 then 2. */
-    val eventors: List<UnitSlot> = emptyList(),
+    /** Modifiers, in order ahead of the machine: notes pass modifier 1, then 2, then 3. */
+    val modifiers: List<UnitSlot> = emptyList(),
 ) {
     fun effectAt(slot: Int): UnitSlot = effects.getOrNull(slot) ?: UnitSlot()
-    fun eventorAt(slot: Int): UnitSlot = eventors.getOrNull(slot) ?: UnitSlot()
+    fun modifierAt(slot: Int): UnitSlot = modifiers.getOrNull(slot) ?: UnitSlot()
 }
 
 /**
@@ -540,9 +540,9 @@ data class Song(
      *
      * A fact about the song rather than an instruction to it: the roll shades
      * the rows that are not in it and a new track is fitted with a matching
-     * Scale eventor, but nothing already written is moved and no track is
+     * Scale modifier, but nothing already written is moved and no track is
      * forced. A track that wants a different scale says so in its own Scale
-     * eventor, which is where it always said it.
+     * modifier, which is where it always said it.
      */
     val key: SongKey? = null,
     val signature: Signature = Signature(),

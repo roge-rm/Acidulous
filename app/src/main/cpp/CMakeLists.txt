@@ -15,7 +15,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O1 -g")
 #   format/    reading and writing files: wav, aiff, flac, mp3, sf2
 #   machine/   one directory per instrument
 #   effect/    the inserts
-#   eventor/   the note processors
+#   modifier/   the note processors
 #   rack/      what holds a machine, its effects and its fader
 # sequencer/ clock, transport, clips, scenes, recording
 # platform/  everything that is not portable

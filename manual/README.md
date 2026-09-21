@@ -26,7 +26,7 @@
     - [Timber](04-the-machines/timber.md) - woodwinds by modelling: a reed or a jet of air, a tube, and holes down the side of it.
     - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the one that does everything.
 5. [Effects and mixing](05-effects-and-mixing.md) - two inserts a track, two sends, a master.
-6. [Scale, chord and arpeggio](06-eventors.md) - what a note becomes on its way out.
+6. [Modifiers](06-modifiers.md) - what a note becomes on its way in.
 7. [MIDI and playing with others](07-midi-and-sync.md) - keyboards, clock, MPE and Link.
 8. [Recording and samples](08-recording-and-samples.md) - getting audio in, and what to do with it.
 9. [Exporting](09-exporting.md) - getting the song out.

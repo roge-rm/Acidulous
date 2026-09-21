@@ -3,7 +3,7 @@
 
 // Scale and chord tables. The 33 scales are the set from Dan's ScaleInKey
 // (MIT, his own), in its order and grouping; Kotlin holds the same names in
-// the same order for the panel (ui/EventorsPanel.kt).
+// the same order for the panel (ui/ModifiersPanel.kt).
 namespace acidulous::music {
 
 struct ScaleDef {

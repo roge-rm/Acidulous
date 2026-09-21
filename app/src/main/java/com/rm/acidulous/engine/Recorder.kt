@@ -35,7 +35,7 @@ class Recorder {
     private val buffer = LongArray(128 * 5)
     private val paramNames = HashMap<String, List<String>>()
     private val effectParamNames = HashMap<String, List<String>>()
-    private val eventorParamNames = HashMap<String, List<String>>()
+    private val modifierParamNames = HashMap<String, List<String>>()
     private val open = HashMap<Int, OpenNote>() // key: rack shl 8 or pitch
     private var dirty = false
     private var lastScene = -1
@@ -199,11 +199,11 @@ class Recorder {
                 else if (type.isEmpty()) null
                 else effectParamNames.getOrPut(type) { NativeEngine.effectParamInfo(type).map { it.name } }.getOrNull(index)
             }
-            "eventor1", "eventor2", "eventor3" -> {
-                val type = track.eventorAt(if (unit == "eventor1") 0 else if (unit == "eventor2") 1 else 2).type
+            "mod1", "mod2", "mod3" -> {
+                val type = track.modifierAt(if (unit == "mod1") 0 else if (unit == "mod2") 1 else 2).type
                 if (index == EFFECT_BYPASS_INDEX) "bypass"
                 else if (type.isEmpty()) null
-                else eventorParamNames.getOrPut(type) { NativeEngine.eventorParamInfo(type).map { it.name } }.getOrNull(index)
+                else modifierParamNames.getOrPut(type) { NativeEngine.inputModParamInfo(type).map { it.name } }.getOrNull(index)
             }
             else -> null
         } ?: return null
@@ -233,7 +233,7 @@ class Recorder {
         // Order matters: this is the Unit enum's ordinal, read off events the
         // audio thread stamped. Keep it in step with Messages.h.
         val UNITS = listOf(
-            "machine", "effect1", "effect2", "eventor1", "eventor2", "eventor3", "channel", "master",
+            "machine", "effect1", "effect2", "mod1", "mod2", "mod3", "channel", "master",
             "performance",
         )
         /** Unit::Performance's two indices; see kPerfMod in Messages.h. */

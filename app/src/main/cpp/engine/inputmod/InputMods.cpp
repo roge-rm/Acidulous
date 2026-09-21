@@ -1,8 +1,8 @@
-#include "Eventors.h"
+#include "InputMods.h"
 #include <cstring>
 #include <initializer_list>
 
-namespace acidulous::eventor {
+namespace acidulous::modifier {
 
 using namespace acidulous::music;
 
@@ -402,4 +402,4 @@ void Arp::allNotesOff(MidiSink &out) {
     heldCount = 0; latched = false; seqLen = 0; nextStep = -1;
 }
 
-} // namespace acidulous::eventor
+} // namespace acidulous::modifier

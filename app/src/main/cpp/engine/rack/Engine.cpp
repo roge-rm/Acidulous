@@ -9,6 +9,9 @@ namespace acidulous {
 Engine::Engine() {
     clock.setSampleRate(kSampleRate);
     scheduler.bind(racks, kRackCount, &clock, &transport);
+    // Every rack reports what leaves its modifier chain, so a recording keeps
+    // what was heard rather than what was pressed.
+    for (int32_t r = 0; r < kRackCount; ++r) racks[r].setModifiedNoteSink(this);
 }
 
 Engine::~Engine() { stop(); }
@@ -75,7 +78,7 @@ void Engine::renderBlock(const float *in, float *out) {
         startPending = false;
         scheduler.allNotesOff();
         // And the clip players' own beginning: a pass count and, in a
-        // free-rolling clip, the dice. Same reason the eventors are reset
+        // free-rolling clip, the dice. Same reason the modifiers are reset
         // below - a render panics first, so this is where "from the
         // beginning" has to mean it.
         scheduler.resetClipPlayers();
@@ -103,14 +106,14 @@ void Engine::renderBlock(const float *in, float *out) {
                     if (e != nullptr) { e->reset(); e->params().jumpAll(); }
                 }
             }
-            // The eventors too. They were missed here from the start, and
+            // The modifiers too. They were missed here from the start, and
             // the cost was not obvious: an arpeggiator keeps a step, so a
             // panic - or an offline render, which panics first - left it
             // part way through its pattern and the next notes to arrive
             // came out somewhere else in the run. It is why exporting the
             // same song twice gave two different files.
-            for (int32_t s = 0; s < kEventorSlots; ++s) {
-                if (Eventor *e = racks[r].currentEventor(s)) e->reset();
+            for (int32_t s = 0; s < kInputModSlots; ++s) {
+                if (InputMod *e = racks[r].currentInputMod(s)) e->reset();
             }
         }
         master.panic();
@@ -664,7 +667,7 @@ void Engine::drainMidi() {
         if (!racks[rack].isActive()) continue;
 
         // A member channel is one finger. Its note goes down the ordinary
-        // path, through the eventors like any other; its bend, pressure and
+        // path, through the modifiers like any other; its bend, pressure and
         // slide belong to that note alone and go straight to the machine.
         if (mpeMember(m.channel)) {
             if (status == 0x90 && d2 > 0) {
@@ -684,28 +687,44 @@ void Engine::drainMidi() {
                 continue;
             }
         }
+        // Into the modifiers, and out the far end into `onModifiedNote` -
+        // which is where it is written down, if it is being written down at
+        // all. Nothing is recorded here any more: what a finger sent is not
+        // what the song keeps once a chord or an arp is in the way.
         racks[rack].handleMidi(status, m.data1, d2);
-        // Played just before the downbeat, with the scheduler not yet running:
-        // hold it rather than lose it. Flushed at the top of the first block
-        // that is actually recording, where the scene is known.
-        if (!recordingNow() && countInPreRoll() && earlyCount < kMaxEarlyNotes) {
-            earlyNotes[earlyCount++] = {rack, status, m.data1, d2};
-            continue;
-        }
-        if (recordingNow()) {
-            seq::RecordedEvent ev;
-            ev.absTick = clock.position();
-            // The rack's own clip, not the scheduler's: in clip mode a take
-            // recorded onto a launched clip must land in *that* cell.
-            ev.sceneId = scheduler.rackSceneId(rack);
-            ev.tickInIteration = scheduler.rackTick(rack);
-            ev.rack = rack;
-            ev.cmd = status;
-            ev.p1 = m.data1;
-            ev.p2 = d2;
-            recordQueue.push(ev);
-        }
     }
+}
+
+/**
+ * A note that has come out of a rack's modifier chain.
+ *
+ * On the audio thread, inside the rack's own delivery. Everything the chain
+ * produces arrives here - the key itself when nothing is enabled, the three
+ * notes of a chord, each step of an arpeggio - and while recording, that is
+ * what goes into the clip.
+ */
+void Engine::onModifiedNote(int32_t rack, uint8_t status, uint8_t d1, uint8_t d2) {
+    if (rack < 0 || rack >= kRackCount) return;
+    // Played just before the downbeat, with the scheduler not yet running:
+    // hold it rather than lose it. Flushed at the top of the first block that
+    // is actually recording, where the scene is known.
+    if (!recordingNow()) {
+        if (countInPreRoll() && earlyCount < kMaxEarlyNotes) {
+            earlyNotes[earlyCount++] = {rack, status, d1, d2};
+        }
+        return;
+    }
+    seq::RecordedEvent ev;
+    ev.absTick = clock.position();
+    // The rack's own clip, not the scheduler's: in clip mode a take recorded
+    // onto a launched clip must land in *that* cell.
+    ev.sceneId = scheduler.rackSceneId(rack);
+    ev.tickInIteration = scheduler.rackTick(rack);
+    ev.rack = rack;
+    ev.cmd = status;
+    ev.p1 = d1;
+    ev.p2 = d2;
+    recordQueue.push(ev);
 }
 
 /**
@@ -843,11 +862,11 @@ void Engine::applyMount(const Mount &m) {
         // - or the new one straight back if the slot was not a slot.
         retirer.retire(master.swapSend(m.slot, static_cast<Effect *>(m.object)), deleteAs<Effect>);
         break;
-    case Mount::Kind::Eventor:
+    case Mount::Kind::InputMod:
         if (m.rack >= 0 && m.rack < kRackCount) {
-            retirer.retire(racks[m.rack].swapEventor(m.slot, static_cast<Eventor *>(m.object)), deleteAs<Eventor>);
+            retirer.retire(racks[m.rack].swapInputMod(m.slot, static_cast<InputMod *>(m.object)), deleteAs<InputMod>);
         } else {
-            retirer.retire(m.object, deleteAs<Eventor>);
+            retirer.retire(m.object, deleteAs<InputMod>);
         }
         break;
     case Mount::Kind::Object: {

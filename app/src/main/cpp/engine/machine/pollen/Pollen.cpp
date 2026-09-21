@@ -4,7 +4,7 @@
 #include <cmath>
 #include <engine/core/InputBus.h>
 #include <engine/dsp/Math.h>
-#include <engine/eventor/Scales.h>
+#include <engine/inputmod/Scales.h>
 
 namespace acidulous::machine {
 
@@ -294,7 +294,7 @@ float Pollen::scatterSemis(float amount, uint32_t &state) const {
         return kTriad[static_cast<int32_t>(r * n) % 6];
     }
     case InScale: {
-        // The same thirty-three the eventors use, so a cloud can be told to
+        // The same thirty-three the modifiers use, so a cloud can be told to
         // stay in the song's key.
         const music::ScaleDef &scale = music::kScales[std::clamp(steppedOf(ScaleIndex), 0, music::kScaleCount - 1)];
         const int32_t span = std::max(1, static_cast<int32_t>(amount / 12.0f * scale.count + 0.5f));

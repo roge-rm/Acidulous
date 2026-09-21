@@ -7,7 +7,7 @@
 # out to be. Proved on single notes in C major - +2 degrees gives a major third
 # over C, F and G and a minor third over D and E, from the same setting.
 #
-# The thirty-three scales are the ones the eventors know, so a part harmonised
+# The thirty-three scales are the ones the modifiers know, so a part harmonised
 # here agrees with a part quantised there. Below the tracker's confidence - on
 # a drum, on noise, between phrases - it falls back to the plain chromatic
 # interval, because a wrong note is worse than an unmusical one.

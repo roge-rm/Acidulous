@@ -1,13 +1,13 @@
 #pragma once
 #include <cstdint>
 #include <engine/core/Params.h>
-#include <engine/eventor/Eventor.h>
+#include <engine/inputmod/InputMod.h>
 
 namespace acidulous {
 
-class EventorRegistry {
+class InputModRegistry {
   public:
-    static Eventor *create(const char *typeName);
+    static InputMod *create(const char *typeName);
     static const ParamDef *paramDefs(const char *typeName, int32_t &count);
     static int32_t count();
     static const char *name(int32_t index);

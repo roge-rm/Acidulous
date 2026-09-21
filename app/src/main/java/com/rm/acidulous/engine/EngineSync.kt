@@ -8,9 +8,9 @@ import com.rm.acidulous.model.EFFECT_SLOTS
 import com.rm.acidulous.model.EngineParams
 import com.rm.acidulous.model.effectSlotOf
 import com.rm.acidulous.model.effectUnit
-import com.rm.acidulous.model.EVENTOR_SLOTS
-import com.rm.acidulous.model.eventorSlotOf
-import com.rm.acidulous.model.eventorUnit
+import com.rm.acidulous.model.MODIFIER_SLOTS
+import com.rm.acidulous.model.modifierSlotOf
+import com.rm.acidulous.model.modifierUnit
 import com.rm.acidulous.model.MachineKind
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Master
@@ -42,7 +42,7 @@ object EngineSync {
 
     private val mounted = arrayOfNulls<String>(RACKS)
     private val mountedEffects = Array(RACKS) { arrayOfNulls<String>(EFFECT_SLOTS) }
-    private val mountedEventors = Array(RACKS) { arrayOfNulls<String>(EVENTOR_SLOTS) }
+    private val mountedModifiers = Array(RACKS) { arrayOfNulls<String>(MODIFIER_SLOTS) }
     private val mountedInput = arrayOfNulls<String>(INPUT_SLOTS)
     private val loadedSamples = HashMap<String, String>() // "rack:slot" -> relative path
     private val loadedMaps = arrayOfNulls<String>(RACKS)   // the source string a rack's map was built from
@@ -252,20 +252,20 @@ object EngineSync {
         }
     }
 
-    /** Eventors follow the same rule as effects: remount on type change only. */
-    fun ensureEventors(song: Song) {
+    /** Modifiers follow the same rule as effects: remount on type change only. */
+    fun ensureModifiers(song: Song) {
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
-            for (slot in 0 until EVENTOR_SLOTS) {
-                val want = track?.eventorAt(slot)?.type?.ifEmpty { null }
-                if (mountedEventors[rack][slot] == want) continue
-                if (NativeEngine.mountEventor(rack, slot, want ?: "")) mountedEventors[rack][slot] = want
-                else Log.w(TAG, "could not mount eventor ${want ?: "(none)"} on rack $rack slot $slot")
+            for (slot in 0 until MODIFIER_SLOTS) {
+                val want = track?.modifierAt(slot)?.type?.ifEmpty { null }
+                if (mountedModifiers[rack][slot] == want) continue
+                if (NativeEngine.mountInputMod(rack, slot, want ?: "")) mountedModifiers[rack][slot] = want
+                else Log.w(TAG, "could not mount modifier ${want ?: "(none)"} on rack $rack slot $slot")
             }
         }
     }
 
-    /** Everything the engine needs after any edit: machines, effects, eventors, then the snapshot. */
+    /** Everything the engine needs after any edit: machines, effects, modifiers, then the snapshot. */
     /**
      * The frozen clips a rack should be holding. The identity is the whole
      * list, so adding or thawing one clip reloads that rack's set and leaves
@@ -437,7 +437,7 @@ object EngineSync {
         ensureEffects(song)
         ensureSends(song)
         ensureInputFx(song)
-        ensureEventors(song)
+        ensureModifiers(song)
         ensureSampleMaps(song)
         ensureNexusPatches(song)
         ensureClouds(song)
@@ -528,7 +528,7 @@ object EngineSync {
                     // The type the lane's parameter belongs to: the machine's, or the effect's in that slot.
                     val unit = laneUnit(key)
                     val ownerType = effectSlotOf(unit)?.let { track.effectAt(it).type }
-                        ?: eventorSlotOf(unit)?.let { track.eventorAt(it).type }
+                        ?: modifierSlotOf(unit)?.let { track.modifierAt(it).type }
                         ?: track.machine.type
                     NativeEngine.snapshotSetLane(handle, rack, sceneIdx, ownerType, unit, laneParam(key), lane.linear, pts)
                 }
@@ -547,7 +547,7 @@ object EngineSync {
                 pushChannel(rack, track.mixer, song.swingOf(track))
                 pushMachineParams(rack, track.machine.params)
                 for (slot in 0 until EFFECT_SLOTS) pushSlot(rack, effectUnit(slot), track.effectAt(slot))
-                for (slot in 0 until EVENTOR_SLOTS) pushSlot(rack, eventorUnit(slot), track.eventorAt(slot))
+                for (slot in 0 until MODIFIER_SLOTS) pushSlot(rack, modifierUnit(slot), track.modifierAt(slot))
             }
         }
         pushMaster(song.master)

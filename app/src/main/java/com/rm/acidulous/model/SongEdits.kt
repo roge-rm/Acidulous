@@ -235,22 +235,22 @@ fun Song.withInputFxBypass(slot: Int, bypass: Boolean): Song {
     return copy(input = list)
 }
 
-// --- Eventors ---------------------------------------------------------------------------
+// --- Modifiers ---------------------------------------------------------------------------
 
-private fun Track.withEventorSlot(slot: Int, f: (UnitSlot) -> UnitSlot): Track {
-    if (slot !in 0 until EVENTOR_SLOTS) return this
-    val list = List(EVENTOR_SLOTS) { eventorAt(it) }.toMutableList()
+private fun Track.withModifierSlot(slot: Int, f: (UnitSlot) -> UnitSlot): Track {
+    if (slot !in 0 until MODIFIER_SLOTS) return this
+    val list = List(MODIFIER_SLOTS) { modifierAt(it) }.toMutableList()
     list[slot] = f(list[slot])
-    return copy(eventors = list)
+    return copy(modifiers = list)
 }
 
-fun Track.withEventor(slot: Int, type: String): Track = withEventorSlot(slot) { UnitSlot(type = type) }
-fun Track.withEventorParam(slot: Int, name: String, v01: Float): Track =
-    withEventorSlot(slot) { it.copy(params = it.params + (name to v01.coerceIn(0f, 1f))) }
-fun Track.withEventorBypass(slot: Int, bypass: Boolean): Track = withEventorSlot(slot) { it.copy(bypass = bypass) }
+fun Track.withModifier(slot: Int, type: String): Track = withModifierSlot(slot) { UnitSlot(type = type) }
+fun Track.withModifierParam(slot: Int, name: String, v01: Float): Track =
+    withModifierSlot(slot) { it.copy(params = it.params + (name to v01.coerceIn(0f, 1f))) }
+fun Track.withModifierBypass(slot: Int, bypass: Boolean): Track = withModifierSlot(slot) { it.copy(bypass = bypass) }
 
-fun eventorUnit(slot: Int): String = "eventor${slot + 1}"
-fun eventorSlotOf(unit: String): Int? = when (unit) { "eventor1" -> 0; "eventor2" -> 1; "eventor3" -> 2; else -> null }
+fun modifierUnit(slot: Int): String = "mod${slot + 1}"
+fun modifierSlotOf(unit: String): Int? = when (unit) { "mod1" -> 0; "mod2" -> 1; "mod3" -> 2; else -> null }
 
 /** How long the song plays once through: per-scene tempo honoured, smooth ramps ignored. */
 fun Song.durationSeconds(): Float {

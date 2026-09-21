@@ -50,8 +50,8 @@ object NativeEngine {
      */
     fun prewarm() = nativePrewarm()
 
-    /** Mounts an eventor (Scale, Chord, Arp) ahead of the machine; an empty [typeName] clears it. */
-    fun mountEventor(rackId: Int, slot: Int, typeName: String): Boolean = nativeMountEventor(rackId, slot, typeName)
+    /** Mounts an modifier (Scale, Chord, Arp) ahead of the machine; an empty [typeName] clears it. */
+    fun mountInputMod(rackId: Int, slot: Int, typeName: String): Boolean = nativeMountInputMod(rackId, slot, typeName)
 
     /**
      * How much of a long file a sample may hold, in seconds.
@@ -171,8 +171,8 @@ object NativeEngine {
     /** Every insert effect type, from the effect registry. */
     val effectTypes: List<String> get() = nativeEffectTypes().toList()
     fun effectParamInfo(type: String): List<ParamInfo> = nativeEffectParamInfo(type).map { ParamInfo.parse(it) }
-    val eventorTypes: List<String> get() = nativeEventorTypes().toList()
-    fun eventorParamInfo(type: String): List<ParamInfo> = nativeEventorParamInfo(type).map { ParamInfo.parse(it) }
+    val inputModTypes: List<String> get() = nativeInputModTypes().toList()
+    fun inputModParamInfo(type: String): List<ParamInfo> = nativeInputModParamInfo(type).map { ParamInfo.parse(it) }
     /** Normalised 0..1 value of a mounted unit's parameter, or -1. */
     fun paramNormalized(rackId: Int, unit: String, name: String): Float = nativeParamNormalized(rackId, unit, name)
 
@@ -219,7 +219,7 @@ object NativeEngine {
         nativeChannelPressure(rackId, value, record)
 
     /**
-     * [unit] is "machine", "effect1", "effect2", "eventor1", "eventor2", "eventor3" or "channel";
+     * [unit] is "machine", "effect1", "effect2", "mod1", "mod2", "mod3" or "channel";
      * [value] is normalised 0..1. Returns false if the name is unknown for what is mounted.
      */
     fun setParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean = true): Boolean =
@@ -699,9 +699,9 @@ object NativeEngine {
     private external fun nativeRenderedSeconds(): Float
     private external fun nativeRenderedPeak(): Float
     private external fun nativePrewarm()
-    private external fun nativeMountEventor(rackId: Int, slot: Int, typeName: String): Boolean
-    private external fun nativeEventorTypes(): Array<String>
-    private external fun nativeEventorParamInfo(type: String): Array<String>
+    private external fun nativeMountInputMod(rackId: Int, slot: Int, typeName: String): Boolean
+    private external fun nativeInputModTypes(): Array<String>
+    private external fun nativeInputModParamInfo(type: String): Array<String>
     private external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     private external fun nativeMountSend(slot: Int, typeName: String): Boolean
     private external fun nativeMountInputEffect(slot: Int, typeName: String): Boolean

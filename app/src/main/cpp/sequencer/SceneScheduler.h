@@ -274,7 +274,7 @@ class SceneScheduler {
         for (int32_t r = 0; r < rackCount; ++r) {
             if (racks[r].isActive()) {
                 Rack &rack = racks[r];
-                rack.clipPlayer.allNotesOff([&rack](uint8_t c, uint8_t a, uint8_t b) { rack.handleMidi(c, a, b); });
+                rack.clipPlayer.allNotesOff([&rack](uint8_t c, uint8_t a, uint8_t b) { rack.playSequenced(c, a, b); });
             }
         }
     }
@@ -678,7 +678,7 @@ class SceneScheduler {
                 rack.clearTouched();
             }
             rack.clipPlayer.process(from, to, origin,
-                                    [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.handleMidi(c, a, b); });
+                                    [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.playSequenced(c, a, b); });
             rack.clipPlayer.processExpression(
                 to, [&rack](uint8_t n, int32_t k, float v) { rack.noteExpressionValue(k, n, v); });
             if (launcher.playing(r)) {
@@ -740,7 +740,7 @@ class SceneScheduler {
                 Rack &rack = racks[r];
                 if (rack.clipPlayer.originChanged(iterationOrigin)) rack.clearTouched();
                 rack.clipPlayer.process(from, to, iterationOrigin,
-                                        [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.handleMidi(c, a, b); });
+                                        [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.playSequenced(c, a, b); });
                 rack.clipPlayer.processExpression(
                     to, [&rack](uint8_t n, int32_t k, float v) { rack.noteExpressionValue(k, n, v); });
                 rack.clipPlayer.processLanes(

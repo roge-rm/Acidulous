@@ -45,7 +45,7 @@ enum class EditMode { Draw, Select }
 
 /**
  * How the roll treats a scale. Chromatic ignores it, Dim greys the rows a
- * Scale eventor would move, and Fold drops those rows entirely so only
+ * Scale modifier would move, and Fold drops those rows entirely so only
  * playable notes have a lane. The corner of the roll cycles them.
  */
 enum class ScaleView { Chromatic, Dim, Fold }
@@ -787,7 +787,7 @@ private class Geometry(
      *
      * When the rows are folded to a scale, a note the scale does not contain
      * takes the row nearest to where it will actually sound, which is the
-     * truth the eventor will impose anyway. That search used to run over
+     * truth the modifier will impose anyway. That search used to run over
      * every row without a bound, so a note *scrolled out of view* also took
      * the nearest row - the last one - and was drawn there: scroll a bass
      * line up two semitones and the C2s reappeared as D2s, sitting on the

@@ -18,9 +18,9 @@ object SongStore {
     fun decode(text: String): Song = normalise(json.decodeFromString(Song.serializer(), text))
 
     /**
-     * Put each eventor in the slot its control owns.
+     * Put each modifier in the slot its control owns.
      *
-     * Eventors used to go wherever there was room, because only two of the
+     * Modifiers used to go wherever there was room, because only two of the
      * three could run at once. Now chord, scale and arp have a chip each and
      * a slot each, and a song written before that has, say, an Arp sitting
      * in the chord's slot - where the chord chip would read it as absent and
@@ -39,18 +39,18 @@ object SongStore {
         // swing at all - fifty is. Read on the way in, like the rest.
         if (song.swing < SWING_STRAIGHT) song = song.copy(swing = SWING_STRAIGHT)
         val home = mapOf("Chord" to 0, "Scale" to 1, "Arp" to 2)
-        if (song.tracks.none { t -> (0 until EVENTOR_SLOTS).any { home[t.eventorAt(it).type]?.let { h -> h != it } == true } }) {
+        if (song.tracks.none { t -> (0 until MODIFIER_SLOTS).any { home[t.modifierAt(it).type]?.let { h -> h != it } == true } }) {
             return song
         }
         return song.copy(
             tracks = song.tracks.map { track ->
-                val placed = arrayOfNulls<UnitSlot>(EVENTOR_SLOTS)
-                for (slot in 0 until EVENTOR_SLOTS) {
-                    val ev = track.eventorAt(slot)
+                val placed = arrayOfNulls<UnitSlot>(MODIFIER_SLOTS)
+                for (slot in 0 until MODIFIER_SLOTS) {
+                    val ev = track.modifierAt(slot)
                     val h = home[ev.type] ?: continue
                     if (placed[h] == null) placed[h] = ev
                 }
-                track.copy(eventors = List(EVENTOR_SLOTS) { placed[it] ?: UnitSlot() })
+                track.copy(modifiers = List(MODIFIER_SLOTS) { placed[it] ?: UnitSlot() })
             },
         )
     }

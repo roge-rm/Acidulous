@@ -55,7 +55,7 @@ class EngineHost {
      */
     void setCacheRoot(const std::string &path) { cacheRoot = path; }
     const char *mountedEffect(int rack, int slot) const;
-    bool mountEventor(int rack, int slot, const std::string &typeName);
+    bool mountInputMod(int rack, int slot, const std::string &typeName);
     // Builds anything a machine needs before it can be mounted (Trinity's
     // wavetables). Safe to call from a worker at startup; mounting waits on it.
     static void prewarm();
@@ -209,7 +209,7 @@ class EngineHost {
 
     void noteOn(int rack, uint8_t note, uint8_t velocity);
     void noteOff(int rack, uint8_t note);
-    // Performance controllers. They travel as MIDI so the eventor chain and,
+    // Performance controllers. They travel as MIDI so the modifier chain and,
     // later, a USB controller share one path into the machine.
     void controlChange(int rack, uint8_t cc, uint8_t value, bool record = true);
     void channelPressure(int rack, uint8_t value, bool record = true);
@@ -222,7 +222,7 @@ class EngineHost {
     /** Which member channels are holding a note, a bit per channel. */
     int mpeHeldMask() const;
 
-    // unit: "machine" | "effect1" | "effect2" | "eventor1" | "eventor2" | "channel".
+    // unit: "machine" | "effect1" | "effect2" | "mod1" | "mod2" | "channel".
     // value is normalised 0..1. Names are resolved here, on the UI thread.
     // `record`: a user gesture (recordable) rather than the document syncing state.
     bool setParam(int rack, const std::string &unit, const std::string &name, float value, bool record);
@@ -490,7 +490,7 @@ class EngineHost {
     std::string mountedSendType[2];
     /** What is on each input slot, for resolving its parameters by name. */
     std::string mountedInputType[2];
-    std::string mountedEventorType[16][2];
+    std::string mountedModifierType[16][2];
     std::unordered_map<int64_t, std::shared_ptr<const seq::Clip>> clipCache;
 };
 

@@ -19,9 +19,9 @@ constexpr int32_t kEffectSlots = 2;    // per rack, for now
  * to keep deciding about goes there.
  */
 constexpr int32_t kInputSlots = 2;
-// Three, one per eventor: the keyboard strip gives chord, scale and arp a
+// Three, one per modifier: the keyboard strip gives chord, scale and arp a
 // control each, so all three have to be able to run at once.
-constexpr int32_t kEventorSlots = 3;
+constexpr int32_t kInputModSlots = 3;
 constexpr int32_t kMaxParams = 256;    // per unit (Forage: 14 per pad x 13 pads, plus globals)
 
 } // namespace acidulous

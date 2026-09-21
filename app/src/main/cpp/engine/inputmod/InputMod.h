@@ -11,19 +11,19 @@ struct MidiSink {
     virtual void send(uint8_t status, uint8_t d1, uint8_t d2) = 0;
 };
 
-// Bypass shares the effects' pseudo-parameter index (unit eventor1/2, name "bypass").
-constexpr int32_t kEventorBypassIndex = -2;
+// Bypass shares the effects' pseudo-parameter index (unit mod1/2/3, name "bypass").
+constexpr int32_t kInputModBypassIndex = -2;
 
-class Eventor {
+class InputMod {
   public:
-    virtual ~Eventor() = default;
+    virtual ~InputMod() = default;
     virtual const char *typeName() const = 0;
     virtual const ParamDef *paramDefs(int32_t &count) const = 0;
     virtual void reset() = 0;
     virtual void handleMidi(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out) = 0;
     // Once per block, with the block's tick range and tempo, for anything clocked.
     virtual void onBlock(int64_t /*tickStart*/, int64_t /*tickEnd*/, float /*bpm*/, MidiSink & /*out*/) {}
-    // Release everything this eventor is sounding, then forget it (transport stop, bypass).
+    // Release everything this modifier is sounding, then forget it (transport stop, bypass).
     virtual void allNotesOff(MidiSink &out) = 0;
     ParamSet &params() { return params_; }
 

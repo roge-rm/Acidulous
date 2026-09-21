@@ -7,7 +7,7 @@
 #include <limits>
 
 // Plays one rack's clip. Lives inside the Rack and emits into
-// Rack::handleMidi(), ahead of the eventors, so sequenced and live notes are
+// Rack::handleMidi(), ahead of the modifiers, so sequenced and live notes are
 // treated identically.
 //
 // Positions are absolute transport ticks. The clip loops by arithmetic from the

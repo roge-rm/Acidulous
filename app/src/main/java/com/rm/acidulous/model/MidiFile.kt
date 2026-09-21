@@ -18,10 +18,11 @@ import java.io.File
  * four times too, because a MIDI file has no idea what a scene or a loop is.
  * What comes out is what you would hear playing the song from the top.
  *
- * **Eventors are not applied.** What is written is what is in the clips, so
- * a part played through the arpeggiator exports as the chord you drew rather
- * than the run you hear. Applying them would mean running the engine, which
- * is what the audio export is for; this is the editable version.
+ * **The modifiers need no applying.** What is written is what is in the clips,
+ * and since M59 that is already what you hear: a part played through the
+ * arpeggiator was written down as the run, not as the chord that made it. The
+ * note reading "the export is the chord you drew rather than the run you hear"
+ * belonged to the old arrangement and is gone with it.
  *
  * Entirely offline, entirely ours, and it shares nothing with the live paths
  * but the song itself.

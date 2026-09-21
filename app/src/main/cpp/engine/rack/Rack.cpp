@@ -33,7 +33,7 @@ const ParamDef kChannelDefs[Rack::ChannelCount] = {
 
 Rack::Rack() {
     channel.init(kChannelDefs, ChannelCount);
-    for (int32_t i = 0; i <= kEventorSlots; ++i) {
+    for (int32_t i = 0; i <= kInputModSlots; ++i) {
         sinks[i].rack = this;
         sinks[i].stage = i;
     }
@@ -41,15 +41,15 @@ Rack::Rack() {
 
 void Rack::Sink::send(uint8_t status, uint8_t d1, uint8_t d2) { rack->deliver(stage + 1, status, d1, d2); }
 
-// Stage 0 is "before eventor 1"; stage kEventorSlots is "at the machine".
+// Stage 0 is "before modifier 1"; stage kInputModSlots is "at the machine".
 void Rack::deliver(int32_t fromStage, uint8_t status, uint8_t d1, uint8_t d2) {
-    for (int32_t s = fromStage; s < kEventorSlots; ++s) {
-        if (eventors[s] != nullptr && !eventors[s]->bypassed()) {
-            eventors[s]->handleMidi(status, d1, d2, sinks[s]);
-            return; // the eventor forwards through its sink
+    for (int32_t s = fromStage; s < kInputModSlots; ++s) {
+        if (modifiers[s] != nullptr && !modifiers[s]->bypassed()) {
+            modifiers[s]->handleMidi(status, d1, d2, sinks[s]);
+            return; // the modifier forwards through its sink
         }
     }
-    toMachine(status, d1, d2);
+    toMachine(status, d1, d2, true);
 }
 
 /**
@@ -81,12 +81,17 @@ void Rack::updateMidiOut(int64_t frame) {
     lastOutChannel = ch;
 }
 
-void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2) {
-    // After the eventors, so what leaves for the hardware is what you hear -
-    // arpeggiated, scale-corrected, and the same whether it came from a clip,
-    // the on-screen keyboard or a controller, because all three arrive here.
-    // Before the voice limiter, which is a property of the machine and no
-    // business of a synthesizer on the other end of a cable.
+void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
+    // Anything that got here through the chain came from a finger, or from a
+    // modifier acting on one, so this is what a recording should keep: the
+    // arpeggio rather than the key that started it. A clip's own notes arrive
+    // by the other door and are not written down again.
+    if (live && modifiedSink != nullptr) modifiedSink->onModifiedNote(rackIndex, status, d1, d2);
+
+    // After the modifiers, so what leaves for the hardware is what you hear -
+    // arpeggiated and scale-corrected. Before the voice limiter, which is a
+    // property of the machine and no business of a synthesizer on the other
+    // end of a cable.
     const int32_t mode = lastOutMode;
     if (mode != OutInternal && outQueue != nullptr) {
         outQueue->push({outFrame, static_cast<uint8_t>((status & 0xf0) | lastOutChannel), d1, d2,
@@ -126,6 +131,8 @@ void Rack::forgetHeld(uint8_t note) {
 
 void Rack::handleMidi(uint8_t status, uint8_t d1, uint8_t d2) { deliver(0, status, d1, d2); }
 
+void Rack::playSequenced(uint8_t status, uint8_t d1, uint8_t d2) { toMachine(status, d1, d2, false); }
+
 void Rack::noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, float bendSemis) {
     if (machine == nullptr) return;
     switch (kind) {
@@ -151,16 +158,16 @@ void Rack::noteExpressionValue(int32_t kind, uint8_t note, float v01) {
 }
 
 void Rack::allNotesOff() {
-    for (int32_t s = 0; s < kEventorSlots; ++s) {
-        if (eventors[s] != nullptr) eventors[s]->allNotesOff(sinks[s]);
+    for (int32_t s = 0; s < kInputModSlots; ++s) {
+        if (modifiers[s] != nullptr) modifiers[s]->allNotesOff(sinks[s]);
     }
     if (machine != nullptr) machine->allNotesOff();
     heldCount = 0;
 }
 
 void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
-    for (int32_t s = 0; s < kEventorSlots; ++s) {
-        if (eventors[s] != nullptr) eventors[s]->run(tickStart, tickEnd, bpm, sinks[s]);
+    for (int32_t s = 0; s < kInputModSlots; ++s) {
+        if (modifiers[s] != nullptr) modifiers[s]->run(tickStart, tickEnd, bpm, sinks[s]);
     }
     for (int32_t s = 0; s < kEffectSlots; ++s) {
         if (effects[s] != nullptr) effects[s]->onBlock(tickStart, tickEnd, bpm);
@@ -299,11 +306,11 @@ Effect *Rack::swapEffect(int32_t slot, Effect *next) {
     return old;
 }
 
-Eventor *Rack::swapEventor(int32_t slot, Eventor *next) {
-    if (slot < 0 || slot >= kEventorSlots) return next;
-    Eventor *old = eventors[slot];
+InputMod *Rack::swapInputMod(int32_t slot, InputMod *next) {
+    if (slot < 0 || slot >= kInputModSlots) return next;
+    InputMod *old = modifiers[slot];
     if (old != nullptr) old->allNotesOff(sinks[slot]); // its sounding notes end cleanly
-    eventors[slot] = next;
+    modifiers[slot] = next;
     return old;
 }
 
@@ -318,13 +325,13 @@ void Rack::setParam(Unit unit, int32_t index, float v01) {
         else fx->params().set(index, v01);
         break;
     }
-    case Unit::Eventor1:
-    case Unit::Eventor2:
-    case Unit::Eventor3: {
-        const int32_t s = unit == Unit::Eventor1 ? 0 : (unit == Unit::Eventor2 ? 1 : 2);
-        Eventor *ev = eventors[s];
+    case Unit::Mod1:
+    case Unit::Mod2:
+    case Unit::Mod3: {
+        const int32_t s = unit == Unit::Mod1 ? 0 : (unit == Unit::Mod2 ? 1 : 2);
+        InputMod *ev = modifiers[s];
         if (ev == nullptr) break;
-        if (index == kEventorBypassIndex) ev->setBypass(v01 >= 0.5f, sinks[s]);
+        if (index == kInputModBypassIndex) ev->setBypass(v01 >= 0.5f, sinks[s]);
         else ev->params().set(index, v01);
         break;
     }
@@ -332,7 +339,7 @@ void Rack::setParam(Unit unit, int32_t index, float v01) {
     case Unit::Performance: {
         // Back into the MIDI it arrived as, so a lane and a finger on the
         // strip reach the machine by exactly the same path - through the
-        // eventors, as a controller, the way a hardware wheel would.
+        // modifiers, as a controller, the way a hardware wheel would.
         const auto byte = static_cast<uint8_t>(
             v01 <= 0.0f ? 0 : (v01 >= 1.0f ? 127 : static_cast<int32_t>(v01 * 127.0f + 0.5f)));
         if (index == kPerfMod) {

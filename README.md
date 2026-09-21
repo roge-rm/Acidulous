@@ -67,8 +67,9 @@ same sixteen**, chosen and edited from the master strip.
 - **Scene-major arranger.** Clips vary in length within a scene; scenes repeat.
 - **Clip launcher** as a second view of the same song, with per-track origins.
 - Piano roll and drum grid, both views over the same clip.
-- **Eventors** — Scale, Chord and Arp — as per-rack processors rather than
-  edits, so the notes underneath stay as you played them.
+- **Modifiers** — Scale, Chord and Arp — between what you play and what is
+  written down, so a clip holds the arpeggio rather than the key that made it,
+  and always plays exactly what the roll shows.
 - **Swing** as a time warp rather than a delay, per song with a per-track
   override, and the inverse applied on the way in so a part played against a
   swung song is stored straight.
