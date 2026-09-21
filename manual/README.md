@@ -1,17 +1,4 @@
 # The Acidulous manual
-
-The app carries these same words in its own **Help…** window, first item of the
-file menu. They are not two documents: `tools/gen_manual.py` lifts this
-directory into the app, and `tools/all_tests.sh` fails if the two have drifted.
-
-So **edit the Markdown here**, never the generated file, and re-run:
-
-```sh
-python3 tools/gen_manual.py
-```
-
-## Contents
-
 <!-- contents -->
 
 1. [A first song](01-first-song.md) - tracks, scenes, clips, and a first sound.
