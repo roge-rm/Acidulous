@@ -47,11 +47,27 @@ class WavetableBank {
 
   private:
     WavetableBank();
+    /**
+     * **Mip outside frame, not the other way round.**
+     *
+     * `sample` interpolates between two adjacent *frames* at one mip, so those
+     * two rows are read together on every sample of every oscillator. Laid out
+     * `[table][frame][mip]` they sat `kMips` rows apart - ten times 1025
+     * floats, or **41 KB** - which is past the first-level data cache on the
+     * phones this has to run on, so the pair could not stay resident and each
+     * sample paid for two lines a long way apart. The whole bank is 2.6 MB, so
+     * there is no question of it all fitting; the only thing that helps is
+     * putting what is read together next to each other.
+     *
+     * Swapped, adjacent frames are one row apart - 4.1 KB - and the mip, which
+     * is held constant for sixteen samples at a time, is the outer index.
+     * Identical numbers come out; only their addresses change.
+     */
     const float *row(int table, int frame, int mip) const {
-        return data.data() + ((static_cast<size_t>(table) * kFrames + static_cast<size_t>(frame)) * kMips +
-                              static_cast<size_t>(mip)) * (kSize + 1);
+        return data.data() + ((static_cast<size_t>(table) * kMips + static_cast<size_t>(mip)) * kFrames +
+                              static_cast<size_t>(frame)) * (kSize + 1);
     }
-    std::vector<float> data; // [table][frame][mip][kSize + 1], last sample duplicates the first
+    std::vector<float> data; // [table][mip][frame][kSize + 1], last sample duplicates the first
 };
 
 } // namespace acidulous::dsp
