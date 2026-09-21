@@ -5,6 +5,26 @@
 2. [The song grid](02-the-song-grid.md) - the arranger, the launcher, and freezing.
 3. [The editor](03-the-editor.md) - drawing notes, and what one note decides.
 4. [The machines](04-the-machines.md) - nineteen instruments, a four-track for your recordings, and what each is for.
+    - [Bias](04-the-machines/bias.md) - the four-track: recordings arranged along the song, four lanes at a time.
+    - [Brazen](04-the-machines/brazen.md) - brass by modelling: lips blown open against a tube.
+    - [Cipher](04-the-machines/cipher.md) - a vocoder whose band map is the instrument.
+    - [Cumulus](04-the-machines/cumulus.md) - pads by spectrum: you describe the sound's shape and the machine builds it.
+    - [Dice](04-the-machines/dice.md) - a loop cut into pieces, and rolled.
+    - [Filament](04-the-machines/filament.md) - strings by modelling: plucked, bowed or blown at, and they hear each other.
+    - [Forage](04-the-machines/forage.md) - the sample drum machine: thirteen pads, your own files, and a filter and envelope on each.
+    - [Formulate](04-the-machines/formulate.md) - the 8-bit machine, and an equation you can type into it.
+    - [Genesis](04-the-machines/genesis.md) - the big drum box: circuit drift, and a bus compressor with the kick wired to its side chain.
+    - [Hexbeat](04-the-machines/hexbeat.md) - drums by synthesis, in the small-box vocabulary, grown to the kit those boxes never had.
+    - [Manual](04-the-machines/manual.md) - the organ: two manuals and pedals over one shared generator, four models, and a cabinet that spins.
+    - [Molt](04-the-machines/molt.md) - a voice you write for: sing a take in, and the piano roll tunes it.
+    - [Mosaic](04-the-machines/mosaic.md) - the multisample player: zones across the keyboard and across velocity, and a grain engine over the top.
+    - [Nexus](04-the-machines/nexus.md) - a modular whose blocks are this app's own instruments, and whose patch is text.
+    - [Pollen](04-the-machines/pollen.md) - granular clouds that seed their own, from a file or from what is coming in live.
+    - [Ratio](04-the-machines/ratio.md) - six-operator FM, with the algorithm itself on a knob.
+    - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring - and hear each other.
+    - [Subvert](04-the-machines/subvert.md) - the acid bass: one oscillator, one filter that screams, and a line you play rather than program.
+    - [Timber](04-the-machines/timber.md) - woodwinds by modelling: a reed or a jet of air, a tube, and holes down the side of it.
+    - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the one that does everything.
 5. [Effects and mixing](05-effects-and-mixing.md) - two inserts a track, two sends, a master.
 6. [Scale, chord and arpeggio](06-eventors.md) - what a note becomes on its way out.
 7. [MIDI and playing with others](07-midi-and-sync.md) - keyboards, clock, MPE and Link.

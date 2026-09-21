@@ -12,7 +12,7 @@ into ParamLabels.kt, and for the same reason.
 Not a Markdown renderer: the app has none and does not need one. The subset the
 manual is written in is the subset a manual needs -
 
-    # Title              the section, one per file
+    # Title              the section, one per file (and one per sub-page)
     > summary            the line under it in the contents
     ## Heading           a heading inside the section
     paragraph            run of lines, joined
@@ -83,6 +83,20 @@ def parse(path):
     return title, summary, blocks
 
 
+def children_of(path):
+    """The sub-pages of a section: `04-the-machines/` beside `04-the-machines.md`.
+
+    A machine deserves more than a line and the machines page would be
+    unreadable at twenty times that length, so a section may have pages of its
+    own. Everything else is unchanged: they are the same Markdown, parsed by
+    the same parser, and they appear in the same contents.
+    """
+    folder = path.with_suffix("")
+    if not folder.is_dir():
+        return []
+    return [(p, parse(p)) for p in sorted(folder.glob("*.md"))]
+
+
 def kotlin(sections):
     q = lambda s: '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$") + '"'
     out = [
@@ -97,27 +111,45 @@ def kotlin(sections):
         "",
         "class ManualBlock(val kind: ManualKind, val text: String)",
         "",
-        "class ManualSection(val title: String, val summary: String, val blocks: List<ManualBlock>)",
+        "class ManualSection(",
+        "    val title: String,",
+        "    val summary: String,",
+        "    val blocks: List<ManualBlock>,",
+        "    /** Pages of this one's own: a machine is more than a line. */",
+        "    val children: List<ManualSection> = emptyList(),",
+        ")",
         "",
         "object Manual {",
         "    val sections: List<ManualSection> = listOf(",
     ]
     kinds = {HEADING: "Heading", PARA: "Para", BULLET: "Bullet", STEP: "Step"}
-    for title, summary, blocks in sections:
-        out.append(f"        ManualSection({q(title)}, {q(summary)}, listOf(")
+
+    def emit(title, summary, blocks, kids, pad):
+        out.append(f"{pad}ManualSection({q(title)}, {q(summary)}, listOf(")
         for kind, text in blocks:
-            out.append(f"            ManualBlock(ManualKind.{kinds[kind]}, {q(text)}),")
-        out.append("        )),")
+            out.append(f"{pad}    ManualBlock(ManualKind.{kinds[kind]}, {q(text)}),")
+        if not kids:
+            out.append(f"{pad})),")
+            return
+        out.append(f"{pad}), listOf(")
+        for _, (t, s2, b2) in kids:
+            emit(t, s2, b2, [], pad + "    ")
+        out.append(f"{pad})),")
+
+    for (title, summary, blocks), kids in sections:
+        emit(title, summary, blocks, kids, "        ")
     out += ["    )", "}", ""]
     return "\n".join(out)
 
 
 def contents(files, sections):
     """The numbered list, between the markers in manual/README.md."""
-    rows = [
-        f"{i}. [{title}]({path.name}) - {summary[0].lower() + summary[1:]}"
-        for i, (path, (title, summary, _)) in enumerate(zip(files, sections), 1)
-    ]
+    rows = []
+    for i, (path, ((title, summary, _), kids)) in enumerate(zip(files, sections), 1):
+        rows.append(f"{i}. [{title}]({path.name}) - {summary[0].lower() + summary[1:]}")
+        for kp, (kt, ks, _) in kids:
+            here = f"{path.stem}/{kp.name}"
+            rows.append(f"    - [{kt}]({here}) - {ks[0].lower() + ks[1:]}")
     return "\n".join([OPEN, ""] + rows + ["", CLOSE])
 
 
@@ -134,10 +166,14 @@ def main():
     files = sorted(p for p in SRC.glob("*.md") if p.name != "README.md")
     if not files:
         sys.exit("gen_manual: manual/ has no sections")
-    sections = [parse(p) for p in files]
+    sections = [(parse(p), children_of(p)) for p in files]
     text = kotlin(sections)
     index = indexed(files, sections)
-    words = sum(len(t.split()) for _, _, bs in sections for _, t in bs)
+    words = sum(len(t.split()) for (_, _, bs), _ in sections for _, t in bs)
+    pages = len(sections)
+    for _, kids in sections:
+        pages += len(kids)
+        words += sum(len(t.split()) for _, (_, _, bs) in kids for _, t in bs)
     if "--check" in sys.argv:
         for path, want in ((OUT, text), (INDEX, index)):
             have = path.read_text(encoding="utf-8") if path.exists() else ""
@@ -145,11 +181,11 @@ def main():
                 print(f"  FAIL manual: {path} is not what manual/ would produce")
                 print("       run: python3 tools/gen_manual.py")
                 sys.exit(1)
-        print(f"  ok   manual: {len(sections)} sections, {words} words, in step")
+        print(f"  ok   manual: {pages} pages, {words} words, in step")
         return
     OUT.write_text(text, encoding="utf-8")
     INDEX.write_text(index, encoding="utf-8")
-    print(f"gen_manual: {len(sections)} sections, {words} words -> {OUT} and {INDEX}")
+    print(f"gen_manual: {pages} pages, {words} words -> {OUT} and {INDEX}")
 
 
 main()

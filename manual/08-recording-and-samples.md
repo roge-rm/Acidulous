@@ -38,6 +38,11 @@ reached.
 The whole recording stays in the sound library under its own name, so a split
 you did not want can be thrown away and the audio placed by hand instead.
 
+Everything you do to a take afterwards - trimming it, fading it, crossfading
+one lane into another, flattening four lanes into one, and whether it follows
+the song's tempo or runs at the speed it was sung at - is on
+[Bias](04-the-machines/bias.md), and none of it touches the file.
+
 **A take may be half an hour long.** Anything under two minutes is held in
 memory as it always was; past that it is converted once, in the background, and
 read from storage as it plays - so a vocal that runs the length of a song costs

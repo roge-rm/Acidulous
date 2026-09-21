@@ -34,7 +34,11 @@ import com.rm.acidulous.ui.theme.Acid
  * the app is worse than no manual, and two hand-kept copies disagree within a
  * release. Nothing here is written here.
  *
- * **Contents first, and a section is its own window** - which is the shape the
+ * **Contents first, a section is its own window, and a machine is a page
+ * inside that** - three levels, because twenty machines are a line each in a
+ * list and a page each behind it, and neither length does both jobs.
+ *
+ * The original note still holds: - which is the shape the
  * licences already take a file along, and for the same reason this one cannot
  * be a [TabbedDialog]: that measures every page and takes the tallest, so the
  * longest section would make the short ones a screen of mostly nothing.
@@ -42,6 +46,7 @@ import com.rm.acidulous.ui.theme.Acid
 @Composable
 fun HelpDialog(onDismiss: () -> Unit) {
     var reading by remember { mutableStateOf<ManualSection?>(null) }
+    var page by remember { mutableStateOf<ManualSection?>(null) }
 
     PlainDialog(title = "Help", onDismiss = onDismiss, dismissLabel = "Done") {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -61,6 +66,28 @@ fun HelpDialog(onDismiss: () -> Unit) {
         PlainDialog(section.title, onDismiss = { reading = null }, dismissLabel = "Back", spacing = 0.dp) {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 for (block in section.blocks) ManualLine(block)
+                // **A page of its own for each of them, under the summary.**
+                // Twenty machines are a line each here and a page each behind
+                // it, because neither length is the right one for both jobs:
+                // the list is for finding the machine and the page is for
+                // learning it.
+                if (section.children.isNotEmpty()) {
+                    ListSection("in detail") {
+                        for (child in section.children) {
+                            DialogRow(mark = "›", name = child.title, under = child.summary) {
+                                page = child
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    page?.let { child ->
+        PlainDialog(child.title, onDismiss = { page = null }, dismissLabel = "Back", spacing = 0.dp) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                for (block in child.blocks) ManualLine(block)
             }
         }
     }
