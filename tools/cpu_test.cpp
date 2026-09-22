@@ -27,7 +27,10 @@
 #include <engine/core/Settings.h>
 #include <engine/dsp/Denormals.h>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/core/Frozen.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/rack/Rack.h>
+#include <memory>
 
 using namespace acidulous;
 
@@ -109,6 +112,75 @@ struct Player {
         next = block + 16; // a note every ~21 ms
     }
 };
+
+/**
+ * A whole rack, live against frozen: what freezing actually gives back.
+ *
+ * Dan asked the only question that matters about it - *"is freezing the tracks
+ * really leading to reduced load?"* - and neither the per-unit table above nor
+ * the app's meter answers it, because both measure parts rather than the rack
+ * as the engine runs it. This times `Rack::render` itself, with a machine and
+ * two inserts, in each of the three states a rack can be in:
+ *
+ *   live    the machine and both effects running, notes arriving
+ *   frozen  the same rack reading its own audio back instead
+ *   bare    a rack with nothing mounted, which is the floor nothing can go below
+ *
+ * The channel strip, the pan and the peak loop run in every one of them, so
+ * the difference between live and frozen is the whole of the saving and the
+ * frozen figure is the whole of the remaining cost.
+ */
+Result timeRack(const std::string &machine, const std::string &fx1, const std::string &fx2, int mode) {
+    Result r;
+    r.name = mode == 0 ? machine + " live" : (mode == 1 ? machine + " frozen" : "bare rack");
+    auto rack = std::make_unique<Rack>();
+
+    if (mode != 2) {
+        rack->swapMachine(MachineRegistry::create(machine.c_str()));
+        if (rack->currentMachine() == nullptr) return r;
+        rack->swapEffect(0, EffectRegistry::create(fx1.c_str()));
+        rack->swapEffect(1, EffectRegistry::create(fx2.c_str()));
+        if (Machine *m = rack->currentMachine()) { m->prepare(kSr); m->reset(); m->params().jumpAll(); }
+        for (int32_t sl = 0; sl < kEffectSlots; ++sl) {
+            if (Effect *e = rack->currentEffect(sl)) { e->prepare(kSr); e->reset(); e->params().jumpAll(); }
+        }
+    }
+
+    // A freeze of one bar, with a second of ring-out after it, which is what
+    // the renderer now produces. The content does not matter to the cost: a
+    // buffer read is a buffer read.
+    FrozenSet set;
+    auto fc = std::make_shared<FrozenClip>();
+    if (mode == 1) {
+        fc->frames = kSr * 2;
+        fc->tail = kSr;
+        fc->ticks = kPPQN * 4;
+        fc->bpm = 120.0f;
+        fc->left.assign(static_cast<size_t>(fc->frames + fc->tail), 0.25f);
+        fc->right = fc->left;
+        set.entries.push_back({1, fc});
+        rack->swapFrozen(&set);
+        rack->updateFrozen(1, 120.0f, true);
+        if (!rack->frozenActive()) { r.name += " (NOT FROZEN)"; }
+    }
+
+    Player player;
+    for (int32_t b = 0; b < kBlocks; ++b) {
+        if (mode == 0) player.tick(rack->currentMachine(), b);
+        const double t0 = nowUs();
+        // Exactly what Engine::renderBlock does per rack, in the same order.
+        if (rack->frozenActive()) rack->syncFrozen(b * kBlock / 100, 120.0f);
+        else rack->onBlock(b * 10, (b + 1) * 10, 120.0f);
+        rack->render(kBlock);
+        const double us = nowUs() - t0;
+        if (b > 8) r.samples.push_back(us);
+    }
+    r.finish();
+    rack->swapFrozen(nullptr);
+    delete rack->swapMachine(nullptr);
+    for (int32_t sl = 0; sl < kEffectSlots; ++sl) delete rack->swapEffect(sl, nullptr);
+    return r;
+}
 
 Result timeMachine(const std::string &name) {
     Machine *m = MachineRegistry::create(name.c_str());
@@ -256,6 +328,19 @@ int main(int argc, char **argv) {
     printf("cost per %d-frame block, budget %.0f us\n\n", kBlock, kBudgetUs);
 
     std::vector<Result> rows;
+    if (only == "rack") {
+        printf("a whole rack, live against frozen - what freezing gives back\n\n");
+        // The demo's two dearest tracks, with the inserts they actually carry.
+        rows.push_back(timeRack("Trinity", "Delay", "", 0));
+        rows.push_back(timeRack("Trinity", "Delay", "", 1));
+        rows.push_back(timeRack("Filament", "Chorus", "", 0));
+        rows.push_back(timeRack("Filament", "Chorus", "", 1));
+        rows.push_back(timeRack("Resonance", "Reverb", "", 0));
+        rows.push_back(timeRack("Resonance", "Reverb", "", 1));
+        rows.push_back(timeRack("", "", "", 2));
+        report(rows);
+        return 0;
+    }
     if (only == "tail") {
         printf("cost of the two seconds AFTER a note stops\n\n");
         for (int32_t i = 0; i < MachineRegistry::count(); ++i) {
