@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -111,9 +112,14 @@ fun SlotDialog(
         title = fixedType?.lowercase() ?: "${kind.label}${slot + 1}",
         onDismiss = onDismiss,
         dismissLabel = "Done",
-        maxBodyHeight = 420.dp,
+        // The default, which is 560, rather than the 420 this used to ask for.
+        // That number was chosen when every control sat in one scrolling row
+        // and the body only ever needed the height of a single knob; wrapped
+        // into rows the arp's seventeen need nearer all of it, and the shell
+        // caps the card to the window anyway, so asking for more cannot push
+        // the Done button off a turned phone.
     ) {
-        SlotRow(kind, track, trackIndex, slot, types, editor, fixedType)
+        SlotRow(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true)
     }
 }
 
@@ -125,6 +131,18 @@ fun EffectsPanel(track: Track, trackIndex: Int, editor: SongEditor, modifier: Mo
 private fun SlotRow(
     kind: SlotKind, track: Track, trackIndex: Int, slot: Int, types: List<String>, editor: SongEditor,
     fixedType: String? = null,
+    /**
+     * A window's shape rather than a panel's: the controls wrap into as many
+     * rows as they need instead of running off the side.
+     *
+     * The one scrolling row is the machine-panel house style and it is right
+     * there - a panel shares its height with the piano roll, so width is the
+     * only axis it can have. A dialog is the opposite: it has 420 dp of height
+     * to itself and the width of the screen, and an arp with thirteen controls
+     * in one row made you scroll sideways to find out what it was doing while
+     * two thirds of the window sat empty.
+     */
+    wrap: Boolean = false,
 ) {
     val fx = kind.at(track, slot)
     var menu by remember { mutableStateOf(false) }
@@ -163,19 +181,30 @@ private fun SlotRow(
                     },
                     modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
                 ) { Text(if (on) "on" else "bypass", color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
-                Spacer(Modifier.weight(1f))
-                TextButton(
-                    onClick = { minimized = !minimized },
-                    contentPadding = PaddingValues(horizontal = 8.dp),
-                ) { Text(if (minimized) "\u25B4" else "\u25BE", color = Acid.colors.textMid, fontSize = 13.sp) }
+                // Folding the face away is a *panel* control: two effects and a
+                // modifier can fill a phone, so a slot you are not editing is
+                // worth reducing to the line that says what it is. A window is
+                // the opposite - it exists to show the face - so the mark is
+                // not offered there, and the row stops carrying a wide gap to
+                // hold a control that would only make the window pointless.
+                if (!wrap) {
+                    Spacer(Modifier.weight(1f))
+                    TextButton(
+                        onClick = { minimized = !minimized },
+                        contentPadding = PaddingValues(horizontal = 8.dp),
+                    ) { Text(if (minimized) "\u25B4" else "\u25BE", color = Acid.colors.textMid, fontSize = 13.sp) }
+                }
             }
         }
-        if (!fx.isEmpty && !minimized) SlotFace(kind, fx.type, trackIndex, slot, editor)
+        if (!fx.isEmpty && !minimized) SlotFace(kind, fx.type, trackIndex, slot, editor, wrap)
     }
 }
 
 @Composable
-private fun SlotFace(kind: SlotKind, type: String, trackIndex: Int, slot: Int, editor: SongEditor) {
+private fun SlotFace(
+    kind: SlotKind, type: String, trackIndex: Int, slot: Int, editor: SongEditor,
+    wrap: Boolean = false,
+) {
     val info = remember(kind, type) { kind.paramInfo(type) }
     val unit = kind.unit(slot)
     val b = rememberParamBinding(trackIndex, type, info, editor, unit) { t, n, v -> kind.withParam(t, slot, n, v) }
@@ -206,7 +235,7 @@ private fun SlotFace(kind: SlotKind, type: String, trackIndex: Int, slot: Int, e
                 )
             }
         }
-        Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
+        val controls: @Composable () -> Unit = {
             for (p in info) {
                 if (type == "Arp" && p.name.length == 3 && p.name[0] == 's' && p.name[1].isDigit()) continue // the step row below
                 val labels = switchLabels(type, p.name, p.steps)
@@ -231,6 +260,20 @@ private fun SlotFace(kind: SlotKind, type: String, trackIndex: Int, slot: Int, e
                     else -> PanelKnob(b, p.name, accent = accent)
                 }
             }
+        }
+        if (wrap) {
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                itemVerticalAlignment = Alignment.Bottom,
+            ) { controls() }
+        } else {
+            Row(
+                Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) { controls() }
         }
         if (type == "Arp") ArpSteps(b)
     }

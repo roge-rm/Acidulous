@@ -463,8 +463,14 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
     ) {
         run {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(Modifier.fillMaxWidth().horizontalScrollWithBar(androidx.compose.foundation.rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                // Twelve keys, wrapped rather than scrolled sideways. There is
+                // nothing off the end of a wrapped row to go looking for, and
+                // a key you cannot see is a key you will not use.
+                androidx.compose.foundation.layout.FlowRow(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
                     for (i in 0 until 12) {
                         Pill(com.rm.acidulous.model.Scales.rootName(i, s.scale), i == s.key) {
                             s = s.copy(key = i)
@@ -509,23 +515,39 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                         }
                     }
                 }
-                Column(
-                    Modifier.height(220.dp).verticalScrollWithBar(androidx.compose.foundation.rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(1.dp),
-                ) {
+                // **Thirty-three scales, wrapped, in the window's own scroll.**
+                //
+                // They were full-width rows in a box 220 dp tall - about
+                // eleven hundred dp of list in it, so five of the
+                // thirty-three showed and the rest were a long drag away. And
+                // it was a scroller inside the dialog's scroller, which is its
+                // own trap: whichever one takes the gesture, the other looks
+                // broken.
+                //
+                // A scale's name is the width of its name, so wrapped chips
+                // fit three or four to a row and the groups keep their
+                // headings. What is left over scrolls with the rest of the
+                // window, once, with a position bar the shell already draws.
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     for ((title, range) in ScaleGroups) {
                         Text(title, color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                             modifier = Modifier.padding(top = 4.dp))
-                        for (i in range) {
-                            val on = i == s.scale
-                            Box(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp))
-                                    .background(if (on) c.green else c.control)
-                                    .clickable { s = s.copy(scale = i, on = true) }
-                                    .padding(horizontal = 8.dp, vertical = 5.dp),
-                            ) {
-                                Text(com.rm.acidulous.model.Scales.names[i],
-                                    color = if (on) Color.White else c.textHi, fontSize = 12.sp)
+                        androidx.compose.foundation.layout.FlowRow(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                            verticalArrangement = Arrangement.spacedBy(3.dp),
+                        ) {
+                            for (i in range) {
+                                val on = i == s.scale
+                                Box(
+                                    Modifier.clip(RoundedCornerShape(3.dp))
+                                        .background(if (on) c.green else c.control)
+                                        .clickable { s = s.copy(scale = i, on = true) }
+                                        .padding(horizontal = 8.dp, vertical = 5.dp),
+                                ) {
+                                    Text(com.rm.acidulous.model.Scales.names[i],
+                                        color = if (on) Color.White else c.textHi, fontSize = 12.sp)
+                                }
                             }
                         }
                     }
