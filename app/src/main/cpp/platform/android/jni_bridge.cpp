@@ -676,6 +676,21 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeInterruptedPercent(JNIEnv *, job
     return host().interruptedPercent();
 }
 
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeHintRunning(JNIEnv *, jobject) {
+    return host().hintRunning() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeHintAvailable(JNIEnv *, jobject) {
+    return host().hintAvailable() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeHintState(JNIEnv *, jobject) {
+    return host().hintState();
+}
+
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeRecentCallbackUs(JNIEnv *, jobject) {
     return host().recentCallbackUs();

@@ -504,6 +504,12 @@ object NativeEngine {
      */
     val interruptedPercent: Float get() = nativeInterruptedPercent()
 
+    /** Whether the scheduler is being told about our deadline, and whether it could be. */
+    val hintRunning: Boolean get() = nativeHintRunning()
+    val hintAvailable: Boolean get() = nativeHintAvailable()
+    /** 0 no api, 1 waiting, 2 the audio thread never named itself, 3 refused, 4 on. */
+    val hintState: Int get() = nativeHintState()
+
     /** What this rack costs lately, in microseconds. Falls by itself; reading does not clear it. */
     fun rackCostUs(rack: Int): Int = nativeRackCostUs(rack)
 
@@ -809,6 +815,9 @@ object NativeEngine {
     private external fun nativeWorstRackUs(rack: Int): Int
     private external fun nativeWorstRackWasFrozen(rack: Int): Boolean
     private external fun nativeInterruptedPercent(): Float
+    private external fun nativeHintRunning(): Boolean
+    private external fun nativeHintAvailable(): Boolean
+    private external fun nativeHintState(): Int
     private external fun nativeRackCostUs(rack: Int): Int
     private external fun nativeRecentCallbackUs(): Int
     private external fun nativeWorstCallbackCpuUs(): Int

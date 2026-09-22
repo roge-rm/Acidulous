@@ -189,8 +189,7 @@ fun ClipSettingsDialog(
         val held = ClipClipboard.clip
         Section(
             "clip",
-            if (held != null) "%s is on the clipboard.".format(ClipClipboard.from)
-            else "Copying takes the notes, the automation and the settings. The frozen audio stays where it was made.",
+            if (held != null) "%s is on the clipboard.".format(ClipClipboard.from) else "",
         ) {
             Choice("copy", false, enabled = clip.hasContent() || clip.notes.isNotEmpty(), onPick = onCopy)
             Choice("cut", false, enabled = clip.hasContent(), onPick = onCut)

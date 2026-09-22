@@ -1,4 +1,5 @@
 #pragma once
+#include <platform/android/PerfHint.h>
 #include <atomic>
 #include <ctime>
 #include <engine/core/Constants.h>
@@ -87,6 +88,12 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     int32_t getFramesPerBurst() const { return actualFramesPerBurst; }
     bool isLowLatency() const { return actualLowLatency; }
     int64_t getXRunCount() const;
+    /** Whether the scheduler is being told about our deadline, and why not when it is not. */
+    bool hintRunning() const { return perfHint.running(); }
+    bool hintAvailable() const { return perfHint.available(); }
+    int32_t hintState() const { return static_cast<int32_t>(perfHint.state()); }
+    void setHintWanted(bool on) { hintWanted.store(on, std::memory_order_relaxed); }
+
     /** Worst callback since the last read, in microseconds. Reading clears it. */
     int32_t readCallbackPeakUs() { return callbackPeakUs.exchange(0, std::memory_order_relaxed); }
     /** The decaying one: read as often as you like, by as many as you like. */
@@ -195,6 +202,25 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
      * stream's, and it resets whenever the stream is reopened, which is
      * exactly what happens after a dropout bad enough to disconnect.
      */
+    /**
+     * Telling the scheduler this work has a deadline.
+     *
+     * The session wants the audio thread's own id, which only the audio thread
+     * knows, and creating one allocates - so the callback publishes its id
+     * here and `start` opens the session off the audio thread once it appears.
+     */
+    acidulous::platform::PerfHint perfHint;
+    std::atomic<int32_t> audioThreadId{0};
+    std::atomic<bool> hintWanted{true};
+    /**
+     * Which stream the waiting thread belongs to.
+     *
+     * It sleeps between attempts, and a stream can be stopped and started
+     * under it - a freeze does exactly that. Without this, the old thread
+     * wakes up and opens a session naming a thread that no longer exists.
+     */
+    std::atomic<int32_t> hintGeneration{0};
+
     std::atomic<int32_t> callbackPeakUs{0};
     /**
      * The same peak, falling by itself instead of being cleared by whoever

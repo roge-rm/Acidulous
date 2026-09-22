@@ -1,4 +1,6 @@
 #include "AudioDriver.h"
+#include <unistd.h>
+#include <thread>
 
 #include <chrono>
 #include <engine/dsp/Denormals.h>
@@ -71,6 +73,54 @@ bool AudioDriver::start() {
          actualSampleRate, actualFramesPerBurst, engineBlockFrames,
          actualLowLatency ? "LowLatency" : "Normal",
          stream->getSharingMode() == oboe::SharingMode::Exclusive ? "Exclusive" : "Shared");
+
+    // **The hint, opened off the audio thread once the audio thread exists.**
+    //
+    // A session is per *thread* and the thread is AAudio's, not ours, so its
+    // id is not known until it has run once. Creating the session allocates
+    // and talks to a system service, which is not something to do in a
+    // callback - so the callback leaves its id behind and this waits for it.
+    // A detached thread rather than a wait here, because `start` is called
+    // from the UI and a second of it is a second of blank screen.
+    audioThreadId.store(0, std::memory_order_relaxed);
+    if (perfHint.load()) {
+        const int64_t targetNanos = static_cast<int64_t>(budgetFor(actualFramesPerBurst)) * 1000;
+        const int32_t generation = hintGeneration.fetch_add(1, std::memory_order_relaxed) + 1;
+        std::thread([this, targetNanos, generation] {
+            const auto ours = [this, generation] {
+                return hintGeneration.load(std::memory_order_relaxed) == generation;
+            };
+            int32_t tid = 0;
+            for (int i = 0; i < 200 && ours(); ++i) { // two seconds to name itself
+                tid = audioThreadId.load(std::memory_order_acquire);
+                if (tid != 0) break;
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            if (tid == 0) {
+                if (ours()) perfHint.gaveUp();
+                return;
+            }
+            // **Asked again, later.** Dan's phone answered "refused" to a
+            // session asked for within ten milliseconds of the first callback,
+            // and a device that declines in the first moments of a process's
+            // life may accept once it has settled - the power HAL may not be
+            // up, or the app may not yet count as foreground. Four tries over
+            // about seventeen seconds, then it is a fact about the device
+            // rather than about our timing.
+            //
+            // Cheap to be wrong about: a refusal is one call that returns
+            // null, and a success on the second try is a session for the rest
+            // of the stream's life.
+            static constexpr int kWaits[] = {0, 2000, 5000, 10000};
+            constexpr int kTries = static_cast<int>(sizeof(kWaits) / sizeof(kWaits[0]));
+            for (int n = 0; n < kTries; ++n) {
+                if (kWaits[n] > 0) std::this_thread::sleep_for(std::chrono::milliseconds(kWaits[n]));
+                if (!ours()) return; // the stream this belonged to has gone
+                if (!hintWanted.load(std::memory_order_relaxed)) return;
+                if (perfHint.begin(tid, targetNanos, n == kTries - 1)) return;
+            }
+        }).detach();
+    }
     return true;
 }
 
@@ -179,6 +229,9 @@ const float *AudioDriver::nextInputBlock() {
 }
 
 void AudioDriver::stop() {
+    // Before the stream goes: the session names a thread that is about to
+    // stop existing.
+    perfHint.end();
     if (stream == nullptr) {
         return;
     }
@@ -213,6 +266,12 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
 
     const auto tCallback = std::chrono::steady_clock::now();
     const int64_t cpu0 = threadCpuUs();
+    // Once, for the thread that opens the hint session. A relaxed read of an
+    // already-set value is a register compare, which is what this costs on
+    // every callback after the first.
+    if (audioThreadId.load(std::memory_order_relaxed) == 0) {
+        audioThreadId.store(static_cast<int32_t>(gettid()), std::memory_order_release);
+    }
     auto *out = static_cast<float *>(audioData);
     int32_t written = 0;
     pumpInput(numFrames);
@@ -300,6 +359,12 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
     // a constant: Oboe may open at a rate we did not ask for and may hand a
     // different frame count than the burst.
     if (us > budgetFor(numFrames)) lateCallbacks.fetch_add(1, std::memory_order_relaxed);
+    // **Every callback, not only the late ones.** The governor is being told
+    // what this work costs so it can decide what to clock the core at;
+    // reporting only the misses would describe a device that is always
+    // struggling and ask for more than we need. Wall time, because that is
+    // what the deadline is about and what the session's target is stated in.
+    perfHint.report(static_cast<int64_t>(us) * 1000);
 
     return oboe::DataCallbackResult::Continue;
 }

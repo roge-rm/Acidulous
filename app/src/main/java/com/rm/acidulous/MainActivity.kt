@@ -796,6 +796,10 @@ private fun App(modifier: Modifier = Modifier) {
     var strainUntil by remember { mutableStateOf(0L) }
     /** True while the engine is missing its deadline, right now. */
     var straining by remember { mutableStateOf(false) }
+    // How long the automatic quality watcher has wanted each answer. Zero
+    // means "it does not want that one at the moment".
+    var leanSince by remember { mutableStateOf(0L) }
+    var fullSince by remember { mutableStateOf(0L) }
     /** Which tracks are a large enough share of a block to be worth freezing. */
     var rackHot by remember { mutableStateOf(BooleanArray(16)) }
     var lateCallbacks by remember { mutableStateOf(0L) }
@@ -1093,6 +1097,14 @@ private fun App(modifier: Modifier = Modifier) {
         while (true) {
             peak = NativeEngine.readPeakLevel()
             playing = NativeEngine.isPlaying
+            // The service follows the transport rather than the app's
+            // lifetime, so an app sitting on the grid is not holding a
+            // notification open for nothing. `wasPlaying` still holds the last
+            // poll's answer here - it is updated further down - and the call
+            // is made only on the change, because `startForegroundService`
+            // every eighty milliseconds is a binder call every eighty
+            // milliseconds.
+            if (playing != wasPlaying) PlaybackService.follow(context, playing)
             position = Position.unpack(NativeEngine.positionPacked)
             countInBeats = countInBeatsOf(NativeEngine.countInRemaining)
             bpm = NativeEngine.tempo
@@ -1146,6 +1158,52 @@ private fun App(modifier: Modifier = Modifier) {
             if (lateNow > lateSeen) strainUntil = System.currentTimeMillis() + 2500
             lateSeen = lateNow
             straining = playing && System.currentTimeMillis() < strainUntil
+
+            // **Choosing quality by the two signals, not by the one.**
+            //
+            // A worst block over its budget is not on its own a reason to give
+            // anything up: the block may have been interrupted rather than
+            // slow, and lean cannot make the scheduler hand the core back. So
+            // lean is asked for only when the blocks that were *not*
+            // interrupted are the ones over budget - the song costing more
+            // than the device has - and full comes back when they are not.
+            //
+            // The hysteresis is wide on purpose. Flipping the amp's
+            // oversampling is audible, and a watcher that changed its mind at
+            // the edge of the budget would do it every few seconds; over is
+            // 100% of a block and back is 70%, and each has to hold for a
+            // stretch before anything moves.
+            if (com.rm.acidulous.ui.UiPrefs.autoQuality && playing) {
+                // **The decaying figure, not the peak-hold.** `worstBlockUs`
+                // is cleared by whoever reads it, and the Settings window is
+                // the reader it was written for - a watcher polling it every
+                // eighty milliseconds would leave that window showing nothing.
+                // `recentCallbackUs` decays instead of clearing, so there can
+                // be two readers, and the callback is the span with the
+                // deadline anyway.
+                val budgetUs = NativeEngine.callbackBudgetUs.toFloat()
+                val recent = NativeEngine.recentCallbackUs
+                val interrupted = NativeEngine.interruptedPercent
+                if (budgetUs > 0f) {
+                    val share = recent / budgetUs
+                    val ours = interrupted < 25f // mostly our own cost, not the OS taking the core
+                    val now = System.currentTimeMillis()
+                    if (ours && share > 1.0f) {
+                        if (leanSince == 0L) leanSince = now
+                        fullSince = 0L
+                        if (now - leanSince > 3000) com.rm.acidulous.ui.UiPrefs.applyAutoQuality(false)
+                    } else if (share < 0.7f) {
+                        if (fullSince == 0L) fullSince = now
+                        leanSince = 0L
+                        if (now - fullSince > 15000) com.rm.acidulous.ui.UiPrefs.applyAutoQuality(true)
+                    }
+                }
+            } else if (!com.rm.acidulous.ui.UiPrefs.autoQuality) {
+                // Switched off, or never on: what you chose is what runs.
+                com.rm.acidulous.ui.UiPrefs.applyAutoQuality(com.rm.acidulous.ui.UiPrefs.fullQuality)
+                leanSince = 0L
+                fullSince = 0L
+            }
             // **Worked out here, not in composition.** As a `val` up there it
             // was read once before the engine had opened a stream, when the
             // sample rate is still nought - so the budget came out as sixty-four

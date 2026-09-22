@@ -23,6 +23,17 @@
 
     <!-- Sampling and the vocoder both listen to what is coming in. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!--
+        Playing is a thing the user can see, so it is a foreground service.
+        Without one the process is cached the moment the activity is not in
+        front: trimmable, freezable, and the first thing the scheduler gives up
+        on. POST_NOTIFICATIONS is not requested at runtime anywhere - the
+        service is asked for and, if the platform refuses it, playing carries
+        on exactly as it did before.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
@@ -55,6 +66,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".PlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
     </application>
 
 </manifest>

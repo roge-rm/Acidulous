@@ -1962,6 +1962,9 @@ int32_t EngineHost::recentCallbackUs() const { return sAudio.recentCallbackUs();
 int32_t EngineHost::worstRackUs(int32_t rack) { return sEngine.worstRackUs(rack); }
 bool EngineHost::worstRackWasFrozen(int32_t rack) const { return sEngine.worstRackWasFrozen(rack); }
 float EngineHost::interruptedPercent() const { return sEngine.interruptedPercent(); }
+bool EngineHost::hintRunning() const { return sAudio.hintRunning(); }
+bool EngineHost::hintAvailable() const { return sAudio.hintAvailable(); }
+int32_t EngineHost::hintState() const { return sAudio.hintState(); }
 int32_t EngineHost::rackCostUs(int32_t rack) const { return sEngine.rackCostUs(rack); }
 int64_t EngineHost::lateCallbacks() const { return sAudio.getLateCallbacks(); }
 int64_t EngineHost::stalledCallbacks() const { return sAudio.getStalledCallbacks(); }

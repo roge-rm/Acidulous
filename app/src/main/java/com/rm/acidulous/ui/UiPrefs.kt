@@ -230,6 +230,20 @@ object UiPrefs {
     var fullQuality by mutableStateOf(true)
         private set
 
+    /**
+     * Let the app choose between full and lean while it plays.
+     *
+     * Off by default, and that is deliberate rather than timid: a setting that
+     * changes what you are hearing without being asked has to be something you
+     * turned on. What makes it honest at all is that there are now **two**
+     * signals and they call for opposite answers - a worst block over budget
+     * with few interrupted blocks means the song is asking too much and lean
+     * will help; a high interrupted share means the device is busy and lean
+     * will do nothing but make it sound worse.
+     */
+    var autoQuality by mutableStateOf(false)
+        private set
+
     /** Bits in a recorded or exported WAV. */
     var recordBits by mutableStateOf(24)
     /**
@@ -338,6 +352,8 @@ object UiPrefs {
             .getOrDefault(Buffer.Balanced)
         voiceLimit = p.getInt(KEY_VOICES, 0)
         fullQuality = p.getBoolean(KEY_QUALITY, true)
+        autoQuality = p.getBoolean(KEY_AUTO_QUALITY, false)
+        qualityNow = fullQuality
         recordBits = p.getInt(KEY_BITS, 24)
         inputDevice = p.getInt(KEY_INPUT_DEVICE, 0)
         keepAwake = p.getBoolean(KEY_AWAKE, true)
@@ -515,6 +531,28 @@ object UiPrefs {
         NativeEngine.setQuality(if (full) 1 else 0)
     }
 
+    fun chooseAutoQuality(on: Boolean) {
+        autoQuality = on
+        store?.edit()?.putBoolean(KEY_AUTO_QUALITY, on)?.apply()
+    }
+
+    /**
+     * What the watcher decided, kept apart from what *you* chose.
+     *
+     * Turning the watcher off has to give you your setting back, so its
+     * decision never writes over `fullQuality` in the preferences - it only
+     * tells the engine. This is the last thing it asked for, so the readout
+     * can say what is actually running.
+     */
+    var qualityNow by mutableStateOf(true)
+        private set
+
+    fun applyAutoQuality(full: Boolean) {
+        if (qualityNow == full) return
+        qualityNow = full
+        NativeEngine.setQuality(if (full) 1 else 0)
+    }
+
     /** Remembered rather than asked for every time the window opens. */
     fun chooseInputDevice(id: Int) {
         if (id == inputDevice) return
@@ -673,6 +711,7 @@ object UiPrefs {
     private const val KEY_BUFFER = "buffer"
     private const val KEY_VOICES = "voice_limit"
     private const val KEY_QUALITY = "quality_full"
+    private const val KEY_AUTO_QUALITY = "quality_auto"
     private const val KEY_BITS = "record_bits"
     private const val KEY_INPUT_DEVICE = "input_device"
     private const val KEY_AWAKE = "keep_awake"

@@ -230,16 +230,31 @@ private fun AudioTab(trackNames: List<String>) {
     // distortion only, never the amp, which is the dearest thing here.
     Section(
         "quality",
-        if (UiPrefs.fullQuality) {
-            ""
-        } else {
-            "Amp and distortion alias instead of oversampling, the reverb is " +
-                "half a room, and struck objects keep half their partials."
+        when {
+            UiPrefs.autoQuality -> "Auto: running %s.".format(if (UiPrefs.qualityNow) "full" else "lean")
+            UiPrefs.fullQuality -> ""
+            else ->
+                "Amp and distortion alias instead of oversampling, the reverb is " +
+                    "half a room, and struck objects keep half their partials."
         },
     ) {
-        Choice("full", UiPrefs.fullQuality) { UiPrefs.chooseQuality(true) }
-        Choice("lean", !UiPrefs.fullQuality) { UiPrefs.chooseQuality(false) }
+        Choice("full", UiPrefs.fullQuality, enabled = !UiPrefs.autoQuality) { UiPrefs.chooseQuality(true) }
+        Choice("lean", !UiPrefs.fullQuality, enabled = !UiPrefs.autoQuality) { UiPrefs.chooseQuality(false) }
+        Choice("auto", UiPrefs.autoQuality) { UiPrefs.chooseAutoQuality(!UiPrefs.autoQuality) }
     }
+
+    // No control, because there is nothing to choose: the device either takes
+    // hints or it does not. The line says which, and nothing else.
+    Section(
+        "scheduler hint",
+        when (NativeEngine.hintState) {
+            0 -> "Not taken on this device."
+            1 -> "Waiting for the audio thread."
+            2 -> "The audio thread never named itself."
+            3 -> "This device refused it."
+            else -> "On. Every callback's real length is reported."
+        },
+    ) {}
 }
 
 @Composable

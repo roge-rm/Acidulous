@@ -407,6 +407,11 @@ class EngineHost {
     bool worstRackWasFrozen(int32_t rack) const;
     /** How often a block is interrupted rather than slow, 0 to 100. */
     float interruptedPercent() const;
+    /** Whether the scheduler is being told about our deadline, and whether it could be. */
+    bool hintRunning() const;
+    bool hintAvailable() const;
+    /** 0 no api, 1 waiting, 2 the audio thread never named itself, 3 refused, 4 on. */
+    int32_t hintState() const;
     int32_t rackCostUs(int32_t rack) const;
     int32_t worstCallbackCpuUs();
     int32_t recentCallbackUs() const;
