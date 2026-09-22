@@ -1110,11 +1110,28 @@ private fun PanelActions(vararg actions: Triple<String, Color, () -> Unit>) {
 
 @Composable
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-internal fun Group(title: String, content: @Composable () -> Unit) {
+internal fun Group(
+    title: String,
+    /**
+     * How many controls to a line when the card is stacked.
+     *
+     * Two is right for the side panel it was written for, which is as wide as
+     * two knobs. A dialog is the width of the screen and fits four, and a card
+     * that used two there would be tall and half empty.
+     */
+    perLine: Int = StackedPerLine,
+    /**
+     * The card's own colour. The default is what a panel sits on, and a
+     * *window* is already that colour - so a card drawn in it would be
+     * invisible and the grouping would be titles and nothing else.
+     */
+    background: Color = Acid.colors.card,
+    content: @Composable () -> Unit,
+) {
     val stacked = LocalPanelStacked.current
     Column(
         Modifier.then(if (stacked) Modifier.fillMaxWidth() else Modifier)
-            .clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(6.dp),
+            .clip(RoundedCornerShape(6.dp)).background(background).padding(6.dp),
     ) {
         Text(title, color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         // IntrinsicSize.Max so the row knows how tall its tallest control is
@@ -1143,7 +1160,7 @@ internal fun Group(title: String, content: @Composable () -> Unit) {
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                maxItemsInEachRow = StackedPerLine,
+                maxItemsInEachRow = perLine,
             ) { content() }
             return@Column
         }

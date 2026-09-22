@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
+import com.rm.acidulous.engine.ParamInfo
 import androidx.compose.ui.platform.LocalContext
 import com.rm.acidulous.model.EFFECT_SLOTS
 import com.rm.acidulous.model.Patch
@@ -235,16 +236,19 @@ private fun SlotFace(
                 )
             }
         }
-        val controls: @Composable () -> Unit = {
-            for (p in info) {
-                if (type == "Arp" && p.name.length == 3 && p.name[0] == 's' && p.name[1].isDigit()) continue // the step row below
+        val control: @Composable (ParamInfo) -> Unit = { p ->
+            run {
                 val labels = switchLabels(type, p.name, p.steps)
                 val accent = if (p.name in EXTRA[type].orEmpty()) Acid.colors.accent else Acid.colors.teal
+                // A knob is 58 dp wide and some names are not. Shortened here
+                // rather than in the engine, because the engine's name is what
+                // a patch file, a lane and a mapping all address.
+                val shortLabel = SHORT_LABELS[p.name] ?: p.name
                 when {
                     // a few choices: buttons; many (note values): a stepped knob that names its step
-                    p.curve == 2 && labels != null && labels.size <= 4 -> PanelSwitch(b, p.name, labels)
+                    p.curve == 2 && labels != null && labels.size <= 4 -> PanelSwitch(b, p.name, labels, label = shortLabel)
                     p.curve == 2 && labels != null -> Knob(
-                        label = p.name, value = b.value(p.name), accent = accent,
+                        label = shortLabel, value = b.value(p.name), accent = accent,
                         // The step's *position* in the range, not its value.
                         //
                         // `p.map` gives the parameter in its own units, and
@@ -258,26 +262,110 @@ private fun SlotFace(
                         onStart = { b.start(p.name) }, onChange = { v -> b.change(p.name, v) }, onEnd = { b.end() },
                         onReset = { b.reset(p.name) },
                     )
-                    else -> PanelKnob(b, p.name, accent = accent)
+                    else -> PanelKnob(b, p.name, label = shortLabel, accent = accent)
                 }
             }
         }
+        // The arp's sixteen step toggles are a row of their own below, so they
+        // are not among the controls a card lays out.
+        val shown = info.filterNot {
+            type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit()
+        }
         if (wrap) {
-            FlowRow(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                itemVerticalAlignment = Alignment.Bottom,
-            ) { controls() }
+            // A card per group, stacked down the window, each wrapping its own
+            // controls. `LocalPanelStacked` is what tells `Group` to wrap
+            // rather than to lay one row and let it run off the side.
+            androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    for ((title, group) in groupsFor(type, shown)) {
+                        Group(title, perLine = 4, background = Acid.colors.cardAlt) {
+                            for (p in group) control(p)
+                        }
+                    }
+                }
+            }
         } else {
             Row(
                 Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.Bottom,
-            ) { controls() }
+            ) { for (p in shown) control(p) }
         }
         if (type == "Arp") ArpSteps(b)
     }
+}
+
+/**
+ * What belongs with what, for the windows that get a card per group.
+ *
+ * A wrapped row of every control in the order the engine happens to declare
+ * them is not a layout - it is a list that has run out of width, and it reads
+ * as one: Dan, on the first version of this, *"knobs and buttons following no
+ * apparent layout"*. These say which controls are about the same thing, so the
+ * window can put a titled card round each and you can find `gate` by knowing
+ * it is about time rather than by reading every label.
+ *
+ * Anything the engine declares that is not named here still appears, in a
+ * trailing card - so adding a parameter to a modifier shows it rather than
+ * hiding it, and this table is a layout rather than a filter.
+ */
+/** Names too long for a knob's width, said shorter. */
+private val SHORT_LABELS = mapOf(
+    "ratchetchance" to "rchance",
+    "velspread" to "vspread",
+    "strumdir" to "dir",
+    "octmode" to "octmod",
+    "humanise" to "human",
+    "inversion" to "invert",
+)
+
+private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
+    "Arp" to listOf(
+        // When a note happens, and for how long.
+        "time" to listOf("rate", "gate", "swing"),
+        // Which note, out of what you are holding.
+        "pattern" to listOf("mode", "octaves", "octmode", "length"),
+        // How hard, and how human.
+        "feel" to listOf("velmode", "accent", "humanise"),
+        // What it does twice, and what it does sometimes.
+        "chance" to listOf("ratchet", "ratchetchance", "chance"),
+        // How it sits against the song, and what happens when you let go.
+        "run" to listOf("sync", "shift", "cycles", "latch"),
+    ),
+    "Chord" to listOf(
+        // Which chord.
+        "chord" to listOf("mode", "type", "key", "scale"),
+        // How it is stacked.
+        "voicing" to listOf("voicing", "inversion", "spread", "bass"),
+        // How it is played, rather than which notes it is.
+        "strum" to listOf("strum", "strumdir", "velspread"),
+    ),
+    "Scale" to listOf(
+        "scale" to listOf("mode", "key", "scale"),
+        "how" to listOf("snap", "octave"),
+    ),
+)
+
+/**
+ * The declared groups, then a card for whatever was not spoken for.
+ *
+ * Names the engine does not have are dropped rather than drawn empty, so a
+ * parameter that is renamed leaves a smaller card instead of a broken one.
+ */
+private fun groupsFor(type: String, info: List<ParamInfo>): List<Pair<String, List<ParamInfo>>> {
+    val byName = info.associateBy { it.name }
+    val declared = PANEL_GROUPS[type] ?: return listOf("" to info)
+    val out = ArrayList<Pair<String, List<ParamInfo>>>()
+    val taken = HashSet<String>()
+    for ((title, names) in declared) {
+        val here = names.mapNotNull { byName[it] }
+        if (here.isEmpty()) continue
+        taken += here.map { it.name }
+        out += title to here
+    }
+    val rest = info.filter { it.name !in taken }
+    if (rest.isNotEmpty()) out += "more" to rest
+    return out
 }
 
 /** The arp's pattern: sixteen compact step toggles in one row, the ones past `length` dimmed. */

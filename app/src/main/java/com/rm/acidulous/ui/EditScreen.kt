@@ -771,10 +771,17 @@ fun EditScreen(
             onSavePatch = { name -> onSavePatch(name, 12 * (octave + 1), 12 * (octave + 3)) },
             onLoadPatch = { name ->
                 onLoadPatch(name)?.also { p ->
-                    if (p.low >= 0) {
-                        octave = (p.low / 12 - 1).coerceIn(0, 8)
-                        lowestPitch = (p.low - 2).coerceIn(0, 127 - rows)
-                    }
+                    // **The keyboard follows the patch; the roll does not.**
+                    //
+                    // A patch remembers the range it plays in so the keys land
+                    // somewhere the instrument has notes - press one and you
+                    // hear something. The *roll* is a different thing: it is
+                    // where you were looking at your own music, and you put it
+                    // there. Moving it because a sound was auditioned made
+                    // trying five patches scroll the clip five times, which is
+                    // the one place in the app where losing your place costs
+                    // you the thing you were doing.
+                    if (p.low >= 0) octave = (p.low / 12 - 1).coerceIn(0, 8)
                 }
             },
             factoryPatchNames = factoryPatchNames, userPatchNames = userPatchNames, onDeletePatch = onDeletePatch,

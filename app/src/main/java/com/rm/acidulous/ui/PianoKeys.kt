@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -454,107 +455,146 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
     }
     // C Dorian is C D E♭ F G A B♭, not C D D♯ F G A A♯.
     val spelling = remember(s.key, s.scale) { com.rm.acidulous.model.Scales.spelling(s.key, s.scale) }
-    PlainDialog(
-        title = "Scale",
-        onDismiss = onDismiss,
-        confirmLabel = "OK",
-        onConfirm = { onApply(s) },
-        spacing = 6.dp,
-    ) {
-        run {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                // Twelve keys, wrapped rather than scrolled sideways. There is
-                // nothing off the end of a wrapped row to go looking for, and
-                // a key you cannot see is a key you will not use.
-                androidx.compose.foundation.layout.FlowRow(
+    // Open on the family the current scale belongs to, so the window comes up
+    // showing what is in force rather than showing the modes every time.
+    var tab by rememberSaveable(current.scale) {
+        mutableStateOf(ScaleGroups.indexOfFirst { current.scale in it.second }.coerceAtLeast(0))
+    }
+
+    /**
+     * Everything above the scales, on every page.
+     *
+     * It is the same three rows whichever family you are looking at - the key,
+     * what the scale *does*, and which notes that leaves - so it belongs above
+     * the tabs. `TabbedDialog` has no slot above them, and repeating a
+     * composable across pages that share their state costs nothing, so each
+     * page draws it.
+     */
+    val header: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            // **Twelve keys across the width.** They were a row that scrolled
+            // sideways, which hid half of them; sharing the width by weight
+            // makes every key reachable and makes each one bigger than it was.
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                for (i in 0 until 12) {
+                    val on = i == s.key
+                    Box(
+                        Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(4.dp))
+                            .background(if (on) c.green else c.controlAlt)
+                            .clickable { s = s.copy(key = i) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            com.rm.acidulous.model.Scales.rootName(i, s.scale),
+                            color = if (on) Color.White else c.textMid,
+                            fontSize = 12.sp, maxLines = 1,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
+                    }
+                }
+            }
+            // Centred, because these three are the window's verb and the eye
+            // should find them without reading left to right.
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
+            ) {
+                Pill("off", !s.on) { s = s.copy(on = false) }
+                Pill("snap", s.on && !s.degree) { s = s.copy(on = true, degree = false) }
+                Pill("degrees", s.on && s.degree) { s = s.copy(on = true, degree = true) }
+            }
+            if (s.on && !s.degree) {
+                Row(
                     Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
                 ) {
-                    for (i in 0 until 12) {
-                        Pill(com.rm.acidulous.model.Scales.rootName(i, s.scale), i == s.key) {
-                            s = s.copy(key = i)
-                        }
+                    listOf("nearest", "down", "up").forEachIndexed { i, n ->
+                        Pill(n, s.snap == i) { s = s.copy(snap = i) }
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Pill("off", !s.on) { s = s.copy(on = false) }
-                    Pill("snap", s.on && !s.degree) { s = s.copy(on = true, degree = false) }
-                    Pill("degrees", s.on && s.degree) { s = s.copy(on = true, degree = true) }
-                }
-                if (s.on && !s.degree) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                        listOf("nearest", "down", "up").forEachIndexed { i, n ->
-                            Pill(n, s.snap == i) { s = s.copy(snap = i) }
-                        }
-                    }
-                }
-                // The shape of the scale: the notes it keeps, and nothing
-                // else. It used to show all twelve with the rejected ones
-                // greyed, which asked you to read past them to see the
-                // scale; the notes that are in it are the answer.
-                // A FlowRow, by the usual rule: the widest scale
-                // here is eight notes and fits, but a fixed Row that does
-                // not fit crushes its children rather than wrapping them.
-                androidx.compose.foundation.layout.FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
-                ) {
-                    for (pc in 0 until 12) {
-                        if (pc !in pitches) continue
-                        Box(
-                            Modifier.width(26.dp).height(20.dp).clip(RoundedCornerShape(3.dp))
-                                .background(if (pc == s.key) c.accent else c.green),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                spelling[pc] ?: com.rm.acidulous.model.Scales.keyNames[pc],
-                                color = Color.White, fontSize = 9.sp,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            )
-                        }
-                    }
-                }
-                // **Thirty-three scales, wrapped, in the window's own scroll.**
-                //
-                // They were full-width rows in a box 220 dp tall - about
-                // eleven hundred dp of list in it, so five of the
-                // thirty-three showed and the rest were a long drag away. And
-                // it was a scroller inside the dialog's scroller, which is its
-                // own trap: whichever one takes the gesture, the other looks
-                // broken.
-                //
-                // A scale's name is the width of its name, so wrapped chips
-                // fit three or four to a row and the groups keep their
-                // headings. What is left over scrolls with the rest of the
-                // window, once, with a position bar the shell already draws.
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    for ((title, range) in ScaleGroups) {
-                        Text(title, color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.padding(top = 4.dp))
-                        androidx.compose.foundation.layout.FlowRow(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(3.dp),
-                            verticalArrangement = Arrangement.spacedBy(3.dp),
-                        ) {
-                            for (i in range) {
-                                val on = i == s.scale
-                                Box(
-                                    Modifier.clip(RoundedCornerShape(3.dp))
-                                        .background(if (on) c.green else c.control)
-                                        .clickable { s = s.copy(scale = i, on = true) }
-                                        .padding(horizontal = 8.dp, vertical = 5.dp),
-                                ) {
-                                    Text(com.rm.acidulous.model.Scales.names[i],
-                                        color = if (on) Color.White else c.textHi, fontSize = 12.sp)
-                                }
-                            }
-                        }
+            }
+            // The shape of the scale: the notes it keeps, and nothing else. It
+            // used to show all twelve with the rejected ones greyed, which
+            // asked you to read past them to see the scale; the notes that are
+            // in it are the answer. Centred under the keys they came from.
+            androidx.compose.foundation.layout.FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                for (pc in 0 until 12) {
+                    if (pc !in pitches) continue
+                    Box(
+                        Modifier.width(30.dp).height(24.dp).clip(RoundedCornerShape(3.dp))
+                            .background(if (pc == s.key) c.accent else c.green),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            spelling[pc] ?: com.rm.acidulous.model.Scales.keyNames[pc],
+                            color = Color.White, fontSize = 10.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
                     }
                 }
             }
         }
     }
+
+    TabbedDialog(
+        title = "Scale",
+        selected = tab,
+        onDismiss = onDismiss,
+        dismissLabel = "Cancel",
+        confirmLabel = "OK",
+        onConfirm = { onApply(s) },
+        // **Wrapped, not shared out by weight.** The shared chip row gives every
+        // tab the same slice of the width and cuts the words to fit, which is
+        // right for the four the machine picker has and wrong for six: it read
+        // "Minor var", "Pentatoni", "World & e". These size to their words and
+        // take a second line when they need one, so nothing is abbreviated and
+        // nothing scrolls.
+        chips = {
+            androidx.compose.foundation.layout.FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                ScaleGroups.forEachIndexed { i, (title, _) -> Pill(title, i == tab) { tab = i } }
+            }
+        },
+        // **Tabs with the scales under them, like the machine picker.** The
+        // thirty-three were one long list in a box 220 dp tall; six families
+        // behind six chips is the same arrangement the app already uses for
+        // choosing an instrument, and it is one tap to a family rather than a
+        // drag through everything.
+        pages = ScaleGroups.map { (_, range) ->
+            {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    header()
+                    androidx.compose.foundation.layout.FlowRow(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        for (i in range) {
+                            val on = i == s.scale
+                            Box(
+                                Modifier.clip(RoundedCornerShape(4.dp))
+                                    .background(if (on) c.green else c.control)
+                                    .clickable { s = s.copy(scale = i, on = true) }
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                            ) {
+                                Text(
+                                    com.rm.acidulous.model.Scales.names[i],
+                                    color = if (on) Color.White else c.textHi, fontSize = 12.sp,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+    )
 }
 
 @Composable
