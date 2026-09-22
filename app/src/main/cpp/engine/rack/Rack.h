@@ -18,7 +18,7 @@ namespace acidulous {
 
 class Rack {
   public:
-    enum ChannelParam : int32_t { Gain, Pan, Mute, Solo, SendReverb, SendDelay, MidiMode, MidiChannel, Swing, ChannelCount };
+    enum ChannelParam : int32_t { Gain, Pan, Mute, Solo, SendReverb, SendDelay, MidiMode, MidiChannel, Swing, Output, ChannelCount };
 
     /**
      * A channel parameter where it is going, not where it has smoothed to.
@@ -180,6 +180,17 @@ class Rack {
      * `Engine::renderRacks` for when a listener reads it.
      */
     float keyBuf[kBlockFrames]{};
+
+    /** Whether this rack is a group: its machine sums other racks. */
+    bool isBus() const;
+    /**
+     * The rack this one's output is asked to go to, or -1 for the master.
+     * What it *actually* goes to this block is `routedTo`, which the engine
+     * settles - a bus that is not there, or a group routed into a group, goes
+     * to the master instead.
+     */
+    int32_t outputRequested() const { return static_cast<int32_t>(channel.target(Output) + 0.5f) - 1; }
+    int32_t routedTo = -1;
 
     // Read by the master after render(); post-fader.
     bool soloed() const { return channel.get(Solo) >= 0.5f; }

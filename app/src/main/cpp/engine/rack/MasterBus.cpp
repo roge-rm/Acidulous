@@ -32,11 +32,25 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
                         int64_t tickStart, int64_t tickEnd) {
     params_.tick();
 
-    // Solo: if anyone is soloed, only they are heard.
+    // Solo: if anyone is soloed, only they are heard - and a group is heard
+    // when any of its members is, since that member can only be heard
+    // through it. A soloed member of a group reaches the sends the same way:
+    // through its own send amount, as it always does.
     bool anySolo = false;
     for (int32_t r = 0; r < rackCount; ++r) {
         if (racks[r].isActive() && racks[r].soloed()) { anySolo = true; break; }
     }
+    const auto heard = [&](int32_t r) {
+        const Rack &rack = racks[r];
+        if (!anySolo || rack.soloed()) return true;
+        if (rack.routedTo >= 0 && racks[rack.routedTo].soloed()) return true; // its group is soloed
+        if (rack.isBus()) {
+            for (int32_t m = 0; m < rackCount; ++m) {
+                if (racks[m].routedTo == r && racks[m].isActive() && racks[m].soloed()) return true;
+            }
+        }
+        return false;
+    };
 
     for (int32_t i = 0; i < frames; ++i) sumL[i] = sumR[i] = 0.0f;
     for (int32_t s = 0; s < kSendSlots; ++s) {
@@ -44,10 +58,14 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
     }
     for (int32_t r = 0; r < rackCount; ++r) {
         Rack &rack = racks[r];
-        if (!rack.isActive() || (anySolo && !rack.soloed())) continue;
-        for (int32_t i = 0; i < frames; ++i) {
-            sumL[i] += rack.bufL[i];
-            sumR[i] += rack.bufR[i];
+        if (!rack.isActive() || !heard(r)) continue;
+        // A track routed into a group reaches the master through the group,
+        // not also on its own; its sends still go straight to the send buses.
+        if (rack.routedTo < 0) {
+            for (int32_t i = 0; i < frames; ++i) {
+                sumL[i] += rack.bufL[i];
+                sumR[i] += rack.bufR[i];
+            }
         }
         for (int32_t s = 0; s < kSendSlots; ++s) {
             const float amount = rack.sendAmount(s);

@@ -156,6 +156,8 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
     return copy(
         tracks = tracks.map { t ->
             t.copy(
+                // A track's output names a group by position too.
+                mixer = if (t.mixer.output == 0) t.mixer else t.mixer.copy(output = f(t.mixer.output).coerceIn(0, SIDECHAIN_STEPS - 1)),
                 effects = t.effects.map { it.remapped() },
                 clips = t.clips.mapValues { (_, c) ->
                     if (c.automation.keys.none { it.endsWith(lane) }) c

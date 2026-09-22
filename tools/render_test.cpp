@@ -465,6 +465,125 @@ void aTrackCanListenToAnother() {
     ok("a sidechained render is the same twice", firstDifference(mix1, mix2) == mix1.size());
 }
 
+/**
+ * **Groups: tracks routed into a track.**
+ *
+ * Two members - a pattern on rack 1 and a kick on rack 5 - and the group on
+ * rack 3, between them, so one member renders after the group in index order
+ * and has to be moved ahead of it.
+ */
+struct GroupFixture {
+    Engine engine;
+    std::shared_ptr<SongSnapshot> snap = std::make_shared<SongSnapshot>();
+    std::vector<std::shared_ptr<const Clip>> keep;
+    static constexpr int32_t kA = 1, kBus = 3, kB = 5;
+
+    explicit GroupFixture(bool grouped) {
+        add(kA, "Hexbeat");
+        add(kB, "Genesis");
+        if (grouped) {
+            add(kBus, "Bus");
+            for (int32_t m : {kA, kB}) engine.racks[m].setParam(Unit::Channel, Rack::Output, (kBus + 1) / 16.0f);
+        }
+        SceneInfo sc;
+        sc.id = 1;
+        sc.bars = 2;
+        sc.repeat = 1;
+        sc.ticksPerBar = kBar;
+        snap->scenes.push_back(sc);
+        for (int32_t r : {kA, kB}) {
+            auto c = std::make_shared<Clip>();
+            c->rev = r + 1;
+            c->bars = 2;
+            c->ticksPerBar = kBar;
+            for (int32_t i = 0; i < 16; ++i) c->notes.push_back(ClipNote{i * kPPQN / 2, kPPQN / 4, static_cast<uint8_t>(36 + (r == kA ? 6 : 0) + (i % 2)), 110});
+            keep.push_back(c);
+            snap->setClip(r, 0, c);
+        }
+        snap->rackCount = kB + 1;
+        engine.scheduler.swapSnapshot(snap.get());
+    }
+    void add(int32_t rack, const char *machine) {
+        Machine *m = MachineRegistry::create(machine);
+        m->prepare(kSampleRate);
+        m->reset();
+        m->params().jumpAll();
+        delete engine.racks[rack].swapMachine(m);
+    }
+    ~GroupFixture() {
+        for (int32_t r = 0; r < kRackCount; ++r) delete engine.racks[r].swapMachine(nullptr);
+    }
+    std::vector<float> run(int32_t blocks) {
+        engine.panicFlag.store(true, std::memory_order_release);
+        float scratch[kBlockFrames * 2];
+        engine.renderBlock(nullptr, scratch);
+        engine.transport.requestPlay(0);
+        std::vector<float> out(static_cast<size_t>(blocks) * kBlockFrames * 2);
+        for (int32_t b = 0; b < blocks; ++b) engine.renderBlock(nullptr, out.data() + static_cast<size_t>(b) * kBlockFrames * 2);
+        return out;
+    }
+};
+
+float largestDifference(const std::vector<float> &a, const std::vector<float> &b) {
+    float d = 0.0f;
+    for (size_t i = 0; i < std::min(a.size(), b.size()); ++i) d = std::max(d, std::fabs(a[i] - b[i]));
+    return d;
+}
+
+void tracksCanBeGrouped() {
+    printf("- groups\n");
+    constexpr int32_t kBlocks = 800;
+    std::vector<float> plain, grouped;
+    { GroupFixture f(false); plain = f.run(kBlocks); }
+    { GroupFixture f(true); grouped = f.run(kBlocks); }
+    // A group at unity with nothing on it is its members' sum: the same mix,
+    // to within the rounding of one more fader - and in the same block, or
+    // the member after the group would arrive 64 samples late.
+    const float d = largestDifference(plain, grouped);
+    ok("a group at unity sounds like its members did", peakOf(plain) > 0.05f && d < 1e-4f,
+       "largest difference " + std::to_string(d));
+
+    std::vector<float> muted;
+    {
+        GroupFixture f(true);
+        f.engine.racks[GroupFixture::kBus].setParam(Unit::Channel, Rack::Mute, 1.0f);
+        muted = f.run(kBlocks);
+    }
+    ok("muting the group silences its members", peakOf(std::vector<float>(muted.begin() + 20 * 128, muted.end())) < 1e-6f);
+
+    // Solo one member: it is heard through the group and the other is not.
+    std::vector<float> soloGrouped, soloPlain;
+    {
+        GroupFixture f(true);
+        f.engine.racks[GroupFixture::kB].setParam(Unit::Channel, Rack::Solo, 1.0f);
+        soloGrouped = f.run(kBlocks);
+    }
+    {
+        GroupFixture f(false);
+        f.engine.racks[GroupFixture::kB].setParam(Unit::Channel, Rack::Solo, 1.0f);
+        soloPlain = f.run(kBlocks);
+    }
+    ok("a soloed member is heard through its group, alone", largestDifference(soloGrouped, soloPlain) < 1e-4f &&
+       peakOf(soloPlain) > 0.05f);
+
+    // A member's sends go straight to the send buses, grouped or not.
+    std::vector<float> sentPlain, sentGrouped;
+    for (int32_t g = 0; g < 2; ++g) {
+        GroupFixture f(g == 1);
+        f.engine.master.swapSend(0, nullptr);
+        Effect *rev = EffectRegistry::create("Delay");
+        rev->prepare(kSampleRate);
+        rev->reset();
+        rev->params().jumpAll();
+        delete f.engine.master.swapSend(0, rev);
+        f.engine.racks[GroupFixture::kA].setParam(Unit::Channel, Rack::SendReverb, 0.8f);
+        (g == 1 ? sentGrouped : sentPlain) = f.run(kBlocks);
+        delete f.engine.master.swapSend(0, nullptr);
+    }
+    ok("a member's sends still reach the send buses", largestDifference(sentPlain, sentGrouped) < 1e-4f,
+       "largest difference " + std::to_string(largestDifference(sentPlain, sentGrouped)));
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -472,6 +591,7 @@ int main() {
     aRenderDoesNotDependOnWhatPlayedBefore();
     aTracksCostIsAPercentile();
     aTrackCanListenToAnother();
+    tracksCanBeGrouped();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

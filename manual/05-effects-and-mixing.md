@@ -40,8 +40,8 @@ and the knob that puts it back should always be in the same place.
 
 ## Level
 
-- [**Compressor**](05-effects-and-mixing/compressor.md) - the classic four, and a pump in time with the transport that
-  needs no sidechain routing.
+- [**Compressor**](05-effects-and-mixing/compressor.md) - the classic four, a sidechain from any track, and a pump
+  in time with the transport.
 - [**Gate**](05-effects-and-mixing/gate.md) - shut below a level, with a filter on its own detector so it opens
   for a pick and not for a room.
 
@@ -98,6 +98,34 @@ The mixer pill opens the strips: one per track and one master.
   driven by movement you recorded, which is why that control will not stay
   where you put it. Tap the mark to see which, and to clear those lanes from
   every clip on the track - the notes are not touched.
+
+## Groups
+
+A group is a track whose machine is **Bus**. Add one from the machine picker,
+under *beyond*. It plays nothing itself. Instead, any track can be routed into
+it: once the song has a group, each strip in the mixer gets an extra row at the
+bottom - tap it to step between the master and each group.
+
+Everything routed into a group goes through the group's two inserts and its
+fader before it reaches the master. Put one compressor on the drums instead of
+one per drum, or pull a whole section down with one fader.
+
+- A track's **sends** still go straight to the send buses, not through the
+  group.
+- **Solo** a group to hear all of it; solo a track inside one to hear just that
+  track, through the group's inserts.
+- A group can't be routed into another group, and can't be frozen - its
+  members are still playing live.
+- When exporting **stems**, a group is one stem with its members in it, and
+  the members don't get stems of their own.
+
+## Sidechain
+
+The compressor, the gate and the filter can listen to another track instead of
+their own input. Set **sidechain** in the effect to the track you want - the
+classic use is a compressor on the bass keyed to the kick. The key is taken
+before the other track's fader and mute, so turning the kick down doesn't
+weaken the duck, and a muted kick still works as a trigger.
 
 ## The two sends
 

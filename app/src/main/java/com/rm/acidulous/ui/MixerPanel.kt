@@ -104,13 +104,16 @@ fun MixerPanel(
     // never a problem - the strips stretched down the whole screen with a
     // hand's width of nothing under the chips. What is wanted is a ceiling.
     val room = if (constraints.hasBoundedHeight) maxHeight else Dp.Infinity
+    // The output row is there only in a song that has a group to route to.
+    val groups = song.tracks.withIndex().filter { it.value.machine.type == "Bus" }.map { it.index }
+    val chrome = STRIP_CHROME + if (groups.isEmpty()) 0.dp else OUTPUT_ROW
     val faderH = if (room == Dp.Infinity) {
         FADER_H
     } else {
-        (room - STRIP_CHROME).coerceIn(FADER_MIN, FADER_H)
+        (room - chrome).coerceIn(FADER_MIN, FADER_H)
     }
     // Only once even the floor will not fit does anything scroll.
-    val tight = room != Dp.Infinity && room < STRIP_CHROME + FADER_MIN
+    val tight = room != Dp.Infinity && room < chrome + FADER_MIN
     // **Against the right edge, not the left.** The master is the last strip
     // and the thing you reach for, and with three tracks in a song the row
     // used to sit in the left third of the screen with two thirds of nothing
@@ -145,7 +148,7 @@ fun MixerPanel(
                     .distinct()
                     .sorted()
             }
-            ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated, faderH, room, tight, sendNames)
+            ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated, faderH, room, tight, sendNames, groups)
         }
         MasterStrip(song, editor, masterPeak, clickOn, onClick, faderH, room, tight)
     }
@@ -166,6 +169,8 @@ private fun ChannelStrip(
     tight: Boolean = false,
     /** What the two send sliders are called - the effects that are on them. */
     sendNames: List<String> = listOf("send 1", "send 2"),
+    /** The tracks that are groups, which this one could be routed into. */
+    groups: List<Int> = emptyList(),
 ) {
     val c = Acid.colors
     var askClear by remember { mutableStateOf(false) }
@@ -316,6 +321,17 @@ private fun ChannelStrip(
                 ToggleChip("${m.midiChannel + 1}", true, c.accentDim) {
                     tap { it.copy(midiChannel = (it.midiChannel + 1) % 16) }
                 }
+            }
+        }
+        // Where the sound goes: the master, or a group. A tap steps through
+        // them. A group itself always goes to the master.
+        if (groups.isNotEmpty()) {
+            val targets = listOf(0) + groups.filter { it != index }.map { it + 1 }
+            val isGroup = track.machine.type == "Bus"
+            val to = editor.song.tracks.getOrNull(m.output - 1)?.takeIf { it.machine.type == "Bus" }
+            val label = if (isGroup || to == null) "master" else to.name
+            ToggleChip("→ $label", !isGroup && to != null, c.teal, Modifier.width(STRIP_W - 8.dp).mappable(map("output"))) {
+                if (!isGroup) tap { it.copy(output = targets[(targets.indexOf(it.output) + 1) % targets.size]) }
             }
         }
     }
@@ -477,6 +493,9 @@ private val FADER_MIN = 56.dp
  * rather than guessed; if a row is added to it, this goes up.
  */
 private val STRIP_CHROME = 204.dp
+
+/** The output row a strip grows when the song has a group to route to. */
+private val OUTPUT_ROW = 26.dp
 // It describes a *channel* strip, which is the one that decides how tall a
 // fader can be; the master carries a chip or two more and scrolls if it must.
 

@@ -47,7 +47,11 @@ object Freeze {
 
     /** A clip with nothing in it renders silence; there is no point. */
     fun freezable(song: Song, track: Int, sceneId: String): Boolean {
-        val clip = song.tracks.getOrNull(track)?.clips?.get(sceneId) ?: return false
+        val t = song.tracks.getOrNull(track) ?: return false
+        // A group plays its members, which go on playing live: frozen, it
+        // would sound them twice.
+        if (t.machine.type == "Bus") return false
+        val clip = t.clips[sceneId] ?: return false
         return clip.notes.isNotEmpty() && clip.frozen == null
     }
 

@@ -641,7 +641,13 @@ private fun App(modifier: Modifier = Modifier) {
                     // `bits` carries its bitrate instead - see Mp3Writer.
                     val depth = if (options.format.lossy) options.rate else options.bits
                     if (options.what == com.rm.acidulous.ui.ExportWhat.Stems) {
-                        val racks = song.tracks.indices.filter { song.tracks[it].machine.type.isNotEmpty() }
+                        // A stem is what reaches the master, so a track routed
+                        // into a group is in the group's stem and not also in
+                        // its own - or the stems would sum to more than the mix.
+                        val racks = song.tracks.indices.filter {
+                            val t = song.tracks[it]
+                            t.machine.type.isNotEmpty() && song.tracks.getOrNull(t.mixer.output - 1)?.machine?.type != "Bus"
+                        }
                         if (racks.isEmpty()) {
                             emptyList<File>() to "no tracks to render"
                         } else {

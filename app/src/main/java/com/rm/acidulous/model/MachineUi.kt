@@ -56,7 +56,7 @@ object MachineUi {
         MachineGroup("synths", listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup("drums", listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
         MachineGroup("realish", listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
-        MachineGroup("beyond", listOf("Cipher", "Nexus", "Bias")),
+        MachineGroup("beyond", listOf("Cipher", "Nexus", "Bias", "Bus")),
     )
 
     /** One line per machine: what it is, not what it has. */
@@ -81,6 +81,7 @@ object MachineUi {
         "Cipher" -> "a vocoder whose band map is the instrument"
         "Nexus" -> "a modular whose blocks are the other machines"
         "Bias" -> "a four-track: recordings arranged along the song"
+        "Bus" -> "a group: other tracks routed through one fader and two inserts"
         else -> ""
     }
 

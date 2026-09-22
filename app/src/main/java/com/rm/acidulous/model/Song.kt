@@ -461,6 +461,12 @@ data class Mixer(
      */
     val midiMode: Int = 0,
     val midiChannel: Int = 0,
+    /**
+     * Where this track's sound goes: 0 the master, 1..16 a group track (a
+     * track whose machine is a Bus). By position, like a sidechain, so moving
+     * tracks remaps it - see [remapSidechains].
+     */
+    val output: Int = 0,
 )
 
 @Serializable

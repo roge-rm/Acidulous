@@ -170,5 +170,11 @@ class SongEditsTest {
         assertEquals(0f, sc(gone, 0))
         assertEquals(key(3), gone.master.sends[1].params[SIDECHAIN_PARAM])
         assertEquals(listOf(0f, key(3)), gone.tracks[1].clips["s"]!!.automation["effect1:sidechain"]!!.points.map { it.value })
+
+        // A track's output names a group by position the same way.
+        val grouped = song.addTrack("Bus").updateTrack(3) { it.copy(mixer = it.mixer.copy(output = 5)) }
+        assertEquals(4, grouped.deleteTrack(0).tracks[2].mixer.output)
+        assertEquals(6, grouped.duplicateTrack(1).tracks[4].mixer.output)
+        assertEquals(0, grouped.deleteTrack(4).tracks[3].mixer.output)
     }
 }

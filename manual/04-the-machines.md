@@ -46,6 +46,7 @@ Not recordings and not filtered noise - models of how the real thing works, so t
 ## Audio
 
 - [**Bias**](04-the-machines/bias.md) - the four-track. Four lanes of recordings per cell, sounding together; record over the song and the take is cut at the scene lines. Its patches are **recording media** rather than sounds - a cassette, a Portastudio, a reel, a MiniDisc, a telephone - which colour what comes out and never the recordings.
+- **Bus** - a group track. It has no sound of its own; other tracks are routed into it from the mixer. See [groups](05-effects-and-mixing.md#groups).
 
 ## Patches
 
