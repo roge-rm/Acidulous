@@ -159,7 +159,17 @@ private fun Track.withEffectSlot(slot: Int, f: (EffectSlot) -> EffectSlot): Trac
 }
 
 /** Puts a fresh effect of [type] in [slot]; empty clears it. Parameters start at the effect's defaults. */
-fun Track.withEffect(slot: Int, type: String): Track = withEffectSlot(slot) { EffectSlot(type = type) }
+/**
+ * Put [type] in the slot - and **changing it to what it already is is not a
+ * change**, so its settings survive.
+ *
+ * Without that guard this is a wipe dressed as an assignment: any caller that
+ * says "make sure this slot holds an Arp" to a slot that already holds one
+ * takes its parameters with it. One did, and the arp lost every setting
+ * anybody made.
+ */
+fun Track.withEffect(slot: Int, type: String): Track =
+    withEffectSlot(slot) { if (it.type == type) it else EffectSlot(type = type) }
 
 fun Track.withEffectParam(slot: Int, name: String, v01: Float): Track =
     withEffectSlot(slot) { it.copy(params = it.params + (name to v01.coerceIn(0f, 1f))) }
@@ -244,7 +254,9 @@ private fun Track.withModifierSlot(slot: Int, f: (UnitSlot) -> UnitSlot): Track 
     return copy(modifiers = list)
 }
 
-fun Track.withModifier(slot: Int, type: String): Track = withModifierSlot(slot) { UnitSlot(type = type) }
+/** As [withEffect]: the type it already is is not a change, so the settings stay. */
+fun Track.withModifier(slot: Int, type: String): Track =
+    withModifierSlot(slot) { if (it.type == type) it else UnitSlot(type = type) }
 fun Track.withModifierParam(slot: Int, name: String, v01: Float): Track =
     withModifierSlot(slot) { it.copy(params = it.params + (name to v01.coerceIn(0f, 1f))) }
 fun Track.withModifierBypass(slot: Int, bypass: Boolean): Track = withModifierSlot(slot) { it.copy(bypass = bypass) }

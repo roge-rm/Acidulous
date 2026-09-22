@@ -873,7 +873,15 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
     } else if (u == Unit::Effect1 || u == Unit::Effect2) {
         index = paramIndex(mountedEffectType[rack][u == Unit::Effect1 ? 0 : 1], unit, name);
     } else if (u == Unit::Mod1 || u == Unit::Mod2 || u == Unit::Mod3) {
-        index = paramIndex(mountedModifierType[rack][u == Unit::Mod1 ? 0 : 1], unit, name);
+        // Three slots, not two - see the same correction in `paramNormalized`.
+        // Here it was worse than a wrong readout: the name was looked up
+        // against slot 1's mounted type, did not resolve, and `setParam`
+        // returned false. So **no parameter of the third modifier had ever
+        // reached the engine** - not from a knob, and not from the snapshot
+        // push either, since that goes through here too. The arp ran on its
+        // defaults whatever the document said, which is why turning its knobs
+        // changed nothing you could hear.
+        index = paramIndex(mountedModifierType[rack][u == Unit::Mod1 ? 0 : u == Unit::Mod2 ? 1 : 2], unit, name);
     }
     if (index == -1) return false;
     ParamMessage p;
@@ -2050,7 +2058,13 @@ float EngineHost::paramNormalized(int rack, const std::string &unit, const std::
     const Unit u = unitFromName(unit);
     const bool isFx = u == Unit::Effect1 || u == Unit::Effect2;
     const bool isEv = u == Unit::Mod1 || u == Unit::Mod2 || u == Unit::Mod3;
-    const int slot = (u == Unit::Effect1 || u == Unit::Mod1) ? 0 : 1;
+    // **Three modifier slots, two effect slots.** This read `Effect1 || Mod1 ?
+    // 0 : 1`, which is right for a pair and wrong for a trio: `mod3` - where
+    // the arp lives, because the chips are chord, scale, arp - was answered
+    // about slot 1. So the arp's window asked the engine what it held and was
+    // told about the scale, every time, and showed its defaults instead.
+    const int slot = isFx ? (u == Unit::Effect1 ? 0 : 1)
+                          : (u == Unit::Mod1 ? 0 : u == Unit::Mod2 ? 1 : 2);
     const int index = paramIndex(isFx ? mountedEffectType[rack][slot] : (isEv ? mountedModifierType[rack][slot] : mountedType[rack]), unit, name);
     if (index == -1) return -1.0f;
     if (isEv) {

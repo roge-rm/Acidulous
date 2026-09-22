@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -299,9 +300,21 @@ fun SlotChip(
     icon: Boolean = false,
 ) {
     val c = Acid.colors
+    // **The callbacks have to be the current ones.** `pointerInput` restarts
+    // only when its key changes, and the key here was `on` - so the block held
+    // whichever lambdas were in scope the last time the chip's lit state
+    // changed, and went on calling them for as long as it did not.
+    //
+    // That cost the arp every setting anybody made. Holding the chip fills an
+    // empty slot *bypassed*, so `on` stays false; the captured lambda goes on
+    // believing the slot is empty; and the next hold fills it again, which
+    // replaces the slot and throws the parameters away. It looked exactly like
+    // a window that did not save. `Knob` has guarded against this since it was
+    // written, with the same three lines.
+    val cb by rememberUpdatedState(onToggle to onOpen)
     Box(
         modifier.clip(RoundedCornerShape(4.dp)).background(if (on) c.accentDim else c.card)
-            .pointerInput(on) { detectTapGestures(onLongPress = { onOpen() }, onTap = { onToggle() }) },
+            .pointerInput(Unit) { detectTapGestures(onLongPress = { cb.second() }, onTap = { cb.first() }) },
         contentAlignment = Alignment.Center,
     ) {
         val tint = if (on) c.accent else c.textDim
