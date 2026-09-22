@@ -188,10 +188,10 @@ void Ratio::reset() {
 
 // Blend the two algorithms into one matrix, then flatten it to the edges that
 // actually carry something. Once per block, not once per voice.
-void Ratio::buildRouting() {
+void Ratio::fillRouting(Routing &routing, float morph) const {
     const Algorithm &a = kAlgorithms[stepOf(AlgoA) % kAlgorithmCount];
     const Algorithm &b = kAlgorithms[stepOf(AlgoB) % kAlgorithmCount];
-    const float m = clampf(paramOf(Morph), 0.0f, 1.0f);
+    const float m = clampf(morph, 0.0f, 1.0f);
     for (int s = 0; s < kOps; ++s) {
         for (int d = 0; d < kOps; ++d) routing.amount[s][d] = 0.0f;
     }
@@ -215,6 +215,10 @@ void Ratio::buildRouting() {
         sum += routing.carrier[o];
     }
     routing.carrierSum = sum > 0.5f ? std::sqrt(sum) : 1.0f;
+}
+
+void Ratio::buildRouting() {
+    fillRouting(routing, paramOf(Morph));
 
     // And which of the three mod envelopes any matrix slot names. See
     // Trinity's `envMask` for why an envelope nobody reads is not free.
@@ -444,6 +448,15 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
     const float glideStep = glideSeconds > 0.001f ? 1.0f / (glideSeconds * sampleRate) : 1.0f;
     const float targetFreq = mtof(static_cast<float>(v.note));
     const float glideOctaves = v.glidePos < 1.0f ? std::log2(targetFreq / v.glideFrom) : 0.0f;
+    // **Morph, modulated, is this voice's own blend.** The matrix offered
+    // morph as a destination and nothing read it: the blend is built once a
+    // block for the whole machine, and a modulation is per voice. A blend is
+    // a six-by-six table, so a voice whose morph is being moved builds its
+    // own, and every other voice shares the block's.
+    Routing own;
+    const bool morphed = v.mod[DstMorph] != 0.0f;
+    if (morphed) fillRouting(own, paramOf(Morph) + v.mod[DstMorph]);
+    const Routing &routing = morphed ? own : this->routing;
     const float invCarriers = 1.0f / routing.carrierSum;
 
     for (int32_t i = 0; i < frames; ++i) {

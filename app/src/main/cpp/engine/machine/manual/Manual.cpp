@@ -740,7 +740,12 @@ bool Manual::render(float *L, float *R, int32_t frames) {
     // generator is shared, so it does not.
     const bool busLoaded = model == Tonewheel || model == Transistor;
     const bool rotOn = steppedOf(RotOn) != 0;
-    const bool eqActive = std::fabs(paramOf(Bass)) + std::fabs(paramOf(Mid)) + std::fabs(paramOf(Treble)) > 0.05f;
+    // The treble is a matrix destination, so the EQ is in whenever the knob
+    // *or* the modulation moves it. It used to look at the knobs alone, and
+    // a treble modulation on a flat EQ did nothing at all.
+    const bool eqActive = std::fabs(paramOf(Bass)) + std::fabs(paramOf(Mid)) +
+                              std::fabs(clampf(paramOf(Treble) + blockMod[DstTreble] * 12.0f, -18.0f, 18.0f)) >
+                          0.05f;
     int slotTimbre[kSlots];
     for (int sl = 0; sl < kSlots; ++sl) slotTimbre[sl] = model == Pipe ? timbreForRank(sl) : timbreFor(0);
     // What each footage draws from each rank, once a block: the stop list

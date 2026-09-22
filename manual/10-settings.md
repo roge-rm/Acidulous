@@ -64,7 +64,10 @@ how your app behaves.
     with a long release pays for its release rather than its notes - a bell
     arp can have a dozen tails going behind the one you are playing - and
     this is about forty per cent of what such a patch costs. Held notes are
-    never touched.
+    never touched;
+  - the **granular machine** has half as many grains to share out. A dense
+    cloud thins - about forty per cent cheaper - and a sparse one, which
+    never used half the pool, is left as it was.
 
   Nothing else changes, and nothing changes about what you have recorded. A
   note you are holding keeps whatever it was born with, so the switch - and

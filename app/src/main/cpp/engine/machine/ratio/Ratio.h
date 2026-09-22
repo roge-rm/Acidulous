@@ -133,6 +133,7 @@ class Ratio final : public Machine {
     };
 
     static float waveAt(int wave, float phase, OpState &st);
+    void fillRouting(Routing &routing, float morph) const;
     void buildRouting();
     void startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger);
     Voice *allocate();

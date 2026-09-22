@@ -1,4 +1,5 @@
 #include "Pollen.h"
+#include <engine/core/Settings.h>
 #include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
@@ -426,7 +427,7 @@ void Pollen::pollinate(const Grain &parent, const View &view) {
     // there is room to spare, so a new note is never starved by a bloom.
     int32_t free = 0;
     for (const auto &g : grains) if (!g.active) ++free;
-    if (free <= 8) return;
+    if (free - (kGrains - grainPool) <= 8) return;
 
     const int32_t slot = takeGrain();
     Grain &g = grains[slot];
@@ -491,7 +492,14 @@ bool Pollen::render(float *L, float *R, int32_t frames) {
 
     int32_t active = 0;
     for (const auto &v : voices) if (v.used) ++active;
-    const int32_t quota = active > 0 ? std::max(4, kGrains / active) : kGrains;
+    // **Lean halves the cloud.** A grain is a read, a window and two
+    // interpolations every sample, so the cloud's size is the machine's cost
+    // - eighty-nine microseconds a block at its defaults - and until now lean
+    // had nothing here to take. Half the pool: each voice's share halves and
+    // blooms only take room the smaller pool has spare. Nothing sounding is
+    // cut; grains already alive finish their windows.
+    grainPool = fullQuality() ? kGrains : kGrains / 2;
+    const int32_t quota = active > 0 ? std::max(4, grainPool / active) : grainPool;
 
     const float ampA = paramOf(AmpAttack), ampD = paramOf(AmpDecay);
     const float ampS = paramOf(AmpSustain), ampR = paramOf(AmpRelease);

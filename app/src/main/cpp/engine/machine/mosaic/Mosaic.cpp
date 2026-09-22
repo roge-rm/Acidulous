@@ -1,4 +1,5 @@
 #include "Mosaic.h"
+#include <array>
 #include <algorithm>
 #include <engine/machine/Voices.h>
 
@@ -213,6 +214,13 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
     v.velocity = velocity;
     v.age = ageCounter++;
     v.random = rnd(v.rng) * 2.0f - 1.0f;
+    // **The matrix for this note, before anything reads it.** Scan and start
+    // are decided here, once, and they read `v.mod` - which until now was
+    // whatever this voice's *previous* note had left in it, or nothing on a
+    // fresh voice. So a velocity or an LFO routed to either moved the wrong
+    // note, or none. The envelopes read where they stand; they are about to
+    // be triggered below.
+    evalMatrix(v);
 
     // Which layers sound. Scan slides the velocity axis away from the played
     // velocity, so the map can be walked by a knob instead of by playing harder.
@@ -430,6 +438,10 @@ void Mosaic::updateVoiceMod(Voice &v, float blockSeconds) {
         hz *= std::exp2(v.mod[DstLfo1Rate + l] * 4.0f);
         v.lfo[l].advance(stepOf(b + LWave), hz, blockSeconds, 0.0f, false);
     }
+    evalMatrix(v);
+}
+
+void Mosaic::evalMatrix(Voice &v) {
     for (auto &m : v.mod) m = 0.0f;
     for (int s = 0; s < kMatrixSlots; ++s) {
         const int32_t b = MatrixBase + s * MatrixParams;
@@ -451,6 +463,22 @@ float Mosaic::readSample(const SampleData &s, double pos) {
     const float f = static_cast<float>(pos - i);
     return s.left[static_cast<size_t>(i)] * (1.0f - f) + s.left[static_cast<size_t>(i + 1)] * f;
 }
+
+namespace {
+/** `0.5 - 0.5 cos(2 pi t)` for t in [0, 1], from a table built once. */
+float hannAt(float t) {
+    constexpr int kSize = 1024;
+    static const auto table = [] {
+        std::array<float, kSize + 1> w{};
+        for (int i = 0; i <= kSize; ++i) w[static_cast<size_t>(i)] = 0.5f - 0.5f * std::cos(static_cast<float>(i) / kSize * kTwoPi);
+        return w;
+    }();
+    const float x = clampf(t, 0.0f, 1.0f) * kSize;
+    const int i = std::min(static_cast<int>(x), kSize - 1);
+    const float f = x - static_cast<float>(i);
+    return table[static_cast<size_t>(i)] + (table[static_cast<size_t>(i + 1)] - table[static_cast<size_t>(i)]) * f;
+}
+} // namespace
 
 void Mosaic::cacheLayer(Layer &L, float panBase) {
     if (L.zone == nullptr || L.sample == nullptr) return;
@@ -586,8 +614,12 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                 for (auto &g : v.grain) {
                     if (!g.active) continue;
                     // Hann window, so grains fade in and out instead of clicking.
+                    // Read from a table, as Pollen's is: a `cos` per grain per
+                    // sample was most of what a cloud cost. Linear between 1024
+                    // points is within 5e-6 of the curve, a hundred decibels
+                    // under the grain it shapes.
                     const float t = static_cast<float>(g.age) / static_cast<float>(g.length);
-                    const float w = 0.5f - 0.5f * std::cos(t * kTwoPi);
+                    const float w = hannAt(t);
                     sum += readSample(*L.sample, g.pos) * w;
                     g.pos += g.inc;
                     if (g.pos >= span) g.pos -= span;

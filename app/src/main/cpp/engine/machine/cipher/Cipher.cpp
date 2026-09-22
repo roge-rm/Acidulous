@@ -181,7 +181,14 @@ void Cipher::prepare(int32_t sr) {
 // to say.
 void Cipher::rebuildBands() {
     const int32_t count = std::max(4, std::min(kMaxBands, steppedOf(Bands)));
-    const float low = paramOf(LowHz), high = paramOf(HighHz), q = paramOf(BandQ);
+    // The edges move with the matrix, two octaves either way at full depth.
+    // They were offered as destinations and read by nothing: the bank is laid
+    // out here, once a block, and the matrix had never been asked.
+    const float low = mod[DstBandLow] == 0.0f ? paramOf(LowHz)
+                                              : clampf(paramOf(LowHz) * std::exp2(mod[DstBandLow] * 2.0f), 40.0f, 600.0f);
+    const float high = mod[DstBandHigh] == 0.0f ? paramOf(HighHz)
+                                                : clampf(paramOf(HighHz) * std::exp2(mod[DstBandHigh] * 2.0f), 1500.0f, 16000.0f);
+    const float q = paramOf(BandQ);
     if (count == lastCount && std::fabs(low - lastLow) < 0.5f && std::fabs(high - lastHigh) < 0.5f &&
         std::fabs(q - lastQ) < 0.002f) {
         return;
@@ -204,7 +211,8 @@ void Cipher::rebuildBands() {
 // derived from how many bands are covering how many octaves, and the knob
 // only leans on that.
 float Cipher::bandResonance(float q) const {
-    const float octaves = std::log2(std::fmax(1.01f, paramOf(HighHz) / paramOf(LowHz)));
+    // The edges the bank was actually laid out on, modulated or not.
+    const float octaves = std::log2(std::fmax(1.01f, lastHigh / lastLow));
     const float perOctave = static_cast<float>(bandCount - 1) / std::fmax(0.5f, octaves);
     const float wanted = std::fmax(0.7f, perOctave * 1.45f * (0.45f + 1.1f * q));
     return clampf((2.0f - 1.0f / wanted) / 1.96f, 0.0f, 0.995f);
@@ -378,8 +386,8 @@ float Cipher::carrierSample(Voice &v, float glideK, float detuneMul, float pitch
 
 bool Cipher::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    applyMatrix(); // first: the band edges are destinations now
     rebuildBands();
-    applyMatrix();
 
     const float dt = static_cast<float>(frames) / sampleRate;
     static const float kSyncBeats[6] = {0.0f, 4.0f, 2.0f, 1.0f, 0.5f, 1.0f / 3.0f};
@@ -425,7 +433,12 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const float remapAmount = clampf(paramOf(RemapAmount) + mod[DstRemapAmount], 0.0f, 1.0f);
     const bool freeze = steppedOf(Freeze) != 0;
     const float freezeMorph = clampf(paramOf(FreezeMorph) + mod[DstFreezeMorph], 0.0f, 1.0f);
-    const float freezeDecay = std::exp(-static_cast<float>(frames) / (paramOf(FreezeDecay) * sampleRate));
+    // Per *sample*, because that is where it is applied. It was worked out
+    // for a whole block - `exp(-frames / (t * rate))` - and then applied on
+    // every sample of it, so a held spectrum let go sixty-four times faster
+    // than the knob said: Held Vowel's thirty seconds were half of one, and
+    // "one vowel sustains for as long as the key is down" did not.
+    const float freezeDecay = std::exp(-1.0f / (paramOf(FreezeDecay) * sampleRate));
     const float gate = clampf(paramOf(Gate) + mod[DstGate], 0.0f, 1.0f);
     const float gateDepth = paramOf(GateDepth);
     const float sibilance = paramOf(Sibilance);

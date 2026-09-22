@@ -27,7 +27,7 @@ Two envelopes and two syncable LFOs, into eight matrix rows: a source, a destina
 
 Neither envelope is wired to anything by default - they are here to be routed, and the string's own amplitude comes from the exciter rather than from an envelope. The sources include **level**, which is how loudly the string is currently ringing, so the model can be made to respond to itself: damping that comes on as the note decays, or a bow that leans harder the quieter the string gets.
 
-Every destination that matters is in the list - **damping**, **tone**, **position**, **pressure**, **damper**, **tension** and **detune** among them. An LFO on `position` is the hand moving up the string while the note sounds.
+Every destination that matters is in the list - **damping**, **tone**, **position**, **pressure**, **damper**, **tension** and **detune** among them. An LFO on `position` is the hand moving up the string while the note sounds. **Brightness** is the exciter's - a finger's or a bow's grit, a hammer's hardness - and **rattle** and **volume** are the voice's own. **Body** and **drive** belong to the whole instrument, so, like **sympathy**, they follow the most recent string.
 
 ## Using it well
 

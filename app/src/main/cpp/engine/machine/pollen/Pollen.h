@@ -147,6 +147,8 @@ class Pollen final : public Machine {
 
     std::vector<float> window[WindowCount];
     Grain grains[kGrains];
+    /** How many of them the cloud may use this block: all, or half under lean. */
+    int32_t grainPool = kGrains;
     Voice voices[kVoices];
     int32_t grainCursor = 0;
     int64_t births = 0;

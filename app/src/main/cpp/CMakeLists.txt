@@ -7,7 +7,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # -ffast-math gets us flush-to-zero for denormals on ARM, which matters for
 # filter and delay tails; -fno-finite-math-only keeps NaN/inf checks honest.
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -fno-finite-math-only")
-set(CMAKE_CXX_FLAGS_DEBUG "-O1 -g")
+# The debug build is optimised exactly as the release is, with symbols. It is
+# the build that gets played and measured - every phone figure in M65 came off
+# it - and at -O1 without fast-math it was a different engine: slower by about
+# a fifth on the dev box, and not even the same arithmetic as what ships. A
+# debug APK's engine that sounds and costs what the release's does is worth
+# more here than stepping through native code line by line.
+set(CMAKE_CXX_FLAGS_DEBUG "-O3 -ffast-math -fno-finite-math-only -g")
 
 # engine/    the audio engine
 #   core/      realtime plumbing: params, queues, hand-over, timebase

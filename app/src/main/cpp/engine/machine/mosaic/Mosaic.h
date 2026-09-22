@@ -233,6 +233,8 @@ class Mosaic final : public Machine {
     void updateVoiceMod(Voice &v, float blockSeconds);
     float sourceValue(const Voice &v, int src) const;
     void cacheLayer(Layer &L, float panBase);
+    /** Every matrix row for one voice, into `v.mod`: once a block, and at note-on. */
+    void evalMatrix(Voice &v);
     /** Which of the mod envelopes a matrix row reads, once a block. See Ratio's. */
     int32_t egUsed = (1 << kModEgs) - 1;
     void renderVoice(Voice &v, int32_t frames, float *outL, float *outR);

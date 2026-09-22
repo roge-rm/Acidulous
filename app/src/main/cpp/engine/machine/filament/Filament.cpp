@@ -467,6 +467,9 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     // The sympathetic bank belongs to the machine, so it takes the matrix of
     // the last voice that sounded - as it always has.
     float symMod = 0.0f;
+    // And so do the body and the drive, which are the machine's as well.
+    float bodyMod = 0.0f, driveMod = 0.0f;
+    float driveKNow = driveK, driveNormNow = driveNorm, driveSolved = drive;
 
     for (int32_t n = 0; n < frames; ++n) {
         if (egWanted) { eg[0].next(); eg[1].next(); }
@@ -549,7 +552,12 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             v.panR = std::sin(angle);
             }
 
-            // Excitation.
+            // Excitation. `brightness` in the matrix is the exciter's: the grit
+            // of a finger, a pick, a bow or a breath, and the hardness of a
+            // hammer. It was offered as a destination and read by nothing.
+            const float bright = v.mod[DstBrightness];
+            const float gritNow = bright == 0.0f ? grit : clampf(grit + bright, 0.0f, 1.0f);
+            const float hardNow = bright == 0.0f ? hardness : clampf(hardness + bright, 0.0f, 1.0f);
             float excite = 0.0f;
             rngState = rngState * 1664525u + 1013904223u;
             const float noise = (static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f;
@@ -570,7 +578,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                     // times brighter than it continued and no setting on the
                     // string could reach it, because none of it was on the
                     // string.
-                    const float raw = noise * (0.3f + 0.7f * grit);
+                    const float raw = noise * (0.3f + 0.7f * gritNow);
                     excite = (mode == Pick ? (raw - v.lastPick * 0.7f) * 1.25f : raw) * v.exciteGain;
                     v.lastPick = raw;
                     --v.exciteLeft;
@@ -582,7 +590,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                     // hit it: felt compresses.
                     const float t = 1.0f - static_cast<float>(v.exciteLeft) / std::fmax(1.0f, paramOf(ExcitLength) * sampleRate);
                     const float soft = std::sin(kPiF * t);
-                    excite = soft * soft * (1.0f - hardness * 0.6f) * v.exciteGain * 2.0f;
+                    excite = soft * soft * (1.0f - hardNow * 0.6f) * v.exciteGain * 2.0f;
                     --v.exciteLeft;
                 }
                 break;
@@ -596,7 +604,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 const float relative = bowSpeed * 0.5f - v.a.velocity();
                 const float width = 0.08f + 0.5f * (1.0f - p);
                 const float grip = relative / (width + relative * relative / width);
-                excite = (grip * p * 0.12f + noise * grit * 0.01f) * v.exciteGain;
+                excite = (grip * p * 0.12f + noise * gritNow * 0.01f) * v.exciteGain;
                 break;
             }
             case Breath:
@@ -604,7 +612,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 // An air jet saturates as the resonator fills: past a point
                 // blowing harder does not make it louder, it makes it
                 // overblow, which is the instrument, not a bug.
-                excite = (noise * (0.2f + 0.8f * grit) * 0.25f + 0.02f) *
+                excite = (noise * (0.2f + 0.8f * gritNow) * 0.25f + 0.02f) *
                          clampf(bowPressure + v.mod[DstPressure], 0.0f, 1.0f) * v.exciteGain *
                          (1.0f - std::tanh(std::fabs(v.a.velocity()) * 1.6f) * 0.9f);
                 break;
@@ -694,17 +702,24 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             v.b.exciteOverTurn(-share);
 
             float voiceOut = coupled;
-            if (rattle > 0.0f && std::fabs(voiceOut) > rattleAt) {
+            const float rattleNow = v.mod[DstRattle] == 0.0f ? rattle : clampf(rattle + v.mod[DstRattle], 0.0f, 1.0f);
+            if (rattleNow > 0.0f && std::fabs(voiceOut) > rattleAt) {
                 // Something loose on the string: it buzzes only when driven.
                 const float over = std::fabs(voiceOut) - rattleAt;
-                voiceOut += (voiceOut > 0.0f ? -1.0f : 1.0f) * over * rattle * 1.6f;
+                voiceOut += (voiceOut > 0.0f ? -1.0f : 1.0f) * over * rattleNow * 1.6f;
             }
+            // A voice's own level, moved the way the knob would move it -
+            // the machine's volume is applied once, at the end, to everything.
+            if (v.mod[DstVolume] != 0.0f && volume > 0.0f)
+                voiceOut *= clampf(volume + v.mod[DstVolume], 0.0f, 1.5f) / volume;
             sumForSympathy += voiceOut;
             loudest = std::fmax(loudest, v.a.level());
 
             mixL += voiceOut * v.panL * 1.4142f;
             mixR += voiceOut * v.panR * 1.4142f;
             symMod = v.mod[DstSympathetic];
+            bodyMod = v.mod[DstBody];
+            driveMod = v.mod[DstDrive];
 
             if (!v.gate && v.a.level() < 0.00005f && v.b.level() < 0.00005f && v.exciteLeft <= 0) {
                 v.used = false;
@@ -732,14 +747,21 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 const float s = body[i].process(i == 0 ? mixL : mixR);
                 if (i % 2 == 0) bl += s; else br += s;
             }
-            outL = mixL * (1.0f - bodyMix) + bl * bodyMix * 0.5f;
-            outR = mixR * (1.0f - bodyMix) + br * bodyMix * 0.5f;
+            const float mixNow = bodyMod == 0.0f ? bodyMix : clampf(bodyMix + bodyMod, 0.0f, 1.0f);
+            outL = mixL * (1.0f - mixNow) + bl * mixNow * 0.5f;
+            outR = mixR * (1.0f - mixNow) + br * mixNow * 0.5f;
         }
         outL += exciterOut * dry;
         outR += exciterOut * dry;
-        if (drive > 0.0f) {
-            outL = std::tanh(outL * driveK) * driveNorm;
-            outR = std::tanh(outR * driveK) * driveNorm;
+        const float driveNow = driveMod == 0.0f ? drive : clampf(drive + driveMod, 0.0f, 1.0f);
+        if (driveNow > 0.0f) {
+            if (driveNow != driveSolved) { // modulated: solved again only when it moves
+                driveSolved = driveNow;
+                driveKNow = 1.0f + driveNow * 8.0f;
+                driveNormNow = kNominal / std::tanh(kNominal * driveKNow);
+            }
+            outL = std::tanh(outL * driveKNow) * driveNormNow;
+            outR = std::tanh(outR * driveKNow) * driveNormNow;
         }
         L[n] = outL * volume;
         R[n] = outR * volume;
