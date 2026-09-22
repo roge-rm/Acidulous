@@ -99,6 +99,8 @@ class Cumulus final : public Machine {
         float rateMul = 1.0f; // detune
         float drift = 0.0f;   // slow walk, in cents
         float driftTarget = 0.0f;
+        /** What that drift works out to, refreshed on a stride rather than per sample. */
+        float rate = 1.0f;
         float pan = 0.0f;
     };
     struct Voice {

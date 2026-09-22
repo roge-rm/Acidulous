@@ -29,6 +29,9 @@
 #include <engine/effect/EffectRegistry.h>
 #include <engine/core/Frozen.h>
 #include <engine/machine/MachineRegistry.h>
+#include "patchbank.h"
+#include <engine/machine/cumulus/Cloud.h>
+#include <engine/machine/cumulus/Cumulus.h>
 #include <engine/dsp/Wsola.h>
 #include <engine/rack/Rack.h>
 #include <memory>
@@ -115,6 +118,33 @@ struct Player {
 };
 
 /**
+ * The cloud Cumulus plays, which nothing here was building.
+ *
+ * Cumulus takes its wavetables through `swapObject`, the way the samplers take
+ * a file - so with nothing mounted it renders **exact silence**, and this
+ * harness has been reporting 1.4 us for a machine doing nothing at all while
+ * the same track was the second dearest on a phone. Unlike a sampler's, its
+ * tables are *computed*, so nothing outside the tree is needed to build them:
+ * the app does this in `EngineHost::buildCloud` and so does this.
+ *
+ * The set is leaked on purpose. It lives as long as the machine does and the
+ * process is about to end.
+ */
+void mountCloudIfNeeded(Machine *m, const std::string &machine) {
+    if (m == nullptr || machine != "Cumulus") return;
+    auto *cum = static_cast<machine::Cumulus *>(m);
+    auto set = machine::cumulus::buildCloud(cum->spec(), kSr);
+    delete static_cast<machine::cumulus::CloudSet *>(cum->swapObject(0, set.release()));
+}
+
+/** And the other half of it: a sweep builds one of these per round. */
+void unmountCloud(Machine *m, const std::string &machine) {
+    if (m == nullptr || machine != "Cumulus") return;
+    auto *cum = static_cast<machine::Cumulus *>(m);
+    delete static_cast<machine::cumulus::CloudSet *>(cum->swapObject(0, nullptr));
+}
+
+/**
  * A whole rack, live against frozen: what freezing actually gives back.
  *
  * Dan asked the only question that matters about it - *"is freezing the tracks
@@ -141,7 +171,10 @@ Result timeRack(const std::string &machine, const std::string &fx1, const std::s
         if (rack->currentMachine() == nullptr) return r;
         rack->swapEffect(0, EffectRegistry::create(fx1.c_str()));
         rack->swapEffect(1, EffectRegistry::create(fx2.c_str()));
-        if (Machine *m = rack->currentMachine()) { m->prepare(kSr); m->reset(); m->params().jumpAll(); }
+        if (Machine *m = rack->currentMachine()) {
+            m->prepare(kSr); m->reset(); m->params().jumpAll();
+            mountCloudIfNeeded(m, machine);
+        }
         for (int32_t sl = 0; sl < kEffectSlots; ++sl) {
             if (Effect *e = rack->currentEffect(sl)) { e->prepare(kSr); e->reset(); e->params().jumpAll(); }
         }
@@ -178,6 +211,7 @@ Result timeRack(const std::string &machine, const std::string &fx1, const std::s
     }
     r.finish();
     rack->swapFrozen(nullptr);
+    unmountCloud(rack->currentMachine(), machine);
     delete rack->swapMachine(nullptr);
     for (int32_t sl = 0; sl < kEffectSlots; ++sl) delete rack->swapEffect(sl, nullptr);
     return r;
@@ -201,6 +235,7 @@ Result timeIdle(const std::string &name) {
     m->prepare(kSr);
     m->reset();
     m->params().jumpAll();
+    mountCloudIfNeeded(m, name);
 
     std::vector<float> L(kBlock), R(kBlock);
     // No Player: not one note, ever.
@@ -213,6 +248,7 @@ Result timeIdle(const std::string &name) {
         if (b > 8) r.samples.push_back(us);
     }
     r.finish();
+    unmountCloud(m, name);
     delete m;
     return r;
 }
@@ -317,13 +353,56 @@ Result timeStretch() {
  */
 std::vector<std::pair<std::string, float>> forced;
 
-void force(Machine *m) {
-    if (m == nullptr || forced.empty()) return;
+/**
+ * A factory patch to time instead of the defaults.
+ *
+ * **Defaults are a patch nobody plays**, and timing them has been wrong twice
+ * over: Resonance's `modes` defaults to the number lean caps it at, and
+ * Trinity's `density` to one, so both levers measured nought while both were
+ * working. The same blindness runs the other way - the demo's `Brass` is four
+ * players and its `Keys` is a wavetable through a ring modulator, and neither
+ * is what this harness was timing when it said what those machines cost.
+ *
+ * So `--patch "Bell Keys"` loads that patch out of `tools/banks/`, which is
+ * the same file the audition harness and the app's factory bank come from.
+ */
+std::string patchName;
+
+/** `tools/banks`, from the root the shell script hands over. */
+std::string bankDir() {
+    const char *root = getenv("ACIDULOUS_ROOT");
+    return std::string(root != nullptr ? root : ".") + "/tools/banks";
+}
+
+void force(Machine *m, const std::string &machine) {
+    if (m == nullptr) return;
+    if (!patchName.empty()) {
+        acidulous::audition::Bank bank;
+        std::string error;
+        const std::string path = bankDir() + "/" + machine + ".bank";
+        if (!acidulous::audition::readBank(path, bank, error)) {
+            printf("  %s\n", error.c_str());
+        } else {
+            bool found = false;
+            for (const auto &p : bank.patches) {
+                if (p.name != patchName) continue;
+                int32_t count = 0;
+                const ParamDef *defs = MachineRegistry::paramDefs(machine.c_str(), count);
+                const auto r = acidulous::audition::resolve(p, defs, count);
+                for (size_t i = 0; i < r.norm.size(); ++i) m->params().set(static_cast<int32_t>(i), r.norm[i]);
+                found = true;
+                break;
+            }
+            if (!found) printf("  no patch called '%s' in %s\n", patchName.c_str(), path.c_str());
+        }
+    }
     for (const auto &kv : forced) {
         const int32_t i = m->params().indexOf(kv.first.c_str());
         if (i >= 0) m->params().set(i, kv.second);
     }
     m->params().jumpAll();
+    // After the patch: the spectrum the cloud is built from is parameters.
+    mountCloudIfNeeded(m, machine);
 }
 
 Result timeMachine(const std::string &name) {
@@ -334,7 +413,7 @@ Result timeMachine(const std::string &name) {
     m->prepare(kSr);
     m->reset();
     m->params().jumpAll();
-    force(m);
+    force(m, name);
 
     std::vector<float> L(kBlock), R(kBlock);
     Player player;
@@ -350,6 +429,7 @@ Result timeMachine(const std::string &name) {
         if (b > 8) r.samples.push_back(us);
     }
     r.finish();
+    unmountCloud(m, name);
     delete m;
     return r;
 }
@@ -403,7 +483,7 @@ Result timeTail(const std::string &name, bool isEffect) {
     Machine *m = isEffect ? nullptr : MachineRegistry::create(name.c_str());
     Effect *fx = isEffect ? EffectRegistry::create(name.c_str()) : nullptr;
     if (m == nullptr && fx == nullptr) return r;
-    if (m != nullptr) { m->prepare(kSr); m->reset(); m->params().jumpAll(); }
+    if (m != nullptr) { m->prepare(kSr); m->reset(); m->params().jumpAll(); mountCloudIfNeeded(m, name); }
     if (fx != nullptr) { fx->prepare(kSr); fx->reset(); fx->params().jumpAll(); }
 
     std::vector<float> L(kBlock), R(kBlock);
@@ -436,6 +516,7 @@ Result timeTail(const std::string &name, bool isEffect) {
         if (b > 4) r.samples.push_back(us);
     }
     r.finish();
+    unmountCloud(m, name);
     delete m;
     delete fx;
     return r;
@@ -451,8 +532,10 @@ void report(std::vector<Result> &rows) {
                r.mean / kBudgetUs * 100.0, r.spikiness(), r.spikiness() > 6.0 ? "  <-- spiky" : "");
     }
     printf("\n  Units that hold audio - Bias, Dice, Forage, Mosaic, Pollen - have no\n"
-           "  material mounted here, and Cumulus has no prewarmed tables, so they are\n"
-           "  measured close to idle and their figures are a floor, not a cost.\n");
+           "  material mounted here, so they are measured close to idle and their\n"
+           "  figures are a floor, not a cost. Cumulus used to be in that list and\n"
+           "  was reported at 1.4 us; its tables are computed rather than loaded, so\n"
+           "  this builds them and it is now timed like anything else.\n");
 }
 
 } // namespace
@@ -583,6 +666,11 @@ int main(int argc, char **argv) {
         // Anything after the unit is `name=normalised`, applied before timing.
         for (int i = 3; i < argc; ++i) {
             const std::string kv = argv[i];
+            if (kv == "--patch" && i + 1 < argc) {
+                patchName = argv[++i];
+                printf("patch: %s\n", patchName.c_str());
+                continue;
+            }
             const size_t eq = kv.find('=');
             if (eq == std::string::npos) continue;
             forced.emplace_back(kv.substr(0, eq), std::stof(kv.substr(eq + 1)));

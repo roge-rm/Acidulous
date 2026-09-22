@@ -285,6 +285,7 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
     const float driftCents = paramOf(Drift), driftRate = paramOf(DriftRate);
     const float drive = paramOf(Drive), volume = paramOf(Volume), pan = paramOf(Pan);
     const int32_t unison = std::clamp(steppedOf(Spread), 1, kUnison);
+    const float unisonNorm = 1.0f / std::sqrt(static_cast<float>(unison));
 
     // LFOs, once a block: one on the morph, one on the filter and pan.
     const float sync1 = steppedOf(Lfo1Sync) != 0 ? bpm / 60.0f : 1.0f;
@@ -347,9 +348,19 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
                 Reader &rd = v.readers[u];
                 // Drift: a slow walk toward a new random detune. What makes
                 // a table that never changes sound like it is breathing.
-                rd.drift += (rd.driftTarget * driftCents - rd.drift) * driftRate * dt * 6.0f;
-                if (std::fabs(rd.driftTarget * driftCents - rd.drift) < 0.05f) rd.driftTarget = nextRandom() * 2.0f - 1.0f;
-                const float rate = baseRate * rd.rateMul * std::pow(2.0f, rd.drift / 1200.0f);
+                //
+                // **On a sixteen-sample stride**, as Trinity's pitch and the
+                // filters' coefficients are. The walk moves by `driftRate * dt`
+                // a sample - seconds to cross a few cents - and it was paying
+                // for a `pow` per reader, per voice, per sample to find out.
+                // The coefficient carries the stride so the walk takes the
+                // same time it did.
+                if ((i & 15) == 0) {
+                    rd.drift += (rd.driftTarget * driftCents - rd.drift) * driftRate * dt * 96.0f;
+                    if (std::fabs(rd.driftTarget * driftCents - rd.drift) < 0.05f) rd.driftTarget = nextRandom() * 2.0f - 1.0f;
+                    rd.rate = baseRate * rd.rateMul * std::exp2(rd.drift * (1.0f / 1200.0f));
+                }
+                const float rate = rd.rate;
 
                 float p = rd.pos;
                 float pr = p + widthOffset;
@@ -383,7 +394,7 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
                 v.shimmerPos += baseRate * shimmerRatio;
                 while (v.shimmerPos >= static_cast<float>(size)) v.shimmerPos -= static_cast<float>(size);
             }
-            const float g = env * vel / std::sqrt(static_cast<float>(unison));
+            const float g = env * vel * unisonNorm;
             l = v.filterL.process(l * g);
             r = v.filterR.process(r * g);
             const float pl = std::clamp(1.0f - voicePan, 0.0f, 2.0f);

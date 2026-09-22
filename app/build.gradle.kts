@@ -56,8 +56,14 @@ android {
         // nobody read, a pitch that only moves when a note glides, a `pow`
         // and a `tanh` of numbers that hold still for a block. Trinity's
         // worst block on a mid-range phone halved.
-        versionCode = 7
-        versionName = "0.5.1"
+        //
+        // 0.5.2 measures the patches people play rather than the defaults
+        // nobody does, and found that the pad machine had never been measured
+        // at all - it takes its wavetables through a mount, like the samplers,
+        // so with nothing mounted it made no sound and cost nothing, while the
+        // same track was the second dearest on a phone.
+        versionCode = 8
+        versionName = "0.5.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
