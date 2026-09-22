@@ -1,4 +1,5 @@
 #pragma once
+#include <engine/dsp/Wsola.h>
 #include <atomic>
 #include <engine/core/Constants.h>
 #include <engine/core/Frozen.h>
@@ -100,7 +101,23 @@ class Rack {
     // Which scene is playing decides whether this rack plays its machine or
     // the audio that machine already made. Called before the scheduler fires
     // notes, because a frozen rack is not sent any.
-    void updateFrozen(int64_t sceneId, float bpm, bool playing);
+    /**
+     * [ramping] relaxes the tempo match, and only that.
+     *
+     * A frozen clip is tempo-bound because audio does not stretch - except it
+     * does, for about nine microseconds. A scene with a smooth tempo change is
+     * between two tempos for its first bar, so it matches no clip's rendered
+     * tempo and every freeze in it fell back to its machine: 87 us a rack for
+     * Trinity, in the scene most likely to be why anything was frozen. While
+     * the clock ramps, the mismatch is taken as a rate and the audio is
+     * stretched to it instead.
+     *
+     * Deliberately *only* while ramping. Playing a freeze at any tempo at all
+     * is a bigger change than this - it is the end of a freeze being tempo
+     * bound, which is a promise the interface makes in two places - and it
+     * wants to be that on purpose rather than as a side effect of a ramp.
+     */
+    void updateFrozen(int64_t sceneId, float bpm, bool playing, bool ramping = false);
     /** Pass the rack's place in the arrangement to a machine that wants it. */
     void updateScene(int64_t sceneId, int64_t cycleTick, bool playing);
     bool frozenActive() const { return frozenNow != nullptr; }
@@ -225,6 +242,19 @@ class Rack {
      */
     const FrozenClip *tailClip = nullptr;
     int64_t tailCursor = 0;
+    /**
+     * How fast the frozen audio is read, as a multiple of the rate it was
+     * rendered at. Exactly one for all but a ramping bar, and one means the
+     * plain buffer read rather than the stretcher - there is no sense paying
+     * nine microseconds for what one and a half will do, and none in smearing
+     * a transient that did not need moving.
+     */
+    float frozenRate = 1.0f;
+    dsp::StereoStretch frozenStretch;
+    /** Last block's tick-derived read position, to notice a cycle coming round. */
+    int64_t frozenSyncTarget = 0;
+    /** Whether the stretcher holds this clip at this moment in it. */
+    const FrozenClip *stretching = nullptr;
 
     Machine *machine = nullptr;
     Effect *effects[kEffectSlots]{};

@@ -509,6 +509,63 @@ void aFrozenClipRingsOutPastItsOwnEnd() {
 }
 
 /**
+ * A frozen clip follows a tempo it was not rendered at, while the clock ramps.
+ *
+ * A scene with a smooth tempo change spends its first bar between two tempos,
+ * so it matches no clip's rendered tempo - and `updateFrozen` used to drop the
+ * freeze for exactly that bar and run the machine instead. On the demo that is
+ * three frozen tracks going live at once, in the scene most likely to be why
+ * they were frozen: Trinity measures 87 us a rack against a stretch's 9.
+ *
+ * So the mismatch becomes a rate. The checks are that it engages while ramping
+ * and not otherwise, that the rate is the tempo ratio, and that audio comes
+ * out - a stretcher fed a bad range returns nothing and would be silent.
+ */
+void aFrozenClipFollowsARamp() {
+    auto f = std::make_unique<Fixture>();
+    f->scene(1, 1);
+    f->clip(0, 0, 1);
+    f->commit();
+    f->play();
+    f->run(2);
+
+    // Rack 1 again: no clip, so no notes, so the only sound is the audio.
+    // Long enough that the stretcher has a window and a search to work with.
+    constexpr int32_t kBody = kSampleRate * 2;
+    f->freeze(1, 1, kBar, kSampleRate, kBody);
+    Rack &r = f->racks[1];
+    r.tapDry = true;
+
+    // At the tempo it was rendered at, nothing changes.
+    r.updateFrozen(1, 120.0f, true, false);
+    ok("frozen at its own tempo", r.frozenActive());
+    r.syncFrozen(0, 120.0f);
+    r.render(kBlockFrames);
+    ok("and read plainly", r.dryL[0] == 0.5f, std::to_string(r.dryL[0]));
+
+    // A tempo it was not rendered at, and no ramp: the freeze steps aside, as
+    // it always did, because audio at the wrong tempo walks off the beat.
+    r.updateFrozen(1, 132.0f, true, false);
+    ok("a wrong tempo drops the freeze", !r.frozenActive());
+
+    // The same mismatch while the clock ramps into it: kept, and stretched.
+    r.updateFrozen(1, 132.0f, true, true);
+    ok("but a ramp keeps it", r.frozenActive());
+    r.syncFrozen(0, 132.0f);
+    r.render(kBlockFrames);
+    float peak = 0.0f;
+    for (int32_t i = 0; i < kBlockFrames; ++i) peak = std::max(peak, std::fabs(r.dryL[i]));
+    ok("and it still makes a sound", peak > 0.1f, std::to_string(peak));
+    // Both channels, because the source is the same in both and the search is
+    // shared - the thing that keeps a stereo image together.
+    bool same = true;
+    for (int32_t i = 0; i < kBlockFrames; ++i) same = same && r.dryL[i] == r.dryR[i];
+    ok("in both channels alike", same);
+
+    r.tapDry = false;
+}
+
+/**
  * A cell's cycle counts its repeats; a note's tick does not.
  *
  * `rackTick` goes back to nought at every repeat, which is what makes a
@@ -594,6 +651,7 @@ int main() {
     nothingIsLeftSounding();
     aMutedClipIsMutedWhenFrozen();
     aFrozenClipRingsOutPastItsOwnEnd();
+    aFrozenClipFollowsARamp();
     aCellsCycleCountsItsRepeats();
     aShortCellsCycleAgreesInBothModes();
     printf("\n%d checks, %d failures\n", checks, failures);

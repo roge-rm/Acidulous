@@ -33,6 +33,9 @@ const ParamDef kChannelDefs[Rack::ChannelCount] = {
 
 Rack::Rack() {
     channel.init(kChannelDefs, ChannelCount);
+    // Here, because it allocates: seventeen kilobytes of overlap buffer per
+    // rack, and a rack is built long before the audio thread exists.
+    frozenStretch.prepare();
     for (int32_t i = 0; i <= kInputModSlots; ++i) {
         sinks[i].rack = this;
         sinks[i].stage = i;
@@ -187,7 +190,7 @@ void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
  * starting. Falling back to the machine is both correct and quiet about it;
  * the UI says the freeze is stale.
  */
-void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing) {
+void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing, bool ramping) {
     const FrozenClip *want = nullptr;
     // **A muted clip is muted whether or not it was frozen.**
     //
@@ -206,8 +209,23 @@ void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing) {
         // The tempo has to be the one it was rendered at, to a hundredth of
         // a beat: a second of audio at 121 bpm is a different number of
         // frames than at 120, so the loop would walk away from the beat.
-        if (c != nullptr && c->frames > 0 && std::fabs(c->bpm - bpm) < 0.01f) want = c;
+        //
+        // Unless the clock is ramping, in which case there is no tempo to
+        // match - it is between two of them - and the ratio is handed to the
+        // stretcher instead. Bounded, because a rate far from one is a warble
+        // rather than a tempo and the machine is the better answer there.
+        if (c != nullptr && c->frames > 0 && c->bpm > 0.0f) {
+            const float rate = bpm / c->bpm;
+            if (std::fabs(c->bpm - bpm) < 0.01f) {
+                want = c;
+                frozenRate = 1.0f;
+            } else if (ramping && rate > 0.5f && rate < 2.0f) {
+                want = c;
+                frozenRate = rate;
+            }
+        }
     }
+    if (want == nullptr) frozenRate = 1.0f;
     if (want == frozenNow) return;
     // A frozen clip is exactly its own length, so when it stops it stops - and
     // what the machine would have done is go on ringing. That is what the tail
@@ -227,6 +245,7 @@ void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing) {
     if (machine != nullptr) machine->allNotesOff();
     frozenNow = want;
     frozenCursor = -1;
+    stretching = nullptr; // a new clip is a new cycle, so the stretcher re-seeks
 }
 
 void Rack::updateScene(int64_t sceneId, int64_t cycleTick, bool playing) {
@@ -238,18 +257,81 @@ void Rack::updateScene(int64_t sceneId, int64_t cycleTick, bool playing) {
 }
 
 void Rack::syncFrozen(int64_t tickInIteration, float bpm) {
+    (void)bpm;
     if (frozenNow == nullptr) return;
-    const double perTick = static_cast<double>(kSampleRate) * 60.0 / (static_cast<double>(bpm) * kPPQN);
+    // **The clip's own tempo, not the clock's.** The target is a position in
+    // the recorded audio, and that audio's seconds are the ones it was
+    // rendered at - which is the same number until the clock ramps, and a
+    // different one the moment it does.
+    const float at = frozenNow->bpm > 0.0f ? frozenNow->bpm : 120.0f;
+    const double perTick = static_cast<double>(kSampleRate) * 60.0 / (static_cast<double>(at) * kPPQN);
     const int64_t ticks = frozenNow->ticks > 0 ? frozenNow->ticks : 1;
     const int64_t target = static_cast<int64_t>((tickInIteration % ticks) * perTick) % frozenNow->frames;
-    // The cursor runs free between blocks and is only pulled back when it has
-    // drifted audibly - recomputing it from the tick every block would step
-    // the read position by a sample or two each time, which clicks.
-    if (frozenCursor < 0 || std::llabs(target - frozenCursor) > 256) frozenCursor = target;
+    if (frozenRate == 1.0f) {
+        stretching = nullptr;
+        // The cursor runs free between blocks and is only pulled back when it
+        // has drifted audibly - recomputing it from the tick every block would
+        // step the read position by a sample or two each time, which clicks.
+        if (frozenCursor < 0 || std::llabs(target - frozenCursor) > 256) frozenCursor = target;
+        frozenSyncTarget = target;
+        return;
+    }
+    // Stretching, and the read position is the stretcher's own. Nudging it
+    // between hops is the one thing `Stretcher` forbids: the next join would
+    // be searched against audio from somewhere else. So it is seeded when the
+    // clip arrives and re-seeded only where a cycle begins, which the tick
+    // going backwards is how we know.
+    if (stretching != frozenNow || target < frozenSyncTarget) {
+        frozenStretch.seek(target);
+        stretching = frozenNow;
+    }
+    frozenSyncTarget = target;
 }
 
 void Rack::render(int32_t frames) {
-    if (frozenNow != nullptr) {
+    if (frozenNow != nullptr && frozenRate != 1.0f && stretching == frozenNow) {
+        // Following a tempo the audio was not rendered at, by stretching it.
+        //
+        // The source runs to the end of the **tail**, not the end of the clip,
+        // and that is deliberate: `Stretcher::fill` stops a window short of
+        // whatever end it is given, so bounding it at the clip would drop the
+        // last thirty milliseconds of every pass. The tail is the audio that
+        // followed the clip, contiguous in the same buffer, so it is exactly
+        // the right runway to read into.
+        const FrozenClip *f = frozenNow;
+        float *dst[2] = {bufL, bufR};
+        const float *src[2] = {f->left.data(), f->right.data()};
+        const int64_t last = static_cast<int64_t>(f->frames) + f->tail;
+        int32_t made = frozenStretch.fill(dst, src, 0, last, frames, frozenRate);
+        // Round again when the source has passed the clip's end. A loop point
+        // inside a ramp is joined by the stretcher's own search rather than
+        // sample-exactly, which is the one thing here that is approximate -
+        // and a ramp is one bar, so it needs a clip shorter than that to
+        // happen at all.
+        while (made < frames) {
+            if (f->tail > 0) {
+                tailClip = f;
+                tailCursor = f->frames;
+            }
+            frozenStretch.seek(0);
+            float *more[2] = {bufL + made, bufR + made};
+            const int32_t got = frozenStretch.fill(more, src, 0, last, frames - made, frozenRate);
+            if (got <= 0) {
+                for (int32_t i = made; i < frames; ++i) bufL[i] = bufR[i] = 0.0f;
+                break;
+            }
+            made += got;
+        }
+        if (frozenStretch.sourcePosition() >= f->frames) {
+            if (f->tail > 0) {
+                tailClip = f;
+                tailCursor = f->frames;
+            }
+            frozenStretch.seek(0);
+        }
+        frozenCursor = frozenStretch.sourcePosition();
+        stereo = true;
+    } else if (frozenNow != nullptr) {
         const FrozenClip *f = frozenNow;
         int64_t at = frozenCursor < 0 ? 0 : frozenCursor;
         for (int32_t i = 0; i < frames; ++i) {

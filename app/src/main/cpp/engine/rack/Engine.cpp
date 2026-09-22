@@ -258,7 +258,7 @@ void Engine::renderBlock(const float *in, float *out) {
         // Per rack, because in clip mode every rack may be on a different
         // scene and frozen audio is stored per (track, scene).
         for (int32_t r = 0; r < kRackCount; ++r) {
-            racks[r].updateFrozen(scheduler.rackSceneId(r), clock.bpm(), playing);
+            racks[r].updateFrozen(scheduler.rackSceneId(r), clock.bpm(), playing, clock.isRamping());
             // And the same question asked of the machine, for one that plays
             // the arrangement rather than notes out of it.
             racks[r].updateScene(scheduler.rackSceneId(r), scheduler.rackCycleTick(r), playing);

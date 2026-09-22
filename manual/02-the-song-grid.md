@@ -80,6 +80,12 @@ How much is kept is decided by the sound rather than by a number: the render
 carries on until the decay has gone, up to eight seconds. A closed hat stores
 nothing and a hall stores what it needs.
 
+A scene that **changes tempo smoothly** spends its first bar between two
+tempos, and audio cannot be in two tempos at once. Rather than hand the bar
+back to the machines, the frozen clips in that scene are time-stretched to
+follow the ramp - the same stretching an audio track uses for a take recorded
+at another tempo, so the pitch does not move with the tempo.
+
 Because they are baked in, changing the machine or either effect makes the
 freeze out of date, and the clip says so - the same mark it shows when the
 tempo has moved. Thaw it or freeze it again. A freeze made before this version
