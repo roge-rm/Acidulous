@@ -94,6 +94,29 @@ struct Result {
 };
 
 /**
+ * How fast notes arrive, in note-ons a second.
+ *
+ * **This was a hidden assumption and it made a number wrong.** The pattern
+ * below has always fired an event every sixteen blocks, alternating on and
+ * off - a note-on every 43 ms, about 23 a second. A sixteenth at 124 bpm is
+ * 121 ms, about eight. So the harness plays roughly **three times faster than
+ * any music**, and any patch whose release outlives a note therefore holds
+ * three times the voices here that it would in a song: Trinity's `Bell Keys`
+ * measures 122 us at this rate and 53 at a musical one, and it was the 122
+ * that got reported as what the demo's Keys track costs.
+ *
+ * The density is right for what this harness is mostly for - comparing units,
+ * and measuring a change against itself, where more voices is more signal -
+ * and wrong for "what does this song cost". So it stays the default, and it
+ * is **printed** rather than assumed, and `--rate` changes it.
+ *
+ * Percussive patches do not care: `Pump` and `Squelch` measure the same at
+ * both. A patch that moves a lot between the two rates is telling you its
+ * release is long, which is worth knowing on its own.
+ */
+double gNotesPerSecond = static_cast<double>(kSr) / (16.0 * 2.0 * kBlock); // ~23.4
+
+/**
  * A note pattern with something happening on most blocks.
  *
  * Silence measures nothing: most of these are cheap until a note starts, and
@@ -102,6 +125,11 @@ struct Result {
 struct Player {
     int32_t next = 0;
     int32_t step = 0;
+    /** Blocks between events; two events make one note, so this is half a period. */
+    static int32_t stride() {
+        const double blocks = static_cast<double>(kSr) / (gNotesPerSecond * 2.0 * kBlock);
+        return std::max(1, static_cast<int32_t>(blocks + 0.5));
+    }
     void tick(Machine *m, int32_t block) {
         if (block != next) return;
         // **36 upward, one semitone at a time.** The first version played 48
@@ -113,7 +141,7 @@ struct Player {
         if (step % 2 == 0) m->noteOn(pitch, 100);
         else m->noteOff(static_cast<uint8_t>(36 + ((step - 1) % 8)));
         ++step;
-        next = block + 16; // a note every ~21 ms
+        next = block + stride();
     }
 };
 
@@ -642,6 +670,23 @@ void reportPaired(std::vector<Paired> &rows) {
 }
 
 int main(int argc, char **argv) {
+    // `--rate N` anywhere, in every mode: the note density, in note-ons a
+    // second. It is stripped out here so each mode's own argument handling
+    // sees the arguments it expects.
+    std::vector<std::string> args;
+    for (int i = 0; i < argc; ++i) {
+        const std::string a = argv[i];
+        if (a == "--rate" && i + 1 < argc) {
+            gNotesPerSecond = std::max(0.1, atof(argv[++i]));
+            continue;
+        }
+        args.push_back(a);
+    }
+    argc = static_cast<int>(args.size());
+    std::vector<char *> argp;
+    for (auto &a : args) argp.push_back(a.data());
+    argv = argp.data();
+
     const std::string only = argc > 1 ? argv[1] : "";
     // Off with ACIDULOUS_NO_FTZ=1, so the cost of denormals can be measured
     // rather than argued about.
@@ -654,7 +699,13 @@ int main(int argc, char **argv) {
     const bool ftz = getenv("ACIDULOUS_NO_FTZ") == nullptr;
     if (ftz) dsp::flushDenormals();
     printf("flush-to-zero: %s\n", ftz ? "on" : "off");
-    printf("cost per %d-frame block, budget %.0f us\n\n", kBlock, kBudgetUs);
+    printf("cost per %d-frame block, budget %.0f us\n", kBlock, kBudgetUs);
+    // Said out loud, because it decides what the sustained patches cost and
+    // nothing else here reveals it.
+    printf("notes: %.1f a second, one every %.0f ms%s\n\n", gNotesPerSecond,
+           1000.0 / gNotesPerSecond,
+           gNotesPerSecond > 15.0 ? " - a stress rate, about three times sixteenths at 124 bpm"
+                                  : "");
 
     std::vector<Result> rows;
     if (only == "paired") {
