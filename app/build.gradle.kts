@@ -79,8 +79,13 @@ android {
         // through every scene it sits out. Also: lean reaches the patch that
         // costs its release, machines with nothing to play go to sleep, and
         // the demo is a dub.
-        versionCode = 10
-        versionName = "0.6.0"
+        //
+        // 0.7.0: the mix can be finished on the phone. A sidechain from any
+        // track, group tracks, two inserts on the master, and a loudness meter
+        // with a normalised export. Swing, which had never reached the engine
+        // from the app, now does.
+        versionCode = 11
+        versionName = "0.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
