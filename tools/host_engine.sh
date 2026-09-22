@@ -20,9 +20,14 @@ SRC=$(find "$CPP/engine/machine" "$CPP/engine/dsp" "$CPP/engine/effect" -name '*
 # Molt's analyser, the onsets Dice and Pollen read, and our own file writing.
 SRC="$SRC $CPP/engine/core/Utterance.cpp $CPP/engine/core/Take.cpp $CPP/engine/core/SampleEdit.cpp"
 SRC="$SRC $CPP/engine/core/Tuner.cpp"
-# The modifiers and the rack that runs them, for inputmod_test. Rack.cpp only:
-# the rest of engine/rack is the Engine itself and wants a platform under it.
+# The modifiers and the rack that runs them, for inputmod_test.
 SRC="$SRC $(find "$CPP/engine/inputmod" -name '*.cpp') $CPP/engine/rack/Rack.cpp"
+# And the Engine itself, for render_test. It was left out on the grounds that
+# it "wants a platform under it", and it turns out it does not: `sequencer/` is
+# entirely headers, and `LinkFollower.h` needs only Constants and Timebase, so
+# no Ableton Link comes with it. Two files buy a harness that renders a whole
+# song off a phone.
+SRC="$SRC $CPP/engine/rack/Engine.cpp $CPP/engine/rack/MasterBus.cpp $CPP/engine/core/Capture.cpp"
 SRC="$SRC $CPP/engine/core/ReelCache.cpp $CPP/engine/format/WavStream.cpp"
 SRC="$SRC $CPP/engine/format/WavWriter.cpp $CPP/engine/format/WavReader.cpp"
 SRC="$SRC $CPP/engine/format/Decoded.cpp $CPP/engine/format/AiffReader.cpp $CPP/engine/format/FlacReader.cpp"

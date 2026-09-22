@@ -893,6 +893,27 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
     return sEngine.pushParam(p);
 }
 
+namespace {
+
+/**
+ * Says "this is a render" for as long as it is alive.
+ *
+ * A scope guard rather than two stores, because both render paths return early
+ * in a dozen places - a file that will not open, a scene that does not exist,
+ * a mount queue that is full - and a flag left set would silently pin the
+ * *live* engine to full quality until the app was restarted, which is the
+ * opposite of what the setting is for and would look like the lean switch
+ * being broken.
+ */
+struct OfflineRender {
+    OfflineRender() { EngineSettings::get().offlineRender.store(true, std::memory_order_relaxed); }
+    ~OfflineRender() { EngineSettings::get().offlineRender.store(false, std::memory_order_relaxed); }
+    OfflineRender(const OfflineRender &) = delete;
+    OfflineRender &operator=(const OfflineRender &) = delete;
+};
+
+} // namespace
+
 // --- Offline render -------------------------------------------------------------
 
 bool EngineHost::renderSong(const std::string &path, float tailSeconds, AudioFormat format, int32_t bits,
@@ -944,6 +965,12 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     }
 
     // Take the engine off the device: from here every block is ours to pull.
+    //
+    // And at full quality, whatever the setting says: a render has no deadline
+    // to miss, so there is nothing for lean to buy, and a file that quietly
+    // came out lean because the automatic watcher had chosen it a minute ago
+    // is not a file anybody asked for.
+    const OfflineRender renderingAtFullQuality;
     sAudio.stop();
     const bool loopSongBefore = sEngine.transport.loopSong();
     const bool loopSceneBefore = sEngine.transport.loopScene();
@@ -1745,7 +1772,11 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     const int64_t tailFrames = static_cast<int64_t>(std::max(0.0f, tailSeconds) * kSampleRate);
 
     // Off the device: from here every block is ours to pull, at whatever
-    // speed the CPU manages.
+    // speed the CPU manages - and at full quality, for the reason the song
+    // render gives. A freeze is baked in and then plays back beside machines
+    // running at full, so a lean freeze would be audible as one track being
+    // thinner than the rest.
+    const OfflineRender renderingAtFullQuality;
     sAudio.stop();
     const bool loopSongBefore = sEngine.transport.loopSong();
     const bool loopSceneBefore = sEngine.transport.loopScene();
@@ -1767,12 +1798,28 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     // clip, the dice; and the modifiers carry a step, which is exactly the
     // fault Engine::renderBlock records for song renders. Without them a
     // freeze captures whatever the track happened to be part way through.
+    //
+    // **And the third thing, which was missing too: the parameters jump.**
+    // Every one of them is smoothed, so a `reset()` on its own leaves them
+    // sliding in from wherever they had been - and the first few milliseconds
+    // of the render then depend on what was playing before it. `Engine`'s
+    // panic path says this in its own comment and does both; this said only
+    // half of it, and the cost was a freeze that was **not repeatable**:
+    // rendering the demo's bass twice, with nothing changed between, gave two
+    // files differing from the first block. A frozen clip is supposed to be
+    // the clip, not the clip plus whatever knob was still gliding.
     Rack &r = sEngine.racks[rack];
     r.allNotesOff();
     r.clipPlayer.reset();
-    if (r.currentMachine() != nullptr) r.currentMachine()->reset();
+    if (Machine *m = r.currentMachine()) {
+        m->reset();
+        m->params().jumpAll();
+    }
     for (int32_t sl = 0; sl < kEffectSlots; ++sl) {
-        if (r.currentEffect(sl) != nullptr) r.currentEffect(sl)->reset();
+        if (Effect *e = r.currentEffect(sl)) {
+            e->reset();
+            e->params().jumpAll();
+        }
     }
     for (int32_t sl = 0; sl < kInputModSlots; ++sl) {
         if (r.currentInputMod(sl) != nullptr) r.currentInputMod(sl)->reset();
