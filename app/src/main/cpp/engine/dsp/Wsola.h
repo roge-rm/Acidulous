@@ -108,6 +108,13 @@ template <class Sample, int32_t Channels> class Stretcher {
         readPos = 0.0;
         anchor = 0;
         primed = false;
+        // No search is in flight, and `primed` means the next hop would not
+        // use one anyway - but a stale `searchLag` would let `stepSearch`
+        // correlate against an `out` that has been zeroed.
+        searchLag = 1;
+        searchReach = 0;
+        searchLags = 0;
+        searchCredit = 0.0f;
     }
 
     /** How far into the source the next output sample comes from. */
@@ -139,6 +146,9 @@ template <class Sample, int32_t Channels> class Stretcher {
             }
             made += k;
             taken += k;
+            // A slice of the next hop's search, proportional to what was just
+            // handed out, so it is finished by the time the hop is due.
+            stepSearch(src, first, last, k);
         }
         return made;
     }
@@ -180,7 +190,12 @@ template <class Sample, int32_t Channels> class Stretcher {
         // read a third. The search decides *which* samples are copied and
         // nothing about *where the clock is*.
         int64_t want = static_cast<int64_t>(readPos);
-        if (primed) want = bestJoin(src, first, last, want, searchFor(rate));
+        if (primed) {
+            // Whatever of the search is left, which on a steady stream is
+            // nothing: it was spread across the blocks since the last hop.
+            finishSearch(src, first, last);
+            want = searchBest;
+        }
         if (want < first) want = first;
         if (want + kWindow > last) return false;
 
@@ -193,6 +208,11 @@ template <class Sample, int32_t Channels> class Stretcher {
         // the rate. That difference is the whole of the stretch.
         readPos += static_cast<double>(kHop) * static_cast<double>(rate);
         primed = true;
+        // And the next hop's search opens here, because everything it needs is
+        // known now: its nominal source position is the read position just
+        // advanced, and what it must join onto is the half of this window that
+        // the next shift will bring down to the front of `out`.
+        beginSearch(rate);
         return true;
     }
 
@@ -225,13 +245,54 @@ template <class Sample, int32_t Channels> class Stretcher {
         return want > kSearch ? kSearch : want;
     }
 
-    int64_t bestJoin(const Sample *const src[Channels], int64_t first, int64_t last, int64_t want,
-                     int32_t reach) const {
+    /**
+     * The search, spread across the blocks between two hops instead of paid in
+     * one of them.
+     *
+     * A hop lands once every `kHop` output frames - one block in eleven at 64
+     * frames - and the search is the whole of its cost. So the mean was never
+     * the number: on a phone, three stretching racks seeded at the same cycle
+     * boundary hop in lockstep and put three of those spikes in a single
+     * block. Spreading it makes the cost flat and the lockstep harmless,
+     * because there is no longer a spike to coincide.
+     *
+     * It can be opened as soon as the previous hop is laid, because both of
+     * its inputs are known then: the nominal source position is the read
+     * position that hop just advanced, and what it has to join onto is the
+     * second half of that window - which is precisely what the next shift
+     * brings down to the front of `out`. Hence the `kHop` offset below.
+     * Nothing writes `out` between hops, so the reference is stable.
+     */
+    void beginSearch(float rate) {
+        searchWant = static_cast<int64_t>(readPos);
+        searchBest = searchWant;
+        searchBestScore = -1e30f;
+        searchReach = searchFor(rate);
+        searchLag = -searchReach;
+        searchCredit = 0.0f;
+        // Lags of four, hence the eight: two lag positions per step of four.
+        searchLags = searchReach / 2 + 1;
+    }
+
+    /** Take the slice of the search that [frames] of output has paid for. */
+    void stepSearch(const Sample *const src[Channels], int64_t first, int64_t last, int32_t frames) {
+        if (searchLag > searchReach) return; // done
+        searchCredit += static_cast<float>(searchLags) * static_cast<float>(frames) / static_cast<float>(kHop);
+        int32_t lags = static_cast<int32_t>(searchCredit);
+        if (lags <= 0) return;
+        searchCredit -= static_cast<float>(lags);
+        scoreLags(src, first, last, lags);
+    }
+
+    /** Whatever is left, when the hop is due and will not wait. */
+    void finishSearch(const Sample *const src[Channels], int64_t first, int64_t last) {
+        scoreLags(src, first, last, searchLags * 2 + 2);
+    }
+
+    void scoreLags(const Sample *const src[Channels], int64_t first, int64_t last, int32_t lags) {
         const int32_t overlap = kWindow - kHop;
-        int64_t best = want;
-        float bestScore = -1e30f;
-        for (int32_t d = -reach; d <= reach; d += 4) {
-            const int64_t at = want + d;
+        for (int32_t n = 0; n < lags && searchLag <= searchReach; ++n, searchLag += 4) {
+            const int64_t at = searchWant + searchLag;
             if (at < first || at + kWindow > last) continue;
             float score = 0.0f;
             // On the sum of the channels, so every channel is laid at the one
@@ -240,17 +301,16 @@ template <class Sample, int32_t Channels> class Stretcher {
             for (int32_t i = 0; i < overlap; i += 4) {
                 float written = 0.0f, coming = 0.0f;
                 for (int32_t ch = 0; ch < Channels; ++ch) {
-                    written += out[ch][static_cast<size_t>(i)];
+                    written += out[ch][static_cast<size_t>(kHop + i)];
                     coming += static_cast<float>(src[ch][at + i]);
                 }
                 score += written * coming;
             }
-            if (score > bestScore) {
-                bestScore = score;
-                best = at;
+            if (score > searchBestScore) {
+                searchBestScore = score;
+                searchBest = at;
             }
         }
-        return best;
     }
 
     const float *window = nullptr;
@@ -259,6 +319,13 @@ template <class Sample, int32_t Channels> class Stretcher {
     double readPos = 0.0;
     int64_t anchor = 0;
     bool primed = false;
+    int64_t searchWant = 0;
+    int64_t searchBest = 0;
+    float searchBestScore = -1e30f;
+    int32_t searchLag = 1;
+    int32_t searchReach = 0;
+    int32_t searchLags = 0;
+    float searchCredit = 0.0f;
 };
 
 /** A reel lane: one channel of int16, which is what Bias has always asked for. */
