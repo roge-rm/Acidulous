@@ -69,8 +69,18 @@ android {
         // quarter apart, so most of what is left to find could not be seen.
         // It is the worst block in a hundred now, out of a histogram the
         // engine keeps per rack.
-        versionCode = 9
-        versionName = "0.5.3"
+        //
+        // 0.6.0 because saved songs mean something different. Eleven matrix
+        // destinations that had been offered and read by nothing now move
+        // what they name, so a routing saved to one of them starts doing
+        // something; a frozen vocoder spectrum holds as long as its decay knob
+        // says rather than a sixty-fourth of it; and the organ's leakage, hum
+        // and blower fade out when it is not playing rather than hissing
+        // through every scene it sits out. Also: lean reaches the patch that
+        // costs its release, machines with nothing to play go to sleep, and
+        // the demo is a dub.
+        versionCode = 10
+        versionName = "0.6.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
