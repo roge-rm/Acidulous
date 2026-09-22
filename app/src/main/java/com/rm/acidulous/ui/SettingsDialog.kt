@@ -136,6 +136,8 @@ private fun AudioTab(trackNames: List<String>) {
     var worst by remember { mutableStateOf(0) }
     var phases by remember { mutableStateOf(IntArray(NativeEngine.Phase.entries.size)) }
     var racks by remember { mutableStateOf(IntArray(RACKS)) }
+    // Whether each one was playing frozen audio when it set that peak.
+    var rackFrozen by remember { mutableStateOf(BooleanArray(RACKS)) }
     LaunchedEffect(Unit) {
         while (true) {
             worst = maxOf(worst, NativeEngine.worstBlockUs)
@@ -145,8 +147,18 @@ private fun AudioTab(trackNames: List<String>) {
             }
             phases = next
             val byRack = racks.copyOf()
-            for (r in 0 until RACKS) byRack[r] = maxOf(byRack[r], NativeEngine.worstRackUs(r))
+            val wasFrozen = rackFrozen.copyOf()
+            for (r in 0 until RACKS) {
+                // The flag first: reading the peak is what clears it.
+                val frozen = NativeEngine.worstRackWasFrozen(r)
+                val us = NativeEngine.worstRackUs(r)
+                if (us > byRack[r]) {
+                    byRack[r] = us
+                    wasFrozen[r] = frozen
+                }
+            }
             racks = byRack
+            rackFrozen = wasFrozen
             delay(120)
         }
     }
@@ -168,6 +180,7 @@ private fun AudioTab(trackNames: List<String>) {
             worst = 0
             phases = IntArray(NativeEngine.Phase.entries.size)
             racks = IntArray(RACKS)
+            rackFrozen = BooleanArray(RACKS)
         }
     }
 
@@ -180,7 +193,14 @@ private fun AudioTab(trackNames: List<String>) {
     if (named.isNotEmpty()) {
         Section(
             "worst track",
-            named.take(6).joinToString("  ") { "${trackNames[it]} %.2f".format(racks[it] / 1000f) },
+            // A snowflake means that cost was paid while the track was playing
+            // frozen audio - which should be next to nothing, so it is the
+            // readout saying the freeze is not doing its job rather than the
+            // track being expensive.
+            named.take(6).joinToString("  ") {
+                val mark = if (rackFrozen[it]) " ❄" else ""
+                "${trackNames[it]}$mark %.2f".format(racks[it] / 1000f)
+            },
         ) {}
     }
 

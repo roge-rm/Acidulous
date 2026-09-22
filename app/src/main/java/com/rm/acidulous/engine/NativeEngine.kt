@@ -493,6 +493,8 @@ object NativeEngine {
 
     /** The worst this rack has cost since last asked, in microseconds. Reading clears it. */
     fun worstRackUs(rack: Int): Int = nativeWorstRackUs(rack)
+    /** Was that rack playing frozen audio when it set its peak? Read before [worstRackUs]. */
+    fun worstRackWasFrozen(rack: Int): Boolean = nativeWorstRackWasFrozen(rack)
 
     /** What this rack costs lately, in microseconds. Falls by itself; reading does not clear it. */
     fun rackCostUs(rack: Int): Int = nativeRackCostUs(rack)
@@ -797,6 +799,7 @@ object NativeEngine {
     private external fun nativeWorstCallbackUs(): Int
     private external fun nativeWorstPhaseUs(phase: Int): Int
     private external fun nativeWorstRackUs(rack: Int): Int
+    private external fun nativeWorstRackWasFrozen(rack: Int): Boolean
     private external fun nativeRackCostUs(rack: Int): Int
     private external fun nativeRecentCallbackUs(): Int
     private external fun nativeWorstCallbackCpuUs(): Int

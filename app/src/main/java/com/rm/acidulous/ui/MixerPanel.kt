@@ -213,21 +213,28 @@ private fun ChannelStrip(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(track.name, color = c.text, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         // A lane on this channel, said out loud. Without it a fader that is
         // being overwritten every pass simply looks broken, which is exactly
         // how it was found: "the level didn't seem to respond to my controls".
-        if (automated.isNotEmpty()) {
-            Text(
-                "\u223F " + automated.joinToString(" "),
-                color = c.accent, fontSize = 9.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(c.accentDim)
-                    .clickable { askClear = true }
-                    .padding(horizontal = 3.dp, vertical = 1.dp),
-                textAlign = TextAlign.Center,
-            )
+        //
+        // **Beside the name, not above the fader.** It used to be its own
+        // full-width row, which meant the one strip that had automation stood
+        // a line lower than every strip beside it - the faders no longer
+        // started at the same height and the mixer stopped reading as a row of
+        // like things. A mark on the name line costs no height at all, so
+        // every strip still lines up, and the lanes themselves are named in
+        // the window a tap opens, which had more room to say it properly than
+        // a 9sp line ever did.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(track.name, color = c.text, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (automated.isNotEmpty()) {
+                Text(
+                    "\u223F",
+                    color = c.accent,
+                    fontSize = 11.sp,
+                    modifier = Modifier.clickable { askClear = true }.padding(start = 3.dp),
+                )
+            }
         }
         Row(
             Modifier.height(faderH),

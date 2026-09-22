@@ -13,8 +13,11 @@ says, and then the next one starts. Press play and it plays the song.
 - Tap a scene's header to hear that scene on its own.
 - Hold a scene's header for its menu: settings, insert, duplicate, delete, and
   move it left or right.
-- The loop pill at the left of the bottom bar loops the whole song or the scene
-  that is playing.
+- The loop pill at the left of the bottom bar answers two questions. **Tap** it
+  for what repeats: the whole song, or the scene you are in. **Hold** it for
+  whether it repeats at all - **⟳** comes round for ever, **⇥ end** plays the
+  arrangement through once and stops. An arrangement with a last scene is a
+  thing you want to hear finish.
 - Stop means stop: the next play starts the song from the top. There is no
   pause here - in the launcher every track keeps its own place instead, so stop
   leaves it where it is.

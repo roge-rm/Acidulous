@@ -128,6 +128,19 @@ class Engine : public Rack::ModifiedNoteSink {
      * answer and the other half is *which* rack. It is what decides whether to
      * freeze a track, swap a machine, or leave it alone.
      */
+    /**
+     * Was this rack playing frozen audio when it set that peak?
+     *
+     * Read before `worstRackUs`, which clears. It exists because the readout
+     * said Pad 0.92 and Keys 0.83 on a phone where both were frozen, and a
+     * frozen rack measures 1.5 us off-device - so the list could not say
+     * whether the freeze was not working or the number was not about the
+     * freeze. Now it says which.
+     */
+    bool worstRackWasFrozen(int32_t rack) const {
+        return rack >= 0 && rack < kRackCount && rackPeakFrozen[rack].load(std::memory_order_relaxed);
+    }
+
     int32_t worstRackUs(int32_t rack) {
         return rack >= 0 && rack < kRackCount ? rackPeak[rack].exchange(0, std::memory_order_relaxed) : 0;
     }
@@ -312,6 +325,7 @@ class Engine : public Rack::ModifiedNoteSink {
     std::atomic<int32_t> blockPeak{0};
     std::atomic<int32_t> phasePeak[kPhases]{};
     std::atomic<int32_t> rackPeak[kRackCount]{};
+    std::atomic<bool> rackPeakFrozen[kRackCount]{};
     std::atomic<int32_t> rackRecent[kRackCount]{};
 
     /**

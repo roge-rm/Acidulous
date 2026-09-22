@@ -403,6 +403,8 @@ class EngineHost {
     int32_t worstCallbackUs();
     int32_t worstPhaseUs(int32_t phase);
     int32_t worstRackUs(int32_t rack);
+    /** Was that rack frozen when it set its peak? Read before worstRackUs, which clears. */
+    bool worstRackWasFrozen(int32_t rack) const;
     int32_t rackCostUs(int32_t rack) const;
     int32_t worstCallbackCpuUs();
     int32_t recentCallbackUs() const;

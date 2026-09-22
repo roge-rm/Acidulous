@@ -368,6 +368,12 @@ void Engine::renderBlock(const float *in, float *out) {
             const auto rackUs = static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(
                                                          std::chrono::steady_clock::now() - tRack)
                                                          .count());
+            // Record what this rack was doing when it set the peak, before
+            // keepPeak moves it. A relaxed read against a relaxed store, on a
+            // diagnostic: at worst the flag belongs to a neighbouring block.
+            if (rackUs > rackPeak[r].load(std::memory_order_relaxed)) {
+                rackPeakFrozen[r].store(racks[r].frozenActive(), std::memory_order_relaxed);
+            }
             keepPeak(rackPeak[r], rackUs);
             keepDecaying(rackRecent[r], rackUs);
         }

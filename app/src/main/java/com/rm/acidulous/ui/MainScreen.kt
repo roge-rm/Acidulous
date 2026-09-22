@@ -238,10 +238,39 @@ fun MainScreen(
             // Narrow, it is the glyph alone: which of the two it is reads
             // from the symbol being lit rather than from the word beside it,
             // and a row that has run out of width has nowhere to put a word.
+            //
+            // **Two questions on one pill.** A tap says *what* repeats - the
+            // song or the scene you are in. A hold says *whether* it repeats
+            // at all, because a song that only ever loops has no ending, and
+            // an arrangement with a last scene is a thing you want to hear
+            // finish. The glyph carries it: ⟳ comes round, ⇥ runs to the
+            // end and stops, and the colour says the same thing again so it
+            // reads at a glance from across the room.
+            val repeating = song.loopSong
             BarButton(
-                if (!words) "\u27F3" else if (loopScene) "\u27F3 scene" else "\u27F3 song",
-                word.mappable(MapTargets.action(Action.LoopScene.name)),
-            ) { onLoopScene(!loopScene) }
+                label = when {
+                    !repeating -> if (words) "\u21E5 end" else "\u21E5"
+                    !words -> "\u27F3"
+                    loopScene -> "\u27F3 scene"
+                    else -> "\u27F3 song"
+                },
+                modifier = word.mappable(MapTargets.action(Action.LoopScene.name)),
+                colour = if (repeating) Acid.colors.teal else Acid.colors.textDim,
+                onLongPress = {
+                    val on = !repeating
+                    editor.replace(song.copy(loopSong = on))
+                    // Playing through to the end and looping one scene for
+                    // ever are the same instruction twice, so choosing the
+                    // ending puts the scene loop down.
+                    if (!on) onLoopScene(false)
+                },
+            ) {
+                // Choosing what repeats is also choosing to repeat: a tap on a
+                // pill that says "end" would otherwise change a word nobody
+                // can see the effect of.
+                if (!repeating) editor.replace(song.copy(loopSong = true))
+                onLoopScene(!loopScene)
+            }
         }
     }
     val footerSlot: @Composable () -> Unit = {
