@@ -119,6 +119,7 @@ class Manual final : public Machine {
         float percCoeff = 0.0f;
         float click = 0.0f;      // contact bounce, a few milliseconds
         float clickCoeff = 0.0f;
+        float clickEnv = 0.0f;   // the burst still sounding from the last make or break
         float chiff = 0.0f;
         float chiffCoeff = 0.0f;
         float contactPhase[kBars] = {}; // per-contact make time, in samples
@@ -173,6 +174,10 @@ class Manual final : public Machine {
     float tremPhase = 0.0f;
     /** Blocks in a row with no key down and nothing over -120 dB; see `render`. */
     int32_t quietBlocks = 0;
+    /** The click's own noise, and the gain that gives a 1.8 ms burst one sample's energy. */
+    static constexpr uint32_t kClickSeed = 0x5eed1c1cu;
+    uint32_t clickRng = kClickSeed;
+    float clickBurst = 0.26f;
     /** How much of the idle sounds - leakage, hum, blower - is up; see `render`. */
     float presence = 0.0f;
     float humPhase = 0.0f;

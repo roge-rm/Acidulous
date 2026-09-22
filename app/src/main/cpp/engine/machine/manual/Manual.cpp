@@ -267,6 +267,10 @@ int32_t Manual::steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf
 
 void Manual::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
+    // Uniform noise has a third of a unit's power, and a burst decaying with
+    // time constant t sums to half of t in squared gain: this makes the two
+    // come out equal to the one sample at full height it replaces.
+    clickBurst = std::sqrt(6.0f / (0.0018f * sampleRate));
     bank = &WheelBank::shared(sampleRate);
     rotary.prepare(sampleRate);
     scanner.prepare(static_cast<int32_t>(sampleRate * 0.01f));
@@ -388,6 +392,7 @@ void Manual::reset() {
     for (auto &m : blockMod) m = 0.0f;
     leakSum = 0.0f;
     rngState = kRngSeed;
+    clickRng = kClickSeed;
 }
 
 int32_t Manual::wheelFor(int32_t note, int32_t bar) const {
@@ -484,7 +489,13 @@ void Manual::noteOff(uint8_t note) {
             const float sus = v.manual == MPedal ? paramOf(PedalSustain) : 0.0f;
             v.amp.set(0.0f, paramOf(AmpAttack), 0.0f, 1.0f, paramOf(AmpRelease) + sus * 1.5f, false);
             v.amp.release();
+            // **And the contacts break.** This set the release click and
+            // nothing ever fired it - the contacts only made, at note-on - so
+            // `clickoff` did nothing. Breaking is at once, not staggered: the
+            // key lets go of all nine together.
             v.click = paramOf(Click) * paramOf(ClickRelease);
+            const int bars = v.manual == MPedal ? kPedalBars : kBars;
+            for (int b = 0; b < bars; ++b) v.clickEnv += v.click * v.barLevel[b];
             if (heldCount > 0) --heldCount;
         }
     }
@@ -869,7 +880,9 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         for (auto &v : voices) {
             if (!v.used) continue;
             const float env = v.amp.next();
-            if (!v.gate && env < 0.0002f) { v.used = false; continue; }
+            // Not while a release click is still sounding: the key has let go,
+            // and the break is the last thing it says.
+            if (!v.gate && env < 0.0002f && v.clickEnv < 1e-4f) { v.used = false; continue; }
             const int bars = v.manual == MPedal ? kPedalBars : kBars;
             const float manualGain = v.manual == MUpper ? upperGain : (v.manual == MLower ? lowerGain : pedalGain);
             const float velGain = 1.0f - velAmt + velAmt * v.velocity;
@@ -881,7 +894,7 @@ bool Manual::render(float *L, float *R, int32_t frames) {
                 if (v.contactPhase[b] > 0.0f) {
                     v.contactPhase[b] -= 1.0f;
                     if (v.contactPhase[b] <= 0.0f) {
-                        click += v.click * level;   // the contact makes
+                        v.clickEnv += v.click * level; // the contact makes
                         mech += level;              // and the key moves
                     }
                     continue;
@@ -907,6 +920,20 @@ bool Manual::render(float *L, float *R, int32_t frames) {
                 } else {
                     draw(0, g);
                 }
+            }
+            // **The click is a burst, not a sample.** Two contacts meeting
+            // bounce for a millisecond or two, and what comes out is a short
+            // spray of noise dying away - `clickCoeff`, 1.8 ms, had been
+            // worked out for exactly that and read by nothing, so every
+            // contact was one sample at full height: a tick with no body,
+            // brighter than anything a contact makes. Scaled so the burst
+            // carries the energy the single sample did; only its shape moves.
+            // Its own noise, so the chiff and the wind keep theirs.
+            if (v.clickEnv > 1e-5f) {
+                clickRng = clickRng * 1664525u + 1013904223u;
+                const float n = (static_cast<float>((clickRng >> 9) & 0xffff) / 32768.0f) - 1.0f;
+                click += n * v.clickEnv * clickBurst;
+                v.clickEnv *= v.clickCoeff;
             }
             if (v.perc > 0.0f) {
                 const int w = v.wheel[percBar];
