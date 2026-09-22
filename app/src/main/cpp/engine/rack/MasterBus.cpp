@@ -23,6 +23,7 @@ MasterBus::MasterBus() {
 
 void MasterBus::prepare(int32_t sampleRate) {
     limiter.prepare(sampleRate);
+    loudness.prepare(static_cast<float>(sampleRate));
     this->sampleRate = static_cast<float>(sampleRate);
     click.prepare(sampleRate);
     params_.jumpAll();
@@ -130,6 +131,24 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
     const float f = fadeSmooth.next();
     fadeNow.store(f, std::memory_order_relaxed);
     for (int32_t i = 0; i < frames; ++i) { sumL[i] *= f; sumR[i] *= f; }
+
+    // Loudness of the song, before the metronome is added to it.
+    if (loudnessResetWanted.exchange(false, std::memory_order_relaxed)) {
+        loudness.reset();
+        lufsM.store(dsp::Loudness::kSilent, std::memory_order_relaxed);
+        lufsS.store(dsp::Loudness::kSilent, std::memory_order_relaxed);
+        lufsI.store(dsp::Loudness::kSilent, std::memory_order_relaxed);
+        truePeakDb.store(dsp::Loudness::kSilent, std::memory_order_relaxed);
+    }
+    const int32_t watch = loudnessWatch.load(std::memory_order_relaxed);
+    if (watch > 0) {
+        loudnessWatch.store(watch - 1, std::memory_order_relaxed);
+        loudness.process(sumL, sumR, frames);
+        lufsM.store(loudness.momentary(), std::memory_order_relaxed);
+        lufsS.store(loudness.shortTerm(), std::memory_order_relaxed);
+        lufsI.store(loudness.integrated(), std::memory_order_relaxed);
+        truePeakDb.store(loudness.truePeakDb(), std::memory_order_relaxed);
+    }
 
     // With the limiter off there is no ceiling to borrow from, so a loud
     // mix plus a click can still meet the clamp. That is the user's own

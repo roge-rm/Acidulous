@@ -161,6 +161,13 @@ object NativeEngine {
         startScene: Int = 0, maxSeconds: Float = 0f,
     ): String = nativeRenderStems(paths, racks, tailSeconds, format, bits, startScene, maxSeconds)
     fun cancelRender() = nativeCancelRender()
+    /** [integrated LUFS, true peak dBTP] of the song as an export would render it, or null. */
+    fun measureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray? =
+        nativeMeasureLoudness(tailSeconds, startScene, maxSeconds)
+    fun setRenderGain(db: Float) = nativeSetRenderGain(db)
+    /** Momentary, short-term, integrated LUFS and true peak dBTP of the master; reading keeps it measuring. */
+    fun loudness(): FloatArray = nativeLoudness()
+    fun resetLoudness() = nativeResetLoudness()
     val isRendering: Boolean get() = nativeIsRendering()
     val renderedSeconds: Float get() = nativeRenderedSeconds()
     val renderedPeak: Float get() = nativeRenderedPeak()
@@ -781,6 +788,10 @@ object NativeEngine {
     private external fun nativeInputModParamInfo(type: String): Array<String>
     private external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     private external fun nativeMountSend(slot: Int, typeName: String): Boolean
+    private external fun nativeMeasureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray?
+    private external fun nativeSetRenderGain(db: Float)
+    private external fun nativeLoudness(): FloatArray
+    private external fun nativeResetLoudness()
     private external fun nativeMountMasterInsert(slot: Int, typeName: String): Boolean
     private external fun nativeMountInputEffect(slot: Int, typeName: String): Boolean
     private external fun nativeEffectTypes(): Array<String>

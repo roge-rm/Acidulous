@@ -44,6 +44,9 @@ enum class ExportFormat(
     Bundle("bundle", ".zip", "application/zip", -1, false),
 }
 
+/** What a normalised export aims for: where the streaming services turn songs to. */
+const val NORMALISE_LUFS = -14f
+
 data class ExportOptions(
     val what: ExportWhat = ExportWhat.Song,
     val format: ExportFormat = ExportFormat.Wav,
@@ -51,6 +54,8 @@ data class ExportOptions(
     /** Kilobits a second, for the formats that throw audio away. */
     val rate: Int = 256,
     val tailSeconds: Float = 2f,
+    /** Measured first and turned to [NORMALISE_LUFS], never past -1 dBTP. */
+    val normalise: Boolean = false,
 ) {
     /** Several files, so the picker has to ask for a folder. */
     val manyFiles: Boolean get() = what == ExportWhat.Stems && format.audio
@@ -85,11 +90,12 @@ fun ExportOptionsDialog(
     var bits by rememberSaveable { mutableStateOf(24) }
     var rate by rememberSaveable { mutableStateOf(256) }
     var tail by rememberSaveable { mutableStateOf(2f) }
+    var normalise by rememberSaveable { mutableStateOf(false) }
 
     // The data formats describe the whole song by their nature: there is no
     // such thing as one track's worth of song bundle.
     val audio = format.audio
-    val options = ExportOptions(if (audio) what else ExportWhat.Song, format, bits, rate, tail)
+    val options = ExportOptions(if (audio) what else ExportWhat.Song, format, bits, rate, tail, audio && normalise)
 
     PlainDialog(
         title = "Export",
@@ -151,6 +157,10 @@ fun ExportOptionsDialog(
                 Choice("none", tail <= 0f) { tail = 0f }
                 Choice("2 s", tail > 0f && tail <= 2f) { tail = 2f }
                 Choice("5 s", tail > 2f) { tail = 5f }
+            }
+            if (audio) Section("loudness", if (normalise) "Renders twice: once to measure, once to write." else "") {
+                Choice("as mixed", !normalise) { normalise = false }
+                Choice("${NORMALISE_LUFS.toInt()} LUFS", normalise) { normalise = true }
             }
         }
     }

@@ -604,7 +604,18 @@ private fun App(modifier: Modifier = Modifier) {
             } else {
                 0f
             }
-            when (options.format) {
+            // A normalised export measures first: the same render into no file,
+            // then a gain that brings it to the target - but never past a true
+            // peak of -1 dBTP, which is what a lossy encoder needs above it.
+            var gainDb = 0f
+            if (options.normalise && options.format.audio) {
+                val m = NativeEngine.measureLoudness(options.tailSeconds, scene, limit)
+                    ?: return@withContext emptyList<File>() to "could not measure the song"
+                if (m[0] > -70f) gainDb = minOf(com.rm.acidulous.ui.NORMALISE_LUFS - m[0], -1f - m[1])
+                Log.i(TAG, "normalise: measured %.1f LUFS, %.1f dBTP; gain %.1f dB".format(m[0], m[1], gainDb))
+            }
+            NativeEngine.setRenderGain(gainDb)
+            try { when (options.format) {
                 com.rm.acidulous.ui.ExportFormat.Midi -> {
                     val file = File(cache, "$base.mid")
                     runCatching { com.rm.acidulous.model.MidiFile.write(song, file); listOf(file) to "" }
@@ -673,6 +684,8 @@ private fun App(modifier: Modifier = Modifier) {
                         if (error.isEmpty()) listOf(file) to "" else emptyList<File>() to error
                     }
                 }
+            } } finally {
+                NativeEngine.setRenderGain(0f)
             }
         }
 

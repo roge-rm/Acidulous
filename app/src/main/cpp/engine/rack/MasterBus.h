@@ -4,6 +4,7 @@
 #include <engine/core/Params.h>
 #include <engine/dsp/Click.h>
 #include <engine/dsp/Limiter.h>
+#include <engine/dsp/Loudness.h>
 #include <engine/effect/Effect.h>
 
 // The master section: sums the racks, feeds two send buses, then master
@@ -121,6 +122,27 @@ class MasterBus {
     }
 
     float readPeak() { return peakHold.exchange(0.0f, std::memory_order_relaxed); }
+
+    /**
+     * Loudness of what leaves the master: momentary, short-term and
+     * integrated LUFS, and true peak in dBTP.
+     *
+     * **Measured only while somebody is reading it.** The meter costs a few
+     * microseconds a block - most of it the 4x interpolation true peak needs -
+     * which is several percent of a phone's budget for a number nobody is
+     * looking at. So each read keeps it running for another second, the
+     * audio thread counts that down, and the integrated figure covers the
+     * time the meter was watched since the last reset.
+     */
+    void readLoudness(float *out4) {
+        loudnessWatch.store(kWatchBlocks, std::memory_order_relaxed);
+        out4[0] = lufsM.load(std::memory_order_relaxed);
+        out4[1] = lufsS.load(std::memory_order_relaxed);
+        out4[2] = lufsI.load(std::memory_order_relaxed);
+        out4[3] = truePeakDb.load(std::memory_order_relaxed);
+    }
+    /** Start the integrated figure again: at play, or when asked. */
+    void resetLoudness() { loudnessResetWanted.store(true, std::memory_order_relaxed); }
     float currentFade() const { return fadeNow.load(std::memory_order_relaxed); }
 
     /** Empty every tail and come back from silence. Audio thread. */
@@ -130,6 +152,12 @@ class MasterBus {
     ParamSet params_;
     Effect *sends[kSendSlots]{};
     Effect *inserts[kMasterInsertSlots]{};
+    dsp::Loudness loudness;
+    static constexpr int32_t kWatchBlocks = 750; // a second at 64 frames
+    std::atomic<int32_t> loudnessWatch{0};
+    std::atomic<bool> loudnessResetWanted{false};
+    std::atomic<float> lufsM{dsp::Loudness::kSilent}, lufsS{dsp::Loudness::kSilent},
+        lufsI{dsp::Loudness::kSilent}, truePeakDb{dsp::Loudness::kSilent};
     dsp::Limiter<kBlockFrames> limiter;
     float sampleRate = 48000.0f;
     float panicRamp = 1.0f;

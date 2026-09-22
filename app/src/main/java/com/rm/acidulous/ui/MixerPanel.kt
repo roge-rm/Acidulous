@@ -1,5 +1,6 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -380,6 +381,21 @@ private fun MasterStrip(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text("master", color = c.text, fontSize = 11.sp)
+        // Loudness: integrated since play started, and the short-term and true
+        // peak under it. Polled while the mixer is open, which is also what
+        // keeps the engine measuring; a tap starts the integrated figure again.
+        var lufs by remember { mutableStateOf(floatArrayOf(-120f, -120f, -120f, -120f)) }
+        LaunchedEffect(Unit) {
+            while (true) {
+                lufs = NativeEngine.loudness()
+                kotlinx.coroutines.delay(250)
+            }
+        }
+        fun fmt(v: Float) = if (v <= -70f) "-" else "%.1f".format(v)
+        Column(Modifier.clickable { NativeEngine.resetLoudness() }) {
+            Text("${fmt(lufs[2])} LUFS", color = c.text, fontSize = 11.sp, maxLines = 1)
+            Text("S ${fmt(lufs[1])}  TP ${fmt(lufs[3])}", color = if (lufs[3] > -1f) c.red else c.textDim, fontSize = 9.sp, maxLines = 1)
+        }
         Row(
             Modifier.height(faderH),
             horizontalArrangement = Arrangement.spacedBy(6.dp),

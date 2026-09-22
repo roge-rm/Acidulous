@@ -957,8 +957,20 @@ bool EngineHost::renderStems(const std::vector<RenderTarget> &targets, float tai
     return renderTargets(targets, tailSeconds, format, bits, error, startScene, maxSeconds);
 }
 
+bool EngineHost::measureLoudness(float tailSeconds, int32_t startScene, float maxSeconds, float &lufs, float &truePeak,
+                                 std::string &error) {
+    dsp::Loudness meter;
+    meter.prepare(static_cast<float>(kSampleRate));
+    if (!renderTargets({}, tailSeconds, AudioFormat::Wav, 24, error, startScene, maxSeconds, &meter)) return false;
+    lufs = meter.integrated();
+    truePeak = meter.truePeakDb();
+    return true;
+}
+
 bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
-                               int32_t bits, std::string &error, int32_t startScene, float maxSeconds) {
+                               int32_t bits, std::string &error, int32_t startScene, float maxSeconds,
+                               dsp::Loudness *measure) {
+    if (targets.empty() && measure == nullptr) { error = "nothing to render"; return false; }
     if (!running) { error = "engine not running"; return false; }
     if (rendering.exchange(true)) { error = "already rendering"; return false; }
     renderCancel.store(false, std::memory_order_relaxed);
@@ -1044,6 +1056,15 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     for (;;) {
         if (renderCancel.load(std::memory_order_relaxed)) { cancelled = true; break; }
         sEngine.renderBlock(nullptr, block);
+        if (measure != nullptr) {
+            float ml[kBlockFrames], mr[kBlockFrames];
+            for (int32_t f = 0; f < kBlockFrames; ++f) { ml[f] = block[f * 2]; mr[f] = block[f * 2 + 1]; }
+            measure->process(ml, mr, kBlockFrames);
+        }
+        // A normalised export: the gain its measuring pass asked for, on the
+        // mix and every stem alike so the stems still sum to the mix.
+        const float renderGain = renderGainDb == 0.0f ? 1.0f : std::pow(10.0f, renderGainDb / 20.0f);
+        if (renderGain != 1.0f) for (float &v : block) v *= renderGain;
         for (size_t i = 0; i < targets.size(); ++i) {
             const int32_t rack = targets[i].rack;
             if (rack < 0) {
@@ -1053,8 +1074,8 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
             // A rack's two buffers are separate; a file wants them laced.
             const Rack &source = sEngine.racks[rack];
             for (int32_t f = 0; f < kBlockFrames; ++f) {
-                stem[f * 2] = source.bufL[f];
-                stem[f * 2 + 1] = source.bufR[f];
+                stem[f * 2] = source.bufL[f] * renderGain;
+                stem[f * 2 + 1] = source.bufR[f] * renderGain;
             }
             sinks[i]->write(stem, kBlockFrames);
         }
@@ -1090,7 +1111,7 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     if (!sAudio.start()) LOGE("audio failed to restart after render");
     rendering.store(false);
     LOGI("rendered %zu file(s) from %s: %lld blocks (%.2f s), peak %.3f%s", targets.size(),
-         targets.front().path.c_str(), static_cast<long long>(blocks),
+         targets.empty() ? "(measuring)" : targets.front().path.c_str(), static_cast<long long>(blocks),
          static_cast<float>(blocks) * kBlockFrames / kSampleRate, peak, cancelled ? ", cancelled" : "");
     if (cancelled) {
         error = "cancelled";
@@ -1103,7 +1124,10 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
 
 // --- Transport ---------------------------------------------------------------
 
-void EngineHost::transportPlay(int sceneIdx) { sEngine.transport.requestPlay(sceneIdx); }
+void EngineHost::transportPlay(int sceneIdx) {
+    sEngine.master.resetLoudness(); // integrated loudness is of this playing
+    sEngine.transport.requestPlay(sceneIdx);
+}
 void EngineHost::transportStop() { sEngine.transport.requestStop(); }
 void EngineHost::transportRewind() { sEngine.transport.requestRewind(); }
 bool EngineHost::isPlaying() const { return sEngine.transport.isPlayingForUi(); }
@@ -2040,6 +2064,8 @@ int64_t EngineHost::lateCallbacks() const { return sAudio.getLateCallbacks(); }
 int64_t EngineHost::stalledCallbacks() const { return sAudio.getStalledCallbacks(); }
 int32_t EngineHost::callbackBudgetUs() const { return sAudio.callbackBudgetUs(); }
 float EngineHost::peakLevel() const { return sEngine.master.readPeak(); }
+void EngineHost::loudness(float *out4) { sEngine.master.readLoudness(out4); }
+void EngineHost::resetLoudness() { sEngine.master.resetLoudness(); }
 float EngineHost::rackPeak(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].readPeak() : 0.0f;
 }

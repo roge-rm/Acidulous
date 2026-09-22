@@ -1,4 +1,5 @@
 #pragma once
+#include <engine/dsp/Loudness.h>
 #include <atomic>
 #include <cstdint>
 #include <memory>
@@ -341,7 +342,20 @@ class EngineHost {
      */
   private:
     bool renderTargets(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
-                       int32_t bits, std::string &error, int32_t startScene, float maxSeconds);
+                       int32_t bits, std::string &error, int32_t startScene, float maxSeconds,
+                       dsp::Loudness *measure = nullptr);
+  public:
+    /**
+     * Render the song as an export would, into no file, and measure it:
+     * integrated LUFS and true peak dBTP. The first pass of a normalised
+     * export - renders repeat exactly, so the second pass is what was measured.
+     */
+    bool measureLoudness(float tailSeconds, int32_t startScene, float maxSeconds, float &lufs, float &truePeak,
+                         std::string &error);
+    /** A gain in dB applied to everything the next renders write; 0 for none. */
+    void setRenderGain(float db) { renderGainDb = db; }
+  private:
+    float renderGainDb = 0.0f;
 
   public:
     /**
@@ -423,6 +437,9 @@ class EngineHost {
     int64_t stalledCallbacks() const;
     int32_t callbackBudgetUs() const;
     float peakLevel() const;
+    /** Momentary, short-term and integrated LUFS and true peak dBTP; see MasterBus::readLoudness. */
+    void loudness(float *out4);
+    void resetLoudness();
     float rackPeak(int rack) const;
     float masterFade() const;
     // --- Audio in -------------------------------------------------------

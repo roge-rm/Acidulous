@@ -69,6 +69,18 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMountSend(JNIEnv *env, jobject, 
     return host().mountSend(slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT jfloatArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoudness(JNIEnv *env, jobject) {
+    float v[4];
+    host().loudness(v);
+    jfloatArray out = env->NewFloatArray(4);
+    env->SetFloatArrayRegion(out, 0, 4, v);
+    return out;
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeResetLoudness(JNIEnv *, jobject) { host().resetLoudness(); }
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeMountMasterInsert(JNIEnv *env, jobject, jint slot, jstring typeName) {
     return host().mountMasterInsert(slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
@@ -780,6 +792,22 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeRenderStems(JNIEnv *env, jobject
 
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeCancelRender(JNIEnv *, jobject) { host().cancelRender(); }
+
+/** [integrated LUFS, true peak dBTP], or null with the error left in the log. */
+JNIEXPORT jfloatArray JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMeasureLoudness(JNIEnv *env, jobject, jfloat tailSeconds, jint startScene,
+                                                               jfloat maxSeconds) {
+    float lufs = 0.0f, tp = 0.0f;
+    std::string error;
+    if (!host().measureLoudness(tailSeconds, startScene, maxSeconds, lufs, tp, error)) return nullptr;
+    const float v[2] = {lufs, tp};
+    jfloatArray out = env->NewFloatArray(2);
+    env->SetFloatArrayRegion(out, 0, 2, v);
+    return out;
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetRenderGain(JNIEnv *, jobject, jfloat db) { host().setRenderGain(db); }
 
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSetCountInBars(JNIEnv *, jobject, jint bars) {
