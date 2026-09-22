@@ -31,7 +31,7 @@ very dynamic song may come out a little under -14. Stems get the same gain as
 the mix, so they still add up to it.
 
 The master strip shows the same measurement while you play: integrated LUFS on
-top, short-term and true peak under it. The true peak turns red over -1 dBTP.
+top, true peak under it, in red over -1 dBTP.
 It starts again every time you press play; tap it to start it again yourself.
 
 ## Two renders of the same song match

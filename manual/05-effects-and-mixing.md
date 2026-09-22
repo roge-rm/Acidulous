@@ -94,7 +94,9 @@ The mixer pill opens the strips: one per track and one master.
 - **Pan**, and a MIDI row for what this track sends out.
 - **The master** carries the limiter, and the meter that tells you whether you
   are asking it for too much.
-- **Two master inserts**, the **fx1** and **fx2** chips on the master strip.
+- **Two master inserts**, the **fx1** and **fx2** buttons on the master strip,
+  in the grid under the fader with the two sends (top row) and the limiter and
+  click (bottom row).
   They run on the whole mix, sends included, before the master fader and the
   limiter - an EQ or a gentle compressor for the song. Tap to switch one off and
   on, hold it to choose the effect and set it up.

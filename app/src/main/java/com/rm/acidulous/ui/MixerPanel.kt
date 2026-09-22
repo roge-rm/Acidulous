@@ -392,10 +392,6 @@ private fun MasterStrip(
             }
         }
         fun fmt(v: Float) = if (v <= -70f) "-" else "%.1f".format(v)
-        Column(Modifier.clickable { NativeEngine.resetLoudness() }) {
-            Text("${fmt(lufs[2])} LUFS", color = c.text, fontSize = 11.sp, maxLines = 1)
-            Text("S ${fmt(lufs[1])}  TP ${fmt(lufs[3])}", color = if (lufs[3] > -1f) c.red else c.textDim, fontSize = 9.sp, maxLines = 1)
-        }
         Row(
             Modifier.height(faderH),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -416,63 +412,84 @@ private fun MasterStrip(
                 onChange = { v -> gesture("limiterdrive", v) { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(drive = v))) } },
                 onEnd = { editor.endSongGesture() })
         }
-        // **Under the fader, not beside it.** Four chips in a column next to a
-        // thirty-six dp fader made the master strip three times a channel's
-        // width and left the whole row hugging one side of the screen with a
-        // hand's width of nothing on the other - Dan, over a drawing of it
-        // going vertical instead. A strip is a column; this one is now the
-        // same column as its neighbours, the same width, and the chips are
-        // simply more of what is in it.
-        // **The two sends, by the name of whatever is on them.** They
-        // were a `reverb` chip and a `delay` chip because that is all
-        // they could ever be; now the chip says what the slot holds and
-        // a hold opens it - the tap/hold grammar every other slot in
-        // the app already uses.
-        for (slot in 0 until SEND_SLOTS) {
+        // Under the limiter rather than over the fader, so the master's fader
+        // lines up with every channel's.
+        Column(Modifier.fillMaxWidth().clickable { NativeEngine.resetLoudness() }) {
+            Text("${fmt(lufs[2])} LUFS", color = c.text, fontSize = 10.sp, maxLines = 1)
+            Text("TP ${fmt(lufs[3])}", color = if (lufs[3] > -1f) c.red else c.textDim, fontSize = 9.sp, maxLines = 1)
+        }
+        // **Six buttons in a grid of three rows, so the strip is no taller
+        // than a channel's.** The two sends, the two master inserts, then the
+        // limiter and the click. Tap switches one off and on; hold opens a
+        // send or an insert to choose the effect and set it up.
+        fun sendTap(slot: Int) {
             val send = master.sendAt(slot)
-            ToggleChip(
-                if (send.isEmpty) "send${slot + 1}" else send.type.lowercase(),
-                !send.isEmpty && !send.bypass,
-                c.teal,
-                Modifier.onLongPress { editing = slot },
-            ) {
-                if (send.isEmpty) editing = slot
-                else {
-                    val bypass = !send.bypass
-                    editor.editSong { s -> s.withSendBypass(slot, bypass) }
-                    NativeEngine.setParam(0, sendUnit(slot), "bypass", if (bypass) 1f else 0f, record = false)
-                }
-            }
+            if (send.isEmpty) { editing = slot; return }
+            val bypass = !send.bypass
+            editor.editSong { s -> s.withSendBypass(slot, bypass) }
+            NativeEngine.setParam(0, sendUnit(slot), "bypass", if (bypass) 1f else 0f, record = false)
         }
-        // The master's two inserts: on the whole mix, before the fader and
-        // the limiter. Tap to switch one off and on, hold to choose and set it.
-        for (slot in 0 until MASTER_INSERT_SLOTS) {
+        fun insertTap(slot: Int) {
             val fx = master.insertAt(slot)
-            ToggleChip(
-                if (fx.isEmpty) "fx${slot + 1}" else fx.type.lowercase(),
-                !fx.isEmpty && !fx.bypass,
-                c.accent,
-                Modifier.onLongPress { editingInsert = slot },
-            ) {
-                if (fx.isEmpty) editingInsert = slot
-                else {
-                    val bypass = !fx.bypass
-                    editor.editSong { s -> s.withMasterInsertBypass(slot, bypass) }
-                    NativeEngine.setParam(0, masterInsertUnit(slot), "bypass", if (bypass) 1f else 0f, record = false)
-                }
+            if (fx.isEmpty) { editingInsert = slot; return }
+            val bypass = !fx.bypass
+            editor.editSong { s -> s.withMasterInsertBypass(slot, bypass) }
+            NativeEngine.setParam(0, masterInsertUnit(slot), "bypass", if (bypass) 1f else 0f, record = false)
+        }
+        val grid = Modifier.fillMaxWidth()
+        Row(grid, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            for (slot in 0 until SEND_SLOTS) {
+                val send = master.sendAt(slot)
+                GridChip(if (send.isEmpty) "s${slot + 1}" else shortFx(send.type), !send.isEmpty && !send.bypass, c.teal,
+                         Modifier.weight(1f).onLongPress { editing = slot }) { sendTap(slot) }
             }
         }
-        // **The two on the way in are not here.** They were, beside the sends,
-        // on the grounds that both belong to the song rather than to a rack -
-        // and that put them where a mix is made rather than where a recording
-        // is. Dan: "they are applied on the recordings themselves as they go
-        // in". They live in the record window now, where what they do to a
-        // take is the thing you are already looking at.
-        ToggleChip("limiter", master.limiter.on, c.teal, Modifier.mappable(map("limiteron"))) {
-            editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
+        Row(grid, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            for (slot in 0 until MASTER_INSERT_SLOTS) {
+                val fx = master.insertAt(slot)
+                GridChip(if (fx.isEmpty) "fx${slot + 1}" else shortFx(fx.type), !fx.isEmpty && !fx.bypass, c.accent,
+                         Modifier.weight(1f).onLongPress { editingInsert = slot }) { insertTap(slot) }
+            }
         }
-        ToggleChip("♩ click", clickOn, c.accent) { onClick(!clickOn) }
+        Row(grid, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            GridChip("lim", master.limiter.on, c.teal, Modifier.weight(1f).mappable(map("limiteron"))) {
+                editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
+            }
+            GridChip("♩", clickOn, c.accent, Modifier.weight(1f)) { onClick(!clickOn) }
+        }
     }
+}
+
+/** An effect's name cut to fit half a strip. */
+private fun shortFx(type: String): String = when (type) {
+    "Reverb" -> "verb"
+    "Delay" -> "dly"
+    "Compressor" -> "comp"
+    "Distortion" -> "dist"
+    "Bitcrusher" -> "crsh"
+    "Chorus" -> "chor"
+    "Flanger" -> "flng"
+    "Phaser" -> "phas"
+    "Tremolo" -> "trem"
+    "Filter" -> "filt"
+    "Width" -> "wide"
+    "Shifter" -> "shft"
+    "Harmonizer" -> "harm"
+    else -> type.lowercase().take(4)
+}
+
+/** A half-width chip for the master strip's grid. */
+@Composable
+private fun GridChip(label: String, on: Boolean, colour: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val c = Acid.colors
+    Box(
+        modifier
+            .height(20.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(if (on) colour.copy(alpha = 0.25f) else c.raised)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(label, color = if (on) colour else c.textMid, fontSize = 10.sp, maxLines = 1) }
 }
 
 @Composable
