@@ -556,7 +556,7 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
         chips = {
             androidx.compose.foundation.layout.FlowRow(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 ScaleGroups.forEachIndexed { i, (title, _) -> Pill(title, i == tab) { tab = i } }
@@ -573,7 +573,7 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                     header()
                     androidx.compose.foundation.layout.FlowRow(
                         Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         for (i in range) {

@@ -304,6 +304,21 @@ class ParamBinding(
      * case before the first poll has answered - a window opened and
      * long-pressed inside a tenth of a second.
      */
+    /**
+     * Put **everything** back to how it was when the panel opened.
+     *
+     * What a window's Cancel does. The controls in these windows write live -
+     * a knob is heard as it turns, and it has to be, because voicing anything
+     * by ear means hearing it - so there is nothing held back for an OK to
+     * apply. Cancel is the other half of that bargain: the same baseline the
+     * long press uses, applied to the lot, in one undo step.
+     */
+    fun resetAll() {
+        val was = opened.value ?: return
+        val changed = was.filter { (n, v) -> value(n) != v }
+        if (changed.isNotEmpty()) setMany(changed)
+    }
+
     fun reset(name: String): Boolean {
         val was = opened.value?.get(name) ?: return false
         if (was == value(name)) return true // already there; a no-op, not a failure
@@ -1120,6 +1135,8 @@ internal fun Group(
      * that used two there would be tall and half empty.
      */
     perLine: Int = StackedPerLine,
+    /** Centre the controls in the card rather than packing them to the left. */
+    centred: Boolean = false,
     /**
      * The card's own colour. The default is what a panel sits on, and a
      * *window* is already that colour - so a card drawn in it would be
@@ -1158,7 +1175,11 @@ internal fun Group(
             // of `PanelControlH` - the scar from the 490 dp three-way switch.
             FlowRow(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = if (centred) {
+                    Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
+                } else {
+                    Arrangement.spacedBy(6.dp)
+                },
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 maxItemsInEachRow = perLine,
             ) { content() }

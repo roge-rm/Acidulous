@@ -109,10 +109,25 @@ fun SlotDialog(
     onDismiss: () -> Unit,
 ) {
     val types = remember(kind) { kind.types() }
+    // **Cancel and OK, like every other window, and Cancel means it.**
+    //
+    // This said Done because the controls in it write live - a knob is heard
+    // as it turns, which is the only way to voice anything by ear - so there
+    // was nothing held back for an OK to apply and nothing for a Cancel to
+    // throw away. That is a true label and an inconsistent one: two windows
+    // opened from the same row of chips disagreed about how to leave them.
+    //
+    // So Cancel is given something to do rather than the label being changed
+    // to suit. The panel already knows every control's value as the window
+    // opened - it is what a long press puts one knob back to - so Cancel puts
+    // all of them back, in one undo step, and the bypass with them.
+    val revert = remember { mutableStateOf<(() -> Unit)?>(null) }
     PlainDialog(
         title = fixedType?.lowercase() ?: "${kind.label}${slot + 1}",
-        onDismiss = onDismiss,
-        dismissLabel = "Done",
+        onDismiss = { revert.value?.invoke(); onDismiss() },
+        dismissLabel = "Cancel",
+        confirmLabel = "OK",
+        onConfirm = onDismiss,
         // The default, which is 560, rather than the 420 this used to ask for.
         // That number was chosen when every control sat in one scrolling row
         // and the body only ever needed the height of a single knob; wrapped
@@ -120,7 +135,7 @@ fun SlotDialog(
         // caps the card to the window anyway, so asking for more cannot push
         // the Done button off a turned phone.
     ) {
-        SlotRow(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true)
+        SlotRow(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true, onRevert = { revert.value = it })
     }
 }
 
@@ -144,8 +159,13 @@ private fun SlotRow(
      * two thirds of the window sat empty.
      */
     wrap: Boolean = false,
+    /** Hands the window a way to put everything back; see [SlotDialog]. */
+    onRevert: ((() -> Unit) -> Unit)? = null,
 ) {
     val fx = kind.at(track, slot)
+    // The slot as the window found it. Bypass is not a parameter, so it is not
+    // in the binding's baseline and has to be remembered here.
+    val openedBypass = remember(kind, slot, trackIndex) { fx.bypass }
     var menu by remember { mutableStateOf(false) }
     // Per slot, and kept across a rotation, the same as a machine panel's.
     // Two effects and an modifier can fill a phone between them, and most of
@@ -153,7 +173,18 @@ private fun SlotRow(
     // that says what it is and whether it is on.
     var minimized by rememberSaveable(kind.label, slot) { mutableStateOf(false) }
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            if (wrap) Modifier.fillMaxWidth() else Modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            // Centred in a window, packed left in a panel: a panel's row is a
+            // line in a column of slots and has to line up with the ones above
+            // and below it; a window's is the only thing on its line.
+            horizontalArrangement = if (wrap) {
+                Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)
+            } else {
+                Arrangement.spacedBy(4.dp)
+            },
+        ) {
             if (fixedType == null) Text("${kind.label}${slot + 1}", color = Acid.colors.teal, fontSize = 10.sp)
             if (fixedType == null) TextButton(onClick = { menu = true }) {
                 Text(if (fx.isEmpty) "none ▾" else "${fx.type} ▾", color = Acid.colors.accent, fontSize = 12.sp)
@@ -197,7 +228,17 @@ private fun SlotRow(
                 }
             }
         }
-        if (!fx.isEmpty && !minimized) SlotFace(kind, fx.type, trackIndex, slot, editor, wrap)
+        if (!fx.isEmpty && !minimized) {
+            SlotFace(kind, fx.type, trackIndex, slot, editor, wrap) { b ->
+                onRevert?.invoke {
+                    b.resetAll()
+                    if (fx.bypass != openedBypass) {
+                        editor.edit(trackIndex) { t -> kind.withBypass(t, slot, openedBypass) }
+                        NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (openedBypass) 1f else 0f, record = true)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -205,10 +246,13 @@ private fun SlotRow(
 private fun SlotFace(
     kind: SlotKind, type: String, trackIndex: Int, slot: Int, editor: SongEditor,
     wrap: Boolean = false,
+    /** Called with the binding once it exists, so a window can undo it wholesale. */
+    onBinding: ((ParamBinding) -> Unit)? = null,
 ) {
     val info = remember(kind, type) { kind.paramInfo(type) }
     val unit = kind.unit(slot)
     val b = rememberParamBinding(trackIndex, type, info, editor, unit) { t, n, v -> kind.withParam(t, slot, n, v) }
+    androidx.compose.runtime.SideEffect { onBinding?.invoke(b) }
     // The panel follows the engine; on first show the engine holds whatever the
     // document pushed, so nothing to seed here.
     Column {
@@ -278,7 +322,7 @@ private fun SlotFace(
             androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true) {
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     for ((title, group) in groupsFor(type, shown)) {
-                        Group(title, perLine = 4, background = Acid.colors.cardAlt) {
+                        Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
                             for (p in group) control(p)
                         }
                     }
