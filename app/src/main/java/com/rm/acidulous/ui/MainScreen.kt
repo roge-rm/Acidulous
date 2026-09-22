@@ -61,6 +61,7 @@ import com.rm.acidulous.engine.LaunchState
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
 import com.rm.acidulous.model.Action
+import com.rm.acidulous.model.ClipClipboard
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.samplesInUse
@@ -742,6 +743,31 @@ fun MainScreen(
                 onClear = {
                     dialog = null
                     editor.editClip(d.track, d.sceneId) { it.cleared() }
+                },
+                onCopy = {
+                    dialog = null
+                    ClipClipboard.put(
+                        current,
+                        song.tracks.getOrNull(d.track)?.name ?: "",
+                        song.scenes.firstOrNull { it.id == d.sceneId }?.name ?: "",
+                    )
+                },
+                onCut = {
+                    dialog = null
+                    ClipClipboard.put(
+                        current,
+                        song.tracks.getOrNull(d.track)?.name ?: "",
+                        song.scenes.firstOrNull { it.id == d.sceneId }?.name ?: "",
+                    )
+                    editor.editClip(d.track, d.sceneId) { it.cleared() }
+                },
+                onPaste = {
+                    dialog = null
+                    // The whole clip, not a merge: what was here is replaced,
+                    // which is why pasting over something asks first.
+                    ClipClipboard.take()?.let { pasted ->
+                        editor.editClip(d.track, d.sceneId) { pasted }
+                    }
                 },
             ) { edited ->
                 editor.editClip(d.track, d.sceneId) { edited }

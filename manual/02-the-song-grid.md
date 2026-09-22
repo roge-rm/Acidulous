@@ -50,6 +50,21 @@ or opens a clip, so nothing is in the way of playing.
 Hold a clip for its settings: how many bars it is, whether it is muted, and the
 grid it snaps to.
 
+**Copy, cut, paste and clear** are the four at the top, because they are what
+you came for. Hold any cell to reach them, empty ones included, so a copied
+clip goes wherever you want it - the next scene, another track, a track that
+has nothing in that scene yet. Pasting replaces the whole clip rather than
+merging into it, so pasting over a cell that has something in it asks first,
+and so does clearing. Cutting does not ask, because what it takes is on the
+clipboard rather than gone.
+
+A copy carries the notes, the automation and the settings - its length comes
+with it, so a four-bar clip stays four bars in a two-bar scene, which is
+allowed. It does **not** carry the frozen audio: a render belongs to the notes
+it was made from, on the track it was made for, so a pasted clip plays its
+machine until you freeze it where it now lives. Recordings on an audio track
+do come, because a take is one file however many clips point into it.
+
 ## What a cell tells you
 
 The number of bars is in the corner, with **1** for a one-shot and **M** for a

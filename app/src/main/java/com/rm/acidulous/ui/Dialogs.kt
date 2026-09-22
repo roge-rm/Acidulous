@@ -43,6 +43,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import com.rm.acidulous.model.Clip
+import com.rm.acidulous.model.ClipClipboard
 import com.rm.acidulous.model.hasContent
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.PlayMode
@@ -151,6 +152,11 @@ fun ClipSettingsDialog(
     onThaw: () -> Unit = {},
     /** Empty it of notes and automation, keeping how it is set up. Dismisses. */
     onClear: () -> Unit = {},
+    /** Put this clip on the clipboard. [onCut] copies and then clears. Both dismiss. */
+    onCopy: () -> Unit = {},
+    onCut: () -> Unit = {},
+    /** Replace this clip with what is on the clipboard. Dismisses. */
+    onPaste: () -> Unit = {},
     onConfirm: (Clip) -> Unit,
 ) {
     var bars by remember { mutableStateOf(clip.bars) }
@@ -160,6 +166,7 @@ fun ClipSettingsDialog(
     var seed by remember { mutableStateOf(clip.seed) }
     var free by remember { mutableStateOf(clip.freeRoll) }
     var confirmClear by remember { mutableStateOf(false) }
+    var confirmPaste by remember { mutableStateOf(false) }
     // Only where the clip actually gambles. A control for a feature this clip
     // is not using is clutter, and most clips never will be.
     val rolls = clip.notes.any { it.chance < 100 }
@@ -172,6 +179,27 @@ fun ClipSettingsDialog(
             onConfirm(clip.copy(bars = bars, playMode = mode, mute = mute, grid = grid, seed = seed, freeRoll = free))
         },
     ) {
+        // **The actions first.** They are what you opened this window to do -
+        // the settings under them are the ones you set once and leave - and a
+        // control you reach for often does not belong at the bottom of a
+        // scrolling list. `clear` sits with them because it is the same kind of
+        // thing, and it asks before it does anything; so does pasting over a
+        // clip that has something in it. `cut` does not ask, because what it
+        // takes is on the clipboard rather than gone.
+        val held = ClipClipboard.clip
+        Section(
+            "clip",
+            if (held != null) "%s is on the clipboard.".format(ClipClipboard.from)
+            else "Copying takes the notes, the automation and the settings. The frozen audio stays where it was made.",
+        ) {
+            Choice("copy", false, enabled = clip.hasContent() || clip.notes.isNotEmpty(), onPick = onCopy)
+            Choice("cut", false, enabled = clip.hasContent(), onPick = onCut)
+            Choice("paste", false, enabled = held != null) {
+                if (clip.hasContent()) confirmPaste = true else onPaste()
+            }
+            Choice("clear", false, enabled = clip.hasContent()) { confirmClear = true }
+        }
+
         SliderSection("bars", "$bars", "", bars.toFloat(), 1f..16f, 14) { bars = it.toInt().coerceIn(1, 16) }
 
         Section("plays") {
@@ -217,9 +245,10 @@ fun ClipSettingsDialog(
             }
         }
 
-        // Also an action rather than a setting, and the only one here that
-        // throws work away - so it asks first, and it is offered only when
-        // there is something to throw.
+        // What is in it, said plainly. The action that throws it away is at the
+        // top with the others; this is only the sentence that says what would
+        // go, and it is worth having where the eye ends up rather than only
+        // inside the window that asks.
         if (clip.hasContent()) {
             val what = buildString {
                 if (clip.notes.isNotEmpty()) append("%d note%s".format(clip.notes.size, if (clip.notes.size == 1) "" else "s"))
@@ -232,9 +261,23 @@ fun ClipSettingsDialog(
                     append("the freeze")
                 }
             }
-            ListSection("contents", "$what. Bars, play mode, mute and grid are kept.") {
-                Choice("clear", false) { confirmClear = true }
-            }
+            Section("contents", "$what.") {}
+        }
+    }
+
+    if (confirmPaste) {
+        PlainDialog(
+            title = "Paste over this clip?",
+            onDismiss = { confirmPaste = false },
+            confirmLabel = "Paste",
+            onConfirm = { confirmPaste = false; onPaste() },
+        ) {
+            Text(
+                "This clip already has something in it, and pasting replaces the whole of it - " +
+                    "notes, automation, length and all. " +
+                    ClipClipboard.from + " is what goes in its place.",
+                color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
+            )
         }
     }
 
@@ -964,18 +1007,40 @@ internal fun ListSection(
     }
 }
 
-/** One of a set: filled when it is the one in force. */
+/**
+ * One of a set: filled when it is the one in force.
+ *
+ * [enabled] is for the chips that are *actions* rather than choices - pasting
+ * with nothing on the clipboard, clearing a clip with nothing in it - where
+ * the honest thing is to show the control and say it has nothing to do, rather
+ * than to hide it and leave somebody hunting for where it went.
+ */
 @Composable
-internal fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onPick: () -> Unit) {
+internal fun Choice(
+    label: String,
+    on: Boolean,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onPick: () -> Unit,
+) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
     Box(
         modifier.clip(RoundedCornerShape(4.dp))
             .background(if (on) c.accent else c.control)
-            .clickable(onClick = onPick)
+            .clickable(enabled = enabled, onClick = onPick)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (on) c.onAccent else c.textMid, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+        Text(
+            label,
+            color = when {
+                !enabled -> c.textFaint
+                on -> c.onAccent
+                else -> c.textMid
+            },
+            fontSize = 12.sp,
+            fontFamily = FontFamily.Monospace,
+        )
     }
 }
 

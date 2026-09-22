@@ -336,6 +336,31 @@ data class Clip(
 fun Clip.cleared(): Clip =
     copy(notes = emptyList(), automation = emptyMap(), frozen = null, audio = null)
 
+/**
+ * The clip as something to put somewhere else: everything it holds, except the
+ * freeze, and a new identity.
+ *
+ * **The freeze cannot come.** A render is named after the track and scene it
+ * was made for - `Freeze.fileFor` builds `"${'$'}{trackId}__${'$'}{sceneId}.wav"` - and
+ * `Freeze.discard` deletes that file, so two clips pointing at one render means
+ * thawing either one silences both. Pasted onto another track it would be a
+ * render of a different machine as well. It is the same reasoning [cleared]
+ * gives: a freeze belongs to the notes it was made from, in the place it was
+ * made.
+ *
+ * **The audio does come.** A `TakeRef` is a window into a shared, immutable
+ * take file - one take sung across four scenes is four clips and one file - so
+ * a second clip referring to it is what that design is for.
+ *
+ * Everything else comes: the notes, the automation, and how the clip is set up.
+ * A lane is addressed by name and resolved against whatever machine it lands
+ * on, so a name the new one does not have simply does not resolve; and the
+ * ordinary paste is the same track in the next scene, where the automation is
+ * exactly what you wanted to bring. The `rev` looks after itself - it lives
+ * outside the constructor, so every `copy` mints a new one.
+ */
+fun Clip.asCopy(): Clip = copy(frozen = null)
+
 /** Is there anything in this clip to clear? */
 fun Clip.hasContent(): Boolean =
     notes.isNotEmpty() || automation.isNotEmpty() || frozen != null || audio?.isEmpty == false
