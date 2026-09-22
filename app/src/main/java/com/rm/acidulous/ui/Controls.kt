@@ -42,13 +42,27 @@ fun VerticalFader(
     onStart: () -> Unit = {},
     onChange: (Float) -> Unit,
     onEnd: () -> Unit = {},
+    /** Hold it to put it back where it was when the panel opened; see [Knob]. */
+    onReset: (() -> Unit)? = null,
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
+    val reset by rememberUpdatedState(onReset)
     val c = Acid.colors
     Canvas(
         modifier.pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
+                // Before anything moves. A fader jumps to where you touched
+                // it, so the hold has to be ruled out first or a hold would
+                // move the value and then put it back - which is a jump either
+                // way, and the one thing this gesture is for is not jumping.
+                if (reset != null &&
+                    wasHeld(down, viewConfiguration.touchSlop, viewConfiguration.longPressTimeoutMillis)
+                ) {
+                    reset?.invoke()
+                    swallowRest()
+                    return@awaitEachGesture
+                }
                 cb.first()
                 fun at(y: Float) = (1f - y / size.height).coerceIn(0f, 1f)
                 cb.second(at(down.position.y))
@@ -84,13 +98,24 @@ fun MiniSlider(
     onStart: () -> Unit = {},
     onChange: (Float) -> Unit,
     onEnd: () -> Unit = {},
+    /** Hold it to put it back where it was when the panel opened; see [Knob]. */
+    onReset: (() -> Unit)? = null,
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
+    val reset by rememberUpdatedState(onReset)
     val c = Acid.colors
     Canvas(
         modifier.pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
+                // Before the jump, for the reason the fader above gives.
+                if (reset != null &&
+                    wasHeld(down, viewConfiguration.touchSlop, viewConfiguration.longPressTimeoutMillis)
+                ) {
+                    reset?.invoke()
+                    swallowRest()
+                    return@awaitEachGesture
+                }
                 cb.first()
                 fun at(x: Float) = (x / size.width).coerceIn(0f, 1f)
                 cb.second(at(down.position.x))

@@ -49,6 +49,20 @@ it is showing; then drag inside it to set that property on each note.
 The same seed drives every one of these, so a clip that varies still plays the
 same bar twice when you want it to.
 
+## The controls
+
+The machine's own panel sits between the grid and the instrument, and every
+insert, modifier and send has the same one in a window of its own.
+
+**Hold a knob to put it back.** It returns to the value it had when you opened
+that panel - not to a factory setting, but to how it sounded when you got here.
+Reopening the panel takes a new reading, so "when you got here" is always the
+last time you came in. Faders and sliders do it too, the mixer's included.
+
+While **MIDI mapping** is on, holding a control means something else: it clears
+whatever is driving that control. The two never overlap, because mapping mode
+takes every touch before the control sees it.
+
 ## Automation
 
 The strip under the note lane records and draws a parameter over time. Move any

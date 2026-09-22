@@ -178,6 +178,24 @@ private fun ChannelStrip(
     fun tap(update: (Mixer) -> Mixer) = editor.edit(index) { t -> t.copy(mixer = update(t.mixer)) }
     fun map(name: String) = MapTargets.param(index, "channel", name)
 
+    /**
+     * The strip as it was when the mixer opened, for a long press to go back
+     * to - the same gesture the panels' knobs have.
+     *
+     * **Taken at composition, unlike a panel's.** A machine panel waits for
+     * its first poll because it reads the *engine* and knows nothing until it
+     * has asked. A strip reads the document, which is right here and already
+     * correct, so there is nothing to wait for. The mixer leaving composition
+     * when it closes is what makes reopening take a fresh reading.
+     */
+    val opened = remember(index) { m }
+
+    /** Put one value back, in the document and in the engine both. */
+    fun back(name: String, v01: Float, update: (Mixer) -> Mixer) {
+        live(name, v01)
+        tap(update)
+    }
+
     if (askClear) {
         PlainDialog(
             title = "Clear automation on ${track.name}?",
@@ -248,6 +266,7 @@ private fun ChannelStrip(
                 onStart = { editor.beginGesture(index) },
                 onChange = { v -> gesture("gain", v) { it.copy(volume = EngineParams.volumeFrom01(v)) } },
                 onEnd = { editor.endGesture() },
+                onReset = { back("gain", EngineParams.volume01(opened.volume)) { it.copy(volume = opened.volume) } },
             )
         }
         Labeled("pan") {
@@ -257,6 +276,7 @@ private fun ChannelStrip(
                 onStart = { editor.beginGesture(index) },
                 onChange = { v -> gesture("pan", v) { it.copy(pan = EngineParams.panFrom01(v)) } },
                 onEnd = { editor.endGesture() },
+                onReset = { back("pan", EngineParams.pan01(opened.pan)) { it.copy(pan = opened.pan) } },
             )
         }
         Labeled(sendNames.getOrElse(0) { "send 1" }) {
@@ -266,6 +286,7 @@ private fun ChannelStrip(
                 onStart = { editor.beginGesture(index) },
                 onChange = { v -> gesture("sendreverb", v) { it.copy(sendReverb = v) } },
                 onEnd = { editor.endGesture() },
+                onReset = { back("sendreverb", opened.sendReverb) { it.copy(sendReverb = opened.sendReverb) } },
             )
         }
         Labeled(sendNames.getOrElse(1) { "send 2" }) {
@@ -275,6 +296,7 @@ private fun ChannelStrip(
                 onStart = { editor.beginGesture(index) },
                 onChange = { v -> gesture("senddelay", v) { it.copy(sendDelay = v) } },
                 onEnd = { editor.endGesture() },
+                onReset = { back("senddelay", opened.sendDelay) { it.copy(sendDelay = opened.sendDelay) } },
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {

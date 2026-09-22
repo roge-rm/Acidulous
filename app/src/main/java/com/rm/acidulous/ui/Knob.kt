@@ -23,7 +23,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -38,6 +41,41 @@ import com.rm.acidulous.ui.theme.AcidColors
  * value below. Value is 0..1; the caller formats it. Reports gesture start
  * and end so the document can coalesce a turn into one undo step.
  */
+/**
+ * Was this press a hold, or the beginning of a move?
+ *
+ * The only thing that separates them is whether the finger travelled before
+ * the clock ran out, so **nothing is decided until one of the two wins** -
+ * which is why no `onStart` fires first and no undo entry is opened for a
+ * thumb somebody rested on a control. Lifting early is a tap and is neither.
+ *
+ * Shared by the knob and the fader because the fader needs it more: it jumps
+ * to wherever you touched it, so a hold that had not been ruled out first
+ * would move the value before putting it back.
+ */
+internal suspend fun AwaitPointerEventScope.wasHeld(
+    down: PointerInputChange,
+    slop: Float,
+    timeoutMillis: Long,
+): Boolean = withTimeoutOrNull(timeoutMillis) {
+    var moved = false
+    while (!moved) {
+        val event = awaitPointerEvent()
+        if (event.changes.none { it.pressed }) return@withTimeoutOrNull false // lifted: a tap
+        moved = event.changes.any { (it.position - down.position).getDistance() > slop }
+    }
+    true // travelled: a move
+} == null
+
+/** Eat the rest of a gesture we have already acted on, so the release lands nowhere. */
+internal suspend fun AwaitPointerEventScope.swallowRest() {
+    while (true) {
+        val event = awaitPointerEvent()
+        event.changes.forEach { it.consume() }
+        if (event.changes.none { it.pressed }) break
+    }
+}
+
 @Composable
 fun Knob(
     label: String,
@@ -49,8 +87,18 @@ fun Knob(
     onStart: () -> Unit = {},
     onChange: (Float) -> Unit,
     onEnd: () -> Unit = {},
+    /**
+     * Hold it to put it back where it was when this panel opened.
+     *
+     * Null on a knob that has nothing to go back to. It is the same gesture
+     * `Modifier.mappable` uses to clear a control's mapping, and there is no
+     * argument between them: while mapping mode is on, `mappable` consumes the
+     * touch on the Initial pass and this loop never runs at all.
+     */
+    onReset: (() -> Unit)? = null,
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
+    val reset by rememberUpdatedState(onReset)
     val current by rememberUpdatedState(value)
     // `c` is the centre point inside the Canvas below, so the palette takes
     // the other name here.
@@ -62,6 +110,22 @@ fun Knob(
                     val down = awaitFirstDown()
                     val startValue = current
                     val startY = down.position.y
+                    // **The long press is decided before the gesture begins.**
+                    //
+                    // A hold has to be told from a turn, and the only thing
+                    // that separates them is whether the finger moved before
+                    // the timeout. So nothing is opened - no `onStart`, no
+                    // undo entry - until one of the two has won: a movement
+                    // past the touch slop, or the clock. Calling `onStart`
+                    // first and taking it back later would leave a gesture on
+                    // the editor for every knob anybody rested a thumb on.
+                    if (reset != null &&
+                        wasHeld(down, viewConfiguration.touchSlop, viewConfiguration.longPressTimeoutMillis)
+                    ) {
+                        reset?.invoke()
+                        swallowRest()
+                        return@awaitEachGesture
+                    }
                     cb.first()
                     drag(down.id) { change ->
                         change.consume()

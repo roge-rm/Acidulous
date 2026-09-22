@@ -238,6 +238,11 @@ class ParamBinding(
     private val editor: SongEditor,
     private val values: androidx.compose.runtime.MutableState<Map<String, Float>>,
     private val dragging: androidx.compose.runtime.MutableState<String?>,
+    /**
+     * Every control's value as it was when this panel opened, or null until
+     * the first poll has said what they are. See [reset].
+     */
+    private val opened: androidx.compose.runtime.MutableState<Map<String, Float>?>,
     /** Which unit on the rack the names address: "machine", "effect1", "effect2". */
     val unit: String = "machine",
     /** How a value lands in the document. */
@@ -286,6 +291,32 @@ class ParamBinding(
         for ((n, v) in full) NativeEngine.setParam(trackIndex, unit, n, v, record = false)
     }
 
+    /**
+     * Put one control back where it was when the panel was opened.
+     *
+     * **Where it was, not its factory default.** A default is a fact about the
+     * machine; this is a fact about what you were doing - you turned four
+     * knobs, you want one of them back, and back means how it sounded a minute
+     * ago. Reopening the panel takes a new reading, so "a minute ago" is
+     * always the last time you came in here.
+     *
+     * Returns false when there is nothing to go back to, which is only the
+     * case before the first poll has answered - a window opened and
+     * long-pressed inside a tenth of a second.
+     */
+    fun reset(name: String): Boolean {
+        val was = opened.value?.get(name) ?: return false
+        if (was == value(name)) return true // already there; a no-op, not a failure
+        set(name, was)
+        return true
+    }
+
+    /** Has this control been moved since the panel opened? */
+    fun moved(name: String): Boolean {
+        val was = opened.value?.get(name) ?: return false
+        return was != value(name)
+    }
+
     val draggingName: String? get() = dragging.value
 }
 
@@ -297,7 +328,21 @@ fun rememberParamBinding(
 ): ParamBinding {
     val values = remember(trackIndex, type, unit) { mutableStateOf(info.associate { it.name to it.defaultNormalized }) }
     val dragging = remember { mutableStateOf<String?>(null) }
-    val binding = remember(trackIndex, type, unit) { ParamBinding(trackIndex, info, editor, values, dragging, unit, apply) }
+    /**
+     * What everything read when this panel opened, for a long press to go back
+     * to.
+     *
+     * **Taken on the first poll, not at composition.** At composition `values`
+     * is every parameter's *default*, because the panel has not asked the
+     * engine anything yet - so a baseline captured here would send a long
+     * press to the factory setting and call it "where it was". Keyed with the
+     * binding, so reopening a panel takes a fresh reading, which is what "when
+     * this panel was opened" has to mean.
+     */
+    val opened = remember(trackIndex, type, unit) { mutableStateOf<Map<String, Float>?>(null) }
+    val binding = remember(trackIndex, type, unit) {
+        ParamBinding(trackIndex, info, editor, values, dragging, opened, unit, apply)
+    }
     LaunchedEffect(trackIndex, type, unit) {
         while (true) {
             val d = dragging.value
@@ -305,6 +350,7 @@ fun rememberParamBinding(
                 p.name to (if (p.name == d) values.value[p.name] ?: p.defaultNormalized
                 else NativeEngine.paramNormalized(trackIndex, unit, p.name).takeIf { it >= 0f } ?: values.value[p.name] ?: p.defaultNormalized)
             }
+            if (opened.value == null) opened.value = values.value
             delay(100)
         }
     }
@@ -661,6 +707,7 @@ internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, acce
         label = label, value = b.value(name), display = b.display(name), accent = accent,
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
+        onReset = { b.reset(name) },
     )
 }
 
@@ -989,6 +1036,7 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
         display = labels.getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
+        onReset = { b.reset(name) },
     )
 }
 
@@ -1696,6 +1744,7 @@ private fun Drawbars(b: ParamBinding, prefix: String, names: List<String>, colou
                     onStart = { b.start(name) },
                     onChange = { v -> b.change(name, v) },
                     onEnd = { b.end() },
+                    onReset = { b.reset(name) },
                 )
                 Text("%d".format((b.value(name) * 8f).roundToInt()), color = PanelAmber, fontSize = 8.sp,
                     fontFamily = FontFamily.Monospace)

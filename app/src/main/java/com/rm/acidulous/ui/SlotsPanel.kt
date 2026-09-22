@@ -256,6 +256,7 @@ private fun SlotFace(
                         display = labels[(b.value(p.name) * (labels.size - 1))
                             .roundToInt().coerceIn(0, labels.size - 1)],
                         onStart = { b.start(p.name) }, onChange = { v -> b.change(p.name, v) }, onEnd = { b.end() },
+                        onReset = { b.reset(p.name) },
                     )
                     else -> PanelKnob(b, p.name, accent = accent)
                 }
