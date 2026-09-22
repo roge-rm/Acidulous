@@ -137,6 +137,16 @@ class Engine : public Rack::ModifiedNoteSink {
      * whether the freeze was not working or the number was not about the
      * freeze. Now it says which.
      */
+    /**
+     * How often a block is interrupted rather than slow, 0 to 100.
+     *
+     * The peaks above are only taken from blocks that ran uninterrupted, so
+     * this is also how much of the picture they are not seeing. High here
+     * means the fix is priority and scheduling; low here with a high worst
+     * block means the fix is the DSP.
+     */
+    float interruptedPercent() const { return interruptedPct.load(std::memory_order_relaxed); }
+
     bool worstRackWasFrozen(int32_t rack) const {
         return rack >= 0 && rack < kRackCount && rackPeakFrozen[rack].load(std::memory_order_relaxed);
     }
@@ -324,6 +334,15 @@ class Engine : public Rack::ModifiedNoteSink {
     std::atomic<float> load{0.0f};
     std::atomic<int32_t> blockPeak{0};
     std::atomic<int32_t> phasePeak[kPhases]{};
+    /**
+     * Wall time beyond CPU time that still counts as an uninterrupted block.
+     *
+     * Not nought: the two clock reads cost something themselves, and a cache
+     * miss or an interrupt costs a little more. 50 us is 4% of a block at 48k,
+     * which is far below anything a deschedule costs and far above the noise.
+     */
+    static constexpr int32_t kPreemptedUs = 50;
+    std::atomic<float> interruptedPct{0.0f};
     std::atomic<int32_t> rackPeak[kRackCount]{};
     std::atomic<bool> rackPeakFrozen[kRackCount]{};
     std::atomic<int32_t> rackRecent[kRackCount]{};

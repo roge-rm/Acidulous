@@ -23,6 +23,20 @@ how your app behaves.
   load meter beside the transport is an average and cannot show a spike, which
   is why a phone can read a comfortable load and still click. **reset** clears
   it, so what it shows is since you last looked.
+
+  Only blocks that ran *uninterrupted* are counted. A phone runs far more
+  threads than it has cores, so now and then the system takes the audio thread
+  off its core and gives it back a moment later - and a block that this happens
+  to looks enormous while having done no more work than any other. Those are
+  thrown away rather than believed, and **% interrupted** is how many. It is
+  also the most useful number here: if it is low, a high worst block means the
+  song is asking for too much and freezing or **lean** will help. If it is
+  high, the song is not the problem - the device is busy, and closing other
+  apps will do more than anything in this window.
+- **worst track** - the same measurement per track, dearest first, so the list
+  says what to freeze. A **❄** means that track was playing frozen audio when
+  it set that figure, which should be next to nothing - if you see one, the
+  freeze is not doing its job.
 - **machine voice limit** - how many notes a track may hold at once. The oldest
   goes first.
 - **quality** - what to give up when a device cannot keep up. At **lean**:

@@ -671,6 +671,11 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeWorstRackWasFrozen(JNIEnv *, job
     return host().worstRackWasFrozen(rack) ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeInterruptedPercent(JNIEnv *, jobject) {
+    return host().interruptedPercent();
+}
+
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeRecentCallbackUs(JNIEnv *, jobject) {
     return host().recentCallbackUs();

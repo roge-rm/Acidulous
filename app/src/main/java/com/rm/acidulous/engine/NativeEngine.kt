@@ -495,6 +495,14 @@ object NativeEngine {
     fun worstRackUs(rack: Int): Int = nativeWorstRackUs(rack)
     /** Was that rack playing frozen audio when it set its peak? Read before [worstRackUs]. */
     fun worstRackWasFrozen(rack: Int): Boolean = nativeWorstRackWasFrozen(rack)
+    /**
+     * How often a block is interrupted rather than slow, 0 to 100.
+     *
+     * The worst-block, per-phase and per-track figures are only taken from
+     * blocks that ran uninterrupted, so this is also how much they are not
+     * seeing. High means the fix is scheduling, not DSP.
+     */
+    val interruptedPercent: Float get() = nativeInterruptedPercent()
 
     /** What this rack costs lately, in microseconds. Falls by itself; reading does not clear it. */
     fun rackCostUs(rack: Int): Int = nativeRackCostUs(rack)
@@ -800,6 +808,7 @@ object NativeEngine {
     private external fun nativeWorstPhaseUs(phase: Int): Int
     private external fun nativeWorstRackUs(rack: Int): Int
     private external fun nativeWorstRackWasFrozen(rack: Int): Boolean
+    private external fun nativeInterruptedPercent(): Float
     private external fun nativeRackCostUs(rack: Int): Int
     private external fun nativeRecentCallbackUs(): Int
     private external fun nativeWorstCallbackCpuUs(): Int

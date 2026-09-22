@@ -138,6 +138,7 @@ private fun AudioTab(trackNames: List<String>) {
     var racks by remember { mutableStateOf(IntArray(RACKS)) }
     // Whether each one was playing frozen audio when it set that peak.
     var rackFrozen by remember { mutableStateOf(BooleanArray(RACKS)) }
+    var interrupted by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) {
         while (true) {
             worst = maxOf(worst, NativeEngine.worstBlockUs)
@@ -159,6 +160,7 @@ private fun AudioTab(trackNames: List<String>) {
             }
             racks = byRack
             rackFrozen = wasFrozen
+            interrupted = NativeEngine.interruptedPercent
             delay(120)
         }
     }
@@ -169,11 +171,18 @@ private fun AudioTab(trackNames: List<String>) {
     val blockBudgetMs = 1000f * BLOCK_FRAMES / NativeEngine.sampleRate.coerceAtLeast(1)
     Section(
         "worst block",
-        "%.2f ms of %.2f · %s".format(
+        // Every figure here comes from a block that ran without being
+        // interrupted, which is the only kind whose parts can be believed: a
+        // thread taken off its core mid-block hands that whole absence to
+        // whatever it was timing. The percentage is how many blocks were
+        // thrown away for that reason - and it is the answer to "is this the
+        // DSP or the scheduler" all by itself.
+        "%.2f ms of %.2f · %s%s".format(
             worst / 1000f,
             blockBudgetMs,
             NativeEngine.Phase.entries
                 .joinToString(" ") { "${it.name.lowercase().take(3)} %.2f".format(phases[it.ordinal] / 1000f) },
+            if (interrupted >= 0.5f) " · %.0f%% interrupted".format(interrupted) else "",
         ),
     ) {
         Choice("reset", false) {

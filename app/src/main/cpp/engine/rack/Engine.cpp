@@ -3,6 +3,7 @@
 #include <sequencer/LinkFollower.h>
 #include <sequencer/Song.h>
 #include <cmath>
+#include <ctime>
 
 namespace acidulous {
 
@@ -51,8 +52,26 @@ void Engine::runInputChain() {
     }
 }
 
+/**
+ * This thread's own CPU time, in microseconds.
+ *
+ * Duplicated from `AudioDriver` rather than shared, so the engine keeps no
+ * dependency on the platform layer for five lines of clock.
+ *
+ * **Not a substitute for the wall clock, a companion to it.** The deadline is
+ * wall time - the speaker does not care why we were late. What this answers is
+ * the second question, which the per-track list could not: of that wall time,
+ * how much did we spend computing?
+ */
+static int64_t threadCpuUs() {
+    timespec ts{};
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
+    return static_cast<int64_t>(ts.tv_sec) * 1000000 + ts.tv_nsec / 1000;
+}
+
 void Engine::renderBlock(const float *in, float *out) {
     const auto t0 = std::chrono::steady_clock::now();
+    const int64_t cpu0 = threadCpuUs();
 
     // The tuner hears it first, at the level it arrived at and with nothing
     // applied. Costs one branch when it is off, which is almost always.
@@ -356,6 +375,8 @@ void Engine::renderBlock(const float *in, float *out) {
     // deleted by an over-long slice edit in M35, which took the scene fade
     // with them: `out` was then never written at all, so every block handed
     // back whatever the caller's stack happened to hold.
+    int32_t rackUsThisBlock[kRackCount]{};
+    bool rackFrozenThisBlock[kRackCount]{};
     for (int32_t r = 0; r < kRackCount; ++r) {
         if (racks[r].isActive()) {
             const auto tRack = std::chrono::steady_clock::now();
@@ -368,20 +389,12 @@ void Engine::renderBlock(const float *in, float *out) {
             const auto rackUs = static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(
                                                          std::chrono::steady_clock::now() - tRack)
                                                          .count());
-            // Record what this rack was doing when it set the peak, before
-            // keepPeak moves it. A relaxed read against a relaxed store, on a
-            // diagnostic: at worst the flag belongs to a neighbouring block.
-            if (rackUs > rackPeak[r].load(std::memory_order_relaxed)) {
-                rackPeakFrozen[r].store(racks[r].frozenActive(), std::memory_order_relaxed);
-            }
-            keepPeak(rackPeak[r], rackUs);
-            keepDecaying(rackRecent[r], rackUs);
+            // Held, not published: whether this is a cost or an interruption
+            // is not known until the whole block has been timed in both
+            // clocks, and the answer is the same for every rack in it.
+            rackUsThisBlock[r] = rackUs;
+            rackFrozenThisBlock[r] = racks[r].frozenActive();
         }
-    }
-    // A rack that has gone quiet is not costing anything, and its light must
-    // go out - so the ones that did not render this block decay too.
-    for (int32_t r = 0; r < kRackCount; ++r) {
-        if (!racks[r].isActive()) keepDecaying(rackRecent[r], 0);
     }
 
     const auto tRacks = std::chrono::steady_clock::now();
@@ -457,7 +470,36 @@ void Engine::renderBlock(const float *in, float *out) {
     // 27 ms memory and is read every 80 ms, so the block that caused a dropout
     // has decayed out of it before anybody looks; this is the one that answers
     // "how bad did it get".
-    keepPeak(blockPeak, static_cast<int32_t>(us));
+    // **Was this block interrupted, or was it slow?**
+    //
+    // Every span above is wall time, and a thread that is taken off its core
+    // mid-block hands the whole of that absence to whatever it happened to be
+    // measuring. That is not a hypothetical: the per-track list reported
+    // `Pad 0.92` for a rack that was playing frozen audio, which costs 1.5 us
+    // measured off-device, and the same readout claimed 19.91 ms in the
+    // sequencer - a phase that does bookkeeping and nothing else. Both were
+    // the same 20 ms of being descheduled, billed to whoever held the clock.
+    //
+    // Comparing the block's two clocks catches it for two reads rather than
+    // the twenty-two it would take to time every rack on the CPU clock - and
+    // `CLOCK_THREAD_CPUTIME_ID` is a real syscall on this platform, not a vDSO
+    // call, so twenty-two of them a block is not a diagnostic, it is a cost.
+    // If the block as a whole ran uninterrupted then nothing inside it was
+    // interrupted either, and every span in it can be believed.
+    const int64_t cpuUs = threadCpuUs() - cpu0;
+    const bool interrupted = us - cpuUs > kPreemptedUs;
+    // An EMA of how often that happens, because a per-track list that is never
+    // updated looks the same as one with nothing to say. This is the per-block
+    // twin of the driver's stall counter, and it is the number that says
+    // whether to optimise the DSP or go after the scheduler.
+    const float wasInterrupted = interrupted ? 100.0f : 0.0f;
+    interruptedPct.store(interruptedPct.load(std::memory_order_relaxed) * 0.99f + wasInterrupted * 0.01f,
+                         std::memory_order_relaxed);
+    if (interrupted) return;
+
+    // The cost, not the elapsed time. They are the same on a clean block, and
+    // this is only ever reached on a clean block.
+    keepPeak(blockPeak, static_cast<int32_t>(cpuUs));
     const auto span = [](auto a, auto b) {
         return static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(b - a).count());
     };
@@ -466,6 +508,13 @@ void Engine::renderBlock(const float *in, float *out) {
     keepPeak(phasePeak[static_cast<size_t>(Phase::Racks)], span(tSeq, tRacks));
     keepPeak(phasePeak[static_cast<size_t>(Phase::Master)], span(tRacks, tMaster));
     keepPeak(phasePeak[static_cast<size_t>(Phase::Capture)], span(tMaster, tEnd));
+    for (int32_t r = 0; r < kRackCount; ++r) {
+        if (rackUsThisBlock[r] > rackPeak[r].load(std::memory_order_relaxed)) {
+            rackPeakFrozen[r].store(rackFrozenThisBlock[r], std::memory_order_relaxed);
+        }
+        keepPeak(rackPeak[r], rackUsThisBlock[r]);
+        keepDecaying(rackRecent[r], rackUsThisBlock[r]);
+    }
 }
 
 /**
