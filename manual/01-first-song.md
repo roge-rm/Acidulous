@@ -1,56 +1,47 @@
 # A first song
 > Tracks, scenes, clips, and a first sound.
 
-Acidulous is sixteen racks. A rack holds one machine - a synthesizer, a drum
-machine, a sampler - and that machine is also a track in the song. There is no
-separate list of instruments and list of parts: the track *is* the instrument.
+A song has up to sixteen tracks. Each track has one machine on it: a synth, a
+drum machine, a sampler and so on. The track and its instrument are the same
+thing, so there's no separate instrument list.
 
-## What you are looking at
+## The song grid
 
-The first screen is the song grid. Track names run down the left, one row each.
-Scenes run across the top, one column each. Where a row and a column meet there
-is a clip: the notes that track plays during that scene.
+The first screen is the song grid. Tracks run down the left, one per row, and
+scenes run across the top, one per column. Where a track and a scene meet is a
+clip: the notes that track plays in that scene.
 
-The bar at the foot of the screen is the same on every screen. Its right-hand
-end is always the same five controls in the same order - undo, redo, mixer,
-record and play - so the one you want is where you left it.
+The bar along the bottom is on every screen. Its right end always has the same
+five buttons in the same order: undo, redo, mixer, record and play.
 
 ## Making a sound
 
-1. Tap **+ track** and pick a machine. A new song starts with one already.
-2. Tap the empty clip where your new track meets the first scene. That opens the
+1. Tap **+ track** and pick a machine. A new song already has one.
+2. Tap the empty clip where the track meets the first scene. This opens the
    editor.
-3. Play the keyboard at the bottom. That is the machine as it stands; tap
-   **patch** at the top of the panel to try the ones it ships with.
-4. Draw notes in the grid above, or press record and play them in.
-5. Tap the back arrow to return to the song, and press play.
+3. Play the keyboard at the bottom. Tap **patch** at the top of the panel to try
+   the factory sounds.
+4. Draw notes in the grid, or press record and play them in.
+5. Tap the back arrow to go back to the song, and press play.
 
-## Scenes are sections
+## Scenes
 
-A scene is a part of the song - an intro, a verse. Every track's clip in that
-scene plays together, and the scene repeats for as many times as its header
-says before the song moves to the next one.
+A scene is a section of the song, like an intro or a verse. All the clips in a
+scene play together, and the scene repeats as many times as its header says
+before the song moves on.
 
-Clips in one scene need not be the same length. A one-bar drum clip under a
-four-bar chord clip simply repeats four times, which is how most parts are
-written anyway.
+Clips in a scene don't have to be the same length. A one-bar drum clip under a
+four-bar chord clip just loops four times.
 
 ## Saving
 
-The song you are working on is saved continuously and comes back when you next
-open the app, so nothing is lost by closing it. **save** in the header writes it
-under its own name; **file** offers a new song, a copy under another name, and
-the songs you already have.
+The song you're working on is saved as you go and comes back next time you open
+the app. **save** in the header saves it under its name. **file** has new song,
+save as, and your other songs.
 
 ## The demo song
 
-The song that opens the first time is a demo, and it is there to be taken apart:
-a dub, eight tracks across four scenes, with an example of most of what the app
-does - the skank thrown into the delay and the bass filter closing in the dub,
-hand drums that are never the same bar twice, a one-shot siren whose whole sound
-is a bend drawn on one note, and a tempo that drags as the song strips down.
-
-**file · Demo song** builds a fresh copy of it whenever you want one, so pulling
-it to pieces costs nothing. It replaces what is open, the same way opening a song
-does, and it is not saved until you save it - so a song of your own called
-"Demo" is left where it is.
+The first time the app opens it loads a demo song to look around in and pull
+apart. **file · Demo song** loads a fresh copy whenever you want one. It replaces
+the open song like opening any other song does, and isn't saved until you save
+it, so a song of yours called "Demo" is safe.

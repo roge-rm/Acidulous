@@ -76,7 +76,7 @@ private fun describeFormat(f: ExportFormat): String = when (f) {
 private fun describeWhat(w: ExportWhat): String = when (w) {
     ExportWhat.Song -> "Every scene in order, with its repeats."
     ExportWhat.Scene -> "The open scene, once through."
-    ExportWhat.Stems -> "One file per track, post-fader, plus the mix."
+    ExportWhat.Stems -> "One file per track (after the fader), plus the mix."
 }
 
 @Composable
@@ -127,7 +127,7 @@ fun ExportOptionsDialog(
             if (format.lossy) Section(
                 "rate",
                 when (rate) {
-                    128 -> "Rough: it shows on cymbals and reverb tails."
+                    128 -> "Low quality: you'll hear it on cymbals and reverb."
                     320 -> "As much as MP3 has to give."
                     else -> ""
                 },
@@ -139,7 +139,7 @@ fun ExportOptionsDialog(
             if (!format.lossy) Section(
                 "depth",
                 when (bits) {
-                    16 -> "Half the size. For listening, not for mastering."
+                    16 -> "Smaller files. Fine for listening, not for mastering."
                     32 -> "Floating point: it cannot clip."
                     else -> ""
                 },

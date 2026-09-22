@@ -1,22 +1,24 @@
 # Shifter
-> Frequency shifting, which moves everything by the same number of hertz rather than the same interval.
+> Frequency shifting, for metallic and detuned sounds.
 
-Not a pitch shifter, and the difference is the whole point. A pitch shifter multiplies every partial by the same factor and the sound keeps its identity an octave up. A frequency shifter *adds* the same number of hertz to every partial, so their ratios change and the sound stops being harmonic at all.
+This isn't a pitch shifter. A pitch shifter keeps the sound's harmonics in
+proportion. A frequency shifter moves every harmonic up or down by the same
+number of hertz, so the sound stops being in tune with itself. That's what
+makes it useful.
 
 ## The controls
 
-- **shift** - the amount, -500 to +500 Hz. Small values are the useful ones; large values are a special effect.
-- **fine** - ±20 Hz, for the settings under a hertz where the whole thing becomes a very slow beating.
-- **spread** *(extra)* - the two channels are shifted in opposite directions. Even a couple of hertz of this makes a wide, slowly rotating field out of a mono source.
-- **feedback** - the shifted output goes back in, so each pass is shifted again. This is where the metallic cascades come from.
+- **shift** - -500 to +500 Hz. Small amounts are the most useful.
+- **fine** - ±20 Hz, for tiny shifts that just beat slowly.
+- **spread** *(extra)* - shifts the two channels in opposite directions. A couple
+  of hertz makes a mono sound wide and slowly swirling.
+- **feedback** - feeds the output back in so it shifts again each pass, for
+  metallic cascades.
 - **mix** - wet against dry.
 
-## Using it well
+## Tips
 
-**Under one hertz it is not an effect, it is a modulation.** A shift of half a hertz beats against the dry signal once every two seconds. On a pad this is the widest, slowest movement available anywhere in the rack.
-
-**It ruins pitched material on purpose.** Anything more than a few hertz makes a sustained note inharmonic, which is wonderful on drums, bells and noise and usually wrong on a chord. That is not a fault to work around - it is what to use it for.
-
-**Feedback plus a small shift is the classic.** Each repeat climbs by the same few hertz, so a percussive sound turns into a rising metallic ladder that no pitch shifter can make.
-
-**On a send, fed a little from several tracks**, it is a chorus of octaves nobody is playing.
+- Under 1 Hz it acts like a very slow, wide modulation. Lovely on pads.
+- A few hertz or more makes held notes sound inharmonic: great on drums, bells
+  and noise, usually wrong on chords.
+- Feedback with a small shift turns a hit into a rising metallic ladder.

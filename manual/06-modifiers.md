@@ -1,50 +1,42 @@
 # Modifiers
-> What a note becomes on its way in.
+> Scale, chord and arp, applied to notes as you play them in.
 
-Every track has three, and they sit in the row just above the keyboard. **A tap
-says whether one is running; holding it open lets you choose.** They are the
-same gesture as every other slot in the app.
+Every track has three modifiers, in the row just above the keyboard. **Tap one
+to turn it on or off, and hold it to open its settings.**
 
-A modifier sits between what you play and what gets written down. Play one key
-with the chord modifier running and three notes sound - and if you are
-recording, three notes are what the clip keeps. The same is true of anything
-arriving from a MIDI keyboard or a controller: it comes in the same door.
+A modifier changes what you play before it's written down. Play one key with
+the chord modifier on and you hear three notes, and if you're recording, the
+clip gets three notes. Notes from a MIDI keyboard or controller go through the
+modifiers too.
 
-**What is in the clip is what you hear.** A clip plays straight to its machine;
-the modifiers are not in that path at all. So the piano roll always shows what
-the song is playing, and a part can be edited note by note after the fact.
+**The clip is what you hear.** Clips play straight to the machine without going
+through the modifiers, so the piano roll always shows exactly what plays, and
+you can edit the notes afterwards.
 
-**They do not change anything already recorded.** Turning the arpeggio off does
-not un-arpeggiate a part you played with it on - those notes are in the clip
-now. That is deliberate: what you played is what you have, and if you want it
-different, undo and play it again.
+**They don't change what's already recorded.** Turning the arp off doesn't
+un-arpeggiate a part you played with it on. If you want it different, undo and
+play it again.
 
 ## Scale
 
-Thirty-three scales, each with a key. With one running, the keyboard collapses
-to only the notes the scale allows, so a phone's worth of width goes further and
-a wrong note is not available to play. A note that would be out of key is moved
-to the nearest one that is, before it is written down.
+Thirty-three scales, in any key. With a scale on, the keyboard only shows notes
+in the scale, so you get more range on a small screen and can't hit a wrong
+note. MIDI notes outside the scale are moved to the nearest one that fits.
 
-The piano roll can show the scale three ways - every note, the scale's notes lit,
-or only the scale's notes - from the **scl** corner.
-
-The song's own key, behind the tempo button, sets what the roll shades on a
-track that has no scale of its own.
+The **scl** corner of the piano roll chooses how the scale is shown: all notes,
+scale notes highlighted, or only scale notes. On a track without its own scale,
+the roll uses the song's key (set behind the tempo button).
 
 ## Chord
 
-Plays a chord from every note you play. Either a fixed shape that follows your
-finger, or the chord the running scale builds on that degree, so the harmony
-stays in key as the line moves. **strum** spreads the notes in time instead of
-landing them together, and a recorded chord keeps that spread.
+Turns every note into a chord. Either a fixed chord shape, or the chord the
+current scale builds on that note, so the harmony stays in key. **strum**
+spreads the notes out in time, and recordings keep the strum.
 
 ## Arpeggio
 
-Takes the notes you are holding and plays them one at a time: the order, the
-rate, how many octaves it climbs, how long each note lasts, and a chance that
-any given step is skipped.
+Plays the notes you're holding one at a time. You choose the order, speed,
+octave range, note length, and a chance for each step to be skipped.
 
-Recording with it running writes the arpeggio out as notes - one per step, where
-each one landed. A held chord becomes a line you can then edit, retime or
-rewrite a note of, which is the thing an arpeggio normally will not let you do.
+Recording with the arp on writes out every note it plays, so a held chord
+becomes a line you can edit afterwards.

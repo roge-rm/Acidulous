@@ -1,33 +1,41 @@
 # Cumulus
 
-> Pads by spectrum: you describe the sound's shape and the machine builds it.
+> Pads built from a spectrum of partials.
 
-Cumulus does not have oscillators in the usual sense. You describe a **spectrum** - which partials, how loud, how wide - and the machine builds a wavetable from it offline, then plays that back. It is the machine for pads, drones and anything that wants to be enormous.
+Cumulus doesn't use normal oscillators. You describe a spectrum (which
+partials, how loud, how wide) and it builds a wavetable from that, then plays
+it. It's for pads, drones and huge sounds.
 
-## Why it is built that way
+## How it works
 
-Every partial is given a *bandwidth* rather than a single frequency: a smear of energy around where the harmonic would be. That smear is what makes the sound lush without any chorus, because each partial beats against its own spread rather than against a copy of itself.
+Each partial is given a width instead of being a single frequency. That spread
+is what makes it lush without needing a chorus.
 
-Building the table costs real work, so it happens **off the audio thread** when the spectrum settles. Everything from `morph` onwards is live and immediate; the spectrum controls are the ones with a moment's thought behind them.
+Building the table takes a moment, so it happens in the background whenever you
+change the spectrum. Everything from **morph** on is instant.
 
-## The spectrum
+## Spectrum controls
 
-- **bandwidth** and **bwscale** - how wide each partial is, and whether the high ones are wider than the low ones. This is the main control and the one that makes it a pad.
-- **tilt** - the overall slope from bass to treble.
-- **stretch** - pushes the partials away from being whole-number multiples, which is what a piano's top octave and every bell have in common.
-- **comb** and **period** - scallops the spectrum, taking out regular slices.
-- **vowel** and its amount - bends the spectrum towards a formant.
-- **odd** - the balance between odd and even partials: all-odd is a clarinet, all-even is hollow.
-- **seed** - the random phases. Changing it gives a different sound with the same description.
+- **bandwidth** and **bwscale** - how wide each partial is, and whether the high
+  ones are wider than the low ones. This is the main control.
+- **tilt** - the balance of bass to treble.
+- **stretch** - pushes the partials off whole-number multiples, like a piano's
+  top end or a bell. A little goes a long way.
+- **comb** and **period** - cut regular notches in the spectrum.
+- **vowel** and its amount - shapes the spectrum towards a vowel.
+- **odd** - odd against even partials. All odd sounds like a clarinet, all even
+  sounds hollow.
+- **seed** - the random phases. Change it for a different take on the same
+  sound.
 
-## Playing it
+## Playing controls
 
-**detune**, **spread** and **width** stack copies; **drift**, **driftrate** and **scatter** keep the cloud moving. Then an ordinary filter with its own envelope, an amp envelope, and drive.
+**detune**, **spread** and **width** stack copies. **drift**, **driftrate** and
+**scatter** keep the sound moving. Then there's a filter with its own envelope,
+an amp envelope and drive.
 
-## Using it well
+## Tips
 
-**Long attacks and long releases.** This machine is at its best when notes overlap; short ones waste what makes it different.
-
-**Move `morph`, not the spectrum, while playing.** The spectrum rebuilds; morph is instant.
-
-**Stretch a little goes a long way** - a few per cent is a grand piano, a lot is a gong.
+- Use long attacks and releases and let the notes overlap.
+- Move **morph** while playing rather than the spectrum controls, because morph
+  changes instantly.

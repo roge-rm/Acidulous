@@ -24,100 +24,97 @@ Dan (rm)
 
 ---
 
-## What is in it
+## What's in it
 
 ### Twenty machines
 
 | | |
 |---|---|
-| **Reflux** | The signature bass mono. Accent is velocity and slide is legato, so a line is played rather than programmed. |
-| **Trinity** | Three-oscillator poly with wavetables, density, FM and drift. |
-| **Ratio** | Six-operator FM with morphing algorithms and ratios you can snap or skew. |
-| **Manual** | An organ: two manuals and pedals over one shared 91-wheel generator, four models, rotary cabinet. |
-| **Cumulus** | A pad machine that builds its spectrum offline and plays it back — bandwidth, not oscillators. |
-| **Formulate** | An 8-bit machine with tracker tables and a small expression language, so a waveform is something you write. |
-| **Filament** | Modelled strings: the loop is solved from its own phase, and the strings hear each other. |
-| **Brazen** | A brass model — lips blown open against a tube, and a lip Q with a floor. |
-| **Timber** | A woodwind model: the reed's table is a curve and the tube sits below the note. |
-| **Resonance** | Modal percussion. Six shapes' worth of mode ratios, struck somewhere with something, and the pads ring into each other. |
-| **Hexbeat** | A drum synthesizer in the small-box vocabulary, expanded to the kit those boxes never had. Thirteen voices, nothing sampled. |
-| **Genesis** | The big drum box: circuit drift, and a bus compressor with the kick wired to its side chain. |
-| **Mosaic** | A multisample player — zones, key and velocity crossfades, a layer scan, and a grain engine over the map. |
-| **Pollen** | Granular: one view over a mounted file and a live ring. |
-| **Dice** | A slicer. A loop in pieces, with a probability on every trigger. |
-| **Forage** | The sample drum machine — thirteen pads, your own files. |
-| **Cipher** | A vocoder. The band map between analysis and synthesis is the instrument. |
-| **Molt** | A voice you write for: a sung take turned into an instrument, with pitch and formant moved independently. |
-| **Nexus** | A modular, whose blocks are this app's own instruments and whose patch is text. |
-| **Bias** | A four-track that runs along the song. Four lanes of recordings per cell, sounding together; record over the song and the take is cut at the scene lines. |
+| **Reflux** | The acid bass. One oscillator and a filter that screams. Accent comes from velocity and slide from overlapping notes, so you just play it. |
+| **Trinity** | A three-oscillator poly synth with wavetables, stacked voices, FM between the oscillators and a bit of drift. |
+| **Ratio** | Six-operator FM. You can morph between two algorithms and snap or skew the operator ratios. |
+| **Manual** | An organ. Two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
+| **Cumulus** | Pads built from a spectrum of partials, like PadSynth. Big, smooth and slow to change. |
+| **Formulate** | An 8-bit chip synth with tracker-style step tables, plus a small expression language so you can type your own waveform. |
+| **Filament** | Physically modelled strings. Pluck, pick, hammer, bow or blow them. |
+| **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
+| **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
+| **Resonance** | Eight struck objects (drums, wood, metal, bells) that ring into each other. |
+| **Hexbeat** | A synthesized drum machine in the style of the classic small boxes. Thirteen voices, no samples. |
+| **Genesis** | The big drum box: a kick you feel, some circuit drift, and a bus compressor the kick ducks. |
+| **Mosaic** | A multisample player. Load a SoundFont or your own samples into key and velocity zones. It can also turn them into grain clouds. |
+| **Pollen** | Granular clouds from a file or from the live input. |
+| **Dice** | A loop slicer that can shuffle, stutter, reverse and drop its slices on chance. |
+| **Forage** | A sample drum machine: thirteen pads for your own sounds. |
+| **Cipher** | A vocoder. You can rearrange which bands drive which. |
+| **Molt** | Record yourself singing and play it back tuned to the notes you draw, with pitch and formant separate. |
+| **Nexus** | A modular synth whose modules are the other machines. |
+| **Bias** | A four-track for audio recordings that runs along the song. |
+
+Plus **Bus**, which isn't an instrument: it's a group track that other tracks can be routed into.
 
 ### Sixteen effects
 
-Each with one classic behaviour and one extra, and a page of its own in the
-manual.
+Each has the usual controls plus one extra, and a page in the manual.
 
 | | |
 |---|---|
-| **Delay** | Echoes on a note value, with a duck that gets out of the way while you are playing. |
-| **Reverb** | A room, and four things a room cannot do: freeze it, gate it, send it up an octave, or make it out of eight-bit memory. |
-| **Eq** | Three bands, and a tilt that trades top for bottom on one knob. |
-| **Filter** | Low, band or high pass, swept by an LFO on a note value or by the signal's own envelope. |
-| **Width** | The stereo image: wider, narrower, mono below a frequency, or turned. |
-| **Distortion** | Four clipping characters, and a bias that makes the two halves of the wave behave differently. |
-| **Amp** | A guitar amplifier as a chain — preamp, an interactive tone stack, a power stage that sags — with a **modelled** cabinet you can resize continuously between a combo and a stack. |
-| **Bitcrusher** | Fewer bits and a lower rate, with a jitter that makes the clock unsteady. |
-| **Compressor** | The classic four, and a pump in time with the transport that needs no sidechain routing. |
-| **Gate** | Shut below a level, with a filter on its own detector so it opens for a pick and not for a room. |
-| **Chorus** | Two to four detuned voices, and a drift that stops them agreeing about the tuning. |
-| **Flanger** | One short sweeping delay, and inverted feedback for the hollow version. |
-| **Phaser** | Allpass notches sweeping, from two stages to eight. |
-| **Tremolo** | Amplitude on an LFO, and the same lever turned into an auto-pan. |
-| **Shifter** | Frequency shifting — everything moves by the same number of hertz rather than the same interval, so a harmonic sound stops being one. |
-| **Harmonizer** | Two added voices at scale degrees, so the harmony stays in key. |
+| **Delay** | Echoes on a note value. It can duck while you play. |
+| **Reverb** | A room. Can also freeze, gate, shimmer up an octave, or crush itself down to 8 bits. |
+| **Eq** | Three bands and a tilt. |
+| **Filter** | Low, band or high pass, moved by an LFO, by the signal's level, or by another track's. |
+| **Width** | Wider, narrower, or mono below a frequency. |
+| **Distortion** | Four kinds of clipping and a bias control. |
+| **Amp** | A guitar amp with a cabinet you can resize from a small combo to a full stack. |
+| **Bitcrusher** | Fewer bits, a lower sample rate, and an unsteady clock if you want one. |
+| **Compressor** | The usual controls, a sidechain from any track, and a pump that follows the tempo. |
+| **Gate** | A noise gate that can be keyed from another track. |
+| **Chorus** | Two to four detuned voices that drift. |
+| **Flanger** | A short sweeping delay, with negative feedback for the hollow sound. |
+| **Phaser** | Two to eight stages. |
+| **Tremolo** | Volume on an LFO, or auto-pan. |
+| **Shifter** | Frequency shifting, for metallic and detuned sounds. |
+| **Harmonizer** | Adds two voices at scale steps so the harmony stays in key. |
 
-Two insert slots per rack, and **the song's two send buses hold any of the same
-sixteen**, chosen and edited from the master strip.
+### Mixing
+
+- Two insert effects on every track.
+- Two send buses shared by the whole song. They start as a reverb and a delay but can hold any effect.
+- **Groups**: route tracks into a Bus track to process them together on one fader.
+- **Sidechain**: the compressor, gate and filter can react to another track, e.g. duck the bass under the kick.
+- Two insert effects on the master, before the limiter.
+- A loudness meter (LUFS and true peak) on the master, and exports can be normalised to -14 LUFS.
 
 ### Sequencing
 
-- **Scene-major arranger.** Clips vary in length within a scene; scenes repeat.
-- **Clip launcher** as a second view of the same song, with per-track origins.
-- Piano roll and drum grid, both views over the same clip.
-- **Modifiers** — Scale, Chord and Arp — between what you play and what is
-  written down, so a clip holds the arpeggio rather than the key that made it,
-  and always plays exactly what the roll shows.
-- **Swing** as a time warp rather than a delay, per song with a per-track
-  override, and the inverse applied on the way in so a part played against a
-  swung song is stored straight.
-- Automation lanes, performance lanes (mod and pressure), and per-note
-  expression.
-- Clip freeze: render a clip to audio, pre-fader, with its ring-out kept after
-  the clip so a frozen track goes on sounding where a live one would.
-- **Two effect slots on the input**, at the top of the recording window: they
-  run before the recorder does, so an amp is printed into the take rather than
-  only applied over it afterwards.
-- **Audio tracks**, on the same sixteen racks: record over the song and the
-  take is split into cells, with no second timeline in either view.
+- Songs are built from scenes. Clips in a scene can be different lengths, and scenes can repeat.
+- A clip launcher view of the same song for playing live.
+- Piano roll and drum grid.
+- Scale, chord and arp that act on notes as you play them in, so the clip holds what you hear.
+- Swing per song, with a per-track override.
+- Automation lanes, mod wheel and pressure lanes, and per-note pitch bend, pressure and slide.
+- Probability, conditions, ratchets and micro-timing on individual notes.
+- Freeze a clip to audio to save CPU.
+- Audio tracks (Bias) for recording over the song.
+- Two effect slots on the input, so you can record through an amp.
 
 ### Playing and syncing
 
-- MIDI in over USB and Bluetooth LE; MIDI out with clock.
-- **MPE** — per-note pitch, pressure and slide.
-- **Ableton Link**, for a tempo and a bar line shared with other machines on
-  the network; MIDI clock in and out for everything else.
-- Controller mapping: any CC or note onto any control.
+- MIDI in over USB and Bluetooth LE, MIDI out with clock.
+- MPE.
+- Ableton Link, and MIDI clock in and out.
+- Map any MIDI CC or note to any control.
 
-### Getting sound out
+### Export
 
-Export to WAV, AIFF, FLAC or MP3, whole song or per-track stems in one pass,
-with our own writers for everything but MP3.
+WAV, AIFF, FLAC, MP3 or AAC, as the whole song or one scene, or as stems. Also MIDI files and a song bundle you can share.
 
 ---
 
 ## Building
 
 You need the Android SDK and NDK. The NDK version is pinned in
-`app/build.gradle.kts` so the native ABI does not shift between machines.
+`app/build.gradle.kts`.
 
 ```sh
 ./gradlew assembleDebug        # debug APK
@@ -128,60 +125,43 @@ You need the Android SDK and NDK. The NDK version is pinned in
 |---|---|
 | Minimum Android | 8.1 (API 27) |
 | Built against | API 37 |
-| ABIs | `arm64-v8a`, `x86_64` — 64-bit only |
-| UI | Kotlin, Jetpack Compose, phone-first |
-| Engine | C++17, `app/src/main/cpp`, Android audio via Oboe |
+| ABIs | `arm64-v8a`, `x86_64` (64-bit only) |
+| UI | Kotlin, Jetpack Compose |
+| Engine | C++17 in `app/src/main/cpp`, audio through Oboe |
 
 ## Testing
 
-The engine's harnesses run on the host, not on a device, and take a few
-seconds together:
+The engine tests run on the computer rather than on a device, and take a few
+seconds:
 
 ```sh
 tools/all_tests.sh
 ```
 
-They cover the sequencer's launcher and song position, where a recording's
-boundaries fall when it is cut into cells, reading a long file a piece at a
-time, MIDI clock in and out,
-the metronome, MPE, Ableton Link's arithmetic (and, where the network allows
-it, two real Link peers in one process), the audio file writers, Molt's
-analysis, the expression language, and a reset-determinism pass that plays
-every machine, panics it, plays the same performance again and requires the
-two renders to match bit for bit.
+Among other things they check that:
 
-Two of them exist because a control can be present, documented and wired to
-nothing, and no ordinary test notices. `tools/render_test.sh` renders a whole
-song through the engine and asks the questions that only exist once the
-pieces are together — that a render repeats, and that it ignores the quality
-setting. `tools/modsource_test.sh` routes every modulation source of every
-machine to every destination in turn and requires the audio to change; it
-found six sources across three machines that had never run at all.
+- every machine sounds the same after a panic as before it (`reset_test`);
+- a whole song renders the same twice, sidechains and groups work, and an
+  export ignores the lean quality setting (`render_test`);
+- every modulation source and destination in every machine actually does
+  something (`modsource_test`);
+- every factory patch makes a sound without clipping, and no two patches in a
+  bank are the same (`bank_test`);
+- the loudness meter reads the EBU's test signals correctly (`loudness_test`).
 
-`tools/bank_test.sh` checks the factory presets: that every patch sounds,
-that none of them are silent or clipped, and that no two siblings in a bank
-are the same sound twice.
+`tools/cpu_test.sh` measures what each machine and effect costs per block.
 
-### The audition harness
+### Auditioning patches
 
-`tools/audition.sh` plays a factory patch on a desk, writes a wav and prints
-what it measures — loudness, peak, brightness, how long it takes to speak,
-how long it rings. It is how the preset banks are voiced: the harness says
-what a patch measures, and a person says what it sounds like. Neither is
-enough on its own.
+`tools/audition.sh` plays a factory patch, writes a WAV and prints some
+measurements (loudness, peak, brightness, attack and ring time). I use it
+alongside my ears when voicing the preset banks.
 
 ```sh
-tools/audition.sh bank Trinity            # every patch, and the spread
+tools/audition.sh bank Trinity            # every patch in a bank
 tools/audition.sh play Reflux Acid        # one patch
 tools/audition.sh params Mosaic           # the parameter table
 ```
-
----
-
-## Talk to us
-
-Questions, bug reports, feature ideas and works in progress all go to the
-Discord: **<https://discord.gg/9Wun47jGC6>**.
 
 ---
 
@@ -192,14 +172,13 @@ or later**. See [LICENSE](LICENSE).
 
 Copyright © 2026 Dan Hunke.
 
-It is GPLv3-*or-later* rather than GPLv2 for a specific reason: Oboe is
-Apache 2.0, which is compatible with GPLv3 and not with GPLv2.
+It's GPLv3 rather than GPLv2 because Oboe is Apache 2.0, which works with
+GPLv3 but not GPLv2.
 
-Third-party components — Oboe, LAME, Ableton Link and asio — are listed with
-their licences and the reasoning in [NOTICE](NOTICE). Every licence text is
-shipped inside the app and can be read from its About window.
+Third-party components (Oboe, LAME, Ableton Link and asio) are listed with
+their licences in [NOTICE](NOTICE), and every licence text can be read from
+the app's About window.
 
-**Everything else in this repository is original work.** The engine, every
-machine and effect, the sequencer, the WAV, AIFF and FLAC writers and the MIDI
-file writer were all written for this project. No DSP, no presets and no
-samples are taken from anywhere else.
+Everything else, including the engine, the machines and effects, the
+sequencer and the file writers, was written for this project. No DSP code,
+presets or samples come from anywhere else.

@@ -1,29 +1,35 @@
 # Molt
 
-> A voice you write for: sing a take in, and the piano roll tunes it.
+> Sing a take in, and the piano roll tunes it.
 
-Molt takes a sung recording and makes an instrument of it. Not a sampler - it finds the **glottal pulses** in the take, the individual openings of the vocal folds, and lays them down again at a new spacing. Moving the spacing moves the pitch; leaving the grain's own shape alone leaves the formants where they were, so the voice does not turn into a chipmunk.
+Molt turns a sung recording into an instrument. It finds the individual pulses
+of the voice and re-spaces them to change the pitch, so the formants stay where
+they were and the voice doesn't go chipmunk.
 
-## The extra: the roll does the tuning
+## The roll does the tuning
 
-This is the machine's whole idea. **Draw the notes you want in the piano roll, sing anything, and the take is pulled onto those notes.** The melody comes from the clip and not from a knob.
+Draw the notes you want in the piano roll, sing anything, and the take is pulled
+onto those notes.
 
-- **tune** - how hard it is pulled. All the way is hard-tune, part of the way is a correction.
-- **rate** - how quickly it gets there, which is the difference between a natural slide and the stepped sound.
-- **robot** - flattens the pitch entirely onto the note.
+- **tune** - how hard it's pulled. All the way is hard-tune; less is a gentle
+  correction.
+- **rate** - how fast it gets there. Slow sounds like a natural slide, fast
+  sounds stepped.
+- **robot** - flattens the pitch completely onto the note.
 
 ## The voice
 
-- **formant** - moves the formants independently of the pitch, which is the size of the singer rather than their note.
+- **formant** - moves the formants without changing the pitch, so the singer
+  sounds bigger or smaller.
 - **mega** - a megaphone.
-- **start** and **loop** - which part of the take is used, and whether it repeats.
+- **start** and **loop** - which part of the take plays, and whether it loops.
 
-Then an ordinary filter, an amp envelope and drive.
+Then a filter, an amp envelope and drive.
 
-## Using it well
+## Tips
 
-**Take the rumble out first.** The recording page's low cut exists for this: a hand holding a phone puts more than half the take's energy below seventy hertz, the pitch marks snap to *that* instead of the voice, and the whole machine comes apart. It is done for you on the way in, but a bad recording is still a bad recording.
-
-**Consonants are copied, not stretched.** The analysis knows which parts have a pitch and which do not, so the sibilants stay sharp instead of being smeared onto a note - which is exactly what makes a cheap pitch shifter sound cheap.
-
-**Sing flat and let the roll fix it** is a legitimate way to work here, and much faster than singing it right.
+- Keep low rumble out of the recording. Handling noise from holding the phone
+  can throw the pitch detection off. The recorder's low cut helps, and it's on
+  by default for Molt.
+- Consonants are copied rather than pitched, so they stay crisp.
+- Singing roughly and letting the roll fix it is a perfectly good way to work.

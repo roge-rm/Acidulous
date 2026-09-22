@@ -329,8 +329,8 @@ private fun App(modifier: Modifier = Modifier) {
         ) {
             Text(message, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
             Text(
-                "Acidulous reads WAV, AIFF, FLAC and MP3 - mono or stereo, at any rate - " +
-                    "and converts what it imports to WAV. M4A, Ogg and WMA it cannot read.",
+                "Acidulous can import WAV, AIFF, FLAC and MP3, mono or stereo, at any " +
+                    "sample rate. It can't read M4A, Ogg or WMA.",
                 fontSize = 12.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textDim,
             )
         }
@@ -398,7 +398,7 @@ private fun App(modifier: Modifier = Modifier) {
         if (names.isEmpty()) return
         val long = if (seconds >= 120) "%d minutes".format(seconds / 60) else "$seconds seconds"
         problem = "Only the first $long of " + names.joinToString(", ") +
-            " was imported - that is as much as a sample can hold."
+            " was imported. That's the most a sample can hold."
     }
 
     /**
@@ -970,8 +970,8 @@ private fun App(modifier: Modifier = Modifier) {
             // The ring dropped frames, so every index after the drop names the
             // wrong moment. The recording is kept - it is in the library and
             // can be placed by hand - but it must not be cut up.
-            problem = "The recording has a gap in it, so it was not split. " +
-                "It is in the sound library."
+            problem = "The recording has a gap in it, so it wasn't split. " +
+                "It's in the sound library."
             return
         }
         if (count == 0 || track < 0 || lane < 0) {
@@ -986,7 +986,7 @@ private fun App(modifier: Modifier = Modifier) {
                 .joinToString(" ") { "${it.frame}@${it.sceneId}+${it.tick}/${it.cycleTicks}" })
         val takes = splitTake(marksFrom(raw, count), frames, rel, sceneIdOf)
         if (takes.isEmpty()) {
-            problem = "That take was too short to place. It is in the sound library."
+            problem = "That take was too short to place. It's in the sound library."
             return
         }
         scope.launch {

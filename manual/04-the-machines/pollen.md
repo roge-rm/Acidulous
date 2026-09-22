@@ -1,30 +1,39 @@
 # Pollen
 
-> Granular clouds that seed their own, from a file or from what is coming in live.
+> Granular clouds from a file or the live input, whose grains can spawn more grains.
 
-Pollen reads a buffer as a cloud of short grains rather than as a sample. It has two sources - a file you mount, or **the live input**, captured into a ring as you play - and one view over both.
+Pollen plays a sound as a cloud of short grains. The source is either a file you
+load or the live input, recorded into a loop as you play.
 
 ## The cloud
 
-- **size** and **sizespread** - how long a grain is, and how much they vary.
-- **density** and **jitter** - how many per second, and how irregular.
-- **window** and **skew** - the grain's envelope shape.
-- **position**, **scan** and **spray** - where in the buffer grains are taken from, whether that point moves, and how far either side they scatter.
-- **snap** - pulls grain starts onto the buffer's own transients, so a rhythmic source stays rhythmic instead of becoming a wash.
+- **size** and **sizespread** - how long each grain is, and how much that
+  varies.
+- **density** and **jitter** - how many grains per second, and how irregular.
+- **window** and **skew** - the shape of each grain's fade in and out.
+- **position**, **scan** and **spray** - where grains come from in the buffer,
+  whether that point moves, and how far they scatter around it.
+- **snap** - lines grains up with the hits in the source, so rhythmic material
+  stays rhythmic.
 - **panspread** and **width**.
 
-## The live source
+## Live input
 
-**source** switches to the input, **buffer** sets how much is kept, **freeze** decides whether the ring rolls or holds, and **capture** grabs what is in it. A live cloud is **not saved with the song and is silent on export**, which the panel says on screen rather than leaving you to find out.
+**source** switches to the input. **buffer** sets how much is kept, **freeze**
+holds it, and **capture** grabs what's in it. A live buffer **isn't saved with
+the song and is silent in an export**, and the panel reminds you of that.
 
-## The extra: pollination
+## Pollination
 
-**bloom** and **generations**. Grains seed further grains: each one can spawn another, at a related position and pitch, up to a depth you set. At low settings it thickens; at high settings one note becomes a texture that keeps unfolding. **drift** and **mutate** decide how far the children stray from their parents.
+**bloom** and **generations**: grains can spawn more grains at a related
+position and pitch, up to the depth you set. A little thickens the sound; a lot
+turns one note into an evolving texture. **drift** and **mutate** set how far the
+new grains wander.
 
-## Using it well
+## Tips
 
-**Density and size trade against each other.** Long grains at high density is a wall; short grains at high density is a texture. Pick one and adjust the other.
-
-**Use `snap` on anything with a beat in it.** It is the difference between granulating a drum loop and erasing one.
-
-**Scatter onto a scale.** The pitch scatter can be quantised to a key, so a cloud stays in the song rather than beside it.
+- Density and size work against each other: long grains at high density make a
+  wall, short ones make a texture.
+- Use **snap** on anything with a beat.
+- The pitch scatter can be locked to a scale so the cloud stays in key.
+- Under lean quality (Settings) the cloud uses half as many grains.

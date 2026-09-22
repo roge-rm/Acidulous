@@ -216,7 +216,7 @@ fun ClipSettingsDialog(
         if (rolls) {
             ListSection(
                 "the dice",
-                "Seeded rolls the same bar every pass; free rolls again each time.",
+                "Seeded repeats the same variations every loop; free rolls new ones each time.",
             ) {
                 Choice("seeded", !free) { free = false }
                 Choice("free", free) { free = true }
@@ -239,7 +239,7 @@ fun ClipSettingsDialog(
                 Choice("thaw", false, onPick = onThaw)
             }
         } else if (clip.notes.isNotEmpty()) {
-            ListSection("audio", "Renders the clip down; the machine stops running.") {
+            ListSection("audio", "Renders the clip to audio to save CPU.") {
                 Choice("freeze", false, onPick = onFreeze)
             }
         }
@@ -272,9 +272,8 @@ fun ClipSettingsDialog(
             onConfirm = { confirmPaste = false; onPaste() },
         ) {
             Text(
-                "This clip already has something in it, and pasting replaces the whole of it - " +
-                    "notes, automation, length and all. " +
-                    ClipClipboard.from + " is what goes in its place.",
+                "Pasting replaces everything in this clip (notes, automation and length) " +
+                    "with " + ClipClipboard.from + ".",
                 color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }
@@ -288,8 +287,8 @@ fun ClipSettingsDialog(
             onConfirm = { confirmClear = false; onClear() },
         ) {
             Text(
-                "Everything played into it goes: notes, automation and any frozen audio. " +
-                    "How the clip is set up - its length, play mode, mute and grid - stays as it is.",
+                "Removes the notes, automation and any frozen audio. " +
+                    "The clip's length, play mode, mute and grid stay the same.",
                 color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }
@@ -519,8 +518,8 @@ private fun LinkPage() {
     Section(
         "link tempo sync",
         if (hub.enabled) {
-            "The session sets the tempo, and play waits for its downbeat. " +
-                "Scene tempos and Smooth ramps do nothing meanwhile."
+            "The Link session sets the tempo, and play waits for its downbeat. " +
+                "Scene tempos and smooth ramps are ignored."
         } else {
             ""
         },
@@ -550,7 +549,7 @@ private fun LinkPage() {
             if (hub.multicast) {
                 ""
             } else {
-                "Without a multicast lock the Wi-Fi chip drops the packets that find peers, and nothing will ever appear here."
+                "Couldn't get a multicast lock, so other Link apps won't be found on this Wi-Fi."
             },
         ) {
             Readout(
@@ -731,8 +730,8 @@ private fun ClickPage() {
     Section(
         "click sound",
         when (UiPrefs.clickVoice) {
-            1 -> "Filtered noise: carries over a busy mix without being loud."
-            2 -> "Detuned squares: for when the drums hide the other two."
+            1 -> "Noise: cuts through a busy mix."
+            2 -> "Detuned squares: for when the drums hide the others."
             else -> ""
         },
     ) {
@@ -749,7 +748,7 @@ private fun ClickPage() {
         "click plays",
         when (UiPrefs.clickWhen) {
             1 -> "Only while the transport is armed."
-            2 -> "Never during the song - only to count you in."
+            2 -> "Only for the count-in."
             else -> ""
         },
     ) {

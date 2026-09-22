@@ -1,29 +1,32 @@
 # Forage
 
-> The sample drum machine: thirteen pads, your own files, and a filter and envelope on each.
+> A sample drum machine: thirteen pads for your own sounds.
 
-Forage is where recordings become drums. Thirteen pads, each holding a file you imported or recorded, and each with enough processing to make it fit.
+Forage plays your own samples on thirteen pads, each with some processing to
+help it fit.
 
 ## A pad
 
 - **level**, **pan**, **pitch** and **decay**.
-- **start** and **end** - the part of the file that plays, which is how one long recording becomes several pads.
+- **start** and **end** - which part of the file plays. One long recording can
+  feed several pads this way.
 - **mode** - once, loop or hold.
-- **dir** - forwards or reversed.
+- **dir** - forwards or backwards.
 - **cutoff** with a filter type, and **crush** for bit reduction.
-- **pdecay** - a pitch envelope, so a sample can fall the way a drum does.
-- **choke** - which group this pad belongs to. Two pads in one choke group cut each other off, which is how an open hat stops when the closed one hits.
+- **pdecay** - a pitch drop, so a sample can fall like a drum does.
+- **choke** - pads in the same choke group cut each other off, like an open
+  hat stopping when the closed hat plays.
 
-## The slice source
+## Slicing one file
 
-There is a fourteenth slot above the pads: **one file for the whole machine**, which the pads take slices of. Load a bar of a break into it, ask for thirteen slices, and every pad is a piece of it - one decode and one copy in memory rather than thirteen.
+There's a fourteenth slot above the pads for one file shared by the whole
+machine. Load a drum break into it, ask for thirteen slices, and each pad plays
+one piece of it.
 
-## Using it well
+## Tips
 
-**Choke groups are not optional.** Hats without one sound like two hats; with one they sound like a hat.
-
-**Trim before you tune.** A sample with silence at the front plays late, and no amount of micro-timing fixes what a trim would have.
-
-**`start` is a performance control.** Automate it across a bar and a single hit becomes a stutter.
-
-**The sound library remembers what a song is using** - the delete page says "a track is playing this" before it lets you remove a file, which is the failure that set exists to prevent.
+- Put your hats in a choke group.
+- Trim silence off the start of a sample, or it will play late.
+- Automate **start** across a bar to turn one hit into a stutter.
+- The sound library won't let you delete a file a track is still using without
+  telling you first.

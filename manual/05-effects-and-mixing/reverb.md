@@ -1,25 +1,30 @@
 # Reverb
-> A room, and four things a room cannot do.
+> A room that can also freeze, gate, shimmer, or crush itself.
 
-The classic half is a bank of combs and allpasses - eight and four a side - with **size**, **damp** and **predelay** doing what they always do. Everything after that is here because a rack with one reverb in it should not only be able to make rooms.
+A reverb with the usual size, damping and predelay, plus some extras.
 
 ## The controls
 
-- **size** - how big the space is, from a booth to something with no walls in it.
-- **damp** - how absorbent it is. A damped room is carpet and bodies; an undamped one is tile.
-- **tone** - a low-pass over the whole tail, for sitting it behind a mix.
-- **predelay** - a gap before the reverb starts, up to 200 ms. The single most useful control for keeping a vocal clear: the word arrives dry and the room turns up afterwards.
+- **size** - how big the space is.
+- **damp** - how absorbent the room is. Damped sounds like carpet, undamped like
+  tiles.
+- **tone** - a low-pass on the reverb tail.
+- **predelay** - a gap before the reverb starts, up to 200 ms.
 - **mix** - wet against dry.
-- **freeze** *(extra)* - the tail is held forever instead of decaying. A pad made out of whatever was playing when you pressed it.
-- **gate** *(extra)* - the tail is cut off flat rather than allowed to fade, which is the eighties snare and is very hard to get any other way.
-- **shimmer** *(extra)* - the tail is fed back an octave up, **inside** the feedback, so each pass climbs and a held chord slowly becomes a rising one. Not a high part added on top: it builds.
-- **bits** and **crush** *(extra)* - the tail, and only the tail, goes through a bit quantiser and a sample-and-hold. The dry stays clean and the room behind it is a cheap sampler.
-- **wobble** *(extra)* - the comb lengths drift slowly and out of step, so a long tail is never quite still. Tape does this; concrete does not.
+- **freeze** *(extra)* - holds the tail forever.
+- **gate** *(extra)* - cuts the tail off sharply, for the classic 80s gated
+  snare.
+- **shimmer** *(extra)* - feeds the tail back an octave up, so a held chord keeps
+  rising.
+- **bits** and **crush** *(extra)* - bit reduction and sample-rate reduction on
+  the tail only.
+- **wobble** *(extra)* - makes the tail drift slightly so it's never quite
+  still.
 
-## Using it well
+## Tips
 
-**Predelay before size.** If a reverb is making something indistinct, reach for predelay first. Thirty to sixty milliseconds keeps the attack of the sound in front of the room.
-
-**Shimmer wants a small mix and a long tail.** It is a build-up, so the further the feedback goes the more it does - and at a high mix it takes over the part rather than lifting behind it.
-
-**Bits and crush belong on a send.** With the dry on its own channel and a ruined copy of it in the return, you get a second, degraded version of the mix sitting behind the clean one, which is a sound hardware used to make by accident.
+- If the reverb makes things muddy, try 30-60 ms of **predelay** before making
+  it smaller.
+- Shimmer works best with a low mix and a long tail.
+- Put **bits** and **crush** on a send for a lo-fi copy of the mix behind the
+  clean one.

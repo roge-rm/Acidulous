@@ -1,22 +1,27 @@
 # Filter
-> Low, band or high pass, swept by an LFO on a note value or by the signal's own envelope.
+> Low, band or high pass, moved by an LFO, the signal's level, or another track.
 
-A state-variable filter with resonance, and two ways of moving it that do not need an automation lane: in time with the transport, or in time with the part.
+A resonant filter that can move on its own, in time with the song or with the
+sound going through it.
 
 ## The controls
 
-- **cutoff** - where it turns over, 20 Hz to 20 kHz.
-- **reso** - emphasis at the corner, up to the edge of self-oscillation.
+- **cutoff** - 20 Hz to 20 kHz.
+- **reso** - resonance, up to the edge of self-oscillation.
 - **mode** - low pass, band pass or high pass.
-- **lforate** *(extra)* - a note value rather than a frequency, so the sweep is locked to the song and stays locked when the tempo moves.
-- **lfodepth** *(extra)* - how far the LFO moves the cutoff, and **signed**: negative sweeps down from where you set it rather than up.
-- **envdepth** *(extra)* - how far the signal's own level moves the cutoff. Positive is an auto-wah that opens when you play harder; negative closes instead, which is the sound nothing else here makes.
-- **sidechain** - whose level moves it: **own**, or another track by name. With a negative `envdepth` and the kick as the source, the filter shuts on every hit and opens again behind it - a duck that takes the top off rather than the level.
+- **lforate** *(extra)* - the LFO speed as a note value, so it stays in time.
+- **lfodepth** *(extra)* - how far the LFO moves the cutoff. Negative sweeps
+  down instead of up.
+- **envdepth** *(extra)* - how much the signal's level moves the cutoff.
+  Positive opens it when you play harder (auto-wah); negative closes it.
+- **sidechain** - whose level moves it: **own**, or another track. With a
+  negative **envdepth** and the kick as the source, the filter closes on every
+  kick and opens again after.
 
-## Using it well
+## Tips
 
-**A signed depth is two effects.** Most filters give you a sweep upward and expect you to set the cutoff low. Being able to go the other way means the resting position can be open and the movement can be a dip, which reads as a very different thing.
-
-**Envelope and LFO together.** Set a slow `lforate` for the bar-level movement and a little `envdepth` on top, and the filter breathes with the song *and* responds to what is played into it. Either alone sounds mechanical by comparison.
-
-**Resonance costs level.** A band pass in particular throws away most of the signal; the `gain` trim at the end is there for exactly that and is not cheating.
+- A negative depth lets you leave the filter open and have it dip, which sounds
+  quite different from a sweep up.
+- Combine a slow LFO with a little envelope so it moves with the song and with
+  what's played.
+- Resonance and band pass lose level. Use **gain** to make it up.

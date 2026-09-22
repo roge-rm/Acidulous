@@ -83,8 +83,8 @@ private fun AppTab() {
         Text("Acidulous", color = c.text, fontSize = 22.sp)
         Readout("version $version")
         Body(
-            "A music workstation: sixteen racks, a scene-major arranger, and " +
-                "every instrument written for it.",
+            "A music studio for Android: up to sixteen tracks of synths, drum " +
+                "machines and samplers, arranged in scenes.",
         )
         Body("Copyright © 2026 Dan Hunke")
     }
@@ -115,10 +115,9 @@ private fun LicenceTab(onRead: (Licence) -> Unit) {
 private fun ComponentsTab(onRead: (Licence) -> Unit) {
     ListSection(
         "not ours",
-        "Everything else is original work. The engine, every machine and " +
-            "effect, the sequencer, the WAV, AIFF and FLAC writers and the MIDI " +
-            "file writer were all written for this app: no DSP, no presets and " +
-            "no samples are taken from anywhere else.",
+        "Everything else was written for this app, including the engine, the " +
+            "machines and effects, the sequencer and the file writers. No DSP code, " +
+            "presets or samples come from anywhere else.",
     ) {
         LicenceRow(Licence.Apache2, "Oboe 1.10.0 · the audio stream", onRead)
         LicenceRow(Licence.Lgpl2, "LAME 3.100 · MP3 encoding, as its own library", onRead)

@@ -243,9 +243,8 @@ private fun AudioTab(trackNames: List<String>) {
             UiPrefs.autoQuality -> "Auto: running %s.".format(if (UiPrefs.qualityNow) "full" else "lean")
             UiPrefs.fullQuality -> ""
             else ->
-                "Amp and distortion alias instead of oversampling, the reverb is " +
-                    "half a room, struck objects keep half their partials, the synth " +
-                    "thins its stacks and lets fewer notes ring out, and grain clouds halve."
+                "Saves CPU: simpler amp, distortion and reverb, and fewer voices, " +
+                    "tails and grains in Resonance, Trinity and Pollen."
         },
     ) {
         Choice("full", UiPrefs.fullQuality, enabled = !UiPrefs.autoQuality) { UiPrefs.chooseQuality(true) }
@@ -258,11 +257,11 @@ private fun AudioTab(trackNames: List<String>) {
     Section(
         "scheduler hint",
         when (NativeEngine.hintState) {
-            0 -> "Not taken on this device."
+            0 -> "Not available on this device."
             1 -> "Waiting for the audio thread."
-            2 -> "The audio thread never named itself."
+            2 -> "The audio thread didn't register."
             3 -> "This device refused it."
-            else -> "On. Every callback's real length is reported."
+            else -> "On."
         },
     ) {}
 }

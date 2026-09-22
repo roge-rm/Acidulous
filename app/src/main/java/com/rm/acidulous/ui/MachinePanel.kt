@@ -237,7 +237,7 @@ fun MachinePanel(
 private fun BusPanel(editor: SongEditor, trackIndex: Int) {
     val members = editor.song.tracks.filter { it.mixer.output == trackIndex + 1 }.map { it.name }
     Text(
-        if (members.isEmpty()) "nothing routed here - pick this group under a track's fader"
+        if (members.isEmpty()) "Nothing routed here yet. Pick this group under a track's fader in the mixer."
         else "playing " + members.joinToString(", "),
         color = Acid.colors.textDim, fontSize = 11.sp,
         modifier = Modifier.padding(6.dp),
@@ -1388,8 +1388,8 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         },
     ) {
         Text(
-            "Takes the sample off all thirteen pads and forgets the file they were slicing. " +
-                "The files themselves stay in the app - samples… still lists them.",
+            "Removes the samples from all thirteen pads and the slice file. " +
+                "The files stay in the app under samples….",
             color = Acid.colors.textMid, fontSize = 12.sp,
         )
     }
@@ -1484,8 +1484,8 @@ private fun SliceDialog(name: String, onChoose: () -> Unit, onDismiss: () -> Uni
             }
         }
         Text(
-            if (mode == 0) "Finds the hits. More than the pads can hold and the loudest win; fewer and it divides evenly instead."
-            else "Equal pieces, whatever the music does.",
+            if (mode == 0) "Cuts at the hits. If there are too many, the loudest are used; too few and it cuts evenly."
+            else "Equal pieces.",
             color = Acid.colors.textDim, fontSize = 11.sp,
         )
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1499,8 +1499,8 @@ private fun SliceDialog(name: String, onChoose: () -> Unit, onDismiss: () -> Uni
             }
         }
         Text(
-            "Pads 1 to $count take a piece each. A pad with its own sample keeps it - " +
-                "clear it to let the slice through.",
+            "Pads 1 to $count get a slice each. Pads that already have their own " +
+                "sample keep it; clear them to use the slice.",
             color = Acid.colors.textDim, fontSize = 11.sp,
         )
     }
@@ -2668,7 +2668,7 @@ private fun ResonancePanel(b: ParamBinding, pad: Int) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("object ${p + 1}", color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
             Text(
-                "a shape, hit somewhere, with something - and it can hear the others",
+                "a struck object that rings with the others",
                 color = Acid.colors.textDim, fontSize = 10.sp, maxLines = 1,
             )
         }
@@ -2986,7 +2986,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                             )
                             if (live) {
                                 Text(
-                                    "live: not saved with the song, and silent on export",
+                                    "live input: not saved with the song, silent in exports",
                                     color = c.accent, fontSize = 9.sp, maxLines = 2,
                                 )
                             }

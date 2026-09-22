@@ -227,8 +227,8 @@ private fun ChannelStrip(
             Text(
                 "This channel's " + automated.joinToString(", ") + " " +
                     (if (automated.size == 1) "is" else "are") +
-                    " being driven by recorded movement, which is why the control does not stay where you put it. " +
-                    "Clearing removes those lanes from every clip on this track; the notes are untouched.",
+                    " automated, so the control won't stay where you put it. " +
+                    "Clearing removes those lanes from every clip on this track. Notes aren't touched.",
                 color = c.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }

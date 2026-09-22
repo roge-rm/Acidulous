@@ -294,10 +294,10 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
             color = c.red, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
         )
         if (NativeEngine.captureOverflowed) {
-            Text("the writer fell behind; this take has a gap in it", color = c.accent, fontSize = 10.sp)
+            Text("the recorder fell behind, so this take has a gap", color = c.accent, fontSize = 10.sp)
         }
         if (NativeEngine.captureDeaf) {
-            Text("nothing is arriving - this take is silence", color = c.red, fontSize = 10.sp)
+            Text("no input: this take is silent", color = c.red, fontSize = 10.sp)
         }
     } else if (message.isNotEmpty()) {
         Text(message, color = c.textDim, fontSize = 11.sp)
@@ -379,7 +379,7 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
     val c = Acid.colors
     if (file == null) {
         Text(
-            "Record something, or pick a sample in the library, and it lands here.",
+            "Record something or pick a sample from the library to edit it here.",
             color = c.textDim, fontSize = 12.sp,
         )
         return

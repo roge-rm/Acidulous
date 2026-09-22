@@ -1,70 +1,88 @@
 # Bias
 
-> The four-track: recordings arranged along the song, four lanes at a time.
+> A four-track: recordings arranged along the song, four lanes at a time.
 
-Bias is the audio track. Where every other machine plays the notes in a cell, Bias plays the **recording** in a cell - four lanes of them, sounding together, so choosing between three takes is muting two and doubling a vocal is unmuting a second.
+Bias is the audio track. Instead of notes, each of its cells plays recordings:
+four lanes of them at once. You can mute two takes to pick the third, or unmute
+a second lane to double a vocal.
 
 ## How it fits the song
 
-There is no second timeline. A Bias cell is an ordinary clip, so a take sung across four scenes becomes **four cells naming the same file** at four offsets - nothing is copied, scenes of different lengths need nothing said about them, and it works identically in the arranger and in the clip launcher.
+A Bias cell is a normal clip, so there's no separate timeline. A take recorded
+across four scenes becomes four cells that all point at the same file, each
+starting at a different place. Nothing is copied, and it works the same in the
+arranger and the clip launcher.
 
-A cell covers its bars **times the scene's repeat**, and plays straight through them: a scene played twice is one performance, not the same two seconds again.
+A cell lasts its bars times the scene's repeat count and plays straight
+through, so a scene played twice plays one continuous take.
 
-## Recording onto it
+## Recording
 
-Tap the red dot beside a lane, arm the transport's record button, and press play. What you sing is written while the song plays under you and the other lanes keep playing - which is what overdubbing on a four-track is.
+Tap the red dot next to a lane, arm record on the transport, and press play. The
+song plays while you record, and the other lanes keep playing.
 
-**When you disarm, the take is cut at the scene lines.** One recording over a whole song becomes one cell per scene, and scenes the track had nothing in are made as they are reached. The whole recording stays in the sound library, so a split you did not want can be thrown away and the audio placed by hand.
+**When you stop, the take is cut at the scene lines**: one cell per scene, and
+cells are created in scenes where the track was empty. The whole recording also
+stays in the sound library, so you can undo the split and place it by hand.
 
-One lane records at a time, because there is one recorder. If the recorder fell behind and the take has a gap in it, it is **not** split - every moment after the gap would be in the wrong place - and it is left whole instead.
+One lane records at a time. If the recorder fell behind and there's a gap in the
+take, it isn't split (everything after the gap would be misplaced), so it's kept
+whole instead.
 
 ## The editor
 
-Opening a cell gives you the four lanes along the whole cycle:
+Opening a cell shows the four lanes:
 
-- drag a lane's **body** to move where it comes in;
-- drag either **end, top half**, to trim the recording without moving it;
-- drag either **end, bottom half**, to fade it in or out. The fades are equal-power, so **one lane fading out under another fading in is a crossfade** and holds a steady level between them;
-- tap the number at the left to **mute** the lane, and the dot below it to arm.
+- drag a lane's **body** to move where it starts;
+- drag either **end, top half**, to trim it;
+- drag either **end, bottom half**, to fade it in or out. Fading one lane out
+  while another fades in gives you a smooth crossfade;
+- tap the number on the left to **mute** a lane, and the dot below it to arm it.
 
-A fade-out needs an end you can see, so on a take longer than its cell both halves of the right edge trim - which is the thing to do first anyway.
+On a take longer than its cell, both halves of the right edge trim, so you have
+an end to fade.
 
-## Level, mute and automation
+## Levels, mutes and automation
 
-The level and the mute on each lane are ordinary **machine parameters**, which is the whole reason they are there rather than on the recording: they automate in the strip under the grid, they map to a pad or a knob, and they record while you play. A muted section is a mute drawn in that cell.
+Each lane's level and mute are ordinary machine parameters, so you can automate
+them, map them to a controller and record them.
 
-## Following the tempo
+## Tempo
 
-**tempo › takes** decides whether a take runs at the speed it was recorded at or follows the song. Following, it is read at the ratio between the two tempos **without its pitch moving**, so a take recorded at one tempo covers the same musical length at any other. Not following, it enters on the bar and runs at its own speed, and the cell says so in amber.
+**tempo › takes** chooses whether a take plays at the speed it was recorded at
+or follows the song's tempo. When it follows, it's time-stretched without
+changing pitch. When it doesn't, it starts on the bar and plays at its own
+speed, and the cell turns amber.
 
 ## Playing a guitar through it
 
-**monitor**, under **tempo**, mixes what is coming in into this track's own
-output - before its inserts, so an **amp** in slot one is in front of you while
-you play. Record with it up and the *recording is still dry*, because the
-recorder takes the input and not the track, so the amp can be changed
-afterwards exactly as the medium can.
+**monitor**, under **tempo**, feeds the input into this track's output before its
+effects, so you can hear an amp in the first insert slot while you play. The
+recording itself stays dry, so you can change the amp later.
 
-It is off by default, and on a phone's own speaker it will howl. Headphones, or
-an interface.
+Monitor is off by default. Use headphones or an interface, because on the phone
+speaker it will feed back.
 
-**printed in**, beside it, is the other half of the choice. Those two slots are
-effects on the way *in*: what is on them is **recorded into the take**, because
-they run before the recorder sees the audio. An amp there is committed; an amp
-on the track's own **fx** is applied on playback and can be changed for ever
-afterwards. They are the same two slots the recording window shows, because
-they belong to the session rather than to this track.
+**printed in**, next to it, is for effects you want recorded into the take. They
+run before the recorder, so they're committed. These are the same two input
+slots the recording window shows.
 
 ## Flattening
 
-**comp** takes the four lanes, their levels, their mutes and their fades, and writes them into one file in lane 1. It does **not** flatten the medium - a patch here is a way of listening and a comp is an edit, so baking one into the other would make it permanent and apply it twice. The recordings it was made from stay in the library.
+**comp** mixes the four lanes (with their levels, mutes and fades) into one file
+in lane 1. The patch's tape colour isn't baked in. The original recordings stay
+in the library.
 
-## The patches are recording media
+## Patches
 
-See **Patches** on the machines page: Bias's are a cassette, a Portastudio, a reel, a MiniDisc, a telephone, a wax cylinder. They colour what comes out and never the recordings, so trying one costs nothing and undoes itself. **Init** is the default and plays the file back untouched.
+Bias's patches are recording media (cassette, reel, telephone, wax cylinder and
+others). They colour the sound on playback but never change the recordings, so
+you can try them freely. **Init** plays the file back untouched.
 
-## Using it well
+## Tips
 
-**Record first, decide later.** Everything here - the medium, the tempo, the fades, even the split - is a decision you can change afterwards, because none of them touch the file.
-
-**A take may be half an hour.** Anything under two minutes is held in memory; past that it is converted once, in the background, and read from storage as it plays, so a vocal that runs the length of a song costs no more than a chorus does.
+- Record first and decide later. The patch, tempo, fades and even the split can
+  all be changed afterwards without touching the file.
+- Takes can be long. Anything over two minutes is converted once in the
+  background and streamed from storage, so a full-length vocal costs about the
+  same as a short one.

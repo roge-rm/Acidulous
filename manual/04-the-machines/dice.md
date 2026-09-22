@@ -1,33 +1,37 @@
 # Dice
 
-> A loop cut into pieces, and rolled.
+> A loop slicer with chance on every slice.
 
-Dice takes one loop and cuts it into slices, then plays those slices back with a probability on every trigger. It is the machine for breaks, and for the thing a break does when it stops being a loop.
+Dice cuts a loop into slices and plays them back, with a chance of something
+different happening on each one. It's good for breaks.
 
-## The cut
+## Slicing
 
-**slices** is how many pieces, and **cut** is where the cuts fall - from an even division to the loop's own transients. Each slice then has its own **level**, **pan**, **pitch**, **decay** and **dir**, so a slice can be quieter, lower or backwards without touching the others.
+**slices** sets how many pieces, and **cut** sets where they fall, from even
+divisions to the loop's own hits. Each slice has its own **level**, **pan**,
+**pitch**, **decay** and **dir**.
 
 ## The dice
 
-Five of them, each a probability rolled per trigger:
+Five chances, rolled on every slice:
 
-- **swap** - play a different slice instead of this one.
+- **swap** - play a different slice.
 - **reverse** - play it backwards.
-- **stutter**, with **stutterdiv** - repeat a fraction of it.
+- **stutter**, with **stutterdiv** - repeat part of it.
 - **drop** - play nothing.
-- **jump**, with **jumprange** - move somewhere else in the loop and carry on from there.
+- **jump**, with **jumprange** - skip to somewhere else in the loop and carry on.
 
-**seed** decides the rolls, and **hold** freezes them - so a roll you liked can be kept rather than lost to the next bar. That pairing is the whole machine: turn the dice up until something good happens, then hold it.
+**seed** decides the rolls and **hold** freezes them. Turn the dice up until you
+hear something you like, then hold it.
 
-## Playing it
+## Playing
 
-The slices sit on the grid like drum voices, so a pattern of slice numbers is a re-ordering of the loop written out. **rate**, **gate**, **pitch**, **fine** and **accent** are the playback, and there is a filter and drive after.
+The slices sit on the grid like drum sounds, so you can reorder the loop by
+writing a pattern. **rate**, **gate**, **pitch**, **fine** and **accent** control
+playback, followed by a filter and drive.
 
-## Using it well
+## Tips
 
-**Hold is the point.** Unheld, Dice is different every bar and tiring; held on a good roll, it is a part.
-
-**Cut on transients, not evenly, for a real break** - an even cut on a loop that swings puts every slice in slightly the wrong place.
-
-**A seed makes it repeatable**, so an exported song sounds like the one you arranged.
+- Unheld, Dice changes every bar. Held on a good roll, it becomes a part.
+- For a break that swings, cut on the hits rather than evenly.
+- The seed makes it repeatable, so an export sounds like what you arranged.

@@ -1,32 +1,36 @@
 # Hexbeat
 
-> Drums by synthesis, in the small-box vocabulary, grown to the kit those boxes never had.
+> Synthesized drums in the style of the classic small boxes, with a bigger kit.
 
-Hexbeat makes its drums rather than playing recordings of them. Thirteen voices, each a small piece of synthesis aimed at one sound, in the vocabulary of the little silver drum machines - which means it is punchy, dry and slightly unreal, and it sits in a mix without being asked twice.
+Hexbeat makes its drums with synthesis rather than samples. It has thirteen
+voices in the style of the small classic drum machines: punchy, dry and easy to
+sit in a mix.
 
 ## The kit
 
-Kick, rim, snare, clap, three toms, closed and open hat, crash, ride, cowbell and clave. Those boxes had six or eight voices; this has the ones they left out, built in the same style.
+Kick, rim, snare, clap, three toms, closed and open hat, crash, ride, cowbell
+and clave.
 
 ## The controls
 
-Every voice has a **level** and at least a **tune** and a **decay**, and then whatever that particular sound is made of:
+Every voice has a **level**, and most have **tune** and **decay**, plus a few of
+their own:
 
-- **kick** - tune, decay, punch. Punch is the pitch envelope: none is a tom, a lot is the swept kick.
-- **snare** - tune, decay, tone and **snappy**, which is the balance between the drum and the noise across it.
-- **hats** - one tone and tune shared, with separate closed and open decays, because on a real kit they are one instrument played two ways.
-- **clap** - decay and tone, and the spread of the little burst of repeats that makes a clap a clap rather than a click.
+- **kick** - tune, decay and **punch** (the pitch drop at the start).
+- **snare** - tune, decay, tone and **snappy** (drum against noise).
+- **hats** - shared tone and tune, separate closed and open decays.
+- **clap** - decay, tone, and the spread of the little repeats that make it a
+  clap.
 - **cymbals** - decay and tone for crash and ride.
 - **bell** and **clave** - tune and level.
 
-**accent** is how much a hard hit adds, and it applies across the kit.
+**accent** is how much a hard hit adds across the whole kit.
 
-## Using it well
+## Tips
 
-**The grid is the editor for this machine.** It opens on the drum grid and stays there; a piano roll of thirteen one-tick notes answers no question the grid does not answer better.
-
-**Decay is the arrangement.** The same pattern with short decays is tight and with long ones is spacious - it is a faster edit than changing the notes.
-
-**Use the trig lane.** Probability on a hat and a ratchet on a snare turn a sixteen-step loop into something that does not repeat, and neither is a note you have to draw.
-
-**For the sampled equivalent, see Forage**; for the bigger, louder relative, see Genesis.
+- It opens on the drum grid, which is the best way to edit it.
+- Changing the decays is a quick way to make a pattern tighter or roomier.
+- Try probability on the hats and a ratchet on the snare so the loop doesn't
+  repeat exactly.
+- For drums from your own samples see Forage; for a bigger, heavier kit see
+  Genesis.

@@ -1,43 +1,38 @@
 # MIDI and playing with others
-> Keyboards, clock, MPE and Link.
+> Keyboards, controller mapping, clock, MPE and Link.
 
-**MIDI…** in the file menu is where all of this lives, in the order somebody
-asks the questions: what is coming in, where it goes, and what goes out.
+Everything here is under **MIDI…** in the file menu.
 
-## Playing the app from a keyboard
+## Playing from a keyboard
 
-USB and Bluetooth keyboards are handled by the app itself. Arriving notes go
-either to whichever track is open - so changing track changes what you are
-playing - or to a track you pin, so it stays put whatever you are looking at.
+USB and Bluetooth MIDI keyboards work directly. Notes go either to whichever
+track is open, or to a track you pin so it stays the same whatever you're
+looking at.
 
-**Per-note expression** is understood where a machine can use it. A controller
-that bends one finger without bending the others will bend one note without
-bending the others, on the machines that have somewhere to put it, and the zone
-and bend range are set here. It is recorded as well as played: a note remembers
-its own bend, pressure and slide.
+**MPE** works on the machines that support it: bending one finger bends only
+that note. You set the zone and bend range here. Per-note bend, pressure and
+slide are recorded too.
 
 ## Mapping a controller
 
-Long-press redo to enter mapping mode. Every control that can be mapped says so,
-and tapping one arms it: move a knob or press a key on your controller and the
-two are joined. Knobs, faders, mixer controls and transport buttons can all be
-mapped, to a CC **or** to a note.
+Long-press redo to enter mapping mode. Controls that can be mapped are
+highlighted. Tap one, then move a knob or press a key on your controller to link
+them. Knobs, faders, mixer controls and transport buttons can all be mapped, to
+a CC or a note.
 
-A mapped parameter records into the automation lane for free, because it moves
-down the same path your finger does. A mapped action - play, stop, fill - never
-records, because a button press is not a value.
+A mapped knob records into automation just like moving it by hand. Mapped
+buttons like play, stop and fill don't record.
 
 ## Clock
 
-The app can send MIDI clock to hardware, with start, stop and song position, and
-it can follow somebody else's. Following means the tempo control goes quiet: the
-tempo is theirs.
+The app can send MIDI clock (with start, stop and song position) to hardware,
+and it can follow an incoming clock. When following, the tempo comes from the
+other device.
 
-What goes out is set per track: notes, or clock, or both.
+Each track chooses what it sends out: notes, clock, or both.
 
 ## Link
 
-Link shares tempo and the position within the bar with any other Link app on the
-same network, in both directions. Switch it on and the peer count appears. It
-carries the beat and the bar, not the song position - so everybody agrees on
-where the downbeat is without anybody being in charge.
+Ableton Link shares tempo and bar position with other Link apps on the same
+network, both ways. Turn it on and the number of connected apps appears. It
+keeps everyone's downbeat together without anyone being in charge.

@@ -185,8 +185,8 @@ private fun InTab(trackNames: List<String>, mpeHeld: Int) {
 private fun OutTab() {
     ListSection(
         "send to",
-        if (MidiHub.destinations.isEmpty()) "A keyboard that only plays is input-only."
-        else "A track only sends if its own switch says so.",
+        if (MidiHub.destinations.isEmpty()) "A keyboard that only sends has no outputs here."
+        else "Each track chooses whether it sends, in the mixer.",
     ) {
         MidiHub.destinations.forEach { dest ->
             DialogRow(
@@ -232,7 +232,7 @@ private fun OutTab() {
 private fun SyncTab(context: android.content.Context) {
     Section(
         "clock out",
-        if (MidiHub.clockOut) "24 ppq to every open destination, with start, stop and position."
+        if (MidiHub.clockOut) "Sent to every open output, with start, stop and song position."
         else "",
     ) {
         Choice("send clock", MidiHub.clockOut) { UiPrefs.chooseClockOut(true) }
@@ -244,7 +244,7 @@ private fun SyncTab(context: android.content.Context) {
         when {
             com.rm.acidulous.engine.LinkHub.enabled ->
                 "Link has the tempo. Switching this on turns Link off."
-            MidiHub.clockIn -> "Scene tempos and Smooth ramps do nothing meanwhile."
+            MidiHub.clockIn -> "Scene tempos and smooth ramps are ignored while following."
             else -> ""
         },
     ) {
@@ -330,7 +330,7 @@ private fun MapTab(song: Song) {
         Readout(
             if (claimed.isEmpty()) "none - every note still plays"
             else claimed.joinToString(", ") { Mapping(note = it).sourceLabel().removePrefix("note ") } +
-                " · these fire their mapping instead of sounding",
+                " · these trigger their mapping instead of playing",
             good = claimed.isEmpty(),
         )
     }
@@ -401,13 +401,13 @@ private fun MpeSection(mpeHeld: Int) {
         ) { UiPrefs.chooseMpe(members = (it * 14f).toInt() + 1) }
         SliderSection(
             "bend range", "±%.0f st".format(MidiHub.mpeBendSemis),
-            "Per finger. The spec says 48; many controllers ship 24.",
+            "Per finger. The MPE standard is 48, but many controllers use 24.",
             (MidiHub.mpeBendSemis - 1f) / 95f, 0f..1f,
         ) { UiPrefs.chooseMpe(bendSemis = 1f + it * 95f) }
         Section(
             "cc 74 is",
             if (MidiHub.mpeTimbre) "CC 74 drives each machine's slide knob."
-            else "CC 74 is an ordinary controller, free to be mapped.",
+            else "CC 74 is a normal controller you can map.",
         ) {
             Choice("timbre", MidiHub.mpeTimbre) { UiPrefs.chooseMpe(timbre = true) }
             Choice("plain cc", !MidiHub.mpeTimbre) { UiPrefs.chooseMpe(timbre = false) }
@@ -426,9 +426,8 @@ private fun MpeSection(mpeHeld: Int) {
                 }
             }
             Text(
-                "Two notes on the first two member channels, then a bend, a press and a slide " +
-                    "on the first of them only. If both notes move, the expression is not " +
-                    "reaching the voice that owns it.",
+                "Plays two notes, then bends, presses and slides the first one only. " +
+                    "If both notes change, per-note expression isn't working.",
                 color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }

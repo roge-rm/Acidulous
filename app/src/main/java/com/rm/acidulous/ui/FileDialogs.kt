@@ -55,7 +55,7 @@ fun SongBrowserDialog(
             onConfirm = { onDelete(name); confirm = null },
         ) {
             Text(
-                "The file is removed. The song stays open if it is the one you are editing.",
+                "This deletes the file. If it's the song you have open, it stays open.",
                 color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }
