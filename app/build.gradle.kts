@@ -32,8 +32,17 @@ android {
         //
         // 0.2.0 is the manual: the first release you can be handed without
         // also being told how any of it works.
-        versionCode = 4
-        versionName = "0.3.0"
+        //
+        // 0.4.0 because two things changed what a song already saved *means*,
+        // which is the case a minor number exists for. Modifiers replaced
+        // eventors outright and deliberately without migration, so a song from
+        // 0.3.0 opens without the chain it was written with; and a freeze now
+        // stores its ring-out as its own region, so every freeze rendered
+        // before this says so and asks to be made again. Swing and a transport
+        // that ends rather than only looping came with them, and the
+        // performance work that made the meter worth reading.
+        versionCode = 5
+        versionName = "0.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
