@@ -182,6 +182,40 @@ Result timeRack(const std::string &machine, const std::string &fx1, const std::s
     return r;
 }
 
+/**
+ * What a machine costs with nothing to play.
+ *
+ * Not the tail above, which is the two seconds after a note and is mostly a
+ * release. This is a track that is simply not in this scene - and on Dan's
+ * phone that is most of them most of the time: nine tracks, and the busiest
+ * scene uses six. If a silent machine is not free then a song pays for every
+ * track in every scene whether it sounds or not, which is a very different
+ * problem from any single machine being dear.
+ */
+Result timeIdle(const std::string &name) {
+    Machine *m = MachineRegistry::create(name.c_str());
+    Result r;
+    r.name = name;
+    if (m == nullptr) return r;
+    m->prepare(kSr);
+    m->reset();
+    m->params().jumpAll();
+
+    std::vector<float> L(kBlock), R(kBlock);
+    // No Player: not one note, ever.
+    for (int32_t b = 0; b < kBlocks; ++b) {
+        std::fill(L.begin(), L.end(), 0.0f);
+        std::fill(R.begin(), R.end(), 0.0f);
+        const double t0 = nowUs();
+        m->render(L.data(), R.data(), kBlock);
+        const double us = nowUs() - t0;
+        if (b > 8) r.samples.push_back(us);
+    }
+    r.finish();
+    delete m;
+    return r;
+}
+
 Result timeMachine(const std::string &name) {
     Machine *m = MachineRegistry::create(name.c_str());
     Result r;
@@ -338,6 +372,12 @@ int main(int argc, char **argv) {
         rows.push_back(timeRack("Resonance", "Reverb", "", 0));
         rows.push_back(timeRack("Resonance", "Reverb", "", 1));
         rows.push_back(timeRack("", "", "", 2));
+        report(rows);
+        return 0;
+    }
+    if (only == "idle") {
+        printf("cost of a machine with NOTHING to play\n\n");
+        for (int32_t i = 0; i < MachineRegistry::count(); ++i) rows.push_back(timeIdle(MachineRegistry::name(i)));
         report(rows);
         return 0;
     }
