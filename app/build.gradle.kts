@@ -41,8 +41,16 @@ android {
         // before this says so and asks to be made again. Swing and a transport
         // that ends rather than only looping came with them, and the
         // performance work that made the meter worth reading.
-        versionCode = 5
-        versionName = "0.4.0"
+        //
+        // 0.5.0 is a freeze that follows a tempo ramp. A scene that changes
+        // tempo smoothly spends its first bar between two tempos, matching no
+        // clip's rendered tempo, so every frozen clip in it used to hand that
+        // bar back to its machine - in the busiest scene, which is usually why
+        // anything was frozen. The audio is time-stretched to the ramp
+        // instead, through the stretcher the audio tracks already used, now
+        // float and stereo. No saved song means anything different for it.
+        versionCode = 6
+        versionName = "0.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
