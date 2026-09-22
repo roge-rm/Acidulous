@@ -584,6 +584,33 @@ void tracksCanBeGrouped() {
        "largest difference " + std::to_string(largestDifference(sentPlain, sentGrouped)));
 }
 
+/** The master's inserts: on the whole mix, before the fader and the limiter. */
+void theMasterHasInserts() {
+    printf("- master inserts\n");
+    constexpr int32_t kBlocks = 600;
+    std::vector<float> plain, driven, bypassed, again;
+    { GroupFixture f(false); plain = f.run(kBlocks); }
+    const auto withDrive = [&](bool bypass) {
+        GroupFixture f(false);
+        Effect *fx = EffectRegistry::create("Distortion");
+        fx->prepare(kSampleRate);
+        fx->reset();
+        fx->params().set(fx->params().indexOf("drive"), 0.9f);
+        fx->params().jumpAll();
+        fx->setBypass(bypass);
+        delete f.engine.master.swapInsert(0, fx);
+        auto out = f.run(kBlocks);
+        delete f.engine.master.swapInsert(0, nullptr);
+        return out;
+    };
+    driven = withDrive(false);
+    bypassed = withDrive(true);
+    again = withDrive(false);
+    ok("an insert on the master changes the mix", largestDifference(plain, driven) > 0.01f);
+    ok("and bypassed it is not there at all", firstDifference(plain, bypassed) == plain.size());
+    ok("and a render through it repeats", firstDifference(driven, again) == driven.size());
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -592,6 +619,7 @@ int main() {
     aTracksCostIsAPercentile();
     aTrackCanListenToAnother();
     tracksCanBeGrouped();
+    theMasterHasInserts();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

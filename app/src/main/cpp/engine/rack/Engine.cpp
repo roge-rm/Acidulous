@@ -425,6 +425,9 @@ void Engine::renderBlock(const float *in, float *out) {
     for (int32_t s = 0; s < kSendSlots; ++s) {
         if (Effect *e = master.send(s)) e->setKey(keyFor(e->sidechainRack(), -1));
     }
+    for (int32_t s = 0; s < kMasterInsertSlots; ++s) {
+        if (Effect *e = master.insert(s)) e->setKey(keyFor(e->sidechainRack(), -1));
+    }
     master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade, clock.blockStart(), clock.blockEnd());
 
     const auto tMaster = std::chrono::steady_clock::now();
@@ -1025,6 +1028,12 @@ void Engine::drainParams() {
     while (paramsIn.pop(p)) {
         if (p.unit == Unit::Master) {
             master.params().set(p.index, p.value);
+        } else if (p.unit == Unit::MasterFx1 || p.unit == Unit::MasterFx2) {
+            Effect *fx = master.insert(p.unit == Unit::MasterFx1 ? 0 : 1);
+            if (fx != nullptr) {
+                if (p.index == kEffectBypassIndex) fx->setBypass(p.value >= 0.5f);
+                else fx->params().set(p.index, p.value);
+            }
         } else if (p.unit == Unit::Send1 || p.unit == Unit::Send2) {
             Effect *fx = master.send(p.unit == Unit::Send1 ? 0 : 1);
             if (fx != nullptr) {
@@ -1094,6 +1103,9 @@ void Engine::applyMount(const Mount &m) {
         } else {
             retirer.retire(m.object, deleteAs<Effect>);
         }
+        break;
+    case Mount::Kind::MasterInsert:
+        retirer.retire(master.swapInsert(m.slot, static_cast<Effect *>(m.object)), deleteAs<Effect>);
         break;
     case Mount::Kind::Send:
         // Slot-checked inside swapSend, which hands back whatever it displaced

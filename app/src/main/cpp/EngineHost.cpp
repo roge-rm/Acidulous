@@ -61,6 +61,8 @@ Unit unitFromName(const std::string &u) {
     if (u == "mod3") return Unit::Mod3;
     if (u == "channel") return Unit::Channel;
     if (u == "master") return Unit::Master;
+    if (u == "master1") return Unit::MasterFx1;
+    if (u == "master2") return Unit::MasterFx2;
     if (u == "send1") return Unit::Send1;
     if (u == "send2") return Unit::Send2;
     if (u == "input1") return Unit::Input1;
@@ -200,6 +202,26 @@ bool EngineHost::mountSend(int slot, const std::string &typeName) {
     m.object = fx;
     if (!mountWithRetry(m, deleteAs<Effect>)) return false;
     mountedSendType[slot] = typeName;
+    return true;
+}
+
+bool EngineHost::mountMasterInsert(int slot, const std::string &typeName) {
+    if (slot < 0 || slot >= kMasterInsertSlots) return false;
+    Effect *fx = nullptr;
+    if (!typeName.empty()) {
+        fx = EffectRegistry::create(typeName.c_str());
+        if (fx == nullptr) {
+            LOGE("unknown master effect '%s'", typeName.c_str());
+            return false;
+        }
+        fx->prepare(kSampleRate);
+    }
+    Mount m;
+    m.kind = Mount::Kind::MasterInsert;
+    m.slot = slot;
+    m.object = fx;
+    if (!mountWithRetry(m, deleteAs<Effect>)) return false;
+    mountedMasterInsertType[slot] = typeName;
     return true;
 }
 
@@ -804,6 +826,14 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         return sEngine.racks[0].channelIndexOf(name.c_str());
     }
     if (u == Unit::Master) return sEngine.master.params().indexOf(name.c_str());
+    if (u == Unit::MasterFx1 || u == Unit::MasterFx2) {
+        if (name == "bypass") return kEffectBypassIndex;
+        int32_t n = 0;
+        const ParamDef *defs =
+            EffectRegistry::paramDefs(mountedMasterInsertType[u == Unit::MasterFx1 ? 0 : 1].c_str(), n);
+        for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
+        return -1;
+    }
     if (u == Unit::Send1 || u == Unit::Send2) {
         if (name == "bypass") return kEffectBypassIndex;
         int32_t n = 0;
@@ -855,6 +885,8 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         index = sEngine.racks[rack].channelIndexOf(name.c_str()); // see paramIndex
     } else if (u == Unit::Master) {
         index = sEngine.master.params().indexOf(name.c_str());
+    } else if (u == Unit::MasterFx1 || u == Unit::MasterFx2) {
+        index = paramIndex(mountedMasterInsertType[u == Unit::MasterFx1 ? 0 : 1], unit, name);
     } else if (u == Unit::Send1 || u == Unit::Send2) {
         index = paramIndex(mountedSendType[u == Unit::Send1 ? 0 : 1], unit, name);
     } else if (u == Unit::Input1 || u == Unit::Input2) {

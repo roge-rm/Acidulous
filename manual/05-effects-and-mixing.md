@@ -94,6 +94,10 @@ The mixer pill opens the strips: one per track and one master.
 - **Pan**, and a MIDI row for what this track sends out.
 - **The master** carries the limiter, and the meter that tells you whether you
   are asking it for too much.
+- **Two master inserts**, the **fx1** and **fx2** chips on the master strip.
+  They run on the whole mix, sends included, before the master fader and the
+  limiter - an EQ or a gentle compressor for the song. Tap to switch one off and
+  on, hold it to choose the effect and set it up.
 - A **∿ beside a track's name** means something on that channel is being
   driven by movement you recorded, which is why that control will not stay
   where you put it. Tap the mark to see which, and to clear those lanes from

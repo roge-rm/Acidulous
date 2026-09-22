@@ -428,6 +428,9 @@ const val EFFECT_SLOTS = 2
 /** How many send buses the master has; see [Master.sends]. */
 const val SEND_SLOTS = 2
 
+/** How many inserts the master has, before its fader and limiter. */
+const val MASTER_INSERT_SLOTS = 2
+
 /**
  * Effects on the way *in*, before anything hears the input.
  *
@@ -526,11 +529,14 @@ data class Master(
      */
     val sends: List<UnitSlot> = listOf(UnitSlot("Reverb"), UnitSlot("Delay")),
     val limiter: LimiterSettings = LimiterSettings(),
+    /** Effects on the whole mix, after the sends and before the fader and limiter. */
+    val inserts: List<UnitSlot> = emptyList(),
     /** Only ever non-null in a song written before the sends were slots. */
     val reverb: ReverbSettings? = null,
     val delay: DelaySettings? = null,
 ) {
     fun sendAt(slot: Int): UnitSlot = sends.getOrNull(slot) ?: UnitSlot()
+    fun insertAt(slot: Int): UnitSlot = inserts.getOrNull(slot) ?: UnitSlot()
 
     /**
      * An old song's two fixed boxes, as the two slots.

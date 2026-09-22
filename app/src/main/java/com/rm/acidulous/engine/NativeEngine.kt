@@ -33,6 +33,7 @@ object NativeEngine {
      * addressed as `effect1` and `effect2`.
      */
     fun mountSend(slot: Int, typeName: String): Boolean = nativeMountSend(slot, typeName)
+    fun mountMasterInsert(slot: Int, typeName: String): Boolean = nativeMountMasterInsert(slot, typeName)
 
     /**
      * An effect on the way **in**, before anything hears the input.
@@ -780,6 +781,7 @@ object NativeEngine {
     private external fun nativeInputModParamInfo(type: String): Array<String>
     private external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     private external fun nativeMountSend(slot: Int, typeName: String): Boolean
+    private external fun nativeMountMasterInsert(slot: Int, typeName: String): Boolean
     private external fun nativeMountInputEffect(slot: Int, typeName: String): Boolean
     private external fun nativeEffectTypes(): Array<String>
     private external fun nativeEffectParamInfo(type: String): Array<String>

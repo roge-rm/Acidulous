@@ -569,6 +569,7 @@ object Manual {
             ManualBlock(ManualKind.Bullet, "**Two sends**, to two effects shared by the whole song. Sends are how several tracks sit in one room without each paying for its own."),
             ManualBlock(ManualKind.Bullet, "**Pan**, and a MIDI row for what this track sends out."),
             ManualBlock(ManualKind.Bullet, "**The master** carries the limiter, and the meter that tells you whether you are asking it for too much."),
+            ManualBlock(ManualKind.Bullet, "**Two master inserts**, the **fx1** and **fx2** chips on the master strip. They run on the whole mix, sends included, before the master fader and the limiter - an EQ or a gentle compressor for the song. Tap to switch one off and on, hold it to choose the effect and set it up."),
             ManualBlock(ManualKind.Bullet, "A **∿ beside a track's name** means something on that channel is being driven by movement you recorded, which is why that control will not stay where you put it. Tap the mark to see which, and to clear those lanes from every clip on the track - the notes are not touched."),
             ManualBlock(ManualKind.Heading, "Groups"),
             ManualBlock(ManualKind.Para, "A group is a track whose machine is **Bus**. Add one from the machine picker, under *beyond*. It plays nothing itself. Instead, any track can be routed into it: once the song has a group, each strip in the mixer gets an extra row at the bottom - tap it to step between the master and each group."),

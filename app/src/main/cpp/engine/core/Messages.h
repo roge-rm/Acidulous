@@ -83,6 +83,11 @@ enum class Unit : uint8_t {
      * other end is MIDI again, which is how they arrived.
      */
     Performance,
+    /**
+     * The master's two inserts: after the sends come back, before the fader
+     * and the limiter. The same slot shape as a send; the rack is ignored.
+     */
+    MasterFx1, MasterFx2,
 };
 
 /** Indices within Unit::Performance. */

@@ -12,6 +12,8 @@ namespace acidulous {
 
 /** How many send buses the master carries. */
 constexpr int32_t kSendSlots = 2;
+/** How many insert slots the master carries, before its fader and limiter. */
+constexpr int32_t kMasterInsertSlots = 2;
 
 class MasterBus {
   public:
@@ -56,6 +58,15 @@ class MasterBus {
 
     /** What is on send [slot], or null. Its own ParamSet is its parameters. */
     Effect *send(int32_t slot) { return (slot >= 0 && slot < kSendSlots) ? sends[slot] : nullptr; }
+
+    /** Put [next] on master insert [slot]; returns what was there, for the caller to retire. */
+    Effect *swapInsert(int32_t slot, Effect *next) {
+        if (slot < 0 || slot >= kMasterInsertSlots) return next;
+        Effect *old = inserts[slot];
+        inserts[slot] = next;
+        return old;
+    }
+    Effect *insert(int32_t slot) { return (slot >= 0 && slot < kMasterInsertSlots) ? inserts[slot] : nullptr; }
 
     /** [accent] is dsp::Click::Bar, Beat or Division. */
     void clickAt(int32_t accent, int32_t offsetSamples) { click.trigger(accent, offsetSamples); }
@@ -118,6 +129,7 @@ class MasterBus {
   private:
     ParamSet params_;
     Effect *sends[kSendSlots]{};
+    Effect *inserts[kMasterInsertSlots]{};
     dsp::Limiter<kBlockFrames> limiter;
     float sampleRate = 48000.0f;
     float panicRamp = 1.0f;

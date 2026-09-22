@@ -20,7 +20,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import com.rm.acidulous.model.MASTER_INSERT_SLOTS
 import com.rm.acidulous.model.SEND_SLOTS
+import com.rm.acidulous.model.masterInsertUnit
+import com.rm.acidulous.model.withMasterInsert
+import com.rm.acidulous.model.withMasterInsertBypass
+import com.rm.acidulous.model.withMasterInsertParam
 import com.rm.acidulous.model.INPUT_SLOTS
 import com.rm.acidulous.model.UnitSlot
 import com.rm.acidulous.model.withInputFxBypass
@@ -358,6 +363,14 @@ private fun MasterStrip(
     // Which send's editor is open, if any.
     var editing by remember { mutableStateOf<Int?>(null) }
     editing?.let { slot -> SendDialog(slot, editor) { editing = null } }
+    var editingInsert by remember { mutableStateOf<Int?>(null) }
+    editingInsert?.let { slot ->
+        SongSlotDialog("master ${slot + 1}", slot, ::masterInsertUnit, { s, i -> s.master.insertAt(i) },
+                       Song::withMasterInsert, Song::withMasterInsertParam,
+                       // In series with the mix, like a track's insert, so a
+                       // dry blend is a real thing to want.
+                       hideMix = false, editor = editor) { editingInsert = null }
+    }
 
     Column(
         Modifier.width(MASTER_W).then(if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
@@ -412,6 +425,24 @@ private fun MasterStrip(
                     val bypass = !send.bypass
                     editor.editSong { s -> s.withSendBypass(slot, bypass) }
                     NativeEngine.setParam(0, sendUnit(slot), "bypass", if (bypass) 1f else 0f, record = false)
+                }
+            }
+        }
+        // The master's two inserts: on the whole mix, before the fader and
+        // the limiter. Tap to switch one off and on, hold to choose and set it.
+        for (slot in 0 until MASTER_INSERT_SLOTS) {
+            val fx = master.insertAt(slot)
+            ToggleChip(
+                if (fx.isEmpty) "fx${slot + 1}" else fx.type.lowercase(),
+                !fx.isEmpty && !fx.bypass,
+                c.accent,
+                Modifier.onLongPress { editingInsert = slot },
+            ) {
+                if (fx.isEmpty) editingInsert = slot
+                else {
+                    val bypass = !fx.bypass
+                    editor.editSong { s -> s.withMasterInsertBypass(slot, bypass) }
+                    NativeEngine.setParam(0, masterInsertUnit(slot), "bypass", if (bypass) 1f else 0f, record = false)
                 }
             }
         }

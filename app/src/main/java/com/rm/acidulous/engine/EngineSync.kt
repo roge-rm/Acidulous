@@ -18,7 +18,9 @@ import com.rm.acidulous.model.Mixer
 import com.rm.acidulous.model.PlayMode
 import com.rm.acidulous.model.INPUT_SLOTS
 import com.rm.acidulous.model.inputUnit
+import com.rm.acidulous.model.MASTER_INSERT_SLOTS
 import com.rm.acidulous.model.SEND_SLOTS
+import com.rm.acidulous.model.masterInsertUnit
 import com.rm.acidulous.model.BIAS_MACHINE
 import com.rm.acidulous.model.reelSpec
 import com.rm.acidulous.model.sendUnit
@@ -194,7 +196,15 @@ object EngineSync {
             if (NativeEngine.mountSend(slot, want ?: "")) mountedSends[slot] = want
             else Log.w(TAG, "could not mount send ${want ?: "(none)"} on slot $slot")
         }
+        // The master's inserts, the same way.
+        for (slot in 0 until MASTER_INSERT_SLOTS) {
+            val want = song.master.insertAt(slot).type.ifEmpty { null }
+            if (mountedMasterInserts[slot] == want) continue
+            if (NativeEngine.mountMasterInsert(slot, want ?: "")) mountedMasterInserts[slot] = want
+            else Log.w(TAG, "could not mount master insert ${want ?: "(none)"} on slot $slot")
+        }
     }
+    private val mountedMasterInserts = arrayOfNulls<String>(MASTER_INSERT_SLOTS)
 
     /**
      * What the incoming audio goes through before anything hears it.
@@ -609,6 +619,7 @@ object EngineSync {
 
     fun pushSends(m: Master) {
         for (slot in 0 until SEND_SLOTS) pushSlot(0, sendUnit(slot), m.sendAt(slot))
+        for (slot in 0 until MASTER_INSERT_SLOTS) pushSlot(0, masterInsertUnit(slot), m.insertAt(slot))
     }
 
     /** The metronome lives on the transport, not in the song. */

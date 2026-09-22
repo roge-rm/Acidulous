@@ -16,7 +16,7 @@
 namespace acidulous {
 
 struct Mount {
-    enum class Kind : uint8_t { None, Machine, Song, Effect, InputMod, Object, Frozen, Send, Input };
+    enum class Kind : uint8_t { None, Machine, Song, Effect, InputMod, Object, Frozen, Send, Input, MasterInsert };
     Kind kind = Kind::None;
     int32_t rack = 0;
     int32_t slot = 0;

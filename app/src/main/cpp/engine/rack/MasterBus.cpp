@@ -95,6 +95,16 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
         }
     }
 
+    // **The master's inserts**: on the whole mix, sends and all, before the
+    // fader and the limiter - where an EQ or a glue compressor for the song
+    // goes. In place, stereo in, like a track's.
+    for (int32_t s = 0; s < kMasterInsertSlots; ++s) {
+        Effect *fx = inserts[s];
+        if (fx == nullptr) continue;
+        fx->onBlock(tickStart, tickEnd, bpm);
+        fx->run(sumL, sumR, frames, true);
+    }
+
     const float volume = params_.get(Volume);
     for (int32_t i = 0; i < frames; ++i) { sumL[i] *= volume; sumR[i] *= volume; }
 
@@ -166,6 +176,9 @@ void MasterBus::panic() {
     // the sends would otherwise go on sounding after the machines that made
     // it have stopped.
     for (Effect *fx : sends) {
+        if (fx != nullptr) fx->reset();
+    }
+    for (Effect *fx : inserts) {
         if (fx != nullptr) fx->reset();
     }
     limiter.reset();

@@ -167,7 +167,7 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
                 },
             )
         },
-        master = master.copy(sends = master.sends.map { it.remapped() }),
+        master = master.copy(sends = master.sends.map { it.remapped() }, inserts = master.inserts.map { it.remapped() }),
     )
 }
 
@@ -247,6 +247,25 @@ fun effectUnit(slot: Int): String = "effect${slot + 1}"
 
 /** The unit a send bus's parameters are addressed under. */
 fun sendUnit(slot: Int): String = "send${slot + 1}"
+
+/** The unit a master insert's parameters are addressed under: "master1", "master2". */
+fun masterInsertUnit(slot: Int): String = "master${slot + 1}"
+
+private fun Song.withMasterInsertSlot(slot: Int, f: (UnitSlot) -> UnitSlot): Song {
+    if (slot !in 0 until MASTER_INSERT_SLOTS) return this
+    val list = List(MASTER_INSERT_SLOTS) { master.insertAt(it) }.toMutableList()
+    list[slot] = f(list[slot])
+    return copy(master = master.copy(inserts = list))
+}
+
+fun Song.withMasterInsert(slot: Int, type: String): Song =
+    withMasterInsertSlot(slot) { if (type == it.type) it else UnitSlot(type) }
+
+fun Song.withMasterInsertParam(slot: Int, name: String, v01: Float): Song =
+    withMasterInsertSlot(slot) { it.copy(params = it.params + (name to v01)) }
+
+fun Song.withMasterInsertBypass(slot: Int, bypass: Boolean): Song =
+    withMasterInsertSlot(slot) { it.copy(bypass = bypass) }
 
 /** [slot]'s send with [type] on it, keeping nothing of what was there. */
 fun Song.withSend(slot: Int, type: String): Song {
