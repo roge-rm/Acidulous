@@ -45,9 +45,10 @@ the songs you already have.
 ## The demo song
 
 The song that opens the first time is a demo, and it is there to be taken apart:
-nine machines across four scenes, with an example of most of what the app does -
-a filter that opens across the verse, percussion that is never the same bar
-twice, a one-shot brass figure, a bend on the lead's last note.
+a dub, eight tracks across four scenes, with an example of most of what the app
+does - the skank thrown into the delay and the bass filter closing in the dub,
+hand drums that are never the same bar twice, a one-shot siren whose whole sound
+is a bend drawn on one note, and a tempo that drags as the song strips down.
 
 **file · Demo song** builds a fresh copy of it whenever you want one, so pulling
 it to pieces costs nothing. It replaces what is open, the same way opening a song
