@@ -209,6 +209,8 @@ class Rack {
     }
     float readPeak() { return peakHold.exchange(0.0f, std::memory_order_relaxed); }
     float channelNormalized(int32_t index) const { return channel.normalized(index); }
+    /** A channel parameter by name, from the table itself; -1 if there is none. */
+    int32_t channelIndexOf(const char *name) const { return channel.indexOf(name); }
 
     /** Where this rack's notes go when they are bound for the outside world. */
     void bindMidiOut(MidiOutQueue *queue, int32_t index) {

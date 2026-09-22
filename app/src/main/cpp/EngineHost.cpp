@@ -797,15 +797,11 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         return -1;
     }
     if (u == Unit::Channel) {
-        if (name == "gain") return Rack::Gain;
-        if (name == "pan") return Rack::Pan;
-        if (name == "mute") return Rack::Mute;
-        if (name == "solo") return Rack::Solo;
-        if (name == "sendreverb") return Rack::SendReverb;
-        if (name == "senddelay") return Rack::SendDelay;
-        if (name == "midimode") return Rack::MidiMode;
-        if (name == "midichannel") return Rack::MidiChannel;
-        return -1;
+        // From the channel's own table, not a list of names kept here: the
+        // list had stopped at `midichannel`, so `swing` - added to the table
+        // in M58 - and `output` never resolved, and a per-track swing set in
+        // the app never reached the scheduler at all.
+        return sEngine.racks[0].channelIndexOf(name.c_str());
     }
     if (u == Unit::Master) return sEngine.master.params().indexOf(name.c_str());
     if (u == Unit::Send1 || u == Unit::Send2) {
@@ -856,14 +852,7 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
             if (name == defs[i].name) { index = i; break; }
         }
     } else if (u == Unit::Channel) {
-        if (name == "gain") index = Rack::Gain;
-        else if (name == "pan") index = Rack::Pan;
-        else if (name == "mute") index = Rack::Mute;
-        else if (name == "solo") index = Rack::Solo;
-        else if (name == "sendreverb") index = Rack::SendReverb;
-        else if (name == "senddelay") index = Rack::SendDelay;
-        else if (name == "midimode") index = Rack::MidiMode;
-        else if (name == "midichannel") index = Rack::MidiChannel;
+        index = sEngine.racks[rack].channelIndexOf(name.c_str()); // see paramIndex
     } else if (u == Unit::Master) {
         index = sEngine.master.params().indexOf(name.c_str());
     } else if (u == Unit::Send1 || u == Unit::Send2) {
