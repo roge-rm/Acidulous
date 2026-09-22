@@ -180,7 +180,7 @@ template <class Sample, int32_t Channels> class Stretcher {
         // read a third. The search decides *which* samples are copied and
         // nothing about *where the clock is*.
         int64_t want = static_cast<int64_t>(readPos);
-        if (primed) want = bestJoin(src, first, last, want);
+        if (primed) want = bestJoin(src, first, last, want, searchFor(rate));
         if (want < first) want = first;
         if (want + kWindow > last) return false;
 
@@ -204,11 +204,33 @@ template <class Sample, int32_t Channels> class Stretcher {
      * microseconds, which is far below where a phase error is audible, and it
      * is four times less work in the one loop here that is O(search x window).
      */
-    int64_t bestJoin(const Sample *const src[Channels], int64_t first, int64_t last, int64_t want) const {
+    /**
+     * How far the search has to look, which depends on the rate.
+     *
+     * ±half a hop is what it takes to *acquire* alignment from nothing - a
+     * full period of anything above 70 Hz. But after the first hop this is not
+     * acquiring, it is **tracking**: the previous hop was already aligned, and
+     * one hop of a rate r slips the source by `(r - 1) * kHop` against the
+     * output. So the correction needed is that slip and not a whole period.
+     *
+     * At the 1.065 a demo tempo ramp asks for, that is 47 samples rather than
+     * 360 - and the search is the whole cost of a hop. Measured on a phone
+     * before this: 1.07 ms for one stretching rack, three of them in lockstep,
+     * against a 1.33 ms block. A take at half speed still gets the full range,
+     * because there the slip really is a period and more.
+     */
+    int32_t searchFor(float rate) const {
+        const float slip = std::fabs(rate - 1.0f) * static_cast<float>(kHop);
+        const int32_t want = static_cast<int32_t>(slip * 2.0f) + 32;
+        return want > kSearch ? kSearch : want;
+    }
+
+    int64_t bestJoin(const Sample *const src[Channels], int64_t first, int64_t last, int64_t want,
+                     int32_t reach) const {
         const int32_t overlap = kWindow - kHop;
         int64_t best = want;
         float bestScore = -1e30f;
-        for (int32_t d = -kSearch; d <= kSearch; d += 4) {
+        for (int32_t d = -reach; d <= reach; d += 4) {
             const int64_t at = want + d;
             if (at < first || at + kWindow > last) continue;
             float score = 0.0f;

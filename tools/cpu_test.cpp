@@ -232,6 +232,38 @@ Result timeIdle(const std::string &name) {
  * 180-tap decimated overlap. So the mean is not the number - the block the hop
  * lands in is, and it is paid per channel per frozen rack.
  */
+Result timeStretchStereo() {
+    Result r;
+    r.name = "StereoStretch, as the rack uses it";
+    std::vector<float> l(static_cast<size_t>(kSr) * 4), rr(static_cast<size_t>(kSr) * 4);
+    uint32_t seed = 4242;
+    for (size_t i = 0; i < l.size(); ++i) {
+        const double t = static_cast<double>(i) / kSr;
+        seed = seed * 1664525u + 1013904223u;
+        const double noise = static_cast<double>(static_cast<int32_t>(seed >> 9) % 2000 - 1000) / 1000.0;
+        const float v = static_cast<float>(0.4 * std::sin(6.283185 * 110.0 * t) +
+                                           0.3 * std::sin(6.283185 * 165.0 * t) + 0.1 * noise);
+        l[i] = v;
+        rr[i] = v * 0.9f;
+    }
+    dsp::StereoStretch st;
+    st.prepare();
+    st.seek(0);
+    std::vector<float> outL(kBlock), outR(kBlock);
+    float *dst[2] = {outL.data(), outR.data()};
+    const float *src[2] = {l.data(), rr.data()};
+    for (int32_t b = 0; b < kBlocks; ++b) {
+        const float ramp = 124.0f + 8.0f * (static_cast<float>(b % 200) / 200.0f);
+        const double t0 = nowUs();
+        const int32_t made = st.fill(dst, src, 0, static_cast<int64_t>(l.size()), kBlock, ramp / 124.0f);
+        const double us = nowUs() - t0;
+        if (made < kBlock) { st.seek(0); continue; }
+        if (b > 8) r.samples.push_back(us);
+    }
+    r.finish();
+    return r;
+}
+
 Result timeStretch() {
     Result r;
     r.name = "Wsola, one channel";
@@ -430,6 +462,7 @@ int main(int argc, char **argv) {
     if (only == "stretch") {
         printf("time-stretching a frozen clip to follow a tempo ramp\n\n");
         rows.push_back(timeStretch());
+        rows.push_back(timeStretchStereo());
         rows.push_back(timeRack("Trinity", "Delay", "", 0));
         rows.push_back(timeRack("Trinity", "Delay", "", 1));
         report(rows);
