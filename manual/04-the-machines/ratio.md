@@ -22,7 +22,9 @@ Each of the six has:
 
 ## Around them
 
-A filter with its own envelope, three envelopes, two syncable LFOs, and a mod matrix in the same shape as Trinity's.
+A filter with its own envelope, three more envelopes over and above the six the operators carry, three syncable LFOs, and ten matrix rows in the same shape as Trinity's - source, a second source that scales it, destination, depth.
+
+The three spare envelopes are for routing and nothing else, so a ratio that walks over the first second of a note is one row.
 
 ## Using it well
 

@@ -102,6 +102,8 @@ class Filament final : public Machine {
         uint8_t note = 0;
         float velocity = 1.0f, key01 = 0.5f;
         float freq = 220.0f, target = 220.0f;
+        /** What the string was last tuned to, kept for the pick comb below. */
+        float freqNow = 220.0f;
         Waveguide a, b;          // a course: two strings, slightly apart
         int32_t exciteLeft = 0;  // samples of excitation remaining
         float exciteGain = 0.0f;

@@ -168,6 +168,7 @@ void Filament::reset() {
     }
     for (auto &s : sympathetic) s.clear();
     for (auto &bq : body) bq.reset();
+    for (auto &e : eg) e.reset();
     stringLevel = 0.0f;
     rngState = kRngSeed;
 }
@@ -190,6 +191,22 @@ void Filament::retuneSympathetic(float rootHz) {
 }
 
 void Filament::noteOn(uint8_t note, uint8_t velocity) {
+    // **The two mod envelopes, which had never run.**
+    //
+    // They were `set` from their eight parameters every block and read by
+    // `sourceValue`, and nothing ever triggered or advanced them - so
+    // `eg1` and `eg2` were two mod sources that always returned nought, and
+    // eight knobs that did nothing. Found while taking a `pow` out of the
+    // loop next to them.
+    //
+    // They belong to the machine rather than to a voice, as the LFOs do, so
+    // they start on the first note of a phrase and let go when the last one
+    // does - a second note on top of a held one does not restart them, which
+    // would put a step into whatever they are moving.
+    bool held = false;
+    for (const auto &cand : voices) if (cand.used && cand.gate) { held = true; break; }
+    if (!held) for (auto &e : eg) e.retrigger();
+
     Voice *v = nullptr;
     for (auto &cand : voices) if (!cand.used) { v = &cand; break; }
     if (v == nullptr) {
@@ -280,10 +297,14 @@ void Filament::noteOff(uint8_t note) {
             v.damp = steppedOf(Release) != 0 ? 1.0f : 0.0f;
         }
     }
+    bool held = false;
+    for (const auto &cand : voices) if (cand.used && cand.gate) { held = true; break; }
+    if (!held) for (auto &e : eg) e.release();
 }
 
 void Filament::allNotesOff() {
     for (auto &v : voices) { v.gate = false; v.damp = 1.0f; }
+    for (auto &e : eg) e.release();
 }
 
 void Filament::controlChange(uint8_t cc, uint8_t value) {
@@ -349,6 +370,16 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     }
     eg[0].set(0.0f, paramOf(Eg1A), paramOf(Eg1D), paramOf(Eg1S), paramOf(Eg1R), false);
     eg[1].set(0.0f, paramOf(Eg2A), paramOf(Eg2D), paramOf(Eg2S), paramOf(Eg2R), false);
+    // Stepped below only if the matrix names one: an envelope nothing reads
+    // makes no sound, and these belong to the machine rather than to a voice,
+    // so stepping them costs the same whether one string is sounding or six.
+    bool egWanted = false;
+    for (int m = 0; m < kMatrixSlots && !egWanted; ++m) {
+        const int base = MatrixBase + m * kMatrixParams;
+        if (steppedOf(base + XDest) == DstOff) continue;
+        const int32_t src = steppedOf(base + XSrc);
+        egWanted = src == SrcEg1 || src == SrcEg2;
+    }
 
     const int32_t mode = steppedOf(ExciterMode);
     const float position = paramOf(Position);
@@ -406,12 +437,31 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     float symFeed = 0.0f;
 
     for (int32_t n = 0; n < frames; ++n) {
+        if (egWanted) { eg[0].next(); eg[1].next(); }
         float mixL = 0.0f, mixR = 0.0f, exciterOut = 0.0f;
         float sumForSympathy = 0.0f;
         float loudest = 0.0f;
 
         for (auto &v : voices) {
             if (!v.used) continue;
+            // **Everything the string is made of, on a sixteen-sample stride.**
+            //
+            // All of this was per voice *per sample*: the matrix, three
+            // `pow`s, an `exp`, and eight coefficient setters on two
+            // waveguides - for an answer that changes at the rate a knob
+            // moves. The matrix advances nothing (the LFOs are stepped once a
+            // block and read by value), so it gave the same numbers forty-
+            // eight thousand times a second.
+            //
+            // The one thing here that does move inside a block is `v.damp`,
+            // the hand coming down on the string, and its ramp is multiplied
+            // by the stride so a damped note stops just as fast as it did.
+            //
+            // The *excitation* below stays per sample. A block-rate value
+            // applied per sample is the onset-click fault this tree has been
+            // caught by before; this is the opposite case - a coefficient,
+            // not a source - and the filters have always been set this way.
+            if ((n & 15) == 0) {
             applyMatrix(v, mod);
 
             // Damping, brightness and tuning, note by note: a short string
@@ -439,13 +489,14 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // Letting go shortens that time rather than scaling the gain,
             // because a damped string is still a string and a hand on a high
             // one stops it just as fast as on a low one.
-            if (v.damp > 0.0f) v.damp = std::fmin(1.0f, v.damp + releaseCoeff * 4.0f);
+            if (v.damp > 0.0f) v.damp = std::fmin(1.0f, v.damp + releaseCoeff * 64.0f);
             const float keyDamp = 1.0f - paramOf(DampingKey) * v.key01 * 0.35f;
             const float sustain = clampf(paramOf(Damping) + mod[DstDamping], 0.0f, 1.0f);
             const float ring = 0.05f * std::pow(160.0f, sustain) * keyDamp * (1.0f - 0.92f * v.damp);
             const float damped = std::fmin(
                 0.99995f, std::exp(-1.0f / (std::fmax(20.0f, freq) * std::fmax(0.002f, ring))));
 
+            v.freqNow = freq;
             v.a.setFrequency(freq);
             v.b.setFrequency(freq * std::pow(2.0f, (detune + mod[DstDetune] * 50.0f) / 1200.0f));
             v.a.setDamping(damped, tone);
@@ -458,6 +509,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             const float damperF = clampf(paramOf(DamperPressure) + mod[DstDamperPressure], 0.0f, 1.0f);
             v.a.setDamper(damperP, damperF);
             v.b.setDamper(damperP, damperF);
+            }
 
             // Excitation.
             float excite = 0.0f;
@@ -576,7 +628,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             if (atAPoint && !v.pick.empty()) {
                 const auto size = static_cast<int32_t>(v.pick.size());
                 const int32_t back = std::clamp(
-                    static_cast<int32_t>(pos * sampleRate / std::max(20.0f, freq)), 1, size - 1);
+                    static_cast<int32_t>(pos * sampleRate / std::max(20.0f, v.freqNow)), 1, size - 1);
                 const int32_t at = (v.pickWrite - back + size) % size;
                 const float earlier = v.pick[static_cast<size_t>(at)];
                 v.pick[static_cast<size_t>(v.pickWrite)] = excite;

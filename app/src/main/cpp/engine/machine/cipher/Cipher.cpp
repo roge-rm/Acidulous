@@ -159,6 +159,7 @@ int32_t Cipher::steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf
 
 void Cipher::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
+    invSampleRate = 1.0f / sampleRate;
     for (auto &b : bands) {
         b.analysis1.setSampleRate(sampleRate);
         b.analysis2.setSampleRate(sampleRate);
@@ -218,11 +219,20 @@ void Cipher::reset() {
     }
     sibilanceFilter.reset();
     sibilanceShaper.reset();
+    for (auto &e : eg) e.reset();
     feedbackSample = 0.0f;
     loudness = brightness = 0.0f;
 }
 
 void Cipher::noteOn(uint8_t note, uint8_t velocity) {
+    // **The two mod envelopes, which had never run** - the third machine with
+    // this fault and the last one `tools/modsource_test.sh` can find. They
+    // are the machine's, not a voice's, so the first note of a phrase starts
+    // them and a note added to a held chord does not.
+    bool held = false;
+    for (const auto &cand : voices) if (cand.used && cand.gate) { held = true; break; }
+    if (!held) for (auto &e : eg) e.retrigger();
+
     Voice *v = nullptr;
     for (auto &cand : voices) if (!cand.used) { v = &cand; break; }
     if (v == nullptr) {
@@ -249,10 +259,14 @@ void Cipher::noteOff(uint8_t note) {
             v.amp.release();
         }
     }
+    bool held = false;
+    for (const auto &cand : voices) if (cand.used && cand.gate) { held = true; break; }
+    if (!held) for (auto &e : eg) e.release();
 }
 
 void Cipher::allNotesOff() {
     for (auto &v : voices) { v.gate = false; v.amp.release(); }
+    for (auto &e : eg) e.release();
 }
 
 void Cipher::controlChange(uint8_t cc, uint8_t value) {
@@ -320,16 +334,14 @@ int32_t Cipher::mappedBand(int32_t band) const {
     }
 }
 
-float Cipher::carrierSample(Voice &v, float dt, float pitchScale, int32_t waveA, int32_t waveB, float mix,
-                            float detune, float pw, float sub) {
-    const float glide = paramOf(Glide);
-    const float k = glide <= 0.002f ? 1.0f : clampf(dt / glide, 0.0f, 1.0f);
-    v.freq += (v.target - v.freq) * k;
+float Cipher::carrierSample(Voice &v, float glideK, float detuneMul, float pitchScale, int32_t waveA,
+                            int32_t waveB, float mix, float pw, float sub) {
+    v.freq += (v.target - v.freq) * glideK;
     const float f = v.freq * pitchScale * noteBendMul(v);
-    const float inc = f / sampleRate;
+    const float inc = f * invSampleRate;
     v.phaseA += inc;
     if (v.phaseA >= 1.0f) v.phaseA -= 1.0f;
-    v.phaseB += inc * std::pow(2.0f, detune / 1200.0f);
+    v.phaseB += inc * detuneMul;
     if (v.phaseB >= 1.0f) v.phaseB -= 1.0f;
     v.phaseSub += inc * 0.5f;
     if (v.phaseSub >= 1.0f) v.phaseSub -= 1.0f;
@@ -377,6 +389,14 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     }
     eg[0].set(0.0f, paramOf(Eg1A), paramOf(Eg1D), paramOf(Eg1S), paramOf(Eg1R), false);
     eg[1].set(0.0f, paramOf(Eg2A), paramOf(Eg2D), paramOf(Eg2S), paramOf(Eg2R), false);
+    // Stepped in the sample loop only if the matrix names one. See Filament's.
+    bool egWanted = false;
+    for (int m = 0; m < kMatrixSlots && !egWanted; ++m) {
+        const int base = MatrixBase + m * kMatrixParams;
+        if (steppedOf(base + XDest) == DstOff) continue;
+        const int32_t src = steppedOf(base + XSrc);
+        egWanted = src == SrcEg1 || src == SrcEg2;
+    }
 
     // A shuffle has to be stable or the bank would boil; it is rebuilt only
     // when the seed changes.
@@ -412,10 +432,20 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const int32_t waveA = steppedOf(CarrierWaveA), waveB = steppedOf(CarrierWaveB);
     const float mix = clampf(paramOf(CarrierMix) + mod[DstCarrierMix], 0.0f, 1.0f);
     const float detune = paramOf(Detune), pw = paramOf(PulseWidth), sub = paramOf(SubLevel);
+    // The second oscillator's offset and the glide's coefficient, worked out
+    // once: a `pow` and a divide of numbers that hold still for the block.
+    const float detuneMul = std::exp2(detune / 1200.0f);
+    const float glideSeconds = paramOf(Glide);
+    const float glideK = glideSeconds <= 0.002f ? 1.0f
+                                                : clampf(invSampleRate / glideSeconds, 0.0f, 1.0f);
     const float noiseLevel = clampf(paramOf(NoiseLevel) + mod[DstNoise], 0.0f, 1.0f);
     const float carrierDrive = paramOf(CarrierDrive);
     const float dry = paramOf(Dry), wet = paramOf(Wet);
     const float drive = clampf(paramOf(Drive) + mod[DstDrive], 0.0f, 1.0f);
+    const float carrierDriveK = 1.0f + carrierDrive * 6.0f;
+    const float carrierDriveNorm = kCarrierNominal / std::tanh(kCarrierNominal * carrierDriveK);
+    const float driveK = 1.0f + drive * 8.0f;
+    const float driveNorm = kNominal / std::tanh(kNominal * driveK);
     // Clamped to the knob's own maximum, not to a number that used to match it.
     //
     // This said 1.5 while the parameter ran to 1.0, so modulation could push
@@ -424,6 +454,12 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     // identically at 1.6 and at 2.0, and no amount of levelling moved them.
     const float volume = clampf(paramOf(Volume) + mod[DstVolume], 0.0f, kVolumeMax);
     const float pan = clampf(paramOf(Pan) + mod[DstPan], -1.0f, 1.0f);
+    // A pan does not move inside a block, and a drive's compensation is a
+    // property of the knob rather than of the sample: all four were trig or
+    // `tanh` being called once per output sample for an answer that never
+    // changed.
+    const float panAngle = (pan + 1.0f) * 0.25f * kPiF;
+    const float panL = std::cos(panAngle) * 1.4142f, panR = std::sin(panAngle) * 1.4142f;
     const float velAmt = paramOf(VelocityAmount);
     const bool track = steppedOf(PitchTrack) != 0;
     const float trackAmount = paramOf(TrackAmount);
@@ -457,6 +493,7 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     float sumLoud = 0.0f, sumBright = 0.0f, sumWeight = 0.0f;
 
     for (int32_t n = 0; n < frames; ++n) {
+        if (egWanted) { eg[0].next(); eg[1].next(); }
         const float external = in != nullptr ? 0.5f * (in[static_cast<size_t>(n) * 2] + in[static_cast<size_t>(n) * 2 + 1]) : 0.0f;
 
         // The carrier: the internal oscillators, or the input if the roles
@@ -473,7 +510,7 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
                 v.target = noteToHz(static_cast<float>(v.note));
             }
             const float velGain = 1.0f - velAmt + velAmt * v.velocity;
-            carrier += carrierSample(v, 1.0f / sampleRate, pitchScale, waveA, waveB, mix, detune, pw, sub) *
+            carrier += carrierSample(v, glideK, detuneMul, pitchScale, waveA, waveB, mix, pw, sub) *
                        env * velGain;
             ampSum += env;
         }
@@ -487,8 +524,7 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             // quietened it at once - and the vocoder imposes the modulator's
             // envelope on whatever the carrier is, so that loss passes
             // straight through to the output.
-            const float k = 1.0f + carrierDrive * 6.0f;
-            carrier = std::tanh(carrier * k) * (kCarrierNominal / std::tanh(kCarrierNominal * k));
+            carrier = std::tanh(carrier * carrierDriveK) * carrierDriveNorm;
         }
         carrier *= 0.5f;
 
@@ -625,14 +661,12 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             // 0.4 - but it never showed, because until the bands were
             // normalised this stage was permanently slammed and acting as the
             // machine's limiter rather than as a drive.
-            const float k = 1.0f + drive * 8.0f;
-            x = std::tanh(x * k) * (kNominal / std::tanh(kNominal * k));
+            x = std::tanh(x * driveK) * driveNorm;
         }
         feedbackSample = x;
         x *= volume * kHouse;
-        const float angle = (pan + 1.0f) * 0.25f * kPiF;
-        L[n] = x * std::cos(angle) * 1.4142f;
-        R[n] = x * std::sin(angle) * 1.4142f;
+        L[n] = x * panL;
+        R[n] = x * panR;
     }
 
     if (sumWeight > 0.0f) {

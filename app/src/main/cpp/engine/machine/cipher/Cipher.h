@@ -119,10 +119,19 @@ class Cipher final : public Machine {
     int32_t mappedBand(int32_t band) const;
     float sourceValue(int32_t src) const;
     void applyMatrix();
-    float carrierSample(Voice &v, float dt, float pitchScale, int32_t waveA, int32_t waveB, float mix,
-                        float detune, float pw, float sub);
+    /**
+     * One sample of one voice's carrier.
+     *
+     * [glideK] and [detuneMul] arrive worked out rather than as the knobs
+     * they come from: the first was a divide and the second a `pow`, both of
+     * numbers that cannot change inside a block, and both were being paid for
+     * per voice per sample.
+     */
+    float carrierSample(Voice &v, float glideK, float detuneMul, float pitchScale, int32_t waveA,
+                        int32_t waveB, float mix, float pw, float sub);
 
     float sampleRate = 48000.0f;
+    float invSampleRate = 1.0f / 48000.0f;
     Band bands[kMaxBands];
     int32_t bandCount = 16;
     float lastLow = -1.0f, lastHigh = -1.0f, lastQ = -1.0f;

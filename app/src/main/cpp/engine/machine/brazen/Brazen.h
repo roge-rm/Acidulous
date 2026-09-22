@@ -76,6 +76,8 @@ class Brazen final : public Machine {
         float delayLeft = 0.0f;    // they do not all come in together
         float breath = 1.0f;       // nor blow equally hard
         float pan = 0.0f;      // what they are blowing, this block
+        /** Where that pan puts them, worked out once a block rather than per sample. */
+        float panL = 0.70710678f, panR = 0.70710678f;
         /** The block's mouth pressure, split so the sample loop can ramp it. */
         float pushScale = 0.0f, pushBias = 0.0f;
         /**

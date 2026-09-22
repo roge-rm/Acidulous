@@ -110,6 +110,17 @@ class Trinity final : public Machine {
         uint32_t age = 0;
         float freq = 440.0f, glideFrom = 440.0f, glidePos = 1.0f;
         float random = 0.0f, detuneCents = 0.0f, panOffset = 0.0f;
+        /**
+         * Whether this note was started while the engine was running lean.
+         *
+         * Read once, at note-on, and kept for the life of the voice. The
+         * unison stack is resolved per *block*, so reading the setting there
+         * would thin a note that is already sounding the moment the automatic
+         * watcher changed its mind - a chord would shift under your hands.
+         * A note keeps the detail it was born with; the next one gets the new
+         * answer.
+         */
+        bool bornLean = false;
         // Per-note expression (MPE). `bend` is in semitones and adds to the
         // machine's own; `pressure` and `timbre` are -1 until this finger
         // sends them, so a voice with no expression of its own falls back to
@@ -127,6 +138,19 @@ class Trinity final : public Machine {
     void startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger);
     Voice *allocate();
     void updateVoiceMod(Voice &v, float blockSeconds);
+    /**
+     * Which envelopes anything actually reads, as a bit per envelope.
+     *
+     * Six envelopes ticked every sample, and only two of them are wired to
+     * anything by name: the amplitude and the filter. The other four exist to
+     * be *routed*, and a patch that routes none of them was still paying for
+     * four envelopes a sample a voice - six percent of the machine, for four
+     * numbers nothing read.
+     *
+     * Recomputed once a block from the matrix, so a slot that starts naming an
+     * envelope mid-note gets one that begins moving from where it was left.
+     */
+    int32_t envMask() const;
     float sourceValue(const Voice &v, int src) const;
     float renderVoice(Voice &v, int32_t frames, float *out);
     float paramOf(int32_t index) const { return params_.get(index); }
@@ -139,6 +163,7 @@ class Trinity final : public Machine {
     uint32_t ageCounter = 1;
     float modWheel = 0.0f, aftertouch = 0.0f, bend = 0.0f, bpm = 120.0f;
     float noiseZ = 0.0f;
+    int32_t envUsed = 0x3f;
     static constexpr uint32_t kNoiseSeed = 0x13579bdfu;
     uint32_t noiseRng = kNoiseSeed;
     float voiceBuf[64]{};

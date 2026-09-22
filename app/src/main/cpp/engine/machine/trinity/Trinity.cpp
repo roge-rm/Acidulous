@@ -1,3 +1,4 @@
+#include <engine/core/Settings.h>
 #include "Trinity.h"
 #include <engine/machine/Voices.h>
 
@@ -214,6 +215,7 @@ void Trinity::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigge
     v.glidePos = gliding ? 0.0f : 1.0f;
     v.used = true;
     v.gate = true;
+    v.bornLean = !fullQuality();
     v.note = note;
     v.velocity = velocity;
     v.age = ageCounter++;
@@ -333,6 +335,21 @@ float Trinity::sourceValue(const Voice &v, int src) const {
     }
 }
 
+int32_t Trinity::envMask() const {
+    // The first two are always read by name - amplitude and filter - and the
+    // rest only exist if a matrix slot names them.
+    int32_t mask = 0x3;
+    for (int s = 0; s < kMatrixSlots; ++s) {
+        const int32_t b = MatrixBase + s * MatrixParams;
+        if (stepOf(b + XDest) == DstOff) continue;
+        const int src = stepOf(b + XSrc);
+        const int src2 = stepOf(b + XSrc2);
+        if (src >= SrcEnvAmp && src <= SrcEnv6) mask |= 1 << (src - SrcEnvAmp);
+        if (src2 >= SrcEnvAmp && src2 <= SrcEnv6) mask |= 1 << (src2 - SrcEnvAmp);
+    }
+    return mask;
+}
+
 void Trinity::updateVoiceMod(Voice &v, float blockSeconds) {
     for (int l = 0; l < kLfos; ++l) {
         const int32_t b = LfoBase + l * LfoParams;
@@ -375,6 +392,8 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
          * that changes inside a block.
          */
         float densityNorm;
+        /** The phase increment, refreshed with the mip rather than per sample. */
+        float baseInc, inc;
         /** The pair `WavetableBank::between` reads, refreshed with the mip. */
         const float *rowA;
         const float *rowB;
@@ -395,7 +414,24 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
         OscCfg &c = cfg[k];
         c.wave = stepOf(b + OWave);
         c.table = c.wave - WFirstTable;
-        c.density = stepOf(b + ODensity);
+        // **Half the unison stack when the note was born lean.**
+        //
+        // The stack is the one thing on this machine that multiplies the whole
+        // oscillator - `for (d < density)` around every sample of every
+        // oscillator of every voice - so it is where the cost is and where
+        // lean has to reach. Trinity is the dearest machine here and the
+        // setting could not touch it at all.
+        //
+        // Halved rather than flattened, and never below two: a stack of eight
+        // thinned to four is the same sound narrower, where one voice is a
+        // different patch. Detail, not identity. A density of one or two is
+        // left alone - there is nothing there to halve, and a pad that was
+        // never wide should not get narrower.
+        //
+        // `densityNorm` follows from whatever survives, so the level does not
+        // jump: it is `1 / sqrt(n)` of the stack actually being summed.
+        const int32_t asked = stepOf(b + ODensity);
+        c.density = (v.bornLean && asked > 2) ? std::max(2, asked / 2) : asked;
         c.densityNorm = c.density > 1 ? 1.0f / std::sqrt(static_cast<float>(c.density)) : 1.0f;
         c.rowA = nullptr;
         c.rowB = nullptr;
@@ -453,11 +489,17 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
     const float targetFreq = mtof(static_cast<float>(v.note));
     const float glideOctaves = v.glidePos < 1.0f ? std::log2(targetFreq / v.glideFrom) : 0.0f;
     float peak = 0.0f;
+    // Nought means every sample, which is what this did before it was
+    // measured; fifteen is one in sixteen. Kept as a variable only so the
+    // paired harness can time the two against each other in one process.
+    const int32_t pitchStride = 15;
 
     for (int32_t i = 0; i < frames; ++i) {
         const float envAmp = v.env[0].next();
         const float envFilter = v.env[1].next();
-        for (int e = 2; e < kEnvs; ++e) v.env[e].next();
+        for (int e = 2; e < kEnvs; ++e) {
+            if (envUsed & (1 << e)) v.env[e].next();
+        }
 
         if (v.glidePos < 1.0f) {
             v.glidePos += glideStep;
@@ -481,17 +523,32 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
             OscCfg &c = cfg[k];
             if (!c.needed) continue;
             OscState &st = v.osc[k];
-            // Drift: a slow random walk, a few cents wide, different per voice.
-            st.drift += (st.driftTarget - st.drift) * 0.00003f;
-            if (std::fabs(st.drift - st.driftTarget) < 0.01f) st.driftTarget = rnd(v.rng) * 2.0f - 1.0f;
-            const float hz = clampf(v.freq * c.pitchMul * (1.0f + st.drift * c.drift * 0.0046f), 1.0f,
-                                    sampleRate * 0.49f);
-            // Multiply by the reciprocal, not divide. A divide is several
-            // times the cost of a multiply on the cores this has to run on,
-            // and this one is in the innermost loop there is: per oscillator,
-            // per voice, per sample.
-            const float baseInc = hz * invSampleRate;
-            const float inc = baseInc * (1.0f + c.sync * 3.0f);
+            // **The pitch is resolved sixteen samples at a time**, on the same
+            // stride the filter coefficients already use.
+            //
+            // Nothing in here moves at audio rate. Drift is a random walk with
+            // a coefficient of thirty parts in a million - seconds to cross a
+            // few cents - and `v.freq` is a constant unless the note is
+            // gliding, where sixteen samples is a step of three kilohertz that
+            // no glide can be heard through. What it was costing was a clamp,
+            // three multiplies and a compare per oscillator, per voice, per
+            // sample, in the innermost loop there is.
+            //
+            // The drift coefficient is multiplied by the stride, so the walk
+            // takes the same time as it did.
+            if ((i & pitchStride) == 0) {
+                st.drift += (st.driftTarget - st.drift) * 0.00048f;
+                if (std::fabs(st.drift - st.driftTarget) < 0.01f) st.driftTarget = rnd(v.rng) * 2.0f - 1.0f;
+                const float hz = clampf(v.freq * c.pitchMul * (1.0f + st.drift * c.drift * 0.0046f), 1.0f,
+                                        sampleRate * 0.49f);
+                // Multiply by the reciprocal, not divide. A divide is several
+                // times the cost of a multiply on the cores this has to run
+                // on.
+                c.baseInc = hz * invSampleRate;
+                c.inc = c.baseInc * (1.0f + c.sync * 3.0f);
+            }
+            const float baseInc = c.baseInc;
+            const float inc = c.inc;
             if (c.sync > 0.0f) {
                 st.syncPhase += baseInc;
                 if (st.syncPhase >= 1.0f) {
@@ -500,7 +557,7 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
                 }
             }
             if (c.wave >= WFirstTable && (i & 15) == 0) {
-                c.mip = WavetableBank::mipFor(hz * (1.0f + c.sync * 3.0f));
+                c.mip = WavetableBank::mipFor(c.inc * sampleRate);
                 bank->rowsFor(c.table, c.frame, c.mip, c.rowA, c.rowB);
             }
             const float fmIn = k == 0 ? o[1] * fm21 : (k == 1 ? o[2] * fm32 : 0.0f);
@@ -513,7 +570,9 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
                 case WSquare: sum += pulseAt(ph, inc, c.pw); break;
                 case WTriangle: sum += triangleAt(ph); break;
                 case WSine: sum += std::sin(ph * kTwoPi); break;
-                default: sum += WavetableBank::between(c.rowA, c.rowB, c.frac, ph); break;
+                default:
+                    sum += WavetableBank::between(c.rowA, c.rowB, c.frac, ph);
+                    break;
                 }
                 st.phase[d] += inc * c.detuneMul[d];
                 if (st.phase[d] >= 1.0f) st.phase[d] -= 1.0f;
@@ -552,6 +611,7 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
 
 bool Trinity::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    envUsed = envMask();
     for (int32_t i = 0; i < frames; ++i) { L[i] = 0.0f; R[i] = 0.0f; }
     const float blockSeconds = static_cast<float>(frames) / sampleRate;
     const float panBase = paramOf(Pan);

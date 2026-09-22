@@ -19,7 +19,11 @@ Two of them, and **route** decides whether they are in series, in parallel, or s
 
 ## Modulation
 
-Two LFOs, each with a wave, a rate that can sync to the transport, a delay, a phase, key sync, one-shot and slew - and a **mod matrix** where any source reaches any destination, with a second source that scales the first.
+Six envelopes and three LFOs, into twelve matrix rows.
+
+Two of the envelopes are spoken for - **a** is the amplitude and **f** the filter - and the other four exist only to be routed. Each LFO has a wave, a rate that can sync to the transport, a delay, a phase, key sync, one-shot and slew.
+
+A **matrix** row is a source, a second source, a destination and a depth. The second source *scales* the first rather than adding to it.
 
 ## Using it well
 
@@ -27,4 +31,4 @@ Two LFOs, each with a wave, a rate that can sync to the transport, a delay, a ph
 
 **Two sources in one matrix row is the trick most people miss.** Setting src to an envelope and src2 to the mod wheel gives you an envelope you can fade in with your thumb, which is one row rather than two.
 
-**It is the hungriest machine here.** If a song is running out of processor, Trinity with high density is usually where it went - and freezing that clip gives it all back.
+**A stacked patch is the expensive one.** If a song is running out of processor, Trinity with high density is usually where it went - and freezing that clip gives it all back.

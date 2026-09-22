@@ -300,6 +300,32 @@ Result timeStretch() {
     return r;
 }
 
+/**
+ * Parameters to force before timing, as `name=value` in the machine's own
+ * units.
+ *
+ * **A lever that depends on a patch setting is invisible at defaults**, and
+ * this harness times machines at their defaults. Resonance caps `modes` in
+ * lean, and `modes` defaults to 12 against a cap of 12 - nothing. Trinity
+ * halves the unison stack, and `density` defaults to 1 - nothing. Both levers
+ * measured 0% and both were working; the sweep was asking the machine to play
+ * a patch nobody would.
+ *
+ * So a measurement can say what it is measuring: `paired Trinity o1_density=1`
+ * times the thing the lever is for. The value is **normalised**, 0 to 1, as
+ * every parameter is on the way in - 1 is whatever that knob's maximum means.
+ */
+std::vector<std::pair<std::string, float>> forced;
+
+void force(Machine *m) {
+    if (m == nullptr || forced.empty()) return;
+    for (const auto &kv : forced) {
+        const int32_t i = m->params().indexOf(kv.first.c_str());
+        if (i >= 0) m->params().set(i, kv.second);
+    }
+    m->params().jumpAll();
+}
+
 Result timeMachine(const std::string &name) {
     Machine *m = MachineRegistry::create(name.c_str());
     Result r;
@@ -308,6 +334,7 @@ Result timeMachine(const std::string &name) {
     m->prepare(kSr);
     m->reset();
     m->params().jumpAll();
+    force(m);
 
     std::vector<float> L(kBlock), R(kBlock);
     Player player;
@@ -553,6 +580,14 @@ int main(int argc, char **argv) {
         // being changed is worth measuring harder than the sweep can afford
         // to measure all thirty-six.
         const std::string one = argc > 2 ? argv[2] : "";
+        // Anything after the unit is `name=normalised`, applied before timing.
+        for (int i = 3; i < argc; ++i) {
+            const std::string kv = argv[i];
+            const size_t eq = kv.find('=');
+            if (eq == std::string::npos) continue;
+            forced.emplace_back(kv.substr(0, eq), std::stof(kv.substr(eq + 1)));
+            printf("forcing %s to %s\n", kv.substr(0, eq).c_str(), kv.substr(eq + 1).c_str());
+        }
         const int rounds = one.empty() ? 10 : 40;
         printf("full against lean, alternating in one process, best of each\n");
         printf("%d rounds%s\n\n", rounds, one.empty() ? "" : (", " + one + " alone").c_str());

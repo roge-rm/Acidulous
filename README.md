@@ -150,6 +150,14 @@ analysis, the expression language, and a reset-determinism pass that plays
 every machine, panics it, plays the same performance again and requires the
 two renders to match bit for bit.
 
+Two of them exist because a control can be present, documented and wired to
+nothing, and no ordinary test notices. `tools/render_test.sh` renders a whole
+song through the engine and asks the questions that only exist once the
+pieces are together — that a render repeats, and that it ignores the quality
+setting. `tools/modsource_test.sh` routes every modulation source of every
+machine to every destination in turn and requires the audio to change; it
+found six sources across three machines that had never run at all.
+
 `tools/bank_test.sh` checks the factory presets: that every patch sounds,
 that none of them are silent or clipped, and that no two siblings in a bank
 are the same sound twice.

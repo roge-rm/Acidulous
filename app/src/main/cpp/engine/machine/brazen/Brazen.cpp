@@ -355,6 +355,13 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
             p.bore.setLoss(loss);
             p.bore.setPressure(push);
             p.bore.tune();
+            // Where this player sits. A section's width does not move inside a
+            // block, so the trig pair belongs here and not on every sample of
+            // every player - four players is eight calls a sample.
+            const float panNow = std::clamp(p.pan * width, -1.0f, 1.0f);
+            const float panAngle = (panNow + 1.0f) * 0.25f * 3.14159265f;
+            p.panL = std::cos(panAngle);
+            p.panR = std::sin(panAngle);
             // Everything in `push` that does not change inside the block, so
             // the sample loop can put the envelope back on per sample rather
             // than in sixty-four-frame treads. See the step() call below.
@@ -408,10 +415,8 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
                 p.entry += (1.0f - p.entry) * entryCoeff;
                 const float pushNow = (p.pushScale * env + p.pushBias) * p.entry;
                 const float s = p.bore.step(pushNow, hiss * pushNow) * growlAmNow;
-                const float pan = std::clamp(p.pan * width, -1.0f, 1.0f);
-                const float angle = (pan + 1.0f) * 0.25f * 3.14159265f;
-                l += s * std::cos(angle);
-                r += s * std::sin(angle);
+                l += s * p.panL;
+                r += s * p.panR;
             }
             v.ring += (std::fabs(l) + std::fabs(r) - v.ring) * ringCoeff;
             // The mute. A cup over the bell is not a volume knob: it is a

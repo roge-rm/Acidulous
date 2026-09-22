@@ -24,6 +24,14 @@ Normally band 1 drives band 1. Here you can **remap** it: reverse the order so a
 
 **attack**, **release** and **smear** are the envelope followers on each band. Fast is articulate and can chatter; slow is smooth and can slur.
 
+## Modulation
+
+Two envelopes and two syncable LFOs, into eight matrix rows: a source, a destination and a depth.
+
+Three of the sources are measurements of **the modulator itself** - its **loudness**, its **brightness** and its **pitch**, the last needing `track` switched on. Those are the ones to reach for: the voice driving the map it is being poured through is the thing this machine can do and a rack of effects cannot. Loudness on `smear`, so the words tighten as they get louder, is one row.
+
+The destinations are the map's own controls - **shift**, **stretch**, **remap**, **freeze**, **smear**, **q** and the band edges - plus the carrier's pitch and mix.
+
 ## Using it well
 
 **Consonants are the whole problem.** Turn `unvoiced` up until the words are intelligible, then back off until it stops hissing.

@@ -161,6 +161,7 @@ const ParamDef *Ratio::paramDefs(int32_t &count) const {
 
 void Ratio::prepare(int32_t rate) {
     sampleRate = static_cast<float>(rate);
+    invSampleRate = 1.0f / sampleRate;
     for (auto &v : voices) {
         for (auto &e : v.env) e.setSampleRate(sampleRate);
         for (auto &e : v.modEg) e.setSampleRate(sampleRate);
@@ -214,6 +215,17 @@ void Ratio::buildRouting() {
         sum += routing.carrier[o];
     }
     routing.carrierSum = sum > 0.5f ? std::sqrt(sum) : 1.0f;
+
+    // And which of the three mod envelopes any matrix slot names. See
+    // Trinity's `envMask` for why an envelope nobody reads is not free.
+    egUsed = 0;
+    for (int s = 0; s < kMatrixSlots; ++s) {
+        const int32_t b = MatrixBase + s * MatrixParams;
+        if (stepOf(b + XDest) == DstOff) continue;
+        const int a = stepOf(b + XSrc), b2 = stepOf(b + XSrc2);
+        if (a >= SrcEg1 && a <= SrcEg3) egUsed |= 1 << (a - SrcEg1);
+        if (b2 >= SrcEg1 && b2 <= SrcEg3) egUsed |= 1 << (b2 - SrcEg1);
+    }
 }
 
 Ratio::Voice *Ratio::allocate() {
@@ -457,7 +469,10 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
             const float env = v.env[o].next();
             const float amp = env * c.level;
             const float hz = clampf(c.fixed ? c.fixedHz : base * c.freqMul, 0.05f, sampleRate * 0.49f);
-            const float inc = hz / sampleRate;
+            // A reciprocal, not a divide: six operators, sixteen voices, every
+            // sample. Trinity's oscillator says the same thing in the same
+            // words, and this loop is three times the size of that one.
+            const float inc = hz * invSampleRate;
             float y = 0.0f;
             const float self = st.out * c.feedback;
             switch (c.mode) {
@@ -516,7 +531,9 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
         mix *= invCarriers;
 
         const float fenv = v.filterEg.next();
-        for (int e = 0; e < kModEgs; ++e) v.modEg[e].next();
+        for (int e = 0; e < kModEgs; ++e) {
+            if (egUsed & (1 << e)) v.modEg[e].next();
+        }
         if ((i & 15) == 0) {
             v.filter.set(filterBase * std::exp2(filterEnvAmt * fenv * 4.0f), filterRes, filterType, 0, 0.0f);
         }

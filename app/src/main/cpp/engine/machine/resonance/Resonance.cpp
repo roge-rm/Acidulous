@@ -17,6 +17,29 @@ constexpr float kTwoPi = 6.28318530718f;
  * order equation, a bell's are what founders have measured for centuries.
  * That is why the machine sounds like objects rather than like filters.
  */
+namespace {
+
+/**
+ * How many partials to build, given what the patch asked for.
+ *
+ * **Lean halves what was asked, rather than capping at half the maximum.**
+ * The cap was `kMaxModes / 2`, which is 12 - and `modes` *defaults* to 12, so
+ * for every factory patch the clamp did nothing at all and the setting saved
+ * nothing. Measured after it was written and never measured again: the paired
+ * harness reports -1% against a 6% floor, which is the sound of a lever that
+ * never fires.
+ *
+ * A floor of four, because a modal voice with two partials is not a thinner
+ * version of the sound, it is a different instrument - and lean is meant to
+ * cost detail, not identity.
+ */
+int32_t modesFor(float asked) {
+    const int32_t want = std::clamp(static_cast<int32_t>(asked + 0.5f), 1, Resonance::kMaxModes);
+    return fullQuality() ? want : std::max(4, want / 2);
+}
+
+} // namespace
+
 const float kRatios[Resonance::ShapeCount][Resonance::kMaxModes] = {
     // Membrane: a circular drumhead, which is why a tom is not a pitch.
     {1.000f, 1.594f, 2.136f, 2.296f, 2.653f, 2.918f, 3.156f, 3.501f, 3.600f, 3.652f, 4.060f, 4.154f,
@@ -123,8 +146,7 @@ void Resonance::buildPad(int32_t pad) {
     const float damp = padParam(pad, Damp);
     const float inharm = padParam(pad, Inharm);
     const float hit = hitOf(pad);
-    const int32_t want = std::clamp(static_cast<int32_t>(params_.get(Modes) + 0.5f), 1,
-                                    fullQuality() ? kMaxModes : kMaxModes / 2);
+    const int32_t want = modesFor(params_.get(Modes));
 
     p.modeCount = want;
     p.builtKind = kind;
@@ -289,12 +311,12 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
     const float coupling = params_.get(Coupling);
     const float volume = params_.get(Volume);
     const float masterPan = params_.get(MasterPan);
-    // Half the partials at lean quality. A mode is a two-pole resonator per
-    // pad per sample, so this is the one knob on this machine that is purely
-    // a cost - the ones that are left are the loud ones, because the series
-    // is rolled off up the spectrum.
-    const int32_t modeCap = fullQuality() ? kMaxModes : kMaxModes / 2;
-    const int32_t wantModes = std::clamp(static_cast<int32_t>(params_.get(Modes) + 0.5f), 1, modeCap);
+    // Half the partials at lean quality - half of what the patch asked for,
+    // see `modesFor`. A mode is a two-pole resonator per pad per sample, so
+    // this is the one knob on this machine that is purely a cost, and the ones
+    // that are left are the loud ones, because the series is rolled off up the
+    // spectrum.
+    const int32_t wantModes = modesFor(params_.get(Modes));
 
     // **Nothing ringing, nothing on the frame: nothing to do.**
     //

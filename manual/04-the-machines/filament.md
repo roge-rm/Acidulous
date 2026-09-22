@@ -21,6 +21,14 @@ Filament is a physical model of a string. Not a recording of one and not a filte
 
 Four modes standing in for a box, with **size** moving them together and **bodydamp** widening them - the difference between a guitar and a crate - and **bodymix** for how much of it you hear. There are sympathetic strings too, which ring when the played string excites them.
 
+## Modulation
+
+Two envelopes and two syncable LFOs, into eight matrix rows: a source, a destination and a depth.
+
+Neither envelope is wired to anything by default - they are here to be routed, and the string's own amplitude comes from the exciter rather than from an envelope. The sources include **level**, which is how loudly the string is currently ringing, so the model can be made to respond to itself: damping that comes on as the note decays, or a bow that leans harder the quieter the string gets.
+
+Every destination that matters is in the list - **damping**, **tone**, **position**, **pressure**, **damper**, **tension** and **detune** among them. An LFO on `position` is the hand moving up the string while the note sounds.
+
 ## Using it well
 
 **The loop is solved from its own phase.** You do not need to know that, but it is why the tuning holds when you move `body` and `damper` - things that on a naive model would pull the pitch about.
@@ -30,3 +38,5 @@ Four modes standing in for a box, with **size** moving them together and **bodyd
 **Ringing is a time, not a gain.** If a note is too loud, turn it down; if it rings too long, shorten the decay. Turning the loop gain down to shorten it detunes the string.
 
 **Exciter position is the first control to reach for**, before the filter and before the body.
+
+**Then put something on it.** Position is also a modulation destination, and a slow LFO there does more for a static pluck than any amount of reverb.

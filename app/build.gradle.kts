@@ -49,8 +49,15 @@ android {
         // anything was frozen. The audio is time-stretched to the ramp
         // instead, through the stretcher the audio tracks already used, now
         // float and stereo. No saved song means anything different for it.
-        versionCode = 6
-        versionName = "0.5.0"
+        //
+        // 0.5.1 is the first of the performance releases, and nothing a song
+        // holds changes in any of them. The dearest machines were doing work
+        // at audio rate that nothing at audio rate asked for: envelopes
+        // nobody read, a pitch that only moves when a note glides, a `pow`
+        // and a `tanh` of numbers that hold still for a block. Trinity's
+        // worst block on a mid-range phone halved.
+        versionCode = 7
+        versionName = "0.5.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

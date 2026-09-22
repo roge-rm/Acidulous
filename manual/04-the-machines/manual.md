@@ -23,7 +23,15 @@ A real tonewheel organ's key contacts make and break one at a time, so a note st
 
 ## The cabinet
 
-The rotary speaker is part of this machine rather than an effect after it: a horn over a counter-rotating drum, split at 800 Hz, each with its own rate and its own ramp up and down, Doppler as a modulated delay, and microphones at a distance and an angle. Its phase is also a **modulation source**, so anything in the matrix can be driven by where the horn is pointing.
+The rotary speaker is part of this machine rather than an effect after it: a horn over a counter-rotating drum, split at 800 Hz, each with its own rate and its own ramp up and down, Doppler as a modulated delay, and microphones at a distance and an angle. Its phase is also a **modulation source** - see below.
+
+## Modulation
+
+Two envelopes and two syncable LFOs, into eight matrix rows: a source, a destination and a depth.
+
+Four of the sources are the instrument watching itself - the **horn** and the **drum**, which are where the cabinet's two rotors are pointing, the **scanner** at the heart of the vibrato, and **wind**, the pressure in the chest. The horn and drum stand still until the rotary is off its brake.
+
+The destinations include the **drawbars** - each of the nine on its own, and both manuals together - so a registration that opens as the note is held is nine rows or one.
 
 ## Using it well
 

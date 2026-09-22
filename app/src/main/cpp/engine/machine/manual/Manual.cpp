@@ -461,6 +461,17 @@ void Manual::noteOn(uint8_t note, uint8_t velocity) {
     } else {
         v->perc = 0.0f;
     }
+    // **The two mod envelopes, which had never run.** The same fault as
+    // Filament's, found by the same harness: `set` from their parameters
+    // every block, read by `sourceValue`, and triggered or stepped by
+    // nothing - so `eg1` and `eg2` returned nought for ever.
+    //
+    // They belong to the instrument rather than to a key, as the LFOs do,
+    // and an organ is an instrument you play chords on: a second key pressed
+    // on top of a held one must not restart them, or every added note puts a
+    // step into whatever they are moving. `wasSilent` already says which
+    // press is the first of a phrase.
+    if (wasSilent) for (auto &e : eg) e.retrigger();
     ++heldCount;
 }
 
@@ -475,10 +486,12 @@ void Manual::noteOff(uint8_t note) {
             if (heldCount > 0) --heldCount;
         }
     }
+    if (heldCount == 0) for (auto &e : eg) e.release();
 }
 
 void Manual::allNotesOff() {
     for (auto &v : voices) { v.gate = false; v.amp.release(); }
+    for (auto &e : eg) e.release();
     heldCount = 0;
 }
 
@@ -613,6 +626,14 @@ bool Manual::render(float *L, float *R, int32_t frames) {
     }
     eg[0].set(0.0f, paramOf(Eg1A), paramOf(Eg1D), paramOf(Eg1S), paramOf(Eg1R), false);
     eg[1].set(0.0f, paramOf(Eg2A), paramOf(Eg2D), paramOf(Eg2S), paramOf(Eg2R), false);
+    // Stepped in the sample loop only if the matrix names one. See Filament's.
+    bool egWanted = false;
+    for (int m = 0; m < kMatrixSlots && !egWanted; ++m) {
+        const int base = MatrixBase + m * kMatrixParams;
+        if (steppedOf(base + XDest) == DstOff) continue;
+        const int32_t src = steppedOf(base + XSrc);
+        egWanted = src == SrcEg1 || src == SrcEg2;
+    }
 
     Voice global;
     global.velocity = 1.0f;
@@ -687,6 +708,26 @@ bool Manual::render(float *L, float *R, int32_t frames) {
                                                 12.0f);
     const float reedPress = model == ReedOrgan ? 0.35f + 0.65f * paramOf(ReedPressure) : 1.0f;
     const float buzz = model == ReedOrgan ? paramOf(ReedBuzz) : 0.0f;
+    // The two saturations and the pan, worked out once a block.
+    //
+    // All five of these - two curves' gains, the bias each takes back out of
+    // its own output, and the pair of pan gains - are properties of knobs.
+    // They were being recomputed for every sample of every block: four
+    // `tanh`, a divide and two trig calls, forty-eight thousand times a
+    // second, for numbers that had not moved.
+    const float buzzK = 1.0f + buzz * 4.0f;
+    const float buzzBias = buzz * 0.45f; // the frame is closer on one side
+    const float buzzBiasOut = std::tanh(buzzBias);
+    // Normalised at the level that actually arrives here, measured, rather
+    // than at a guess - the whole point of the exercise.
+    constexpr float kBuzzNominal = 0.55f;
+    const float buzzNorm = kBuzzNominal / std::tanh(kBuzzNominal * buzzK);
+    const float driveG = 1.0f + drive * 5.0f;
+    const float driveBias = bias * 0.5f;
+    const float driveBiasOut = std::tanh(driveBias);
+    const float driveNorm = 0.4f / std::tanh(0.4f * driveG);
+    const float panAngle = (pan + 1.0f) * 0.25f * kPi;
+    const float panL = std::cos(panAngle) * 1.4142f, panR = std::sin(panAngle) * 1.4142f;
     const float chiffAmt = model == Pipe ? paramOf(Chiff) : 0.0f;
     const float trackerAmt = model == Pipe ? paramOf(Tracker) : 0.0f;
     // Pipes and reeds are one sound source each, so they really do add; a
@@ -738,6 +779,7 @@ bool Manual::render(float *L, float *R, int32_t frames) {
     }
 
     for (int32_t i = 0; i < frames; ++i) {
+        if (egWanted) { eg[0].next(); eg[1].next(); }
         for (int w = 0; w < WheelBank::kWheels; ++w) {
             wheelPhase[w] += wheelStep[w] * pitchScale * (0.997f + 0.003f * windPressure);
             if (wheelPhase[w] >= 1.0f) wheelPhase[w] -= 1.0f;
@@ -936,14 +978,8 @@ bool Manual::render(float *L, float *R, int32_t frames) {
             // over-corrected and handed chords less drive than single notes,
             // which is the original fault upside down.
             const float reeds = std::sqrt(std::fmax(1.0f, demand));
-            const float k = 1.0f + buzz * 4.0f;
-            const float b = buzz * 0.45f; // the frame is closer on one side
-            // Normalised at the level that actually arrives here, measured,
-            // rather than at a guess - the whole point of the exercise.
-            constexpr float kNominal = 0.55f;
-            const float norm = kNominal / std::tanh(kNominal * k);
             const float one = dry / reeds;
-            dry = reeds * (std::tanh(one * k * trem + b) - std::tanh(b)) * norm;
+            dry = reeds * (std::tanh(one * buzzK * trem + buzzBias) - buzzBiasOut) * buzzNorm;
         }
         dry *= trem;
 
@@ -971,10 +1007,7 @@ bool Manual::render(float *L, float *R, int32_t frames) {
             // all did it. The gain range is gentler, the curve is normalised
             // so a nominal signal passes at its own size, and the bias's own
             // offset is taken back out rather than left as DC.
-            const float g = 1.0f + drive * 5.0f;
-            const float b = bias * 0.5f;
-            const float norm = 0.4f / std::tanh(0.4f * g);
-            x = (std::tanh(x * g + b) - std::tanh(b)) * norm;
+            x = (std::tanh(x * driveG + driveBias) - driveBiasOut) * driveNorm;
         }
         if (eqActive) x = trebleEq.process(midEq.process(bassEq.process(x)));
         if (model == Transistor) x += reedyFilter.process(x) * paramOf(ComboReedy) * 0.5f;
@@ -996,9 +1029,8 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         const float wide = sprayWidth * spray * 0.5f;
         outL += wideL * wide * volume * exprGain * kHouse;
         outR += wideR * wide * volume * exprGain * kHouse;
-        const float angle = (pan + 1.0f) * 0.25f * kPi;
-        L[i] = outL * std::cos(angle) * 1.4142f;
-        R[i] = outR * std::sin(angle) * 1.4142f;
+        L[i] = outL * panL;
+        R[i] = outR * panR;
     }
     return true;
 }

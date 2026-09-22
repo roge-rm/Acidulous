@@ -46,9 +46,23 @@ how your app behaves.
   - the **reverb** is built from half as many combs and allpasses - a thinner
     tail, for about half the processor;
   - **struck objects** keep half their partials, which affects the patches
-    that ask for more than twelve and leaves the rest alone.
+    that ask for more than twelve and leaves the rest alone;
+  - the **three-oscillator synth** halves a unison stack, never below two, so
+    a wide pad narrows rather than turning into one voice. A patch stacked
+    eight deep costs about a third less; a patch that was never stacked is
+    left alone.
 
-  Nothing else changes, and nothing changes about what you have recorded.
+  Nothing else changes, and nothing changes about what you have recorded. A
+  note already sounding keeps whatever it was born with, so the switch - and
+  **auto** moving on its own - never alters a note part way through.
+
+  Most of what a phone struggles with is not in this list and never was: a
+  machine doing work at audio rate that nothing at audio rate asked for. That
+  is a fault rather than a setting, and it is fixed where it is found.
+
+  **Exports and frozen tracks ignore this setting.** Writing a file has no
+  deadline to miss, so it is always done at full quality however the setting
+  is left.
 
 ## record
 

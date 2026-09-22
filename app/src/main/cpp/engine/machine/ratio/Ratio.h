@@ -146,6 +146,9 @@ class Ratio final : public Machine {
     Voice voices[kVoices];
     Routing routing;
     float sampleRate = 48000.0f;
+    float invSampleRate = 1.0f / 48000.0f;
+    /** Which of the three mod envelopes the matrix names. See Trinity's. */
+    int32_t egUsed = 0x7;
     uint32_t ageCounter = 1;
     float modWheel = 0.0f, pressure = 0.0f, bend = 0.0f, bpm = 120.0f;
     float voiceBuf[64]{};
