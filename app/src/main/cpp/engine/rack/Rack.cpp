@@ -268,7 +268,10 @@ void Rack::syncFrozen(int64_t tickInIteration, float bpm) {
     const int64_t ticks = frozenNow->ticks > 0 ? frozenNow->ticks : 1;
     const int64_t target = static_cast<int64_t>((tickInIteration % ticks) * perTick) % frozenNow->frames;
     if (frozenRate == 1.0f) {
-        stretching = nullptr;
+        // `stretching` is *not* cleared here. The stretcher has to stay alive
+        // until the crossfade out of it has finished, and render is what knows
+        // when that is.
+        //
         // The cursor runs free between blocks and is only pulled back when it
         // has drifted audibly - recomputing it from the tick every block would
         // step the read position by a sample or two each time, which clicks.
@@ -288,8 +291,56 @@ void Rack::syncFrozen(int64_t tickInIteration, float bpm) {
     frozenSyncTarget = target;
 }
 
+/**
+ * The frozen clip read at the rate it was rendered at: a memory read, and the
+ * whole of what freezing saves. Lifted out of `render` so the crossfade into
+ * and out of the stretcher can mix it against the stretched read.
+ */
+void Rack::readFrozenPlain(int32_t frames) {
+    const FrozenClip *f = frozenNow;
+    if (f == nullptr) return;
+    int64_t at = frozenCursor < 0 ? 0 : frozenCursor;
+    for (int32_t i = 0; i < frames; ++i) {
+        if (at >= f->frames) {
+            at = 0;
+            // Round again, and the pass that just ended starts ringing over
+            // the top of this one - which is the whole reason a loop of a
+            // frozen clip does not cut its own reverb off at the bar line.
+            // It is started here rather than from the tick, because this is
+            // the one place that knows the audio itself came round.
+            if (f->tail > 0) {
+                tailClip = f;
+                tailCursor = f->frames;
+            }
+        }
+        bufL[i] = f->left[static_cast<size_t>(at)];
+        bufR[i] = f->right[static_cast<size_t>(at)];
+        ++at;
+    }
+    frozenCursor = at;
+}
+
 void Rack::render(int32_t frames) {
-    if (frozenNow != nullptr && frozenRate != 1.0f && stretching == frozenNow) {
+    // Frozen audio, in one of three states: read plainly, read through the
+    // stretcher, or crossfading between the two. The blend is what the third
+    // one is, and it exists because both edges are discontinuities - see
+    // `frozenBlend`. It is stepped once per block rather than per sample,
+    // because ten milliseconds of ramp across a 64-frame block is a
+    // hundred-and-thirty step staircase and each step is a fifth of a
+    // percent: below anything audible, and it saves a multiply a sample.
+    if (frozenNow != nullptr) {
+        const bool wantStretch = frozenRate != 1.0f && stretching == frozenNow;
+        const float target = wantStretch ? 1.0f : 0.0f;
+        const float step = static_cast<float>(frames) / static_cast<float>(kBlendFrames);
+        if (frozenBlend < target) frozenBlend = std::min(target, frozenBlend + step);
+        else if (frozenBlend > target) frozenBlend = std::max(target, frozenBlend - step);
+        if (frozenBlend <= 0.0f && !wantStretch) stretching = nullptr; // the fade is done with it
+    } else {
+        frozenBlend = 0.0f;
+        stretching = nullptr;
+    }
+
+    if (frozenNow != nullptr && frozenBlend > 0.0f && stretching == frozenNow) {
         // Following a tempo the audio was not rendered at, by stretching it.
         //
         // The source runs to the end of the **tail**, not the end of the clip,
@@ -329,29 +380,30 @@ void Rack::render(int32_t frames) {
             }
             frozenStretch.seek(0);
         }
-        frozenCursor = frozenStretch.sourcePosition();
         stereo = true;
-    } else if (frozenNow != nullptr) {
-        const FrozenClip *f = frozenNow;
-        int64_t at = frozenCursor < 0 ? 0 : frozenCursor;
-        for (int32_t i = 0; i < frames; ++i) {
-            if (at >= f->frames) {
-                at = 0;
-                // Round again, and the pass that just ended starts ringing over
-                // the top of this one - which is the whole reason a loop of a
-                // frozen clip does not cut its own reverb off at the bar line.
-                // It is started here rather than from the tick, because this is
-                // the one place that knows the audio itself came round.
-                if (f->tail > 0) {
-                    tailClip = f;
-                    tailCursor = f->frames;
-                }
+        // **Not `frozenCursor = sourcePosition()`.** That is where the *next*
+        // hop will read from, which runs ahead of the audio just emitted by up
+        // to a whole hop - so handing it to the plain read on the way out
+        // skipped up to fifteen milliseconds rather than merely clicking. The
+        // plain cursor is left where the tick put it, which is authoritative,
+        // and the crossfade covers the join.
+        if (frozenBlend < 1.0f) {
+            // Mid-fade, so the plain read is wanted too. It goes in a scratch
+            // and the two are mixed; the stretched read is already in buf.
+            float wetL[kBlockFrames], wetR[kBlockFrames];
+            for (int32_t i = 0; i < frames; ++i) {
+                wetL[i] = bufL[i];
+                wetR[i] = bufR[i];
             }
-            bufL[i] = f->left[static_cast<size_t>(at)];
-            bufR[i] = f->right[static_cast<size_t>(at)];
-            ++at;
+            readFrozenPlain(frames);
+            const float wet = frozenBlend, dry = 1.0f - frozenBlend;
+            for (int32_t i = 0; i < frames; ++i) {
+                bufL[i] = bufL[i] * dry + wetL[i] * wet;
+                bufR[i] = bufR[i] * dry + wetR[i] * wet;
+            }
         }
-        frozenCursor = at;
+    } else if (frozenNow != nullptr) {
+        readFrozenPlain(frames);
         stereo = true;
     } else if (machine == nullptr) {
         for (int32_t i = 0; i < frames; ++i) bufL[i] = bufR[i] = 0.0f;

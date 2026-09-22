@@ -97,6 +97,12 @@ class Rack {
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm);
     void render(int32_t frames);
 
+  private:
+    /** The frozen clip at its own rate, straight out of memory. */
+    void readFrozenPlain(int32_t frames);
+
+  public:
+
     // --- Freeze ---------------------------------------------------------
     // Which scene is playing decides whether this rack plays its machine or
     // the audio that machine already made. Called before the scheduler fires
@@ -255,6 +261,24 @@ class Rack {
     int64_t frozenSyncTarget = 0;
     /** Whether the stretcher holds this clip at this moment in it. */
     const FrozenClip *stretching = nullptr;
+    /**
+     * How much of the output is the stretched read rather than the plain one,
+     * and the ramp between them.
+     *
+     * Both transitions are discontinuities. Going in, the stretcher's first
+     * hop has nothing to overlap onto, so the window ramps it in over a hop -
+     * half the level for fifteen milliseconds. Coming out is worse than a
+     * click: `sourcePosition()` is where the *next* hop will read, which runs
+     * ahead of the audio already emitted by up to a hop, so resuming the plain
+     * read there skips up to fifteen milliseconds outright.
+     *
+     * Ten milliseconds of crossfade covers both, and costs what it mixes:
+     * two buffer reads instead of one, for ten milliseconds, twice a ramp.
+     * The plain read is skipped entirely once the blend is all the way over,
+     * so a ramp that is not transitioning pays nothing at all.
+     */
+    float frozenBlend = 0.0f;
+    static constexpr int32_t kBlendFrames = 480; // 10 ms at 48k
 
     Machine *machine = nullptr;
     Effect *effects[kEffectSlots]{};

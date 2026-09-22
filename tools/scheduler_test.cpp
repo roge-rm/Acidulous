@@ -562,6 +562,31 @@ void aFrozenClipFollowsARamp() {
     for (int32_t i = 0; i < kBlockFrames; ++i) same = same && r.dryL[i] == r.dryR[i];
     ok("in both channels alike", same);
 
+    // Nothing jumps on the way in or the way out.
+    //
+    // Dan: *"Just because we don't hear it in this example doesn't mean there
+    // won't be cases where it could happen"* - and costing the smoothing found
+    // something worse than a click. `sourcePosition()` is where the *next* hop
+    // will read, which runs ahead of the audio already emitted by up to a
+    // whole hop, so handing it to the plain read on the way out skipped up to
+    // fifteen milliseconds. Both edges are crossfaded now, and the test is
+    // that no single sample step is bigger than the material's own.
+    float worstStep = 0.0f;
+    float last = r.dryL[kBlockFrames - 1];
+    for (int pass = 0; pass < 24; ++pass) {
+        // Out of the ramp, half way through: the hardest edge there is.
+        if (pass == 12) r.updateFrozen(1, 120.0f, true, false);
+        r.syncFrozen(static_cast<int64_t>(pass) * 8, pass < 12 ? 132.0f : 120.0f);
+        r.render(kBlockFrames);
+        for (int32_t i = 0; i < kBlockFrames; ++i) {
+            worstStep = std::max(worstStep, std::fabs(r.dryL[i] - last));
+            last = r.dryL[i];
+        }
+    }
+    // The body is a flat 0.5 and the ring 0.25, so any real signal step is 0 -
+    // a jump between two read positions would show up as 0.25 or more.
+    ok("no jump leaving the stretch", worstStep < 0.2f, std::to_string(worstStep));
+
     r.tapDry = false;
 }
 
