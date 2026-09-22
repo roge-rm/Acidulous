@@ -24,7 +24,33 @@
 // to stretch it would undo what the mapping was for.
 namespace acidulous::dsp {
 
-class Wsola {
+/**
+ * How a sample type becomes a float, and nothing else.
+ *
+ * A reel is int16 because that is how a half-hour take is held. A frozen clip
+ * is float **and stereo**, and float deliberately: the tap is pre-fader, so it
+ * can sit above full scale - the demo's Hexbeat bar peaks at 1.84 - and
+ * converting it to int16 to stretch it would clip exactly what the float
+ * format is there to keep.
+ */
+template <class Sample> struct SampleScale;
+template <> struct SampleScale<int16_t> {
+    static float of(int16_t v) { return static_cast<float>(v) * (1.0f / 32768.0f); }
+};
+template <> struct SampleScale<float> {
+    static float of(float v) { return v; }
+};
+
+/**
+ * [Channels] is where a stereo stretch is won or lost.
+ *
+ * Two independent stretchers on a stereo pair each pick their own join, and
+ * the offsets differ by up to half a hop - so the image wanders and anything
+ * centred comes apart. **The search runs once, on the sum of the channels,
+ * and the offset it finds is applied to all of them.** That is the whole of
+ * what makes this stereo rather than two monos.
+ */
+template <class Sample, int32_t Channels> class Stretcher {
   public:
     /**
      * The hop, the overlap and how far the search may look.
@@ -62,7 +88,7 @@ class Wsola {
 
     void prepare() {
         window = hann();
-        out.resize(static_cast<size_t>(kWindow + kHop));
+        for (auto &ch : out) ch.resize(static_cast<size_t>(kWindow + kHop));
         reset();
     }
 
@@ -74,7 +100,9 @@ class Wsola {
     }
 
     void reset() {
-        for (auto &v : out) v = 0.0f;
+        for (auto &ch : out) {
+            for (auto &v : ch) v = 0.0f;
+        }
         have = 0;
         taken = 0;
         readPos = 0.0;
@@ -92,21 +120,35 @@ class Wsola {
      * it in half the time **at the same pitch**. Returns how many frames were
      * written; short means the source ran out.
      */
-    int32_t fill(float *dst, int32_t n, const int16_t *src, int64_t first, int64_t last, float rate) {
-        if (src == nullptr || window == nullptr || last - first < kWindow) return 0;
+    int32_t fill(float *const dst[Channels], const Sample *const src[Channels], int64_t first, int64_t last,
+                 int32_t n, float rate) {
+        if (window == nullptr || last - first < kWindow) return 0;
+        for (int32_t ch = 0; ch < Channels; ++ch) {
+            if (src[ch] == nullptr) return 0;
+        }
         int32_t made = 0;
         while (made < n) {
             if (taken >= have) {
                 if (!lay(src, first, last, rate)) break;
             }
             const int32_t k = have - taken < n - made ? have - taken : n - made;
-            for (int32_t i = 0; i < k; ++i) {
-                dst[made + i] = out[static_cast<size_t>(taken + i)];
+            for (int32_t ch = 0; ch < Channels; ++ch) {
+                for (int32_t i = 0; i < k; ++i) {
+                    dst[ch][made + i] = out[ch][static_cast<size_t>(taken + i)];
+                }
             }
             made += k;
             taken += k;
         }
         return made;
+    }
+
+    /** The one-channel call, which is how a reel asks and how it always asked. */
+    int32_t fill(float *dst, int32_t n, const Sample *src, int64_t first, int64_t last, float rate) {
+        static_assert(Channels == 1, "a stereo stretch needs both channels, or the image wanders");
+        float *dsts[1] = {dst};
+        const Sample *srcs[1] = {src};
+        return fill(dsts, srcs, first, last, n, rate);
     }
 
   private:
@@ -118,13 +160,15 @@ class Wsola {
      * `seek` must be called at a cycle boundary rather than the position
      * nudged, or the join is searched against audio from somewhere else.
      */
-    bool lay(const int16_t *src, int64_t first, int64_t last, float rate) {
+    bool lay(const Sample *const src[Channels], int64_t first, int64_t last, float rate) {
         // Shift the overlap down: what has been consumed goes, what has been
         // written into the tail becomes the head of the next window.
-        for (int32_t i = 0; i < kWindow - kHop; ++i) {
-            out[static_cast<size_t>(i)] = out[static_cast<size_t>(i + kHop)];
+        for (int32_t ch = 0; ch < Channels; ++ch) {
+            for (int32_t i = 0; i < kWindow - kHop; ++i) {
+                out[ch][static_cast<size_t>(i)] = out[ch][static_cast<size_t>(i + kHop)];
+            }
+            for (int32_t i = kWindow - kHop; i < kWindow + kHop; ++i) out[ch][static_cast<size_t>(i)] = 0.0f;
         }
-        for (int32_t i = kWindow - kHop; i < kWindow + kHop; ++i) out[static_cast<size_t>(i)] = 0.0f;
         have = kHop;
         taken = 0;
 
@@ -140,9 +184,10 @@ class Wsola {
         if (want < first) want = first;
         if (want + kWindow > last) return false;
 
-        for (int32_t i = 0; i < kWindow; ++i) {
-            const float v = static_cast<float>(src[want + i]) * (1.0f / 32768.0f);
-            out[static_cast<size_t>(i)] += v * window[i];
+        for (int32_t ch = 0; ch < Channels; ++ch) {
+            for (int32_t i = 0; i < kWindow; ++i) {
+                out[ch][static_cast<size_t>(i)] += SampleScale<Sample>::of(src[ch][want + i]) * window[i];
+            }
         }
         // The *output* advances by a hop; the *source* advances by a hop times
         // the rate. That difference is the whole of the stretch.
@@ -159,7 +204,7 @@ class Wsola {
      * microseconds, which is far below where a phase error is audible, and it
      * is four times less work in the one loop here that is O(search x window).
      */
-    int64_t bestJoin(const int16_t *src, int64_t first, int64_t last, int64_t want) const {
+    int64_t bestJoin(const Sample *const src[Channels], int64_t first, int64_t last, int64_t want) const {
         const int32_t overlap = kWindow - kHop;
         int64_t best = want;
         float bestScore = -1e30f;
@@ -167,8 +212,16 @@ class Wsola {
             const int64_t at = want + d;
             if (at < first || at + kWindow > last) continue;
             float score = 0.0f;
+            // On the sum of the channels, so every channel is laid at the one
+            // offset. Scale is irrelevant here - this only ever picks a winner
+            // - so the source is correlated raw and unconverted.
             for (int32_t i = 0; i < overlap; i += 4) {
-                score += out[static_cast<size_t>(i)] * static_cast<float>(src[at + i]);
+                float written = 0.0f, coming = 0.0f;
+                for (int32_t ch = 0; ch < Channels; ++ch) {
+                    written += out[ch][static_cast<size_t>(i)];
+                    coming += static_cast<float>(src[ch][at + i]);
+                }
+                score += written * coming;
             }
             if (score > bestScore) {
                 bestScore = score;
@@ -179,11 +232,27 @@ class Wsola {
     }
 
     const float *window = nullptr;
-    std::vector<float> out;
+    std::vector<float> out[Channels];
     int32_t have = 0, taken = 0;
     double readPos = 0.0;
     int64_t anchor = 0;
     bool primed = false;
 };
+
+/** A reel lane: one channel of int16, which is what Bias has always asked for. */
+using Wsola = Stretcher<int16_t, 1>;
+
+/**
+ * A frozen clip: float, stereo, and stretched to follow a tempo it was not
+ * rendered at.
+ *
+ * A freeze is tempo-bound because audio does not stretch - and it does, for
+ * about nine microseconds a rack against a block's thirteen hundred. Measured
+ * against the alternative it replaces: a scene with a smooth tempo change
+ * cannot match any clip's rendered tempo while it is ramping, so every frozen
+ * clip in it fell back to its machine for a bar - 87 us a rack for Trinity,
+ * in the scene most likely to be why anything was frozen at all.
+ */
+using StereoStretch = Stretcher<float, 2>;
 
 } // namespace acidulous::dsp

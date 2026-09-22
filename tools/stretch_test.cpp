@@ -4,7 +4,9 @@
 // the pitch does not. The rest are the ways a stretcher goes wrong quietly -
 // a rate of one that is not the input back again, a warble from joining two
 // windows at the wrong phase, and a render that does not repeat.
+#include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -175,6 +177,97 @@ void itRepeats() {
 
 } // namespace
 
+/**
+ * A stereo pair is stretched as a pair, not as two monos.
+ *
+ * This is the one claim that is new with `StereoStretch` and the one thing a
+ * stereo stretcher gets wrong. WSOLA chooses each hop by searching for the
+ * window that joins best; run two of them on a stereo pair and they choose
+ * independently, differing by up to half a hop - forty milliseconds - so
+ * anything centred is smeared across the image and the middle of the mix
+ * comes apart. The search runs once on the sum of the channels instead.
+ *
+ * Proven the way it fails: feed the *same* audio to both channels. Whatever
+ * the stretcher does, it must do identically to each, so the output must come
+ * back identical too. Two independent searches cannot pass this, because the
+ * correlation is over a decimated window and a different lag wins on a signal
+ * that is not perfectly periodic.
+ */
+void aStereoPairKeepsItsImage() {
+    printf("- a stereo pair is stretched as a pair\n");
+    // Not a pure tone: something with enough structure that the search has a
+    // real choice to make. A tone plus a fifth plus a little noise, which is
+    // what any recording of anything looks like to a correlation.
+    const int32_t frames = kRate * 3;
+    std::vector<float> l(static_cast<size_t>(frames)), r(static_cast<size_t>(frames));
+    uint32_t seed = 9001;
+    for (int32_t i = 0; i < frames; ++i) {
+        const double t = static_cast<double>(i) / kRate;
+        seed = seed * 1664525u + 1013904223u;
+        const double noise = static_cast<double>(static_cast<int32_t>(seed >> 9) % 2000 - 1000) / 1000.0;
+        const float v = static_cast<float>(0.4 * std::sin(6.283185 * 220.0 * t) +
+                                           0.3 * std::sin(6.283185 * 330.0 * t) + 0.08 * noise);
+        l[static_cast<size_t>(i)] = v;
+        r[static_cast<size_t>(i)] = v; // identical on purpose
+    }
+
+    dsp::StereoStretch st;
+    st.prepare();
+    st.seek(0);
+    const int32_t want = kRate; // a second of output
+    std::vector<float> outL(static_cast<size_t>(want)), outR(static_cast<size_t>(want));
+    float *dst[2] = {outL.data(), outR.data()};
+    const float *src[2] = {l.data(), r.data()};
+    const int32_t made = st.fill(dst, src, 0, frames, want, 132.0f / 124.0f);
+    ok("it filled the block", made == want, std::to_string(made));
+
+    int32_t differ = 0;
+    float worst = 0.0f;
+    for (int32_t i = 0; i < made; ++i) {
+        const float d = std::fabs(outL[static_cast<size_t>(i)] - outR[static_cast<size_t>(i)]);
+        if (d > 0.0f) ++differ;
+        worst = std::max(worst, d);
+    }
+    ok("both channels came out identical", differ == 0,
+       std::to_string(differ) + " samples differ, worst " + std::to_string(worst));
+
+    // And it is still audio: a stretch that returned silence would pass the
+    // check above perfectly.
+    float peak = 0.0f;
+    for (int32_t i = 0; i < made; ++i) peak = std::max(peak, std::fabs(outL[static_cast<size_t>(i)]));
+    ok("and it is not silence", peak > 0.3f, std::to_string(peak));
+}
+
+/**
+ * Float in, float out, above full scale and back again.
+ *
+ * A frozen clip is the rack's output before its fader, so it may legitimately
+ * sit above 1.0 - the demo's Hexbeat bar peaks at 1.84. The int16 stretcher
+ * could not carry that, and a stretcher that quietly clipped it would undo
+ * the reason the freeze is written as float in the first place.
+ */
+void itCarriesMoreThanFullScale() {
+    printf("- float, and above full scale\n");
+    const int32_t frames = kRate * 2;
+    std::vector<float> l(static_cast<size_t>(frames)), r(static_cast<size_t>(frames));
+    for (int32_t i = 0; i < frames; ++i) {
+        const double t = static_cast<double>(i) / kRate;
+        const float v = static_cast<float>(1.8 * std::sin(6.283185 * 220.0 * t));
+        l[static_cast<size_t>(i)] = v;
+        r[static_cast<size_t>(i)] = v;
+    }
+    dsp::StereoStretch st;
+    st.prepare();
+    st.seek(0);
+    std::vector<float> outL(static_cast<size_t>(kRate)), outR(static_cast<size_t>(kRate));
+    float *dst[2] = {outL.data(), outR.data()};
+    const float *src[2] = {l.data(), r.data()};
+    const int32_t made = st.fill(dst, src, 0, frames, kRate, 1.0f);
+    float peak = 0.0f;
+    for (int32_t i = 0; i < made; ++i) peak = std::max(peak, std::fabs(outL[static_cast<size_t>(i)]));
+    ok("1.8 in is 1.8 out", peak > 1.7f && peak < 1.9f, std::to_string(peak));
+}
+
 int main() {
     printf("time-stretch: the duration moves, the pitch does not\n");
     thePitchStaysWhereItWas();
@@ -182,6 +275,8 @@ int main() {
     aRateOfOneIsTransparent();
     itDoesNotWarble();
     itRepeats();
+    aStereoPairKeepsItsImage();
+    itCarriesMoreThanFullScale();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

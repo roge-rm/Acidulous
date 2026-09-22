@@ -29,6 +29,7 @@
 #include <engine/effect/EffectRegistry.h>
 #include <engine/core/Frozen.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/dsp/Wsola.h>
 #include <engine/rack/Rack.h>
 #include <memory>
 
@@ -216,6 +217,57 @@ Result timeIdle(const std::string &name) {
     return r;
 }
 
+/**
+ * What it would cost for a frozen clip to follow a tempo ramp by stretching.
+ *
+ * Dan asked for this after finding that a scene with a smooth tempo change
+ * hands back every freeze in it for a bar - the freeze is tempo-bound, the
+ * ramp is between two tempos, so `Rack::updateFrozen` can match neither and
+ * falls back to the machine. Time-stretching the audio instead is the obvious
+ * answer and the tree already has the stretcher, in `dsp::Wsola` for Bias.
+ *
+ * The question is what it costs in the *audio* path rather than over a take,
+ * and the shape of the answer is the point: WSOLA lays one hop per 720 output
+ * frames, which is one block in eleven, and that hop searches 181 lags over a
+ * 180-tap decimated overlap. So the mean is not the number - the block the hop
+ * lands in is, and it is paid per channel per frozen rack.
+ */
+Result timeStretch() {
+    Result r;
+    r.name = "Wsola, one channel";
+    // A few seconds of something with structure to lock onto: a tone, a fifth
+    // above it, and noise, because a correlation search on silence measures
+    // the loop and not the work.
+    std::vector<int16_t> src(static_cast<size_t>(kSr) * 4);
+    uint32_t seed = 22222;
+    for (size_t i = 0; i < src.size(); ++i) {
+        const double t = static_cast<double>(i) / kSr;
+        seed = seed * 1664525u + 1013904223u;
+        const double noise = static_cast<double>(static_cast<int32_t>(seed >> 9) % 2000 - 1000) / 1000.0;
+        const double v = 0.4 * std::sin(6.283185 * 110.0 * t) + 0.3 * std::sin(6.283185 * 165.0 * t) +
+                         0.1 * noise;
+        src[i] = static_cast<int16_t>(v * 12000.0);
+    }
+
+    dsp::Wsola w;
+    w.prepare();
+    w.seek(0);
+    std::vector<float> dst(kBlock);
+    // 124 to 132, which is what the demo's Lift asks for.
+    for (int32_t b = 0; b < kBlocks; ++b) {
+        const float ramp = 124.0f + 8.0f * (static_cast<float>(b % 200) / 200.0f);
+        const float rate = ramp / 124.0f;
+        const double t0 = nowUs();
+        const int32_t made = w.fill(dst.data(), kBlock, src.data(), 0,
+                                    static_cast<int64_t>(src.size()), rate);
+        const double us = nowUs() - t0;
+        if (made < kBlock) { w.seek(0); continue; }
+        if (b > 8) r.samples.push_back(us);
+    }
+    r.finish();
+    return r;
+}
+
 Result timeMachine(const std::string &name) {
     Machine *m = MachineRegistry::create(name.c_str());
     Result r;
@@ -372,6 +424,14 @@ int main(int argc, char **argv) {
         rows.push_back(timeRack("Resonance", "Reverb", "", 0));
         rows.push_back(timeRack("Resonance", "Reverb", "", 1));
         rows.push_back(timeRack("", "", "", 2));
+        report(rows);
+        return 0;
+    }
+    if (only == "stretch") {
+        printf("time-stretching a frozen clip to follow a tempo ramp\n\n");
+        rows.push_back(timeStretch());
+        rows.push_back(timeRack("Trinity", "Delay", "", 0));
+        rows.push_back(timeRack("Trinity", "Delay", "", 1));
         report(rows);
         return 0;
     }
