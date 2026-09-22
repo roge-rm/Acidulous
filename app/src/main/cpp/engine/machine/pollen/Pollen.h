@@ -89,6 +89,8 @@ class Pollen final : public Machine {
         int32_t age = 0, length = 1;
         float gainL = 0.5f, gainR = 0.5f;
         float skew = 0.0f;
+        /** `2^(-2 skew)`, the power the window's time is raised to - fixed at birth. */
+        float skewK = 1.0f;
         int32_t generation = 0;
     };
     struct Voice {
@@ -122,7 +124,7 @@ class Pollen final : public Machine {
     int32_t takeGrain();
     void spawn(Voice &v, int32_t voiceIndex, const audio::View &view, float env);
     void pollinate(const Grain &parent, const audio::View &view);
-    float windowAt(int32_t shape, float phase, float skew) const;
+    float windowAt(int32_t shape, float phase, float skew, float skewK) const;
     float scatterSemis(float amount, uint32_t &state) const;
     audio::View resolveView(int32_t mode, int32_t liveLen) const;
 

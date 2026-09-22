@@ -171,6 +171,7 @@ void Cipher::prepare(int32_t sr) {
     for (auto &v : voices) v.amp.setSampleRate(sampleRate);
     for (auto &e : eg) e.setSampleRate(sampleRate);
     lastCount = -1;
+    for (auto &k : lastBandKey) k = NAN; // the coefficients mean another rate now
     rebuildBands();
     reset();
 }
@@ -222,6 +223,8 @@ void Cipher::reset() {
     for (auto &e : eg) e.reset();
     feedbackSample = 0.0f;
     loudness = brightness = 0.0f;
+    quietBlocks = 0;
+    asleep = false;
 }
 
 void Cipher::noteOn(uint8_t note, uint8_t velocity) {
@@ -472,7 +475,18 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     // Band tuning for the synthesis side: shifted, stretched, or both. The
     // analysis bank stays where it is, which is what makes a shift move the
     // formants rather than the whole sound.
-    for (int i = 0; i < bandCount; ++i) {
+    //
+    // **Only when something it depends on has moved.** Four filters a band,
+    // each a `tan`, and two `pow`s and two `exp`s besides - two hundred and
+    // fifty libm calls a block at forty bands, every block, for a bank whose
+    // knobs sit still for minutes at a time.
+    const float bandKey[] = {static_cast<float>(bandCount), shift, stretch, q, smear, attack, release,
+                             lastLow, lastHigh};
+    bool bandsMoved = false;
+    for (size_t k = 0; k < sizeof(bandKey) / sizeof(bandKey[0]); ++k) {
+        if (bandKey[k] != lastBandKey[k]) { bandsMoved = true; lastBandKey[k] = bandKey[k]; }
+    }
+    for (int i = 0; bandsMoved && i < bandCount; ++i) {
         const float t = bandCount > 1 ? static_cast<float>(i) / static_cast<float>(bandCount - 1) : 0.0f;
         const float warp = 1.0f + stretch * (t - 0.5f) * 1.6f;
         const float hz = clampf(bands[i].centre * std::pow(2.0f, shift / 12.0f) * warp, 20.0f, sampleRate * 0.45f);
@@ -491,6 +505,46 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const InputBus &bus = InputBus::get();
     const float *in = bus.live() ? bus.block() : nullptr;
     float sumLoud = 0.0f, sumBright = 0.0f, sumWeight = 0.0f;
+
+    // **No note, nothing coming in and the bank empty: nothing to do.**
+    //
+    // With nothing playing the bank still ran - two filters a band on the
+    // analysis side and two on the synthesis, forty bands, every sample, all
+    // of them filtering zeros. Sixty microseconds a block on the dev box for a
+    // track that was not playing, the most of any machine here.
+    //
+    // Strict about what counts as empty: no voice, no input over -120 dB,
+    // every band's envelope *and* its frozen hold under that too - a held
+    // spectrum is waiting for a note, not finished - and two quiet blocks of
+    // output behind it. So what it leaves is zeros, and it zeroes the filters
+    // on the way in so that what wakes is what a reset would have made.
+    bool anyVoice = false;
+    for (const auto &v : voices) anyVoice = anyVoice || v.used;
+    float inputPeak = 0.0f;
+    if (in != nullptr) {
+        for (int32_t n = 0; n < frames * 2; ++n) inputPeak = std::fmax(inputPeak, std::fabs(in[n]));
+    }
+    bool bankQuiet = true;
+    for (int i = 0; i < bandCount && bankQuiet; ++i) bankQuiet = bands[i].envelope < 1e-6f && bands[i].held < 1e-6f;
+    if (!anyVoice && inputPeak < 1e-6f && bankQuiet && quietBlocks >= 2) {
+        if (!asleep) {
+            for (int i = 0; i < kMaxBands; ++i) {
+                Band &b = bands[i];
+                b.analysis1.reset(); b.analysis2.reset();
+                b.synthesis1.reset(); b.synthesis2.reset();
+                b.envelope = b.held = 0.0f;
+            }
+            sibilanceFilter.reset();
+            sibilanceShaper.reset();
+            sibilanceEnv = feedbackLp = feedbackSample = 0.0f;
+            loudness = brightness = 0.0f;
+            asleep = true;
+        }
+        if (egWanted) for (int32_t n = 0; n < frames; ++n) { eg[0].next(); eg[1].next(); }
+        for (int32_t n = 0; n < frames; ++n) L[n] = R[n] = 0.0f;
+        return true;
+    }
+    asleep = false;
 
     for (int32_t n = 0; n < frames; ++n) {
         if (egWanted) { eg[0].next(); eg[1].next(); }
@@ -672,6 +726,13 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     if (sumWeight > 0.0f) {
         loudness = clampf(sumLoud / sumWeight * 8.0f, 0.0f, 1.0f);
         brightness = clampf(sumBright / sumWeight, 0.0f, 1.0f);
+    }
+    if (anyVoice || inputPeak >= 1e-6f) {
+        quietBlocks = 0;
+    } else {
+        float peak = 0.0f;
+        for (int32_t n = 0; n < frames; ++n) peak = std::fmax(peak, std::fmax(std::fabs(L[n]), std::fabs(R[n])));
+        quietBlocks = peak < 1e-6f ? quietBlocks + 1 : 0;
     }
     return true;
 }

@@ -171,6 +171,10 @@ class Manual final : public Machine {
     dsp::DelayLine scanner;
     float windPressure = 1.0f;
     float tremPhase = 0.0f;
+    /** Blocks in a row with no key down and nothing over -120 dB; see `render`. */
+    int32_t quietBlocks = 0;
+    /** How much of the idle sounds - leakage, hum, blower - is up; see `render`. */
+    float presence = 0.0f;
     float humPhase = 0.0f;
     float leakSum = 0.0f;
     dsp::Biquad bassEq, midEq, trebleEq, reedyFilter, chiffFilter;

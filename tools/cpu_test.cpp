@@ -29,6 +29,7 @@
 #include <engine/effect/EffectRegistry.h>
 #include <engine/core/Frozen.h>
 #include <engine/machine/MachineRegistry.h>
+#include "audition_material.h"
 #include "patchbank.h"
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
@@ -158,8 +159,65 @@ struct Player {
  * The set is leaked on purpose. It lives as long as the machine does and the
  * process is about to end.
  */
+/**
+ * **And the samplers get something to play.**
+ *
+ * The same was true of Mosaic, Forage, Dice, Pollen and Molt, and it hid
+ * the dearest fault outside the demo: Mosaic worked out every layer's playback
+ * rate - two `exp2` and a double divide - and its pan - a `cos` and a `sin` -
+ * per sample, for numbers that hold still for the block. It was reported here
+ * as a floor because it had nothing mounted.
+ *
+ * The material is the audition harness's own synthetic set, the one
+ * `bank_test` plays every factory patch against: a zone map, a drum kit, a
+ * break and a spoken phrase, all built in code. Built once per machine and
+ * kept for the life of the process, so a forty-round sweep does not build
+ * forty of each.
+ */
+struct Mounted {
+    std::vector<std::unique_ptr<SampleData>> pieces;
+    std::unique_ptr<audio::Take> take;
+    std::unique_ptr<SampleMap> map;
+    std::unique_ptr<audio::Utterance> utterance;
+};
+
+Mounted &mounted(const std::string &machine) {
+    static Mounted forage, dice, pollen, mosaic, molt;
+    if (machine == "Forage") {
+        if (forage.pieces.empty()) {
+            for (int i = 0; i < static_cast<int>(audition::Piece::Count); ++i)
+                forage.pieces.push_back(audition::pieceSample(static_cast<audition::Piece>(i)));
+        }
+        return forage;
+    }
+    if (machine == "Dice") { if (!dice.take) dice.take = audition::breakLoop(); return dice; }
+    if (machine == "Pollen") { if (!pollen.take) pollen.take = audition::breakLoop(); return pollen; }
+    if (machine == "Mosaic") { if (!mosaic.map) mosaic.map = audition::zoneMap(); return mosaic; }
+    if (!molt.utterance) molt.utterance = audition::voiceUtterance();
+    return molt;
+}
+
+bool holdsAudio(const std::string &machine) {
+    return machine == "Forage" || machine == "Dice" || machine == "Pollen" || machine == "Mosaic" ||
+           machine == "Molt";
+}
+
 void mountCloudIfNeeded(Machine *m, const std::string &machine) {
-    if (m == nullptr || machine != "Cumulus") return;
+    if (m == nullptr) return;
+    if (holdsAudio(machine)) {
+        Mounted &mat = mounted(machine);
+        if (!mat.pieces.empty()) {
+            for (size_t i = 0; i < mat.pieces.size(); ++i) m->swapObject(static_cast<int32_t>(i), mat.pieces[i].get());
+        } else if (mat.take) {
+            m->swapObject(0, mat.take.get());
+        } else if (mat.map) {
+            m->swapObject(0, mat.map.get());
+        } else {
+            m->swapObject(0, mat.utterance.get());
+        }
+        return;
+    }
+    if (machine != "Cumulus") return;
     auto *cum = static_cast<machine::Cumulus *>(m);
     auto set = machine::cumulus::buildCloud(cum->spec(), kSr);
     delete static_cast<machine::cumulus::CloudSet *>(cum->swapObject(0, set.release()));
@@ -167,7 +225,14 @@ void mountCloudIfNeeded(Machine *m, const std::string &machine) {
 
 /** And the other half of it: a sweep builds one of these per round. */
 void unmountCloud(Machine *m, const std::string &machine) {
-    if (m == nullptr || machine != "Cumulus") return;
+    if (m == nullptr) return;
+    if (holdsAudio(machine)) {
+        // The material is kept; the machine only lets go of it.
+        const int32_t slots = machine == "Forage" ? static_cast<int32_t>(mounted(machine).pieces.size()) : 1;
+        for (int32_t i = 0; i < slots; ++i) m->swapObject(i, nullptr);
+        return;
+    }
+    if (machine != "Cumulus") return;
     auto *cum = static_cast<machine::Cumulus *>(m);
     delete static_cast<machine::cumulus::CloudSet *>(cum->swapObject(0, nullptr));
 }
@@ -559,11 +624,10 @@ void report(std::vector<Result> &rows) {
         printf("  %-14s %9.1f %9.1f %7.1f%% %7.1fx%s\n", r.name.c_str(), r.mean, r.p99,
                r.mean / kBudgetUs * 100.0, r.spikiness(), r.spikiness() > 6.0 ? "  <-- spiky" : "");
     }
-    printf("\n  Units that hold audio - Bias, Dice, Forage, Mosaic, Pollen - have no\n"
-           "  material mounted here, so they are measured close to idle and their\n"
-           "  figures are a floor, not a cost. Cumulus used to be in that list and\n"
-           "  was reported at 1.4 us; its tables are computed rather than loaded, so\n"
-           "  this builds them and it is now timed like anything else.\n");
+    printf("\n  The samplers play the audition harness's synthetic material - a zone\n"
+           "  map, a kit, a break, a phrase - and Cumulus its computed tables. Bias\n"
+           "  alone has nothing mounted: an audio track plays what was recorded into\n"
+           "  it, so its figure is a floor, not a cost.\n");
 }
 
 } // namespace

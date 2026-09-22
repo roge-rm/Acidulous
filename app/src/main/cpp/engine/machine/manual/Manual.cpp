@@ -364,6 +364,8 @@ void Manual::reset() {
     for (auto &e : eg) e.reset();
     scanPhase = scanValue = 0.0f;
     tremPhase = 0.0f;
+    quietBlocks = 0;
+    presence = 0.0f;
     humPhase = 0.0f;
 
     rotary.reset();
@@ -683,6 +685,10 @@ bool Manual::render(float *L, float *R, int32_t frames) {
     const float windSag = clampf(paramOf(WindSag) + blockMod[DstWindSag], 0.0f, 1.0f);
     const float windCoeff = onePoleCoeff(paramOf(WindResponse), sampleRate);
     const float windNoise = paramOf(WindNoise);
+    // The idle sounds come up quickly - they are under the first note - and
+    // go slowly, well after the last one.
+    const float presenceIn = onePoleCoeff(0.05f / 3.0f, sampleRate);
+    const float presenceOut = onePoleCoeff(0.4f / 3.0f, sampleRate);
     // Two tremulants, one output. They used to be *added*, so a reed patch
     // asking for a strong one on each knob got 0.95 and swung its own level
     // down to a twentieth twice a second - and anything over 1.0 sent the
@@ -764,17 +770,52 @@ bool Manual::render(float *L, float *R, int32_t frames) {
 
     bool anyVoice = false;
     for (auto &v : voices) if (v.used) { anyVoice = true; break; }
-    if (!anyVoice && leak < 0.0005f && hum < 0.0005f && !rotOn) {
-        // The generator keeps turning - a wheel that stopped would come back
-        // in the wrong place - but nothing else needs doing.
-        for (int32_t i = 0; i < frames; ++i) {
-            for (int w = 0; w < WheelBank::kWheels; ++w) {
-                wheelPhase[w] += wheelStep[w] * pitchScale;
-                if (wheelPhase[w] >= 1.0f) wheelPhase[w] -= 1.0f;
-            }
-            L[i] = 0.0f;
-            R[i] = 0.0f;
+    // **No key down and the chain gone quiet: the organ sleeps.**
+    //
+    // This used to sleep only with the cabinet switched off, and the cabinet
+    // ships switched on - so an organ with nothing pressed ran its whole chain
+    // every sample: the wind, the scanner, the amp, three EQs and four cosines
+    // of rotor, on silence. Fifty microseconds a block on the dev box, for a
+    // track that was not playing, which is the most any machine here cost
+    // doing nothing.
+    //
+    // It waits for the idle sounds to have faded (see `presence`) and then
+    // for two blocks under -120 dB, so the cabinet's tail is not cut short.
+    //
+    // **Everything that turns keeps turning:** the ninety-one wheels, the
+    // spray's second rank, both rotors - speed ramps included, so a cabinet
+    // switched to fast during a rest is at speed when the next chord lands -
+    // the tremulant, the scanner and the wind settling back. Only the sound
+    // is skipped.
+    if (!anyVoice && presence < 1e-4f && quietBlocks >= 2) {
+        presence = 0.0f;
+        // At block rate, and not sample by sample the way the loop below
+        // does it: ninety-one wheels summed sixty-four times a block cost
+        // thirty microseconds, which was most of what sleeping saved. A block
+        // sum rounds differently, so a wheel wakes a hair from where the
+        // per-sample sum would have put it - and a free-running generator
+        // after a rest is at an arbitrary phase either way.
+        const float n = static_cast<float>(frames);
+        for (int w = 0; w < WheelBank::kWheels; ++w) {
+            wheelPhase[w] += wheelStep[w] * pitchScale * n;
+            wheelPhase[w] -= std::floor(wheelPhase[w]);
         }
+        if (spray > 0.0005f) {
+            for (int w = 0; w < WheelBank::kWheels; ++w) {
+                sprayPhase[w] += sprayStep[w] * n;
+                sprayPhase[w] -= std::floor(sprayPhase[w]);
+            }
+        }
+        windPressure = 1.0f + (windPressure - 1.0f) * std::pow(1.0f - windCoeff, n);
+        if (tremDepth > 0.0005f) {
+            tremPhase += tremStep * n;
+            tremPhase -= std::floor(tremPhase);
+        }
+        scanPhase += vibStep * n;
+        scanPhase -= std::floor(scanPhase);
+        if (egWanted) for (int32_t i = 0; i < frames; ++i) { eg[0].next(); eg[1].next(); }
+        if (rotOn) rotary.spin(frames);
+        for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
         return true;
     }
 
@@ -925,18 +966,28 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         }
         // Leakage and hum: the generator is always turning and the shielding
         // is never perfect, which is a lot of why an idle organ is not silent.
+        // **The idle sounds follow the playing.** Leakage, hum and the
+        // blower are what an organ sounds like between notes, and they belong
+        // under a part, not under the whole song: an engineer would gate a
+        // track that is not playing, and so this does. They fade in as the
+        // organ starts and out again once its last note has rung away.
+        //
+        // It also used to depend on the cabinet: with it off the organ went
+        // silent the moment the last voice ended, blower and all; with it on
+        // the blower hissed through every scene the track sat out.
+        presence += ((anyVoice ? 1.0f : 0.0f) - presence) * (anyVoice ? presenceIn : presenceOut);
         if (leak > 0.0005f || hum > 0.0005f) {
             leakSum *= 0.995f;
             const int w = i % WheelBank::kWheels;
             leakSum += bank->sample(w, WheelBank::Wheel, wheelPhase[w]) * 0.05f;
             humPhase += 60.0f / sampleRate;
             if (humPhase >= 1.0f) humPhase -= 1.0f;
-            dry += leakSum * leak * 0.25f + std::sin(6.2831853f * humPhase) * hum * 0.004f;
+            dry += (leakSum * leak * 0.25f + std::sin(6.2831853f * humPhase) * hum * 0.004f) * presence;
         }
         if (windNoise > 0.0005f) {
             rngState = rngState * 1664525u + 1013904223u;
             const float n = (static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f;
-            dry += n * windNoise * 0.01f * (0.3f + demand);
+            dry += n * windNoise * 0.01f * (0.3f + demand) * presence;
         }
         if (trackerAmt > 0.0005f && mech > 0.0f) dry += mech * trackerAmt * 0.06f;
 
@@ -1031,6 +1082,13 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         outR += wideR * wide * volume * exprGain * kHouse;
         L[i] = outL * panL;
         R[i] = outR * panR;
+    }
+    if (anyVoice) {
+        quietBlocks = 0;
+    } else {
+        float peak = 0.0f;
+        for (int32_t i = 0; i < frames; ++i) peak = std::fmax(peak, std::fmax(std::fabs(L[i]), std::fabs(R[i])));
+        quietBlocks = peak < 1e-6f ? quietBlocks + 1 : 0;
     }
     return true;
 }

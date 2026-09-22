@@ -452,6 +452,17 @@ float Mosaic::readSample(const SampleData &s, double pos) {
     return s.left[static_cast<size_t>(i)] * (1.0f - f) + s.left[static_cast<size_t>(i + 1)] * f;
 }
 
+void Mosaic::cacheLayer(Layer &L, float panBase) {
+    if (L.zone == nullptr || L.sample == nullptr) return;
+    L.rootHz = mtof(static_cast<float>(L.zone->rootKey));
+    L.tuneMul = std::exp2((L.zone->tuneCents + L.modTuneCents) / 1200.0f);
+    L.rateRatio = static_cast<double>(L.sample->rate) / static_cast<double>(sampleRate);
+    L.incFreq = -1.0f; // the rate is worked out again on its next sample
+    const float angle = (clampf(panBase + L.pan + L.modPan, -1.0f, 1.0f) + 1.0f) * 0.25f * kPi;
+    L.panC = std::cos(angle);
+    L.panS = std::sin(angle);
+}
+
 void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
     // Two milliseconds, as a step per frame: short enough that nobody hears
     // a fade, long enough that nobody hears the edge it replaces.
@@ -496,6 +507,18 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
     const float gSpray = clampf(paramOf(GrainSpray) + v.mod[DstGrainSpray], 0.0f, 1.0f);
     const float gPitch = clampf(paramOf(GrainPitch) + v.mod[DstGrainPitch] * 24.0f, 0.0f, 48.0f);
 
+    for (int32_t z = 0; z < v.layerCount; ++z) cacheLayer(v.layer[z], panBase);
+    // The rate for a layer at the voice's current frequency: the expression
+    // that was here per sample, in the same order, redone only when the
+    // frequency has moved since the layer last asked.
+    const auto rateOf = [&](Layer &L) {
+        if (v.freq != L.incFreq) {
+            L.incFreq = v.freq;
+            L.incNow = static_cast<double>(v.freq) / L.rootHz * L.tuneMul * pitchMul * L.rateRatio;
+        }
+        return L.incNow;
+    };
+
     for (int32_t i = 0; i < frames; ++i) {
         if (v.glidePos < 1.0f) {
             v.glidePos += glideStep;
@@ -507,7 +530,10 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
 
         const float env = v.amp.next();
         const float fenv = v.filterEg.next();
-        for (auto &e : v.modEg) e.next();
+        // Only the ones a matrix row reads; see Trinity's envMask.
+        for (int e = 0; e < kModEgs; ++e) {
+            if (egUsed & (1 << e)) v.modEg[e].next();
+        }
 
         float l = 0.0f, r = 0.0f;
         if (grains && v.layerCount > 0) {
@@ -518,9 +544,7 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
             for (int32_t z = 1; z < v.layerCount; ++z) if (v.layer[z].gain > v.layer[best].gain) best = z;
             Layer &L = v.layer[best];
             if (L.sample != nullptr && L.sample->frames > 1) {
-                const double natural = static_cast<double>(v.freq) / mtof(static_cast<float>(L.zone->rootKey)) *
-                                       std::exp2((L.zone->tuneCents + L.modTuneCents) / 1200.0f) * pitchMul *
-                                       (static_cast<double>(L.sample->rate) / static_cast<double>(sampleRate));
+                const double natural = rateOf(L);
                 v.grainOffset += natural * static_cast<double>(gRate);
                 const double span = static_cast<double>(L.sample->frames);
                 if (v.grainOffset > span) v.grainOffset -= span;
@@ -571,17 +595,14 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                     if (++g.age >= g.length) g.active = false;
                 }
                 sum *= L.gain * L.modGain;
-                const float angle = (clampf(panBase + L.pan + L.modPan, -1.0f, 1.0f) + 1.0f) * 0.25f * kPi;
-                l += sum * std::cos(angle) * 1.4142f;
-                r += sum * std::sin(angle) * 1.4142f;
+                l += sum * L.panC * 1.4142f;
+                r += sum * L.panS * 1.4142f;
             }
         } else {
             for (int32_t z = 0; z < v.layerCount; ++z) {
                 Layer &L = v.layer[z];
                 if (L.sample == nullptr || L.finished || L.sample->frames < 2) continue;
-                const double inc = static_cast<double>(v.freq) / mtof(static_cast<float>(L.zone->rootKey)) *
-                                   std::exp2((L.zone->tuneCents + L.modTuneCents) / 1200.0f) * pitchMul *
-                                   (static_cast<double>(L.sample->rate) / static_cast<double>(sampleRate));
+                const double inc = rateOf(L);
                 const float s = readSample(*L.sample, L.pos) * L.gain * L.modGain * L.fade * L.fadeIn;
                 if (L.pendingPos >= 0.0) {
                     // Waiting to move: fade out where we are, then jump and
@@ -598,6 +619,7 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                             L.pan = L.pendingPan;
                             L.pendingSample = nullptr;
                             L.pendingZone = nullptr;
+                            cacheLayer(L, panBase); // another zone: another rate and pan
                         }
                         L.pendingPos = -1.0;
                         L.fade = 1.0f;
@@ -606,9 +628,8 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                 } else if (L.fadeIn < 1.0f) {
                     L.fadeIn = std::min(1.0f, L.fadeIn + endFadeStep);
                 }
-                const float angle = (clampf(panBase + L.pan + L.modPan, -1.0f, 1.0f) + 1.0f) * 0.25f * kPi;
-                l += s * std::cos(angle) * 1.4142f;
-                r += s * std::sin(angle) * 1.4142f;
+                l += s * L.panC * 1.4142f;
+                r += s * L.panS * 1.4142f;
 
                 L.pos += reverse ? -inc : inc;
                 const bool wantLoop = loopMode == LoopForward ||
@@ -655,6 +676,14 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
 
 bool Mosaic::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    egUsed = 0;
+    for (int s = 0; s < kMatrixSlots; ++s) {
+        const int32_t b = MatrixBase + s * MatrixParams;
+        if (stepOf(b + XDest) == DstOff) continue;
+        const int a = stepOf(b + XSrc), b2 = stepOf(b + XSrc2);
+        if (a >= SrcEg1 && a <= SrcEg2) egUsed |= 1 << (a - SrcEg1);
+        if (b2 >= SrcEg1 && b2 <= SrcEg2) egUsed |= 1 << (b2 - SrcEg1);
+    }
     for (int32_t i = 0; i < frames; ++i) { L[i] = 0.0f; R[i] = 0.0f; }
     if (map == nullptr) return true;
     const float blockSeconds = static_cast<float>(frames) / sampleRate;

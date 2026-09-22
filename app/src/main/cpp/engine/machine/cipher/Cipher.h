@@ -134,6 +134,11 @@ class Cipher final : public Machine {
     float invSampleRate = 1.0f / 48000.0f;
     Band bands[kMaxBands];
     int32_t bandCount = 16;
+    /** What the band coefficients were last solved for; see `render`. NaN never matches. */
+    float lastBandKey[9] = {NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN};
+    /** Blocks in a row with no voice, no input and nothing over -120 dB; see `render`. */
+    int32_t quietBlocks = 0;
+    bool asleep = false;
     float lastLow = -1.0f, lastHigh = -1.0f, lastQ = -1.0f;
     int32_t lastCount = -1;
 

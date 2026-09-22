@@ -171,6 +171,8 @@ void Filament::reset() {
     for (auto &e : eg) e.reset();
     stringLevel = 0.0f;
     rngState = kRngSeed;
+    quietBlocks = 0;
+    asleep = false;
 }
 
 // The sympathetic bank follows whatever was played last, so it is a set of
@@ -381,6 +383,27 @@ bool Filament::render(float *L, float *R, int32_t frames) {
         egWanted = src == SrcEg1 || src == SrcEg2;
     }
 
+    // **No string sounding and the tail gone quiet: nothing to do.**
+    //
+    // With every voice retired the body resonators, the six sympathetic
+    // strings and the drive were still being run every sample, for ever, on
+    // silence - eight microseconds a block on the dev box for a track in a
+    // scene where it has no clip. Asleep once the output has stayed under
+    // -120 dB for two blocks; the state it leaves behind is zeroed on the way
+    // in, so what wakes is exactly what a reset would have made.
+    bool anyVoice = false;
+    for (const auto &v : voices) anyVoice = anyVoice || v.used;
+    if (!anyVoice && quietBlocks >= 2) {
+        if (!asleep) {
+            for (auto &sym : sympathetic) sym.clear();
+            for (auto &bq : body) bq.reset();
+            asleep = true;
+        }
+        for (int32_t n = 0; n < frames; ++n) L[n] = R[n] = 0.0f;
+        return true;
+    }
+    asleep = false;
+
     const int32_t mode = steppedOf(ExciterMode);
     const float position = paramOf(Position);
     const float hardness = paramOf(Hardness);
@@ -400,6 +423,12 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     const bool bodyOn = steppedOf(BodyOn) != 0;
     const float bodyMix = paramOf(BodyMix);
     const float drive = paramOf(Drive);
+    // Normalised. This had no compensation at all, so turning the knob up
+    // thinned the string and quietened it at the same time. The curve's own
+    // answer at the nominal level is a constant for the block; it was a third
+    // `tanh` a sample.
+    const float driveK = 1.0f + drive * 8.0f;
+    const float driveNorm = kNominal / std::tanh(kNominal * driveK);
     const float volume = paramOf(Volume);
     const float panBase = paramOf(Pan);
     const float dry = paramOf(Dry);
@@ -435,6 +464,9 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     const InputBus &bus = InputBus::get();
     const float *in = bus.live() ? bus.block() : nullptr;
     float symFeed = 0.0f;
+    // The sympathetic bank belongs to the machine, so it takes the matrix of
+    // the last voice that sounded - as it always has.
+    float symMod = 0.0f;
 
     for (int32_t n = 0; n < frames; ++n) {
         if (egWanted) { eg[0].next(); eg[1].next(); }
@@ -462,13 +494,13 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // caught by before; this is the opposite case - a coefficient,
             // not a source - and the filters have always been set this way.
             if ((n & 15) == 0) {
-            applyMatrix(v, mod);
+            applyMatrix(v, v.mod);
 
             // Damping, brightness and tuning, note by note: a short string
             // rings for less time and darker, as a real one does.
             const float keyTone = 1.0f - paramOf(ToneKey) * v.key01 * 0.5f;
-            const float tone = clampf((paramOf(Tone) + mod[DstTone]) * keyTone, 0.02f, 1.0f);
-            const float freq = v.freq * pitchScale * noteBendMul(v) * std::pow(2.0f, mod[DstPitch]);
+            const float tone = clampf((paramOf(Tone) + v.mod[DstTone]) * keyTone, 0.02f, 1.0f);
+            const float freq = v.freq * pitchScale * noteBendMul(v) * std::pow(2.0f, v.mod[DstPitch]);
 
             // **How long the string rings is a time, not a loop gain.**
             //
@@ -491,24 +523,30 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // one stops it just as fast as on a low one.
             if (v.damp > 0.0f) v.damp = std::fmin(1.0f, v.damp + releaseCoeff * 64.0f);
             const float keyDamp = 1.0f - paramOf(DampingKey) * v.key01 * 0.35f;
-            const float sustain = clampf(paramOf(Damping) + mod[DstDamping], 0.0f, 1.0f);
+            const float sustain = clampf(paramOf(Damping) + v.mod[DstDamping], 0.0f, 1.0f);
             const float ring = 0.05f * std::pow(160.0f, sustain) * keyDamp * (1.0f - 0.92f * v.damp);
             const float damped = std::fmin(
                 0.99995f, std::exp(-1.0f / (std::fmax(20.0f, freq) * std::fmax(0.002f, ring))));
 
             v.freqNow = freq;
             v.a.setFrequency(freq);
-            v.b.setFrequency(freq * std::pow(2.0f, (detune + mod[DstDetune] * 50.0f) / 1200.0f));
+            v.b.setFrequency(freq * std::pow(2.0f, (detune + v.mod[DstDetune] * 50.0f) / 1200.0f));
             v.a.setDamping(damped, tone);
             v.b.setDamping(damped, tone);
-            v.a.setDispersion(clampf(dispersion + mod[DstDispersion], 0.0f, 1.0f), stages);
-            v.b.setDispersion(clampf(dispersion + mod[DstDispersion], 0.0f, 1.0f), stages);
-            v.a.setTension(clampf(tension + mod[DstTension], 0.0f, 1.0f));
-            v.b.setTension(clampf(tension + mod[DstTension], 0.0f, 1.0f));
-            const float damperP = clampf(paramOf(DamperPos) + mod[DstDamperPos], 0.0f, 1.0f);
-            const float damperF = clampf(paramOf(DamperPressure) + mod[DstDamperPressure], 0.0f, 1.0f);
+            v.a.setDispersion(clampf(dispersion + v.mod[DstDispersion], 0.0f, 1.0f), stages);
+            v.b.setDispersion(clampf(dispersion + v.mod[DstDispersion], 0.0f, 1.0f), stages);
+            v.a.setTension(clampf(tension + v.mod[DstTension], 0.0f, 1.0f));
+            v.b.setTension(clampf(tension + v.mod[DstTension], 0.0f, 1.0f));
+            const float damperP = clampf(paramOf(DamperPos) + v.mod[DstDamperPos], 0.0f, 1.0f);
+            const float damperF = clampf(paramOf(DamperPressure) + v.mod[DstDamperPressure], 0.0f, 1.0f);
             v.a.setDamper(damperP, damperF);
             v.b.setDamper(damperP, damperF);
+            // Two trig calls a voice a sample, for a pan that moves when the
+            // matrix does.
+            const float pan = clampf(panBase + v.pan * spread + v.mod[DstPan], -1.0f, 1.0f);
+            const float angle = (pan + 1.0f) * 0.25f * kPiF;
+            v.panL = std::cos(angle);
+            v.panR = std::sin(angle);
             }
 
             // Excitation.
@@ -554,7 +592,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 // while the two move together and lets go when the string
                 // slips past it. The curve has to fall away on both sides or
                 // the bow only ever adds energy and the note runs away.
-                const float p = clampf(bowPressure + mod[DstPressure], 0.0f, 1.0f);
+                const float p = clampf(bowPressure + v.mod[DstPressure], 0.0f, 1.0f);
                 const float relative = bowSpeed * 0.5f - v.a.velocity();
                 const float width = 0.08f + 0.5f * (1.0f - p);
                 const float grip = relative / (width + relative * relative / width);
@@ -567,7 +605,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 // blowing harder does not make it louder, it makes it
                 // overblow, which is the instrument, not a bug.
                 excite = (noise * (0.2f + 0.8f * grit) * 0.25f + 0.02f) *
-                         clampf(bowPressure + mod[DstPressure], 0.0f, 1.0f) * v.exciteGain *
+                         clampf(bowPressure + v.mod[DstPressure], 0.0f, 1.0f) * v.exciteGain *
                          (1.0f - std::tanh(std::fabs(v.a.velocity()) * 1.6f) * 0.9f);
                 break;
             case External:
@@ -616,7 +654,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // Slide walks the pick up the string, which is the brightest
             // thing a finger can do to one.
             const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
-            const float pos = clampf(position + mod[DstPosition] +
+            const float pos = clampf(position + v.mod[DstPosition] +
                                          slide * paramOf(MpeTimbre) * 0.28f,
                                      0.02f, 0.5f);
             // A pluck, a pick and a hammer all act at one point and leave,
@@ -664,10 +702,9 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             sumForSympathy += voiceOut;
             loudest = std::fmax(loudest, v.a.level());
 
-            const float pan = clampf(panBase + v.pan * spread + mod[DstPan], -1.0f, 1.0f);
-            const float angle = (pan + 1.0f) * 0.25f * kPiF;
-            mixL += voiceOut * std::cos(angle) * 1.4142f;
-            mixR += voiceOut * std::sin(angle) * 1.4142f;
+            mixL += voiceOut * v.panL * 1.4142f;
+            mixR += voiceOut * v.panR * 1.4142f;
+            symMod = v.mod[DstSympathetic];
 
             if (!v.gate && v.a.level() < 0.00005f && v.b.level() < 0.00005f && v.exciteLeft <= 0) {
                 v.used = false;
@@ -679,11 +716,11 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // ...per turn as well, and for the same reason: six strings each
             // given eight per cent of the played one every sample is forty
             // times a turn at the bottom of the range, and they never stopped.
-            symFeed = sumForSympathy * clampf(symLevel + mod[DstSympathetic], 0.0f, 1.0f) * 0.6f;
+            symFeed = sumForSympathy * clampf(symLevel + symMod, 0.0f, 1.0f) * 0.6f;
             float symOut = 0.0f;
             for (int i = 0; i < kSympathetic; ++i)
                 symOut += sympathetic[i].step(symFeed * sympathetic[i].turnScale());
-            symOut *= 0.2f * clampf(symLevel + mod[DstSympathetic], 0.0f, 1.0f);
+            symOut *= 0.2f * clampf(symLevel + symMod, 0.0f, 1.0f);
             mixL += symOut;
             mixR += symOut * 0.85f;
         }
@@ -701,16 +738,19 @@ bool Filament::render(float *L, float *R, int32_t frames) {
         outL += exciterOut * dry;
         outR += exciterOut * dry;
         if (drive > 0.0f) {
-            // Normalised. This had no compensation at all, so turning the
-            // knob up thinned the string and quietened it at the same time.
-            const float k = 1.0f + drive * 8.0f;
-            const float norm = kNominal / std::tanh(kNominal * k);
-            outL = std::tanh(outL * k) * norm;
-            outR = std::tanh(outR * k) * norm;
+            outL = std::tanh(outL * driveK) * driveNorm;
+            outR = std::tanh(outR * driveK) * driveNorm;
         }
         L[n] = outL * volume;
         R[n] = outR * volume;
         stringLevel = loudest;
+    }
+    if (anyVoice) {
+        quietBlocks = 0;
+    } else {
+        float peak = 0.0f;
+        for (int32_t n = 0; n < frames; ++n) peak = std::fmax(peak, std::fmax(std::fabs(L[n]), std::fabs(R[n])));
+        quietBlocks = peak < 1e-6f ? quietBlocks + 1 : 0;
     }
     return true;
 }

@@ -17,6 +17,8 @@ Nine per manual, and they are the patch. **tab16** through **tab1** - or, in the
 - the **reeds** - a reed organ, with **pressure**, **buzz** and a tremulant.
 - the **pipes** - **principal**, **flute**, **string**, **reed** and **mixture** stops, with **chiff** on the attack and **tracker** noise.
 
+**Leakage**, **hum** and the blower's **wind noise** are the sound of an organ between notes. They follow the playing: they come up with the first note and fade out about half a second after the last one has rung away, so a track that sits out a scene is silent in it rather than hissing under the rest of the song.
+
 ## The click, and why it matters
 
 A real tonewheel organ's key contacts make and break one at a time, so a note starts with a burst of clicks. **click**, **clickoff** and **contacts** are that, and turning them off makes the machine sound instantly synthetic. It is the most recognisable thing about the instrument and it is not a tone control.

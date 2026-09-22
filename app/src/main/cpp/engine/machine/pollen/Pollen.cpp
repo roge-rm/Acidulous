@@ -254,14 +254,13 @@ void Pollen::controlChange(uint8_t cc, uint8_t value) {
 void Pollen::pitchBend(int16_t value14) { bend = static_cast<float>(value14) / 8192.0f; }
 void Pollen::onBlock(int64_t, int64_t, float) {}
 
-float Pollen::windowAt(int32_t shape, float phase, float skew) const {
+float Pollen::windowAt(int32_t shape, float phase, float skew, float skewK) const {
     // Skew bends time inside the window: negative puts the peak early,
-    // positive late, without needing a table per setting.
+    // positive late, without needing a table per setting. The power is the
+    // grain's own, worked out when it was born - it was a `pow` per grain per
+    // sample for a number that never changes over the grain's life.
     float t = std::clamp(phase, 0.0f, 1.0f);
-    if (skew > 0.001f || skew < -0.001f) {
-        const float k = std::pow(2.0f, -skew * 2.0f);
-        t = std::pow(t, k);
-    }
+    if (skew > 0.001f || skew < -0.001f) t = std::pow(t, skewK);
     const float x = t * kWindowSize;
     const int32_t i = std::min(static_cast<int32_t>(x), kWindowSize - 1);
     const float f = x - static_cast<float>(i);
@@ -398,6 +397,7 @@ void Pollen::spawn(Voice &v, int32_t voiceIndex, const View &view, float env) {
     g.age = 0;
     g.length = length;
     g.skew = paramOf(Skew);
+    g.skewK = std::pow(2.0f, -g.skew * 2.0f);
     g.generation = 0;
     const float pan = (nextRandom() * 2.0f - 1.0f) * paramOf(PanSpread);
     const float angle = (std::clamp(pan, -1.0f, 1.0f) + 1.0f) * 0.25f * 3.14159265f;
@@ -599,7 +599,7 @@ bool Pollen::render(float *L, float *R, int32_t frames) {
             for (auto &g : grains) {
                 if (!g.active) continue;
                 const float phase = static_cast<float>(g.age) / static_cast<float>(g.length);
-                const float w = windowAt(shape, phase, g.skew);
+                const float w = windowAt(shape, phase, g.skew, g.skewK);
                 double p = g.pos;
                 if (p < 0.0) p += span;
                 if (p >= span) p -= span;

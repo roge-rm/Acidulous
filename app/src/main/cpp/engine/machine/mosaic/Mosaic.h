@@ -106,6 +106,20 @@ class Mosaic final : public Machine {
         float modGain = 1.0f;
         float modPan = 0.0f;
         /**
+         * The playback rate's parts and the pan's two gains, worked out once
+         * a block by `cacheLayer` instead of on every sample.
+         *
+         * The rate was two `exp2` and a double divide per layer per sample,
+         * and the pan a `cos` and a `sin`, for numbers that only move when a
+         * knob, a modulator or the zone does. The rate is still recomputed
+         * whenever the note's frequency has moved - which is a glide - using
+         * the same expression in the same order, so nothing comes out
+         * different by so much as a bit.
+         */
+        float rootHz = 440.0f, tuneMul = 1.0f, incFreq = -1.0f;
+        double rateRatio = 1.0, incNow = 1.0;
+        float panC = 0.70710678f, panS = 0.70710678f;
+        /**
          * A short ramp to nothing when the sample runs off its end.
          *
          * A non-looping sample stopped dead wherever the playhead happened to
@@ -218,6 +232,9 @@ class Mosaic final : public Machine {
     Voice *allocate();
     void updateVoiceMod(Voice &v, float blockSeconds);
     float sourceValue(const Voice &v, int src) const;
+    void cacheLayer(Layer &L, float panBase);
+    /** Which of the mod envelopes a matrix row reads, once a block. See Ratio's. */
+    int32_t egUsed = (1 << kModEgs) - 1;
     void renderVoice(Voice &v, int32_t frames, float *outL, float *outR);
     float paramOf(int32_t index) const { return params_.get(index); }
     int stepOf(int32_t index) const { return static_cast<int>(params_.get(index) + 0.5f); }

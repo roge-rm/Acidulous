@@ -83,6 +83,25 @@ class Rotary {
         spread = spread01;
     }
 
+    /**
+     * The rotors going round with nothing to play through them.
+     *
+     * Exactly the speed and angle arithmetic of `process`, sample by sample,
+     * and none of the sound: what a sleeping organ calls so the cabinet is
+     * where it would have been - and at the speed it was asked for - when
+     * the next note arrives.
+     */
+    void spin(int32_t frames) {
+        for (int32_t i = 0; i < frames; ++i) {
+            hornHz += (hornTarget - hornHz) * (hornTarget > hornHz ? upCoeff : downCoeff);
+            drumHz += (drumTarget - drumHz) * (drumTarget > drumHz ? upCoeff : downCoeff);
+            hornPhase += hornHz / sampleRate;
+            if (hornPhase >= 1.0f) hornPhase -= 1.0f;
+            drumPhase -= drumHz / sampleRate;
+            if (drumPhase < 0.0f) drumPhase += 1.0f;
+        }
+    }
+
     // One sample in, stereo out. `x` is the driven signal.
     void process(float x, float &outL, float &outR) {
         hornHz += (hornTarget - hornHz) * (hornTarget > hornHz ? upCoeff : downCoeff);

@@ -115,6 +115,20 @@ class Filament final : public Machine {
         float bowPhase = 0.0f;
         float pan = 0.0f;
         float damp = 0.0f;       // release damping, 0 while held
+        /**
+         * This voice's matrix, refreshed on the sixteen-sample stride.
+         *
+         * It has to be the voice's own. It was one array on the machine, which
+         * was right while every voice rebuilt it on every sample - and wrong
+         * the moment the rebuild moved to the stride, because for fifteen
+         * samples in sixteen every voice then read whichever voice had been
+         * rebuilt last. Anything per note - key, velocity - routed to the pick
+         * position, the bow or the pan flipped between two answers three
+         * thousand times a second.
+         */
+        float mod[DestCount] = {};
+        /** Where the pan puts this voice, worked out with the matrix. */
+        float panL = 1.0f, panR = 1.0f;
         // Per-note expression (MPE). `bend` is in semitones and adds to
         // whatever the channel is bending.
         // `pressure` and `timbre` are -1 until this finger sends them, so
@@ -140,8 +154,10 @@ class Filament final : public Machine {
     dsp::Adsr eg[2];
     dsp::LfoGen lfo[2];
     float lfoValue[2] = {0.0f, 0.0f};
-    float mod[DestCount] = {};
     float stringLevel = 0.0f;
+    /** Blocks in a row with no voice and nothing over -120 dB; see `render`. */
+    int32_t quietBlocks = 0;
+    bool asleep = false;
 
     float bendSemis = 0.0f, modWheel = 0.0f, pressure = 0.0f;
     float bpm = 120.0f;
