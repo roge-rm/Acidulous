@@ -430,6 +430,107 @@ void report(std::vector<Result> &rows) {
 
 } // namespace
 
+/**
+ * Full against lean, for one unit, measured so the difference is legible.
+ *
+ * **Two runs of this harness cannot answer this question.** Three of each on
+ * this machine put the run-to-run spread at ±30% to ±50% for most units, which
+ * swamps everything the comparison is for: it reported Filament 19% *slower*
+ * in lean and a dozen units "reached" that lean does not touch at all. Both
+ * were noise, and the second was repeated to Dan as fact before being checked.
+ *
+ * Three things fix it, and they are all about comparing like with like:
+ *
+ *  - **One process**, so both modes meet the same cache, the same page layout
+ *    and the same governor.
+ *  - **Alternating**, so a machine that gets busy half way through spoils both
+ *    equally instead of whichever ran second.
+ *  - **The minimum, not the mean.** The fastest pass is the one that was
+ *    interrupted least, and is the closest this can get to what the work
+ *    costs; a mean averages in whatever else the machine was doing.
+ *
+ * And the spread of the full-mode minima is printed beside the result as the
+ * **floor**: a saving smaller than that is not a saving, and the row says so
+ * rather than leaving it to be read into.
+ */
+struct Paired {
+    std::string name;
+    double full = 0.0, lean = 0.0, floorPct = 0.0;
+    double savedPct() const { return full > 0.0 ? 100.0 * (full - lean) / full : 0.0; }
+    bool real() const { return std::fabs(savedPct()) > floorPct && std::fabs(savedPct()) >= 5.0; }
+};
+
+Paired timePaired(const std::string &name, bool isEffect, int rounds) {
+    Paired p;
+    p.name = isEffect ? "fx." + name : name;
+    std::vector<double> fulls, leans;
+    for (int i = 0; i < rounds; ++i) {
+        for (int mode = 0; mode < 2; ++mode) {
+            // Full first on even rounds, lean first on odd, so neither mode
+            // always pays for whatever a fresh unit does on its first blocks.
+            const bool full = (i % 2 == 0) ? (mode == 0) : (mode == 1);
+            EngineSettings::get().quality.store(full ? 1 : 0, std::memory_order_relaxed);
+            Result r = isEffect ? timeEffect(name) : timeMachine(name);
+            if (r.samples.empty()) return p;
+            // **The round's own mean, and the minimum is taken across rounds.**
+            //
+            // Not the cheapest *block* in the round, which was the first
+            // attempt and measured the wrong thing entirely: the cheapest
+            // block of a machine is one where nothing is sounding, so Trinity
+            // came out at 6.9 us against the 87 it costs with notes in it. The
+            // two minimums are at different levels - within a round it picks
+            // silence, across rounds it picks the pass the machine interfered
+            // with least - and only the second one is wanted.
+            (full ? fulls : leans).push_back(r.mean);
+        }
+    }
+    EngineSettings::get().quality.store(1, std::memory_order_relaxed);
+    if (fulls.size() < 4 || leans.empty()) return p;
+    std::sort(fulls.begin(), fulls.end());
+    std::sort(leans.begin(), leans.end());
+    const auto at = [](const std::vector<double> &v, double q) {
+        return v[static_cast<size_t>(q * static_cast<double>(v.size() - 1))];
+    };
+
+    // **The median, and a floor that does not grow when you measure harder.**
+    //
+    // Three estimators were tried and the first two were wrong in instructive
+    // ways. The *minimum* of the rounds looks right - the least interfered-with
+    // pass - but pairing it with a max-minus-min floor is self-defeating: a
+    // range grows with the sample, so asking for forty rounds instead of ten
+    // took Trinity's floor from 9% to 64% and made measuring harder look like
+    // knowing less. Splitting the full rounds in half and comparing those was
+    // the other, and it is far too kind at small counts - the minimum of four
+    // agrees with the minimum of four much more closely than either agrees
+    // with the truth, and it passed Molt at 18% when Molt has no lean branch
+    // to save anything with.
+    //
+    // A median is stable and the middle half is a spread that settles rather
+    // than climbs. So the answer is the median of the rounds, and the floor is
+    // how wide the middle half of the *full* rounds is: how much this
+    // measurement moves when nothing has changed at all.
+    p.full = at(fulls, 0.5);
+    p.lean = at(leans, 0.5);
+    p.floorPct = p.full > 0.0 ? 100.0 * (at(fulls, 0.75) - at(fulls, 0.25)) / p.full : 0.0;
+    return p;
+}
+
+void reportPaired(std::vector<Paired> &rows) {
+    std::sort(rows.begin(), rows.end(), [](const Paired &a, const Paired &b) {
+        return (a.full - a.lean) > (b.full - b.lean);
+    });
+    printf("  %-16s %8s %8s %8s %7s\n", "unit", "full us", "lean us", "saved", "floor");
+    printf("  %-16s %8s %8s %8s %7s\n", "----", "-------", "-------", "-----", "-----");
+    for (const Paired &r : rows) {
+        if (r.full <= 0.0) continue;
+        printf("  %-16s %8.1f %8.1f %7.0f%% %6.0f%%  %s\n", r.name.c_str(), r.full, r.lean,
+               r.savedPct(), r.floorPct, r.real() ? "" : "(inside the floor)");
+    }
+    printf("\n  A saving inside the floor is not a saving: the floor is how much the\n");
+    printf("  full-mode figure moved between rounds on this machine, and nothing\n");
+    printf("  smaller than that can be told apart from it.\n");
+}
+
 int main(int argc, char **argv) {
     const std::string only = argc > 1 ? argv[1] : "";
     // Off with ACIDULOUS_NO_FTZ=1, so the cost of denormals can be measured
@@ -446,6 +547,29 @@ int main(int argc, char **argv) {
     printf("cost per %d-frame block, budget %.0f us\n\n", kBlock, kBudgetUs);
 
     std::vector<Result> rows;
+    if (only == "paired") {
+        // A second argument names one unit and buys it more rounds. The floor
+        // falls as the rounds rise - it is the spread of a sample - so a unit
+        // being changed is worth measuring harder than the sweep can afford
+        // to measure all thirty-six.
+        const std::string one = argc > 2 ? argv[2] : "";
+        const int rounds = one.empty() ? 10 : 40;
+        printf("full against lean, alternating in one process, best of each\n");
+        printf("%d rounds%s\n\n", rounds, one.empty() ? "" : (", " + one + " alone").c_str());
+        std::vector<Paired> rows;
+        for (int32_t i = 0; i < MachineRegistry::count(); ++i) {
+            const std::string n = MachineRegistry::name(i);
+            if (!one.empty() && one != n) continue;
+            rows.push_back(timePaired(n, false, rounds));
+        }
+        for (int32_t i = 0; i < EffectRegistry::count(); ++i) {
+            const std::string n = EffectRegistry::name(i);
+            if (!one.empty() && one != n && one != "fx." + n) continue;
+            rows.push_back(timePaired(n, true, rounds));
+        }
+        reportPaired(rows);
+        return 0;
+    }
     if (only == "rack") {
         printf("a whole rack, live against frozen - what freezing gives back\n\n");
         // The demo's two dearest tracks, with the inserts they actually carry.
