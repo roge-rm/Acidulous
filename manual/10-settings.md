@@ -59,11 +59,17 @@ how your app behaves.
   - the **three-oscillator synth** halves a unison stack, never below two, so
     a wide pad narrows rather than turning into one voice. A patch stacked
     eight deep costs about a third less; a patch that was never stacked is
-    left alone.
+    left alone. It also lets no more than **six released notes** ring on at
+    once: past that the oldest tail fades out over ten milliseconds. A patch
+    with a long release pays for its release rather than its notes - a bell
+    arp can have a dozen tails going behind the one you are playing - and
+    this is about forty per cent of what such a patch costs. Held notes are
+    never touched.
 
   Nothing else changes, and nothing changes about what you have recorded. A
-  note already sounding keeps whatever it was born with, so the switch - and
-  **auto** moving on its own - never alters a note part way through.
+  note you are holding keeps whatever it was born with, so the switch - and
+  **auto** moving on its own - never alters a note under your fingers. Only a
+  tail you have already let go of can be shortened.
 
   Most of what a phone struggles with is not in this list and never was: a
   machine doing work at audio rate that nothing at audio rate asked for. That

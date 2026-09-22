@@ -181,7 +181,7 @@ void Trinity::prepare(int32_t rate) {
 
 void Trinity::reset() {
     for (auto &v : voices) {
-        v.used = v.gate = false;
+        v.used = v.gate = v.cut = false;
         for (auto &e : v.env) e.kill();
         for (auto &f : v.filter) f.reset();
         for (auto &o : v.osc) o = OscState();
@@ -216,6 +216,7 @@ void Trinity::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigge
     v.used = true;
     v.gate = true;
     v.bornLean = !fullQuality();
+    v.cut = false;
     v.note = note;
     v.velocity = velocity;
     v.age = ageCounter++;
@@ -348,6 +349,21 @@ int32_t Trinity::envMask() const {
         if (src2 >= SrcEnvAmp && src2 <= SrcEnv6) mask |= 1 << (src2 - SrcEnvAmp);
     }
     return mask;
+}
+
+void Trinity::cutTails() {
+    int tails = 0;
+    for (const auto &v : voices) tails += v.used && !v.gate && !v.cut;
+    for (; tails > kLeanTails; --tails) {
+        Voice *oldest = nullptr;
+        for (auto &v : voices) {
+            if (!v.used || v.gate || v.cut) continue;
+            if (oldest == nullptr || v.age < oldest->age) oldest = &v;
+        }
+        if (oldest == nullptr) break;
+        oldest->cut = true;
+        oldest->env[0].hasten(0.01f);
+    }
 }
 
 void Trinity::updateVoiceMod(Voice &v, float blockSeconds) {
@@ -612,6 +628,7 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
 bool Trinity::render(float *L, float *R, int32_t frames) {
     params_.tick();
     envUsed = envMask();
+    if (!fullQuality()) cutTails();
     for (int32_t i = 0; i < frames; ++i) { L[i] = 0.0f; R[i] = 0.0f; }
     const float blockSeconds = static_cast<float>(frames) / sampleRate;
     const float panBase = paramOf(Pan);

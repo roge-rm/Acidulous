@@ -244,7 +244,8 @@ private fun AudioTab(trackNames: List<String>) {
             UiPrefs.fullQuality -> ""
             else ->
                 "Amp and distortion alias instead of oversampling, the reverb is " +
-                    "half a room, and struck objects keep half their partials."
+                    "half a room, struck objects keep half their partials, and the " +
+                    "synth thins its stacks and lets fewer notes ring out."
         },
     ) {
         Choice("full", UiPrefs.fullQuality, enabled = !UiPrefs.autoQuality) { UiPrefs.chooseQuality(true) }

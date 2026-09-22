@@ -24,6 +24,8 @@ class Trinity final : public Machine {
     static constexpr int kLfos = 3;
     static constexpr int kMatrixSlots = 12;
     static constexpr int kVoices = 16;
+    /** Released voices lean lets ring at once; see `cutTails`. */
+    static constexpr int kLeanTails = 6;
 
     // Waves 0..3 are the analogue ones; 4.. index the wavetable bank.
     enum WaveKind : int32_t { WSaw, WSquare, WTriangle, WSine, WFirstTable, WaveCount = WFirstTable + dsp::WavetableBank::kTables };
@@ -121,6 +123,8 @@ class Trinity final : public Machine {
          * answer.
          */
         bool bornLean = false;
+        /** Released and being faded out early by `cutTails`. */
+        bool cut = false;
         // Per-note expression (MPE). `bend` is in semitones and adds to the
         // machine's own; `pressure` and `timbre` are -1 until this finger
         // sends them, so a voice with no expression of its own falls back to
@@ -151,6 +155,22 @@ class Trinity final : public Machine {
      * envelope mid-note gets one that begins moving from where it was left.
      */
     int32_t envMask() const;
+    /**
+     * **Under lean, no more than `kLeanTails` released voices ring at once.**
+     *
+     * A patch with a long release costs its release, not its notes. Bell Keys
+     * rings for a second and a half after every note, so a sixteenth arp holds
+     * eleven to fourteen voices of which one is held - and lean's only other
+     * lever here, halving the unison stack, reaches nothing in a patch that
+     * does not stack. The demo's dearest track measured the same lean as full.
+     *
+     * The oldest tails go first, faded over ten milliseconds rather than
+     * stopped, and a held note is never touched: this thins the wash behind
+     * the playing, not the playing. Read every block rather than at note-on,
+     * unlike the stack - a tail is not under anybody's hands, and the moment
+     * the watcher goes lean is exactly when the room is wanted.
+     */
+    void cutTails();
     float sourceValue(const Voice &v, int src) const;
     float renderVoice(Voice &v, int32_t frames, float *out);
     float paramOf(int32_t index) const { return params_.get(index); }

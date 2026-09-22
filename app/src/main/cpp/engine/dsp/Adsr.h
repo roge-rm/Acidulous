@@ -24,6 +24,16 @@ class Adsr {
     void release() { if (stage != Stage::Idle) stage = Stage::Release; }
     void kill() { stage = Stage::Idle; level = 0.0f; }
     /**
+     * Finish a release that is already under way, over [seconds].
+     *
+     * The curve carries on from wherever it is, only faster, so a tail that
+     * has to go is faded rather than cut - `kill()` would be a click. Only the
+     * release coefficient moves; the next `set()` puts it back.
+     */
+    void hasten(float seconds) {
+        if (stage == Stage::Release) rCoeff = onePoleCoeff(seconds * 0.35f, sampleRate);
+    }
+    /**
      * Back to new, for a panic.
      *
      * kill() silences the envelope but leaves its coefficients, its sustain
