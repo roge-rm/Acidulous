@@ -103,7 +103,7 @@ class Distortion final : public Effect {
 
 class Compressor final : public Effect {
   public:
-    enum P { Threshold, Ratio, Attack, Release, Makeup, Pump, PumpRate, Gain, Count };
+    enum P { Threshold, Ratio, Attack, Release, Makeup, Pump, PumpRate, Gain, Sidechain, Count };
     Compressor() { initParams(); }
     ACIDULOUS_EFFECT_COMMON(Compressor)
     void onBlock(int64_t tickStart, int64_t, float bpm) override { tick = tickStart; this->bpm = bpm; }
@@ -114,13 +114,14 @@ class Compressor final : public Effect {
 
 class Filter final : public Effect {
   public:
-    enum P { Cutoff, Reso, Mode, LfoRate, LfoDepth, EnvDepth, Gain, Count };
+    enum P { Cutoff, Reso, Mode, LfoRate, LfoDepth, EnvDepth, Gain, Sidechain, Count };
     Filter() { initParams(); }
     ACIDULOUS_EFFECT_COMMON(Filter)
     void onBlock(int64_t tickStart, int64_t, float bpm) override { tick = tickStart; this->bpm = bpm; }
   private:
     dsp::Svf svf[2];
     float follower = 0.0f, sr = 48000.0f, bpm = 120.0f;
+    float fcSet = -1.0f, resoSet = -1.0f; // what the filters were last solved for
     int64_t tick = 0;
 };
 
@@ -350,7 +351,7 @@ class Flanger final : public Effect {
  */
 class Gate final : public Effect {
   public:
-    enum P { Threshold, Hyst, Attack, Hold, Release, Duck, Key, Gain, Count };
+    enum P { Threshold, Hyst, Attack, Hold, Release, Duck, Key, Gain, Sidechain, Count };
     Gate() { initParams(); }
     ACIDULOUS_EFFECT_COMMON(Gate)
   private:

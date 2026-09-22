@@ -631,7 +631,7 @@ object Manual {
                 ManualBlock(ManualKind.Para, "**Drift is what makes it analogue.** A digital chorus is perfectly periodic, and the ear hears the period. A little drift breaks that up and the effect stops announcing itself."),
                 ManualBlock(ManualKind.Para, "**It is wide by default**, so on something that has to stay centred - a lead, a bass - pull `spread` down and let the depth do the work."),
             )),
-            ManualSection("Compressor", "The classic four, and a pump in time with the transport that needs no sidechain routing.", listOf(
+            ManualSection("Compressor", "The classic four, a sidechain from any track, and a pump in time with the transport that needs no routing at all.", listOf(
                 ManualBlock(ManualKind.Para, "Threshold, ratio, attack and release, doing exactly what they always do - and then the control that this rack could not otherwise offer."),
                 ManualBlock(ManualKind.Heading, "The controls"),
                 ManualBlock(ManualKind.Bullet, "**threshold** - the level above which it starts working, -60 to 0 dB."),
@@ -641,9 +641,11 @@ object Manual {
                 ManualBlock(ManualKind.Bullet, "**makeup** - level back on, up to 24 dB."),
                 ManualBlock(ManualKind.Bullet, "**pump** *(extra)* - the gain is ducked in time with the transport, at **pumprate**, with the exponential recovery a kick would give it. A pad that breathes against the beat with nothing routed into a sidechain input."),
                 ManualBlock(ManualKind.Bullet, "**pumprate** *(extra)* - the note value the duck happens on: 1/16, 1/8, 1/4 or 1/2."),
+                ManualBlock(ManualKind.Bullet, "**sidechain** - what the compressor listens to: **own** is this track's own sound, or pick another track by name and this one is pushed down whenever *that* one is loud. The other track is heard before its fader and its mute, so a kick pulled down in the mix still ducks as hard, and a muted kick can drive a pump nobody hears."),
                 ManualBlock(ManualKind.Heading, "Using it well"),
                 ManualBlock(ManualKind.Para, "**Attack is the tone control.** On anything percussive, the attack setting decides whether you are hearing the stick or the shell. Compressing a drum bus with a 20 ms attack makes it hit harder; with a 1 ms attack it makes it quieter."),
-                ManualBlock(ManualKind.Para, "**Pump is the effect everybody wants and no insert can do.** Sidechain ducking normally needs a routing you have to set up. Here it is a knob, it is locked to the transport, and it works on a track that nothing else is playing against."),
+                ManualBlock(ManualKind.Para, "**Duck the bass under the kick.** On the bass: `sidechain` to the drums, ratio 8:1 or more, attack as fast as it goes, release 80-150 ms, threshold down until the meter moves 6-10 dB on every hit. The low end stops fighting itself, and the kick lands in a hole the bass has just left for it."),
+                ManualBlock(ManualKind.Para, "**Pump or sidechain.** A real sidechain follows the drums, fills and all, and stops when they stop. **pump** needs nothing routed and never misses a beat, which is what you want on a pad in a track whose kick has not been written yet."),
                 ManualBlock(ManualKind.Para, "**On the master, less than you think.** A ratio of 2:1 with the threshold set so the meter moves 2-3 dB on the loud parts is glue. Anything more is a decision about the music, not about the mix."),
             )),
             ManualSection("Delay", "Echoes on a note value, with a duck that gets out of the way while you are playing.", listOf(
@@ -696,6 +698,7 @@ object Manual {
                 ManualBlock(ManualKind.Bullet, "**lforate** *(extra)* - a note value rather than a frequency, so the sweep is locked to the song and stays locked when the tempo moves."),
                 ManualBlock(ManualKind.Bullet, "**lfodepth** *(extra)* - how far the LFO moves the cutoff, and **signed**: negative sweeps down from where you set it rather than up."),
                 ManualBlock(ManualKind.Bullet, "**envdepth** *(extra)* - how far the signal's own level moves the cutoff. Positive is an auto-wah that opens when you play harder; negative closes instead, which is the sound nothing else here makes."),
+                ManualBlock(ManualKind.Bullet, "**sidechain** - whose level moves it: **own**, or another track by name. With a negative `envdepth` and the kick as the source, the filter shuts on every hit and opens again behind it - a duck that takes the top off rather than the level."),
                 ManualBlock(ManualKind.Heading, "Using it well"),
                 ManualBlock(ManualKind.Para, "**A signed depth is two effects.** Most filters give you a sweep upward and expect you to set the cutoff low. Being able to go the other way means the resting position can be open and the movement can be a dip, which reads as a very different thing."),
                 ManualBlock(ManualKind.Para, "**Envelope and LFO together.** Set a slow `lforate` for the bar-level movement and a little `envdepth` on top, and the filter breathes with the song *and* responds to what is played into it. Either alone sounds mechanical by comparison."),
@@ -725,10 +728,12 @@ object Manual {
                 ManualBlock(ManualKind.Bullet, "**release** - how fast it closes once the hold runs out."),
                 ManualBlock(ManualKind.Bullet, "**duck** *(extra)* - how far down \"closed\" is. All the way is a gate; twelve decibels is what drums want, where silence between hits is a hole and the room going quiet is a tightening."),
                 ManualBlock(ManualKind.Bullet, "**key** *(extra)* - a high-pass on the **detector**, not on the audio. A gate in front of an amp is listening to a pickup that hears mains hum, a room and a hand as well as the string, and all of those are low. Slide `key` up and the gate opens for a pick rather than for a building, while the note it passes keeps its bottom end."),
+                ManualBlock(ManualKind.Bullet, "**sidechain** - what opens it: **own** is this track, or another track by name. The `key` filter runs on whichever it is."),
                 ManualBlock(ManualKind.Para, "There is deliberately **no mix**: half a gate is the noise at half level."),
                 ManualBlock(ManualKind.Heading, "Using it well"),
                 ManualBlock(ManualKind.Para, "**Hold does the work, not release.** If a gate is chattering, lengthen the hold before you slow the release. Release only shapes how it closes once it has decided to."),
                 ManualBlock(ManualKind.Para, "**Key it above the hum.** A long cable into a loud amp picks up mains at 50 or 60 Hz and its harmonics. `key` at 120 Hz ignores all of that and still opens for the lowest note on the instrument, because what opens a gate is the attack, which is full of high frequencies."),
+                ManualBlock(ManualKind.Para, "**Chop a pad with the hats.** A sustained pad with its gate keyed to the hi-hat track opens only while a hat is sounding - a rhythm cut out of a chord, locked to a part you can edit, with `duck` at -12 dB so the gaps breathe instead of going black."),
                 ManualBlock(ManualKind.Para, "**Where you put it matters.** Before the amp it removes the hiss your pickups bring in; after the amp it removes the hiss the amp makes, which is usually far more. On an input slot in the record window it is printed into the take, so the recording itself is quiet."),
             )),
             ManualSection("Harmonizer", "Two added voices at scale degrees, so the harmony stays in key.", listOf(

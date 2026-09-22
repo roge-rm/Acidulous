@@ -39,6 +39,28 @@ class Effect {
     void setBypass(bool on) { bypass_ = on; }
     bool bypassed() const { return bypass_; }
 
+    /**
+     * **Sidechain: which track this effect listens to, if not its own input.**
+     *
+     * An effect with a detector - the compressor, the gate, the filter's
+     * follower - may name another rack whose sound it reacts to while it
+     * processes its own: the bass ducking under the kick. `sidechain` is a
+     * stepped parameter, 0 for its own input and 1..16 for a rack.
+     *
+     * Returns the rack index, or -1 for its own input (and for an effect that
+     * has no detector).
+     */
+    int32_t sidechainRack() const {
+        if (sidechainIndex_ < 0) return -1;
+        return static_cast<int32_t>(params_.get(sidechainIndex_) + 0.5f) - 1;
+    }
+    /**
+     * The key for this block: a mono buffer of the source rack's sound, or
+     * null for the effect's own input. Set by the engine before the rack
+     * renders; valid for that call only.
+     */
+    void setKey(const float *key) { key_ = key; }
+
   protected:
     void initParams() {
         int32_t n = 0;
@@ -48,10 +70,15 @@ class Effect {
         // than fourteen times over. Found by name so an effect that has not
         // got one simply does not get the multiply.
         gainIndex_ = -1;
+        sidechainIndex_ = -1;
         for (int32_t i = 0; i < n; ++i) {
-            if (std::strcmp(defs[i].name, "gain") == 0) { gainIndex_ = i; break; }
+            if (std::strcmp(defs[i].name, "gain") == 0) gainIndex_ = i;
+            if (std::strcmp(defs[i].name, "sidechain") == 0) sidechainIndex_ = i;
         }
     }
+
+    /** The sidechain for this block, or null: see `setKey`. */
+    const float *key_ = nullptr;
 
   private:
     /**
@@ -73,6 +100,7 @@ class Effect {
         if (stereo) for (int32_t i = 0; i < frames; ++i) R[i] *= g;
     }
     int32_t gainIndex_ = -1;
+    int32_t sidechainIndex_ = -1;
 
   protected:
     ParamSet params_;

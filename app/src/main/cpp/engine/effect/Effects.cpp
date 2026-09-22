@@ -545,6 +545,8 @@ const ParamDef *Compressor::paramDefs(int32_t &count) const {
         {"pump", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"pumprate", 0.0f, 3.0f, 2.0f, Curve::Stepped, 4, ""}, // 1/16 1/8 1/4 1/2
         {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        // Appended: 0 is the effect's own input, 1..16 a track it listens to.
+        {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
     };
     count = Count;
     return defs;
@@ -564,7 +566,10 @@ bool Compressor::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float slope = 1.0f - 1.0f / ratio;
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
-        const float a = std::fabs(inL) > std::fabs(inR) ? std::fabs(inL) : std::fabs(inR);
+        // The detector hears the sidechain when there is one - the kick, not
+        // the bass it is pushing down - and this track's own sound otherwise.
+        const float a = key_ != nullptr ? std::fabs(key_[i])
+                                        : (std::fabs(inL) > std::fabs(inR) ? std::fabs(inL) : std::fabs(inR));
         env += (a - env) * (a > env ? atk : rel);
         float g = 1.0f;
         if (env > 1e-5f) {
@@ -596,6 +601,8 @@ const ParamDef *Filter::paramDefs(int32_t &count) const {
         {"lfodepth", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"envdepth", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        // Appended: 0 is the effect's own input, 1..16 a track it listens to.
+        {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
     };
     count = Count;
     return defs;
@@ -606,7 +613,7 @@ void Filter::prepare(int32_t sampleRate) {
     for (auto &s : svf) s.setSampleRate(sr);
     reset();
 }
-void Filter::reset() { for (auto &s : svf) s.reset(); follower = 0.0f; }
+void Filter::reset() { for (auto &s : svf) s.reset(); follower = 0.0f; fcSet = resoSet = -1.0f; }
 
 bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
@@ -619,17 +626,30 @@ bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const int chans = stereoIn ? 2 : 1;
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
-        const float a = (std::fabs(inL) + std::fabs(inR)) * 1.2f;
+        // The follower hears the sidechain when there is one, so a negative
+        // envelope depth closes this track's filter on another track's hits.
+        const float a = key_ != nullptr ? std::fabs(key_[i]) * 2.4f : (std::fabs(inL) + std::fabs(inR)) * 1.2f;
         follower += (a - follower) * (a > follower ? atk : rel);
-        // Both modulators move the cutoff in octaves: the LFO up to +-3, the
-        // follower up to 4 (an auto-wah when positive, a duck when negative).
-        const float octaves = lfoDepth * 3.0f * Lfo::triangle(phase) + envDepth * 4.0f * clampf(follower, 0.0f, 1.0f);
-        const float fc = cutoff * std::exp2(octaves);
+        // **The coefficients on a sixteen-sample stride, and only when they
+        // moved.** `Svf::set` is a `tan`, and it was called per sample per
+        // channel - for a cutoff that, with both depths at nought, never
+        // moves at all. Sixteen samples is what every filter in the machines
+        // has always used for a moving cutoff.
+        if ((i & 15) == 0) {
+            // Both modulators move the cutoff in octaves: the LFO up to +-3, the
+            // follower up to 4 (an auto-wah when positive, a duck when negative).
+            const float octaves = lfoDepth * 3.0f * Lfo::triangle(phase) + envDepth * 4.0f * clampf(follower, 0.0f, 1.0f);
+            const float fc = cutoff * std::exp2(octaves);
+            if (fc != fcSet || reso != resoSet) {
+                fcSet = fc;
+                resoSet = reso;
+                for (auto &f : svf) f.set(fc, reso); // both, or a mono input turning stereo finds the second unsolved
+            }
+        }
         phase += inc;
         if (phase >= 1.0f) phase -= 1.0f;
         for (int c = 0; c < chans; ++c) {
             float *buf = c == 0 ? L : R;
-            svf[c].set(fc, reso);
             const float x = buf[i];
             buf[i] = mode == 1 ? svf[c].bandpass(x) : (mode == 2 ? svf[c].highpass(x) : svf[c].lowpass(x));
         }
@@ -1205,6 +1225,8 @@ const ParamDef *Gate::paramDefs(int32_t &count) const {
         {"duck", -90.0f, 0.0f, -90.0f, Curve::Linear, 0, "dB"},
         {"key", 20.0f, 2000.0f, 20.0f, Curve::Exponential, 0, "Hz"},
         {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        // Appended: 0 is the effect's own input, 1..16 a track it listens to.
+        {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
     };
     count = Count;
     return defs;
@@ -1269,8 +1291,12 @@ bool Gate::process(float *L, float *R, int32_t frames, bool stereoIn) {
         // The key filter runs on the audio, per channel, and the rectifier
         // comes after it: filtering a signal that has already been rectified
         // would be filtering the envelope, which is a different instrument.
-        const float kL = std::fabs(key[0].step(inL).hp);
-        const float kR = std::fabs(key[1].step(inR).hp);
+        // With a sidechain the key filter runs on *that*: the gate opens on
+        // another track's hits, filtered the same way, and shuts this one.
+        const float srcL = key_ != nullptr ? key_[i] : inL;
+        const float srcR = key_ != nullptr ? key_[i] : inR;
+        const float kL = std::fabs(key[0].step(srcL).hp);
+        const float kR = std::fabs(key[1].step(srcR).hp);
         const float det = kL > kR ? kL : kR;
         env = det > env ? det : dsp::undenormal(env + (det - env) * detRel);
 

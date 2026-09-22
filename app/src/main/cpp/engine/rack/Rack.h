@@ -174,6 +174,12 @@ class Rack {
 
     float bufL[kBlockFrames]{};
     float bufR[kBlockFrames]{};
+    /**
+     * What a sidechain listening to this rack hears: mono, after the inserts,
+     * before the fader and the mute. Written by every `render`; see
+     * `Engine::renderRacks` for when a listener reads it.
+     */
+    float keyBuf[kBlockFrames]{};
 
     // Read by the master after render(); post-fader.
     bool soloed() const { return channel.get(Solo) >= 0.5f; }

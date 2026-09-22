@@ -29,6 +29,7 @@
 #include <engine/core/Settings.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/effect/Effects.h>
 #include <engine/rack/Engine.h>
 #include <sequencer/Song.h>
 
@@ -320,12 +321,157 @@ void aTracksCostIsAPercentile() {
 
 } // namespace
 
+/**
+ * **Sidechain: a track that listens to another.**
+ *
+ * A held chord on rack 2 through a compressor keyed by a kick on rack 5 -
+ * the listener on the *lower* rack, deliberately, because racks used to
+ * render in index order and a listener that rendered first could only ever
+ * hear its source a block late. The engine now renders sources first.
+ */
+struct SideFixture {
+    Engine engine;
+    std::shared_ptr<SongSnapshot> snap = std::make_shared<SongSnapshot>();
+    std::vector<std::shared_ptr<const Clip>> keep;
+    static constexpr int32_t kListener = 2, kSource = 5;
+
+    explicit SideFixture(int32_t sidechain, int32_t secondListener = -1, bool bypass = false) {
+        add(kListener, "Trinity");
+        add(kSource, "Genesis");
+        Effect *comp = EffectRegistry::create("Compressor");
+        comp->prepare(kSampleRate);
+        comp->reset();
+        auto &p = comp->params();
+        p.set(effect::Compressor::Threshold, 0.25f); // -45 dB: anything the kick does is over it
+        p.set(effect::Compressor::Ratio, 1.0f);      // twenty to one
+        p.set(effect::Compressor::Attack, 0.0f);     // a tenth of a millisecond
+        p.set(effect::Compressor::Sidechain, static_cast<float>(sidechain) / 16.0f);
+        p.jumpAll();
+        comp->setBypass(bypass);
+        delete engine.racks[kListener].swapEffect(0, comp);
+        if (secondListener >= 0) {
+            // And the source listening back: a loop, which cannot be ordered.
+            Effect *back = EffectRegistry::create("Compressor");
+            back->prepare(kSampleRate);
+            back->reset();
+            back->params().set(effect::Compressor::Sidechain, static_cast<float>(secondListener) / 16.0f);
+            back->params().jumpAll();
+            delete engine.racks[kSource].swapEffect(0, back);
+        }
+        SceneInfo sc;
+        sc.id = 1;
+        sc.bars = 2;
+        sc.repeat = 1;
+        sc.ticksPerBar = kBar;
+        snap->scenes.push_back(sc);
+        auto held = std::make_shared<Clip>();
+        held->rev = 1;
+        held->bars = 2;
+        held->ticksPerBar = kBar;
+        for (uint8_t n : {48, 55, 60}) held->notes.push_back(ClipNote{0, 2 * kBar - 1, n, 100});
+        keep.push_back(held);
+        snap->setClip(kListener, 0, held);
+        auto kick = std::make_shared<Clip>();
+        kick->rev = 2;
+        kick->bars = 2;
+        kick->ticksPerBar = kBar;
+        for (int32_t i = 0; i < 8; ++i) kick->notes.push_back(ClipNote{i * kPPQN + kPPQN / 3, kPPQN / 4, 36, 120});
+        keep.push_back(kick);
+        snap->setClip(kSource, 0, kick);
+        snap->rackCount = kSource + 1;
+        engine.scheduler.swapSnapshot(snap.get());
+    }
+    void add(int32_t rack, const char *machine) {
+        Machine *m = MachineRegistry::create(machine);
+        m->prepare(kSampleRate);
+        m->reset();
+        m->params().jumpAll();
+        delete engine.racks[rack].swapMachine(m);
+    }
+    ~SideFixture() {
+        for (int32_t r = 0; r < kRackCount; ++r) {
+            for (int32_t s = 0; s < kEffectSlots; ++s) delete engine.racks[r].swapEffect(s, nullptr);
+            delete engine.racks[r].swapMachine(nullptr);
+        }
+    }
+    /** Render, keeping the listener's and the source's own buffers per sample. */
+    void run(int32_t blocks, std::vector<float> &listener, std::vector<float> &source, std::vector<float> *mix = nullptr) {
+        engine.panicFlag.store(true, std::memory_order_release);
+        float scratch[kBlockFrames * 2];
+        engine.renderBlock(nullptr, scratch);
+        engine.transport.requestPlay(0);
+        for (int32_t b = 0; b < blocks; ++b) {
+            engine.renderBlock(nullptr, scratch);
+            listener.insert(listener.end(), engine.racks[kListener].bufL, engine.racks[kListener].bufL + kBlockFrames);
+            source.insert(source.end(), engine.racks[kSource].keyBuf, engine.racks[kSource].keyBuf + kBlockFrames);
+            if (mix != nullptr) mix->insert(mix->end(), scratch, scratch + kBlockFrames * 2);
+        }
+    }
+};
+
+void aTrackCanListenToAnother() {
+    printf("- sidechain\n");
+    constexpr int32_t kBlocks = 1500; // two seconds: a bar and a bit at 120
+    std::vector<float> dry, keyA, keyed, keyB;
+    // The baseline is the compressor *bypassed*: left on its own input at
+    // -45 dB and twenty to one it squashes the chord by itself.
+    { SideFixture f(0, -1, true); f.run(kBlocks, dry, keyA); }
+    { SideFixture f(SideFixture::kSource + 1); f.run(kBlocks, keyed, keyB); }
+
+    // Gain at each sample, as the keyed listener over the unkeyed one - the
+    // same machine, the same notes, so the ratio is the compressor and
+    // nothing else. Only where the dry signal is big enough to divide by.
+    size_t firstKick = 0;
+    while (firstKick < keyB.size() && std::fabs(keyB[firstKick]) < 0.02f) ++firstKick;
+    size_t firstDuck = 0;
+    for (size_t i = 0; i < dry.size(); ++i) {
+        if (std::fabs(dry[i]) > 0.02f && std::fabs(keyed[i]) < std::fabs(dry[i]) * 0.7f) { firstDuck = i; break; }
+    }
+    float deepest = 1.0f;
+    for (size_t i = firstKick; i < std::min(dry.size(), firstKick + 4800); ++i) {
+        if (std::fabs(dry[i]) > 0.05f) deepest = std::min(deepest, std::fabs(keyed[i]) / std::fabs(dry[i]));
+    }
+    ok("a held chord ducks under another track's kick", firstKick < keyB.size() && deepest < 0.3f,
+       "down to " + std::to_string(deepest));
+    ok("in the same block as the kick, not the next",
+       firstDuck >= firstKick && firstDuck < firstKick + kBlockFrames,
+       "kick at " + std::to_string(firstKick) + ", duck at " + std::to_string(firstDuck));
+
+    // Pre-mute: a muted kick still drives the duck.
+    std::vector<float> mutedOut, mutedKey;
+    {
+        SideFixture f(SideFixture::kSource + 1);
+        f.engine.racks[SideFixture::kSource].setParam(Unit::Channel, Rack::Mute, 1.0f);
+        f.run(kBlocks, mutedOut, mutedKey);
+    }
+    ok("a muted source still ducks, because the key is pre-fader", firstDifference(mutedOut, keyed) == keyed.size());
+
+    // A key from a rack with nothing on it is silence, not the listener's own
+    // input and not whatever that rack last held.
+    std::vector<float> emptyOut, emptyKey;
+    { SideFixture f(12); f.run(kBlocks, emptyOut, emptyKey); }
+    ok("a key from an empty rack is silence: nothing ducks", firstDifference(emptyOut, dry) == dry.size());
+
+    // A loop cannot be ordered; it must still render, and repeat.
+    std::vector<float> loopA, loopKeyA, loopB, loopKeyB;
+    { SideFixture f(SideFixture::kSource + 1, SideFixture::kListener + 1); f.run(400, loopA, loopKeyA); }
+    { SideFixture f(SideFixture::kSource + 1, SideFixture::kListener + 1); f.run(400, loopB, loopKeyB); }
+    ok("two tracks keyed by each other render, and repeat", firstDifference(loopA, loopB) == loopA.size());
+
+    // And the whole thing repeats.
+    std::vector<float> again, againKey, mix1, mix2, k1, k2;
+    { SideFixture f(SideFixture::kSource + 1); f.run(600, again, againKey, &mix1); }
+    { SideFixture f(SideFixture::kSource + 1); f.run(600, k1, k2, &mix2); }
+    ok("a sidechained render is the same twice", firstDifference(mix1, mix2) == mix1.size());
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
     aRenderIsAlwaysFullQuality();
     aRenderDoesNotDependOnWhatPlayedBefore();
     aTracksCostIsAPercentile();
+    aTrackCanListenToAnother();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -11,6 +11,7 @@ A state-variable filter with resonance, and two ways of moving it that do not ne
 - **lforate** *(extra)* - a note value rather than a frequency, so the sweep is locked to the song and stays locked when the tempo moves.
 - **lfodepth** *(extra)* - how far the LFO moves the cutoff, and **signed**: negative sweeps down from where you set it rather than up.
 - **envdepth** *(extra)* - how far the signal's own level moves the cutoff. Positive is an auto-wah that opens when you play harder; negative closes instead, which is the sound nothing else here makes.
+- **sidechain** - whose level moves it: **own**, or another track by name. With a negative `envdepth` and the kick as the source, the filter shuts on every hit and opens again behind it - a duck that takes the top off rather than the level.
 
 ## Using it well
 

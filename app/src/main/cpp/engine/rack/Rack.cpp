@@ -411,7 +411,10 @@ void Rack::render(int32_t frames) {
         // Nothing to render - but a tail may still be ringing out of a clip
         // this rack was playing before its machine was taken away, so the
         // shortcut only holds when there is truly nothing left to hear.
-        if (tailClip == nullptr) return;
+        if (tailClip == nullptr) {
+            for (int32_t i = 0; i < frames; ++i) keyBuf[i] = 0.0f;
+            return;
+        }
     } else {
         stereo = machine->render(bufL, bufR, frames);
         for (int32_t s = 0; s < kEffectSlots; ++s) {
@@ -437,6 +440,15 @@ void Rack::render(int32_t frames) {
         }
         tailCursor = at;
         if (at >= end) tailClip = nullptr; // rung out
+    }
+    // The sidechain tap: this rack as another rack's detector hears it -
+    // after its own inserts, before its fader and its mute. Pre-fader so that
+    // pulling the kick down in the mix does not take the duck away with it,
+    // and pre-mute so a muted kick can still drive a pump nobody hears.
+    if (stereo) {
+        for (int32_t i = 0; i < frames; ++i) keyBuf[i] = (bufL[i] + bufR[i]) * 0.5f;
+    } else {
+        for (int32_t i = 0; i < frames; ++i) keyBuf[i] = bufL[i];
     }
     if (tapDry) {
         for (int32_t i = 0; i < frames; ++i) {

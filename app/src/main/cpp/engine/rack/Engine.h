@@ -179,6 +179,14 @@ class Engine : public Rack::ModifiedNoteSink {
      * is the reset button.
      */
     int32_t rackPercentileUs(int32_t rack, int32_t perMille = 990) const;
+    /**
+     * The key an effect on rack [self] hears from rack [source]: null for its
+     * own input (no source, or itself), silence for a rack with nothing on it,
+     * and otherwise that rack's pre-fader tap. [self] is -1 for a send.
+     */
+    const float *keyFor(int32_t source, int32_t self) const;
+    /** The order racks render in this block: every sidechain source before its listeners. */
+    void sidechainOrder(int32_t *order) const;
     void resetRackCosts();
 
     /**

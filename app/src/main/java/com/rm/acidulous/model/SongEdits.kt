@@ -1,6 +1,7 @@
 package com.rm.acidulous.model
 
 import java.util.UUID
+import kotlin.math.roundToInt
 
 /**
  * Pure edits on the document. Each returns a new [Song]; nothing here touches
@@ -105,14 +106,67 @@ fun Song.uniqueTrackName(base: String): String {
 
 fun Song.deleteTrack(index: Int): Song {
     val track = tracks.getOrNull(index) ?: return this
-    return copy(tracks = tracks - track)
+    // Every sidechain names its source by position, so the tracks after this
+    // one move up a place - and one that listened to *this* track goes back to
+    // its own input, which is what no sidechain means.
+    return copy(tracks = tracks - track).remapSidechains { k ->
+        when {
+            k - 1 == index -> 0
+            k - 1 > index -> k - 1
+            else -> k
+        }
+    }
 }
 
 fun Song.duplicateTrack(index: Int): Song {
     val source = tracks.getOrNull(index) ?: return this
     if (tracks.size >= MAX_TRACKS) return this
     val dup = source.copy(id = newId("t"), name = source.name + " copy", clips = source.clips.mapValues { it.value.copy() })
+    // The copy goes in after its source, so everything past it moves down one.
     return copy(tracks = tracks.toMutableList().also { it.add(index + 1, dup) })
+        .remapSidechains { k -> if (k - 1 > index) k + 1 else k }
+}
+
+/** The one parameter that holds a track's position: see [remapSidechains]. */
+const val SIDECHAIN_PARAM = "sidechain"
+/** Its steps: nought for the effect's own input, then the sixteen tracks. */
+const val SIDECHAIN_STEPS = 17
+
+/**
+ * Re-point every sidechain after the tracks have moved.
+ *
+ * A compressor, gate or filter that listens to another track names it by
+ * position - `sidechain` is 0 for its own input and 1..16 for a track, because
+ * that is what the engine, a lane and a controller mapping all address. So an
+ * edit that moves tracks has to move what points at them, in every place a
+ * value can live: the inserts, the send buses, and any automation lane drawn
+ * on it. [f] takes and returns the 1-based track, or 0.
+ */
+fun Song.remapSidechains(f: (Int) -> Int): Song {
+    val last = (SIDECHAIN_STEPS - 1).toFloat()
+    fun remap(v01: Float): Float {
+        val k = (v01 * last).roundToInt()
+        return if (k == 0) v01 else (f(k).coerceIn(0, SIDECHAIN_STEPS - 1) / last)
+    }
+    fun UnitSlot.remapped(): UnitSlot {
+        val v = params[SIDECHAIN_PARAM] ?: return this
+        return copy(params = params + (SIDECHAIN_PARAM to remap(v)))
+    }
+    val lane = ":$SIDECHAIN_PARAM"
+    return copy(
+        tracks = tracks.map { t ->
+            t.copy(
+                effects = t.effects.map { it.remapped() },
+                clips = t.clips.mapValues { (_, c) ->
+                    if (c.automation.keys.none { it.endsWith(lane) }) c
+                    else c.copy(automation = c.automation.mapValues { (key, l) ->
+                        if (!key.endsWith(lane)) l else l.copy(points = l.points.map { it.copy(value = remap(it.value)) })
+                    })
+                },
+            )
+        },
+        master = master.copy(sends = master.sends.map { it.remapped() }),
+    )
 }
 
 fun Song.changeMachine(index: Int, machineType: String): Song =

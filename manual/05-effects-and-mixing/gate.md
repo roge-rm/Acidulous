@@ -13,6 +13,8 @@ The effect a loud amp asks for next. Four of its controls are the ones everybody
 - **duck** *(extra)* - how far down "closed" is. All the way is a gate; twelve decibels is what drums want, where silence between hits is a hole and the room going quiet is a tightening.
 - **key** *(extra)* - a high-pass on the **detector**, not on the audio. A gate in front of an amp is listening to a pickup that hears mains hum, a room and a hand as well as the string, and all of those are low. Slide `key` up and the gate opens for a pick rather than for a building, while the note it passes keeps its bottom end.
 
+- **sidechain** - what opens it: **own** is this track, or another track by name. The `key` filter runs on whichever it is.
+
 There is deliberately **no mix**: half a gate is the noise at half level.
 
 ## Using it well
@@ -20,5 +22,7 @@ There is deliberately **no mix**: half a gate is the noise at half level.
 **Hold does the work, not release.** If a gate is chattering, lengthen the hold before you slow the release. Release only shapes how it closes once it has decided to.
 
 **Key it above the hum.** A long cable into a loud amp picks up mains at 50 or 60 Hz and its harmonics. `key` at 120 Hz ignores all of that and still opens for the lowest note on the instrument, because what opens a gate is the attack, which is full of high frequencies.
+
+**Chop a pad with the hats.** A sustained pad with its gate keyed to the hi-hat track opens only while a hat is sounding - a rhythm cut out of a chord, locked to a part you can edit, with `duck` at -12 dB so the gaps breathe instead of going black.
 
 **Where you put it matters.** Before the amp it removes the hiss your pickups bring in; after the amp it removes the hiss the amp makes, which is usually far more. On an input slot in the record window it is printed into the take, so the recording itself is quiet.

@@ -133,4 +133,42 @@ class SongEditsTest {
         val renamed = three.renameTrack(three.tracks.size - 2, "Keys")
         assertEquals("Mosaic 2", renamed.addTrack("Mosaic").tracks.last().name)
     }
+
+    /**
+     * A sidechain names its source by position, so moving tracks must move it.
+     * Four tracks: a kick at 1, a bass at 2 whose compressor listens to it, a
+     * pad at 3 listening to it too, and a hat at 4 that the delay send ducks
+     * under. Values are the parameter's own normalisation, k / 16.
+     */
+    @Test
+    fun sidechainsFollowTheirSourceWhenTracksMove() {
+        fun key(k: Int) = k / 16f
+        fun comp(k: Int) = UnitSlot("Compressor", mapOf(SIDECHAIN_PARAM to key(k)))
+        val lane = Lane(listOf(LanePoint(0, key(1)), LanePoint(100, key(4))))
+        var song = demo.copy(tracks = emptyList())
+        for (m in listOf("Genesis", "Trinity", "Cumulus", "Hexbeat")) song = song.addTrack(m)
+        song = song.updateTrack(1) { it.copy(effects = listOf(comp(1))) }
+        song = song.updateTrack(2) {
+            it.copy(effects = listOf(comp(1)), clips = mapOf("s" to Clip(automation = mapOf("effect1:sidechain" to lane))))
+        }
+        song = song.copy(master = song.master.copy(sends = listOf(UnitSlot("Reverb"), comp(4))))
+        fun sc(s: Song, t: Int) = s.tracks[t].effects[0].params[SIDECHAIN_PARAM]
+
+        // A copy of the kick goes in at 2, so everything after it moves down.
+        val dup = song.duplicateTrack(0)
+        assertEquals(key(1), sc(dup, 2)) // the kick itself did not move
+        assertEquals(key(5), dup.master.sends[1].params[SIDECHAIN_PARAM]) // the hat did
+        assertEquals(listOf(key(1), key(5)), dup.tracks[3].clips["s"]!!.automation["effect1:sidechain"]!!.points.map { it.value })
+
+        // Delete the bass: the pad moves up, and still hears the kick.
+        val lost = song.deleteTrack(1)
+        assertEquals(key(1), sc(lost, 1))
+        assertEquals(key(3), lost.master.sends[1].params[SIDECHAIN_PARAM])
+
+        // Delete the kick: its listeners go back to their own input.
+        val gone = song.deleteTrack(0)
+        assertEquals(0f, sc(gone, 0))
+        assertEquals(key(3), gone.master.sends[1].params[SIDECHAIN_PARAM])
+        assertEquals(listOf(0f, key(3)), gone.tracks[1].clips["s"]!!.automation["effect1:sidechain"]!!.points.map { it.value })
+    }
 }

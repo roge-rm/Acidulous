@@ -37,6 +37,8 @@ import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
 import androidx.compose.ui.platform.LocalContext
 import com.rm.acidulous.model.EFFECT_SLOTS
+import com.rm.acidulous.model.SIDECHAIN_PARAM
+import com.rm.acidulous.model.SIDECHAIN_STEPS
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.PatchStore
 import com.rm.acidulous.model.withEffectPatch
@@ -282,7 +284,15 @@ private fun SlotFace(
         }
         val control: @Composable (ParamInfo) -> Unit = { p ->
             run {
-                val labels = switchLabels(type, p.name, p.steps)
+                // A sidechain names a track, so its steps are the song's own
+                // track names rather than numbers nobody can match to a row.
+                val labels = if (p.name == SIDECHAIN_PARAM) {
+                    listOf("own") + (0 until SIDECHAIN_STEPS - 1).map { i ->
+                        editor.song.tracks.getOrNull(i)?.name ?: "${i + 1} -"
+                    }
+                } else {
+                    switchLabels(type, p.name, p.steps)
+                }
                 val accent = if (p.name in EXTRA[type].orEmpty()) Acid.colors.accent else Acid.colors.teal
                 // A knob is 58 dp wide and some names are not. Shortened here
                 // rather than in the engine, because the engine's name is what

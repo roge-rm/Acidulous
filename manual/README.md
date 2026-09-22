@@ -29,7 +29,7 @@
     - [Amp](05-effects-and-mixing/amp.md) - a guitar amplifier as a chain, with a modelled cabinet you can resize continuously.
     - [Bitcrusher](05-effects-and-mixing/bitcrusher.md) - fewer bits and a lower rate, with a jitter that makes the clock unsteady.
     - [Chorus](05-effects-and-mixing/chorus.md) - two to four detuned voices, and a drift that stops them agreeing about the tuning.
-    - [Compressor](05-effects-and-mixing/compressor.md) - the classic four, and a pump in time with the transport that needs no sidechain routing.
+    - [Compressor](05-effects-and-mixing/compressor.md) - the classic four, a sidechain from any track, and a pump in time with the transport that needs no routing at all.
     - [Delay](05-effects-and-mixing/delay.md) - echoes on a note value, with a duck that gets out of the way while you are playing.
     - [Distortion](05-effects-and-mixing/distortion.md) - four clipping characters, and a bias that makes the two halves of the wave behave differently.
     - [Eq](05-effects-and-mixing/eq.md) - three bands, and a tilt that trades top for bottom on one knob.

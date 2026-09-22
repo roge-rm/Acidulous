@@ -377,8 +377,23 @@ void Engine::renderBlock(const float *in, float *out) {
     // back whatever the caller's stack happened to hold.
     int32_t rackUsThisBlock[kRackCount]{};
     bool rackFrozenThisBlock[kRackCount]{};
-    for (int32_t r = 0; r < kRackCount; ++r) {
+    // **Sources before listeners.** A rack whose compressor, gate or filter
+    // listens to another is rendered after it, so the duck lands on the same
+    // block as the kick that caused it rather than one block late. Worked out
+    // every block because a sidechain is a parameter and can be automated.
+    // A loop - two racks each listening to the other - cannot be satisfied;
+    // the lower-numbered one goes first and hears the other a block late.
+    int32_t order[kRackCount];
+    sidechainOrder(order);
+    for (int32_t n = 0; n < kRackCount; ++n) {
+        const int32_t r = order[n];
         if (racks[r].isActive()) {
+            // Hand each detector its key for this block: the source's tap,
+            // which is this block's if it has rendered and the last one's if
+            // it has not, or silence for a rack with nothing on it.
+            for (int32_t s = 0; s < kEffectSlots; ++s) {
+                if (Effect *e = racks[r].currentEffect(s)) e->setKey(keyFor(e->sidechainRack(), r));
+            }
             const auto tRack = std::chrono::steady_clock::now();
             if (racks[r].frozenActive()) {
                 racks[r].syncFrozen(scheduler.rackTick(r), clock.bpm());
@@ -401,6 +416,11 @@ void Engine::renderBlock(const float *in, float *out) {
 
     // The same tick range the racks hand their own inserts, so a tempo-synced
     // effect behaves the same whether it is on a track or on a send.
+    // The sends listen too: every rack has rendered by now, so theirs is
+    // always this block's.
+    for (int32_t s = 0; s < kSendSlots; ++s) {
+        if (Effect *e = master.send(s)) e->setKey(keyFor(e->sidechainRack(), -1));
+    }
     master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade, clock.blockStart(), clock.blockEnd());
 
     const auto tMaster = std::chrono::steady_clock::now();
@@ -519,6 +539,43 @@ void Engine::renderBlock(const float *in, float *out) {
         if (rackUsThisBlock[r] > 0) {
             std::atomic<int32_t> &bin = rackHist[r][bucketOf(rackUsThisBlock[r])];
             bin.store(bin.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
+        }
+    }
+}
+
+const float *Engine::keyFor(int32_t source, int32_t self) const {
+    static const float kSilence[kBlockFrames] = {};
+    if (source < 0 || source >= kRackCount || source == self) return nullptr; // its own input
+    return racks[source].isActive() ? racks[source].keyBuf : kSilence;
+}
+
+void Engine::sidechainOrder(int32_t *order) const {
+    bool placed[kRackCount] = {};
+    const auto ready = [&](int32_t r) {
+        for (int32_t s = 0; s < kEffectSlots; ++s) {
+            const Effect *e = racks[r].currentEffect(s);
+            if (e == nullptr) continue;
+            const int32_t src = e->sidechainRack();
+            if (src >= 0 && src < kRackCount && src != r && racks[src].isActive() && !placed[src]) return false;
+        }
+        return true;
+    };
+    int32_t n = 0;
+    while (n < kRackCount) {
+        bool progressed = false;
+        for (int32_t r = 0; r < kRackCount; ++r) {
+            if (placed[r] || !ready(r)) continue;
+            placed[r] = true;
+            order[n++] = r;
+            progressed = true;
+        }
+        if (progressed) continue;
+        // A loop: take the lowest rack still waiting and let it go first.
+        for (int32_t r = 0; r < kRackCount; ++r) {
+            if (placed[r]) continue;
+            placed[r] = true;
+            order[n++] = r;
+            break;
         }
     }
 }
