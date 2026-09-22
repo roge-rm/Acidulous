@@ -280,6 +280,44 @@ void aRenderDoesNotDependOnWhatPlayedBefore() {
        at == clean.size() ? "" : "differ at sample " + std::to_string(at));
 }
 
+/**
+ * What a track costs, as a figure a single bad block cannot set.
+ *
+ * `worst track` was a peak-hold over a whole song, which is the least
+ * repeatable statistic available: three runs of one build on one phone put
+ * the per-track figures up to 26% apart, so a twenty per cent saving - most of
+ * what is left to find - could not be told from the same build measured twice.
+ * The engine keeps a coarse histogram per rack instead and reads a percentile
+ * out of it.
+ *
+ * Repeatability itself cannot be tested here, because an offline render is
+ * deterministic and the peak would agree with itself too. What can be tested
+ * is that the number is a percentile of the right distribution: present when
+ * the rack has played, never above the worst block it saw, and gone when the
+ * reset button is pressed.
+ */
+void aTracksCostIsAPercentile() {
+    printf("- what a track costs, as a distribution\n");
+    Fixture f;
+    float scratch[kBlockFrames * 2];
+    f.engine.panicFlag.store(true, std::memory_order_release);
+    f.engine.renderBlock(nullptr, scratch);
+    f.engine.transport.requestPlay(0);
+    for (int32_t b = 0; b < 400; ++b) f.engine.renderBlock(nullptr, scratch);
+
+    // The percentile first: reading the peak is what clears it.
+    const int32_t p99 = f.engine.rackPercentileUs(0);
+    const int32_t peak = f.engine.worstRackUs(0);
+    ok("a rack that has played reports a cost", p99 > 0, std::to_string(p99) + " us");
+    // The bucket's top, so it may sit a little above the worst block seen -
+    // eight buckets an octave is at most nine per cent over.
+    ok("and never more than the worst block it saw", p99 <= peak + peak / 8 + 1,
+       "p99 " + std::to_string(p99) + " against peak " + std::to_string(peak));
+    ok("a rack with nothing mounted reports nothing", f.engine.rackPercentileUs(5) == 0);
+    f.engine.resetRackCosts();
+    ok("and the reset button empties it", f.engine.rackPercentileUs(0) == 0);
+}
+
 } // namespace
 
 int main() {
@@ -287,6 +325,7 @@ int main() {
     aRenderRepeats();
     aRenderIsAlwaysFullQuality();
     aRenderDoesNotDependOnWhatPlayedBefore();
+    aTracksCostIsAPercentile();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

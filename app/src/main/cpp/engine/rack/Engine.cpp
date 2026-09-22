@@ -514,6 +514,39 @@ void Engine::renderBlock(const float *in, float *out) {
         }
         keepPeak(rackPeak[r], rackUsThisBlock[r]);
         keepDecaying(rackRecent[r], rackUsThisBlock[r]);
+        // Only blocks where this rack did something: a track that plays in one
+        // scene should report what it costs while playing.
+        if (rackUsThisBlock[r] > 0) {
+            std::atomic<int32_t> &bin = rackHist[r][bucketOf(rackUsThisBlock[r])];
+            bin.store(bin.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
+        }
+    }
+}
+
+int32_t Engine::rackPercentileUs(int32_t rack, int32_t perMille) const {
+    if (rack < 0 || rack >= kRackCount) return 0;
+    int64_t total = 0;
+    int32_t counts[kCostBuckets];
+    for (int32_t i = 0; i < kCostBuckets; ++i) {
+        counts[i] = rackHist[rack][i].load(std::memory_order_relaxed);
+        total += counts[i];
+    }
+    if (total == 0) return 0;
+    // From the top down: the bucket the tail reaches into. `perMille` of 990
+    // means the worst one block in a hundred, which needs a hundred blocks to
+    // exist at all - a tenth of a second - before it means anything.
+    const int64_t want = total - total * perMille / 1000;
+    int64_t seen = 0;
+    for (int32_t i = kCostBuckets - 1; i >= 0; --i) {
+        seen += counts[i];
+        if (seen > want) return usOf(i);
+    }
+    return 0;
+}
+
+void Engine::resetRackCosts() {
+    for (int32_t r = 0; r < kRackCount; ++r) {
+        for (int32_t i = 0; i < kCostBuckets; ++i) rackHist[r][i].store(0, std::memory_order_relaxed);
     }
 }
 

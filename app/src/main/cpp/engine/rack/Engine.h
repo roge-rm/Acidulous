@@ -156,6 +156,32 @@ class Engine : public Rack::ModifiedNoteSink {
     }
 
     /**
+     * What a rack costs, as a distribution rather than as its worst moment.
+     *
+     * **A peak over a whole song is the least repeatable number there is.**
+     * Three runs of one build on the same phone put the per-track peaks 3% to
+     * 26% apart, and the worst block 19% - so a change worth twenty per cent,
+     * which is most of what is left to find, could not be told from the same
+     * build measured twice. One unlucky block sets a peak for the rest of the
+     * run and nothing afterwards can lower it.
+     *
+     * A high percentile does not have that problem: it needs one per cent of
+     * the blocks to agree before it moves, so an interrupt or a scene change
+     * cannot carry it. The engine keeps a coarse histogram per rack - eight
+     * buckets an octave, so a bucket is about nine per cent, finer than
+     * anything worth acting on - and this reads a percentile out of it.
+     *
+     * Counted only over blocks where the rack did something, so a track that
+     * plays in one scene reports what it costs *while playing* rather than
+     * being averaged down by the scenes it sits out.
+     *
+     * Not cleared by reading: any number of readers may ask. [resetRackCosts]
+     * is the reset button.
+     */
+    int32_t rackPercentileUs(int32_t rack, int32_t perMille = 990) const;
+    void resetRackCosts();
+
+    /**
      * What this rack has been costing lately, in microseconds - read without
      * clearing, so anything may ask as often as it likes.
      *
@@ -344,6 +370,32 @@ class Engine : public Rack::ModifiedNoteSink {
     static constexpr int32_t kPreemptedUs = 50;
     std::atomic<float> interruptedPct{0.0f};
     std::atomic<int32_t> rackPeak[kRackCount]{};
+    /**
+     * Eight buckets an octave, up to about four milliseconds.
+     *
+     * The index is the leading bit's position and the three bits under it,
+     * which is a `clz` and two shifts - no `log`, on the audio thread, once
+     * per rack per block.
+     */
+    static constexpr int32_t kCostBuckets = 96;
+    std::atomic<int32_t> rackHist[kRackCount][kCostBuckets]{};
+
+    /** Which bucket a cost falls in, and the cost a bucket stands for. */
+    static int32_t bucketOf(int32_t us) {
+        if (us <= 0) return 0;
+        const auto v = static_cast<uint32_t>(us);
+        const int32_t oct = 31 - __builtin_clz(v);
+        const int32_t sub = oct >= 3 ? static_cast<int32_t>((v >> (oct - 3)) & 7u)
+                                     : static_cast<int32_t>((v << (3 - oct)) & 7u);
+        const int32_t idx = oct * 8 + sub;
+        return idx < kCostBuckets ? idx : kCostBuckets - 1;
+    }
+    static int32_t usOf(int32_t bucket) {
+        const int32_t oct = bucket / 8, sub = bucket % 8;
+        // The top of the bucket, so a reading is never under what was seen.
+        const int32_t top = 8 + sub + 1;
+        return oct >= 3 ? (top << (oct - 3)) : (top >> (3 - oct));
+    }
     std::atomic<bool> rackPeakFrozen[kRackCount]{};
     std::atomic<int32_t> rackRecent[kRackCount]{};
 

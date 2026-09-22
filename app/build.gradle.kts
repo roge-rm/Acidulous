@@ -62,8 +62,15 @@ android {
         // at all - it takes its wavetables through a mount, like the samplers,
         // so with nothing mounted it made no sound and cost nothing, while the
         // same track was the second dearest on a phone.
-        versionCode = 8
-        versionName = "0.5.2"
+        //
+        // 0.5.3 makes the per-track figure a measurement rather than an
+        // anecdote. It was a peak over a whole song, which one unlucky block
+        // sets for good; three runs of one build on one phone put it up to a
+        // quarter apart, so most of what is left to find could not be seen.
+        // It is the worst block in a hundred now, out of a histogram the
+        // engine keeps per rack.
+        versionCode = 9
+        versionName = "0.5.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

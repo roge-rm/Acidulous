@@ -493,6 +493,19 @@ object NativeEngine {
 
     /** The worst this rack has cost since last asked, in microseconds. Reading clears it. */
     fun worstRackUs(rack: Int): Int = nativeWorstRackUs(rack)
+
+    /**
+     * What this rack costs in its worst block in a hundred, in microseconds.
+     *
+     * The peak above is one block out of a whole song, so one interrupt sets
+     * it and nothing afterwards can bring it down: three runs of one build on
+     * the same phone put the per-track peaks up to 26% apart. This needs one
+     * block in a hundred to agree before it moves. Not cleared by reading.
+     */
+    fun rackPercentileUs(rack: Int): Int = nativeRackPercentileUs(rack)
+
+    /** Start the distributions above again. The reset button. */
+    fun resetRackCosts() = nativeResetRackCosts()
     /** Was that rack playing frozen audio when it set its peak? Read before [worstRackUs]. */
     fun worstRackWasFrozen(rack: Int): Boolean = nativeWorstRackWasFrozen(rack)
     /**
@@ -813,6 +826,8 @@ object NativeEngine {
     private external fun nativeWorstCallbackUs(): Int
     private external fun nativeWorstPhaseUs(phase: Int): Int
     private external fun nativeWorstRackUs(rack: Int): Int
+    private external fun nativeRackPercentileUs(rack: Int): Int
+    private external fun nativeResetRackCosts()
     private external fun nativeWorstRackWasFrozen(rack: Int): Boolean
     private external fun nativeInterruptedPercent(): Float
     private external fun nativeHintRunning(): Boolean

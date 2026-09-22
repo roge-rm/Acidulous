@@ -33,10 +33,19 @@ how your app behaves.
   song is asking for too much and freezing or **lean** will help. If it is
   high, the song is not the problem - the device is busy, and closing other
   apps will do more than anything in this window.
-- **worst track** - the same measurement per track, dearest first, so the list
-  says what to freeze. A **❄** means that track was playing frozen audio when
-  it set that figure, which should be next to nothing - if you see one, the
-  freeze is not doing its job.
+- **worst track** - what each track costs, dearest first, so the list says
+  what to freeze. A **❄** means that track was playing frozen audio when it
+  cost that much, which should be next to nothing - if you see one, the freeze
+  is not doing its job.
+
+  This one is each track's **worst block in a hundred**, not its worst block.
+  A single peak over a whole song is set by one unlucky moment and nothing
+  afterwards can bring it down, which made it swing by a quarter between two
+  runs of the same song - useless for telling whether a change helped. A
+  figure that needs one block in a hundred to agree does not move like that.
+  Give it a few seconds of playing before believing it, and expect a track
+  that only plays in one scene to be less settled than one that plays
+  throughout.
 - **machine voice limit** - how many notes a track may hold at once. The oldest
   goes first.
 - **quality** - what to give up when a device cannot keep up. At **lean**:

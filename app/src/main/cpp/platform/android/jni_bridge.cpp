@@ -666,6 +666,16 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeWorstRackUs(JNIEnv *, jobject, j
     return host().worstRackUs(rack);
 }
 
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeRackPercentileUs(JNIEnv *, jobject, jint rack) {
+    return host().rackPercentileUs(rack);
+}
+
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeResetRackCosts(JNIEnv *, jobject) {
+    host().resetRackCosts();
+}
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeWorstRackWasFrozen(JNIEnv *, jobject, jint rack) {
     return host().worstRackWasFrozen(rack) ? JNI_TRUE : JNI_FALSE;

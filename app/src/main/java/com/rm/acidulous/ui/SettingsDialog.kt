@@ -150,13 +150,12 @@ private fun AudioTab(trackNames: List<String>) {
             val byRack = racks.copyOf()
             val wasFrozen = rackFrozen.copyOf()
             for (r in 0 until RACKS) {
-                // The flag first: reading the peak is what clears it.
+                // The flag and the peak are still read - the peak is what the
+                // snowflake hangs off - but what is *shown* is the percentile,
+                // which is not a running maximum and so is simply assigned.
                 val frozen = NativeEngine.worstRackWasFrozen(r)
-                val us = NativeEngine.worstRackUs(r)
-                if (us > byRack[r]) {
-                    byRack[r] = us
-                    wasFrozen[r] = frozen
-                }
+                if (NativeEngine.worstRackUs(r) > 0) wasFrozen[r] = frozen
+                byRack[r] = NativeEngine.rackPercentileUs(r)
             }
             racks = byRack
             rackFrozen = wasFrozen
@@ -190,12 +189,22 @@ private fun AudioTab(trackNames: List<String>) {
             phases = IntArray(NativeEngine.Phase.entries.size)
             racks = IntArray(RACKS)
             rackFrozen = BooleanArray(RACKS)
+            NativeEngine.resetRackCosts()
         }
     }
 
     // **Which track**, because "the racks are most of it" is half an answer.
     // Only the ones with a machine, sorted by cost, so the list says what to
     // freeze rather than making somebody work it out.
+    //
+    // **The worst block in a hundred, not the worst block.** A peak over a
+    // whole song is set by one unlucky block and nothing afterwards can lower
+    // it, which made this the least repeatable number on the page: three runs
+    // of one build on one phone put these up to 26% apart, so a change worth
+    // twenty per cent could not be told from the same build measured twice.
+    // The engine keeps a histogram instead. `worst block` above stays a true
+    // peak, because that one is about a deadline and a deadline is missed by
+    // one block.
     val named = (0 until RACKS)
         .filter { it < trackNames.size && racks[it] > 0 }
         .sortedByDescending { racks[it] }

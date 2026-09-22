@@ -2007,6 +2007,8 @@ int32_t EngineHost::worstPhaseUs(int32_t phase) {
 int32_t EngineHost::worstCallbackCpuUs() { return sAudio.readCallbackCpuPeakUs(); }
 int32_t EngineHost::recentCallbackUs() const { return sAudio.recentCallbackUs(); }
 int32_t EngineHost::worstRackUs(int32_t rack) { return sEngine.worstRackUs(rack); }
+int32_t EngineHost::rackPercentileUs(int32_t rack) const { return sEngine.rackPercentileUs(rack); }
+void EngineHost::resetRackCosts() { sEngine.resetRackCosts(); }
 bool EngineHost::worstRackWasFrozen(int32_t rack) const { return sEngine.worstRackWasFrozen(rack); }
 float EngineHost::interruptedPercent() const { return sEngine.interruptedPercent(); }
 bool EngineHost::hintRunning() const { return sAudio.hintRunning(); }

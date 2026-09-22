@@ -403,6 +403,9 @@ class EngineHost {
     int32_t worstCallbackUs();
     int32_t worstPhaseUs(int32_t phase);
     int32_t worstRackUs(int32_t rack);
+    /** The rack's 99th-percentile block, which a single unlucky one cannot set. */
+    int32_t rackPercentileUs(int32_t rack) const;
+    void resetRackCosts();
     /** Was that rack frozen when it set its peak? Read before worstRackUs, which clears. */
     bool worstRackWasFrozen(int32_t rack) const;
     /** How often a block is interrupted rather than slow, 0 to 100. */
