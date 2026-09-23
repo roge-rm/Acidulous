@@ -188,7 +188,7 @@ class Recorder {
     ): Song? {
         val sceneId = sceneIdOf(sceneIdRaw) ?: return null
         val track = song.tracks.getOrNull(rack) ?: return null
-        val unit = UNITS.getOrNull(unitOrdinal) ?: return null
+        val unit = RECORD_UNITS.getOrNull(unitOrdinal) ?: return null
         val name = when (unit) {
             "machine" -> paramNames.getOrPut(track.machine.type) { NativeEngine.machineParamNames(track.machine.type) }.getOrNull(index)
             "channel" -> CHANNEL_PARAMS.getOrNull(index)
@@ -229,13 +229,6 @@ class Recorder {
         const val CMD_PARAM = 0xf0
         const val CMD_EXPRESSION = 0xf1
         val NO_CURVES = listOf<Lane?>(null, null, null)
-        // Mirrors acidulous::Unit
-        // Order matters: this is the Unit enum's ordinal, read off events the
-        // audio thread stamped. Keep it in step with Messages.h.
-        val UNITS = listOf(
-            "machine", "effect1", "effect2", "mod1", "mod2", "mod3", "channel", "master",
-            "performance",
-        )
         /** Unit::Performance's two indices; see kPerfMod in Messages.h. */
         val PERF_PARAMS = listOf("mod", "pressure")
         /**
@@ -253,3 +246,21 @@ class Recorder {
         const val EFFECT_BYPASS_INDEX = -2 // mirrors kEffectBypassIndex
     }
 }
+
+/**
+ * The name of each `acidulous::Unit`, **by ordinal**: the audio thread stamps
+ * a recorded knob with the ordinal, and this turns it back into the name a
+ * lane is keyed by.
+ *
+ * It had stopped at `performance` in eighth place. The sends and the input
+ * effects were later put into the enum *before* `Performance`, which moved it
+ * to twelfth, and nothing here followed - so from then on every mod wheel and
+ * pressure move made while recording looked up nothing and was dropped.
+ * `RecordUnitsTest` reads the enum out of Messages.h and holds the two
+ * together now.
+ */
+internal val RECORD_UNITS = listOf(
+    "machine", "effect1", "effect2", "mod1", "mod2", "mod3", "channel", "master",
+    "send1", "send2", "input1", "input2", "performance", "master1", "master2",
+    "group1fx1", "group1fx2", "group2fx1", "group2fx2", "group3fx1", "group3fx2", "group4fx1", "group4fx2",
+)
