@@ -29,8 +29,8 @@ package com.rm.acidulous.model
  *    drawn as a curve, whooping up and falling back.
  *  - **A sidechain**: the bass has a compressor keyed to the drums, so it ducks
  *    out of the kick's way on every hit.
- *  - **A group**: the drums and the hand drums are routed into Rhythm, a Bus
- *    track with one glue compressor on the pair of them.
+ *  - **A group**: the drums and the hand drums are routed into Rhythm, a
+ *    group in the mixer with one glue compressor on the pair of them.
  *  - **Master inserts**: a warm tilt and a gentle compressor on the whole mix,
  *    before the limiter.
  *
@@ -94,8 +94,8 @@ object DemoSong {
     private fun fx(type: String, patchName: String): UnitSlot =
         UnitSlot(type, PatchStore.factory(PatchStore.effectKey(type)).firstOrNull { it.name == patchName }?.params ?: emptyMap())
 
-    /** The group track the drums and hand drums play through: track 9. */
-    private const val RHYTHM = 9
+    /** The mixer group the drums and hand drums play through: group 1. */
+    private const val RHYTHM = 1
 
     /**
      * A compressor that ducks this track under [track] (1-based): hard and
@@ -423,15 +423,6 @@ object DemoSong {
                     clips = mapOf(dub.id to clip(2, siren()) { copy(playMode = PlayMode.OneShot) }),
                     mixer = Mixer(volume = 0.30f, pan = 0.3f, sendReverb = 0.40f, sendDelay = 0.55f),
                 ),
-                Track(
-                    id = "t-rhythm",
-                    name = "Rhythm",
-                    // A group: it plays nothing itself. The drums and the hand
-                    // drums are routed into it, and share its compressor.
-                    machine = Machine(type = "Bus"),
-                    effects = listOf(fx("Compressor", "Glue")),
-                    mixer = Mixer(volume = 1.0f),
-                ),
             ),
             scenes = listOf(intro, riddim, version, dub),
             // **0.64, not the default 0.8.** The demo should arrive with
@@ -443,6 +434,8 @@ object DemoSong {
                 // On the whole mix, before the limiter: a little warmth, and
                 // a gentle compressor to hold it together.
                 inserts = listOf(fx("Eq", "Warmer"), fx("Compressor", "Gentle")),
+                // The drums and the hand drums share one glue compressor.
+                groups = listOf(MixGroup("Rhythm", inserts = listOf(fx("Compressor", "Glue")))),
             ),
         )
     }

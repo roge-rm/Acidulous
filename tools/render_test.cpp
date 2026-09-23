@@ -466,24 +466,22 @@ void aTrackCanListenToAnother() {
 }
 
 /**
- * **Groups: tracks routed into a track.**
+ * **Groups: tracks routed into a strip in the mixer.**
  *
- * Two members - a pattern on rack 1 and a kick on rack 5 - and the group on
- * rack 3, between them, so one member renders after the group in index order
- * and has to be moved ahead of it.
+ * Two members - a pattern on rack 1 and a kick on rack 5 - routed into the
+ * master's group 0, which has two inserts and a fader of its own.
  */
 struct GroupFixture {
     Engine engine;
     std::shared_ptr<SongSnapshot> snap = std::make_shared<SongSnapshot>();
     std::vector<std::shared_ptr<const Clip>> keep;
-    static constexpr int32_t kA = 1, kBus = 3, kB = 5;
+    static constexpr int32_t kA = 1, kB = 5, kGroup = 0;
 
     explicit GroupFixture(bool grouped) {
         add(kA, "Hexbeat");
         add(kB, "Genesis");
         if (grouped) {
-            add(kBus, "Bus");
-            for (int32_t m : {kA, kB}) engine.racks[m].setParam(Unit::Channel, Rack::Output, (kBus + 1) / 16.0f);
+            for (int32_t m : {kA, kB}) engine.racks[m].setParam(Unit::Channel, Rack::Output, (kGroup + 1) / 16.0f);
         }
         SceneInfo sc;
         sc.id = 1;
@@ -512,6 +510,11 @@ struct GroupFixture {
     }
     ~GroupFixture() {
         for (int32_t r = 0; r < kRackCount; ++r) delete engine.racks[r].swapMachine(nullptr);
+        for (int32_t s = 0; s < kGroupInsertSlots; ++s) delete engine.master.swapGroupInsert(kGroup, s, nullptr);
+    }
+    void groupParam(int32_t which, float v) {
+        engine.master.params().set(MasterBus::groupParam(kGroup) + which, v);
+        engine.master.params().jumpAll();
     }
     std::vector<float> run(int32_t blocks) {
         engine.panicFlag.store(true, std::memory_order_release);
@@ -537,8 +540,7 @@ void tracksCanBeGrouped() {
     { GroupFixture f(false); plain = f.run(kBlocks); }
     { GroupFixture f(true); grouped = f.run(kBlocks); }
     // A group at unity with nothing on it is its members' sum: the same mix,
-    // to within the rounding of one more fader - and in the same block, or
-    // the member after the group would arrive 64 samples late.
+    // to within the rounding of one more fader.
     const float d = largestDifference(plain, grouped);
     ok("a group at unity sounds like its members did", peakOf(plain) > 0.05f && d < 1e-4f,
        "largest difference " + std::to_string(d));
@@ -546,7 +548,7 @@ void tracksCanBeGrouped() {
     std::vector<float> muted;
     {
         GroupFixture f(true);
-        f.engine.racks[GroupFixture::kBus].setParam(Unit::Channel, Rack::Mute, 1.0f);
+        f.groupParam(1, 1.0f); // mute
         muted = f.run(kBlocks);
     }
     ok("muting the group silences its members", peakOf(std::vector<float>(muted.begin() + 20 * 128, muted.end())) < 1e-6f);
@@ -582,6 +584,31 @@ void tracksCanBeGrouped() {
     }
     ok("a member's sends still reach the send buses", largestDifference(sentPlain, sentGrouped) < 1e-4f,
        "largest difference " + std::to_string(largestDifference(sentPlain, sentGrouped)));
+
+    // Soloing the group plays both members, and nothing is soloed on a track.
+    std::vector<float> soloGroup;
+    {
+        GroupFixture f(true);
+        f.groupParam(2, 1.0f); // solo
+        soloGroup = f.run(kBlocks);
+    }
+    ok("a soloed group is heard whole", largestDifference(soloGroup, grouped) < 1e-6f);
+
+    // An insert on the group processes both members; bypassed, it is not there.
+    const auto withInsert = [&](bool bypass) {
+        GroupFixture f(true);
+        Effect *fx = EffectRegistry::create("Distortion");
+        fx->prepare(kSampleRate);
+        fx->reset();
+        fx->params().set(fx->params().indexOf("drive"), 0.9f);
+        fx->params().jumpAll();
+        fx->setBypass(bypass);
+        delete f.engine.master.swapGroupInsert(GroupFixture::kGroup, 0, fx);
+        return f.run(kBlocks);
+    };
+    const auto driven = withInsert(false), bypassedFx = withInsert(true);
+    ok("an insert on the group changes its members", largestDifference(grouped, driven) > 0.01f);
+    ok("and bypassed it is not there at all", firstDifference(grouped, bypassedFx) == grouped.size());
 }
 
 /** The master's inserts: on the whole mix, before the fader and the limiter. */

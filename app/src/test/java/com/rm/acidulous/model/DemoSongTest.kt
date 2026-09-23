@@ -47,8 +47,6 @@ class DemoSongTest {
         // A machine given a patch has more than nothing in its params; one that
         // came back empty means the name was not found.
         for (track in song.tracks) {
-            // A group has no parameters of its own to resolve.
-            if (track.machine.type == "Bus") continue
             assertTrue(
                 "patch for ${track.machine.type} on '${track.name}' resolved to nothing",
                 track.machine.params.isNotEmpty(),
@@ -143,11 +141,10 @@ class DemoSongTest {
             "no sidechain",
             song.tracks.flatMap { it.effects }.any { (it.params[SIDECHAIN_PARAM] ?: 0f) > 0f },
         )
-        // A group, with something routed into it that is really a group.
-        assertTrue(
-            "no track routed into a group",
-            song.tracks.any { t -> song.tracks.getOrNull(t.mixer.output - 1)?.machine?.type == "Bus" },
-        )
+        // A group in the mixer, with something routed into it.
+        assertTrue("no group", song.master.groups.isNotEmpty())
+        assertTrue("no track routed into a group", song.tracks.any { it.mixer.output in 1..song.master.groups.size })
+        assertTrue("a group is a track again", song.tracks.none { it.machine.type == "Bus" })
         assertTrue("no master inserts", song.master.inserts.any { it.type.isNotEmpty() })
     }
 

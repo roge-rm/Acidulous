@@ -51,8 +51,6 @@ Dan (rm)
 | **Nexus** | A modular synth whose modules are the other machines. |
 | **Bias** | A four-track for audio recordings that runs along the song. |
 
-Plus **Bus**, which isn't an instrument: it's a group track that other tracks can be routed into.
-
 ### Sixteen effects
 
 Each has the usual controls plus one extra, and a page in the manual.
@@ -80,7 +78,7 @@ Each has the usual controls plus one extra, and a page in the manual.
 
 - Two insert effects on every track.
 - Two send buses shared by the whole song. They start as a reverb and a delay but can hold any effect.
-- **Groups**: route tracks into a Bus track to process them together on one fader.
+- **Groups**: up to four group strips in the mixer. Route tracks through one to process them together on one fader.
 - **Sidechain**: the compressor, gate and filter can react to another track, e.g. duck the bass under the kick.
 - Two insert effects on the master, before the limiter.
 - A loudness meter (LUFS and true peak) on the master, and exports can be normalised to -14 LUFS.

@@ -655,9 +655,10 @@ private fun App(modifier: Modifier = Modifier) {
                         // A stem is what reaches the master, so a track routed
                         // into a group is in the group's stem and not also in
                         // its own - or the stems would sum to more than the mix.
+                        val groups = song.master.groups
                         val racks = song.tracks.indices.filter {
                             val t = song.tracks[it]
-                            t.machine.type.isNotEmpty() && song.tracks.getOrNull(t.mixer.output - 1)?.machine?.type != "Bus"
+                            t.machine.type.isNotEmpty() && t.mixer.output !in 1..groups.size
                         }
                         if (racks.isEmpty()) {
                             emptyList<File>() to "no tracks to render"
@@ -666,12 +667,18 @@ private fun App(modifier: Modifier = Modifier) {
                             // more sink in a pass that is happening anyway,
                             // and stems without the mix they came from are
                             // hard to check and easy to misalign.
+                            // And each group is a stem of its own, with its
+                            // tracks in it. -2 is the first group to the engine.
                             val files = listOf(File(cache, "00 Mix${options.format.extension}")) +
                                 racks.map {
                                     File(cache, "%02d %s%s".format(it + 1, safeName(song.tracks[it].name), options.format.extension))
+                                } +
+                                groups.indices.map {
+                                    File(cache, "G%d %s%s".format(it + 1, safeName(groups[it].name), options.format.extension))
                                 }
+                            val ids = intArrayOf(-1) + racks.toIntArray() + IntArray(groups.size) { -2 - it }
                             val error = NativeEngine.renderStems(
-                                files.map { it.absolutePath }.toTypedArray(), (intArrayOf(-1) + racks.toIntArray()),
+                                files.map { it.absolutePath }.toTypedArray(), ids,
                                 options.tailSeconds, engineFormat, depth, scene, limit,
                             )
                             if (error.isEmpty()) files to "" else emptyList<File>() to error

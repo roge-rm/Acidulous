@@ -1,5 +1,4 @@
 #include "Engine.h"
-#include <engine/machine/bus/Bus.h>
 #include <sequencer/ClockFollower.h>
 #include <sequencer/LinkFollower.h>
 #include <sequencer/Song.h>
@@ -396,8 +395,6 @@ void Engine::renderBlock(const float *in, float *out) {
             for (int32_t s = 0; s < kEffectSlots; ++s) {
                 if (Effect *e = racks[r].currentEffect(s)) e->setKey(keyFor(e->sidechainRack(), r));
             }
-            // A group plays its members, which have all rendered by now.
-            if (racks[r].isBus()) gatherBus(r);
             const auto tRack = std::chrono::steady_clock::now();
             if (racks[r].frozenActive()) {
                 racks[r].syncFrozen(scheduler.rackTick(r), clock.bpm());
@@ -427,6 +424,11 @@ void Engine::renderBlock(const float *in, float *out) {
     }
     for (int32_t s = 0; s < kMasterInsertSlots; ++s) {
         if (Effect *e = master.insert(s)) e->setKey(keyFor(e->sidechainRack(), -1));
+    }
+    for (int32_t g = 0; g < kGroupSlots; ++g) {
+        for (int32_t s = 0; s < kGroupInsertSlots; ++s) {
+            if (Effect *e = master.groupInsert(g, s)) e->setKey(keyFor(e->sidechainRack(), -1));
+        }
     }
     master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade, clock.blockStart(), clock.blockEnd());
 
@@ -551,37 +553,12 @@ void Engine::renderBlock(const float *in, float *out) {
 }
 
 void Engine::settleRouting() {
+    // `output` 1..4 is a group in the mixer; anything else is the master.
     for (int32_t r = 0; r < kRackCount; ++r) {
         Rack &rack = racks[r];
-        rack.routedTo = -1;
-        if (!rack.isActive() || rack.isBus()) continue; // a group goes to the master, never into a group
-        const int32_t t = rack.outputRequested();
-        if (t >= 0 && t < kRackCount && t != r && racks[t].isBus()) rack.routedTo = t;
+        const int32_t g = rack.outputRequested();
+        rack.routedTo = rack.isActive() && g >= 0 && g < kGroupSlots ? g : -1;
     }
-}
-
-void Engine::gatherBus(int32_t bus) {
-    // Solo reaches through a group both ways: a soloed group is heard whole,
-    // and a soloed member is heard through its group with the other members
-    // silent - which is what a solo button on a drum is expected to do.
-    bool anySolo = false;
-    for (int32_t r = 0; r < kRackCount; ++r) {
-        if (racks[r].isActive() && racks[r].soloed()) { anySolo = true; break; }
-    }
-    const bool whole = !anySolo || racks[bus].soloed();
-    bool any = false;
-    for (int32_t i = 0; i < kBlockFrames; ++i) busInL[i] = busInR[i] = 0.0f;
-    for (int32_t r = 0; r < kRackCount; ++r) {
-        const Rack &m = racks[r];
-        if (m.routedTo != bus || !m.isActive()) continue;
-        if (!whole && !m.soloed()) continue;
-        for (int32_t i = 0; i < kBlockFrames; ++i) {
-            busInL[i] += m.bufL[i];
-            busInR[i] += m.bufR[i];
-        }
-        any = true;
-    }
-    static_cast<machine::Bus *>(racks[bus].currentMachine())->setInput(any ? busInL : nullptr, busInR);
 }
 
 const float *Engine::keyFor(int32_t source, int32_t self) const {
@@ -593,12 +570,6 @@ const float *Engine::keyFor(int32_t source, int32_t self) const {
 void Engine::sidechainOrder(int32_t *order) const {
     bool placed[kRackCount] = {};
     const auto ready = [&](int32_t r) {
-        // A group after every track routed into it.
-        if (racks[r].isBus()) {
-            for (int32_t m = 0; m < kRackCount; ++m) {
-                if (racks[m].routedTo == r && !placed[m]) return false;
-            }
-        }
         for (int32_t s = 0; s < kEffectSlots; ++s) {
             const Effect *e = racks[r].currentEffect(s);
             if (e == nullptr) continue;
@@ -1028,6 +999,13 @@ void Engine::drainParams() {
     while (paramsIn.pop(p)) {
         if (p.unit == Unit::Master) {
             master.params().set(p.index, p.value);
+        } else if (p.unit >= Unit::Group1Fx1 && p.unit <= Unit::Group4Fx2) {
+            const int32_t k = static_cast<int32_t>(p.unit) - static_cast<int32_t>(Unit::Group1Fx1);
+            Effect *fx = master.groupInsert(k / kGroupInsertSlots, k % kGroupInsertSlots);
+            if (fx != nullptr) {
+                if (p.index == kEffectBypassIndex) fx->setBypass(p.value >= 0.5f);
+                else fx->params().set(p.index, p.value);
+            }
         } else if (p.unit == Unit::MasterFx1 || p.unit == Unit::MasterFx2) {
             Effect *fx = master.insert(p.unit == Unit::MasterFx1 ? 0 : 1);
             if (fx != nullptr) {
@@ -1103,6 +1081,10 @@ void Engine::applyMount(const Mount &m) {
         } else {
             retirer.retire(m.object, deleteAs<Effect>);
         }
+        break;
+    case Mount::Kind::GroupInsert:
+        // The rack field carries the group.
+        retirer.retire(master.swapGroupInsert(m.rack, m.slot, static_cast<Effect *>(m.object)), deleteAs<Effect>);
         break;
     case Mount::Kind::MasterInsert:
         retirer.retire(master.swapInsert(m.slot, static_cast<Effect *>(m.object)), deleteAs<Effect>);

@@ -13,6 +13,15 @@ const ParamDef kDefs[MasterBus::Count] = {
     {"clickvoice", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},  // blip, stick, cowbell
     {"clickdiv", 0.0f, 4.0f, 1.0f, Curve::Stepped, 5, ""},    // bar, 1/4, 1/8, 1/16, 1/8T
     {"clickwhen", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},   // always, recording, count-in only
+    // The groups' faders, on the same range as a track's.
+    {"g1gain", 0.0f, 1.5f, 1.0f, Curve::Linear, 0, ""}, {"g1mute", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"g1solo", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"g2gain", 0.0f, 1.5f, 1.0f, Curve::Linear, 0, ""}, {"g2mute", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"g2solo", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"g3gain", 0.0f, 1.5f, 1.0f, Curve::Linear, 0, ""}, {"g3mute", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"g3solo", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"g4gain", 0.0f, 1.5f, 1.0f, Curve::Linear, 0, ""}, {"g4mute", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"g4solo", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
 };
 } // namespace
 
@@ -33,25 +42,23 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
                         int64_t tickStart, int64_t tickEnd) {
     params_.tick();
 
-    // Solo: if anyone is soloed, only they are heard - and a group is heard
-    // when any of its members is, since that member can only be heard
-    // through it. A soloed member of a group reaches the sends the same way:
-    // through its own send amount, as it always does.
+    // Solo: if anyone is soloed - a track or a group - only they are heard.
+    // A soloed group is heard with all its members, and a soloed member is
+    // heard through its group with the group's other members silent. A
+    // member's sends go the same way as its sound.
+    const auto groupSoloed = [&](int32_t g) { return params_.get(groupParam(g) + 2) >= 0.5f; };
     bool anySolo = false;
-    for (int32_t r = 0; r < rackCount; ++r) {
-        if (racks[r].isActive() && racks[r].soloed()) { anySolo = true; break; }
-    }
+    for (int32_t r = 0; r < rackCount && !anySolo; ++r) anySolo = racks[r].isActive() && racks[r].soloed();
+    for (int32_t g = 0; g < kGroupSlots && !anySolo; ++g) anySolo = groupSoloed(g);
     const auto heard = [&](int32_t r) {
         const Rack &rack = racks[r];
         if (!anySolo || rack.soloed()) return true;
-        if (rack.routedTo >= 0 && racks[rack.routedTo].soloed()) return true; // its group is soloed
-        if (rack.isBus()) {
-            for (int32_t m = 0; m < rackCount; ++m) {
-                if (racks[m].routedTo == r && racks[m].isActive() && racks[m].soloed()) return true;
-            }
-        }
-        return false;
+        return rack.routedTo >= 0 && groupSoloed(rack.routedTo);
     };
+    bool groupUsed[kGroupSlots] = {};
+    for (int32_t g = 0; g < kGroupSlots; ++g) {
+        for (int32_t i = 0; i < frames; ++i) groupL[g][i] = groupR[g][i] = 0.0f;
+    }
 
     for (int32_t i = 0; i < frames; ++i) sumL[i] = sumR[i] = 0.0f;
     for (int32_t s = 0; s < kSendSlots; ++s) {
@@ -62,11 +69,15 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
         if (!rack.isActive() || !heard(r)) continue;
         // A track routed into a group reaches the master through the group,
         // not also on its own; its sends still go straight to the send buses.
-        if (rack.routedTo < 0) {
-            for (int32_t i = 0; i < frames; ++i) {
-                sumL[i] += rack.bufL[i];
-                sumR[i] += rack.bufR[i];
-            }
+        float *toL = sumL, *toR = sumR;
+        if (rack.routedTo >= 0 && rack.routedTo < kGroupSlots) {
+            toL = groupL[rack.routedTo];
+            toR = groupR[rack.routedTo];
+            groupUsed[rack.routedTo] = true;
+        }
+        for (int32_t i = 0; i < frames; ++i) {
+            toL[i] += rack.bufL[i];
+            toR[i] += rack.bufR[i];
         }
         for (int32_t s = 0; s < kSendSlots; ++s) {
             const float amount = rack.sendAmount(s);
@@ -75,6 +86,29 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
                 sendSum[s][i] += (rack.bufL[i] + rack.bufR[i]) * 0.5f * amount;
             }
         }
+    }
+
+    // **The groups**: their members summed above, through two inserts and a
+    // fader of their own, into the master. A group nothing is routed into
+    // does no work at all.
+    for (int32_t g = 0; g < kGroupSlots; ++g) {
+        if (!groupUsed[g]) continue;
+        for (int32_t s = 0; s < kGroupInsertSlots; ++s) {
+            Effect *fx = groupInserts[g][s];
+            if (fx == nullptr) continue;
+            fx->onBlock(tickStart, tickEnd, bpm);
+            fx->run(groupL[g], groupR[g], frames, true);
+        }
+        const float gain = params_.get(groupParam(g) + 1) >= 0.5f ? 0.0f : params_.get(groupParam(g));
+        float peak = 0.0f;
+        for (int32_t i = 0; i < frames; ++i) {
+            groupL[g][i] *= gain;
+            groupR[g][i] *= gain;
+            sumL[i] += groupL[g][i];
+            sumR[i] += groupR[g][i];
+            peak = std::fmax(peak, std::fmax(std::fabs(groupL[g][i]), std::fabs(groupR[g][i])));
+        }
+        if (peak > groupPeakHold[g].load(std::memory_order_relaxed)) groupPeakHold[g].store(peak, std::memory_order_relaxed);
     }
 
     // **The return is the effect's output and nothing else.** An insert is
@@ -199,6 +233,9 @@ void MasterBus::panic() {
     }
     for (Effect *fx : inserts) {
         if (fx != nullptr) fx->reset();
+    }
+    for (auto &group : groupInserts) {
+        for (Effect *fx : group) if (fx != nullptr) fx->reset();
     }
     limiter.reset();
     panicRamp = 0.0f;

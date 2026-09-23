@@ -4,7 +4,7 @@
 1. [A first song](01-first-song.md) - tracks, scenes, clips, and a first sound.
 2. [The song grid](02-the-song-grid.md) - the arranger, the launcher, and freezing.
 3. [The editor](03-the-editor.md) - drawing notes, and what each note can do.
-4. [The machines](04-the-machines.md) - nineteen instruments, a four-track, a group track, and what each is for.
+4. [The machines](04-the-machines.md) - nineteen instruments, a four-track, and what each is for.
     - [Bias](04-the-machines/bias.md) - a four-track: recordings arranged along the song, four lanes at a time.
     - [Brazen](04-the-machines/brazen.md) - modelled brass, from trumpet to tuba, or a whole section.
     - [Cipher](04-the-machines/cipher.md) - a vocoder, where you can rearrange which bands drive which.

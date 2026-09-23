@@ -1,6 +1,6 @@
 # The machines
 
-> Nineteen instruments, a four-track, a group track, and what each is for.
+> Nineteen instruments, a four-track, and what each is for.
 
 Every track has one machine. You pick it when you add the track, and you can
 change it any time from the name at the top of the editor. **Each machine has
@@ -45,10 +45,9 @@ These model how the real instrument works, so they respond like one.
 
 - [**Nexus**](04-the-machines/nexus.md) - a modular synth whose modules are the other machines.
 
-## Audio and groups
+## Audio
 
 - [**Bias**](04-the-machines/bias.md) - a four-track for recordings. Four lanes per cell, and a recording made over the song is cut at the scene lines. Its patches are tape types (cassette, reel, telephone and so on) that colour the sound on the way out.
-- **Bus** - a group track. It makes no sound of its own; other tracks are routed into it from the mixer. See [groups](05-effects-and-mixing.md#groups).
 
 ## Patches
 

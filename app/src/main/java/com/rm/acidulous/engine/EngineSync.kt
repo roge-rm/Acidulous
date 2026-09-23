@@ -18,7 +18,11 @@ import com.rm.acidulous.model.Mixer
 import com.rm.acidulous.model.PlayMode
 import com.rm.acidulous.model.INPUT_SLOTS
 import com.rm.acidulous.model.inputUnit
+import com.rm.acidulous.model.GROUP_INSERT_SLOTS
 import com.rm.acidulous.model.MASTER_INSERT_SLOTS
+import com.rm.acidulous.model.MAX_GROUPS
+import com.rm.acidulous.model.MixGroup
+import com.rm.acidulous.model.groupInsertUnit
 import com.rm.acidulous.model.SEND_SLOTS
 import com.rm.acidulous.model.masterInsertUnit
 import com.rm.acidulous.model.BIAS_MACHINE
@@ -205,6 +209,17 @@ object EngineSync {
         }
     }
     private val mountedMasterInserts = arrayOfNulls<String>(MASTER_INSERT_SLOTS)
+    private val mountedGroupInserts = Array(MAX_GROUPS) { arrayOfNulls<String>(GROUP_INSERT_SLOTS) }
+
+    /** The mixer groups' inserts; a group that is not there has empty slots. */
+    fun ensureGroups(song: Song) {
+        for (g in 0 until MAX_GROUPS) for (slot in 0 until GROUP_INSERT_SLOTS) {
+            val want = song.master.groups.getOrNull(g)?.insertAt(slot)?.type?.ifEmpty { null }
+            if (mountedGroupInserts[g][slot] == want) continue
+            if (NativeEngine.mountGroupInsert(g, slot, want ?: "")) mountedGroupInserts[g][slot] = want
+            else Log.w(TAG, "could not mount group ${g + 1} insert ${want ?: "(none)"} on slot $slot")
+        }
+    }
 
     /**
      * What the incoming audio goes through before anything hears it.
@@ -449,6 +464,7 @@ object EngineSync {
         ensureSamples(song)
         ensureEffects(song)
         ensureSends(song)
+        ensureGroups(song)
         ensureInputFx(song)
         ensureModifiers(song)
         ensureSampleMaps(song)
@@ -602,6 +618,13 @@ object EngineSync {
 
     fun pushMaster(m: Master) {
         NativeEngine.setParam(0, "master", "volume", EngineParams.volume01(m.volume), record = false)
+        // Every group's fader, and unity for the ones that are not there.
+        for (g in 0 until MAX_GROUPS) {
+            val group = m.groups.getOrNull(g) ?: MixGroup()
+            NativeEngine.setParam(0, "master", "g${g + 1}gain", EngineParams.volume01(group.volume), record = false)
+            NativeEngine.setParam(0, "master", "g${g + 1}mute", EngineParams.bool01(group.mute), record = false)
+            NativeEngine.setParam(0, "master", "g${g + 1}solo", EngineParams.bool01(group.solo), record = false)
+        }
         NativeEngine.setParam(0, "master", "limiteron", EngineParams.bool01(m.limiter.on), record = false)
         NativeEngine.setParam(0, "master", "limiterdrive", EngineParams.unit01(m.limiter.drive), record = false)
     }
@@ -620,6 +643,9 @@ object EngineSync {
     fun pushSends(m: Master) {
         for (slot in 0 until SEND_SLOTS) pushSlot(0, sendUnit(slot), m.sendAt(slot))
         for (slot in 0 until MASTER_INSERT_SLOTS) pushSlot(0, masterInsertUnit(slot), m.insertAt(slot))
+        for ((g, group) in m.groups.withIndex()) {
+            for (slot in 0 until GROUP_INSERT_SLOTS) pushSlot(0, groupInsertUnit(g, slot), group.insertAt(slot))
+        }
     }
 
     /** The metronome lives on the transport, not in the song. */

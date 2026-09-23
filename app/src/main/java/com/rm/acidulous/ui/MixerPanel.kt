@@ -1,5 +1,18 @@
 package com.rm.acidulous.ui
 
+import com.rm.acidulous.model.withGroupInsertBypass
+import com.rm.acidulous.model.withGroupInsertParam
+import com.rm.acidulous.model.withGroupInsert
+import com.rm.acidulous.model.withGroupSolo
+import com.rm.acidulous.model.withGroupMute
+import com.rm.acidulous.model.withGroupVolume
+import com.rm.acidulous.model.deleteGroup
+import com.rm.acidulous.model.renameGroup
+import com.rm.acidulous.model.addGroup
+import com.rm.acidulous.model.groupInsertUnit
+import com.rm.acidulous.model.MixGroup
+import com.rm.acidulous.model.GROUP_INSERT_SLOTS
+import com.rm.acidulous.model.MAX_GROUPS
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -111,7 +124,7 @@ fun MixerPanel(
     // hand's width of nothing under the chips. What is wanted is a ceiling.
     val room = if (constraints.hasBoundedHeight) maxHeight else Dp.Infinity
     // The output row is there only in a song that has a group to route to.
-    val groups = song.tracks.withIndex().filter { it.value.machine.type == "Bus" }.map { it.index }
+    val groups = song.master.groups.map { it.name }
     val chrome = STRIP_CHROME + if (groups.isEmpty()) 0.dp else OUTPUT_ROW
     val faderH = if (room == Dp.Infinity) {
         FADER_H
@@ -156,9 +169,116 @@ fun MixerPanel(
             }
             ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated, faderH, room, tight, sendNames, groups)
         }
+        // The groups: strips of their own between the tracks and the master,
+        // and a button to add one while there is room.
+        song.master.groups.forEachIndexed { g, group -> GroupStrip(g, group, editor, faderH, room, tight) }
+        if (song.master.groups.size < MAX_GROUPS) AddGroupStrip(editor, room)
         MasterStrip(song, editor, masterPeak, clickOn, onClick, faderH, room, tight)
     }
     }
+}
+
+/**
+ * One of the mixer's groups: a name, a meter and fader, mute and solo, and two
+ * inserts. Tracks are routed here from the output row under their own fader.
+ * Tap the name to rename it, hold it to delete the group.
+ */
+@Composable
+private fun GroupStrip(g: Int, group: MixGroup, editor: SongEditor, faderH: Dp, room: Dp, tight: Boolean) {
+    val c = Acid.colors
+    val n = g + 1
+    var peak by remember { mutableStateOf(0f) }
+    LaunchedEffect(g) {
+        while (true) {
+            peak = NativeEngine.groupPeak(g)
+            kotlinx.coroutines.delay(80)
+        }
+    }
+    var renaming by remember { mutableStateOf(false) }
+    var deleting by remember { mutableStateOf(false) }
+    var editingInsert by remember { mutableStateOf<Int?>(null) }
+    if (renaming) {
+        TextInputDialog("Group name", group.name, onDismiss = { renaming = false }) { name ->
+            renaming = false
+            if (name.isNotBlank()) editor.editSong { s -> s.renameGroup(g, name.trim()) }
+        }
+    }
+    if (deleting) {
+        PlainDialog(
+            title = "Delete ${group.name}?",
+            onDismiss = { deleting = false },
+            confirmLabel = "Delete",
+            onConfirm = { deleting = false; editor.editSong { s -> s.deleteGroup(g) } },
+        ) {
+            Text("Its tracks go back to the master.", color = c.textDim, fontSize = 11.sp)
+        }
+    }
+    editingInsert?.let { slot ->
+        SongSlotDialog(
+            "${group.name} fx${slot + 1}", slot, { s -> groupInsertUnit(g, s) },
+            { song, s -> song.master.groups.getOrNull(g)?.insertAt(s) ?: UnitSlot() },
+            { song, s, t -> song.withGroupInsert(g, s, t) },
+            { song, s, name, v -> song.withGroupInsertParam(g, s, name, v) },
+            hideMix = false, editor = editor,
+        ) { editingInsert = null }
+    }
+    Column(
+        Modifier.width(STRIP_W).then(if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
+            .clip(RoundedCornerShape(6.dp)).background(c.cardHi)
+            .then(if (tight) Modifier.verticalScrollWithBar(rememberScrollState()) else Modifier)
+            .padding(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            group.name, color = c.accent, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.onLongPress { deleting = true }.clickable { renaming = true },
+        )
+        Row(Modifier.height(faderH), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Meter(peak, Modifier.width(8.dp).fillMaxHeight())
+            VerticalFader(
+                value = EngineParams.volume01(group.volume),
+                modifier = Modifier.width(36.dp).fillMaxHeight().mappable(MapTargets.param(0, "master", "g${n}gain")),
+                accent = c.accent,
+                onStart = { editor.beginSongGesture() },
+                onChange = { v ->
+                    NativeEngine.setParam(0, "master", "g${n}gain", v)
+                    editor.updateSongGesture { s -> s.withGroupVolume(g, EngineParams.volumeFrom01(v)) }
+                },
+                onEnd = { editor.endSongGesture() },
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            ToggleChip("M", group.mute, c.red) { editor.editSong { s -> s.withGroupMute(g, !group.mute) } }
+            ToggleChip("S", group.solo, c.accent) { editor.editSong { s -> s.withGroupSolo(g, !group.solo) } }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            for (slot in 0 until GROUP_INSERT_SLOTS) {
+                val fx = group.insertAt(slot)
+                GridChip(if (fx.isEmpty) "fx${slot + 1}" else shortFx(fx.type), !fx.isEmpty && !fx.bypass, c.accent,
+                         Modifier.weight(1f).onLongPress { editingInsert = slot }) {
+                    if (fx.isEmpty) editingInsert = slot
+                    else {
+                        val bypass = !fx.bypass
+                        editor.editSong { s -> s.withGroupInsertBypass(g, slot, bypass) }
+                        NativeEngine.setParam(0, groupInsertUnit(g, slot), "bypass", if (bypass) 1f else 0f, record = false)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Where a new group comes from: a narrow strip with one button. */
+@Composable
+private fun AddGroupStrip(editor: SongEditor, room: Dp) {
+    val c = Acid.colors
+    Box(
+        Modifier.width(56.dp).then(if (room == Dp.Infinity) Modifier.height(120.dp) else Modifier.heightIn(max = room))
+            .clip(RoundedCornerShape(6.dp)).background(c.cardAlt)
+            .clickable { editor.editSong { s -> s.addGroup("Group ${s.master.groups.size + 1}") } },
+        contentAlignment = Alignment.Center,
+    ) { Text("+\ngroup", color = c.textMid, fontSize = 11.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
 }
 
 
@@ -175,8 +295,8 @@ private fun ChannelStrip(
     tight: Boolean = false,
     /** What the two send sliders are called - the effects that are on them. */
     sendNames: List<String> = listOf("send 1", "send 2"),
-    /** The tracks that are groups, which this one could be routed into. */
-    groups: List<Int> = emptyList(),
+    /** The names of the mixer's groups, which this track can be routed into. */
+    groups: List<String> = emptyList(),
 ) {
     val c = Acid.colors
     var askClear by remember { mutableStateOf(false) }
@@ -329,15 +449,12 @@ private fun ChannelStrip(
                 }
             }
         }
-        // Where the sound goes: the master, or a group. A tap steps through
-        // them. A group itself always goes to the master.
+        // Where the sound goes: the master, or one of the mixer's groups. A
+        // tap steps through them.
         if (groups.isNotEmpty()) {
-            val targets = listOf(0) + groups.filter { it != index }.map { it + 1 }
-            val isGroup = track.machine.type == "Bus"
-            val to = editor.song.tracks.getOrNull(m.output - 1)?.takeIf { it.machine.type == "Bus" }
-            val label = if (isGroup || to == null) "master" else to.name
-            ToggleChip("→ $label", !isGroup && to != null, c.teal, Modifier.width(STRIP_W - 8.dp).mappable(map("output"))) {
-                if (!isGroup) tap { it.copy(output = targets[(targets.indexOf(it.output) + 1) % targets.size]) }
+            val to = groups.getOrNull(m.output - 1)
+            ToggleChip("→ ${to ?: "master"}", to != null, c.teal, Modifier.width(STRIP_W - 8.dp).mappable(map("output")), padding = 3.dp) {
+                tap { it.copy(output = if (it.output in 0 until groups.size) it.output + 1 else 0) }
             }
         }
     }
@@ -508,6 +625,7 @@ private fun ToggleChip(
     on: Boolean,
     colour: Color,
     modifier: Modifier = Modifier,
+    padding: Dp = 8.dp,
     onClick: () -> Unit,
 ) {
     val c = Acid.colors
@@ -517,9 +635,14 @@ private fun ToggleChip(
             .clip(RoundedCornerShape(4.dp))
             .background(if (on) colour.copy(alpha = 0.25f) else c.raised)
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = padding),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = if (on) colour else c.textMid, fontSize = 11.sp, maxLines = 1) }
+    ) {
+        // Never wrapped: a label that wraps at its space and is then cut to one
+        // line shows only its first word - "→ Rhythm" showed as "→".
+        Text(label, color = if (on) colour else c.textMid, fontSize = 11.sp, maxLines = 1,
+             softWrap = false, overflow = TextOverflow.Ellipsis)
+    }
 }
 
 internal fun trackColour(index: Int): Color = PALETTE[index % PALETTE.size]

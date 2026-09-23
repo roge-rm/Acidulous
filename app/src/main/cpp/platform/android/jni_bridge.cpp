@@ -82,6 +82,17 @@ JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeResetLoudness(JNIEnv *, jobject) { host().resetLoudness(); }
 
 JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeMountGroupInsert(JNIEnv *env, jobject, jint group, jint slot,
+                                                                jstring typeName) {
+    return host().mountGroupInsert(group, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeGroupPeak(JNIEnv *, jobject, jint group) {
+    return host().groupPeak(group);
+}
+
+JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeMountMasterInsert(JNIEnv *env, jobject, jint slot, jstring typeName) {
     return host().mountMasterInsert(slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }

@@ -37,6 +37,9 @@ class EngineHost {
     bool mountEffect(int rack, int slot, const std::string &typeName);
     bool mountSend(int slot, const std::string &typeName);
     bool mountMasterInsert(int slot, const std::string &typeName);
+    /** Group [group]'s insert [slot], in the mixer. */
+    bool mountGroupInsert(int group, int slot, const std::string &typeName);
+    float groupPeak(int group);
     /**
      * An effect on the way *in*, before anything hears the input.
      *
@@ -542,6 +545,7 @@ class EngineHost {
     /** What is on each send bus, for resolving its parameters by name. */
     std::string mountedSendType[2];
     std::string mountedMasterInsertType[2];
+    std::string mountedGroupInsertType[4][2];
     /** What is on each input slot, for resolving its parameters by name. */
     std::string mountedInputType[2];
     std::string mountedModifierType[16][2];

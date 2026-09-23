@@ -61,6 +61,13 @@ Unit unitFromName(const std::string &u) {
     if (u == "mod3") return Unit::Mod3;
     if (u == "channel") return Unit::Channel;
     if (u == "master") return Unit::Master;
+    // group1fx1 .. group4fx2
+    if (u.size() == 9 && u.compare(0, 5, "group") == 0 && u.compare(6, 2, "fx") == 0) {
+        const int g = u[5] - '1', s = u[8] - '1';
+        if (g >= 0 && g < kGroupSlots && s >= 0 && s < kGroupInsertSlots) {
+            return static_cast<Unit>(static_cast<int>(Unit::Group1Fx1) + g * kGroupInsertSlots + s);
+        }
+    }
     if (u == "master1") return Unit::MasterFx1;
     if (u == "master2") return Unit::MasterFx2;
     if (u == "send1") return Unit::Send1;
@@ -202,6 +209,27 @@ bool EngineHost::mountSend(int slot, const std::string &typeName) {
     m.object = fx;
     if (!mountWithRetry(m, deleteAs<Effect>)) return false;
     mountedSendType[slot] = typeName;
+    return true;
+}
+
+bool EngineHost::mountGroupInsert(int group, int slot, const std::string &typeName) {
+    if (group < 0 || group >= kGroupSlots || slot < 0 || slot >= kGroupInsertSlots) return false;
+    Effect *fx = nullptr;
+    if (!typeName.empty()) {
+        fx = EffectRegistry::create(typeName.c_str());
+        if (fx == nullptr) {
+            LOGE("unknown group effect '%s'", typeName.c_str());
+            return false;
+        }
+        fx->prepare(kSampleRate);
+    }
+    Mount m;
+    m.kind = Mount::Kind::GroupInsert;
+    m.rack = group;
+    m.slot = slot;
+    m.object = fx;
+    if (!mountWithRetry(m, deleteAs<Effect>)) return false;
+    mountedGroupInsertType[group][slot] = typeName;
     return true;
 }
 
@@ -826,6 +854,15 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         return sEngine.racks[0].channelIndexOf(name.c_str());
     }
     if (u == Unit::Master) return sEngine.master.params().indexOf(name.c_str());
+    if (u >= Unit::Group1Fx1 && u <= Unit::Group4Fx2) {
+        if (name == "bypass") return kEffectBypassIndex;
+        const int k = static_cast<int>(u) - static_cast<int>(Unit::Group1Fx1);
+        int32_t n = 0;
+        const ParamDef *defs = EffectRegistry::paramDefs(
+            mountedGroupInsertType[k / kGroupInsertSlots][k % kGroupInsertSlots].c_str(), n);
+        for (int32_t i = 0; i < n; ++i) if (name == defs[i].name) return i;
+        return -1;
+    }
     if (u == Unit::MasterFx1 || u == Unit::MasterFx2) {
         if (name == "bypass") return kEffectBypassIndex;
         int32_t n = 0;
@@ -885,6 +922,9 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         index = sEngine.racks[rack].channelIndexOf(name.c_str()); // see paramIndex
     } else if (u == Unit::Master) {
         index = sEngine.master.params().indexOf(name.c_str());
+    } else if (u >= Unit::Group1Fx1 && u <= Unit::Group4Fx2) {
+        const int k = static_cast<int>(u) - static_cast<int>(Unit::Group1Fx1);
+        index = paramIndex(mountedGroupInsertType[k / kGroupInsertSlots][k % kGroupInsertSlots], unit, name);
     } else if (u == Unit::MasterFx1 || u == Unit::MasterFx2) {
         index = paramIndex(mountedMasterInsertType[u == Unit::MasterFx1 ? 0 : 1], unit, name);
     } else if (u == Unit::Send1 || u == Unit::Send2) {
@@ -1067,8 +1107,20 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
         if (renderGain != 1.0f) for (float &v : block) v *= renderGain;
         for (size_t i = 0; i < targets.size(); ++i) {
             const int32_t rack = targets[i].rack;
-            if (rack < 0) {
+            if (rack == -1) {
                 sinks[i]->write(block, kBlockFrames);
+                continue;
+            }
+            if (rack <= -2) {
+                // A mixer group: -2 is group 0.
+                const int32_t g = -2 - rack;
+                if (g >= kGroupSlots) continue;
+                const float *gl = sEngine.master.groupOutL(g), *gr = sEngine.master.groupOutR(g);
+                for (int32_t f = 0; f < kBlockFrames; ++f) {
+                    stem[f * 2] = gl[f] * renderGain;
+                    stem[f * 2 + 1] = gr[f] * renderGain;
+                }
+                sinks[i]->write(stem, kBlockFrames);
                 continue;
             }
             // A rack's two buffers are separate; a file wants them laced.
@@ -2065,6 +2117,7 @@ int64_t EngineHost::stalledCallbacks() const { return sAudio.getStalledCallbacks
 int32_t EngineHost::callbackBudgetUs() const { return sAudio.callbackBudgetUs(); }
 float EngineHost::peakLevel() const { return sEngine.master.readPeak(); }
 void EngineHost::loudness(float *out4) { sEngine.master.readLoudness(out4); }
+float EngineHost::groupPeak(int group) { return sEngine.master.readGroupPeak(group); }
 void EngineHost::resetLoudness() { sEngine.master.resetLoudness(); }
 float EngineHost::rackPeak(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].readPeak() : 0.0f;

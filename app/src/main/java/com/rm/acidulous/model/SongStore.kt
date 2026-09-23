@@ -33,6 +33,8 @@ object SongStore {
         // still carries them that way and is brought forward here, where every
         // other shape change to a saved song is.
         @Suppress("NAME_SHADOWING") var song = song.copy(master = song.master.migrated())
+        // Groups were Bus tracks in 0.7.0; they are mixer strips now.
+        song = song.busTracksToGroups()
         song = renamed(song)
         // A song written before swing existed carries the old default of
         // nought in a field that now means a percentage, and nought is not a

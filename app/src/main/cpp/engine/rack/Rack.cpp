@@ -29,8 +29,10 @@ const ParamDef kChannelDefs[Rack::ChannelCount] = {
      * it can be automated and recorded without a second path.
      */
     {"swing", 50.0f, 75.0f, 50.0f, Curve::Linear, 0, "%"},
-    // Where this track's sound goes: 0 the master, 1..16 a group track. A
-    // decision like `midimode`, so it is read off the target and never ramps.
+    // Where this track's sound goes: 0 the master, 1..4 a group in the mixer.
+    // Seventeen steps because it shipped that way, when a group was a track,
+    // and a stepped parameter's count is what a saved value is normalised
+    // against. A decision like `midimode`, so it never ramps.
     {"output", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
 };
 } // namespace
@@ -490,8 +492,6 @@ void Rack::render(int32_t frames) {
     }
     if (peak > peakHold.load(std::memory_order_relaxed)) peakHold.store(peak, std::memory_order_relaxed);
 }
-
-bool Rack::isBus() const { return machine != nullptr && std::strcmp(machine->typeName(), "Bus") == 0; }
 
 Machine *Rack::swapMachine(Machine *next) {
     Machine *old = machine;

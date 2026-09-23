@@ -86,7 +86,8 @@ The mixer button opens a strip for each track, plus the master.
   which is why the control won't stay where you put it. Tap it to see which
   lanes, and to clear them from every clip on the track. Notes aren't touched.
 
-The master strip has the master fader, the limiter's **limit drive**, and the
+After the tracks come the **groups**, if the song has any, and a **+ group**
+button. Last is the master strip, which has the master fader, the limiter's **limit drive**, and the
 loudness readout. Under that is a grid of buttons: the two sends on top, the two
 master inserts (**fx1**, **fx2**) in the middle, and the limiter (**lim**) and
 the click (**♩**) at the bottom. Tap one to turn it on or off, and hold a send
@@ -106,22 +107,25 @@ go on the master inserts.
 
 ## Groups
 
-A group is a track whose machine is **Bus**. Add one from the machine picker,
-under *beyond*. It makes no sound of its own. Once the song has a group, each
-strip in the mixer gets an extra row at the bottom: tap it to route that track
-to the master or to a group.
+A group is a strip in the mixer that tracks can be routed through. It isn't a
+track: it has no machine and no clips, and it doesn't appear in the song grid.
 
-Everything routed into a group goes through the group's two inserts and its
-fader before the master. For example, put one compressor on all the drums, or
-turn a whole section down with one fader.
+Tap **+ group** in the mixer to add one (up to four). Tap a group's name to
+rename it, and hold it to delete the group. Once the song has a group, each
+track strip gets an extra row at the bottom: tap it to send that track to the
+master or to one of the groups.
+
+Everything routed into a group goes through the group's two effects (**fx1**,
+**fx2**) and its fader before the master. For example, put one compressor on
+all the drums, or turn a whole section down with one fader.
 
 - A track's **sends** still go straight to the send effects, not through the
   group.
 - **Solo** a group to hear all of it. Solo a track inside a group to hear just
   that track, still through the group's effects.
-- A group can't go into another group, and it can't be frozen.
-- When you export **stems**, a group is one stem with its tracks in it, and those
-  tracks don't get their own stems.
+- Deleting a group sends its tracks back to the master.
+- When you export **stems**, each group is a stem with its tracks in it, and
+  those tracks don't get their own stems.
 
 ## Sidechain
 

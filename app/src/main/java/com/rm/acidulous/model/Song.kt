@@ -431,6 +431,25 @@ const val SEND_SLOTS = 2
 /** How many inserts the master has, before its fader and limiter. */
 const val MASTER_INSERT_SLOTS = 2
 
+/** How many groups the mixer can have, and how many inserts each has. */
+const val MAX_GROUPS = 4
+const val GROUP_INSERT_SLOTS = 2
+
+/**
+ * A group in the mixer: tracks route into it, and it has two inserts and a
+ * fader of its own. Not a track - it has no machine and no clips.
+ */
+@Serializable
+data class MixGroup(
+    val name: String = "Group",
+    val volume: Float = 1f,
+    val mute: Boolean = false,
+    val solo: Boolean = false,
+    val inserts: List<UnitSlot> = emptyList(),
+) {
+    fun insertAt(slot: Int): UnitSlot = inserts.getOrNull(slot) ?: UnitSlot()
+}
+
 /**
  * Effects on the way *in*, before anything hears the input.
  *
@@ -465,9 +484,8 @@ data class Mixer(
     val midiMode: Int = 0,
     val midiChannel: Int = 0,
     /**
-     * Where this track's sound goes: 0 the master, 1..16 a group track (a
-     * track whose machine is a Bus). By position, like a sidechain, so moving
-     * tracks remaps it - see [remapSidechains].
+     * Where this track's sound goes: 0 the master, 1..4 one of the mixer's
+     * groups ([Master.groups]). Deleting a group remaps it - see [deleteGroup].
      */
     val output: Int = 0,
 )
@@ -531,6 +549,8 @@ data class Master(
     val limiter: LimiterSettings = LimiterSettings(),
     /** Effects on the whole mix, after the sends and before the fader and limiter. */
     val inserts: List<UnitSlot> = emptyList(),
+    /** The mixer's groups, up to [MAX_GROUPS]. A track's [Mixer.output] names one. */
+    val groups: List<MixGroup> = emptyList(),
     /** Only ever non-null in a song written before the sends were slots. */
     val reverb: ReverbSettings? = null,
     val delay: DelaySettings? = null,

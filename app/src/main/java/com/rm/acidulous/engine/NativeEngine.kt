@@ -34,6 +34,9 @@ object NativeEngine {
      */
     fun mountSend(slot: Int, typeName: String): Boolean = nativeMountSend(slot, typeName)
     fun mountMasterInsert(slot: Int, typeName: String): Boolean = nativeMountMasterInsert(slot, typeName)
+    fun mountGroupInsert(group: Int, slot: Int, typeName: String): Boolean = nativeMountGroupInsert(group, slot, typeName)
+    /** Group [group]'s peak since the last read. */
+    fun groupPeak(group: Int): Float = nativeGroupPeak(group)
 
     /**
      * An effect on the way **in**, before anything hears the input.
@@ -793,6 +796,8 @@ object NativeEngine {
     private external fun nativeLoudness(): FloatArray
     private external fun nativeResetLoudness()
     private external fun nativeMountMasterInsert(slot: Int, typeName: String): Boolean
+    private external fun nativeMountGroupInsert(group: Int, slot: Int, typeName: String): Boolean
+    private external fun nativeGroupPeak(group: Int): Float
     private external fun nativeMountInputEffect(slot: Int, typeName: String): Boolean
     private external fun nativeEffectTypes(): Array<String>
     private external fun nativeEffectParamInfo(type: String): Array<String>

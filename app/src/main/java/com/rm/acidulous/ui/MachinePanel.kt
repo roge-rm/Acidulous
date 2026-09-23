@@ -225,24 +225,12 @@ fun MachinePanel(
                     editor.edit(trackIndex) { t -> t.withSetting("slice_count", count.toString()) }
                 },
             )
-            "Bus" -> BusPanel(editor, trackIndex)
             else -> GenericPanel(binding)
         }
     }
     }
 }
 
-/** A group has no knobs of its own; the panel says what is routed into it. */
-@Composable
-private fun BusPanel(editor: SongEditor, trackIndex: Int) {
-    val members = editor.song.tracks.filter { it.mixer.output == trackIndex + 1 }.map { it.name }
-    Text(
-        if (members.isEmpty()) "Nothing routed here yet. Pick this group under a track's fader in the mixer."
-        else "playing " + members.joinToString(", "),
-        color = Acid.colors.textDim, fontSize = 11.sp,
-        modifier = Modifier.padding(6.dp),
-    )
-}
 
 /** Live values + the plumbing to change them. */
 class ParamBinding(

@@ -19,7 +19,6 @@
 #include "timber/Timber.h"
 #include "molt/Molt.h"
 #include "bias/Bias.h"
-#include "bus/Bus.h"
 
 namespace acidulous {
 
@@ -30,9 +29,6 @@ constexpr int32_t kCount = sizeof(kNames) / sizeof(kNames[0]);
 
 Machine *MachineRegistry::create(const char *typeName) {
     if (std::strcmp(typeName, "Bias") == 0) return new machine::Bias();
-    // Not in `kNames`: a group is not an instrument, and every harness that
-    // walks the registry to play each machine would be playing silence.
-    if (std::strcmp(typeName, "Bus") == 0) return new machine::Bus();
     if (std::strcmp(typeName, "Reflux") == 0) return new machine::Reflux();
     if (std::strcmp(typeName, "Trinity") == 0) return new machine::Trinity();
     if (std::strcmp(typeName, "Ratio") == 0) return new machine::Ratio();

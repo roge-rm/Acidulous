@@ -15,6 +15,13 @@ namespace acidulous {
 constexpr int32_t kSendSlots = 2;
 /** How many insert slots the master carries, before its fader and limiter. */
 constexpr int32_t kMasterInsertSlots = 2;
+/**
+ * How many groups the mixer has. A group is a strip in the mixer, not a track:
+ * tracks route into it, and it has two inserts and a fader of its own.
+ */
+constexpr int32_t kGroupSlots = 4;
+/** And how many inserts each group has. */
+constexpr int32_t kGroupInsertSlots = 2;
 
 class MasterBus {
   public:
@@ -30,8 +37,14 @@ class MasterBus {
      */
     enum P : int32_t {
         Volume, LimiterOn, LimiterDrive,
-        ClickOn, ClickVolume, ClickVoice, ClickDiv, ClickWhen, Count
+        ClickOn, ClickVolume, ClickVoice, ClickDiv, ClickWhen,
+        // The four groups' faders: gain, mute and solo each, appended.
+        G1Gain, G1Mute, G1Solo, G2Gain, G2Mute, G2Solo,
+        G3Gain, G3Mute, G3Solo, G4Gain, G4Mute, G4Solo,
+        Count
     };
+    /** Group [g]'s gain parameter; mute and solo follow it. */
+    static constexpr int32_t groupParam(int32_t g) { return G1Gain + g * 3; }
 
     MasterBus();
     void prepare(int32_t sampleRate); // not the audio thread
@@ -68,6 +81,23 @@ class MasterBus {
         return old;
     }
     Effect *insert(int32_t slot) { return (slot >= 0 && slot < kMasterInsertSlots) ? inserts[slot] : nullptr; }
+
+    /** Put [next] on group [g]'s insert [slot]; returns what was there, for the caller to retire. */
+    Effect *swapGroupInsert(int32_t g, int32_t slot, Effect *next) {
+        if (g < 0 || g >= kGroupSlots || slot < 0 || slot >= kGroupInsertSlots) return next;
+        Effect *old = groupInserts[g][slot];
+        groupInserts[g][slot] = next;
+        return old;
+    }
+    Effect *groupInsert(int32_t g, int32_t slot) {
+        return (g >= 0 && g < kGroupSlots && slot >= 0 && slot < kGroupInsertSlots) ? groupInserts[g][slot] : nullptr;
+    }
+    /** Group [g]'s output this block, after its inserts and fader: what its stem is. */
+    const float *groupOutL(int32_t g) const { return groupL[g]; }
+    const float *groupOutR(int32_t g) const { return groupR[g]; }
+    float readGroupPeak(int32_t g) {
+        return (g >= 0 && g < kGroupSlots) ? groupPeakHold[g].exchange(0.0f, std::memory_order_relaxed) : 0.0f;
+    }
 
     /** [accent] is dsp::Click::Bar, Beat or Division. */
     void clickAt(int32_t accent, int32_t offsetSamples) { click.trigger(accent, offsetSamples); }
@@ -152,6 +182,10 @@ class MasterBus {
     ParamSet params_;
     Effect *sends[kSendSlots]{};
     Effect *inserts[kMasterInsertSlots]{};
+    Effect *groupInserts[kGroupSlots][kGroupInsertSlots]{};
+    float groupL[kGroupSlots][kBlockFrames]{};
+    float groupR[kGroupSlots][kBlockFrames]{};
+    std::atomic<float> groupPeakHold[kGroupSlots]{};
     dsp::Loudness loudness;
     static constexpr int32_t kWatchBlocks = 750; // a second at 64 frames
     std::atomic<int32_t> loudnessWatch{0};

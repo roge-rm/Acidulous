@@ -181,13 +181,9 @@ class Rack {
      */
     float keyBuf[kBlockFrames]{};
 
-    /** Whether this rack is a group: its machine sums other racks. */
-    bool isBus() const;
     /**
-     * The rack this one's output is asked to go to, or -1 for the master.
-     * What it *actually* goes to this block is `routedTo`, which the engine
-     * settles - a bus that is not there, or a group routed into a group, goes
-     * to the master instead.
+     * The mixer group this rack's output is asked to go to (0..3), or -1 for
+     * the master. `routedTo` is what the engine settled on this block.
      */
     int32_t outputRequested() const { return static_cast<int32_t>(channel.target(Output) + 0.5f) - 1; }
     int32_t routedTo = -1;

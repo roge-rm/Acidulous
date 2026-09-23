@@ -80,8 +80,7 @@ through the ramp without changing pitch.
 
 Changing the machine or either effect makes a freeze out of date, and so does
 changing the tempo. The clip gets a mark when that happens. Thaw it or freeze it
-again. A group (Bus) track can't be frozen, because its members are still
-playing live.
+again.
 
 ## When the phone can't keep up
 

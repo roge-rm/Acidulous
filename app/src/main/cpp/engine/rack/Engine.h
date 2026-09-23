@@ -187,15 +187,12 @@ class Engine : public Rack::ModifiedNoteSink {
     const float *keyFor(int32_t source, int32_t self) const;
     /**
      * The order racks render in this block: every sidechain source before its
-     * listeners, and every track before the group it is routed into.
+     * listeners. Groups live in the master, after every rack, so need no place.
      */
     void sidechainOrder(int32_t *order) const;
     /** Where each rack's output goes this block; see `Rack::routedTo`. */
     void settleRouting();
-    /** Sum a group's members into its input, minding solo. */
-    void gatherBus(int32_t bus);
-    float busInL[kBlockFrames]{};
-    float busInR[kBlockFrames]{};
+
     void resetRackCosts();
 
     /**

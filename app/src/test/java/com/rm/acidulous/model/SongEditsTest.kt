@@ -171,10 +171,44 @@ class SongEditsTest {
         assertEquals(key(3), gone.master.sends[1].params[SIDECHAIN_PARAM])
         assertEquals(listOf(0f, key(3)), gone.tracks[1].clips["s"]!!.automation["effect1:sidechain"]!!.points.map { it.value })
 
-        // A track's output names a group by position the same way.
-        val grouped = song.addTrack("Bus").updateTrack(3) { it.copy(mixer = it.mixer.copy(output = 5)) }
-        assertEquals(4, grouped.deleteTrack(0).tracks[2].mixer.output)
-        assertEquals(6, grouped.duplicateTrack(1).tracks[4].mixer.output)
-        assertEquals(0, grouped.deleteTrack(4).tracks[3].mixer.output)
+        // A track's output names a mixer group, not a track, so moving tracks
+        // leaves it alone.
+        val grouped = song.addGroup("Drums").updateTrack(3) { it.copy(mixer = it.mixer.copy(output = 1)) }
+        assertEquals(1, grouped.deleteTrack(0).tracks[2].mixer.output)
+        assertEquals(1, grouped.duplicateTrack(1).tracks[4].mixer.output)
+    }
+
+    @Test
+    fun deletingAGroupSendsItsTracksToTheMaster() {
+        var song = demo.copy(tracks = emptyList())
+        for (m in listOf("Genesis", "Trinity", "Cumulus")) song = song.addTrack(m)
+        song = song.addGroup("A").addGroup("B")
+        song = song.updateTrack(0) { it.copy(mixer = it.mixer.copy(output = 1)) }
+            .updateTrack(1) { it.copy(mixer = it.mixer.copy(output = 2)) }
+        val gone = song.deleteGroup(0)
+        assertEquals(listOf("B"), gone.master.groups.map { it.name })
+        assertEquals(0, gone.tracks[0].mixer.output) // its group went
+        assertEquals(1, gone.tracks[1].mixer.output) // B moved down a place
+        assertEquals(0, gone.tracks[2].mixer.output)
+    }
+
+    @Test
+    fun aBusTrackFromZeroSevenBecomesAMixerGroup() {
+        var song = demo.copy(tracks = emptyList())
+        for (m in listOf("Genesis", "Trinity", "Bus", "Hexbeat")) song = song.addTrack(m)
+        // Drums and Hexbeat were routed into the Bus track (track 3), and the
+        // Trinity's compressor listened to it.
+        song = song.updateTrack(0) { it.copy(mixer = it.mixer.copy(output = 3)) }
+            .updateTrack(3) { it.copy(mixer = it.mixer.copy(output = 3)) }
+            .updateTrack(2) { it.copy(name = "Rhythm", effects = listOf(UnitSlot("Compressor")), mixer = it.mixer.copy(volume = 0.8f)) }
+            .updateTrack(1) { it.copy(effects = listOf(UnitSlot("Compressor", mapOf(SIDECHAIN_PARAM to 3 / 16f)))) }
+        val moved = song.busTracksToGroups()
+        assertEquals(3, moved.tracks.size)
+        assertTrue(moved.tracks.none { it.machine.type == "Bus" })
+        assertEquals(listOf("Rhythm"), moved.master.groups.map { it.name })
+        assertEquals(0.8f, moved.master.groups[0].volume)
+        assertEquals("Compressor", moved.master.groups[0].insertAt(0).type)
+        assertEquals(listOf(1, 0, 1), moved.tracks.map { it.mixer.output })
+        assertEquals(0f, moved.tracks[1].effects[0].params[SIDECHAIN_PARAM]) // its source is gone
     }
 }

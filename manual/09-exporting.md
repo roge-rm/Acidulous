@@ -17,8 +17,8 @@ You can export the whole song, the current scene, or stems.
 ## Stems
 
 Stems writes each track to its own file in one pass, along with the full mix.
-A track routed into a group is part of the group's stem instead of having its
-own, so the stems add up to the mix.
+Each mixer group is a stem too, and a track routed into a group is part of the
+group's stem instead of having its own, so the stems add up to the mix.
 
 ## Loudness
 

@@ -156,8 +156,6 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
     return copy(
         tracks = tracks.map { t ->
             t.copy(
-                // A track's output names a group by position too.
-                mixer = if (t.mixer.output == 0) t.mixer else t.mixer.copy(output = f(t.mixer.output).coerceIn(0, SIDECHAIN_STEPS - 1)),
                 effects = t.effects.map { it.remapped() },
                 clips = t.clips.mapValues { (_, c) ->
                     if (c.automation.keys.none { it.endsWith(lane) }) c
@@ -167,7 +165,11 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
                 },
             )
         },
-        master = master.copy(sends = master.sends.map { it.remapped() }, inserts = master.inserts.map { it.remapped() }),
+        master = master.copy(
+            sends = master.sends.map { it.remapped() },
+            inserts = master.inserts.map { it.remapped() },
+            groups = master.groups.map { g -> g.copy(inserts = g.inserts.map { it.remapped() }) },
+        ),
     )
 }
 
@@ -247,6 +249,93 @@ fun effectUnit(slot: Int): String = "effect${slot + 1}"
 
 /** The unit a send bus's parameters are addressed under. */
 fun sendUnit(slot: Int): String = "send${slot + 1}"
+
+// --- Groups in the mixer ------------------------------------------------------------
+
+/** The unit a group insert's parameters are addressed under: "group1fx1" .. "group4fx2". */
+fun groupInsertUnit(group: Int, slot: Int): String = "group${group + 1}fx${slot + 1}"
+
+private fun Song.withGroup(group: Int, f: (MixGroup) -> MixGroup): Song {
+    val list = master.groups
+    if (group !in list.indices) return this
+    return copy(master = master.copy(groups = list.toMutableList().also { it[group] = f(it[group]) }))
+}
+
+/** A new group at the end, if there is room. */
+fun Song.addGroup(name: String): Song {
+    if (master.groups.size >= MAX_GROUPS) return this
+    return copy(master = master.copy(groups = master.groups + MixGroup(name = name)))
+}
+
+fun Song.renameGroup(group: Int, name: String): Song = withGroup(group) { it.copy(name = name) }
+fun Song.withGroupVolume(group: Int, volume: Float): Song = withGroup(group) { it.copy(volume = volume) }
+fun Song.withGroupMute(group: Int, mute: Boolean): Song = withGroup(group) { it.copy(mute = mute) }
+fun Song.withGroupSolo(group: Int, solo: Boolean): Song = withGroup(group) { it.copy(solo = solo) }
+
+private fun Song.withGroupInsertSlot(group: Int, slot: Int, f: (UnitSlot) -> UnitSlot): Song {
+    if (slot !in 0 until GROUP_INSERT_SLOTS) return this
+    return withGroup(group) { g ->
+        val list = List(GROUP_INSERT_SLOTS) { g.insertAt(it) }.toMutableList()
+        list[slot] = f(list[slot])
+        g.copy(inserts = list)
+    }
+}
+fun Song.withGroupInsert(group: Int, slot: Int, type: String): Song =
+    withGroupInsertSlot(group, slot) { if (type == it.type) it else UnitSlot(type) }
+fun Song.withGroupInsertParam(group: Int, slot: Int, name: String, v01: Float): Song =
+    withGroupInsertSlot(group, slot) { it.copy(params = it.params + (name to v01)) }
+fun Song.withGroupInsertBypass(group: Int, slot: Int, bypass: Boolean): Song =
+    withGroupInsertSlot(group, slot) { it.copy(bypass = bypass) }
+
+/**
+ * Remove group [group]. Its tracks go back to the master, and the tracks of
+ * the groups after it follow their group down a place.
+ */
+fun Song.deleteGroup(group: Int): Song {
+    if (group !in master.groups.indices) return this
+    val n = group + 1
+    return copy(
+        master = master.copy(groups = master.groups.filterIndexed { i, _ -> i != group }),
+        tracks = tracks.map { t ->
+            val o = t.mixer.output
+            when {
+                o == n -> t.copy(mixer = t.mixer.copy(output = 0))
+                o > n -> t.copy(mixer = t.mixer.copy(output = o - 1))
+                else -> t
+            }
+        },
+    )
+}
+
+/**
+ * Songs saved in 0.7.0 had groups as tracks whose machine was a Bus. Each of
+ * those becomes a mixer group, its tracks routed to it, and the Bus track goes.
+ */
+fun Song.busTracksToGroups(): Song {
+    val buses = tracks.withIndex().filter { it.value.machine.type == "Bus" }.map { it.index }
+    if (buses.isEmpty()) return this
+    val room = MAX_GROUPS - master.groups.size
+    val groupOf = HashMap<Int, Int>() // old 1-based track number -> new group number, 0 for none
+    var groups = master.groups
+    for ((i, b) in buses.withIndex()) {
+        if (i < room) {
+            val t = tracks[b]
+            groups = groups + MixGroup(t.name, t.mixer.volume, t.mixer.mute, t.mixer.solo, t.effects)
+            groupOf[b + 1] = groups.size
+        } else {
+            groupOf[b + 1] = 0
+        }
+    }
+    var song = copy(
+        master = master.copy(groups = groups),
+        tracks = tracks.map { t ->
+            val to = groupOf[t.mixer.output]
+            if (to == null || t.machine.type == "Bus") t else t.copy(mixer = t.mixer.copy(output = to))
+        },
+    )
+    for (b in buses.sortedDescending()) song = song.deleteTrack(b)
+    return song
+}
 
 /** The unit a master insert's parameters are addressed under: "master1", "master2". */
 fun masterInsertUnit(slot: Int): String = "master${slot + 1}"
