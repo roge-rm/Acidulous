@@ -93,8 +93,13 @@ android {
         // that repeat again, and play putting automated knobs back where the
         // song has them. The rest of 0.8 - the looper, pattern generators and
         // step locks - comes before 0.8.0.
-        versionCode = 13
-        versionName = "0.7.2"
+        //
+        // 0.8.0: play it. Empty launcher cells are loopers, MIDI follow has an
+        // auto setting, pattern generators write notes, a step can lock any
+        // knob, and every window with settings in it is cards of knobs and
+        // switches. A song with step locks means something 0.7 cannot play.
+        versionCode = 14
+        versionName = "0.8.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
