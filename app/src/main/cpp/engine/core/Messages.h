@@ -108,6 +108,12 @@ struct ParamMessage {
     int32_t index = 0; // into the unit's ParamDef table
     float value = 0.0f; // normalised 0..1
     bool record = false; // a user gesture: may be recorded into a lane and wins over its lane this pass
+    /**
+     * Ticks, or nought for now. While playing, a rack's message waits for its
+     * rack's next multiple of this - a bar, say - and lands there. How the
+     * perform page's mutes wait for the bar.
+     */
+    int32_t quantise = 0;
 };
 
 /** Sixteen tracks of notes plus a clock pulse every ten ticks; 1024 is

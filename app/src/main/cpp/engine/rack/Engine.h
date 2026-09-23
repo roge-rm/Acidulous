@@ -344,6 +344,15 @@ class Engine : public Rack::ModifiedNoteSink {
     int32_t mpeMembers = 15;
     float mpeBendSemis = 48.0f;
     void drainParams();
+    /** A rack's parameter, applied: moved, and recorded if it is a gesture while recording. */
+    void applyRackParam(const ParamMessage &p);
+    /** What is waiting for a bar line on each rack; see `ParamMessage::quantise`. */
+    struct PendingParam {
+        bool waiting = false;
+        ParamMessage message;
+        int64_t due = 0; // the clock's own tick
+    };
+    PendingParam pendingParams[kRackCount];
 
     RtQueue<Mount, 64> mounts;
     RtQueue<MidiMessage, 256> midiIn;

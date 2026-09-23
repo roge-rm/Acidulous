@@ -2,6 +2,7 @@ package com.rm.acidulous.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -19,7 +20,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -36,7 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.model.GATE_LENGTHS
+import com.rm.acidulous.model.MUTE_ON
 import com.rm.acidulous.model.PAD_X_MODES
+import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.PAD_Y_MODES
 import com.rm.acidulous.model.REPEAT_LENGTHS
 import com.rm.acidulous.model.RISER_LENGTHS
@@ -45,6 +50,7 @@ import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.THROW_TIMES
 import com.rm.acidulous.ui.theme.Acid
+import kotlinx.coroutines.delay
 
 /**
  * What the perform pages are holding.
@@ -241,12 +247,45 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
 /**
  * The song's parts: every track's mute, and fill.
  *
- * A mute here is the mixer's own mute, and the strip shows it too. Fill is
- * the same held fill the editor has, and like it is never recorded.
+ * A mute here is the mixer's own mute, and the strip shows it too. While the
+ * song plays it waits for the next bar (or beat, from **mute on**) and is
+ * drawn outlined until it lands. The song's own mute only changes once the
+ * engine's has, so nothing pushed in between can land it early. Fill is the
+ * same held fill the editor has, and like it is never recorded.
  */
 @Composable
-fun LivePage(song: Song, editor: SongEditor, modifier: Modifier = Modifier) {
+fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modifier: Modifier = Modifier) {
     val c = Acid.colors
+    val settings = song.master.perform
+    // What each track's mute is on its way to, while it waits for its line.
+    val waiting = remember { mutableStateMapOf<Int, Boolean>() }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(30)
+            for ((i, want) in waiting.toMap()) {
+                if ((NativeEngine.paramNormalized(i, "channel", "mute") >= 0.5f) == want) {
+                    waiting.remove(i)
+                    editor.edit(i, push = false) { t -> t.copy(mixer = t.mixer.copy(mute = want)) }
+                }
+            }
+        }
+    }
+    // A stop drops whatever was waiting, in the engine and so here.
+    LaunchedEffect(playing) { if (!playing) waiting.clear() }
+    fun toggle(i: Int) {
+        val track = song.tracks.getOrNull(i) ?: return
+        val want = !(waiting[i] ?: track.mixer.mute)
+        val on = MUTE_ON[settings.muteOn]
+        if (!playing || on == "now") {
+            waiting.remove(i)
+            editor.edit(i) { t -> t.copy(mixer = t.mixer.copy(mute = want)) }
+            return
+        }
+        val bar = song.scenes.getOrNull(scene)?.let { song.signatureOf(it) } ?: song.signature
+        val quantise = if (on == "bar") bar.ticksPerBar else PPQN
+        waiting[i] = want
+        NativeEngine.setParam(i, "channel", "mute", if (want) 1f else 0f, record = true, quantise = quantise)
+    }
     Row(modifier.background(c.panelAlt).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Column(Modifier.weight(3f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Caption("mute")
@@ -257,9 +296,10 @@ fun LivePage(song: Song, editor: SongEditor, modifier: Modifier = Modifier) {
                 Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     for (i in row) {
                         val track = song.tracks[i]
-                        TrackMute(track.name, trackColour(i), track.mixer.mute, Modifier.weight(1f).fillMaxHeight()) {
-                            editor.edit(i) { t -> t.copy(mixer = t.mixer.copy(mute = !t.mixer.mute)) }
-                        }
+                        TrackMute(
+                            track.name, trackColour(i), track.mixer.mute, waiting[i],
+                            Modifier.weight(1f).fillMaxHeight(),
+                        ) { toggle(i) }
                     }
                     repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
@@ -270,6 +310,11 @@ fun LivePage(song: Song, editor: SongEditor, modifier: Modifier = Modifier) {
             Caption("fill")
             HoldPad("fill", UiPrefs.fillHeld, latch = false, colour = c.accent, modifier = Modifier.fillMaxWidth().weight(1f)) { on ->
                 UiPrefs.holdFill(on)
+            }
+            Setting("mute on", MUTE_ON[settings.muteOn], Modifier.fillMaxWidth()) {
+                editor.editSong { s ->
+                    s.copy(master = s.master.copy(perform = s.master.perform.copy(muteOn = (s.master.perform.muteOn + 1) % MUTE_ON.size)))
+                }
             }
         }
     }
@@ -300,13 +345,20 @@ private fun LatchChip(on: Boolean, modifier: Modifier, onClick: () -> Unit) {
     ) { Text("latch", color = if (on) c.accent else c.textMid, fontSize = 11.sp) }
 }
 
-/** One track's mute: its colour down the side, its name, red while muted. */
+/**
+ * One track's mute: its colour down the side, its name, red while muted.
+ * [waiting] is the state it is on its way to, drawn as an outline in that
+ * state's colour until it lands.
+ */
 @Composable
-private fun TrackMute(name: String, colour: Color, muted: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun TrackMute(name: String, colour: Color, muted: Boolean, waiting: Boolean?, modifier: Modifier, onClick: () -> Unit) {
     val c = Acid.colors
+    val shape = RoundedCornerShape(4.dp)
     Row(
-        modifier.clip(RoundedCornerShape(4.dp))
-            .background(if (muted) c.red.copy(alpha = 0.25f) else c.raised).clickable(onClick = onClick),
+        modifier.clip(shape)
+            .background(if (muted) c.red.copy(alpha = 0.25f) else c.raised)
+            .then(if (waiting != null) Modifier.border(2.dp, if (waiting) c.red else c.textMid, shape) else Modifier)
+            .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.width(3.dp).fillMaxHeight().background(colour))

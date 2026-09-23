@@ -549,6 +549,8 @@ data class Track(
     /** What the pad does across and up: index [PAD_X_MODES] and [PAD_Y_MODES]. */
     val xMode: Int = 0,
     val yMode: Int = 0,
+    /** When a mute on the live page lands: indexes [MUTE_ON]. */
+    val muteOn: Int = 0,
 )
 
 /** How long a tape stop takes, as labels; mirrors `Perform::StopLen`. */
@@ -557,6 +559,8 @@ val STOP_LENGTHS = listOf("1/4", "1/2", "1 beat", "2 beats")
 val THROW_TIMES = listOf("1/16", "1/8", "3/16", "1/4", "3/8")
 /** The repeat's slice lengths, 1..5 in `Perform::Repeat`; 0 is off. */
 val REPEAT_LENGTHS = listOf("1", "1/2", "1/4", "1/8", "1/16")
+/** When a mute tapped on the live page lands, while the song plays. */
+val MUTE_ON = listOf("bar", "beat", "now")
 /** What the pad does across: a filter, or a crush. Mirrors `Perform::XMode`. */
 val PAD_X_MODES = listOf("filter", "crush")
 /** What the pad does up: throws into an echo, or into a wash. Mirrors `Perform::YMode`. */

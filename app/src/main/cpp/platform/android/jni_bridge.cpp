@@ -513,8 +513,10 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMpeHeldMask(JNIEnv *, jobject) {
 
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSetParam(JNIEnv *env, jobject, jint rackId,
-                                                  jstring unit, jstring name, jfloat value, jboolean record) {
-    return host().setParam(rackId, toStdString(env, unit), toStdString(env, name), value, record == JNI_TRUE) ? JNI_TRUE : JNI_FALSE;
+                                                  jstring unit, jstring name, jfloat value, jboolean record,
+                                                  jint quantise) {
+    return host().setParam(rackId, toStdString(env, unit), toStdString(env, name), value, record == JNI_TRUE,
+                           quantise) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jint JNICALL

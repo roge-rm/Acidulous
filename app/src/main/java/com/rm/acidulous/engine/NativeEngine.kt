@@ -233,8 +233,12 @@ object NativeEngine {
      * [unit] is "machine", "effect1", "effect2", "mod1", "mod2", "mod3" or "channel";
      * [value] is normalised 0..1. Returns false if the name is unknown for what is mounted.
      */
-    fun setParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean = true): Boolean =
-        nativeSetParam(rackId, unit, name, value, record)
+    /**
+     * [quantise], in ticks: while playing, the value waits for the rack's
+     * next multiple of it - the next bar, say - and lands there. Nought is now.
+     */
+    fun setParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean = true, quantise: Int = 0): Boolean =
+        nativeSetParam(rackId, unit, name, value, record, quantise)
 
     // --- Transport -----------------------------------------------------------
     /** Play from the top of [sceneIdx]; -1 restarts the current scene. */
@@ -815,7 +819,7 @@ object NativeEngine {
     private external fun nativeNoteOff(rackId: Int, note: Int)
     private external fun nativeControlChange(rackId: Int, cc: Int, value: Int, record: Boolean)
     private external fun nativeChannelPressure(rackId: Int, value: Int, record: Boolean)
-    private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean): Boolean
+    private external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean, quantise: Int): Boolean
     private external fun nativeLoadTake(rack: Int, path: String): String
     private external fun nativeLoadReel(rack: Int, spec: String): String
     private external fun nativeSetCacheRoot(path: String)

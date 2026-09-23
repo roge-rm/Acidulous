@@ -230,7 +230,8 @@ class EngineHost {
     // unit: "machine" | "effect1" | "effect2" | "mod1" | "mod2" | "channel".
     // value is normalised 0..1. Names are resolved here, on the UI thread.
     // `record`: a user gesture (recordable) rather than the document syncing state.
-    bool setParam(int rack, const std::string &unit, const std::string &name, float value, bool record);
+    bool setParam(int rack, const std::string &unit, const std::string &name, float value, bool record,
+                  int quantise = 0);
 
     // --- Transport -----------------------------------------------------------
     void transportPlay(int sceneIdx);

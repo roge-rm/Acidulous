@@ -732,7 +732,7 @@ fun MainScreen(
                 when (panelPage) {
                     1 -> HoldPage(song, editor, performTrack, performState, pageModifier)
                     2 -> PadPage(song, editor, performTrack, performState, pageModifier)
-                    3 -> LivePage(song, editor, pageModifier)
+                    3 -> LivePage(song, editor, playing, position.scene, pageModifier)
                     else -> MixerPanel(
                         song, editor, rackPeaks, masterPeak, clickOn, onClick,
                         Modifier.weight(1f).onSizeChanged { panelH = with(density) { it.height.toDp() } },

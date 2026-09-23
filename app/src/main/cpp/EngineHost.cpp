@@ -910,7 +910,8 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
     return -1;
 }
 
-bool EngineHost::setParam(int rack, const std::string &unit, const std::string &name, float value, bool record) {
+bool EngineHost::setParam(int rack, const std::string &unit, const std::string &name, float value, bool record,
+                          int quantise) {
     const Unit u = unitFromName(unit);
     if (u != Unit::Master && (rack < 0 || rack >= kRackCount)) return false;
     int32_t index = -1;
@@ -955,6 +956,7 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
     p.index = index;
     p.value = std::clamp(value, 0.0f, 1.0f);
     p.record = record;
+    p.quantise = quantise;
     return sEngine.pushParam(p);
 }
 

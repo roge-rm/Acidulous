@@ -148,7 +148,15 @@ the sound out while you hold them: below 250 Hz, 250 Hz to 2.5 kHz, and above
 ### Live
 
 A mute button for every track (the same mute as the mixer's), and **fill**.
-Notes set to play on fill only play while it's held. Fill isn't recorded.
+
+While the song plays, a mute waits for the next bar and lands on it, so tracks
+drop in and out in time. The button is outlined until it does. **mute on**
+sets what it waits for: a bar, a beat, or nothing (**now**). When the song is
+stopped, mutes happen straight away. If you're recording, the mutes are
+recorded into each track's own clip.
+
+Notes set to play on fill only play while **fill** is held. Fill isn't
+recorded.
 
 ## Master inserts
 

@@ -191,6 +191,8 @@ void Engine::renderBlock(const float *in, float *out) {
             // A lane that pressed repeat and was stopped before it let go
             // would otherwise leave the song looping a beat in silence.
             master.perform.release();
+            // And a mute waiting for a bar that will not come now.
+            for (PendingParam &waiting : pendingParams) waiting.waiting = false;
             // **Stop means stop, not pause.** The playhead stayed where it
             // was, and the header's play button starts from the scene the
             // readout is showing - so a stop half way through a song and a
@@ -1034,22 +1036,45 @@ void Engine::drainParams() {
                 else fx->params().set(p.index, p.value);
             }
         } else if (p.rack >= 0 && p.rack < kRackCount) {
-            racks[p.rack].setParam(p.unit, p.index, p.value);
-            if (p.record && recordingNow()) {
-                racks[p.rack].touch(p.unit, p.index);
-                seq::RecordedEvent ev;
-                ev.absTick = clock.position();
-                ev.sceneId = scheduler.rackSceneId(p.rack);
-                ev.tickInIteration = scheduler.rackTick(p.rack);
-                ev.rack = p.rack;
-                ev.cmd = seq::kRecParam;
-                ev.p1 = static_cast<uint8_t>(p.unit);
-                ev.p2 = 0;
-                ev.paramIndex = p.index;
-                ev.value = p.value;
-                recordQueue.push(ev);
+            if (p.quantise > 0 && playing) {
+                // Parked until the rack's next line: a newer one replaces it.
+                const int64_t q = p.quantise;
+                const int64_t into = scheduler.rackTick(p.rack) % q;
+                PendingParam &waiting = pendingParams[p.rack];
+                waiting.message = p;
+                waiting.message.quantise = 0;
+                waiting.due = clock.position() + (into == 0 ? 0 : q - into);
+                waiting.waiting = true;
+            } else {
+                applyRackParam(p);
             }
         }
+    }
+    // And whatever has reached its line.
+    for (int32_t r = 0; r < kRackCount; ++r) {
+        PendingParam &waiting = pendingParams[r];
+        if (waiting.waiting && clock.position() >= waiting.due) {
+            waiting.waiting = false;
+            applyRackParam(waiting.message);
+        }
+    }
+}
+
+void Engine::applyRackParam(const ParamMessage &p) {
+    racks[p.rack].setParam(p.unit, p.index, p.value);
+    if (p.record && recordingNow()) {
+        racks[p.rack].touch(p.unit, p.index);
+        seq::RecordedEvent ev;
+        ev.absTick = clock.position();
+        ev.sceneId = scheduler.rackSceneId(p.rack);
+        ev.tickInIteration = scheduler.rackTick(p.rack);
+        ev.rack = p.rack;
+        ev.cmd = seq::kRecParam;
+        ev.p1 = static_cast<uint8_t>(p.unit);
+        ev.p2 = 0;
+        ev.paramIndex = p.index;
+        ev.value = p.value;
+        recordQueue.push(ev);
     }
 }
 

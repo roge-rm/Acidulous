@@ -694,6 +694,58 @@ void aClipCanPerform() {
     ok("even when the lane holds it at the top of the song", held == 0.0f, std::to_string(held));
 }
 
+/**
+ * A mute sent with a quantise waits for the next bar line and lands on it.
+ *
+ * The rack's own position decides where the bar is, so the check reads the
+ * clock at the moment the mute takes: before the line it must not have, at
+ * the line it must have.
+ */
+void aMuteWaitsForTheBar() {
+    printf("- a mute that waits for the bar\n");
+    Fixture f;
+    f.engine.panicFlag.store(true, std::memory_order_release);
+    float block[kBlockFrames * 2];
+    f.engine.renderBlock(nullptr, block);
+    f.engine.transport.requestPlay(0);
+    const auto until = [&](int64_t tick) {
+        while (f.engine.clock.position() < tick) f.engine.renderBlock(nullptr, block);
+    };
+    ParamMessage mute;
+    mute.rack = 0;
+    mute.unit = Unit::Channel;
+    mute.index = Rack::Mute;
+    mute.value = 1.0f;
+    mute.quantise = kBar;
+    until(kBar / 3);
+    f.engine.pushParam(mute);
+    int64_t landed = -1;
+    while (f.engine.clock.position() < kBar + kBar / 4) {
+        f.engine.renderBlock(nullptr, block);
+        if (landed < 0 && f.engine.racks[0].muted()) landed = f.engine.clock.position();
+    }
+    ok("sent a third of the way in, it lands on the next bar line (within a tick)",
+       landed >= kBar && landed <= kBar + 1, std::to_string(landed) + " vs " + std::to_string(kBar));
+
+    // Waiting when the song stops: it is dropped, not landed on the next play.
+    mute.rack = 1;
+    until(kBar + kBar / 2);
+    f.engine.pushParam(mute);
+    f.engine.renderBlock(nullptr, block);
+    f.engine.transport.requestStop();
+    f.engine.renderBlock(nullptr, block);
+    f.engine.transport.requestPlay(0);
+    until(3 * kBar); // well past where it was due
+    ok("a stop drops a mute that was waiting", !f.engine.racks[1].muted());
+
+    // Stopped, there is no bar to wait for: it lands at once.
+    f.engine.transport.requestStop();
+    f.engine.renderBlock(nullptr, block);
+    f.engine.pushParam(mute);
+    f.engine.renderBlock(nullptr, block);
+    ok("stopped, it lands at once", f.engine.racks[1].muted());
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -704,6 +756,7 @@ int main() {
     tracksCanBeGrouped();
     theMasterHasInserts();
     aClipCanPerform();
+    aMuteWaitsForTheBar();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
