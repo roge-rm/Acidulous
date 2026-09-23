@@ -193,6 +193,14 @@ class SongEditsTest {
     }
 
     @Test
+    fun theHeldEffectsFollowTheirGroupWhenOneIsDeleted() {
+        val song = demo.addGroup("A").addGroup("B")
+        val onB = song.copy(master = song.master.copy(perform = song.master.perform.copy(target = 2)))
+        assertEquals(1, onB.deleteGroup(0).master.perform.target) // B moved down a place, and so did the target
+        assertEquals(0, onB.deleteGroup(1).master.perform.target) // B went: back to the whole mix
+    }
+
+    @Test
     fun aBusTrackFromZeroSevenBecomesAMixerGroup() {
         var song = demo.copy(tracks = emptyList())
         for (m in listOf("Genesis", "Trinity", "Bus", "Hexbeat")) song = song.addTrack(m)

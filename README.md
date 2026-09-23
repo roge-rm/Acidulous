@@ -82,7 +82,7 @@ Each has the usual controls plus one extra, and a page in the manual.
 - **Sidechain**: the compressor, gate and filter can react to another track, e.g. duck the bass under the kick.
 - Two insert effects on the master, before the limiter.
 - A loudness meter (LUFS and true peak) on the master, and exports can be normalised to -14 LUFS.
-- **Perform**: beat repeat, tape stop and a filter and echo pad on the whole mix. They only work while you hold them, and they record into the song.
+- **Perform**: three pages beside the mixer for playing a song live. Hold: beat repeat, gate, reverse, tape stop and a riser. Pad: an XY pad (filter or crush across, echo or wash up) and kill switches. Live: mutes that wait for the bar, and fill. They work on the whole mix or on one group, only while held unless latched, and they record into the song.
 
 ### Sequencing
 

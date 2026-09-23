@@ -295,8 +295,19 @@ fun Song.withGroupInsertBypass(group: Int, slot: Int, bypass: Boolean): Song =
 fun Song.deleteGroup(group: Int): Song {
     if (group !in master.groups.indices) return this
     val n = group + 1
+    // The perform pages' target follows its group, or goes back to the
+    // whole mix if its group is the one going.
+    val target = master.perform.target
+    val retarget = when {
+        target == n -> 0
+        target > n -> target - 1
+        else -> target
+    }
     return copy(
-        master = master.copy(groups = master.groups.filterIndexed { i, _ -> i != group }),
+        master = master.copy(
+            groups = master.groups.filterIndexed { i, _ -> i != group },
+            perform = master.perform.copy(target = retarget),
+        ),
         tracks = tracks.map { t ->
             val o = t.mixer.output
             when {

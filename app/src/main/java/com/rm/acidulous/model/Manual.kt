@@ -563,6 +563,7 @@ object Manual {
             ManualBlock(ManualKind.Heading, "Perform"),
             ManualBlock(ManualKind.Para, "The tabs down the mixer's left edge are **mix**, **hold**, **pad** and **live**. The last three are for playing the song rather than mixing it."),
             ManualBlock(ManualKind.Para, "The effects on **hold** and **pad** work on the whole mix, after the master inserts. They're only on while you hold them, unless **latch** is on. With latch on, a tap turns something on and another tap turns it off, and the pad stays where you leave it. Turning latch off lets go of everything on that page."),
+            ManualBlock(ManualKind.Para, "If the song has groups, **on all** picks what the effects work on: the whole mix, or just one group, e.g. repeat only the drums. Tap it to go through the groups."),
             ManualBlock(ManualKind.Para, "If you're recording, everything you do on **hold** and **pad** is recorded into the clip of the last track you opened, as automation, and the song plays it back the same way. Stopping the song lets go of anything held."),
             ManualBlock(ManualKind.Para, "### Hold"),
             ManualBlock(ManualKind.Bullet, "**repeat** loops the last slice of the song. The five buttons are the slice length, from a beat down to a sixteenth. Slide along them without letting go to change the length. While the song is playing the slice starts on the beat, so it stays in time."),

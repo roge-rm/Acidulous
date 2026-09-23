@@ -746,6 +746,58 @@ void aMuteWaitsForTheBar() {
     ok("stopped, it lands at once", f.engine.racks[1].muted());
 }
 
+/**
+ * The held effects on one group: the group changes and nothing else does.
+ *
+ * Only rack A is routed into the group; B goes straight to the master. With
+ * the limiter off the master is linear, so everything the effects did must
+ * be the group's own change at the master's volume - which is what says B
+ * was left alone.
+ */
+void theEffectsCanPlayOnAGroup() {
+    printf("- the held effects on a group\n");
+    constexpr int32_t kBlocks = 700;
+    struct Take { std::vector<float> mix, group; };
+    const auto take = [&](float target01, bool held) {
+        GroupFixture f(false);
+        f.engine.racks[GroupFixture::kA].setParam(Unit::Channel, Rack::Output, (GroupFixture::kGroup + 1) / 16.0f);
+        f.engine.master.params().set(MasterBus::LimiterOn, 0.0f);
+        f.engine.master.params().jumpAll();
+        f.engine.master.perform.params().set(Perform::Target, target01);
+        f.engine.master.perform.params().jumpAll();
+        f.engine.panicFlag.store(true, std::memory_order_release);
+        float scratch[kBlockFrames * 2];
+        f.engine.renderBlock(nullptr, scratch);
+        f.engine.transport.requestPlay(0);
+        Take t;
+        t.mix.resize(static_cast<size_t>(kBlocks) * kBlockFrames * 2);
+        t.group.resize(static_cast<size_t>(kBlocks) * kBlockFrames);
+        for (int32_t b = 0; b < kBlocks; ++b) {
+            // Held from a little way in: the pad hard left, a deep low pass.
+            if (held && b == 100) {
+                f.engine.master.perform.params().set(Perform::X, 0.0f);
+            }
+            f.engine.renderBlock(nullptr, t.mix.data() + static_cast<size_t>(b) * kBlockFrames * 2);
+            const float *gl = f.engine.master.groupOutL(GroupFixture::kGroup);
+            std::copy(gl, gl + kBlockFrames, t.group.begin() + static_cast<long>(b) * kBlockFrames);
+        }
+        return t;
+    };
+    const Take plain = take(0.25f, false), onGroup = take(0.25f, true);
+    ok("on the group, the group's sound changes", largestDifference(plain.group, onGroup.group) > 0.01f);
+    // The master's change, less the group's change at the master's volume.
+    const float volume = 0.8f;
+    float rest = 0.0f;
+    for (size_t i = 0; i < plain.group.size(); ++i) {
+        const float mixChange = onGroup.mix[i * 2] - plain.mix[i * 2];
+        const float groupChange = (onGroup.group[i] - plain.group[i]) * volume;
+        rest = std::max(rest, std::fabs(mixChange - groupChange));
+    }
+    ok("and nothing outside the group does", rest < 1e-4f, std::to_string(rest));
+    const Take onEmpty = take(0.5f, true), onAll = take(0.0f, true);
+    ok("a group with nothing in it falls back to the whole mix", firstDifference(onEmpty.mix, onAll.mix) == onAll.mix.size());
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -757,6 +809,7 @@ int main() {
     theMasterHasInserts();
     aClipCanPerform();
     aMuteWaitsForTheBar();
+    theEffectsCanPlayOnAGroup();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -252,7 +252,7 @@ class Recorder {
         val PERF_PARAMS = listOf("mod", "pressure")
         /** Mirrors `Perform::P`, by index. */
         val PERFORM_PARAMS = listOf("repeat", "stop", "x", "y", "stoplen", "throwtime", "feedback", "reverse", "gate",
-            "killlow", "killmid", "killhigh", "riser", "riserlen", "xmode", "ymode",
+            "killlow", "killmid", "killhigh", "riser", "riserlen", "xmode", "ymode", "target",
         )
         /** Where each held control rests, normalised. */
         val PERFORM_REST = mapOf("repeat" to 0f, "stop" to 0f, "x" to 0.5f, "y" to 0f, "reverse" to 0f, "gate" to 0f,

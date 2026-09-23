@@ -60,6 +60,8 @@ class Perform {
         XMode,
         /** What the pad does up: 0 an echo, 1 a wash. */
         YMode,
+        /** Where they all run: 0 the whole mix, 1..4 one of the mixer's groups. */
+        Target,
         Count
     };
 
@@ -85,6 +87,7 @@ class Perform {
             {"riserlen", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
             {"xmode", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
             {"ymode", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+            {"target", 0.0f, 4.0f, 0.0f, Curve::Stepped, 5, ""},
         };
         params_.init(kDefs, Count);
         // Allocated here as well as in [prepare], so an engine that is never
@@ -187,6 +190,9 @@ class Perform {
         echoLen = -1.0f;
         lastLoud = -(int64_t{1} << 40);
     }
+
+    /** The group they run on, or -1 for the whole mix; see `MasterBus::process`. */
+    int32_t wantedGroup() const { return static_cast<int32_t>(params_.get(Target) + 0.5f) - 1; }
 
     /** Every held control back to rest: a transport stop, or a panic. */
     void release() {

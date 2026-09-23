@@ -91,6 +91,18 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
         }
     }
 
+    // Where the held effects run this block. A group with nothing routed
+    // into it has nothing to play them on, so they fall back to the whole
+    // mix. Moving from one to the other lets go and starts clean, or a
+    // repeat caught on the drums would carry on playing over the whole song.
+    const int32_t wanted = perform.wantedGroup();
+    const int32_t performOn = wanted >= 0 && wanted < kGroupSlots && groupUsed[wanted] ? wanted : -1;
+    if (performOn != performWas) {
+        perform.release();
+        perform.reset();
+        performWas = performOn;
+    }
+
     // **The groups**: their members summed above, through two inserts and a
     // fader of their own, into the master. A group nothing is routed into
     // does no work at all.
@@ -102,6 +114,7 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
             fx->onBlock(tickStart, tickEnd, bpm);
             fx->run(groupL[g], groupR[g], frames, true);
         }
+        if (g == performOn) perform.process(groupL[g], groupR[g], frames, bpm);
         const float gain = params_.get(groupParam(g) + 1) >= 0.5f ? 0.0f : params_.get(groupParam(g));
         // Pan as a balance on the stereo group, with the same law a track's
         // pan uses, so the centre is unity.
@@ -147,8 +160,9 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
         fx->run(sumL, sumR, frames, true);
     }
 
-    // The held effects, on everything the inserts hand on.
-    perform.process(sumL, sumR, frames, bpm);
+    // The held effects, on everything the inserts hand on - unless they are
+    // on a group this block.
+    if (performOn < 0) perform.process(sumL, sumR, frames, bpm);
 
     const float volume = params_.get(Volume);
     for (int32_t i = 0; i < frames; ++i) { sumL[i] *= volume; sumR[i] *= volume; }

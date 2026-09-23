@@ -551,6 +551,8 @@ data class Track(
     val yMode: Int = 0,
     /** When a mute on the live page lands: indexes [MUTE_ON]. */
     val muteOn: Int = 0,
+    /** Where the held effects run: 0 the whole mix, 1..4 one of the groups. */
+    val target: Int = 0,
 )
 
 /** How long a tape stop takes, as labels; mirrors `Perform::StopLen`. */

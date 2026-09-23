@@ -105,6 +105,10 @@ inserts. They're only on while you hold them, unless **latch** is on. With
 latch on, a tap turns something on and another tap turns it off, and the pad
 stays where you leave it. Turning latch off lets go of everything on that page.
 
+If the song has groups, **on all** picks what the effects work on: the whole
+mix, or just one group, e.g. repeat only the drums. Tap it to go through the
+groups.
+
 If you're recording, everything you do on **hold** and **pad** is recorded into
 the clip of the last track you opened, as automation, and the song plays it
 back the same way. Stopping the song lets go of anything held.

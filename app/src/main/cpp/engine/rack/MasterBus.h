@@ -54,7 +54,10 @@ class MasterBus {
 
     ParamSet &params() { return params_; }
 
-    /** The held effects: after the inserts, before the fader. */
+    /**
+     * The held effects: on the whole mix after the master inserts and before
+     * the fader, or on one group after its inserts and before its fader.
+     */
     Perform perform;
 
     // Per block. `fade` is the scene fade multiplier (1 = none); a click may
@@ -186,6 +189,8 @@ class MasterBus {
 
   private:
     ParamSet params_;
+    /** Where the held effects ran last block: a group, or -1 for the whole mix. */
+    int32_t performWas = -1;
     Effect *sends[kSendSlots]{};
     Effect *inserts[kMasterInsertSlots]{};
     Effect *groupInserts[kGroupSlots][kGroupInsertSlots]{};

@@ -639,6 +639,10 @@ object EngineSync {
         NativeEngine.setParam(0, "perform", "riserlen", m.perform.riserLen / (RISER_LENGTHS.size - 1f), record = false)
         NativeEngine.setParam(0, "perform", "xmode", m.perform.xMode.toFloat(), record = false)
         NativeEngine.setParam(0, "perform", "ymode", m.perform.yMode.toFloat(), record = false)
+        // A target past the groups there are is the whole mix; the engine falls
+        // back too, but only for a group with nothing in it.
+        val target = m.perform.target.takeIf { it in 1..m.groups.size } ?: 0
+        NativeEngine.setParam(0, "perform", "target", target / MAX_GROUPS.toFloat(), record = false)
     }
 
     /**

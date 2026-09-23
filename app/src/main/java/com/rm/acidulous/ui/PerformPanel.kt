@@ -118,7 +118,11 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
     val out = remember(track) { PerformSender(track) }
     val settings = song.master.perform
     Column(modifier.background(c.panelAlt).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Caption("repeat")
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+            Caption("repeat")
+            Spacer(Modifier.weight(1f))
+            TargetChip(song, editor, Modifier)
+        }
         LengthStrip(REPEAT_LENGTHS, state.repeat, state.holdLatch, Modifier.fillMaxWidth().weight(1f)) { k ->
             state.repeat = k
             out.repeat(k)
@@ -213,6 +217,7 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
                     onEnd = { editor.endSongGesture() },
                 )
                 Spacer(Modifier.weight(1f))
+                TargetChip(song, editor, Modifier.fillMaxWidth())
                 LatchChip(state.padLatch, Modifier.fillMaxWidth()) {
                     if (state.padLatch) {
                         if (state.pad != null) { state.pad = null; out.pad(null) }
@@ -333,6 +338,34 @@ private fun Setting(label: String, value: String, modifier: Modifier, onClick: (
         modifier.height(28.dp).clip(RoundedCornerShape(4.dp)).background(c.raised).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text("$label $value", color = c.textMid, fontSize = 11.sp, maxLines = 1, softWrap = false) }
+}
+
+/**
+ * Where the held effects run: "on all", or on one of the groups. Only there
+ * when the song has a group; a tap moves to the next.
+ */
+@Composable
+private fun TargetChip(song: Song, editor: SongEditor, modifier: Modifier) {
+    val groups = song.master.groups
+    if (groups.isEmpty()) return
+    val c = Acid.colors
+    val target = song.master.perform.target.takeIf { it in 1..groups.size } ?: 0
+    Box(
+        modifier.height(28.dp).clip(RoundedCornerShape(4.dp))
+            .background(if (target > 0) c.accent.copy(alpha = 0.25f) else c.raised)
+            .clickable {
+                editor.editSong { s ->
+                    s.copy(master = s.master.copy(perform = s.master.perform.copy(target = (target + 1) % (groups.size + 1))))
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            "on " + (if (target == 0) "all" else groups[target - 1].name), color = if (target > 0) c.accent else c.textMid,
+            fontSize = 11.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 6.dp),
+        )
+    }
 }
 
 @Composable
