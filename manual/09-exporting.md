@@ -29,8 +29,9 @@ back if it would push the true peak over -1 dBTP, so a very dynamic song may end
 up a little under -14. Stems get the same gain, so they still add up to the mix.
 
 The master strip in the mixer shows the same measurement while you play:
-integrated LUFS, and true peak underneath (red above -1 dBTP). It resets every
-time you press play, or when you tap it.
+integrated LUFS, and under it the short-term reading (**S**) and the true peak
+(**TP**). TP turns red above -1 dBTP. It resets every time you press play, or
+when you tap it.
 
 ## Exports are repeatable
 

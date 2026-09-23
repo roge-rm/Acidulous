@@ -111,9 +111,12 @@ A group is a strip in the mixer that tracks can be routed through. It isn't a
 track: it has no machine and no clips, and it doesn't appear in the song grid.
 
 Tap **+ group** in the mixer to add one (up to four). Tap a group's name to
-rename it, and hold it to delete the group. Once the song has a group, each
-track strip gets an extra row at the bottom: tap it to send that track to the
-master or to one of the groups.
+rename it. The **✕** beside it deletes the group, and so does holding the name.
+Once the song has a group, each track strip gets an extra row at the bottom: tap
+it to send that track to the master or to one of the groups.
+
+A group strip has a fader, pan, mute and solo, and lists the tracks going into
+it.
 
 Everything routed into a group goes through the group's two effects (**fx1**,
 **fx2**) and its fader before the master. For example, put one compressor on
