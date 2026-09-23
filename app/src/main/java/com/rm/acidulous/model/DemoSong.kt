@@ -1,8 +1,17 @@
 package com.rm.acidulous.model
 
+import com.rm.acidulous.model.DemoKit.BAR
+import com.rm.acidulous.model.DemoKit.E
+import com.rm.acidulous.model.DemoKit.Q
+import com.rm.acidulous.model.DemoKit.S
+import com.rm.acidulous.model.DemoKit.clip
+import com.rm.acidulous.model.DemoKit.duckUnder
+import com.rm.acidulous.model.DemoKit.fx
+import com.rm.acidulous.model.DemoKit.patch
+
 /**
- * The song that opens on a first run: a dub, in four scenes, with one of most
- * things the app can do somewhere in it.
+ * Riddim, the song that opens on a first run: a dub, in four scenes, with one
+ * of most things the app can do somewhere in it. The first of [DemoSongs].
  *
  * A demo earns its place by being the fastest way to find out what is here,
  * so this one puts a working example of each idea where a person will meet it:
@@ -45,11 +54,6 @@ package com.rm.acidulous.model
  */
 object DemoSong {
 
-    private const val Q = PPQN          // quarter
-    private const val E = PPQN / 2      // eighth
-    private const val S = PPQN / 4      // sixteenth
-    private const val BAR = 4 * PPQN
-
     // Genesis counts from 36: kick, snare, clap, rim, three toms, then hats.
     private const val KICK = 36
     private const val RIM = 39
@@ -88,33 +92,8 @@ object DemoSong {
     /** Where the bass sits under each bar: A1 A1 D2 E2. */
     private val ROOTS = listOf(33, 33, 38, 40)
 
-    private fun patch(machine: String, name: String): Map<String, Float> =
-        PatchStore.factory(machine).firstOrNull { it.name == name }?.params ?: emptyMap()
-
-    private fun fx(type: String, patchName: String): UnitSlot =
-        UnitSlot(type, PatchStore.factory(PatchStore.effectKey(type)).firstOrNull { it.name == patchName }?.params ?: emptyMap())
-
     /** The mixer group the drums and hand drums play through: group 1. */
     private const val RHYTHM = 1
-
-    /**
-     * A compressor that ducks this track under [track] (1-based): hard and
-     * fast, so the bass gets out of the kick's way and comes straight back.
-     * Values are the parameters' normalised positions.
-     */
-    private fun duckUnder(track: Int): UnitSlot = UnitSlot(
-        "Compressor",
-        mapOf(
-            "threshold" to 0.5f,                  // -30 dB
-            "ratio" to 0.694f,                    // 8:1
-            "attack" to 0f,                       // 0.1 ms
-            "release" to 0.54f,                   // 120 ms
-            SIDECHAIN_PARAM to track / (SIDECHAIN_STEPS - 1f),
-        ),
-    )
-
-    private fun clip(bars: Int, notes: List<Note>, block: Clip.() -> Clip = { this }): Clip =
-        Clip(bars = bars, notes = notes.sortedBy { it.tick }).block()
 
     // --- the parts -------------------------------------------------------------------
 
@@ -324,7 +303,7 @@ object DemoSong {
         )
 
         return Song(
-            name = "Demo",
+            name = "Riddim",
             tempo = 74f,
             swing = 58f,
             swingUnit = 0,

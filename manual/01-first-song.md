@@ -39,9 +39,21 @@ The song you're working on is saved as you go and comes back next time you open
 the app. **save** in the header saves it under its name. **file** has new song,
 save as, and your other songs.
 
-## The demo song
+## The demo songs
 
 The first time the app opens it loads a demo song to look around in and pull
-apart. **file · Demo song** loads a fresh copy whenever you want one. It replaces
-the open song like opening any other song does, and isn't saved until you save
-it, so a song of yours called "Demo" is safe.
+apart. **file · Demo songs** has five, each in a different style:
+
+- **Riddim** - dub. Scenes, swing, a sidechain, a group, and a siren drawn as
+  a bend.
+- **Squelch** - acid house. The acid bass with accents and slides, a filter
+  sweep, and the perform effects recorded into the song.
+- **Night Drive** - synthwave. FM bass, gated reverb, a lead with vibrato, and
+  scenes that fade in and out.
+- **Cartridge** - chiptune. The chip machine on every track, and a scene in 7/8.
+- **Lantern** - chamber music in 3/4. The modelled strings, woodwinds and horn,
+  slowing down at the end.
+
+Picking one loads a fresh copy. It replaces the open song like opening any
+other song does, and isn't saved until you save it, so a song of yours with the
+same name is safe.

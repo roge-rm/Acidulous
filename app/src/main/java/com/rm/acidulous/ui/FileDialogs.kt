@@ -63,6 +63,27 @@ fun SongBrowserDialog(
 }
 
 /**
+ * The demo songs: each a different style, and between them most of what the
+ * app does. Picking one opens a fresh copy of it in place of the open song,
+ * the way loading a song does.
+ */
+@Composable
+fun DemoSongsDialog(current: String, onPick: (com.rm.acidulous.model.Demo) -> Unit, onDismiss: () -> Unit) {
+    PlainDialog(title = "Demo songs", onDismiss = onDismiss, dismissLabel = "Close", spacing = 6.dp) {
+        for (demo in com.rm.acidulous.model.DemoSongs.all) {
+            val open = demo.name == current
+            DialogRow(
+                mark = if (open) "●" else "♪",
+                name = demo.name,
+                under = demo.style,
+                trailing = if (open) "open" else "",
+                on = open,
+            ) { onPick(demo) }
+        }
+    }
+}
+
+/**
  * Patches for one machine: a tab per family, and one more for the user's own.
  *
  * A bank of fifty-one in one list is a list nobody reads to the end of, and

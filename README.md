@@ -104,6 +104,11 @@ Each has the usual controls plus one extra, and a page in the manual.
 - Ableton Link, and MIDI clock in and out.
 - Map any MIDI CC or note to any control.
 
+### Demo songs
+
+Five, in the file menu: dub, acid house, synthwave, chiptune and a chamber piece
+in 3/4. Between them they use every machine that doesn't need a sample.
+
 ### Export
 
 WAV, AIFF, FLAC, MP3 or AAC, as the whole song or one scene, or as stems. Also MIDI files and a song bundle you can share.
