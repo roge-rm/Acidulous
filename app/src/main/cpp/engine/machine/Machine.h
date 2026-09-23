@@ -125,4 +125,24 @@ class Machine {
     }
 };
 
+/**
+ * What a panic does to a machine, in one place, so the engine and the
+ * harness that checks it cannot drift apart.
+ *
+ * Silence, then the channel's controllers back to rest, then the machine's
+ * own reset, then parameters jumped rather than glided. The controllers are
+ * the part that was missing: a machine keeps where the wheel, the bend and
+ * the pressure were last left, so a render made after a bent note began
+ * bent, and two exports of one song could differ by what was played between
+ * them.
+ */
+inline void panicMachine(Machine &m) {
+    m.allNotesOff();
+    m.pitchBend(0);
+    m.controlChange(1, 0);
+    m.channelPressure(0);
+    m.reset();
+    m.params().jumpAll();
+}
+
 } // namespace acidulous

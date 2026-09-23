@@ -61,6 +61,13 @@ void Delay::reset() {
     lp[0] = lp[1] = 0.0f;
     duckEnv = 0.0f;
     readSamples = clampf(kDelayBeats[3] * 60.0f / bpm * sr, 1.0f, sr * kMaxDelaySeconds);
+    // And the first block after a reset starts at the length it is asked
+    // for, rather than gliding there from one worked out at whatever tempo
+    // played before it - a render began with a swoop that depended on it.
+    snapRead = true;
+    // The tape's flutter, which ran on from wherever the last song left it:
+    // the Tape and Seasick patches were the two delays that did not repeat.
+    wobblePhase = 0.0f;
 }
 
 bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
@@ -76,6 +83,7 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float wobbleInc = 0.9f / sr, wobbleDepth = wobble * 70.0f;
     const bool wobbling = wobbleDepth > 0.0f;
 
+    if (snapRead) { readSamples = target; snapRead = false; }
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
         readSamples += (target - readSamples) * glide;
@@ -673,7 +681,15 @@ const ParamDef *Bitcrusher::paramDefs(int32_t &count) const {
 }
 
 void Bitcrusher::prepare(int32_t sampleRate) { sr = static_cast<float>(sampleRate); reset(); }
-void Bitcrusher::reset() { hold[0] = hold[1] = 0.0f; phase = 0.0f; period = 1.0f; for (auto &t : tone) t.reset(); }
+// The jitter's generator goes back to its seed too: Unstable and Broken are
+// the two patches that use it, and they were the two that did not repeat.
+void Bitcrusher::reset() {
+    hold[0] = hold[1] = 0.0f;
+    phase = 0.0f;
+    period = 1.0f;
+    rng = 0x2545F491u;
+    for (auto &t : tone) t.reset();
+}
 
 bool Bitcrusher::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;

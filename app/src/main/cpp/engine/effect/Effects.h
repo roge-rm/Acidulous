@@ -28,6 +28,7 @@ class Delay final : public Effect {
   private:
     dsp::DelayLine line[2];
     float readSamples = 24000.0f, lp[2]{}, duckEnv = 0.0f, wobblePhase = 0.0f, sr = 48000.0f, bpm = 120.0f;
+    bool snapRead = true; // see reset()
 };
 
 /**

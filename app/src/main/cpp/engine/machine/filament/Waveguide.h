@@ -39,6 +39,10 @@ class Waveguide {
         for (auto &a : allpassState) a = 0.0f;
         energy = 0.0f;
         dcIn = dcOut = 0.0f;
+        // The last sample the string gave out, which the bow and the breath
+        // lean on: left alone, a bowed or blown note began from the last
+        // one's, and those were the two families that did not repeat.
+        lastOut = 0.0f;
     }
 
     /**

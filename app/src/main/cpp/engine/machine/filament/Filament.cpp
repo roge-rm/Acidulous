@@ -165,8 +165,20 @@ void Filament::reset() {
         v.exciteDc = v.lastPick = 0.0f;
         std::fill(v.pick.begin(), v.pick.end(), 0.0f);
         v.pickWrite = 0;
+        // The bow's phase runs on from note to note, and a bowed or blown
+        // string started wherever the last one left it: those two families
+        // were the only ones that did not repeat after a panic.
+        v.bowPhase = 0.0f;
+        v.damp = 0.0f;
+        v.bend = 0.0f;
+        v.pressure = v.timbre = -1.0f;
     }
     for (auto &s : sympathetic) s.clear();
+    // Retuned from the next note, not kept from the last one.
+    lastRoot = 0.0f;
+    lastTuning = -1;
+    for (auto &l : lfo) l.reset(0.0f);
+    lfoValue[0] = lfoValue[1] = 0.0f;
     for (auto &bq : body) bq.reset();
     for (auto &e : eg) e.reset();
     stringLevel = 0.0f;

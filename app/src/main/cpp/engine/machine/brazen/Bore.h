@@ -123,6 +123,13 @@ class Bore {
         delay = 0.0f;
         onsetBoost = 1.0f;
         onsetFall = 0.0f;
+        // Back to where a new tube starts. setPressure ignores a change of
+        // under 0.02, so a tube still holding its last note's pressure kept
+        // it whenever the next note came in near it, and was tuned for the
+        // old one: the same chord sounded different depending on which
+        // voices had played before. That is what stopped two exports of the
+        // same song matching, from the horns' first note.
+        pressure = 0.5f;
         dirty = true;
     }
 

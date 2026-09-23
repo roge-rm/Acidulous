@@ -173,6 +173,12 @@ class Pipe {
         // this a cleared pipe given the *same* note is not dirty, and reads
         // its line at a length of nothing. It happened to be saved by the
         // pressure being different at note-on, which is not a reason.
+        //
+        // And the pressure goes back too. setPressure ignores a change of
+        // under 0.015, so a pipe holding its last note's pressure kept it
+        // when the next came in near it, and was tuned for the old one - the
+        // same fault the brass had, and why two exports did not match.
+        pressure = 0.5f;
         dirty = true;
     }
 

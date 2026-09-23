@@ -85,6 +85,15 @@ void Formulate::reset() {
         v.filter.reset();
         v.phase = v.subPhase = 0;
         v.lfsr = 0x7fffu;
+        // The noise's own clock and the crusher's held sample and count, all
+        // three carried from note to note on purpose and all three missed
+        // here: the noise drums came out different on every export.
+        v.noisePhase = 0.0f;
+        v.held = v.crushAcc = 0.0f;
+        v.freq = v.glideFrom = 440.0f;
+        v.glidePos = 1.0f;
+        v.age = 0;
+        v.bend = 0.0f;
         v.timeAcc = 0.0;
         v.t = 0;
         v.step = 0;
@@ -92,6 +101,7 @@ void Formulate::reset() {
         v.smoothed = 0.0f;
     }
     pwmPhase = 0.0f;
+    ageCounter = 0;
     rng = kRngSeed;
 }
 

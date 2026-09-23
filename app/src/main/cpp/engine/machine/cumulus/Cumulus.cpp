@@ -145,6 +145,13 @@ void Cumulus::reset() {
     }
     lfo[0].reset(0.0f);
     lfo[1].reset(0.25f);
+    // Where each copy starts reading and how it drifts both come from this,
+    // and it was never put back: with a cloud mounted, every export of a
+    // song with a pad in it scattered its reads differently. The harness
+    // never saw it because it plays Cumulus with no cloud.
+    rng = kRngSeed;
+    ageCounter = 0;
+    for (auto &v : voices) v.age = 0;
 }
 
 void *Cumulus::swapObject(int32_t slot, void *object) {

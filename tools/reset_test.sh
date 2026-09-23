@@ -11,4 +11,4 @@ trap 'rm -rf "$DIR"' EXIT
 # tools/host_engine.sh.
 LIB=$("$ROOT/tools/host_engine.sh") || exit 1
 g++ -O2 -std=c++17 -I "$CPP" "$ROOT/tools/reset_test.cpp" "$LIB" -o "$DIR/reset_test" || exit 1
-"$DIR/reset_test"
+"$DIR/reset_test" "$ROOT/tools/banks"
