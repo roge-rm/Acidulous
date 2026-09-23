@@ -185,7 +185,12 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
         limiter.process(sumL, sumR);
     }
 
-    fadeSmooth.set(fade);
+    if (fadeJump) {
+        fadeSmooth.jump(fade);
+        fadeJump = false;
+    } else {
+        fadeSmooth.set(fade);
+    }
     const float f = fadeSmooth.next();
     fadeNow.store(f, std::memory_order_relaxed);
     for (int32_t i = 0; i < frames; ++i) { sumL[i] *= f; sumR[i] *= f; }
@@ -252,18 +257,28 @@ void MasterBus::panic() {
     // Everything with a tail is emptied: a runaway that has already filled
     // the sends would otherwise go on sounding after the machines that made
     // it have stopped.
+    //
+    // And every parameter here jumps to where it is going, as the racks' do.
+    // Left gliding - or stopped a hair short of its target, which a smoother
+    // can do for ever - the first second of a render depended on what had
+    // played before it, and two exports of one song differed at the top.
     for (Effect *fx : sends) {
-        if (fx != nullptr) fx->reset();
+        if (fx != nullptr) { fx->reset(); fx->params().jumpAll(); }
     }
     for (Effect *fx : inserts) {
-        if (fx != nullptr) fx->reset();
+        if (fx != nullptr) { fx->reset(); fx->params().jumpAll(); }
     }
     for (auto &group : groupInserts) {
-        for (Effect *fx : group) if (fx != nullptr) fx->reset();
+        for (Effect *fx : group) if (fx != nullptr) { fx->reset(); fx->params().jumpAll(); }
     }
+    params_.jumpAll();
+    // The scene fade starts at whatever the first block asks for, rather than
+    // gliding there from where the last playing left it.
+    fadeJump = true;
     limiter.reset();
     perform.release();
     perform.reset();
+    perform.params().jumpAll();
     panicRamp = 0.0f;
 }
 

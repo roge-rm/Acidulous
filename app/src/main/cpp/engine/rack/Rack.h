@@ -188,6 +188,9 @@ class Rack {
     int32_t outputRequested() const { return static_cast<int32_t>(channel.target(Output) + 0.5f) - 1; }
     int32_t routedTo = -1;
 
+    /** The fader, pan and sends to where they are going, not gliding there: a panic. */
+    void jumpChannel() { channel.jumpAll(); }
+
     /**
      * Where `Unit::Perform` goes: the master's held effects. A press is sent
      * to a rack so that it records into that rack's clip and plays back from

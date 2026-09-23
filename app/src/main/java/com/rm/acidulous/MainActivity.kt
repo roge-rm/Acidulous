@@ -609,12 +609,17 @@ private fun App(modifier: Modifier = Modifier) {
             // peak of -1 dBTP, which is what a lossy encoder needs above it.
             var gainDb = 0f
             if (options.normalise && options.format.audio) {
+                // See there: a render starts from the document. On the main
+                // thread, the only one that may send parameters.
+                withContext(Dispatchers.Main) { EngineSync.pushForRender(song) }
                 val m = NativeEngine.measureLoudness(options.tailSeconds, scene, limit)
                     ?: return@withContext emptyList<File>() to "could not measure the song"
                 if (m[0] > -70f) gainDb = minOf(com.rm.acidulous.ui.NORMALISE_LUFS - m[0], -1f - m[1])
                 Log.i(TAG, "normalise: measured %.1f LUFS, %.1f dBTP; gain %.1f dB".format(m[0], m[1], gainDb))
             }
             NativeEngine.setRenderGain(gainDb)
+            // After the measuring pass too, whose lanes moved things again.
+            if (options.format.audio) withContext(Dispatchers.Main) { EngineSync.pushForRender(song) }
             try { when (options.format) {
                 com.rm.acidulous.ui.ExportFormat.Midi -> {
                     val file = File(cache, "$base.mid")
@@ -876,6 +881,9 @@ private fun App(modifier: Modifier = Modifier) {
         NativeEngine.queuedScene = -1
         NativeEngine.stopAtEnd = false
         editor.replace(next)
+        // What the new song does not name goes back to default, or a rack
+        // that kept its machine keeps the last song's settings too.
+        EngineSync.pushUnnamedDefaults(next)
         // And back to the top, which a stop deliberately does not do: a stop
         // leaves the playhead where it stopped so you can read where that
         // was, which is right until the song underneath it changes. Without
@@ -905,6 +913,8 @@ private fun App(modifier: Modifier = Modifier) {
                 var done = 0
                 targets.forEachIndexed { i, t ->
                     freezeStatus = "freezing ${i + 1} of ${targets.size}…"
+                    // A freeze is a render: it starts from the document too.
+                    EngineSync.pushForRender(editor.song)
                     val frozen = withContext(Dispatchers.IO) {
                         com.rm.acidulous.model.Freeze.render(context, editor.song, t)
                     }

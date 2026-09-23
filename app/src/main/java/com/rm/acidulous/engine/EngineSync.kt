@@ -588,6 +588,93 @@ object EngineSync {
         return ok
     }
 
+    /** Each unit type's parameter table, asked for once. */
+    private val tables = HashMap<String, List<ParamInfo>>()
+    private fun machineTable(type: String) = tables.getOrPut("machine:$type") { NativeEngine.machineParamInfo(type) }
+    private fun effectTable(type: String) = tables.getOrPut("effect:$type") { NativeEngine.effectParamInfo(type) }
+    private fun modifierTable(type: String) = tables.getOrPut("mod:$type") { NativeEngine.inputModParamInfo(type) }
+
+    /**
+     * Every parameter a song's units have and the document does not name, set
+     * to its default.
+     *
+     * A patch names only what it changes - Rimshot names eleven of Genesis's
+     * forty-nine - and a song only ever sent what was named. A rack whose
+     * machine is the same type as in the song open before keeps its instance,
+     * so the other thirty-eight kept that song's values: a song sounded
+     * different depending on what had been open first, and so did its export.
+     * Loading a patch already fills the rest in; opening a song did not.
+     *
+     * Main thread only, like every other parameter push: the engine's queue
+     * has one producer. It pauses every couple of hundred messages so that
+     * the queue, which holds five hundred and twelve, can drain.
+     */
+    fun pushUnnamedDefaults(song: Song) {
+        var sent = 0
+        fun send(rack: Int, unit: String, name: String, v: Float) {
+            NativeEngine.setParam(rack, unit, name, v, record = false)
+            if (++sent % 200 == 0) Thread.sleep(15)
+        }
+        song.tracks.forEachIndexed { rack, track ->
+            if (rack >= RACKS || track.machine.type.isEmpty()) return@forEachIndexed
+            for (p in machineTable(track.machine.type)) {
+                if (p.name !in track.machine.params) send(rack, "machine", p.name, p.defaultNormalized)
+            }
+            for (slot in 0 until EFFECT_SLOTS) {
+                val fx = track.effectAt(slot)
+                if (fx.isEmpty) continue
+                for (p in effectTable(fx.type)) if (p.name !in fx.params) send(rack, effectUnit(slot), p.name, p.defaultNormalized)
+            }
+            for (slot in 0 until MODIFIER_SLOTS) {
+                val mod = track.modifierAt(slot)
+                if (mod.isEmpty) continue
+                for (p in modifierTable(mod.type)) if (p.name !in mod.params) send(rack, modifierUnit(slot), p.name, p.defaultNormalized)
+            }
+        }
+        val slots = song.master.sends.withIndex().map { sendUnit(it.index) to it.value } +
+            song.master.inserts.withIndex().map { masterInsertUnit(it.index) to it.value } +
+            song.master.groups.withIndex().flatMap { (g, group) ->
+                group.inserts.withIndex().map { groupInsertUnit(g, it.index) to it.value }
+            }
+        for ((unit, slot) in slots) {
+            if (slot.isEmpty) continue
+            for (p in effectTable(slot.type)) if (p.name !in slot.params) send(0, unit, p.name, p.defaultNormalized)
+        }
+    }
+
+    /**
+     * Every parameter back to what the song says, before a render.
+     *
+     * An automation lane moves a parameter and leaves it where it finished:
+     * the document never hears of it. So a render started from wherever the
+     * last playing had left things - the demo's bass filter ends its Dub scene
+     * at a different cutoff from the patch's, its first scene has no lane to
+     * put it back, and the first export after opening the song and every one
+     * after that differed on the bass. Two exports of one song must be the same
+     * file, so each render starts from the document: every named value, and
+     * every default for the rest (see [pushUnnamedDefaults]).
+     *
+     * Main thread only, for the reason given there.
+     */
+    fun pushForRender(song: Song) {
+        pushUnnamedDefaults(song)
+        var sent = 0
+        song.tracks.forEachIndexed { rack, track ->
+            if (rack >= RACKS) return@forEachIndexed
+            pushChannel(rack, track.mixer, song.swingOf(track))
+            for ((name, v) in track.machine.params) {
+                NativeEngine.setParam(rack, "machine", name, v, record = false)
+                if (++sent % 200 == 0) Thread.sleep(15)
+            }
+            for (slot in 0 until EFFECT_SLOTS) pushSlot(rack, effectUnit(slot), track.effectAt(slot))
+            for (slot in 0 until MODIFIER_SLOTS) pushSlot(rack, modifierUnit(slot), track.modifierAt(slot))
+            Thread.sleep(2)
+        }
+        pushMaster(song.master)
+        pushSends(song.master)
+        pushInputFx(song)
+    }
+
     fun pushMachineParams(rack: Int, params: Map<String, Float>) {
         var rejected = 0
         for ((name, v) in params) if (!NativeEngine.setParam(rack, "machine", name, v, record = false)) rejected++

@@ -209,6 +209,7 @@ class MasterBus {
     dsp::Click click;
     bool countingIn = false;
     Smoothed fadeSmooth;
+    bool fadeJump = false; // see panic()
     float sumL[kBlockFrames]{}, sumR[kBlockFrames]{};
     /** What each send is fed, summed mono across the racks. */
     float sendSum[kSendSlots][kBlockFrames]{};

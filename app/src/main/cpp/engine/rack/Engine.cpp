@@ -117,7 +117,8 @@ void Engine::renderBlock(const float *in, float *out) {
             // milliseconds of a render depending on what had been playing
             // before it. A panic is a discontinuity by definition; there
             // is nothing here to be smooth about.
-            if (Machine *m = racks[r].currentMachine()) { m->reset(); m->params().jumpAll(); }
+            if (Machine *m = racks[r].currentMachine()) panicMachine(*m);
+            racks[r].jumpChannel();
             for (int32_t s = 0; s < kEffectSlots; ++s) {
                 if (Effect *e = racks[r].currentEffect(s)) { e->reset(); e->params().jumpAll(); }
             }
