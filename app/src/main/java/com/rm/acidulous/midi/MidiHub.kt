@@ -52,6 +52,7 @@ object MidiHub {
      */
     private val BLE_MIDI_SERVICE = ParcelUuid.fromString("03B80E5A-EDE8-4B33-A751-6CE34EC4C700")
     private const val TAG = "Acidulous.MIDI"
+    private const val AUTO_GONE_NS = 1_000_000_000L
 
     data class Port(val id: Int, val name: String, val maker: String, val bluetooth: Boolean, val open: Boolean)
     /** Somewhere to send to. Android calls it the device's *input* port. */
@@ -360,8 +361,22 @@ object MidiHub {
     // Not setClockOut: the property's own generated setter has that JVM
     // signature already, the same trap as chooseTheme and chooseClipMode.
     // --- Following someone else's clock ---------------------------------------
+    enum class Follow { Off, On, Auto }
+
+    /** The setting. */
+    var follow by mutableStateOf(Follow.Off)
+        private set
+
+    /** Whether the engine is following now: on, or auto with a clock arriving. */
     var clockIn by mutableStateOf(false)
         private set
+
+    /**
+     * When the last clock byte came in, for auto. Written on the MIDI thread
+     * and read by the poll.
+     */
+    @Volatile private var lastClockNs = 0L
+    @Volatile private var autoFollowing = false
     var followBpm by mutableStateOf(0f)
         private set
     var followErrorMs by mutableStateOf(0f)
@@ -375,7 +390,16 @@ object MidiHub {
      * the engine is handed something already in its own time base.
      */
     private fun clockIn(status: Int, d1: Int, d2: Int, stamp: Long) {
-        if (!clockIn) return
+        if (follow == Follow.Off) return
+        lastClockNs = System.nanoTime()
+        // Auto takes the clock from its first byte, here rather than on the
+        // next poll: the engine reads the switch when it takes the byte off
+        // its queue, so a start that arrives first is not played on our
+        // own clock. Link, if it is on, keeps the tempo.
+        if (follow == Follow.Auto && !autoFollowing && !com.rm.acidulous.engine.LinkHub.enabled) {
+            autoFollowing = true
+            NativeEngine.setExternalSync(true)
+        }
         NativeEngine.audioAnchor(anchor)
         val anchorFrame = anchor[0]
         val rate = if (anchor[2] > 0) anchor[2] else 48000L
@@ -388,9 +412,11 @@ object MidiHub {
         NativeEngine.midiClockIn(frame, status, d1, d2)
     }
 
-    fun chooseExternalSync(on: Boolean) {
-        clockIn = on
-        NativeEngine.setExternalSync(on)
+    fun chooseFollow(mode: Follow) {
+        follow = mode
+        autoFollowing = false
+        clockIn = mode == Follow.On
+        NativeEngine.setExternalSync(clockIn)
     }
 
     /** Called from the poll: what the follower is making of it. */
@@ -408,7 +434,21 @@ object MidiHub {
 
     fun readSync() {
         if (mpeZone != 0) mpeHeld = NativeEngine.mpeHeldMask
-        if (!clockIn) return
+        if (follow == Follow.Auto) {
+            // A master that stops sending has gone, and the song's own tempo
+            // comes back. A second is eight pulses at 20 bpm, and more than a
+            // phone stalls for.
+            if (autoFollowing && System.nanoTime() - lastClockNs > AUTO_GONE_NS) {
+                autoFollowing = false
+                NativeEngine.setExternalSync(false)
+            }
+            clockIn = autoFollowing
+        }
+        if (!clockIn) {
+            followBpm = 0f
+            followLocked = false
+            return
+        }
         val packed = NativeEngine.syncState()
         followLocked = ((packed ushr 56) and 0xff) != 0L
         followBpm = (((packed ushr 32) and 0xffffff).toInt()) / 100f
@@ -425,7 +465,7 @@ object MidiHub {
      * JNI, queue, clock - rather than the accuracy of a Handler.
      */
     fun testClock(bpm: Float = 120f) {
-        if (!clockIn) return
+        if (follow == Follow.Off) return
         val periodNs = (60.0e9 / (bpm.toDouble() * 24.0)).toLong()
         val start = System.nanoTime() + 50_000_000L
         val pulses = (10.0 * 24.0 * bpm / 60.0).toInt()

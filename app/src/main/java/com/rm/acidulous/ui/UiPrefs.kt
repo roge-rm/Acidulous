@@ -384,7 +384,11 @@ object UiPrefs {
         MidiHub.fixedRack = p.getInt(KEY_MIDI_RACK, 0)
         MidiHub.outOffsetMs = p.getInt(KEY_MIDI_AHEAD, 0)
         MidiHub.chooseClockOut(p.getBoolean(KEY_MIDI_CLOCK_OUT, false))
-        MidiHub.chooseExternalSync(p.getBoolean(KEY_MIDI_FOLLOW, false))
+        // The switch was on or off before auto; an old "on" is still on.
+        val follow = p.getString(KEY_MIDI_FOLLOW_MODE, null)
+            ?.let { runCatching { MidiHub.Follow.valueOf(it) }.getOrNull() }
+            ?: if (p.getBoolean(KEY_MIDI_FOLLOW, false)) MidiHub.Follow.On else MidiHub.Follow.Off
+        MidiHub.chooseFollow(follow)
         // 48 semitones is what the MPE specification asks a receiver to
         // assume, and is nothing like what a keyboard means by a bend.
         MidiHub.chooseMpe(
@@ -646,9 +650,9 @@ object UiPrefs {
             ?.putInt(KEY_SCALE_INDEX, index)?.apply()
     }
 
-    fun chooseExternalSync(on: Boolean) {
-        MidiHub.chooseExternalSync(on)
-        store?.edit()?.putBoolean(KEY_MIDI_FOLLOW, on)?.apply()
+    fun chooseFollow(mode: MidiHub.Follow) {
+        MidiHub.chooseFollow(mode)
+        store?.edit()?.putString(KEY_MIDI_FOLLOW_MODE, mode.name)?.apply()
     }
 
     /**
@@ -746,6 +750,7 @@ object UiPrefs {
     private const val KEY_MIDI_RACK = "midi_rack"
     private const val KEY_MIDI_CLOCK_OUT = "midi_clock_out"
     private const val KEY_MIDI_FOLLOW = "midi_follow"
+    private const val KEY_MIDI_FOLLOW_MODE = "midi_follow_mode"
     private const val KEY_MIDI_AHEAD = "midi_ahead_ms"
     private const val KEY_LINK = "link_on"
     private const val KEY_LINK_STARTSTOP = "link_startstop"

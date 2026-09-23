@@ -101,7 +101,7 @@ Each has the usual controls plus one extra, and a page in the manual.
 
 - MIDI in over USB and Bluetooth LE, MIDI out with clock.
 - MPE.
-- Ableton Link, and MIDI clock in and out.
+- Ableton Link, and MIDI clock in and out. Clock in can follow on its own when a clock arrives.
 - Map any MIDI CC or note to any control.
 
 ### Demo songs

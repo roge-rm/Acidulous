@@ -529,7 +529,9 @@ private fun LinkPage() {
             hub.setEnabled(context, true)
             // One master at a time; the engine enforces it and the screen
             // should not go on claiming otherwise.
-            if (com.rm.acidulous.midi.MidiHub.clockIn) UiPrefs.chooseExternalSync(false)
+            if (com.rm.acidulous.midi.MidiHub.follow != com.rm.acidulous.midi.MidiHub.Follow.Off) {
+                UiPrefs.chooseFollow(com.rm.acidulous.midi.MidiHub.Follow.Off)
+            }
         }
         Choice("off", !hub.enabled) {
             UiPrefs.chooseLink(false)

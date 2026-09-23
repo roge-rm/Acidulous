@@ -239,33 +239,38 @@ private fun SyncTab(context: android.content.Context) {
         Choice("off", !MidiHub.clockOut) { UiPrefs.chooseClockOut(false) }
     }
 
+    val link = com.rm.acidulous.engine.LinkHub.enabled
+    val follow = if (link) MidiHub.Follow.Off else MidiHub.follow
     Section(
         "follow external clock",
         when {
-            com.rm.acidulous.engine.LinkHub.enabled ->
-                "Link has the tempo. Switching this on turns Link off."
+            link -> "Link has the tempo. Switching this on turns Link off."
             MidiHub.clockIn -> "Scene tempos and smooth ramps are ignored while following."
             else -> ""
         },
     ) {
-        Choice("follow clock", MidiHub.clockIn && !com.rm.acidulous.engine.LinkHub.enabled) {
+        fun choose(mode: MidiHub.Follow) {
             // One master at a time, on screen as well as in the engine.
-            if (com.rm.acidulous.engine.LinkHub.enabled) {
+            if (mode != MidiHub.Follow.Off && link) {
                 UiPrefs.chooseLink(false)
                 com.rm.acidulous.engine.LinkHub.setEnabled(context, false)
             }
-            UiPrefs.chooseExternalSync(true)
+            UiPrefs.chooseFollow(mode)
         }
-        Choice("off", !MidiHub.clockIn || com.rm.acidulous.engine.LinkHub.enabled) { UiPrefs.chooseExternalSync(false) }
+        Choice("follow clock", follow == MidiHub.Follow.On) { choose(MidiHub.Follow.On) }
+        Choice("auto", follow == MidiHub.Follow.Auto) { choose(MidiHub.Follow.Auto) }
+        Choice("off", follow == MidiHub.Follow.Off) { choose(MidiHub.Follow.Off) }
     }
 
     // A tempo can look right while the phase wanders, so the second number
     // is the one that says whether this is really working: it is the last
     // pulse's distance from where the loop expected it.
-    if (MidiHub.clockIn) {
+    if (follow != MidiHub.Follow.Off) {
         ListSection("what is arriving") {
             Readout(
-                if (MidiHub.followBpm <= 0f) {
+                if (!MidiHub.clockIn) {
+                    "nothing coming in · own clock"
+                } else if (MidiHub.followBpm <= 0f) {
                     "following · nothing coming in"
                 } else {
                     "following %.2f bpm · %s · phase %+.2f ms".format(
