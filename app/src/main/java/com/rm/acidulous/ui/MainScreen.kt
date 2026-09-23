@@ -130,6 +130,8 @@ fun MainScreen(
     rackHot: BooleanArray = BooleanArray(16),
     /** The track a performance on the perform page records into: the last one opened. */
     performTrack: Int = 0,
+    /** Empty launcher cells record into themselves; see Looper. */
+    looper: Looper? = null,
     masterPeak: Float,
     clickOn: Boolean,
     onClick: (Boolean) -> Unit,
@@ -167,6 +169,8 @@ fun MainScreen(
     var showMixer by remember { mutableStateOf(false) }
     // The slide-up panel's two pages: the mixer, and the held effects.
     var panelPage by rememberSaveable { mutableStateOf(0) }
+    // What a looper tap did, by cell, for its double tap to take back.
+    val looperUndo = remember { mutableMapOf<Pair<Int, String>, () -> Unit>() }
     // What the perform pages are holding, kept here so a latch survives a
     // change of tab. A stop lets go of everything in the engine, so here too.
     val performState = remember { PerformState() }
@@ -695,9 +699,17 @@ fun MainScreen(
                                 clipMode = clipMode,
                                 queued = clipMode && launch.pending == sceneIndex,
                                 stopping = clipMode && launch.stopping && launch.scene == sceneIndex,
-                                onCancelLaunch = { NativeEngine.cancelLaunch(trackIndex) },
+                                loopPhase = if (clipMode) looper?.phaseOf(trackIndex, scene.id) else null,
+                                onCancelLaunch = {
+                                    val undo = looperUndo.remove(trackIndex to scene.id)
+                                    if (undo != null) undo() else NativeEngine.cancelLaunch(trackIndex)
+                                },
                                 onLaunch = {
-                                    if (clip != null) {
+                                    // An empty cell, or one looping: the looper's.
+                                    val undo = looper?.tap(song, trackIndex, scene, sceneIndex, launch, playing)
+                                    if (undo != null) {
+                                        looperUndo[trackIndex to scene.id] = undo
+                                    } else if (clip != null) {
                                         NativeEngine.launchClip(trackIndex, scene.engineId)
                                         // The clip first, then the transport:
                                         // start() resets the launcher, and a
@@ -1054,6 +1066,8 @@ private fun ClipCell(
     queued: Boolean = false,
     stopping: Boolean = false,
     onLaunch: () -> Unit = {},
+    /** Where this cell's loop is, if it is one being recorded; see Looper. */
+    loopPhase: Looper.Phase? = null,
     onCancelLaunch: () -> Unit = {},
 ) {
     // pointerInput keeps the lambdas it was built with, so they are read
@@ -1070,7 +1084,10 @@ private fun ClipCell(
         initialValue = 1f, targetValue = 0.3f,
         animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse), label = "queuedclip",
     )
+    val recording = loopPhase == Looper.Phase.Open || loopPhase == Looper.Phase.Overdub
     val edge = when {
+        loopPhase == Looper.Phase.Open -> Acid.colors.red.copy(alpha = pulse)
+        loopPhase == Looper.Phase.Overdub -> Acid.colors.red
         queued -> Acid.colors.sceneQueued.copy(alpha = pulse)
         stopping -> Acid.colors.red.copy(alpha = pulse)
         playing -> colour
@@ -1081,7 +1098,7 @@ private fun ClipCell(
             .width(cell.cellW).height(cell.cellH).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(Acid.colors.card)
-            .border(if (queued || stopping) 2.dp else 1.dp, edge, RoundedCornerShape(6.dp))
+            .border(if (queued || stopping || recording) 2.dp else 1.dp, edge, RoundedCornerShape(6.dp))
             .then(
                 if (clipMode) {
                     // A tap launches and a double tap edits. Registering a
@@ -1167,6 +1184,11 @@ private fun ClipCell(
                     modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = 3.dp),
                 )
             }
+            // A loop being recorded: over everything, so the playhead's
+            // shading cannot hide it.
+            if (recording) {
+                Text("\u25CF", color = Acid.colors.red, fontSize = 11.sp, modifier = Modifier.align(Alignment.TopStart).padding(4.dp))
+            }
             if (clipMode) {
                 val mark = when {
                     stopping -> "\u25A0"
@@ -1208,6 +1230,15 @@ private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () ->
         Section("clips start on", "A tapped clip waits for this line.") {
             for (bars in listOf(0, 1, 2, 4, 8)) {
                 Choice(quantiseLabel(bars), bars == current) { onPick(bars); onDismiss() }
+            }
+        }
+        // An empty cell tapped here records into itself: this is how long.
+        Section("loops record for") {
+            for (bars in listOf(0, 1, 2, 4, 8)) {
+                Choice(if (bars == 0) "until tapped" else if (bars == 1) "1 bar" else "$bars bars", bars == UiPrefs.loopBars) {
+                    UiPrefs.chooseLoopBars(bars)
+                    onDismiss()
+                }
             }
         }
     }

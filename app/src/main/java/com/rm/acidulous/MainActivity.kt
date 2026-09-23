@@ -54,6 +54,7 @@ import com.rm.acidulous.model.withTake
 import com.rm.acidulous.ui.BiasArm
 import com.rm.acidulous.ui.TakePeaks
 import com.rm.acidulous.engine.EngineSync
+import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.engine.LaunchState
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
@@ -1053,6 +1054,16 @@ private fun App(modifier: Modifier = Modifier) {
             finishBiasCapture()
         }
     }
+    // Empty launcher cells record into themselves. It arms recording the way
+    // the ○ button does, and points MIDI in at the track it is looping.
+    val looper = remember(editor) {
+        com.rm.acidulous.ui.Looper(
+            editor,
+            arm = { on -> armed = on; onArm(on) },
+            armed = { NativeEngine.recordArmed },
+            focus = { track -> midiTrack = track },
+        )
+    }
     val onLoopScene: (Boolean) -> Unit = { on ->
         loopScene = on
         NativeEngine.setLoopScene(on)
@@ -1178,9 +1189,26 @@ private fun App(modifier: Modifier = Modifier) {
             queuedScene = NativeEngine.queuedScene
             com.rm.acidulous.midi.MidiHub.readSync()
             com.rm.acidulous.engine.LinkHub.poll()
+            // A track in the launcher that has just come round to the top
+            // of its clip: what was recorded into it goes to the engine now,
+            // so a loop hears its last pass on its next. The arranger's own
+            // playhead is stale in clip mode and cannot say.
+            var cycleWrapped = false
             if (com.rm.acidulous.ui.UiPrefs.clipMode) {
                 NativeEngine.launchStates(launchPacked)
-                launchStates = launchPacked.map { LaunchState.unpack(it) }
+                val next = launchPacked.map { LaunchState.unpack(it) }
+                // Round the *clip*, not the cycle: a cycle is the clip times
+                // the scene's repeats, and a loop has to hear its last pass on
+                // its next one, not two passes later.
+                cycleWrapped = next.indices.any { i ->
+                    val scene = song.scenes.getOrNull(next[i].scene)
+                    val clip = scene?.let { song.tracks.getOrNull(i)?.clips?.get(it.id) }
+                    val len = if (scene != null && clip != null) song.clipLengthTicks(scene.id, clip).toLong() else 0L
+                    next[i].playing && next[i].scene == launchStates[i].scene && len > 0 &&
+                        next[i].tickInCycle % len < launchStates[i].tickInCycle % len
+                }
+                launchStates = next
+                looper.poll(song, launchStates, playing)
             }
             rackPeaks = FloatArray(16) { i -> if (i < song.tracks.size) NativeEngine.readRackPeak(i) else 0f }
             // **Struggling now, not struggling ever.** A cumulative count says
@@ -1262,7 +1290,7 @@ private fun App(modifier: Modifier = Modifier) {
                     if (rackHot[i]) share > 0.22f else share > 0.33f
                 }
             }
-            if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf))
+            if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf, cycleWrapped))
             delay(80)
         }
     }
@@ -1352,6 +1380,7 @@ private fun App(modifier: Modifier = Modifier) {
         Screen.Main -> MainScreen(
             song = song, editor = editor, position = position, playing = playing, armed = armed,
             performTrack = midiTrack,
+            looper = looper,
             countInBeats = countInBeats,
             clipMode = com.rm.acidulous.ui.UiPrefs.clipMode,
             launchStates = launchStates,

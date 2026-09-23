@@ -33,6 +33,21 @@ own clip, from any scene.
 - Each track keeps its own position, and stop leaves them where they are. The
   readout above the bottom bar shows where each one is.
 
+### Looping
+
+In the launcher, an empty cell is a looper.
+
+- Tap an empty cell. It becomes a clip, starts on the next line, and records
+  what you play into it. The cell's edge pulses red while it records.
+- Tap it again to close the loop. It ends on the nearest bar line. If nobody
+  taps, it closes itself at 16 bars.
+- Once closed it goes on recording on top of itself each time round, with a
+  steady red edge. Tap to stop adding to it, and tap again to add more.
+- To have loops close themselves at a set length, pick one under **loops
+  record for** in the **q:** window.
+
+What you end up with is an ordinary clip. Double tap it to edit it.
+
 ## Zooming
 
 Drag with two fingers to move around the grid, and pinch to make the cells

@@ -68,7 +68,12 @@ class Recorder {
      * @param sceneIdOf maps the engine's 64-bit scene id back to the document's
      * @return the updated document, and whether the caller should push it now
      */
-    fun poll(song: Song, position: Position, playing: Boolean, sceneIdOf: (Long) -> String?): Result {
+    /**
+     * [cycleWrapped]: a launcher track has just come round, which the
+     * arranger's [position] cannot see in clip mode - the looper needs its
+     * last pass pushed there to hear it on the next.
+     */
+    fun poll(song: Song, position: Position, playing: Boolean, sceneIdOf: (Long) -> String?, cycleWrapped: Boolean = false): Result {
         var doc = song
         val n = NativeEngine.drainRecorded(buffer)
         for (i in 0 until n) {
@@ -117,7 +122,7 @@ class Recorder {
         lastScene = position.scene
         lastTick = position.tickInIteration
 
-        val pushNow = dirty && (wrapped || !playing)
+        val pushNow = dirty && (wrapped || cycleWrapped || !playing)
         if (pushNow) dirty = false
         return Result(doc, pushNow)
     }

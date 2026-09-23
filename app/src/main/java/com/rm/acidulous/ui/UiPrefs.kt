@@ -344,6 +344,7 @@ object UiPrefs {
             .coerceIn(KeysStretchMin, KeysStretchMax)
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
+        loopBars = p.getInt(KEY_LOOP_BARS, 0)
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
             .getOrDefault(ThemeMode.Dark)
         uiScale = p.getFloat(KEY_UI_SCALE, 1f)
@@ -491,6 +492,14 @@ object UiPrefs {
         clipMode = on
         store?.edit()?.putBoolean(KEY_CLIP_MODE, on)?.apply()
         NativeEngine.setLauncher(on)
+    }
+
+    /** How long a loop tapped into an empty launcher cell records: 0 until tapped again. */
+    var loopBars by mutableStateOf(0)
+
+    fun chooseLoopBars(bars: Int) {
+        loopBars = bars
+        store?.edit()?.putInt(KEY_LOOP_BARS, bars)?.apply()
     }
 
     fun chooseQuantise(bars: Int) {
@@ -706,6 +715,7 @@ object UiPrefs {
     private const val KEY_KEYS_STRETCH = "keys_stretch"
     private const val KEY_CLIP_MODE = "clip_mode"
     private const val KEY_LAUNCH_Q = "launch_quantise"
+    private const val KEY_LOOP_BARS = "loop_bars"
     private const val KEY_THEME = "theme"
     private const val KEY_UI_SCALE = "ui_scale"
     private const val KEY_BUFFER = "buffer"
