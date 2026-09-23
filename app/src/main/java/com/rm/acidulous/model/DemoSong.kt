@@ -27,6 +27,12 @@ package com.rm.acidulous.model
  *    than looping inside it.
  *  - **Note expression**: the siren *is* a bend - one held note whose pitch is
  *    drawn as a curve, whooping up and falling back.
+ *  - **A sidechain**: the bass has a compressor keyed to the drums, so it ducks
+ *    out of the kick's way on every hit.
+ *  - **A group**: the drums and the hand drums are routed into Rhythm, a Bus
+ *    track with one glue compressor on the pair of them.
+ *  - **Master inserts**: a warm tilt and a gentle compressor on the whole mix,
+ *    before the limiter.
  *
  * Nothing here needs a file on disk, so it plays on a phone that has never
  * recorded anything. That rules out the machines that hold audio - the sampler,
@@ -87,6 +93,25 @@ object DemoSong {
 
     private fun fx(type: String, patchName: String): UnitSlot =
         UnitSlot(type, PatchStore.factory(PatchStore.effectKey(type)).firstOrNull { it.name == patchName }?.params ?: emptyMap())
+
+    /** The group track the drums and hand drums play through: track 9. */
+    private const val RHYTHM = 9
+
+    /**
+     * A compressor that ducks this track under [track] (1-based): hard and
+     * fast, so the bass gets out of the kick's way and comes straight back.
+     * Values are the parameters' normalised positions.
+     */
+    private fun duckUnder(track: Int): UnitSlot = UnitSlot(
+        "Compressor",
+        mapOf(
+            "threshold" to 0.5f,                  // -30 dB
+            "ratio" to 0.694f,                    // 8:1
+            "attack" to 0f,                       // 0.1 ms
+            "release" to 0.54f,                   // 120 ms
+            SIDECHAIN_PARAM to track / (SIDECHAIN_STEPS - 1f),
+        ),
+    )
 
     private fun clip(bars: Int, notes: List<Note>, block: Clip.() -> Clip = { this }): Clip =
         Clip(bars = bars, notes = notes.sortedBy { it.tick }).block()
@@ -316,11 +341,14 @@ object DemoSong {
                         version.id to clip(4, oneDrop(4)),
                         dub.id to clip(4, dubDrums(4)),
                     ),
-                    mixer = Mixer(volume = 0.86f, sendReverb = 0.14f, sendDelay = 0.08f),
+                    mixer = Mixer(volume = 0.86f, sendReverb = 0.14f, sendDelay = 0.08f, output = RHYTHM),
                 ),
                 Track(
                     id = "t-bass",
                     name = "Bass",
+                    // Ducked under the kick: a compressor that listens to the
+                    // drums (track 1) rather than to the bass itself.
+                    effects = listOf(duckUnder(track = 1)),
                     machine = Machine(type = "Trinity", params = patch("Trinity", "Sub Bass")),
                     // **Straight, against a song that lilts.** The one
                     // sentence the per-track override exists for.
@@ -368,7 +396,7 @@ object DemoSong {
                         version.id to clip(2, handDrums(2)) { copy(freeRoll = true) },
                         dub.id to clip(2, handDrums(2)) { copy(freeRoll = true) },
                     ),
-                    mixer = Mixer(volume = 0.40f, pan = -0.15f, sendReverb = 0.22f, sendDelay = 0.22f),
+                    mixer = Mixer(volume = 0.40f, pan = -0.15f, sendReverb = 0.22f, sendDelay = 0.22f, output = RHYTHM),
                 ),
                 Track(
                     id = "t-melodica",
@@ -395,6 +423,15 @@ object DemoSong {
                     clips = mapOf(dub.id to clip(2, siren()) { copy(playMode = PlayMode.OneShot) }),
                     mixer = Mixer(volume = 0.30f, pan = 0.3f, sendReverb = 0.40f, sendDelay = 0.55f),
                 ),
+                Track(
+                    id = "t-rhythm",
+                    name = "Rhythm",
+                    // A group: it plays nothing itself. The drums and the hand
+                    // drums are routed into it, and share its compressor.
+                    machine = Machine(type = "Bus"),
+                    effects = listOf(fx("Compressor", "Glue")),
+                    mixer = Mixer(volume = 1.0f),
+                ),
             ),
             scenes = listOf(intro, riddim, version, dub),
             // **0.64, not the default 0.8.** The demo should arrive with
@@ -403,6 +440,9 @@ object DemoSong {
             master = Master(
                 volume = 0.64f,
                 sends = listOf(fx("Reverb", "Dark"), fx("Delay", "Dub")),
+                // On the whole mix, before the limiter: a little warmth, and
+                // a gentle compressor to hold it together.
+                inserts = listOf(fx("Eq", "Warmer"), fx("Compressor", "Gentle")),
             ),
         )
     }
