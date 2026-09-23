@@ -115,6 +115,11 @@ back the same way. Stopping the song lets go of anything held.
   length, from a beat down to a sixteenth. Slide along them without letting go
   to change the length. While the song is playing the slice starts on the beat,
   so it stays in time.
+- **gate** chops the sound on and off in time. The five buttons are how fast:
+  eighths, sixteenths, thirty-seconds, or eighth and sixteenth triplets. Slide
+  along them the same way as repeat.
+- **reverse** plays the last beat backwards, over and over, in time with the
+  song. Hold it with a repeat and the repeat plays backwards.
 - **stop** slows the song down to a stop like a tape machine losing power. Let
   go and it spins back up. **stop** under it sets how long it takes.
 

@@ -566,6 +566,8 @@ object Manual {
             ManualBlock(ManualKind.Para, "If you're recording, everything you do on **hold** and **pad** is recorded into the clip of the last track you opened, as automation, and the song plays it back the same way. Stopping the song lets go of anything held."),
             ManualBlock(ManualKind.Para, "### Hold"),
             ManualBlock(ManualKind.Bullet, "**repeat** loops the last slice of the song. The five buttons are the slice length, from a beat down to a sixteenth. Slide along them without letting go to change the length. While the song is playing the slice starts on the beat, so it stays in time."),
+            ManualBlock(ManualKind.Bullet, "**gate** chops the sound on and off in time. The five buttons are how fast: eighths, sixteenths, thirty-seconds, or eighth and sixteenth triplets. Slide along them the same way as repeat."),
+            ManualBlock(ManualKind.Bullet, "**reverse** plays the last beat backwards, over and over, in time with the song. Hold it with a repeat and the repeat plays backwards."),
             ManualBlock(ManualKind.Bullet, "**stop** slows the song down to a stop like a tape machine losing power. Let go and it spins back up. **stop** under it sets how long it takes."),
             ManualBlock(ManualKind.Para, "### Pad"),
             ManualBlock(ManualKind.Para, "Left and right is a filter: low pass to the left of the middle, high pass to the right. Up is how much of the mix goes into an echo. Let go and the echo keeps repeating and dies away. **echo** sets its time and **feedback** how long it lasts."),

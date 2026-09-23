@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
+import com.rm.acidulous.model.GATE_LENGTHS
 import com.rm.acidulous.model.REPEAT_LENGTHS
 import com.rm.acidulous.model.STOP_LENGTHS
 import com.rm.acidulous.model.Song
@@ -53,6 +54,8 @@ class PerformState {
     var holdLatch by mutableStateOf(false)
     var padLatch by mutableStateOf(false)
     var repeat by mutableStateOf(0)
+    var gate by mutableStateOf(0)
+    var reverse by mutableStateOf(false)
     var stop by mutableStateOf(false)
     /** Where the pad is, normalised with y up; null at rest. */
     var pad by mutableStateOf<Offset?>(null)
@@ -63,6 +66,8 @@ class PerformState {
      */
     fun forgetHeld() {
         repeat = 0
+        gate = 0
+        reverse = false
         stop = false
         pad = null
     }
@@ -72,6 +77,8 @@ class PerformState {
 private class PerformSender(private val track: Int) {
     fun send(name: String, v: Float) = NativeEngine.setParam(track, "perform", name, v, record = true)
     fun repeat(k: Int) = send("repeat", k / REPEAT_LENGTHS.size.toFloat())
+    fun gate(k: Int) = send("gate", k / GATE_LENGTHS.size.toFloat())
+    fun reverse(on: Boolean) = send("reverse", if (on) 1f else 0f)
     fun stop(on: Boolean) = send("stop", if (on) 1f else 0f)
     fun pad(at: Offset?) {
         send("x", at?.x ?: 0.5f)
@@ -80,7 +87,7 @@ private class PerformSender(private val track: Int) {
 }
 
 /**
- * Things that happen in time: repeat and tape stop.
+ * Things that happen in time: repeat, gate, reverse and tape stop.
  *
  * Held, or with **latch** on, tapped on and tapped off. Turning latch off
  * lets go of whatever it was holding.
@@ -96,15 +103,27 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
             state.repeat = k
             out.repeat(k)
         }
-        Caption("tape stop")
-        HoldPad("stop", state.stop, state.holdLatch, c.red, Modifier.fillMaxWidth().weight(1f)) { on ->
-            state.stop = on
-            out.stop(on)
+        Caption("gate")
+        LengthStrip(GATE_LENGTHS, state.gate, state.holdLatch, Modifier.fillMaxWidth().weight(1f)) { k ->
+            state.gate = k
+            out.gate(k)
+        }
+        Row(Modifier.fillMaxWidth().weight(1.2f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            HoldPad("reverse", state.reverse, state.holdLatch, c.accent, Modifier.weight(1f).fillMaxHeight()) { on ->
+                state.reverse = on
+                out.reverse(on)
+            }
+            HoldPad("stop", state.stop, state.holdLatch, c.red, Modifier.weight(1f).fillMaxHeight()) { on ->
+                state.stop = on
+                out.stop(on)
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             LatchChip(state.holdLatch, Modifier.weight(1f)) {
                 if (state.holdLatch) {
                     if (state.repeat != 0) { state.repeat = 0; out.repeat(0) }
+                    if (state.gate != 0) { state.gate = 0; out.gate(0) }
+                    if (state.reverse) { state.reverse = false; out.reverse(false) }
                     if (state.stop) { state.stop = false; out.stop(false) }
                 }
                 state.holdLatch = !state.holdLatch

@@ -45,6 +45,10 @@ class Perform {
         ThrowTime,
         /** The echo's feedback. */
         Feedback,
+        /** Held: the last beat, backwards, looped in time. */
+        Reverse,
+        /** 0 off; 1..5 chops at 1/8, 1/16, 1/32, 1/8 triplets or 1/16 triplets. */
+        Gate,
         Count
     };
 
@@ -61,6 +65,8 @@ class Perform {
             {"stoplen", 0.0f, 3.0f, 2.0f, Curve::Stepped, 4, ""},
             {"throwtime", 0.0f, 4.0f, 2.0f, Curve::Stepped, 5, ""},
             {"feedback", 0.0f, 0.9f, 0.55f, Curve::Linear, 0, ""},
+            {"reverse", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+            {"gate", 0.0f, 5.0f, 0.0f, Curve::Stepped, 6, ""},
         };
         params_.init(kDefs, Count);
         // Allocated here as well as in [prepare], so an engine that is never
@@ -75,11 +81,14 @@ class Perform {
         ring[1].assign(kSize, 0.0f);
         slice[0].assign(kSize, 0.0f);
         slice[1].assign(kSize, 0.0f);
+        rslice[0].assign(kSize, 0.0f);
+        rslice[1].assign(kSize, 0.0f);
         echo[0].assign(kSize, 0.0f);
         echo[1].assign(kSize, 0.0f);
         smoothA = 1.0f - std::exp(-1.0f / (0.005f * sr));
         edgeFrames = std::max(1, static_cast<int32_t>(0.0015f * sr));
         mixStep = 1.0f / std::max(1.0f, 0.005f * sr);
+        gateStep = 1.0f / std::max(1.0f, 0.002f * sr);
         rejoinStep = 1.0f / std::max(1.0f, 0.010f * sr);
         params_.jumpAll();
         reset();
@@ -107,6 +116,11 @@ class Perform {
         repActive = false;
         repMix = 0.0f;
         repK = 0;
+        revHeld = revActive = false;
+        revMix = 0.0f;
+        gateActive = false;
+        gateK = 0;
+        gateG = 1.0f;
         tape = Tape::Off;
         rate = 1.0f;
         rejoin = 0.0f;
@@ -123,6 +137,8 @@ class Perform {
         params_.set(Stop, 0.0f);
         params_.set(X, 0.5f);
         params_.set(Y, 0.0f);
+        params_.set(Reverse, 0.0f);
+        params_.set(Gate, 0.0f);
     }
 
     /**
@@ -181,6 +197,39 @@ class Perform {
             repHeld = false;
         }
 
+        // --- Reverse: the beat before the last beat line, backwards ---------
+        // It is already in the ring, whole, so it plays from the press. The
+        // ring holds what the repeat made, so a held repeat reverses too.
+        const bool revNow = params_.get(Reverse) >= 0.5f;
+        if (revNow && !revActive) {
+            const int32_t len = std::clamp(static_cast<int32_t>(spb + 0.5f), 64, kSize / 2);
+            int32_t offset = 0;
+            if (playing) {
+                const double into = std::fmod(std::max(0.0, transportTick), static_cast<double>(kPPQN));
+                offset = std::clamp(static_cast<int32_t>(into * len / kPPQN + 0.5), 0, len - 1);
+            }
+            for (int32_t j = 0; j < len; ++j) {
+                const int64_t at = w - offset - len + j;
+                const bool known = w - at <= filled;
+                rslice[0][j] = known ? ring[0][at & kMask] : 0.0f;
+                rslice[1][j] = known ? ring[1][at & kMask] : 0.0f;
+            }
+            revLen = len;
+            revElapsed = offset;
+            revActive = true;
+        }
+        revHeld = revNow;
+
+        // --- Gate: a square chop in time ----------------------------------
+        gateK = static_cast<int32_t>(params_.get(Gate) + 0.5f);
+        if (gateK > 0 && !gateActive) {
+            gateActive = true;
+            gateFrom = w;
+        }
+        const double gateBeats[5] = {0.5, 0.25, 0.125, 1.0 / 3.0, 1.0 / 6.0};
+        const double gatePeriod = gateK > 0 ? gateBeats[gateK - 1] : 1.0;
+        const double samplesPerTick = static_cast<double>(spb) / kPPQN;
+
         // --- Tape: stop and start ------------------------------------------
         const bool stopHeld = params_.get(Stop) >= 0.5f;
         const float stopBeats = 0.25f * static_cast<float>(1 << static_cast<int32_t>(params_.get(StopLen) + 0.5f));
@@ -207,7 +256,7 @@ class Perform {
         const bool echoAwake = yTarget > 0.0f || ys > 1e-7f || w - lastLoud <= static_cast<int64_t>(echoLen) + 2;
         const bool padIdle = xTarget == 0.5f && xs == 0.5f && !filterOn;
 
-        if (!repActive && tape == Tape::Off && padIdle && !echoAwake) {
+        if (!repActive && !revActive && !gateActive && tape == Tape::Off && padIdle && !echoAwake) {
             // At rest: only the ring is fed, so a repeat or a stop pressed next
             // has something behind it, and the echo is written silent, so
             // waking it never replays something from a lap of the buffer ago.
@@ -246,7 +295,37 @@ class Perform {
                 if (!repHeld && repMix <= 0.0f) repActive = false;
             }
 
-            // The ring hears what the repeat made, so the tape stops that.
+            // Reverse.
+            if (revActive) {
+                const int32_t pos = static_cast<int32_t>(revElapsed % revLen);
+                const int32_t back = revLen - 1 - pos;
+                float edge = 1.0f;
+                if (pos < edgeFrames) edge = static_cast<float>(pos) / edgeFrames;
+                if (revLen - pos <= edgeFrames) edge = std::min(edge, static_cast<float>(revLen - pos) / edgeFrames);
+                ++revElapsed;
+                revMix = revHeld ? std::min(1.0f, revMix + mixStep) : std::max(0.0f, revMix - mixStep);
+                l += revMix * (rslice[0][back] * edge - l);
+                r += revMix * (rslice[1][back] * edge - r);
+                if (!revHeld && revMix <= 0.0f) revActive = false;
+            }
+
+            // Gate.
+            if (gateActive) {
+                float open = 1.0f;
+                if (gateK > 0) {
+                    const double phase = playing
+                        ? std::fmod(transportTick + i / samplesPerTick, gatePeriod * kPPQN) / (gatePeriod * kPPQN)
+                        : std::fmod(static_cast<double>(w - gateFrom) / (gatePeriod * spb), 1.0);
+                    open = phase < 0.5 ? 1.0f : 0.0f;
+                }
+                gateG += std::clamp(open - gateG, -gateStep, gateStep);
+                l *= gateG;
+                r *= gateG;
+                if (gateK == 0 && gateG >= 1.0f) gateActive = false;
+            }
+
+            // The ring hears what the repeat, reverse and gate made, so the
+            // tape stops that.
             ring[0][w & kMask] = l;
             ring[1][w & kMask] = r;
             if (filled < kSize) ++filled;
@@ -358,7 +437,7 @@ class Perform {
     float rejoinStep = 0.002f;
     int32_t edgeFrames = 72;
 
-    std::vector<float> ring[2], slice[2], echo[2];
+    std::vector<float> ring[2], slice[2], rslice[2], echo[2];
     int64_t w = 0;       // frames written to the ring, ever
     int64_t filled = 0;  // how many of the ring's frames are real
 
@@ -366,6 +445,17 @@ class Perform {
     int32_t repK = 0, repLen = 0, repCaptured = 0;
     int64_t repElapsed = 0;
     float repMix = 0.0f;
+
+    bool revHeld = false, revActive = false;
+    int32_t revLen = 0;
+    int64_t revElapsed = 0;
+    float revMix = 0.0f;
+
+    bool gateActive = false;
+    int32_t gateK = 0;
+    int64_t gateFrom = 0;
+    float gateG = 1.0f;
+    float gateStep = 0.01f;
 
     Tape tape = Tape::Off;
     float rate = 1.0f;

@@ -271,11 +271,82 @@ void throwEchoesAndSleeps() {
     ok("woken over silence, nothing louder than -120 dB comes back", stale < 1e-6f, num(stale));
 }
 
+void reversePlaysTheLastBeatBackwards() {
+    printf("reverse\n");
+    const int edge = static_cast<int>(0.0015f * kSr);
+    const int len = 24000; // a beat at 120
+    for (bool playing : {true, false}) {
+        Rig rig;
+        rig.playing = playing;
+        Noise n;
+        const int N = kBlock * 2500;
+        std::vector<float> L(N), R(N), oL(N), oR(N);
+        for (int i = 0; i < N; ++i) { L[i] = n.next(); R[i] = n.next(); }
+        const int press = kBlock * 1000; // frame 64000: tick 640, 160 ticks into beat three
+        rig.run(L.data(), R.data(), oL.data(), oR.data(), press);
+        set(rig.p, Perform::Reverse, 1.0f);
+        const int held = kBlock * 1000;
+        rig.run(L.data() + press, R.data() + press, oL.data() + press, oR.data() + press, held);
+        // Playing: the whole beat before the last beat line (frames 24000 to
+        // 48000), read backwards from where the press fell in its own beat.
+        // Stopped: the beat before the press, from its end.
+        const int offset = playing ? 16000 : 0;
+        const int from = playing ? 24000 : press - len;
+        int wrong = 0, compared = 0;
+        for (int f = press + 400; f < press + held; ++f) {
+            const int pos = (offset + f - press) % len;
+            if (pos < edge || len - pos <= edge) continue;
+            ++compared;
+            const int back = len - 1 - pos;
+            if (oL[f] != L[from + back] || oR[f] != R[from + back]) ++wrong;
+        }
+        ok(playing ? "playing, the last whole beat backwards, in phase"
+                   : "stopped, the beat before the press backwards",
+           compared > 0 && wrong == 0, std::to_string(wrong) + " of " + std::to_string(compared) + " wrong");
+        set(rig.p, Perform::Reverse, 0.0f);
+        const int after = press + held;
+        rig.run(L.data() + after, R.data() + after, oL.data() + after, oR.data() + after, N - after);
+        int diff = 0;
+        for (int f = after + 400; f < N; ++f) diff += (oL[f] != L[f]) + (oR[f] != R[f]);
+        if (playing) ok("let go, the live mix comes back bit for bit", diff == 0, std::to_string(diff) + " differ");
+    }
+}
+
+void gateChopsInTime() {
+    printf("gate\n");
+    Rig rig;
+    Noise n;
+    const int N = kBlock * 2000;
+    std::vector<float> L(N), R(N), oL(N), oR(N);
+    for (int i = 0; i < N; ++i) { L[i] = n.next(); R[i] = n.next(); }
+    const int press = kBlock * 333;
+    rig.run(L.data(), R.data(), oL.data(), oR.data(), press);
+    set(rig.p, Perform::Gate, 2.0f / 5.0f); // sixteenths: open 3000 frames, shut 3000, on the grid
+    const int held = kBlock * 1000;
+    rig.run(L.data() + press, R.data() + press, oL.data() + press, oR.data() + press, held);
+    int openWrong = 0, shutWrong = 0, opens = 0, shuts = 0;
+    for (int f = press + 6000; f < press + held; ++f) {
+        const int at = f % 6000;
+        if (at >= 200 && at <= 2800) { ++opens; openWrong += oL[f] != L[f] || oR[f] != R[f]; }
+        if (at >= 3200 && at <= 5800) { ++shuts; shutWrong += oL[f] != 0.0f || oR[f] != 0.0f; }
+    }
+    ok("sixteenths: open on the first half of each, untouched", opens > 0 && openWrong == 0,
+       std::to_string(openWrong) + " of " + std::to_string(opens) + " wrong");
+    ok("and silent on the second", shuts > 0 && shutWrong == 0,
+       std::to_string(shutWrong) + " of " + std::to_string(shuts) + " wrong");
+    set(rig.p, Perform::Gate, 0.0f);
+    const int after = press + held;
+    rig.run(L.data() + after, R.data() + after, oL.data() + after, oR.data() + after, N - after);
+    int diff = 0;
+    for (int f = after + 200; f < N; ++f) diff += (oL[f] != L[f]) + (oR[f] != R[f]);
+    ok("let go, bit for bit again", diff == 0, std::to_string(diff) + " differ");
+}
+
 void resetRepeats() {
     printf("reset\n");
     auto perform = [](Rig &rig, std::vector<float> &oL) {
         Noise n;
-        const int N = kBlock * 1500;
+        const int N = kBlock * 1700;
         std::vector<float> L(N), R(N), oR(N);
         oL.assign(N, 0.0f);
         for (int i = 0; i < N; ++i) { L[i] = n.next(); R[i] = n.next(); }
@@ -287,6 +358,8 @@ void resetRepeats() {
         go(300);
         set(rig.p, Perform::Repeat, 0.4f); go(200);
         set(rig.p, Perform::Repeat, 0.0f); set(rig.p, Perform::Y, 0.8f); set(rig.p, Perform::X, 0.2f); go(200);
+        set(rig.p, Perform::Reverse, 1.0f); set(rig.p, Perform::Gate, 0.6f); go(150);
+        set(rig.p, Perform::Reverse, 0.0f); set(rig.p, Perform::Gate, 0.0f);
         set(rig.p, Perform::Stop, 1.0f); go(400);
         set(rig.p, Perform::Stop, 0.0f); set(rig.p, Perform::Y, 0.0f); set(rig.p, Perform::X, 0.5f); go(400);
     };
@@ -310,6 +383,8 @@ int main() {
     tapeStopsAndComesBack();
     padFilters();
     throwEchoesAndSleeps();
+    reversePlaysTheLastBeatBackwards();
+    gateChopsInTime();
     resetRepeats();
     printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

@@ -235,7 +235,7 @@ class Recorder {
     private fun newLane(unit: String, name: String, tick: Int): Lane {
         if (unit != "perform") return Lane()
         val rest = PERFORM_REST[name] ?: return Lane()
-        val stepped = name == "repeat" || name == "stop"
+        val stepped = name in PERFORM_STEPPED
         val start = if (tick > 0) listOf(LanePoint(0, rest)) else emptyList()
         return Lane(points = start, linear = !stepped)
     }
@@ -251,9 +251,11 @@ class Recorder {
         /** Unit::Performance's two indices; see kPerfMod in Messages.h. */
         val PERF_PARAMS = listOf("mod", "pressure")
         /** Mirrors `Perform::P`, by index. */
-        val PERFORM_PARAMS = listOf("repeat", "stop", "x", "y", "stoplen", "throwtime", "feedback")
+        val PERFORM_PARAMS = listOf("repeat", "stop", "x", "y", "stoplen", "throwtime", "feedback", "reverse", "gate")
         /** Where each held control rests, normalised. */
-        val PERFORM_REST = mapOf("repeat" to 0f, "stop" to 0f, "x" to 0.5f, "y" to 0f)
+        val PERFORM_REST = mapOf("repeat" to 0f, "stop" to 0f, "x" to 0.5f, "y" to 0f, "reverse" to 0f, "gate" to 0f)
+        /** The held controls that are switches or steps, so their lanes step rather than slide. */
+        val PERFORM_STEPPED = setOf("repeat", "stop", "reverse", "gate")
         /**
          * Mirrors `kChannelDefs` in `Rack.cpp`, **by index**.
          *
