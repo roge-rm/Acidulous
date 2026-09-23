@@ -1,5 +1,6 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.ui.layout.onSizeChanged
 import com.rm.acidulous.model.withGroupInsertBypass
 import com.rm.acidulous.model.withGroupInsertParam
 import com.rm.acidulous.model.withGroupInsert
@@ -152,6 +153,8 @@ fun MixerPanel(
         // on the send. They said "rev" and "dly" when that was all they could
         // ever be, and went on saying it after the sends became slots, which
         // is a label describing the send it used to be.
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        var stripH by remember { mutableStateOf(Dp.Unspecified) }
         val sendNames = List(SEND_SLOTS) { slot ->
             song.master.sendAt(slot).type.ifEmpty { "send ${slot + 1}" }.lowercase()
         }
@@ -167,13 +170,18 @@ fun MixerPanel(
                     .distinct()
                     .sorted()
             }
-            ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated, faderH, room, tight, sendNames, groups)
+            // The first strip is measured, and the groups and the master are
+            // made its height, so the whole row ends on one line.
+            Box(if (index == 0) Modifier.onSizeChanged { stripH = with(density) { it.height.toDp() } } else Modifier) {
+                ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated, faderH, room, tight, sendNames, groups)
+            }
         }
+        val fullH = if (song.tracks.isEmpty() || tight) Dp.Unspecified else stripH
         // The groups: strips of their own between the tracks and the master,
         // and a button to add one while there is room.
-        song.master.groups.forEachIndexed { g, group -> GroupStrip(g, group, editor, faderH, room, tight) }
-        if (song.master.groups.size < MAX_GROUPS) AddGroupStrip(editor, room)
-        MasterStrip(song, editor, masterPeak, clickOn, onClick, faderH, room, tight)
+        song.master.groups.forEachIndexed { g, group -> GroupStrip(g, group, song, editor, faderH, room, tight, fullH) }
+        if (song.master.groups.size < MAX_GROUPS) AddGroupStrip(editor, room, fullH)
+        MasterStrip(song, editor, masterPeak, clickOn, onClick, faderH, room, tight, fullH)
     }
     }
 }
@@ -184,7 +192,7 @@ fun MixerPanel(
  * Tap the name to rename it, hold it to delete the group.
  */
 @Composable
-private fun GroupStrip(g: Int, group: MixGroup, editor: SongEditor, faderH: Dp, room: Dp, tight: Boolean) {
+private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, faderH: Dp, room: Dp, tight: Boolean, fullH: Dp) {
     val c = Acid.colors
     val n = g + 1
     var peak by remember { mutableStateOf(0f) }
@@ -223,7 +231,10 @@ private fun GroupStrip(g: Int, group: MixGroup, editor: SongEditor, faderH: Dp, 
         ) { editingInsert = null }
     }
     Column(
-        Modifier.width(STRIP_W).then(if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
+        Modifier.width(STRIP_W).then(
+            if (fullH != Dp.Unspecified) Modifier.height(fullH)
+            else if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room),
+        )
             .clip(RoundedCornerShape(6.dp)).background(c.cardHi)
             .then(if (tight) Modifier.verticalScrollWithBar(rememberScrollState()) else Modifier)
             .padding(4.dp),
@@ -248,6 +259,15 @@ private fun GroupStrip(g: Int, group: MixGroup, editor: SongEditor, faderH: Dp, 
                 onEnd = { editor.endSongGesture() },
             )
         }
+        // What is routed here, in the room a channel spends on pan and sends.
+        val members = song.tracks.filter { it.mixer.output == g + 1 }.map { it.name }
+        Text(
+            if (members.isEmpty()) "nothing routed here" else members.joinToString("\n"),
+            color = c.textDim, fontSize = 10.sp, lineHeight = 13.sp,
+            maxLines = 6, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+        )
+        if (fullH != Dp.Unspecified) Spacer(Modifier.weight(1f))
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             ToggleChip("M", group.mute, c.red) { editor.editSong { s -> s.withGroupMute(g, !group.mute) } }
             ToggleChip("S", group.solo, c.accent) { editor.editSong { s -> s.withGroupSolo(g, !group.solo) } }
@@ -271,10 +291,13 @@ private fun GroupStrip(g: Int, group: MixGroup, editor: SongEditor, faderH: Dp, 
 
 /** Where a new group comes from: a narrow strip with one button. */
 @Composable
-private fun AddGroupStrip(editor: SongEditor, room: Dp) {
+private fun AddGroupStrip(editor: SongEditor, room: Dp, fullH: Dp) {
     val c = Acid.colors
     Box(
-        Modifier.width(56.dp).then(if (room == Dp.Infinity) Modifier.height(120.dp) else Modifier.heightIn(max = room))
+        Modifier.width(48.dp).then(
+            if (fullH != Dp.Unspecified) Modifier.height(fullH)
+            else if (room == Dp.Infinity) Modifier.height(120.dp) else Modifier.heightIn(max = room),
+        )
             .clip(RoundedCornerShape(6.dp)).background(c.cardAlt)
             .clickable { editor.editSong { s -> s.addGroup("Group ${s.master.groups.size + 1}") } },
         contentAlignment = Alignment.Center,
@@ -466,6 +489,8 @@ private fun MasterStrip(
     faderH: Dp = FADER_H,
     room: Dp = Dp.Infinity,
     tight: Boolean = false,
+    /** A channel strip's height, to match; unspecified where there is none to match. */
+    fullH: Dp = Dp.Unspecified,
 ) {
     val c = Acid.colors
     val master = song.master
@@ -491,7 +516,10 @@ private fun MasterStrip(
     }
 
     Column(
-        Modifier.width(MASTER_W).then(if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
+        Modifier.width(MASTER_W).then(
+            if (fullH != Dp.Unspecified) Modifier.height(fullH)
+            else if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room),
+        )
             .clip(RoundedCornerShape(6.dp)).background(c.cardHi)
             .then(if (tight) Modifier.verticalScrollWithBar(rememberScrollState()) else Modifier)
             .padding(4.dp),
@@ -535,6 +563,8 @@ private fun MasterStrip(
             Text("${fmt(lufs[2])} LUFS", color = c.text, fontSize = 10.sp, maxLines = 1)
             Text("TP ${fmt(lufs[3])}", color = if (lufs[3] > -1f) c.red else c.textDim, fontSize = 9.sp, maxLines = 1)
         }
+        // The buttons sit at the foot of the strip, level with the channels'.
+        if (fullH != Dp.Unspecified) Spacer(Modifier.weight(1f))
         // **Six buttons in a grid of three rows, so the strip is no taller
         // than a channel's.** The two sends, the two master inserts, then the
         // limiter and the click. Tap switches one off and on; hold opens a
