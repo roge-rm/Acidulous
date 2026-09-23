@@ -1,5 +1,6 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -53,6 +54,11 @@ fun StepEditor(
     onPitchGestureBegin: () -> Unit,
     onPitchGesture: (tick: Int, note: Note) -> Unit,        // absolute from the gesture base
     onPitchGestureEnd: () -> Unit,
+    /** Lock mode: a tap on a step's pitch selects the step for the knobs to lock. */
+    lockMode: Boolean = false,
+    selectedTicks: Set<Int> = emptySet(),
+    lockedTicks: Set<Int> = emptySet(),
+    onSelectStep: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val grid = clip.grid.coerceAtLeast(1)
@@ -74,6 +80,8 @@ fun StepEditor(
                     onPitchBegin = onPitchGestureBegin,
                     onPitch = { pitch -> note?.let { n -> onPitchGesture(tick, n.copy(pitch = pitch.coerceIn(0, 127))) } },
                     onPitchEnd = onPitchGestureEnd,
+                    lockMode = lockMode, selected = tick in selectedTicks, locked = tick in lockedTicks,
+                    onSelect = { onSelectStep(tick) },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -86,6 +94,7 @@ private fun StepColumn(
     index: Int, note: Note?, defaultPitch: Int, grid: Int, active: Boolean,
     onGate: () -> Unit, onAccent: () -> Unit, onSlide: () -> Unit,
     onPitchBegin: () -> Unit, onPitch: (Int) -> Unit, onPitchEnd: () -> Unit,
+    lockMode: Boolean = false, selected: Boolean = false, locked: Boolean = false, onSelect: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val gate = note != null
@@ -94,17 +103,26 @@ private fun StepColumn(
     val pitch = note?.pitch ?: defaultPitch
     val cb by rememberUpdatedState(Triple(onPitchBegin, onPitch, onPitchEnd))
     val pitchState by rememberUpdatedState(pitch)
+    val onSelectState by rememberUpdatedState(onSelect)
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("${index + 1}", color = if (active) Acid.colors.accent else Acid.colors.textFaint, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+        // A locked step carries the knob's ◆ beside its number.
+        Text(
+            "${index + 1}" + if (locked && gate) "◆" else "",
+            color = if (active) Acid.colors.accent else if (locked && gate) Acid.colors.pink else Acid.colors.textFaint,
+            fontSize = 8.sp, fontFamily = FontFamily.Monospace,
+        )
         // Pitch: drag up/down a semitone per 14 px.
         Box(
             Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(3.dp))
                 .background(if (gate) Acid.colors.green else Acid.colors.card)
-                .pointerInput(gate) {
+                .then(if (lockMode && selected && gate) Modifier.border(2.dp, Acid.colors.text, RoundedCornerShape(3.dp)) else Modifier)
+                .pointerInput(gate, lockMode) {
                     awaitEachGesture {
                         val down = awaitFirstDown()
                         if (!gate) return@awaitEachGesture
+                        // Locking: the step is chosen, not played with.
+                        if (lockMode) { onSelectState(); return@awaitEachGesture }
                         val start = pitchState
                         cb.first()
                         drag(down.id) { change ->

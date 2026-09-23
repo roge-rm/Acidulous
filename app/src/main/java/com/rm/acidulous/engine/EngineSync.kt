@@ -1,6 +1,9 @@
 package com.rm.acidulous.engine
 
 import android.util.Log
+import com.rm.acidulous.model.Locks
+import com.rm.acidulous.model.Track
+import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.RISER_LENGTHS
 import com.rm.acidulous.model.STOP_LENGTHS
 import com.rm.acidulous.model.SWING_MAX
@@ -492,29 +495,56 @@ object EngineSync {
             var channel = false
             for (key in lanes) {
                 val unit = laneUnit(key)
-                val name = laneParam(key)
-                val fxSlot = effectSlotOf(unit)
-                val modSlot = modifierSlotOf(unit)
-                val value: Float? = when {
-                    unit == "machine" -> track.machine.params[name]
-                        ?: machineTable(track.machine.type).firstOrNull { it.name == name }?.defaultNormalized
-                    fxSlot != null -> track.effectAt(fxSlot).takeIf { !it.isEmpty }?.let { fx ->
-                        if (name == "bypass") EngineParams.bool01(fx.bypass)
-                        else fx.params[name] ?: effectTable(fx.type).firstOrNull { it.name == name }?.defaultNormalized
-                    }
-                    modSlot != null -> track.modifierAt(modSlot).takeIf { !it.isEmpty }?.let { mod ->
-                        if (name == "bypass") EngineParams.bool01(mod.bypass)
-                        else mod.params[name] ?: modifierTable(mod.type).firstOrNull { it.name == name }?.defaultNormalized
-                    }
-                    unit == "channel" -> { channel = true; null }
-                    // The held effects are let go by a stop, and the wheel
-                    // and pressure are a controller's, not the song's.
-                    else -> null
-                }
-                if (value != null) NativeEngine.setParam(rack, unit, name, value, record = false)
+                if (unit == "channel") { channel = true; continue }
+                val value = documentValue(track, key)
+                if (value != null) NativeEngine.setParam(rack, unit, laneParam(key), value, record = false)
             }
             if (channel) pushChannel(rack, track.mixer, song.swingOf(track))
         }
+    }
+
+    /**
+     * Where the document puts the parameter a lane key names: the knob, or
+     * the parameter's default where the song has never touched it. Null for
+     * the ones that are not the song's to say - the channel is pushed as a
+     * whole, the held effects are let go by a stop, and the wheel and
+     * pressure are a controller's.
+     */
+    fun documentValue(track: Track, key: String): Float? {
+        val unit = laneUnit(key)
+        val name = laneParam(key)
+        val fxSlot = effectSlotOf(unit)
+        val modSlot = modifierSlotOf(unit)
+        return when {
+            unit == "machine" -> track.machine.params[name]
+                ?: machineTable(track.machine.type).firstOrNull { it.name == name }?.defaultNormalized
+            fxSlot != null -> track.effectAt(fxSlot).takeIf { !it.isEmpty }?.let { fx ->
+                if (name == "bypass") EngineParams.bool01(fx.bypass)
+                else fx.params[name] ?: effectTable(fx.type).firstOrNull { it.name == name }?.defaultNormalized
+            }
+            modSlot != null -> track.modifierAt(modSlot).takeIf { !it.isEmpty }?.let { mod ->
+                if (name == "bypass") EngineParams.bool01(mod.bypass)
+                else mod.params[name] ?: modifierTable(mod.type).firstOrNull { it.name == name }?.defaultNormalized
+            }
+            else -> null
+        }
+    }
+
+    /**
+     * A clip's step locks go back to the knob between steps, and the knob is
+     * read when the clip is sent - so a clip whose locks' knobs have moved is
+     * a different clip to the engine even though its own rev has not. This
+     * folds the knobs' values into the rev the engine caches on; nought, and
+     * the rev unchanged, for a clip with no locks.
+     */
+    private fun lockedRev(track: Track, clip: Clip): Long {
+        var h = 0L
+        for ((key, lane) in clip.automation) {
+            if (!Locks.isLocks(lane)) continue
+            val base = documentValue(track, key) ?: continue
+            h = h * 31 + key.hashCode() * 17L + base.toBits()
+        }
+        return if (h == 0L) clip.rev else clip.rev xor (h shl 24) xor Long.MIN_VALUE
     }
 
     fun sync(song: Song): Boolean {
@@ -564,7 +594,8 @@ object EngineSync {
             song.scenes.forEachIndexed forEachIndexedInner@{ sceneIdx, scene ->
                 val clip = track.clips[scene.id] ?: return@forEachIndexedInner
                 // Unchanged since the last push? Then it is one lookup, not a marshal.
-                if (NativeEngine.snapshotSetClipCached(handle, rack, sceneIdx, clip.rev)) {
+                val rev = lockedRev(track, clip)
+                if (NativeEngine.snapshotSetClipCached(handle, rack, sceneIdx, rev)) {
                     cached++
                     return@forEachIndexedInner
                 }
@@ -600,7 +631,7 @@ object EngineSync {
                     flat[i * 6 + 4] = count
                 }
                 NativeEngine.snapshotSetClip(
-                    handle, rack, sceneIdx, clip.rev, clip.bars,
+                    handle, rack, sceneIdx, rev, clip.bars,
                     // Bit 0 is the play mode, bit 1 is whether the dice roll
                     // free: one word rather than a tenth argument for one bool.
                     playMode = (if (clip.playMode == PlayMode.OneShot) 1 else 0) or
@@ -610,7 +641,14 @@ object EngineSync {
                     notes = flat,
                     expr = if (expr.isEmpty()) EMPTY_FLOATS else expr.toFloatArray(),
                 )
-                for ((key, lane) in clip.automation) {
+                for ((key, stored) in clip.automation) {
+                    // Step locks say "back to the knob" between steps; the
+                    // engine is told where the knob is.
+                    val lane = if (Locks.isLocks(stored)) {
+                        Locks.resolve(stored, documentValue(track, key) ?: continue)
+                    } else {
+                        stored
+                    }
                     val pts = FloatArray(lane.points.size * 2)
                     lane.points.forEachIndexed { i, p -> pts[i * 2] = p.tick.toFloat(); pts[i * 2 + 1] = p.value }
                     // The type the lane's parameter belongs to: the machine's, or the effect's in that slot.

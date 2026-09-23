@@ -160,7 +160,9 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
                 clips = t.clips.mapValues { (_, c) ->
                     if (c.automation.keys.none { it.endsWith(lane) }) c
                     else c.copy(automation = c.automation.mapValues { (key, l) ->
-                        if (!key.endsWith(lane)) l else l.copy(points = l.points.map { it.copy(value = remap(it.value)) })
+                        // A lock's "back to the knob" is not a track number.
+                        if (!key.endsWith(lane)) l
+                        else l.copy(points = l.points.map { if (it.value == LANE_BASE) it else it.copy(value = remap(it.value)) })
                     })
                 },
             )

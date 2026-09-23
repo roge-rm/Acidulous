@@ -1,5 +1,6 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.rememberUpdatedState
@@ -128,6 +129,27 @@ fun EditScreen(
     val clipLen = song.clipLengthTicks(sceneId, clip)
 
     var mode by remember { mutableStateOf(EditMode.Draw) }
+
+    // **Step parameter locks.** The ◆ in the header turns a tap on the grid
+    // into choosing steps, and while steps are chosen every knob on the panel
+    // below writes a lock onto them instead of moving: see LockEdit and
+    // model/Locks.kt. A mode rather than hold-a-step-and-turn: long press on
+    // a drum hit is already accent, and two hands on a phone held in one is
+    // asking a lot.
+    var lockMode by remember { mutableStateOf(false) }
+    // The drum grid's and the step row's choice, by the step's tick; the roll
+    // chooses with its own selection.
+    var lockTicks by remember(trackIndex, sceneId) { mutableStateOf(emptySet<Int>()) }
+    val lockedTicks = remember(clip, clipLen) { com.rm.acidulous.model.Locks.startTicks(clip, clipLen) }
+    androidx.compose.runtime.SideEffect {
+        AutomationMarks.locks = clip.automation.filterValues { com.rm.acidulous.model.Locks.isLocks(it) }.keys
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            AutomationMarks.locks = emptySet()
+            LockEdit.clear()
+        }
+    }
     val kind = MachineUi.kindOf(track.machine.type)
     // The machine's alternate editor over the same clip. A drum machine opens on
     // its grid - that is the editor for it; a keyboard machine opens on the roll.
@@ -153,6 +175,24 @@ fun EditScreen(
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var scaleDialog by remember { mutableStateOf(false) }
     var generateDialog by remember { mutableStateOf(false) }
+    // What the knobs lock onto: a grid step on drums and Reflux, a note's
+    // own length in the roll.
+    val lockSpans: List<IntRange> = when {
+        !lockMode -> emptyList()
+        lockTicks.isNotEmpty() -> lockTicks.sorted().map { it..(it + clip.grid.coerceAtLeast(1) - 1).coerceAtMost(clipLen - 1) }
+        else -> selection.mapNotNull { clip.notes.getOrNull(it) }.map { it.tick..(it.tick + maxOf(1, it.length) - 1).coerceAtMost(clipLen - 1) }
+    }
+    androidx.compose.runtime.SideEffect {
+        if (lockSpans.isEmpty()) {
+            LockEdit.clear()
+        } else {
+            LockEdit.trackIndex = trackIndex
+            LockEdit.sceneId = sceneId
+            LockEdit.spans = lockSpans
+            LockEdit.clipTicks = clipLen
+            LockEdit.lanes = clip.automation
+        }
+    }
     // Folding the strip is a preference, not a property of this clip, so it
     // is held for the whole app and across launches - see UiPrefs.
     val landscape = isLandscape()
@@ -494,6 +534,12 @@ fun EditScreen(
             // The generators. In the header because the bar below is full,
             // and because it is about the clip, as the title beside it is.
             if (kind != MachineKind.Audio) HeaderButton("\u2684") { generateDialog = true }
+            // Lock mode: lit while on. Leaving it lets go of what was chosen.
+            if (kind != MachineKind.Audio) HeaderButton("\u25C6", color = if (lockMode) Acid.colors.pink else null) {
+                lockMode = !lockMode
+                lockTicks = emptySet()
+                selection = emptySet()
+            }
             // Paging lives here rather than in a row of its own: a whole row of
             // chrome to show one number costs more height than a phone has to
             // spare, and the header already has the two buttons it belongs with.
@@ -520,6 +566,8 @@ fun EditScreen(
         // pieces are the same either way; only the arrangement differs, so
         // each is written once here and placed below.
         var octave by rememberSaveable(trackIndex) { mutableStateOf(3) }
+        // The grid says it is choosing rather than drawing.
+        val lockEdge = if (lockMode) Modifier.border(1.dp, Acid.colors.pink) else Modifier
         val gridSlot: @Composable ColumnScope.() -> Unit = {
         if (kind == MachineKind.Audio) AudioLanes(
             clip = clip,
@@ -554,7 +602,11 @@ fun EditScreen(
                     c.copy(notes = (if (hit != null) others + hit else others).sortedBy { it.tick })
                 }
             },
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            lockMode = lockMode,
+            selectedTicks = lockTicks,
+            lockedTicks = lockedTicks,
+            onSelectStep = { t -> lockTicks = if (t in lockTicks) lockTicks - t else lockTicks + t },
+            modifier = Modifier.fillMaxWidth().weight(1f).then(lockEdge),
         ) else if (steps) StepEditor(
             clip = clip,
             ticksPerBar = ticksPerBar,
@@ -571,11 +623,16 @@ fun EditScreen(
                 editor.updateGestureClip(sceneId) { base -> base.copy(notes = base.notes.map { if (it.tick == tick) note else it }) }
             },
             onPitchGestureEnd = { editor.endGesture() },
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            lockMode = lockMode,
+            selectedTicks = lockTicks,
+            lockedTicks = lockedTicks,
+            onSelectStep = { t -> lockTicks = if (t in lockTicks) lockTicks - t else lockTicks + t },
+            modifier = Modifier.fillMaxWidth().weight(1f).then(lockEdge),
         ) else PianoRoll(
             clip = clip,
             ticksPerBar = ticksPerBar,
-            mode = mode,
+            // Locking chooses notes, which is what select mode is for.
+            mode = if (lockMode) EditMode.Select else mode,
             selection = selection,
             playheadTick = playhead,
             lowestPitch = lowestPitch,
@@ -606,6 +663,7 @@ fun EditScreen(
             },
             onSelectionChange = { selection = it },
             onAudition = { pitch -> preview(pitch) },
+            lockedTicks = lockedTicks,
             // The same clamp the octave buttons had, so the window can never
             // run off either end of the keyboard.
             onScrollPitch = { delta -> lowestPitch = (lowestPitch + delta).coerceIn(0, 127 - rows) },
@@ -658,7 +716,7 @@ fun EditScreen(
             // here rather than inside the roll because this is where the count
             // is worked out, and the roll is handed the answer.
             modifier = Modifier.fillMaxWidth().weight(1f)
-                .onSizeChanged { rollPx = it.height },
+                .onSizeChanged { rollPx = it.height }.then(lockEdge),
         )
         }
         val noteLaneSlot: @Composable (Dp) -> Unit = { open ->
@@ -758,6 +816,7 @@ fun EditScreen(
                 if (landscape) UiPrefs.foldAutomationLand(!autoFolded) else UiPrefs.foldAutomation(!autoFolded)
             },
             modifier = Modifier.fillMaxWidth().height(if (autoFolded) 24.dp else open).padding(top = 4.dp),
+            baseOf = { key -> com.rm.acidulous.engine.EngineSync.documentValue(track, key) },
         )
         }
         // [bar] and [body] are the machine panel's two halves. Upright both

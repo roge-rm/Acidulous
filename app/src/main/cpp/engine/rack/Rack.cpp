@@ -516,14 +516,20 @@ InputMod *Rack::swapInputMod(int32_t slot, InputMod *next) {
     return old;
 }
 
-void Rack::setParam(Unit unit, int32_t index, float v01) {
+void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
     switch (unit) {
-    case Unit::Machine: if (machine) machine->params().set(index, v01); break;
+    case Unit::Machine:
+        if (machine) {
+            if (jump) machine->params().jump(index, v01);
+            else machine->params().set(index, v01);
+        }
+        break;
     case Unit::Effect1:
     case Unit::Effect2: {
         Effect *fx = effects[unit == Unit::Effect1 ? 0 : 1];
         if (fx == nullptr) break;
         if (index == kEffectBypassIndex) fx->setBypass(v01 >= 0.5f);
+        else if (jump) fx->params().jump(index, v01);
         else fx->params().set(index, v01);
         break;
     }
@@ -534,6 +540,7 @@ void Rack::setParam(Unit unit, int32_t index, float v01) {
         InputMod *ev = modifiers[s];
         if (ev == nullptr) break;
         if (index == kInputModBypassIndex) ev->setBypass(v01 >= 0.5f, sinks[s]);
+        else if (jump) ev->params().jump(index, v01);
         else ev->params().set(index, v01);
         break;
     }

@@ -249,12 +249,44 @@ class ParamBinding(
     /** How a value lands in the document. */
     private val apply: (Track, String, Float) -> Track = { t, n, v -> t.withParam(n, v) },
 ) {
-    fun value(name: String): Float = values.value[name] ?: info.firstOrNull { it.name == name }?.defaultNormalized ?: 0f
+    fun value(name: String): Float {
+        val knob = values.value[name] ?: info.firstOrNull { it.name == name }?.defaultNormalized ?: 0f
+        if (!LockEdit.on(trackIndex)) return knob
+        // Locking: the knob shows the selected step's lock, or the knob
+        // itself where that step has none - which is what it would play.
+        return com.rm.acidulous.model.Locks.at(
+            LockEdit.lanes[com.rm.acidulous.model.laneKey(unit, name)], LockEdit.spans.first().first, LockEdit.clipTicks,
+        )?.value ?: knob
+    }
+
+    /**
+     * Writes a lock on the selected steps instead of moving the knob, and
+     * says whether it did. A parameter with a drawn or recorded curve refuses
+     * - the two would fight over it (Dan's choice) - and its knob stays put.
+     */
+    private fun lock(name: String, v: Float?, gesture: Boolean): Boolean {
+        if (!LockEdit.on(trackIndex)) return false
+        val key = com.rm.acidulous.model.laneKey(unit, name)
+        if (com.rm.acidulous.model.Locks.isDrawn(LockEdit.lanes[key])) return true
+        val spans = LockEdit.spans
+        val ticks = LockEdit.clipTicks
+        val f: (com.rm.acidulous.model.Clip) -> com.rm.acidulous.model.Clip = { c ->
+            val was = c.automation[key]
+            c.withLane(
+                key,
+                if (v == null) com.rm.acidulous.model.Locks.clear(was, spans, ticks)
+                else com.rm.acidulous.model.Locks.set(was, spans, v, ticks),
+            )
+        }
+        if (gesture) editor.updateGestureClip(LockEdit.sceneId, f = f) else editor.editClip(trackIndex, LockEdit.sceneId, f = f)
+        return true
+    }
     fun display(name: String): String = info.firstOrNull { it.name == name }?.format(value(name)) ?: ""
     fun infoOf(name: String): ParamInfo? = info.firstOrNull { it.name == name }
 
     fun start(name: String) { dragging.value = name; editor.beginGesture(trackIndex) }
     fun change(name: String, v: Float) {
+        if (lock(name, v, gesture = true)) return
         values.value = values.value + (name to v)
         NativeEngine.setParam(trackIndex, unit, name, v, record = true)
         editor.updateGesture { t -> apply(t, name, v) }
@@ -263,6 +295,7 @@ class ParamBinding(
 
     /** A tap on a stepped control: one undo step, no gesture. */
     fun set(name: String, v: Float) {
+        if (lock(name, v, gesture = false)) return
         values.value = values.value + (name to v)
         NativeEngine.setParam(trackIndex, unit, name, v, record = true)
         editor.edit(trackIndex) { t -> apply(t, name, v) }
@@ -321,6 +354,8 @@ class ParamBinding(
     }
 
     fun reset(name: String): Boolean {
+        // Held while locking: the selected steps lose their lock on this.
+        if (lock(name, null, gesture = false)) return true
         val was = opened.value?.get(name) ?: return false
         if (was == value(name)) return true // already there; a no-op, not a failure
         set(name, was)
@@ -727,13 +762,45 @@ internal val PanelPink: Color @Composable get() = Acid.colors.pink
  */
 object AutomationMarks {
     var lanes by androidx.compose.runtime.mutableStateOf(emptySet<String>())
+    /** The lanes among them that are step locks, marked ◆ rather than ∿. */
+    var locks by androidx.compose.runtime.mutableStateOf(emptySet<String>())
 }
+
+/**
+ * The steps the panel's knobs lock onto: set by the editor while it is in
+ * lock mode with steps selected, and empty otherwise.
+ *
+ * State here rather than threaded through every panel, for the same reason
+ * as [AutomationMarks]: every knob on every machine and effect panel reads it,
+ * and they are built in forty places that know nothing about the editor.
+ */
+object LockEdit {
+    var trackIndex by androidx.compose.runtime.mutableStateOf(-1)
+    var sceneId by androidx.compose.runtime.mutableStateOf("")
+    /** Tick spans, the first to the last tick a lock covers. */
+    var spans by androidx.compose.runtime.mutableStateOf(emptyList<IntRange>())
+    var clipTicks by androidx.compose.runtime.mutableStateOf(0)
+    var lanes by androidx.compose.runtime.mutableStateOf(emptyMap<String, com.rm.acidulous.model.Lane>())
+
+    fun on(track: Int) = spans.isNotEmpty() && trackIndex == track
+
+    fun clear() {
+        spans = emptyList()
+        trackIndex = -1
+    }
+}
+
+/** A clip with [key]'s lane replaced, or removed when [lane] is null. */
+internal fun com.rm.acidulous.model.Clip.withLane(key: String, lane: com.rm.acidulous.model.Lane?) =
+    copy(automation = if (lane == null) automation - key else automation + (key to lane))
 
 @Composable
 internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal) {
+    val key = com.rm.acidulous.model.laneKey(b.unit, name)
     Knob(
         label = label, value = b.value(name), display = b.display(name), accent = accent,
-        automated = com.rm.acidulous.model.laneKey(b.unit, name) in AutomationMarks.lanes,
+        automated = key in AutomationMarks.lanes && key !in AutomationMarks.locks,
+        locked = key in AutomationMarks.locks,
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
         onReset = { b.reset(name) },
@@ -1088,7 +1155,8 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
     val info = b.infoOf(name) ?: return
     Knob(
         label = label, value = b.value(name), accent = accent,
-        automated = com.rm.acidulous.model.laneKey(b.unit, name) in AutomationMarks.lanes,
+        automated = com.rm.acidulous.model.laneKey(b.unit, name).let { it in AutomationMarks.lanes && it !in AutomationMarks.locks },
+        locked = com.rm.acidulous.model.laneKey(b.unit, name) in AutomationMarks.locks,
         display = labels.getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },

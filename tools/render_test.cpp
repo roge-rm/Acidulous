@@ -798,6 +798,69 @@ void theEffectsCanPlayOnAGroup() {
     ok("a group with nothing in it falls back to the whole mix", firstDifference(onEmpty.mix, onAll.mix) == onAll.mix.size());
 }
 
+/**
+ * A step lock: a stepped lane that moves a parameter for one note and puts
+ * it back. The app writes these as points at the step's start and end.
+ *
+ * What has to hold is the timing. Lanes are applied once a block, at the
+ * value they have at the block's end, and a drum reads its tune when it is
+ * struck - so the lock must already be in place for the note on its own
+ * step, from that note's first sample, or it is a lock on the step after.
+ * Rack 1's third note is the snare (38) on the half bar; the lock is on
+ * Hexbeat's snare tune, which nothing else in the song touches.
+ */
+std::vector<float> renderLocked(int32_t blocks, bool locked, int32_t *noteFrame, int32_t from = kBar / 2) {
+    Fixture f;
+    if (locked) {
+        auto c = std::make_shared<Clip>(*f.snap->clipFor(1, 0));
+        c->rev = 9101;
+        Lane lane;
+        lane.unit = Unit::Machine;
+        lane.index = f.engine.racks[1].currentMachine()->params().indexOf("snare_tune");
+        lane.linear = false;
+        const float base = f.engine.racks[1].currentMachine()->params().target(lane.index);
+        lane.points = {{0, base}, {from, base < 0.5f ? 0.95f : 0.05f}, {kBar * 3 / 4, base}};
+        c->lanes.push_back(lane);
+        f.keep.push_back(c);
+        f.snap->setClip(1, 0, c);
+    }
+    f.engine.panicFlag.store(true, std::memory_order_release);
+    float scratch[kBlockFrames * 2];
+    f.engine.renderBlock(nullptr, scratch);
+    f.engine.transport.requestPlay(0);
+    std::vector<float> out(static_cast<size_t>(blocks) * kBlockFrames * 2);
+    for (int32_t b = 0; b < blocks; ++b) {
+        f.engine.renderBlock(nullptr, out.data() + static_cast<size_t>(b) * kBlockFrames * 2);
+    }
+    // Half a bar at 120 is a second.
+    if (noteFrame != nullptr) *noteFrame = kSampleRate;
+    return out;
+}
+
+void aStepCanBeLocked() {
+    printf("- a parameter locked on one step\n");
+    // A bar and a quarter: past the lock and on to the next snare, at 5/4.
+    constexpr int32_t kBlocks = 1875;
+    int32_t at = 0;
+    const auto plain = renderLocked(kBlocks, false, &at);
+    const auto locked = renderLocked(kBlocks, true, &at);
+    const size_t first = firstDifference(plain, locked) / 2;
+    ok("nothing changes before the locked note", first >= static_cast<size_t>(at), std::to_string(first) + " vs " + std::to_string(at));
+    ok("and the lock is heard", first < plain.size() / 2);
+    // Struck with the lock, not one after it: exactly what the tune set an
+    // eighth before the note sounds like. (The snare's first two blocks do
+    // not depend on its tune at all, so where the difference starts says
+    // nothing about when the lock arrived; this does.)
+    const auto early = renderLocked(kBlocks, true, &at, kBar * 3 / 8);
+    ok("and the note on the step is struck with it", firstDifference(locked, early) == locked.size(),
+       std::to_string(firstDifference(locked, early) / 2));
+    // The next snare, five quarters in, is struck with the knob again.
+    const size_t next = static_cast<size_t>(kSampleRate) * 5 / 2 * 2;
+    std::vector<float> a(plain.begin() + static_cast<long>(next), plain.end());
+    std::vector<float> b(locked.begin() + static_cast<long>(next), locked.end());
+    ok("and the next one is back to the knob", largestDifference(a, b) < 1e-4f, std::to_string(largestDifference(a, b)));
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -810,6 +873,7 @@ int main() {
     aClipCanPerform();
     aMuteWaitsForTheBar();
     theEffectsCanPlayOnAGroup();
+    aStepCanBeLocked();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -1,5 +1,6 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -61,6 +62,12 @@ fun DrumGrid(
     onScrollTime: (ticks: Float) -> Unit = {},
     /** A pinch. Sideways changes the span; the other way is this grid's own. */
     onZoomTime: (scale: Float) -> Unit = {},
+    /** Lock mode: a tap on a hit selects its step instead of taking the hit away. */
+    lockMode: Boolean = false,
+    selectedTicks: Set<Int> = emptySet(),
+    /** Steps with a parameter lock, marked in the corner. */
+    lockedTicks: Set<Int> = emptySet(),
+    onSelectStep: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val grid = clip.grid.coerceAtLeast(1)
@@ -181,6 +188,8 @@ fun DrumGrid(
                     // Read out here: a draw lambda is not a composable and
                     // cannot reach the theme from inside itself.
                     val mark = Acid.colors.teal
+                    val lockMark = Acid.colors.pink
+                    val selectEdge = Acid.colors.text
                     for (s in 0 until steps) {
                         val tick = firstTick + s * grid
                         val hit = clip.notes.firstOrNull { it.tick == tick && it.pitch == voice.note }
@@ -199,9 +208,36 @@ fun DrumGrid(
                                         else -> Acid.colors.bar
                                     },
                                 )
+                                .then(
+                                    if (lockMode && tick in selectedTicks && hit != null) {
+                                        Modifier.border(2.dp, selectEdge, RoundedCornerShape(3.dp))
+                                    } else {
+                                        Modifier
+                                    },
+                                )
                                 .combinedClickable(
-                                    onClick = { onSetHit(tick, voice.note, if (hit == null) Note(tick, 30, voice.note, 90) else null) },
-                                    onLongClick = { hit?.let { onSetHit(tick, voice.note, it.copy(velocity = if (accent) 90 else 110)) } },
+                                    onClick = {
+                                        if (lockMode) { if (hit != null) onSelectStep(tick) }
+                                        else onSetHit(tick, voice.note, if (hit == null) Note(tick, 30, voice.note, 90) else null)
+                                    },
+                                    onLongClick = {
+                                        if (!lockMode) hit?.let { onSetHit(tick, voice.note, it.copy(velocity = if (accent) 90 else 110)) }
+                                    },
+                                )
+                                // A locked step says so in the corner opposite
+                                // the trig's, a diamond for the knob's ◆.
+                                .then(
+                                    if (hit == null || tick !in lockedTicks) Modifier else Modifier.drawBehind {
+                                        val w = size.minDimension * 0.22f
+                                        val cx = w * 1.3f
+                                        val cy = size.height - w * 1.3f
+                                        drawPath(
+                                            Path().apply {
+                                                moveTo(cx, cy - w); lineTo(cx + w, cy); lineTo(cx, cy + w); lineTo(cx - w, cy); close()
+                                            },
+                                            lockMark,
+                                        )
+                                    },
                                 )
                                 // A trig that decides something says so where
                                 // it lives. A corner wedge and not a readout:

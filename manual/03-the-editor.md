@@ -40,6 +40,26 @@ others alone. Mutate moves drums in time, not pitch.
 **roll** gives a new set of random choices. The same settings and roll always
 give the same notes.
 
+## Locking a step
+
+A lock gives one step its own value for a knob. The snare on step 7 can be
+tuned higher while every other snare stays where the knob is.
+
+- Tap the diamond (◆) at the top of the editor. It lights, and the grid gets a
+  pink edge.
+- Tap the steps to lock: hits in the drum grid, steps in Reflux's step row,
+  notes in the roll. Tap again to let one go.
+- Turn any knob on the panel below, the machine's or an effect's. The chosen
+  steps get that value; the knob doesn't move for the rest of the clip.
+- Hold a knob to take the lock off the chosen steps.
+- Tap the diamond again to go back to drawing notes.
+
+A lock lasts one grid step, or the note's length in the roll. Locked steps have
+a pink diamond in the corner, and a knob with locks on it shows ◆ on its dial.
+
+Turn the knob later without a step chosen and every unlocked step follows it.
+A knob that already has a drawn lane can't be locked: it shows ∿ and stays put.
+
 ## Recording
 
 Press record, then play. What you play goes into the clip, quantised to the

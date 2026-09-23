@@ -155,7 +155,12 @@ class Rack {
     Effect *swapEffect(int32_t slot, Effect *next);
     InputMod *swapInputMod(int32_t slot, InputMod *next);
 
-    void setParam(Unit unit, int32_t index, float v01);
+    /**
+     * [jump] skips the smoothing: a stepped lane's value changes on a step,
+     * and a step lock that glided in would be heard as a chirp at the start
+     * of the very note it was put there for.
+     */
+    void setParam(Unit unit, int32_t index, float v01, bool jump = false);
 
     // While recording, a parameter the user moves wins over its lane for the
     // rest of the current pass, so the lane cannot fight the knob it is

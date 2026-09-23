@@ -91,6 +91,8 @@ fun PianoRoll(
     onGestureEnd: () -> Unit,
     /** Tapping a name in the gutter sounds that pitch, as a keyboard would. */
     onAudition: (pitch: Int) -> Unit = {},
+    /** Where a step's parameter lock starts: notes there are marked. */
+    lockedTicks: Set<Int> = emptySet(),
     /**
      * Dragging the gutter moves the pitch window, by this many semitones.
      * The roll shows sixteen rows of a hundred and twenty-eight notes, and
@@ -364,6 +366,16 @@ fun PianoRoll(
                         close()
                     },
                     c.teal,
+                )
+            }
+            // A locked note: the knob's ◆, in the corner the trig's is not.
+            if (note.tick in lockedTicks) {
+                val w = minOf(rect.width, rect.height) * 0.22f
+                val cx = rect.left + w * 1.4f
+                val cy = rect.bottom - w * 1.4f
+                drawPath(
+                    Path().apply { moveTo(cx, cy - w); lineTo(cx + w, cy); lineTo(cx, cy + w); lineTo(cx - w, cy); close() },
+                    c.pink,
                 )
             }
             drawRect(c.bg, rect.topLeft, rect.size, style = Stroke(1.5f))

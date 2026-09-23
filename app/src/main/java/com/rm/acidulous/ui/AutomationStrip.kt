@@ -75,11 +75,17 @@ fun AutomationStrip(
     /** Folded to a single row, with the height handed back to the roll. */
     collapsed: Boolean = false,
     onToggleCollapse: () -> Unit = {},
+    /** Where a lane's knob is, for step locks' "back to the knob" to be drawn there. */
+    baseOf: (String) -> Float? = { null },
     modifier: Modifier = Modifier,
 ) {
     val existing = clip.automation.keys.sorted()
     val current = selected ?: existing.firstOrNull()
-    val lane = current?.let { clip.automation[it] }
+    val lane = current?.let { key ->
+        clip.automation[key]?.let {
+            if (com.rm.acidulous.model.Locks.isLocks(it)) com.rm.acidulous.model.Locks.resolve(it, baseOf(key) ?: 0f) else it
+        }
+    }
     var menu by remember { mutableStateOf(false) }
 
     val clipState by rememberUpdatedState(clip)
@@ -202,7 +208,16 @@ fun AutomationStrip(
                 while (tick <= last) {
                     val v = lane.valueAt(tick)
                     val p = Offset(xOf(tick), (1f - v) * (size.height - 4f) + 2f)
-                    prev?.let { drawLine(c.accent, it, p, 2f) }
+                    prev?.let {
+                        // A stepped lane - a switch's, or a step lock - holds
+                        // until its next point and then jumps: across, then up.
+                        if (lane.linear) {
+                            drawLine(c.accent, it, p, 2f)
+                        } else {
+                            drawLine(c.accent, it, Offset(p.x, it.y), 2f)
+                            drawLine(c.accent, Offset(p.x, it.y), p, 2f)
+                        }
+                    }
                     prev = p
                     tick += step
                 }

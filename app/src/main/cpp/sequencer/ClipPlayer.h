@@ -183,8 +183,10 @@ class ClipPlayer {
         }
     }
 
-    // Automation: after the notes, set every lane's value at the block's end
-    // position. Setter signature: void(Unit, int32_t index, float value).
+    // Automation: before the notes, set every lane's value at the block's end
+    // position. Setter signature: void(Unit, int32_t index, float value,
+    // bool jump) - a stepped lane jumps, so a step lock is in place, whole,
+    // for the note struck on its own step.
     // Skips lanes the live UI has touched during this pass while recording.
     template <class Setter, class Touched>
     void processLanes(int64_t end, int64_t origin, Setter &&set, Touched &&touched) {
@@ -203,7 +205,7 @@ class ClipPlayer {
             const float v = lane.valueAt(t);
             if (v != lastLane[i]) {
                 lastLane[i] = v;
-                set(lane.unit, lane.index, v);
+                set(lane.unit, lane.index, v, !lane.linear);
             }
         }
     }

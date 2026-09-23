@@ -94,6 +94,7 @@ Each has the usual controls plus one extra, and a page in the manual.
 - Automation lanes, mod wheel and pressure lanes, and per-note pitch bend, pressure and slide.
 - Probability, conditions, ratchets and micro-timing on individual notes.
 - Pattern generators: even rhythms, lines in key, and mutation of what is there.
+- Step locks: any knob can have its own value on chosen steps.
 - Freeze a clip to audio to save CPU.
 - Audio tracks (Bias) for recording over the song.
 - Two effect slots on the input, so you can record through an amp.

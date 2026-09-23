@@ -103,6 +103,8 @@ fun Knob(
     onReset: (() -> Unit)? = null,
     /** A lane in the open clip moves this one: marked with a ∿ on the dial. */
     automated: Boolean = false,
+    /** Steps in the open clip lock this one: marked with a ◆. */
+    locked: Boolean = false,
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val reset by rememberUpdatedState(onReset)
@@ -165,10 +167,10 @@ fun Knob(
             maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
         )
-        if (automated) {
+        if (automated || locked) {
             androidx.compose.foundation.layout.Box {
                 dial()
-                Text("∿", color = Acid.colors.accent, fontSize = 11.sp, modifier = Modifier.align(Alignment.TopEnd))
+                Text(if (locked) "◆" else "∿", color = Acid.colors.accent, fontSize = 11.sp, modifier = Modifier.align(Alignment.TopEnd))
             }
         } else {
             dial()

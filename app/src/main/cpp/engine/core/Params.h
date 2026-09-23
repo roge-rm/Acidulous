@@ -89,6 +89,12 @@ class ParamSet {
         norm[index] = v01;
         smooth[index].set(defs[index].map(v01));
     }
+    // A step lock's change: at once, not glided in. See Lane::linear.
+    void jump(int32_t index, float v01) {
+        if (index < 0 || index >= count) return;
+        norm[index] = v01;
+        smooth[index].jump(defs[index].map(v01));
+    }
     void jumpAll() {
         for (int32_t i = 0; i < count; ++i) smooth[i].jump(defs[i].map(norm[i]));
     }
