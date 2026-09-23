@@ -731,7 +731,7 @@ fun MainScreen(
                     )
                 } else {
                     PerformPanel(
-                        editor, performTrack,
+                        song, editor, performTrack,
                         Modifier.weight(1f).height(if (panelH == Dp.Unspecified) PERFORM_H else panelH),
                     )
                 }

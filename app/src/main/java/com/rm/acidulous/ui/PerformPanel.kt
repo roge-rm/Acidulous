@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.model.REPEAT_LENGTHS
 import com.rm.acidulous.model.STOP_LENGTHS
+import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.THROW_TIMES
 import com.rm.acidulous.ui.theme.Acid
@@ -45,9 +46,11 @@ import com.rm.acidulous.ui.theme.Acid
  * [track]'s clip as a lane, so the song plays the performance back.
  */
 @Composable
-fun PerformPanel(editor: SongEditor, track: Int, modifier: Modifier = Modifier) {
+fun PerformPanel(song: Song, editor: SongEditor, track: Int, modifier: Modifier = Modifier) {
     val c = Acid.colors
-    val settings = editor.song.master.perform
+    // From [song], not `editor.song`: the editor's copy is not observed, so a
+    // setting read from it never redrew when it changed.
+    val settings = song.master.perform
     fun send(name: String, v: Float) = NativeEngine.setParam(track, "perform", name, v, record = true)
 
     Row(modifier.background(c.panelAlt).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
