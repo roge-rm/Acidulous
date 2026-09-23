@@ -14,6 +14,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -43,6 +44,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -125,6 +127,8 @@ fun MainScreen(
      */
     straining: Boolean = false,
     rackHot: BooleanArray = BooleanArray(16),
+    /** The track a performance on the perform page records into: the last one opened. */
+    performTrack: Int = 0,
     masterPeak: Float,
     clickOn: Boolean,
     onClick: (Boolean) -> Unit,
@@ -160,6 +164,9 @@ fun MainScreen(
     }
     var fileMenu by remember { mutableStateOf(false) }
     var showMixer by remember { mutableStateOf(false) }
+    // The slide-up panel's two pages: the mixer, and the held effects.
+    var panelPage by rememberSaveable { mutableStateOf(0) }
+    var panelH by remember { mutableStateOf(Dp.Unspecified) }
 
     // **Sideways the transport stands in the header** - the same move the
     // editor makes, and for the same reason: turned, a header is a song
@@ -704,7 +711,31 @@ fun MainScreen(
         }
 
         if (showMixer) {
-            MixerPanel(song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth())
+            // The tabs are turned, down the left edge, so they cost the
+            // strips a little width rather than any of their height. The
+            // perform page is made the mixer's height, so switching between
+            // them does not move the grid.
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            Row(Modifier.fillMaxWidth().background(Acid.colors.panelAlt)) {
+                Column(
+                    Modifier.width(PANEL_TAB_W).padding(start = 4.dp, top = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    PanelTab("mix", panelPage == 0) { panelPage = 0 }
+                    PanelTab("perform", panelPage == 1) { panelPage = 1 }
+                }
+                if (panelPage == 0) {
+                    MixerPanel(
+                        song, editor, rackPeaks, masterPeak, clickOn, onClick,
+                        Modifier.weight(1f).onSizeChanged { panelH = with(density) { it.height.toDp() } },
+                    )
+                } else {
+                    PerformPanel(
+                        editor, performTrack,
+                        Modifier.weight(1f).height(if (panelH == Dp.Unspecified) PERFORM_H else panelH),
+                    )
+                }
+            }
         }
 
         // Sideways the pills are up in the header and this is the readout
@@ -1247,3 +1278,19 @@ private val CellMaxW = 168.dp
 private data class SongCell(val trackW: Dp, val cellW: Dp, val cellH: Dp, val sceneH: Dp)
 
 private val LocalSongCell = compositionLocalOf { SongCell(TRACK_W, CELL_W, CELL_H, SCENE_H) }
+
+private val PANEL_TAB_W = 26.dp
+/** The perform page's height before the mixer has been measured once: about a strip's. */
+private val PERFORM_H = 320.dp
+
+/** One of the slide-up panel's pages, as a turned label. */
+@Composable
+private fun PanelTab(label: String, on: Boolean, onClick: () -> Unit) {
+    val c = Acid.colors
+    Box(
+        Modifier.width(22.dp).height(76.dp).clip(RoundedCornerShape(4.dp))
+            .background(if (on) c.accent.copy(alpha = 0.25f) else c.raised)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { SideText(label, if (on) c.accent else c.textMid, 11.sp, length = 76.dp) }
+}

@@ -13,6 +13,7 @@ Engine::Engine() {
     // Every rack reports what leaves its modifier chain, so a recording keeps
     // what was heard rather than what was pressed.
     for (int32_t r = 0; r < kRackCount; ++r) racks[r].setModifiedNoteSink(this);
+    for (int32_t r = 0; r < kRackCount; ++r) racks[r].performSink = &master.perform.params();
 }
 
 Engine::~Engine() { stop(); }
@@ -187,6 +188,9 @@ void Engine::renderBlock(const float *in, float *out) {
             scheduler.stopLauncher();
             transport.clearLaunchRequests();
             linkWaiting = false;
+            // A lane that pressed repeat and was stopped before it let go
+            // would otherwise leave the song looping a beat in silence.
+            master.perform.release();
             // **Stop means stop, not pause.** The playhead stayed where it
             // was, and the header's play button starts from the scene the
             // readout is showing - so a stop half way through a song and a
@@ -430,6 +434,11 @@ void Engine::renderBlock(const float *in, float *out) {
             if (Effect *e = master.groupInsert(g, s)) e->setKey(keyFor(e->sidechainRack(), -1));
         }
     }
+    // Where this block began, to a fraction of a tick: the tick at the
+    // block's end, less the frames between the block's start and that tick.
+    master.perform.setTransport(
+        playing, static_cast<double>(clock.blockEnd()) -
+                     clock.frameOffsetOfTick(clock.blockEnd(), kBlockFrames) / clock.samplesPerTickNow());
     master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade, clock.blockStart(), clock.blockEnd());
 
     const auto tMaster = std::chrono::steady_clock::now();

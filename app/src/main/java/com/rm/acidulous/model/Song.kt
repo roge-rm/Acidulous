@@ -533,6 +533,22 @@ data class Track(
 
 @Serializable data class LimiterSettings(val on: Boolean = true, val drive: Float = 0.2f)
 
+/**
+ * The held effects' settings. What is held (repeat, stop, the pad) is not
+ * here: it is a performance, and it is kept as lanes in a clip.
+ *
+ * [stopLen] indexes [STOP_LENGTHS], [throwTime] indexes [THROW_TIMES], and
+ * [feedback] is the echo's, 0..0.9.
+ */
+@Serializable data class PerformSettings(val stopLen: Int = 2, val throwTime: Int = 2, val feedback: Float = 0.55f)
+
+/** How long a tape stop takes, as labels; mirrors `Perform::StopLen`. */
+val STOP_LENGTHS = listOf("1/4", "1/2", "1 beat", "2 beats")
+/** The echo's time, as labels; mirrors `Perform::ThrowTime`. */
+val THROW_TIMES = listOf("1/16", "1/8", "3/16", "1/4", "3/8")
+/** The repeat's slice lengths, 1..5 in `Perform::Repeat`; 0 is off. */
+val REPEAT_LENGTHS = listOf("1", "1/2", "1/4", "1/8", "1/16")
+
 /** The master section: fader, send returns, limiter. The metronome is a transport setting, not part of the song. */
 @Serializable
 data class Master(
@@ -552,6 +568,7 @@ data class Master(
     val inserts: List<UnitSlot> = emptyList(),
     /** The mixer's groups, up to [MAX_GROUPS]. A track's [Mixer.output] names one. */
     val groups: List<MixGroup> = emptyList(),
+    val perform: PerformSettings = PerformSettings(),
     /** Only ever non-null in a song written before the sends were slots. */
     val reverb: ReverbSettings? = null,
     val delay: DelaySettings? = null,

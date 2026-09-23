@@ -4,6 +4,7 @@
 #include <engine/core/Params.h>
 #include <engine/dsp/Click.h>
 #include <engine/dsp/Limiter.h>
+#include <engine/rack/Perform.h>
 #include <engine/dsp/Loudness.h>
 #include <engine/effect/Effect.h>
 
@@ -52,6 +53,9 @@ class MasterBus {
     void prepare(int32_t sampleRate); // not the audio thread
 
     ParamSet &params() { return params_; }
+
+    /** The held effects: after the inserts, before the fader. */
+    Perform perform;
 
     // Per block. `fade` is the scene fade multiplier (1 = none); a click may
     // be pending from the metronome. The tick range is passed on to the sends,

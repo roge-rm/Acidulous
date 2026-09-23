@@ -90,6 +90,12 @@ enum class Unit : uint8_t {
     MasterFx1, MasterFx2,
     /** The four mixer groups' two inserts each, group-major. The rack is ignored. */
     Group1Fx1, Group1Fx2, Group2Fx1, Group2Fx2, Group3Fx1, Group3Fx2, Group4Fx1, Group4Fx2,
+    /**
+     * The held effects on the master: repeat, tape stop and the pad. Carried
+     * on a rack only so that a press can be recorded into that track's clip
+     * and played back from it; what it moves is the master's.
+     */
+    Perform,
 };
 
 /** Indices within Unit::Performance. */

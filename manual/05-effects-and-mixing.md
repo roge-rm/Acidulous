@@ -77,7 +77,8 @@ unlike sends.
 
 ## The mixer
 
-The mixer button opens a strip for each track, plus the master.
+The mixer button opens a strip for each track, plus the master. The tabs down
+its left edge switch between the mixer and the **perform** page.
 
 - **Fader and meter** for each track, with mute and solo.
 - **Two send amounts** per track, going to two effects shared by the whole song.
@@ -92,6 +93,26 @@ loudness readout. Under that is a grid of buttons: the two sends on top, the two
 master inserts (**fx1**, **fx2**) in the middle, and the limiter (**lim**) and
 the click (**♩**) at the bottom. Tap one to turn it on or off, and hold a send
 or insert to choose its effect and set it up.
+
+## Perform
+
+The perform page has effects you play by holding them down. They work on the
+whole mix, after the master inserts, and they turn off as soon as you let go.
+
+- **repeat** loops the last slice of the song while you hold it. The five
+  buttons are the slice length, from a beat down to a sixteenth. Slide along
+  them without letting go to change the length. While the song is playing the
+  slice starts on the beat, so it stays in time.
+- **stop** slows the song down to a stop like a tape machine losing power. Let
+  go and it spins back up. **stop** under it sets how long it takes.
+- **The pad**: left and right is a filter (low pass to the left of the middle,
+  high pass to the right). Up is how much of the mix goes into an echo. Let go
+  and the echo keeps repeating and dies away. **echo** sets the echo's time and
+  **feedback** how long it lasts.
+
+If you're recording, everything you do here is recorded into the clip of the
+last track you opened, as automation. The song plays it back the same way.
+Stopping the song lets go of anything held.
 
 ## Master inserts
 

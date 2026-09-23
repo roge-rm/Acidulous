@@ -1341,6 +1341,7 @@ private fun App(modifier: Modifier = Modifier) {
     when (val s = screen) {
         Screen.Main -> MainScreen(
             song = song, editor = editor, position = position, playing = playing, armed = armed,
+            performTrack = midiTrack,
             countInBeats = countInBeats,
             clipMode = com.rm.acidulous.ui.UiPrefs.clipMode,
             launchStates = launchStates,

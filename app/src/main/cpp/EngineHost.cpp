@@ -75,6 +75,7 @@ Unit unitFromName(const std::string &u) {
     if (u == "input1") return Unit::Input1;
     if (u == "input2") return Unit::Input2;
     if (u == "performance") return Unit::Performance;
+    if (u == "perform") return Unit::Perform;
     return Unit::Machine;
 }
 
@@ -854,6 +855,7 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         return sEngine.racks[0].channelIndexOf(name.c_str());
     }
     if (u == Unit::Master) return sEngine.master.params().indexOf(name.c_str());
+    if (u == Unit::Perform) return sEngine.master.perform.params().indexOf(name.c_str());
     if (u >= Unit::Group1Fx1 && u <= Unit::Group4Fx2) {
         if (name == "bypass") return kEffectBypassIndex;
         const int k = static_cast<int>(u) - static_cast<int>(Unit::Group1Fx1);
@@ -922,6 +924,8 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
         index = sEngine.racks[rack].channelIndexOf(name.c_str()); // see paramIndex
     } else if (u == Unit::Master) {
         index = sEngine.master.params().indexOf(name.c_str());
+    } else if (u == Unit::Perform) {
+        index = sEngine.master.perform.params().indexOf(name.c_str());
     } else if (u >= Unit::Group1Fx1 && u <= Unit::Group4Fx2) {
         const int k = static_cast<int>(u) - static_cast<int>(Unit::Group1Fx1);
         index = paramIndex(mountedGroupInsertType[k / kGroupInsertSlots][k % kGroupInsertSlots], unit, name);

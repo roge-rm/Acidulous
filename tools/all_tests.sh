@@ -45,6 +45,7 @@ echo "--- mpe";   "$ROOT/tools/mpe_test.sh"   | tail -2 || fail=1
 echo "--- sched"; "$ROOT/tools/scheduler_test.sh" | tail -2 || fail=1
 echo "--- render"; "$ROOT/tools/render_test.sh" | tail -2 || fail=1
 echo "--- loudness"; "$ROOT/tools/loudness_test.sh" | tail -2 || fail=1
+echo "--- perform"; "$ROOT/tools/perform_test.sh" | tail -2 || fail=1
 echo "--- modsource"; "$ROOT/tools/modsource_test.sh" | tail -2 || fail=1
 echo "--- bias";  "$ROOT/tools/bias_test.sh" | tail -2 || fail=1
 echo "--- marks"; "$ROOT/tools/marks_test.sh" | tail -2 || fail=1

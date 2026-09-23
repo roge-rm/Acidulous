@@ -34,6 +34,7 @@ MasterBus::MasterBus() {
 
 void MasterBus::prepare(int32_t sampleRate) {
     limiter.prepare(sampleRate);
+    perform.prepare(static_cast<float>(sampleRate));
     loudness.prepare(static_cast<float>(sampleRate));
     this->sampleRate = static_cast<float>(sampleRate);
     click.prepare(sampleRate);
@@ -146,6 +147,9 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
         fx->run(sumL, sumR, frames, true);
     }
 
+    // The held effects, on everything the inserts hand on.
+    perform.process(sumL, sumR, frames, bpm);
+
     const float volume = params_.get(Volume);
     for (int32_t i = 0; i < frames; ++i) { sumL[i] *= volume; sumR[i] *= volume; }
 
@@ -244,6 +248,8 @@ void MasterBus::panic() {
         for (Effect *fx : group) if (fx != nullptr) fx->reset();
     }
     limiter.reset();
+    perform.release();
+    perform.reset();
     panicRamp = 0.0f;
 }
 

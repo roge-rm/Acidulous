@@ -1,7 +1,9 @@
 package com.rm.acidulous.engine
 
 import android.util.Log
+import com.rm.acidulous.model.STOP_LENGTHS
 import com.rm.acidulous.model.SWING_MAX
+import com.rm.acidulous.model.THROW_TIMES
 import com.rm.acidulous.model.SWING_STRAIGHT
 import com.rm.acidulous.model.swingOf
 import com.rm.acidulous.model.EFFECT_SLOTS
@@ -628,6 +630,11 @@ object EngineSync {
         }
         NativeEngine.setParam(0, "master", "limiteron", EngineParams.bool01(m.limiter.on), record = false)
         NativeEngine.setParam(0, "master", "limiterdrive", EngineParams.unit01(m.limiter.drive), record = false)
+        // The held effects' settings. Addressed at a rack like everything on
+        // this unit, though they belong to the master.
+        NativeEngine.setParam(0, "perform", "stoplen", m.perform.stopLen / (STOP_LENGTHS.size - 1f), record = false)
+        NativeEngine.setParam(0, "perform", "throwtime", m.perform.throwTime / (THROW_TIMES.size - 1f), record = false)
+        NativeEngine.setParam(0, "perform", "feedback", (m.perform.feedback / 0.9f).coerceIn(0f, 1f), record = false)
     }
 
     /**

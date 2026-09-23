@@ -551,6 +551,7 @@ void Rack::setParam(Unit unit, int32_t index, float v01) {
         }
         break;
     }
+    case Unit::Perform: if (performSink != nullptr) performSink->set(index, v01); break;
     case Unit::Master: break; // never addressed at a rack
     }
 }

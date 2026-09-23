@@ -638,6 +638,62 @@ void theMasterHasInserts() {
     ok("and a render through it repeats", firstDifference(driven, again) == driven.size());
 }
 
+/**
+ * A held effect recorded into a clip plays back from it, on the master.
+ *
+ * The lane is on rack 0's clip, addressed to `Unit::Perform`: the rack hands
+ * it on to the master's held effects, which is the whole of how a recorded
+ * press becomes something the song does again.
+ */
+std::vector<float> renderPerformed(int32_t blocks, bool stopHalfway, float *repeatAfterStop, bool heldFromTop = false) {
+    Fixture f;
+    auto c = std::make_shared<Clip>(*f.snap->clips[0]);
+    c->rev = 9001;
+    Lane lane;
+    lane.unit = Unit::Perform;
+    lane.index = Perform::Repeat;
+    lane.linear = false;
+    lane.points = {{0, 0.0f}, {kBar / 2, 0.6f}, {kBar, 0.0f}}; // a quarter-beat repeat for half a bar
+    if (heldFromTop) lane.points = {{0, 0.6f}, {kBar / 2, 0.0f}};
+    c->lanes.push_back(lane);
+    f.keep.push_back(c);
+    f.snap->setClip(0, 0, c);
+    f.engine.panicFlag.store(true, std::memory_order_release);
+    float scratch[kBlockFrames * 2];
+    f.engine.renderBlock(nullptr, scratch);
+    f.engine.transport.requestPlay(0);
+    std::vector<float> out(static_cast<size_t>(blocks) * kBlockFrames * 2);
+    for (int32_t b = 0; b < blocks; ++b) {
+        if (stopHalfway && b == blocks / 2) f.engine.transport.requestStop();
+        f.engine.renderBlock(nullptr, out.data() + static_cast<size_t>(b) * kBlockFrames * 2);
+    }
+    if (repeatAfterStop != nullptr) *repeatAfterStop = f.engine.master.perform.params().target(Perform::Repeat);
+    return out;
+}
+
+void aClipCanPerform() {
+    printf("- a held effect played from a clip\n");
+    // A bar is 1500 blocks at 120; render to three quarters of one.
+    constexpr int32_t kBlocks = 1125;
+    const auto plain = render(kBlocks);
+    const auto performed = renderPerformed(kBlocks, false, nullptr);
+    const size_t press = size_t{750} * kBlockFrames * 2; // half a bar in: the lane's press
+    const size_t first = firstDifference(plain, performed);
+    ok("nothing changes before the press", first >= press, std::to_string(first) + " vs " + std::to_string(press));
+    ok("and the repeat is heard after it", largestDifference(plain, performed) > 0.01f);
+    ok("and the render repeats", firstDifference(performed, renderPerformed(kBlocks, false, nullptr)) == performed.size());
+    // Stopped while the lane holds it down: the repeat is let go, or the
+    // master would loop a quarter beat of silence until the next play.
+    float held = -1.0f;
+    renderPerformed(1000, true, &held);
+    ok("stopping the transport lets go of a held repeat", held == 0.0f, std::to_string(held));
+    // And a lane that holds it from the very top must not take it again
+    // while stopped: the arranger goes back to the top on a stop.
+    held = -1.0f;
+    renderPerformed(1000, true, &held, true);
+    ok("even when the lane holds it at the top of the song", held == 0.0f, std::to_string(held));
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -647,6 +703,7 @@ int main() {
     aTrackCanListenToAnother();
     tracksCanBeGrouped();
     theMasterHasInserts();
+    aClipCanPerform();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -3,6 +3,7 @@ package com.rm.acidulous.engine
 import android.util.Log
 import com.rm.acidulous.model.CurveBuilder
 import com.rm.acidulous.model.Lane
+import com.rm.acidulous.model.LanePoint
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.trimmedTo
 import com.rm.acidulous.model.Song
@@ -193,6 +194,7 @@ class Recorder {
             "machine" -> paramNames.getOrPut(track.machine.type) { NativeEngine.machineParamNames(track.machine.type) }.getOrNull(index)
             "channel" -> CHANNEL_PARAMS.getOrNull(index)
             "performance" -> PERF_PARAMS.getOrNull(index)
+            "perform" -> PERFORM_PARAMS.getOrNull(index)
             "effect1", "effect2" -> {
                 val type = track.effectAt(if (unit == "effect1") 0 else 1).type
                 if (index == EFFECT_BYPASS_INDEX) "bypass"
@@ -212,13 +214,30 @@ class Recorder {
         if (len <= 0) return null
         val raw = (tickInIteration % len).toInt()
         val g = clip.grid.coerceAtLeast(1)
-        val tick = if (quantise) (((raw + g / 2) / g) * g) % len else raw
+        // A held effect is kept where it was played: quantised, a quick press
+        // and its release can land on one grid line and the release wins.
+        // The repeat keeps time by itself, from the grid in the engine.
+        val tick = if (quantise && unit != "perform") (((raw + g / 2) / g) * g) % len else raw
         val key = laneKey(unit, name)
         dirty = true
         return song.updateClip(rack, sceneId, { clip }) { c ->
-            val lane = c.automation[key] ?: Lane()
+            val lane = c.automation[key] ?: newLane(unit, name, tick)
             c.copy(automation = c.automation + (key to lane.withPoint(tick, value)))
         }
+    }
+
+    /**
+     * An empty lane, except for a held effect's. A lane holds its first value
+     * back to the top of the clip, so a repeat pressed on beat three would
+     * play from beat one; the held effects start at rest instead. Repeat and
+     * stop are switches, so they step rather than slide between points.
+     */
+    private fun newLane(unit: String, name: String, tick: Int): Lane {
+        if (unit != "perform") return Lane()
+        val rest = PERFORM_REST[name] ?: return Lane()
+        val stepped = name == "repeat" || name == "stop"
+        val start = if (tick > 0) listOf(LanePoint(0, rest)) else emptyList()
+        return Lane(points = start, linear = !stepped)
     }
 
     data class Result(val song: Song, val push: Boolean)
@@ -231,6 +250,10 @@ class Recorder {
         val NO_CURVES = listOf<Lane?>(null, null, null)
         /** Unit::Performance's two indices; see kPerfMod in Messages.h. */
         val PERF_PARAMS = listOf("mod", "pressure")
+        /** Mirrors `Perform::P`, by index. */
+        val PERFORM_PARAMS = listOf("repeat", "stop", "x", "y", "stoplen", "throwtime", "feedback")
+        /** Where each held control rests, normalised. */
+        val PERFORM_REST = mapOf("repeat" to 0f, "stop" to 0f, "x" to 0.5f, "y" to 0f)
         /**
          * Mirrors `kChannelDefs` in `Rack.cpp`, **by index**.
          *
@@ -263,4 +286,5 @@ internal val RECORD_UNITS = listOf(
     "machine", "effect1", "effect2", "mod1", "mod2", "mod3", "channel", "master",
     "send1", "send2", "input1", "input2", "performance", "master1", "master2",
     "group1fx1", "group1fx2", "group2fx1", "group2fx2", "group3fx1", "group3fx2", "group4fx1", "group4fx2",
+    "perform",
 )
