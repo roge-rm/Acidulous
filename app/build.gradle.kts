@@ -84,8 +84,12 @@ android {
         // track, group tracks, two inserts on the master, and a loudness meter
         // with a normalised export. Swing, which had never reached the engine
         // from the app, now does.
-        versionCode = 11
-        versionName = "0.7.0"
+        //
+        // 0.7.1: groups are strips in the mixer, not tracks. A song saved with
+        // 0.7.0 has its bus tracks turned into groups when it opens. Groups
+        // have pan, and the demo uses everything 0.7 added.
+        versionCode = 12
+        versionName = "0.7.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
