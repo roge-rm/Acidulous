@@ -27,6 +27,11 @@ class Biquad {
         const float a0 = 1.0f + alpha;
         b0 = (1.0f - c) / 2.0f / a0; b1 = (1.0f - c) / a0; b2 = b0; a1 = -2.0f * c / a0; a2 = (1.0f - alpha) / a0;
     }
+    void highpass(float hz, float q, float sr) {
+        const float w = kTwoPi * clampf(hz, 20.0f, sr * 0.45f) / sr, alpha = std::sin(w) / (2.0f * q), c = std::cos(w);
+        const float a0 = 1.0f + alpha;
+        b0 = (1.0f + c) / 2.0f / a0; b1 = -(1.0f + c) / a0; b2 = b0; a1 = -2.0f * c / a0; a2 = (1.0f - alpha) / a0;
+    }
     void allpass(float hz, float q, float sr) {
         const float w = kTwoPi * clampf(hz, 20.0f, sr * 0.45f) / sr, alpha = std::sin(w) / (2.0f * q), c = std::cos(w);
         const float a0 = 1.0f + alpha;

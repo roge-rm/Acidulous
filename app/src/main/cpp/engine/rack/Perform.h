@@ -2,6 +2,7 @@
 
 #include <engine/core/Constants.h>
 #include <engine/core/Params.h>
+#include <engine/dsp/Biquad.h>
 
 #include <algorithm>
 #include <cmath>
@@ -49,6 +50,12 @@ class Perform {
         Reverse,
         /** 0 off; 1..5 chops at 1/8, 1/16, 1/32, 1/8 triplets or 1/16 triplets. */
         Gate,
+        /** Held: the lows, the mids or the highs taken out. */
+        KillLow, KillMid, KillHigh,
+        /** Held: a high pass climbing and noise rising under it, over [RiserLen]. */
+        Riser,
+        /** How long the riser takes to get to the top: 1, 2 or 4 bars. */
+        RiserLen,
         Count
     };
 
@@ -67,6 +74,11 @@ class Perform {
             {"feedback", 0.0f, 0.9f, 0.55f, Curve::Linear, 0, ""},
             {"reverse", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
             {"gate", 0.0f, 5.0f, 0.0f, Curve::Stepped, 6, ""},
+            {"killlow", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+            {"killmid", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+            {"killhigh", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+            {"riser", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+            {"riserlen", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
         };
         params_.init(kDefs, Count);
         // Allocated here as well as in [prepare], so an engine that is never
@@ -89,6 +101,21 @@ class Perform {
         edgeFrames = std::max(1, static_cast<int32_t>(0.0015f * sr));
         mixStep = 1.0f / std::max(1.0f, 0.005f * sr);
         gateStep = 1.0f / std::max(1.0f, 0.002f * sr);
+        riserStep = 1.0f / std::max(1.0f, 0.010f * sr);
+        // The crossovers: Linkwitz-Riley, two Butterworth sections each, so
+        // the three bands add back up flat. The low band goes through the
+        // upper crossover's all-pass as well, which is what keeps it in step
+        // with the other two once they have been through it.
+        for (int c = 0; c < 2; ++c) {
+            for (int k = 0; k < 2; ++k) {
+                xo[c].lo[k].lowpass(250.0f, 0.70710678f, sr);
+                xo[c].rest[k].highpass(250.0f, 0.70710678f, sr);
+                xo[c].mid[k].lowpass(2500.0f, 0.70710678f, sr);
+                xo[c].high[k].highpass(2500.0f, 0.70710678f, sr);
+                xo[c].apLo[k].lowpass(2500.0f, 0.70710678f, sr);
+                xo[c].apHi[k].highpass(2500.0f, 0.70710678f, sr);
+            }
+        }
         rejoinStep = 1.0f / std::max(1.0f, 0.010f * sr);
         params_.jumpAll();
         reset();
@@ -121,6 +148,16 @@ class Perform {
         gateActive = false;
         gateK = 0;
         gateG = 1.0f;
+        killsOn = false;
+        killMix = 0.0f;
+        for (float &g : killGain) g = 1.0f;
+        for (auto &x : xo) x.reset();
+        riserOn = false;
+        riserHeld = false;
+        riserMix = 0.0f;
+        riserHp[0] = riserHp[1] = RiserSvf{};
+        riserNoise = RiserSvf{};
+        noiseSeed = 0x1234567u;
         tape = Tape::Off;
         rate = 1.0f;
         rejoin = 0.0f;
@@ -139,6 +176,10 @@ class Perform {
         params_.set(Y, 0.0f);
         params_.set(Reverse, 0.0f);
         params_.set(Gate, 0.0f);
+        params_.set(KillLow, 0.0f);
+        params_.set(KillMid, 0.0f);
+        params_.set(KillHigh, 0.0f);
+        params_.set(Riser, 0.0f);
     }
 
     /**
@@ -230,6 +271,32 @@ class Perform {
         const double gatePeriod = gateK > 0 ? gateBeats[gateK - 1] : 1.0;
         const double samplesPerTick = static_cast<double>(spb) / kPPQN;
 
+        // --- Kills ---------------------------------------------------------
+        const bool killHeld[3] = {params_.get(KillLow) >= 0.5f, params_.get(KillMid) >= 0.5f,
+                                  params_.get(KillHigh) >= 0.5f};
+        const bool anyKill = killHeld[0] || killHeld[1] || killHeld[2];
+        if (anyKill && !killsOn) {
+            killsOn = true;
+            for (auto &x : xo) x.reset();
+        }
+
+        // --- Riser ---------------------------------------------------------
+        const bool riserWas = riserHeld;
+        riserHeld = params_.get(Riser) >= 0.5f;
+        if (riserHeld && !riserWas) {
+            // Pressed again while it was still falling away: the climb starts
+            // over, on the filters it already has, so nothing clicks.
+            if (!riserOn) {
+                riserHp[0] = riserHp[1] = RiserSvf{};
+                riserNoise = RiserSvf{};
+            }
+            riserOn = true;
+            riserFrom = w;
+            riserCoefAge = 0;
+        }
+        const float riserFrames =
+            4.0f * spb * static_cast<float>(1 << static_cast<int32_t>(params_.get(RiserLen) + 0.5f));
+
         // --- Tape: stop and start ------------------------------------------
         const bool stopHeld = params_.get(Stop) >= 0.5f;
         const float stopBeats = 0.25f * static_cast<float>(1 << static_cast<int32_t>(params_.get(StopLen) + 0.5f));
@@ -256,7 +323,8 @@ class Perform {
         const bool echoAwake = yTarget > 0.0f || ys > 1e-7f || w - lastLoud <= static_cast<int64_t>(echoLen) + 2;
         const bool padIdle = xTarget == 0.5f && xs == 0.5f && !filterOn;
 
-        if (!repActive && !revActive && !gateActive && tape == Tape::Off && padIdle && !echoAwake) {
+        if (!repActive && !revActive && !gateActive && tape == Tape::Off && !riserOn && !killsOn && padIdle &&
+            !echoAwake) {
             // At rest: only the ring is fed, so a repeat or a stop pressed next
             // has something behind it, and the echo is written silent, so
             // waking it never replays something from a lap of the buffer ago.
@@ -355,6 +423,42 @@ class Perform {
             }
             ++w;
 
+            // Riser: the high pass climbs and the noise rises, exponentially,
+            // to the top at [riserFrames] and held there.
+            if (riserOn) {
+                if (riserCoefAge-- <= 0) {
+                    const float p = std::min(1.0f, static_cast<float>(w - riserFrom) / riserFrames);
+                    riserHp[0].tune(20.0f * std::pow(100.0f, p), 0.9f, sr);
+                    riserHp[1].a1 = riserHp[0].a1; riserHp[1].a2 = riserHp[0].a2; riserHp[1].a3 = riserHp[0].a3;
+                    riserHp[1].k = riserHp[0].k;
+                    riserNoise.tune(500.0f * std::pow(16.0f, p), 2.0f, sr);
+                    riserLevel = 0.125f * p * p;
+                    riserCoefAge = 15;
+                }
+                noiseSeed = noiseSeed * 1664525u + 1013904223u;
+                const float white = static_cast<float>(noiseSeed >> 8) / 8388608.0f - 1.0f;
+                const float noise = riserNoise.band(white) * riserLevel;
+                riserMix = riserHeld ? std::min(1.0f, riserMix + riserStep) : std::max(0.0f, riserMix - riserStep);
+                l += riserMix * (riserHp[0].high(l) + noise - l);
+                r += riserMix * (riserHp[1].high(r) + noise - r);
+                if (!riserHeld && riserMix <= 0.0f) riserOn = false;
+            }
+
+            // Kills: the split summed back with what is killed left out.
+            if (killsOn) {
+                bool settled = !anyKill;
+                for (int b = 0; b < 3; ++b) {
+                    const float target = killHeld[b] ? 0.0f : 1.0f;
+                    killGain[b] += std::clamp(target - killGain[b], -mixStep, mixStep);
+                    if (killGain[b] != 1.0f) settled = false;
+                }
+                killMix = settled ? std::max(0.0f, killMix - mixStep) : std::min(1.0f, killMix + mixStep);
+                const float yl = xo[0].split(l, killGain), yr = xo[1].split(r, killGain);
+                l += killMix * (yl - l);
+                r += killMix * (yr - r);
+                if (settled && killMix <= 0.0f) killsOn = false;
+            }
+
             // The filter.
             xs += (xTarget - xs) * smoothA;
             if (std::fabs(xs - xTarget) < 1e-6f) xs = xTarget;
@@ -413,6 +517,45 @@ class Perform {
   private:
     enum class Tape : uint8_t { Off, Stopping, Starting };
 
+    /** One channel's three-band split. */
+    struct Crossover {
+        dsp::Biquad lo[2], rest[2], mid[2], high[2], apLo[2], apHi[2];
+        void reset() {
+            for (int k = 0; k < 2; ++k) {
+                lo[k].reset(); rest[k].reset(); mid[k].reset(); high[k].reset(); apLo[k].reset(); apHi[k].reset();
+            }
+        }
+        float split(float x, const float *gain) {
+            const float l0 = lo[1].process(lo[0].process(x));
+            const float r0 = rest[1].process(rest[0].process(x));
+            const float m = mid[1].process(mid[0].process(r0));
+            const float h = high[1].process(high[0].process(r0));
+            const float lowAligned = apLo[1].process(apLo[0].process(l0)) + apHi[1].process(apHi[0].process(l0));
+            return gain[0] * lowAligned + gain[1] * m + gain[2] * h;
+        }
+    };
+
+    /** A small state-variable filter for the riser: a high pass, or a band pass for its noise. */
+    struct RiserSvf {
+        float ic1 = 0.0f, ic2 = 0.0f, a1 = 1.0f, a2 = 0.0f, a3 = 0.0f, k = 1.0f;
+        void tune(float hz, float q, float sr) {
+            const float g = std::tan(3.14159265f * std::min(hz, 0.45f * sr) / sr);
+            k = 1.0f / q;
+            a1 = 1.0f / (1.0f + g * (g + k));
+            a2 = g * a1;
+            a3 = g * a2;
+        }
+        void step(float x, float &v1, float &v2) {
+            const float v3 = x - ic2;
+            v1 = a1 * ic1 + a2 * v3;
+            v2 = ic2 + a2 * ic1 + a3 * v3;
+            ic1 = 2.0f * v1 - ic1;
+            ic2 = 2.0f * v2 - ic2;
+        }
+        float high(float x) { float v1, v2; step(x, v1, v2); return x - k * v1 - v2; }
+        float band(float x) { float v1, v2; step(x, v1, v2); return v1; }
+    };
+
     float svf(int c, float x) {
         const float v3 = x - ic2[c];
         const float v1 = a1 * ic1[c] + a2 * v3;
@@ -450,6 +593,18 @@ class Perform {
     int32_t revLen = 0;
     int64_t revElapsed = 0;
     float revMix = 0.0f;
+
+    Crossover xo[2];
+    bool killsOn = false;
+    float killMix = 0.0f;
+    float killGain[3] = {1.0f, 1.0f, 1.0f};
+
+    bool riserOn = false, riserHeld = false;
+    int64_t riserFrom = 0;
+    float riserMix = 0.0f, riserStep = 0.002f, riserLevel = 0.0f;
+    int32_t riserCoefAge = 0;
+    RiserSvf riserHp[2], riserNoise;
+    uint32_t noiseSeed = 0x1234567u;
 
     bool gateActive = false;
     int32_t gateK = 0;

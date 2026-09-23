@@ -540,7 +540,13 @@ data class Track(
  * [stopLen] indexes [STOP_LENGTHS], [throwTime] indexes [THROW_TIMES], and
  * [feedback] is the echo's, 0..0.9.
  */
-@Serializable data class PerformSettings(val stopLen: Int = 2, val throwTime: Int = 2, val feedback: Float = 0.55f)
+@Serializable data class PerformSettings(
+    val stopLen: Int = 2,
+    val throwTime: Int = 2,
+    val feedback: Float = 0.55f,
+    /** Indexes [RISER_LENGTHS]. */
+    val riserLen: Int = 1,
+)
 
 /** How long a tape stop takes, as labels; mirrors `Perform::StopLen`. */
 val STOP_LENGTHS = listOf("1/4", "1/2", "1 beat", "2 beats")
@@ -548,6 +554,8 @@ val STOP_LENGTHS = listOf("1/4", "1/2", "1 beat", "2 beats")
 val THROW_TIMES = listOf("1/16", "1/8", "3/16", "1/4", "3/8")
 /** The repeat's slice lengths, 1..5 in `Perform::Repeat`; 0 is off. */
 val REPEAT_LENGTHS = listOf("1", "1/2", "1/4", "1/8", "1/16")
+/** How long the riser takes to climb; mirrors `Perform::RiserLen`. */
+val RISER_LENGTHS = listOf("1 bar", "2 bars", "4 bars")
 /** The gate's rates, 1..5 in `Perform::Gate`; 0 is off. */
 val GATE_LENGTHS = listOf("1/8", "1/16", "1/32", "1/8T", "1/16T")
 

@@ -342,11 +342,116 @@ void gateChopsInTime() {
     ok("let go, bit for bit again", diff == 0, std::to_string(diff) + " differ");
 }
 
+/** The level of [hz] in [v] from [from] to [to], by Goertzel. */
+double levelAt(const std::vector<float> &v, int from, int to, float hz) {
+    const double w = 2.0 * 3.141592653589793 * hz / kSr, cw = 2.0 * std::cos(w);
+    double s1 = 0, s2 = 0;
+    for (int i = from; i < to; ++i) {
+        const double s0 = v[i] + cw * s1 - s2;
+        s2 = s1;
+        s1 = s0;
+    }
+    const double power = s1 * s1 + s2 * s2 - cw * s1 * s2;
+    return std::sqrt(std::max(0.0, power)) / (to - from) * 2.0;
+}
+
+void killsTakeBandsOut() {
+    printf("kills\n");
+    struct Case { Perform::P which; float hz; double atLeast; const char *what; };
+    const Case cases[] = {
+        {Perform::KillLow, 60.0f, 30.0, "kill low: 60 Hz down by 30 dB or more"},
+        {Perform::KillMid, 1000.0f, 20.0, "kill mid: 1 kHz down by 20 dB or more"},
+        {Perform::KillHigh, 8000.0f, 30.0, "kill high: 8 kHz down by 30 dB or more"},
+    };
+    for (const Case &k : cases) {
+        Rig rig;
+        const int N = kBlock * 1800;
+        std::vector<float> L(N), R(N), oL(N), oR(N);
+        for (int i = 0; i < N; ++i) L[i] = R[i] = 0.5f * std::sin(2.0f * 3.14159265f * k.hz * i / kSr);
+        const int press = kBlock * 600, held = kBlock * 600;
+        rig.run(L.data(), R.data(), oL.data(), oR.data(), press);
+        set(rig.p, k.which, 1.0f);
+        rig.run(L.data() + press, R.data() + press, oL.data() + press, oR.data() + press, held);
+        const double before = levelAt(oL, press - 24000, press, k.hz);
+        const double during = levelAt(oL, press + held - 24000, press + held, k.hz);
+        const double db = 20.0 * std::log10(during / before);
+        ok(k.what, db < -k.atLeast, num(db) + " dB");
+        set(rig.p, k.which, 0.0f);
+        const int after = press + held;
+        rig.run(L.data() + after, R.data() + after, oL.data() + after, oR.data() + after, N - after);
+        int diff = 0;
+        for (int f = after + 1000; f < N; ++f) diff += (oL[f] != L[f]) + (oR[f] != R[f]);
+        if (k.which == Perform::KillLow) ok("let go, bit for bit again", diff == 0, std::to_string(diff) + " differ");
+    }
+    // The other bands come through a kill at their own level.
+    Rig rig;
+    const int N = kBlock * 1000;
+    std::vector<float> L(N), R(N), oL(N), oR(N);
+    for (int i = 0; i < N; ++i) L[i] = R[i] = 0.5f * std::sin(2.0f * 3.14159265f * 8000.0f * i / kSr);
+    set(rig.p, Perform::KillLow, 1.0f);
+    rig.run(L.data(), R.data(), oL.data(), oR.data(), N);
+    const double kept = 20.0 * std::log10(levelAt(oL, N - 24000, N, 8000.0f) / 0.5);
+    ok("with the lows killed, 8 kHz is untouched (within 0.5 dB)", std::fabs(kept) < 0.5, num(kept) + " dB");
+
+    // Where two kept bands meet, they add back up to the level they were.
+    // This is the upper crossover's all-pass on the low band: without it the
+    // low band and the middle one arrive out of step at the lower crossover.
+    for (float hz : {250.0f, 400.0f}) {
+        Rig r2;
+        std::vector<float> a(N), b(N), oa(N), ob(N);
+        for (int i = 0; i < N; ++i) a[i] = b[i] = 0.5f * std::sin(2.0f * 3.14159265f * hz * i / kSr);
+        set(r2.p, Perform::KillHigh, 1.0f);
+        r2.run(a.data(), b.data(), oa.data(), ob.data(), N);
+        const double level = 20.0 * std::log10(levelAt(oa, N - 24000, N, hz) / 0.5);
+        ok(hz == 250.0f ? "with the highs killed, 250 Hz is level (within 0.05 dB)"
+                        : "and 400 Hz (within 0.05 dB)",
+           std::fabs(level) < 0.05, num(level) + " dB");
+    }
+}
+
+void riserClimbs() {
+    printf("riser\n");
+    Rig rig;
+    const int N = kBlock * 4000;
+    std::vector<float> L(N), R(N), oL(N), oR(N);
+    for (int i = 0; i < N; ++i) L[i] = R[i] = 0.5f * std::sin(2.0f * 3.14159265f * 100.0f * i / kSr);
+    const int press = kBlock * 200;
+    rig.run(L.data(), R.data(), oL.data(), oR.data(), press);
+    set(rig.p, Perform::Riser, 1.0f); // two bars at 120: 192000 frames
+    const int held = 200000;
+    const int heldBlocks = (held / kBlock) * kBlock;
+    rig.run(L.data() + press, R.data() + press, oL.data() + press, oR.data() + press, heldBlocks);
+    const double early = levelAt(oL, press + 1000, press + 25000, 100.0f);
+    const double late = levelAt(oL, press + heldBlocks - 24000, press + heldBlocks, 100.0f);
+    ok("the high pass climbs: 100 Hz down by 30 dB or more at the top", 20 * std::log10(late / early) < -30.0,
+       num(20 * std::log10(late / early)) + " dB");
+    {
+        // The noise alone, over silence.
+        Rig quiet;
+        std::vector<float> z(heldBlocks, 0.0f), zl(heldBlocks), zr(heldBlocks);
+        set(quiet.p, Perform::Riser, 1.0f);
+        quiet.run(z.data(), z.data(), zl.data(), zr.data(), heldBlocks);
+        double n0 = 0, n1 = 0;
+        for (int f = 1000; f < 25000; ++f) n0 += zl[f] * zl[f];
+        for (int f = heldBlocks - 24000; f < heldBlocks; ++f) n1 += zl[f] * zl[f];
+        const double top = std::sqrt(n1 / 24000.0);
+        ok("and the noise under it rises", n1 > n0 * 100.0, num(n0) + " then " + num(n1));
+        ok("to about -18 dB at the top (between -30 and -12)",
+           20 * std::log10(top) > -30.0 && 20 * std::log10(top) < -12.0, num(20 * std::log10(top)) + " dB");
+    }
+    set(rig.p, Perform::Riser, 0.0f);
+    const int after = press + heldBlocks;
+    rig.run(L.data() + after, R.data() + after, oL.data() + after, oR.data() + after, N - after);
+    int diff = 0;
+    for (int f = after + 1000; f < N; ++f) diff += (oL[f] != L[f]) + (oR[f] != R[f]);
+    ok("let go, it snaps back, bit for bit", diff == 0, std::to_string(diff) + " differ");
+}
+
 void resetRepeats() {
     printf("reset\n");
     auto perform = [](Rig &rig, std::vector<float> &oL) {
         Noise n;
-        const int N = kBlock * 1700;
+        const int N = kBlock * 1800;
         std::vector<float> L(N), R(N), oR(N);
         oL.assign(N, 0.0f);
         for (int i = 0; i < N; ++i) { L[i] = n.next(); R[i] = n.next(); }
@@ -360,6 +465,8 @@ void resetRepeats() {
         set(rig.p, Perform::Repeat, 0.0f); set(rig.p, Perform::Y, 0.8f); set(rig.p, Perform::X, 0.2f); go(200);
         set(rig.p, Perform::Reverse, 1.0f); set(rig.p, Perform::Gate, 0.6f); go(150);
         set(rig.p, Perform::Reverse, 0.0f); set(rig.p, Perform::Gate, 0.0f);
+        set(rig.p, Perform::Riser, 1.0f); set(rig.p, Perform::KillMid, 1.0f); go(100);
+        set(rig.p, Perform::Riser, 0.0f); set(rig.p, Perform::KillMid, 0.0f);
         set(rig.p, Perform::Stop, 1.0f); go(400);
         set(rig.p, Perform::Stop, 0.0f); set(rig.p, Perform::Y, 0.0f); set(rig.p, Perform::X, 0.5f); go(400);
     };
@@ -385,6 +492,8 @@ int main() {
     throwEchoesAndSleeps();
     reversePlaysTheLastBeatBackwards();
     gateChopsInTime();
+    killsTakeBandsOut();
+    riserClimbs();
     resetRepeats();
     printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

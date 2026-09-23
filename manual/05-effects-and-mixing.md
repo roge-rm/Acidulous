@@ -122,6 +122,8 @@ back the same way. Stopping the song lets go of anything held.
   song. Hold it with a repeat and the repeat plays backwards.
 - **stop** slows the song down to a stop like a tape machine losing power. Let
   go and it spins back up. **stop** under it sets how long it takes.
+- **riser** builds up to a drop. A high pass climbs and noise rises under it
+  over 1, 2 or 4 bars (**riser** under it), then snaps back when you let go.
 
 ### Pad
 
@@ -129,6 +131,10 @@ Left and right is a filter: low pass to the left of the middle, high pass to
 the right. Up is how much of the mix goes into an echo. Let go and the echo
 keeps repeating and dies away. **echo** sets its time and **feedback** how long
 it lasts.
+
+Under the pad, **kill low**, **kill mid** and **kill high** take that part of
+the sound out while you hold them: below 250 Hz, 250 Hz to 2.5 kHz, and above
+2.5 kHz.
 
 ### Live
 

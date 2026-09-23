@@ -1,6 +1,7 @@
 package com.rm.acidulous.engine
 
 import android.util.Log
+import com.rm.acidulous.model.RISER_LENGTHS
 import com.rm.acidulous.model.STOP_LENGTHS
 import com.rm.acidulous.model.SWING_MAX
 import com.rm.acidulous.model.THROW_TIMES
@@ -635,6 +636,7 @@ object EngineSync {
         NativeEngine.setParam(0, "perform", "stoplen", m.perform.stopLen / (STOP_LENGTHS.size - 1f), record = false)
         NativeEngine.setParam(0, "perform", "throwtime", m.perform.throwTime / (THROW_TIMES.size - 1f), record = false)
         NativeEngine.setParam(0, "perform", "feedback", (m.perform.feedback / 0.9f).coerceIn(0f, 1f), record = false)
+        NativeEngine.setParam(0, "perform", "riserlen", m.perform.riserLen / (RISER_LENGTHS.size - 1f), record = false)
     }
 
     /**

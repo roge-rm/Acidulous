@@ -251,11 +251,15 @@ class Recorder {
         /** Unit::Performance's two indices; see kPerfMod in Messages.h. */
         val PERF_PARAMS = listOf("mod", "pressure")
         /** Mirrors `Perform::P`, by index. */
-        val PERFORM_PARAMS = listOf("repeat", "stop", "x", "y", "stoplen", "throwtime", "feedback", "reverse", "gate")
+        val PERFORM_PARAMS = listOf("repeat", "stop", "x", "y", "stoplen", "throwtime", "feedback", "reverse", "gate",
+            "killlow", "killmid", "killhigh", "riser", "riserlen",
+        )
         /** Where each held control rests, normalised. */
-        val PERFORM_REST = mapOf("repeat" to 0f, "stop" to 0f, "x" to 0.5f, "y" to 0f, "reverse" to 0f, "gate" to 0f)
+        val PERFORM_REST = mapOf("repeat" to 0f, "stop" to 0f, "x" to 0.5f, "y" to 0f, "reverse" to 0f, "gate" to 0f,
+            "killlow" to 0f, "killmid" to 0f, "killhigh" to 0f, "riser" to 0f,
+        )
         /** The held controls that are switches or steps, so their lanes step rather than slide. */
-        val PERFORM_STEPPED = setOf("repeat", "stop", "reverse", "gate")
+        val PERFORM_STEPPED = setOf("repeat", "stop", "reverse", "gate", "killlow", "killmid", "killhigh", "riser")
         /**
          * Mirrors `kChannelDefs` in `Rack.cpp`, **by index**.
          *

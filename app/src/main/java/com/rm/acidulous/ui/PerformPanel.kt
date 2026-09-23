@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.model.GATE_LENGTHS
 import com.rm.acidulous.model.REPEAT_LENGTHS
+import com.rm.acidulous.model.RISER_LENGTHS
 import com.rm.acidulous.model.STOP_LENGTHS
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
@@ -57,6 +58,9 @@ class PerformState {
     var gate by mutableStateOf(0)
     var reverse by mutableStateOf(false)
     var stop by mutableStateOf(false)
+    var riser by mutableStateOf(false)
+    /** Low, mid and high. */
+    var kills by mutableStateOf(listOf(false, false, false))
     /** Where the pad is, normalised with y up; null at rest. */
     var pad by mutableStateOf<Offset?>(null)
 
@@ -69,6 +73,8 @@ class PerformState {
         gate = 0
         reverse = false
         stop = false
+        riser = false
+        kills = listOf(false, false, false)
         pad = null
     }
 }
@@ -80,14 +86,20 @@ private class PerformSender(private val track: Int) {
     fun gate(k: Int) = send("gate", k / GATE_LENGTHS.size.toFloat())
     fun reverse(on: Boolean) = send("reverse", if (on) 1f else 0f)
     fun stop(on: Boolean) = send("stop", if (on) 1f else 0f)
+    fun riser(on: Boolean) = send("riser", if (on) 1f else 0f)
+    fun kill(band: Int, on: Boolean) = send(KILLS[band], if (on) 1f else 0f)
     fun pad(at: Offset?) {
         send("x", at?.x ?: 0.5f)
         send("y", at?.y ?: 0f)
     }
 }
 
+private val KILLS = listOf("killlow", "killmid", "killhigh")
+private val KILL_LABELS = listOf("kill low", "kill mid", "kill high")
+private val KILL_H = 52.dp
+
 /**
- * Things that happen in time: repeat, gate, reverse and tape stop.
+ * Things that happen in time: repeat, gate, reverse, tape stop and the riser.
  *
  * Held, or with **latch** on, tapped on and tapped off. Turning latch off
  * lets go of whatever it was holding.
@@ -117,6 +129,10 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
                 state.stop = on
                 out.stop(on)
             }
+            HoldPad("riser", state.riser, state.holdLatch, c.accent, Modifier.weight(1f).fillMaxHeight()) { on ->
+                state.riser = on
+                out.riser(on)
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             LatchChip(state.holdLatch, Modifier.weight(1f)) {
@@ -125,6 +141,7 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
                     if (state.gate != 0) { state.gate = 0; out.gate(0) }
                     if (state.reverse) { state.reverse = false; out.reverse(false) }
                     if (state.stop) { state.stop = false; out.stop(false) }
+                    if (state.riser) { state.riser = false; out.riser(false) }
                 }
                 state.holdLatch = !state.holdLatch
             }
@@ -133,47 +150,67 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
                     s.copy(master = s.master.copy(perform = s.master.perform.copy(stopLen = (s.master.perform.stopLen + 1) % STOP_LENGTHS.size)))
                 }
             }
+            Setting("riser", RISER_LENGTHS[settings.riserLen], Modifier.weight(1f)) {
+                editor.editSong { s ->
+                    s.copy(master = s.master.copy(perform = s.master.perform.copy(riserLen = (s.master.perform.riserLen + 1) % RISER_LENGTHS.size)))
+                }
+            }
         }
     }
 }
 
 /**
- * Shaping the sound: the pad. Across is a filter, up is how much of the mix
- * is thrown into the echo.
+ * Shaping the sound: the pad, and the kills under it. Across the pad is a
+ * filter, up it is how much of the mix is thrown into the echo.
  */
 @Composable
 fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier) {
     val c = Acid.colors
     val out = remember(track) { PerformSender(track) }
     val settings = song.master.perform
-    Row(modifier.background(c.panelAlt).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Setting("echo", THROW_TIMES[settings.throwTime], Modifier.fillMaxWidth()) {
-                editor.editSong { s ->
-                    s.copy(master = s.master.copy(perform = s.master.perform.copy(throwTime = (s.master.perform.throwTime + 1) % THROW_TIMES.size)))
+    Column(modifier.background(c.panelAlt).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Setting("echo", THROW_TIMES[settings.throwTime], Modifier.fillMaxWidth()) {
+                    editor.editSong { s ->
+                        s.copy(master = s.master.copy(perform = s.master.perform.copy(throwTime = (s.master.perform.throwTime + 1) % THROW_TIMES.size)))
+                    }
+                }
+                Caption("feedback")
+                MiniSlider(
+                    settings.feedback / 0.9f, Modifier.fillMaxWidth().height(20.dp),
+                    onStart = { editor.beginSongGesture() },
+                    onChange = { v ->
+                        NativeEngine.setParam(track, "perform", "feedback", v, record = false)
+                        editor.updateSongGesture { s ->
+                            s.copy(master = s.master.copy(perform = s.master.perform.copy(feedback = v * 0.9f)))
+                        }
+                    },
+                    onEnd = { editor.endSongGesture() },
+                )
+                Spacer(Modifier.weight(1f))
+                LatchChip(state.padLatch, Modifier.fillMaxWidth()) {
+                    if (state.padLatch) {
+                        if (state.pad != null) { state.pad = null; out.pad(null) }
+                        state.kills.forEachIndexed { b, on -> if (on) out.kill(b, false) }
+                        state.kills = listOf(false, false, false)
+                    }
+                    state.padLatch = !state.padLatch
                 }
             }
-            Caption("feedback")
-            MiniSlider(
-                settings.feedback / 0.9f, Modifier.fillMaxWidth().height(20.dp),
-                onStart = { editor.beginSongGesture() },
-                onChange = { v ->
-                    NativeEngine.setParam(track, "perform", "feedback", v, record = false)
-                    editor.updateSongGesture { s ->
-                        s.copy(master = s.master.copy(perform = s.master.perform.copy(feedback = v * 0.9f)))
-                    }
-                },
-                onEnd = { editor.endSongGesture() },
-            )
-            Spacer(Modifier.weight(1f))
-            LatchChip(state.padLatch, Modifier.fillMaxWidth()) {
-                if (state.padLatch && state.pad != null) { state.pad = null; out.pad(null) }
-                state.padLatch = !state.padLatch
+            XyPad(state.pad, state.padLatch, Modifier.weight(1.4f).fillMaxHeight()) { at ->
+                state.pad = at
+                out.pad(at)
             }
         }
-        XyPad(state.pad, state.padLatch, Modifier.weight(1.4f).fillMaxHeight()) { at ->
-            state.pad = at
-            out.pad(at)
+        // The kills under the pad, so a hand on the pad has them in reach.
+        Row(Modifier.fillMaxWidth().height(KILL_H), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            for (b in 0 until 3) {
+                HoldPad(KILL_LABELS[b], state.kills[b], state.padLatch, c.red, Modifier.weight(1f).fillMaxHeight()) { on ->
+                    state.kills = state.kills.toMutableList().also { it[b] = on }
+                    out.kill(b, on)
+                }
+            }
         }
     }
 }
