@@ -306,19 +306,19 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
     }
 }
 
-/** Where a new group comes from: a narrow strip with one button. */
+/** Where a new group comes from: a strip no wider than its turned label. */
 @Composable
 private fun AddGroupStrip(editor: SongEditor, room: Dp, fullH: Dp) {
     val c = Acid.colors
     Box(
-        Modifier.width(48.dp).then(
+        Modifier.width(26.dp).then(
             if (fullH != Dp.Unspecified) Modifier.height(fullH)
             else if (room == Dp.Infinity) Modifier.height(120.dp) else Modifier.heightIn(max = room),
         )
             .clip(RoundedCornerShape(6.dp)).background(c.cardAlt)
             .clickable { editor.editSong { s -> s.addGroup("Group ${s.master.groups.size + 1}") } },
         contentAlignment = Alignment.Center,
-    ) { Text("+\ngroup", color = c.textMid, fontSize = 11.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
+    ) { SideText("+ group", c.textMid, 11.sp) }
 }
 
 
@@ -501,6 +501,14 @@ private fun ChannelStrip(
 }
 
 @Composable
+private fun LoudnessFigure(label: String, value: String, colour: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, color = Acid.colors.textMid, fontSize = 8.sp, lineHeight = 9.sp, maxLines = 1, softWrap = false)
+        Text(value, color = colour, fontSize = 10.sp, lineHeight = 11.sp, maxLines = 1, softWrap = false)
+    }
+}
+
+@Composable
 private fun MasterStrip(
     song: Song, editor: SongEditor, peak: Float, clickOn: Boolean, onClick: (Boolean) -> Unit,
     faderH: Dp = FADER_H,
@@ -586,11 +594,20 @@ private fun MasterStrip(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text("${fmt(lufs[2])} LUFS", color = c.textHi, fontSize = 15.sp, maxLines = 1, softWrap = false)
-            Text(
-                "S ${fmt(lufs[1])} TP ${fmt(lufs[3])}",
-                color = if (lufs[3] > -1f) c.red else c.textMid, fontSize = 9.sp, maxLines = 1, softWrap = false,
-            )
+            // The unit small beside the number, and the two small readings
+            // side by side under it: "-14.8 LUFS" at one size is wider than
+            // the strip, and a line of its own is more than a song without
+            // groups leaves room for.
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(fmt(lufs[2]), color = c.textHi, fontSize = 15.sp, lineHeight = 17.sp, maxLines = 1, softWrap = false,
+                    modifier = Modifier.alignByBaseline())
+                Text("LUFS", color = c.textMid, fontSize = 8.sp, maxLines = 1, softWrap = false,
+                    modifier = Modifier.padding(start = 2.dp).alignByBaseline())
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                LoudnessFigure("S", fmt(lufs[1]), c.textMid)
+                LoudnessFigure("TP", fmt(lufs[3]), if (lufs[3] > -1f) c.red else c.textMid)
+            }
         }
         // **Six buttons in a grid of three rows, so the strip is no taller
         // than a channel's.** The two sends, the two master inserts, then the
