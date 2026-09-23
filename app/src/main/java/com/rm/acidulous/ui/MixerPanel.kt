@@ -839,16 +839,42 @@ fun SongSlotDialog(
     onDismiss: () -> Unit,
 ) {
     val c = Acid.colors
-    val send = at(editor.song, slot)
+    // The editor's song is not state this window observes - it lives in its
+    // own Dialog window - so every edit here bumps this, and reading it is
+    // what makes the knobs redraw where the finger put them.
+    var edits by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val send = edits.let { at(editor.song, slot) }
     val types = remember { NativeEngine.effectTypes }
     var menu by remember { mutableStateOf(false) }
     val info = remember(send.type, hideMix) {
         if (send.isEmpty) emptyList()
         else NativeEngine.effectParamInfo(send.type).filter { !hideMix || it.name != "mix" }
     }
-    PlainDialog(title, onDismiss = onDismiss, dismissLabel = "Done", maxBodyHeight = 420.dp) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    // Cancel puts back what the window found, as the track's effect window
+    // does: the type and every value, in one song edit.
+    val opened = remember { at(editor.song, slot) }
+    fun revert() {
+        val now = at(editor.song, slot)
+        if (now == opened) return
+        editor.editSong { s ->
+            var out = if (now.type != opened.type) withType(s, slot, opened.type) else s
+            for ((n, v) in opened.params) out = withParam(out, slot, n, v)
+            out
+        }
+        edits++
+        if (now.type == opened.type) {
+            for (p in info) NativeEngine.setParam(0, unitOf(slot), p.name, opened.params[p.name] ?: p.defaultNormalized, record = false)
+        }
+    }
+    PlainDialog(
+        title,
+        onDismiss = { revert(); onDismiss() },
+        dismissLabel = "Cancel",
+        confirmLabel = "OK",
+        onConfirm = onDismiss,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { menu = true }) {
                     Text(if (send.isEmpty) "none ▾" else "${send.type} ▾", color = c.accent, fontSize = 13.sp)
                 }
@@ -858,33 +884,37 @@ fun SongSlotDialog(
                         DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
                             menu = false
                             editor.editSong { s -> withType(s, slot, "") }
+                            edits++
                         })
                         for (t in types) DropdownMenuItem(text = { Text(t, fontSize = 12.sp) }, onClick = {
                             menu = false
                             if (t != send.type) editor.editSong { s -> withType(s, slot, t) }
+                            edits++
                         })
                     }
                 }
             }
-            for (p in info) {
-                // The document is what the slider reads, not the engine: a send
-                // has no knob anywhere else to fight with, and a parameter the
-                // song has never touched is the effect's own default rather
-                // than nought.
-                val v = send.params[p.name] ?: p.defaultNormalized
-                Labeled("${p.name}  ${p.format(v)}") {
-                    MiniSlider(
-                        v, Modifier.width(200.dp).height(20.dp),
-                        onStart = { editor.beginSongGesture() },
-                        onChange = { nv ->
-                            NativeEngine.setParam(
-                                0, unitOf(slot), p.name, nv, record = false,
-                            )
-                            editor.updateSongGesture { s -> withParam(s, slot, p.name, nv) }
-                        },
-                        onEnd = { editor.endSongGesture() },
-                    )
-                }
+            if (!send.isEmpty) {
+                // The document is what the knobs read, not the engine: a slot
+                // like this has no other control anywhere to fight with, and a
+                // parameter the song has never touched is the effect's own
+                // default rather than nought.
+                SongSlotFace(
+                    send.type, info,
+                    value = { n -> send.params[n] ?: info.firstOrNull { it.name == n }?.defaultNormalized ?: 0f },
+                    start = { editor.beginSongGesture() },
+                    change = { n, nv ->
+                        NativeEngine.setParam(0, unitOf(slot), n, nv, record = false)
+                        editor.updateSongGesture { s -> withParam(s, slot, n, nv) }
+                        edits++
+                    },
+                    end = { editor.endSongGesture() },
+                    set = { n, nv ->
+                        NativeEngine.setParam(0, unitOf(slot), n, nv, record = false)
+                        editor.editSong { s -> withParam(s, slot, n, nv) }
+                        edits++
+                    },
+                )
             }
         }
     }

@@ -29,9 +29,9 @@ The app can send MIDI clock (with start, stop and song position) to hardware,
 and it can follow an incoming clock. When following, the tempo comes from the
 other device.
 
-Following has three settings on the MIDI window's **sync** page:
+**follow** on the MIDI window's **control** tab has three settings:
 
-- **follow clock** always follows, even with nothing coming in.
+- **on** always follows, even with nothing coming in.
 - **auto** follows a clock when one arrives and goes back to the song's own
   tempo a second after it stops.
 - **off** ignores incoming clock.

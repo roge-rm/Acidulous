@@ -1,5 +1,6 @@
 package com.rm.acidulous.ui
 
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -64,7 +65,7 @@ fun SettingsDialog(trackNames: List<String> = emptyList(), onDismiss: () -> Unit
             { NewSongSection() },
         ),
         onDismiss = onDismiss,
-        spacing = 16.dp,
+        spacing = 6.dp,
         chips = { SectionChips(TABS, tab) { tab = it } },
     )
 }
@@ -78,30 +79,30 @@ private val TABS = listOf("display", "audio", "record", "songs")
 
 @Composable
 private fun DisplayTab() {
-    Section("theme") {
-        Choice("auto", UiPrefs.theme == ThemeMode.Auto) { UiPrefs.chooseTheme(ThemeMode.Auto) }
-        Choice("light", UiPrefs.theme == ThemeMode.Light) { UiPrefs.chooseTheme(ThemeMode.Light) }
-        Choice("dark", UiPrefs.theme == ThemeMode.Dark) { UiPrefs.chooseTheme(ThemeMode.Dark) }
-    }
-    // The one setting whose effect is the window it is being read in: the
-    // chips grow under the finger that taps them.
-    //
-    // A note only when the screen cannot give what was asked for, which is the
-    // one thing the chips cannot show - see ui/UiScale.kt for the cap. On every
-    // phone this has been built for it says nothing at all.
-    val applied = LocalUiScale.current
-    Section(
-        "interface size",
-        if (applied >= UiPrefs.uiScale - 0.001f) ""
-        else "This screen can give %.2fx of it.".format(applied),
-    ) {
-        UiScaleSteps.forEachIndexed { i, step ->
-            Choice(UiScaleLabels[i], UiPrefs.uiScale == step) { UiPrefs.chooseUiScale(step) }
+    // Cards of switches, the arp window's shape, like every window with
+    // settings in it (Dan, 2026-09-23).
+    WindowCards {
+        WindowCard("screen") {
+            SwitchGrid(
+                "theme", listOf("auto", "light", "dark"),
+                when (UiPrefs.theme) { ThemeMode.Auto -> 0; ThemeMode.Light -> 1; ThemeMode.Dark -> 2 },
+                columns = 1,
+            ) { UiPrefs.chooseTheme(listOf(ThemeMode.Auto, ThemeMode.Light, ThemeMode.Dark)[it]) }
+            // The one setting whose effect is the window it is being read in:
+            // the cells grow under the finger that taps them.
+            SwitchGrid("size", UiScaleLabels, UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
+                UiPrefs.chooseUiScale(UiScaleSteps[it])
+            }
+            SwitchGrid("while playing", listOf("stay awake", "let it sleep"), if (UiPrefs.keepAwake) 0 else 1) {
+                UiPrefs.chooseKeepAwake(it == 0)
+            }
         }
     }
-    Section("screen while playing") {
-        Choice("stay awake", UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(true) }
-        Choice("let it sleep", !UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(false) }
+    // A line only when the screen cannot give what was asked for, which is
+    // the one thing the switch cannot show - see ui/UiScale.kt for the cap.
+    val applied = LocalUiScale.current
+    if (applied < UiPrefs.uiScale - 0.001f) {
+        Text("This screen can give %.2fx of it.".format(applied), color = Acid.colors.textDim, fontSize = 11.sp)
     }
 }
 
@@ -117,16 +118,32 @@ private fun AudioTab(trackNames: List<String>) {
     val frames = NativeEngine.bufferFrames
     val ms = frames * 1000f / NativeEngine.sampleRate.coerceAtLeast(1)
     val drops = NativeEngine.xRunCount
-    Section(
-        "audio buffer",
-        "%d frames · %.0f ms · burst %d · %d dropout%s"
-            .format(frames, ms, burst, drops, if (drops == 1L) "" else "s"),
-    ) {
-        for (b in UiPrefs.Buffer.entries) {
-            Choice(b.label, UiPrefs.buffer == b) { UiPrefs.chooseBuffer(b) }
+    // The three things to set, in a card; everything under it is a reading.
+    WindowCards {
+        WindowCard("engine") {
+            SwitchGrid("buffer", UiPrefs.Buffer.entries.map { it.label }, UiPrefs.buffer.ordinal, columns = 1) {
+                UiPrefs.chooseBuffer(UiPrefs.Buffer.entries[it])
+            }
+            val limits = listOf(4, 8, 16, 32, 48, 64, 0)
+            val li = limits.indexOf(UiPrefs.voiceLimit).coerceAtLeast(0)
+            CountKnob(
+                "voices", li, 0 until limits.size, if (UiPrefs.voiceLimit == 0) "all" else "${UiPrefs.voiceLimit}",
+                choices = limits.map { if (it == 0) "all" else "$it" },
+            ) { UiPrefs.chooseVoiceLimit(limits[it]) }
+            // Auto decides between the other two, so while it is on they
+            // show which one it chose rather than being chosen.
+            SwitchGrid(
+                "quality", listOf("full", "lean", "auto"),
+                if (UiPrefs.autoQuality) 2 else if (UiPrefs.fullQuality) 0 else 1,
+                columns = 1,
+            ) { i ->
+                when (i) {
+                    2 -> UiPrefs.chooseAutoQuality(!UiPrefs.autoQuality)
+                    else -> { if (UiPrefs.autoQuality) UiPrefs.chooseAutoQuality(false); UiPrefs.chooseQuality(i == 0) }
+                }
+            }
         }
     }
-
     // **Where the time actually went.** The buffer above says how long the
     // engine has; this says how long it took, worst case, and which part of it
     // was slow. Both peaks are cleared by reading, and this is a second reader
@@ -168,31 +185,23 @@ private fun AudioTab(trackNames: List<String>) {
     // render and 4 ms is what a whole 192-frame callback gets, so the figure
     // that mattered was being flattered by a factor of three.
     val blockBudgetMs = 1000f * BLOCK_FRAMES / NativeEngine.sampleRate.coerceAtLeast(1)
-    Section(
-        "worst block",
-        // Every figure here comes from a block that ran without being
-        // interrupted, which is the only kind whose parts can be believed: a
-        // thread taken off its core mid-block hands that whole absence to
-        // whatever it was timing. The percentage is how many blocks were
-        // thrown away for that reason - and it is the answer to "is this the
-        // DSP or the scheduler" all by itself.
-        "%.2f ms of %.2f · %s%s".format(
+    // The readings, in a card of their own under the one you set things in.
+    // Every figure comes from a block that ran without being interrupted,
+    // which is the only kind whose parts can be believed: a thread taken off
+    // its core mid-block hands that whole absence to whatever it was timing.
+    // The percentage is how many blocks were thrown away for that reason -
+    // and it is the answer to "is this the DSP or the scheduler" by itself.
+    val lines = mutableListOf(
+        "buffer  %d frames · %.0f ms · burst %d · %d dropout%s".format(frames, ms, burst, drops, if (drops == 1L) "" else "s") +
+            if (UiPrefs.autoQuality) " · auto running %s".format(if (UiPrefs.qualityNow) "full" else "lean") else "",
+        "worst block  %.2f ms of %.2f · %s%s".format(
             worst / 1000f,
             blockBudgetMs,
             NativeEngine.Phase.entries
                 .joinToString(" ") { "${it.name.lowercase().take(3)} %.2f".format(phases[it.ordinal] / 1000f) },
             if (interrupted >= 0.5f) " · %.0f%% interrupted".format(interrupted) else "",
         ),
-    ) {
-        Choice("reset", false) {
-            worst = 0
-            phases = IntArray(NativeEngine.Phase.entries.size)
-            racks = IntArray(RACKS)
-            rackFrozen = BooleanArray(RACKS)
-            NativeEngine.resetRackCosts()
-        }
-    }
-
+    )
     // **Which track**, because "the racks are most of it" is half an answer.
     // Only the ones with a machine, sorted by cost, so the list says what to
     // freeze rather than making somebody work it out.
@@ -209,94 +218,87 @@ private fun AudioTab(trackNames: List<String>) {
         .filter { it < trackNames.size && racks[it] > 0 }
         .sortedByDescending { racks[it] }
     if (named.isNotEmpty()) {
-        Section(
-            "worst track",
-            // A snowflake means that cost was paid while the track was playing
-            // frozen audio - which should be next to nothing, so it is the
-            // readout saying the freeze is not doing its job rather than the
-            // track being expensive.
-            named.take(6).joinToString("  ") {
-                val mark = if (rackFrozen[it]) " ❄" else ""
-                "${trackNames[it]}$mark %.2f".format(racks[it] / 1000f)
-            },
-        ) {}
-    }
-
-    Section(
-        "machine voice limit",
-        if (UiPrefs.voiceLimit == 0) "" else "Per track. The oldest note goes first.",
-    ) {
-        for (n in listOf(4, 8, 16, 32, 48, 64)) {
-            Choice("$n", UiPrefs.voiceLimit == n) { UiPrefs.chooseVoiceLimit(n) }
+        // A snowflake means that cost was paid while the track was playing
+        // frozen audio - which should be next to nothing, so it is the
+        // readout saying the freeze is not doing its job.
+        lines += "worst track  " + named.take(6).joinToString("  ") {
+            val mark = if (rackFrozen[it]) " ❄" else ""
+            "${trackNames[it]}$mark %.2f".format(racks[it] / 1000f)
         }
-        Choice("all", UiPrefs.voiceLimit == 0) { UiPrefs.chooseVoiceLimit(0) }
     }
 
-    // **What it says is now what it does.** This read "Half the reverb, no
-    // oversampling" while the reverb half was dead code - the one with the
-    // branch in it had not been included by anything since the sends became
-    // ordinary effect slots - and the oversampling half reached the
-    // distortion only, never the amp, which is the dearest thing here.
-    Section(
-        "quality",
-        when {
-            UiPrefs.autoQuality -> "Auto: running %s.".format(if (UiPrefs.qualityNow) "full" else "lean")
-            UiPrefs.fullQuality -> ""
-            else ->
-                "Saves CPU: simpler amp, distortion and reverb, and fewer voices, " +
-                    "tails and grains in Resonance, Trinity and Pollen."
-        },
-    ) {
-        Choice("full", UiPrefs.fullQuality, enabled = !UiPrefs.autoQuality) { UiPrefs.chooseQuality(true) }
-        Choice("lean", !UiPrefs.fullQuality, enabled = !UiPrefs.autoQuality) { UiPrefs.chooseQuality(false) }
-        Choice("auto", UiPrefs.autoQuality) { UiPrefs.chooseAutoQuality(!UiPrefs.autoQuality) }
+    // No control for the scheduler hint, because there is nothing to
+    // choose: the device either takes hints or it does not.
+    lines += "scheduler hint  " + when (NativeEngine.hintState) {
+        0 -> "not available on this device"
+        1 -> "waiting for the audio thread"
+        2 -> "the audio thread didn't register"
+        3 -> "this device refused it"
+        else -> "on"
     }
-
-    // No control, because there is nothing to choose: the device either takes
-    // hints or it does not. The line says which, and nothing else.
-    Section(
-        "scheduler hint",
-        when (NativeEngine.hintState) {
-            0 -> "Not available on this device."
-            1 -> "Waiting for the audio thread."
-            2 -> "The audio thread didn't register."
-            3 -> "This device refused it."
-            else -> "On."
-        },
-    ) {}
+    WindowCards {
+        WindowCard("readings · since opened") {
+            for (l in lines) {
+                Text(l, color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth())
+            }
+            SwitchGrid("peaks", listOf("reset"), -1) {
+                worst = 0
+                phases = IntArray(NativeEngine.Phase.entries.size)
+                racks = IntArray(RACKS)
+                rackFrozen = BooleanArray(RACKS)
+                NativeEngine.resetRackCosts()
+            }
+        }
+    }
 }
 
 @Composable
 private fun RecordTab() {
-    // 48 kHz either way; only the depth is a choice.
-    Section("recording and export depth") {
-        Choice("24-bit", UiPrefs.recordBits == 24) { UiPrefs.chooseRecordBits(24) }
-        Choice("16-bit", UiPrefs.recordBits == 16) { UiPrefs.chooseRecordBits(16) }
+    WindowCards {
+        // 48 kHz either way; only the depth is a choice.
+        WindowCard("recording and export") {
+            SwitchGrid("depth", listOf("24-bit", "16-bit"), if (UiPrefs.recordBits == 24) 0 else 1) {
+                UiPrefs.chooseRecordBits(if (it == 0) 24 else 16)
+            }
+        }
     }
 }
 
 @Composable
 private fun NewSongSection() {
     val sig = UiPrefs.newSignature
-    SliderSection(
-        "new song tempo", "%.0f bpm".format(UiPrefs.newTempo), "",
-        UiPrefs.newTempo, 40f..240f,
-    ) { UiPrefs.chooseNewTempo(it) }
-    // A slider rather than five chips: it fits all eight signatures where
-    // the row fitted five, in the same height.
-    val sigIndex = SIGNATURES.indexOf(UiPrefs.newSignature).coerceAtLeast(0)
-    SliderSection(
-        "new song signature", "${sig.beats}/${sig.unit}", "",
-        sigIndex.toFloat(), 0f..(SIGNATURES.size - 1).toFloat(), SIGNATURES.size - 2,
-    ) { v -> UiPrefs.chooseNewSignature(SIGNATURES[v.toInt().coerceIn(0, SIGNATURES.size - 1)]) }
-    // What the one track of a new song holds. Hexbeat by default - a new
-    // song is usually a beat before it is anything else - and behind the same
-    // picker the arranger's "+ track" uses, because nineteen machines is not
-    // a row of chips and a second list of them would be a second list to keep
-    // up to date.
     var pickingMachine by remember { mutableStateOf(false) }
-    Section("new song machine", com.rm.acidulous.model.MachineUi.describe(UiPrefs.newMachine)) {
-        Choice(UiPrefs.newMachine, true) { pickingMachine = true }
+    WindowCards {
+        WindowCard("new song") {
+            CountKnob("tempo", UiPrefs.newTempo.roundToInt(), 40..240, "%.0f".format(UiPrefs.newTempo), PanelAmber) {
+                UiPrefs.chooseNewTempo(it.toFloat())
+            }
+            val sigIndex = SIGNATURES.indexOf(sig).coerceAtLeast(0)
+            CountKnob(
+                "signature", sigIndex, 0 until SIGNATURES.size, "${sig.beats}/${sig.unit}",
+                choices = SIGNATURES.map { "${it.beats}/${it.unit}" },
+            ) { UiPrefs.chooseNewSignature(SIGNATURES[it]) }
+            // What the one track of a new song holds, behind the same picker
+            // the arranger's "+ track" uses: nineteen machines is not a switch.
+            SwitchGrid("machine", listOf(UiPrefs.newMachine), -1) { pickingMachine = true }
+        }
+        // The scale a new track starts in: a Scale modifier is fitted to it,
+        // so the keyboard and the roll agree with the song from the first
+        // note. Root and scale are knobs that open as lists on a hold, which
+        // retires the window of its own this used to open.
+        WindowCard("new track scale") {
+            SwitchGrid("use", listOf("off", "on"), if (UiPrefs.newScaleOn) 1 else 0) { UiPrefs.chooseNewScale(it == 1) }
+            if (UiPrefs.newScaleOn) {
+                val key = UiPrefs.newScaleKey
+                val scale = UiPrefs.newScaleIndex
+                CountKnob("root", key, 0..11, Scales.rootName(key, scale), PanelAmber, choices = (0 until 12).map { Scales.rootName(it, scale) }) {
+                    UiPrefs.chooseNewScale(true, it, scale)
+                }
+                CountKnob("scale", scale, 0 until Scales.names.size, Scales.names[scale], width = 132.dp, choices = Scales.names) {
+                    UiPrefs.chooseNewScale(true, key, it)
+                }
+            }
+        }
     }
     if (pickingMachine) {
         MachinePickerDialog(
@@ -304,81 +306,25 @@ private fun NewSongSection() {
             onDismiss = { pickingMachine = false },
         ) { type -> UiPrefs.chooseNewMachine(type); pickingMachine = false }
     }
-    // The scale a new track starts in: a Scale modifier is fitted to it, so
-    // the keyboard and the roll agree with the song from the first note.
-    var picking by remember { mutableStateOf(false) }
-    Section(
-        // The chips carry the answer either way: "no scale", or the scale.
-        "new track scale",
-    ) {
-        Choice("no scale", !UiPrefs.newScaleOn) { UiPrefs.chooseNewScale(false) }
-        Choice(
-            if (UiPrefs.newScaleOn) {
-                "${Scales.rootName(UiPrefs.newScaleKey, UiPrefs.newScaleIndex)} ${Scales.names[UiPrefs.newScaleIndex]}"
-            } else {
-                "choose…"
-            },
-            UiPrefs.newScaleOn,
-        ) { picking = true }
-    }
-    if (picking) {
-        ScalePickerDialog(
-            key = UiPrefs.newScaleKey,
-            scale = UiPrefs.newScaleIndex,
-            onDismiss = { picking = false },
-        ) { key, index ->
-            UiPrefs.chooseNewScale(true, key, index)
-            picking = false
-        }
-    }
 }
 
-/** Where an arriving note lands. Shown here and on the MIDI window's in tab. */
+/** Where an arriving note lands: the first card on the MIDI window's in tab. */
 @Composable
-internal fun MidiRoutingSection(trackNames: List<String>) {
-    Section(
-        "where arriving notes go",
-        when (MidiHub.routing) {
-            MidiHub.Routing.SelectedTrack -> "Whichever track is open."
-            MidiHub.Routing.FixedTrack ->
-                trackNames.getOrNull(MidiHub.fixedRack) ?: "track ${MidiHub.fixedRack + 1}"
-            MidiHub.Routing.ChannelToRack -> "Channel 1 to track 1, and so on."
-        },
-    ) {
-        Choice("follow", MidiHub.routing == MidiHub.Routing.SelectedTrack) {
-            UiPrefs.chooseMidiRouting(MidiHub.Routing.SelectedTrack)
+internal fun MidiRoutingSection(trackNames: List<String>, more: @Composable () -> Unit = {}) {
+    val routes = listOf(MidiHub.Routing.SelectedTrack, MidiHub.Routing.FixedTrack, MidiHub.Routing.ChannelToRack)
+    WindowCard("where arriving notes go") {
+        // Follow: whichever track is open. Pinned: one track, even while
+        // another is open. By channel: channel 1 to track 1, and so on.
+        SwitchGrid("to", listOf("follow", "pinned", "by channel"), routes.indexOf(MidiHub.routing), columns = 1) {
+            UiPrefs.chooseMidiRouting(routes[it])
         }
-        Choice("pinned", MidiHub.routing == MidiHub.Routing.FixedTrack) {
-            UiPrefs.chooseMidiRouting(MidiHub.Routing.FixedTrack)
-        }
-        Choice("by channel", MidiHub.routing == MidiHub.Routing.ChannelToRack) {
-            UiPrefs.chooseMidiRouting(MidiHub.Routing.ChannelToRack)
-        }
-    }
-    if (MidiHub.routing == MidiHub.Routing.FixedTrack && trackNames.isNotEmpty()) {
-        Section("pinned to", "Played even while another track is open.") {
-            trackNames.forEachIndexed { i, name ->
-                Choice(name, MidiHub.fixedRack == i) {
-                    UiPrefs.chooseMidiRouting(MidiHub.Routing.FixedTrack, i)
-                }
+        if (MidiHub.routing == MidiHub.Routing.FixedTrack && trackNames.isNotEmpty()) {
+            val at = MidiHub.fixedRack.coerceIn(0, trackNames.size - 1)
+            CountKnob("track", at, 0 until trackNames.size, trackNames[at], PanelAmber, width = 96.dp, choices = trackNames) {
+                UiPrefs.chooseMidiRouting(MidiHub.Routing.FixedTrack, it)
             }
         }
-    }
-}
-
-/** The 33 scales, in a list, with the twelve keys across the top. */
-@Composable
-private fun ScalePickerDialog(key: Int, scale: Int, onDismiss: () -> Unit, onPick: (Int, Int) -> Unit) {
-    var k by remember { mutableStateOf(key) }
-    PlainDialog(title = "Scale", onDismiss = onDismiss, spacing = 10.dp) {
-        Section("key") {
-            for (i in 0 until 12) Choice(Scales.rootName(i, scale), k == i) { k = i }
-        }
-        ListSection("scale") {
-            Scales.names.forEachIndexed { i, name ->
-                DialogRow(mark = if (scale == i) "●" else "·", name = name, on = scale == i) { onPick(k, i) }
-            }
-        }
+        more()
     }
 }
 

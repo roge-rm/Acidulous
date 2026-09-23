@@ -524,3 +524,61 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "lforate" || name == "rate" -> NOTE_RATES
     else -> null
 }
+
+/**
+ * A song-level slot's face - a send, a master or group insert, an input
+ * effect - laid out exactly as a track's effect window lays out its own:
+ * the same cards, the same switches, the same short labels.
+ *
+ * Not through [ParamBinding], which edits a track. These slots belong to the
+ * song, so the values are the document's and each change is a song gesture;
+ * the window hands in how to read and write them.
+ */
+@Composable
+internal fun SongSlotFace(
+    type: String,
+    info: List<ParamInfo>,
+    value: (String) -> Float,
+    start: () -> Unit,
+    change: (String, Float) -> Unit,
+    end: () -> Unit,
+    /** A tap on a switch: one song edit, no gesture. */
+    set: (String, Float) -> Unit,
+) {
+    val control: @Composable (ParamInfo) -> Unit = { p ->
+        val labels = switchLabels(type, p.name, p.steps)
+        val accent = if (p.name in EXTRA[type].orEmpty()) Acid.colors.accent else Acid.colors.teal
+        val shortLabel = SHORT_LABELS[p.name] ?: p.name
+        val v = value(p.name)
+        when {
+            p.curve == 2 && labels != null && labels.size <= 4 -> SwitchGrid(
+                shortLabel, labels, (v * (labels.size - 1)).roundToInt().coerceIn(0, labels.size - 1),
+            ) { i -> set(p.name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
+            // Named steps - note values, modes - turn as a knob and, held,
+            // open as a list, so an exact one is a tap rather than a hunt.
+            p.curve == 2 && labels != null -> {
+                val n = labels.size
+                val idx = (v * (n - 1)).roundToInt().coerceIn(0, n - 1)
+                fun at(i: Int) = if (n > 1) i.toFloat() / (n - 1) else 0f
+                CountKnob(
+                    shortLabel, idx, 0 until n, labels[idx], accent, choices = labels,
+                    onStart = start, onEnd = end, pick = { i -> set(p.name, at(i)) },
+                ) { i -> change(p.name, at(i)) }
+            }
+            else -> Knob(
+                label = shortLabel, value = v, accent = accent, modifier = panelKnobWidth(),
+                display = p.format(v),
+                onStart = start, onChange = { nv -> change(p.name, nv) }, onEnd = end,
+            )
+        }
+    }
+    androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            for ((title, group) in groupsFor(type, info)) {
+                Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
+                    for (p in group) control(p)
+                }
+            }
+        }
+    }
+}

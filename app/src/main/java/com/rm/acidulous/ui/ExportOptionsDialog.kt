@@ -1,5 +1,8 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -102,66 +105,61 @@ fun ExportOptionsDialog(
         onDismiss = onDismiss,
         confirmLabel = "Export",
         onConfirm = { onExport(options) },
+        spacing = 6.dp,
     ) {
-        Section("format", describeFormat(format)) {
-            for (f in ExportFormat.entries) {
-                Choice(f.label, format == f) {
+        // Cards of switches, the arp window's shape, like every window with
+        // settings in it (Dan, 2026-09-23).
+        WindowCards {
+            WindowCard("file") {
+                SwitchGrid("format", ExportFormat.entries.map { it.label }, ExportFormat.entries.indexOf(format), columns = 4) { i ->
+                    val f = ExportFormat.entries[i]
                     format = f
                     // FLAC has nowhere to put a float, so a 32-bit choice
                     // made under another format quietly becomes 24 rather
                     // than being silently ignored at the far end.
                     if (f == ExportFormat.Flac && bits == 32) bits = 24
                 }
+                // The data formats describe the whole song by their nature:
+                // there is no such thing as one track's worth of bundle.
+                if (audio) {
+                    SwitchGrid("what", ExportWhat.entries.map { it.label }, ExportWhat.entries.indexOf(what), columns = 1) {
+                        what = ExportWhat.entries[it]
+                    }
+                }
+            }
+            if (audio) {
+                WindowCard("sound") {
+                    // A bit depth is a thing a PCM format has. MP3 and AAC
+                    // throw audio away instead - what they have is a budget,
+                    // so that is what they are asked for.
+                    if (format.lossy) {
+                        val rates = listOf(128, 192, 256, 320)
+                        SwitchGrid("kbps", rates.map { "$it" }, rates.indexOf(rate), columns = 2) { rate = rates[it] }
+                    } else {
+                        val depths = if (format == ExportFormat.Flac) listOf(16, 24) else listOf(16, 24, 32)
+                        SwitchGrid("bits", depths.map { if (it == 32) "32 float" else "$it" }, depths.indexOf(bits), columns = 1) {
+                            bits = depths[it]
+                        }
+                    }
+                    SwitchGrid(
+                        "tail", listOf("none", "2 s", "5 s"),
+                        if (tail <= 0f) 0 else if (tail <= 2f) 1 else 2, columns = 1,
+                    ) { tail = listOf(0f, 2f, 5f)[it] }
+                    SwitchGrid("loudness", listOf("as mixed", "${NORMALISE_LUFS.toInt()} LUFS"), if (normalise) 1 else 0, columns = 1) {
+                        normalise = it == 1
+                    }
+                }
             }
         }
-
-        if (audio) {
-            Section("what", describeWhat(what) + if (what == ExportWhat.Scene) "  ($sceneName)" else "") {
-                for (w in ExportWhat.entries) {
-                    Choice(w.label, what == w) { what = w }
-                }
-            }
-            // A bit depth is a thing a PCM format has. MP3 and AAC throw
-            // audio away instead - what they have is a budget, so that is
-            // what they are asked for.
-            if (format.lossy) Section(
-                "rate",
-                when (rate) {
-                    128 -> "Low quality: you'll hear it on cymbals and reverb."
-                    320 -> "As much as MP3 has to give."
-                    else -> ""
-                },
-            ) {
-                for (kbps in listOf(128, 192, 256, 320)) {
-                    Choice("$kbps", rate == kbps) { rate = kbps }
-                }
-            }
-            if (!format.lossy) Section(
-                "depth",
-                when (bits) {
-                    16 -> "Smaller files. Fine for listening, not for mastering."
-                    32 -> "Floating point: it cannot clip."
-                    else -> ""
-                },
-            ) {
-                Choice("16", bits == 16) { bits = 16 }
-                Choice("24", bits == 24) { bits = 24 }
-                if (format != ExportFormat.Flac) {
-                    Choice("32 float", bits == 32) { bits = 32 }
-                }
-            }
-            Section(
-                "render tail",
-                if (tail <= 0f) "Cuts any reverb on the last note." else "",
-            ) {
-                Choice("none", tail <= 0f) { tail = 0f }
-                Choice("2 s", tail > 0f && tail <= 2f) { tail = 2f }
-                Choice("5 s", tail > 2f) { tail = 5f }
-            }
-            if (audio) Section("loudness", if (normalise) "Renders twice: once to measure, once to write." else "") {
-                Choice("as mixed", !normalise) { normalise = false }
-                Choice("${NORMALISE_LUFS.toInt()} LUFS", normalise) { normalise = true }
-            }
-        }
+        // The one line of what the switches cannot say. The format's own line
+        // stays whatever else goes: LAME's licence asks that its use be
+        // acknowledged, and this is where somebody choosing MP3 sees it.
+        val notes = listOfNotNull(
+            describeFormat(format).ifEmpty { null },
+            if (audio) describeWhat(what) + if (what == ExportWhat.Scene) " ($sceneName)" else "" else null,
+            if (audio && normalise) "Renders twice: once to measure, once to write." else null,
+            if (audio && tail <= 0f) "Cuts any reverb on the last note." else null,
+        )
+        Text(notes.joinToString(" "), color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp)
     }
 }

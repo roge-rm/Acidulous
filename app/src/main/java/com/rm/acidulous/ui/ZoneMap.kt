@@ -1,5 +1,7 @@
 package com.rm.acidulous.ui
 
+import kotlin.math.roundToInt
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -85,7 +87,13 @@ fun ZoneMapView(
     }
 }
 
-/** Editing one zone: the fields a map needs and nothing else. */
+/**
+ * Editing one zone: the fields a map needs and nothing else.
+ *
+ * The arp window's shape - cards of knobs, all of it in view - because this
+ * is an editor window and Dan asked for every one of those to look alike.
+ * Nothing is heard until OK; a zone is re-read from its file when it lands.
+ */
 @Composable
 fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onDelete: () -> Unit) {
     var z by remember(zone) { mutableStateOf(zone) }
@@ -94,39 +102,49 @@ fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onD
         onDismiss = onDismiss,
         confirmLabel = "OK",
         onConfirm = { onConfirm(z) },
-        spacing = 10.dp,
+        spacing = 6.dp,
     ) {
-        SliderSection("low key", "${z.lowKey}", "", z.lowKey.toFloat(), 0f..127f) {
-            z = z.copy(lowKey = it.toInt(), highKey = maxOf(it.toInt(), z.highKey))
-        }
-        SliderSection("high key", "${z.highKey}", "", z.highKey.toFloat(), 0f..127f) {
-            z = z.copy(highKey = it.toInt(), lowKey = minOf(it.toInt(), z.lowKey))
-        }
-        SliderSection("root key", "${z.rootKey}", "", z.rootKey.toFloat(), 0f..127f) {
-            z = z.copy(rootKey = it.toInt())
-        }
-        SliderSection("low velocity", "${z.lowVel}", "", z.lowVel.toFloat(), 0f..127f) {
-            z = z.copy(lowVel = it.toInt(), highVel = maxOf(it.toInt(), z.highVel))
-        }
-        SliderSection("high velocity", "${z.highVel}", "", z.highVel.toFloat(), 0f..127f) {
-            z = z.copy(highVel = it.toInt(), lowVel = minOf(it.toInt(), z.lowVel))
-        }
-        SliderSection("tune", "%.0f¢".format(z.tuneCents), "", z.tuneCents, -1200f..1200f) {
-            z = z.copy(tuneCents = it)
-        }
-        SliderSection("gain", "%.2f".format(z.gain), "", z.gain, 0f..2f) { z = z.copy(gain = it) }
-        SliderSection("pan", "%+.2f".format(z.pan), "", z.pan, -1f..1f) { z = z.copy(pan = it) }
-
-        Section("loop") {
-            Choice("off", !z.loop) { z = z.copy(loop = false) }
-            Choice("on", z.loop) { z = z.copy(loop = true) }
-        }
-        // Deleting is not the window's action, so it is not the window's
-        // button - a third thing beside OK and Cancel is the one you hit by
-        // accident.
-        ListSection("remove") {
-            DialogRow(mark = "✕", name = "delete this zone", onClick = onDelete)
+        CompositionLocalProvider(LocalPanelStacked provides true) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                // Which notes reach it, by key and by how hard.
+                ZoneCard("range") {
+                    CountKnob("low key", z.lowKey, 0..127, noteName(z.lowKey), PanelAmber, choices = ZONE_KEYS) {
+                        z = z.copy(lowKey = it, highKey = maxOf(it, z.highKey))
+                    }
+                    CountKnob("high key", z.highKey, 0..127, noteName(z.highKey), PanelAmber, choices = ZONE_KEYS) {
+                        z = z.copy(highKey = it, lowKey = minOf(it, z.lowKey))
+                    }
+                    CountKnob("low vel", z.lowVel, 1..127) { z = z.copy(lowVel = it, highVel = maxOf(it, z.highVel)) }
+                    CountKnob("high vel", z.highVel, 1..127) { z = z.copy(highVel = it, lowVel = minOf(it, z.lowVel)) }
+                }
+                // What it sounds like once it does.
+                ZoneCard("sound") {
+                    CountKnob("root", z.rootKey, 0..127, noteName(z.rootKey), choices = ZONE_KEYS) { z = z.copy(rootKey = it) }
+                    // Cents in steps of five: a zone is tuned to a sample, not
+                    // swept, and 2400 stops on one knob is a dial nobody can land.
+                    CountKnob("tune", (z.tuneCents / 5f).roundToInt(), -240..240, "%.0f¢".format(z.tuneCents)) {
+                        z = z.copy(tuneCents = it * 5f)
+                    }
+                    CountKnob("gain", (z.gain * 100f).roundToInt(), 0..200, "%.2f".format(z.gain)) { z = z.copy(gain = it / 100f) }
+                    CountKnob("pan", (z.pan * 100f).roundToInt(), -100..100, "%+.2f".format(z.pan)) { z = z.copy(pan = it / 100f) }
+                }
+                // Deleting is not the window's action, so it is not the
+                // window's button - a third thing beside OK and Cancel is the
+                // one you hit by accident. It is a cell of its own, in a card
+                // of its own.
+                ZoneCard("zone") {
+                    SwitchGrid("loop", listOf("off", "on"), if (z.loop) 1 else 0) { z = z.copy(loop = it == 1) }
+                    SwitchGrid("remove", listOf("delete"), -1) { onDelete() }
+                }
+            }
         }
     }
 }
+
+/** Every key by name, for the lists the key knobs open on a hold. */
+private val ZONE_KEYS = (0..127).map { noteName(it) }
+
+@Composable
+private fun ZoneCard(title: String, content: @Composable () -> Unit) =
+    Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt, content = content)
 

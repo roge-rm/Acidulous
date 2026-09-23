@@ -1,5 +1,7 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -113,7 +115,6 @@ fun RecorderDialog(
         // tapping outside mid-take and losing it is not a thing to allow.
         onDismiss = { if (!recording) onDismiss() },
         dismissLabel = if (recording) "Recording…" else "Close",
-        maxBodyHeight = 460.dp,
         spacing = 6.dp,
         chips = { SectionChips(listOf("record", "edit", "library"), tab) { tab = it } },
         pages = listOf(
@@ -313,61 +314,42 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
         }
     }
 
-    Section("source", note = if (fromInput) "" else "Play something and capture the result.") {
-        Choice("in", fromInput) { if (!recording) fromInput = true }
-        Choice("out (resample)", !fromInput) { if (!recording) fromInput = false }
-    }
-
-    if (fromInput && havePermission) {
-        if (devices.size > 1) {
-            // Only where there is a choice to make. On a phone with nothing
-            // plugged in this is one row saying "built-in", which is a line
-            // that has not earned itself.
-            Section("input", note = opened) {
-                for (d in devices) {
-                    Choice(d.label, d.id == device) { if (!recording) device = d.id }
+    // How it is set up, as cards - the arp window's shape, like every window
+    // with settings in it (Dan, 2026-09-23). They read in the order a signal
+    // travels, from where it comes from to what it is written as.
+    WindowCards {
+        WindowCard("take") {
+            // In records the input; resample records what the app is playing.
+            SwitchGrid("source", listOf("in", "resample"), if (fromInput) 0 else 1, columns = 1, enabled = listOf(!recording, !recording)) {
+                fromInput = it == 0
+            }
+            if (fromInput && havePermission && devices.size > 1) {
+                // Only where there is a choice to make. On a phone with nothing
+                // plugged in this would be one cell saying "built-in".
+                SwitchGrid("input", devices.map { it.label }, devices.indexOfFirst { it.id == device }, columns = 1) {
+                    if (!recording) device = devices[it].id
                 }
             }
-        } else if (opened.isNotEmpty()) {
-            Readout(opened, good = true)
+            SwitchGrid("bits", listOf("16", "24"), if (UiPrefs.recordBits == 16) 0 else 1, columns = 1, enabled = listOf(!recording, !recording)) {
+                UiPrefs.chooseRecordBits(if (it == 0) 16 else 24)
+            }
+            if (fromInput && opened.isNotEmpty()) Box(Modifier.fillMaxWidth()) { Readout(opened, good = true) }
         }
-    }
-
-    if (fromInput && havePermission) {
-        // Above the input effects, because tuning comes before anything else
-        // a person does after plugging in - and because the effects below it
-        // are printed into the take, which is a decision worth arriving at
-        // with the instrument already in tune.
-        Section("tuner") { TunerStrip(tunerHz) }
-    }
-
-    if (fromInput) {
-        // **The title is the explanation.** Three lines of prose under these
-        // chips said what they do to a recording, which is the shape the house
-        // rule exists to prevent: if a note is needed, the title is wrong.
-        // Naming them for what happens to the file says it in four words, and
-        // it says it where somebody reading the page finds it rather than
-        // where somebody who already stopped would.
-        //
-        // They are first on the page for the same reason: everything else here
-        // decides how the take is captured, and these decide what is in it.
-        Section("printed into the recording") { InputChainChips(editor) }
-        SliderSection(
-            title = "gain",
-            value = "%.2f".format(gain),
-            note = "",
-            position = gain / 4f,
-            range = 0f..1f,
-        ) { gain = it * 4f }
-        Section("monitor", note = "Headphones only: a speaker will feed back.") {
-            Choice("off", !monitor) { monitor = false }
-            Choice("on", monitor) { monitor = true }
+        if (fromInput) {
+            WindowCard("input · monitor on headphones only") {
+                Knob(label = "gain", value = gain / 4f, display = "%.2f".format(gain), modifier = panelKnobWidth(), onChange = { gain = it * 4f })
+                SwitchGrid("monitor", listOf("off", "on"), if (monitor) 1 else 0) { monitor = it == 1 }
+                // **The title is the explanation**: these are printed into
+                // the take, so they are named for what happens to the file.
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("printed into the take", color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { InputChainChips(editor) }
+                }
+                // Tuning comes before anything else a person does after
+                // plugging in, so it is in the card they set the input in.
+                if (havePermission) Box(Modifier.fillMaxWidth()) { TunerStrip(tunerHz) }
+            }
         }
-    }
-
-    Section("depth", note = if (UiPrefs.recordBits == 16) "Half the size." else "") {
-        Choice("16 bit", UiPrefs.recordBits == 16) { if (!recording) UiPrefs.chooseRecordBits(16) }
-        Choice("24 bit", UiPrefs.recordBits == 24) { if (!recording) UiPrefs.chooseRecordBits(24) }
     }
 }
 
@@ -429,14 +411,21 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            file.name, color = c.textHi, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
-            modifier = Modifier.weight(1f), maxLines = 1,
-        )
+        // The file's name is on the reading under the waveform, where it has
+        // the width to be read whole.
+        Spacer(Modifier.weight(1f))
         TextButton(onClick = { NativeEngine.auditionFile(file.absolutePath) }) {
             Text("play", color = c.accent, fontSize = 12.sp)
         }
         TextButton(onClick = { start = 0f; end = 1f }) { Text("all", color = c.accent, fontSize = 12.sp) }
+        // Normalise and reverse are yes-or-no to the whole file, so they sit
+        // with the other things said about the whole file, up here.
+        TextButton(onClick = { normalise = !normalise }) {
+            Text("norm", color = if (normalise) c.accent else c.textMid, fontSize = 12.sp)
+        }
+        TextButton(onClick = { reverse = !reverse }) {
+            Text("rev", color = if (reverse) c.accent else c.textMid, fontSize = 12.sp)
+        }
         if (view.zoomed) {
             TextButton(onClick = { view = WaveView() }) { Text("fit", color = c.teal, fontSize = 12.sp) }
         }
@@ -451,37 +440,34 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         end = end,
         onStart = { start = it },
         onEnd = { end = it },
-        modifier = Modifier.fillMaxWidth().height(180.dp),
+        modifier = Modifier.fillMaxWidth().height(120.dp),
         empty = "That file could not be read.",
     )
 
     val seconds = if (rate > 0) frames.toFloat() / rate else 0f
     Readout(
-        "%.2f s · %s · keeping %.2f s".format(
+        "%s · %.2f s · %s · keeping %.2f s".format(
+            file.name,
             seconds,
             if (meta.split('|').getOrNull(2) == "2") "stereo" else "mono",
             seconds * (maxOf(start, end) - minOf(start, end)),
         ),
     )
 
-    // Panel cards inside a window, which the pad editor already does: these
-    // are the machine-panel vocabulary and they should look like it.
-    Row(
-        Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Group("trim") {
+    // Cards that wrap rather than one row that scrolls sideways - the arp
+    // window's shape, which every window with settings in it follows.
+    WindowCards {
+        WindowCard("level") {
             EditKnob("fade in", fadeIn, "%.0f ms".format(fadeIn * 2000f)) { fadeIn = it }
             EditKnob("fade out", fadeOut, "%.0f ms".format(fadeOut * 2000f)) { fadeOut = it }
-        }
-        Group("level") {
             EditKnob("gain", (gainDb + 24f) / 48f, "%+.1f dB".format(gainDb), PanelAmber) {
                 gainDb = it * 48f - 24f
             }
-            PanelToggle("norm", normalise) { normalise = !normalise }
-            PanelToggle("rev", reverse) { reverse = !reverse }
+            EditKnob("squash", squash, if (squash <= 0f) "off" else "%.2f".format(squash), PanelPink) {
+                squash = it
+            }
         }
-        Group("tone") {
+        WindowCard("tone") {
             EditKnob("low cut", lowCut, if (lowCut <= 0f) "off" else "%.0f Hz".format(hzOf(lowCut))) {
                 lowCut = it
             }
@@ -489,25 +475,22 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
                 cutoff = it
             }
             EditKnob("reso", reso, "%.2f".format(reso)) { reso = it }
-            PanelToggle(if (filterType == 1) "low" else "high", filterType == 5) {
-                filterType = if (filterType == 1) 5 else 1
-            }
-        }
-        Group("squash") {
-            EditKnob("amount", squash, if (squash <= 0f) "off" else "%.2f".format(squash), PanelPink) {
-                squash = it
-            }
+            SwitchGrid("filter", listOf("low", "high"), if (filterType == 5) 1 else 0) { filterType = if (it == 1) 5 else 1 }
         }
     }
 
-    Text("save as", color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-    OutlinedTextField(
-        value = saveAs, onValueChange = { saveAs = it }, singleLine = true,
-        modifier = Modifier.fillMaxWidth(), enabled = !busy,
-    )
     if (message.isNotEmpty()) Text(message, color = c.textDim, fontSize = 11.sp)
 
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        OutlinedTextField(
+            value = saveAs, onValueChange = { saveAs = it }, singleLine = true,
+            label = { Text("save as", fontSize = 11.sp) },
+            modifier = Modifier.weight(1f), enabled = !busy,
+        )
         Button(
             enabled = !busy && frames > 0,
             onClick = {
@@ -647,13 +630,7 @@ private fun EditKnob(
     accent: androidx.compose.ui.graphics.Color = PanelTeal,
     onChange: (Float) -> Unit,
 ) {
-    Column(
-        Modifier.height(PanelControlH).width(56.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Bottom,
-    ) {
-        Knob(label = label, value = value, display = display, accent = accent, onChange = onChange)
-    }
+    Knob(label = label, value = value, display = display, accent = accent, modifier = panelKnobWidth(), onChange = onChange)
 }
 
 /** A switch whose state is a local `Boolean`, ditto. */

@@ -7,13 +7,16 @@ One window handles recording, and it opens wherever a machine needs audio: a
 pad on Forage, a loop for Dice, a buffer for Pollen, or a take for Molt.
 
 - **Record** - choose the input, watch the level, and record.
-  - The **tuner** at the top shows the nearest note and how many cents off you
-    are, and turns green within four cents. It listens before the input effects,
-    and shows nothing unless it's sure of the note.
-  - **printed into the recording** holds two effects that are recorded into the
+  - **source** is **in** for the microphone or what's plugged in, or
+    **resample** to record what the app is playing.
+  - The **tuner** in the input card shows the nearest note and how many cents
+    off you are, and turns green within four cents. It listens before the input
+    effects, and shows nothing unless it's sure of the note.
+  - **printed into the take** holds two effects that are recorded into the
     file, e.g. a guitar amp. Effects on a *track* can be changed any time
     instead.
-- **Edit** - trim the ends, set the level, and cut low rumble.
+- **Edit** - trim the ends, set the level, and cut low rumble. **norm** and
+  **rev** at the top normalise and reverse the whole file.
 - **Library** - everything you've recorded or imported.
 
 The result is a file, so the same recording can be used by more than one
