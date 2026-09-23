@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,8 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
@@ -39,36 +43,95 @@ import com.rm.acidulous.model.THROW_TIMES
 import com.rm.acidulous.ui.theme.Acid
 
 /**
- * The held effects: repeat, tape stop, and the pad.
+ * What the perform pages are holding.
  *
- * Nothing here stays on. Each one is on while a finger is down and goes back
- * to rest when it lifts, and while recording every press is written into
- * [track]'s clip as a lane, so the song plays the performance back.
+ * Kept above the pages rather than in them, so that a repeat latched on the
+ * hold page is still on - and still shown as on - after a turn to the live
+ * page to drop a track out. Each value is what was last sent to the engine.
+ */
+class PerformState {
+    var holdLatch by mutableStateOf(false)
+    var padLatch by mutableStateOf(false)
+    var repeat by mutableStateOf(0)
+    var stop by mutableStateOf(false)
+    /** Where the pad is, normalised with y up; null at rest. */
+    var pad by mutableStateOf<Offset?>(null)
+
+    /**
+     * The transport stopped and the engine let go of everything, so this
+     * forgets it too. Nothing is sent: there is nothing left on to turn off.
+     */
+    fun forgetHeld() {
+        repeat = 0
+        stop = false
+        pad = null
+    }
+}
+
+/** Sends the held controls, recorded into [track]'s clip while recording. */
+private class PerformSender(private val track: Int) {
+    fun send(name: String, v: Float) = NativeEngine.setParam(track, "perform", name, v, record = true)
+    fun repeat(k: Int) = send("repeat", k / REPEAT_LENGTHS.size.toFloat())
+    fun stop(on: Boolean) = send("stop", if (on) 1f else 0f)
+    fun pad(at: Offset?) {
+        send("x", at?.x ?: 0.5f)
+        send("y", at?.y ?: 0f)
+    }
+}
+
+/**
+ * Things that happen in time: repeat and tape stop.
+ *
+ * Held, or with **latch** on, tapped on and tapped off. Turning latch off
+ * lets go of whatever it was holding.
  */
 @Composable
-fun PerformPanel(song: Song, editor: SongEditor, track: Int, modifier: Modifier = Modifier) {
+fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier) {
     val c = Acid.colors
-    // From [song], not `editor.song`: the editor's copy is not observed, so a
-    // setting read from it never redrew when it changed.
+    val out = remember(track) { PerformSender(track) }
     val settings = song.master.perform
-    fun send(name: String, v: Float) = NativeEngine.setParam(track, "perform", name, v, record = true)
+    Column(modifier.background(c.panelAlt).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Caption("repeat")
+        LengthStrip(REPEAT_LENGTHS, state.repeat, state.holdLatch, Modifier.fillMaxWidth().weight(1f)) { k ->
+            state.repeat = k
+            out.repeat(k)
+        }
+        Caption("tape stop")
+        HoldPad("stop", state.stop, state.holdLatch, c.red, Modifier.fillMaxWidth().weight(1f)) { on ->
+            state.stop = on
+            out.stop(on)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            LatchChip(state.holdLatch, Modifier.weight(1f)) {
+                if (state.holdLatch) {
+                    if (state.repeat != 0) { state.repeat = 0; out.repeat(0) }
+                    if (state.stop) { state.stop = false; out.stop(false) }
+                }
+                state.holdLatch = !state.holdLatch
+            }
+            Setting("stop", STOP_LENGTHS[settings.stopLen], Modifier.weight(1f)) {
+                editor.editSong { s ->
+                    s.copy(master = s.master.copy(perform = s.master.perform.copy(stopLen = (s.master.perform.stopLen + 1) % STOP_LENGTHS.size)))
+                }
+            }
+        }
+    }
+}
 
+/**
+ * Shaping the sound: the pad. Across is a filter, up is how much of the mix
+ * is thrown into the echo.
+ */
+@Composable
+fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier) {
+    val c = Acid.colors
+    val out = remember(track) { PerformSender(track) }
+    val settings = song.master.perform
     Row(modifier.background(c.panelAlt).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Caption("repeat")
-            RepeatStrip(Modifier.fillMaxWidth().weight(1f)) { k -> send("repeat", k / REPEAT_LENGTHS.size.toFloat()) }
-            Caption("tape stop")
-            HoldPad("stop", Modifier.fillMaxWidth().weight(1f)) { on -> send("stop", if (on) 1f else 0f) }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Setting("stop", STOP_LENGTHS[settings.stopLen], Modifier.weight(1f)) {
-                    editor.editSong { s ->
-                        s.copy(master = s.master.copy(perform = s.master.perform.copy(stopLen = (s.master.perform.stopLen + 1) % STOP_LENGTHS.size)))
-                    }
-                }
-                Setting("echo", THROW_TIMES[settings.throwTime], Modifier.weight(1f)) {
-                    editor.editSong { s ->
-                        s.copy(master = s.master.copy(perform = s.master.perform.copy(throwTime = (s.master.perform.throwTime + 1) % THROW_TIMES.size)))
-                    }
+            Setting("echo", THROW_TIMES[settings.throwTime], Modifier.fillMaxWidth()) {
+                editor.editSong { s ->
+                    s.copy(master = s.master.copy(perform = s.master.perform.copy(throwTime = (s.master.perform.throwTime + 1) % THROW_TIMES.size)))
                 }
             }
             Caption("feedback")
@@ -83,10 +146,52 @@ fun PerformPanel(song: Song, editor: SongEditor, track: Int, modifier: Modifier 
                 },
                 onEnd = { editor.endSongGesture() },
             )
+            Spacer(Modifier.weight(1f))
+            LatchChip(state.padLatch, Modifier.fillMaxWidth()) {
+                if (state.padLatch && state.pad != null) { state.pad = null; out.pad(null) }
+                state.padLatch = !state.padLatch
+            }
         }
-        XyPad(Modifier.weight(1f).fillMaxHeight()) { x, y ->
-            send("x", x)
-            send("y", y)
+        XyPad(state.pad, state.padLatch, Modifier.weight(1.4f).fillMaxHeight()) { at ->
+            state.pad = at
+            out.pad(at)
+        }
+    }
+}
+
+/**
+ * The song's parts: every track's mute, and fill.
+ *
+ * A mute here is the mixer's own mute, and the strip shows it too. Fill is
+ * the same held fill the editor has, and like it is never recorded.
+ */
+@Composable
+fun LivePage(song: Song, editor: SongEditor, modifier: Modifier = Modifier) {
+    val c = Acid.colors
+    Row(modifier.background(c.panelAlt).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.weight(3f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Caption("mute")
+            // Four across, the way the track picker lays sixteen out, and
+            // always four rows tall so a short song's buttons are not huge.
+            val rows = song.tracks.indices.chunked(4)
+            for (row in rows) {
+                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    for (i in row) {
+                        val track = song.tracks[i]
+                        TrackMute(track.name, trackColour(i), track.mixer.mute, Modifier.weight(1f).fillMaxHeight()) {
+                            editor.edit(i) { t -> t.copy(mixer = t.mixer.copy(mute = !t.mixer.mute)) }
+                        }
+                    }
+                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+            repeat((4 - rows.size).coerceAtLeast(0)) { Spacer(Modifier.weight(1f)) }
+        }
+        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Caption("fill")
+            HoldPad("fill", UiPrefs.fillHeld, latch = false, colour = c.accent, modifier = Modifier.fillMaxWidth().weight(1f)) { on ->
+                UiPrefs.holdFill(on)
+            }
         }
     }
 }
@@ -106,38 +211,68 @@ private fun Setting(label: String, value: String, modifier: Modifier, onClick: (
     ) { Text("$label $value", color = c.textMid, fontSize = 11.sp, maxLines = 1, softWrap = false) }
 }
 
+@Composable
+private fun LatchChip(on: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val c = Acid.colors
+    Box(
+        modifier.height(28.dp).clip(RoundedCornerShape(4.dp))
+            .background(if (on) c.accent.copy(alpha = 0.25f) else c.raised).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text("latch", color = if (on) c.accent else c.textMid, fontSize = 11.sp) }
+}
+
+/** One track's mute: its colour down the side, its name, red while muted. */
+@Composable
+private fun TrackMute(name: String, colour: Color, muted: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val c = Acid.colors
+    Row(
+        modifier.clip(RoundedCornerShape(4.dp))
+            .background(if (muted) c.red.copy(alpha = 0.25f) else c.raised).clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.width(3.dp).fillMaxHeight().background(colour))
+        Text(
+            name, color = if (muted) c.red else c.textMid, fontSize = 11.sp, maxLines = 1, softWrap = false,
+            overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 4.dp),
+        )
+    }
+}
+
 /**
- * The five slice lengths side by side, played as one strip: press one to start
- * repeating, slide along to change the length without letting go, lift to stop.
+ * Lengths side by side, played as one strip. Held: press one, slide along to
+ * change it, lift to stop. Latched: tap one on, tap it again for off, tap
+ * another to change.
  */
 @Composable
-private fun RepeatStrip(modifier: Modifier, onRepeat: (Int) -> Unit) {
+private fun LengthStrip(labels: List<String>, held: Int, latch: Boolean, modifier: Modifier, onChange: (Int) -> Unit) {
     val c = Acid.colors
-    val cb by rememberUpdatedState(onRepeat)
-    var held by remember { mutableStateOf(0) }
+    val cb by rememberUpdatedState(onChange)
+    val current by rememberUpdatedState(held)
+    val latched by rememberUpdatedState(latch)
     Row(
-        modifier.clip(RoundedCornerShape(6.dp)).pointerInput(Unit) {
+        modifier.clip(RoundedCornerShape(6.dp)).pointerInput(labels.size) {
             awaitEachGesture {
-                fun at(x: Float) = ((x / size.width) * REPEAT_LENGTHS.size).toInt().coerceIn(0, REPEAT_LENGTHS.size - 1) + 1
+                fun at(x: Float) = ((x / size.width) * labels.size).toInt().coerceIn(0, labels.size - 1) + 1
                 val down = awaitFirstDown()
                 down.consume()
-                held = at(down.position.x)
-                cb(held)
+                val first = at(down.position.x)
+                // Latched, a tap on the lit one turns it off.
+                val wasOn = latched && current == first
+                if (!wasOn) cb(first)
+                var now = first
                 while (true) {
-                    val event = awaitPointerEvent()
-                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                    val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
                     change.consume()
                     if (!change.pressed) break
                     val k = at(change.position.x)
-                    if (k != held) { held = k; cb(k) }
+                    if (k != now) { now = k; cb(k) }
                 }
-                held = 0
-                cb(0)
+                if (!latched || (wasOn && now == first)) cb(0)
             }
         },
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        REPEAT_LENGTHS.forEachIndexed { i, label ->
+        labels.forEachIndexed { i, label ->
             val on = held == i + 1
             Box(
                 Modifier.weight(1f).fillMaxHeight().background(if (on) c.accent.copy(alpha = 0.35f) else c.raised),
@@ -147,53 +282,49 @@ private fun RepeatStrip(modifier: Modifier, onRepeat: (Int) -> Unit) {
     }
 }
 
-/** On while a finger is on it. */
+/** On while a finger is on it, or with [latch], tapped on and off. */
 @Composable
-private fun HoldPad(label: String, modifier: Modifier, onHold: (Boolean) -> Unit) {
+private fun HoldPad(label: String, on: Boolean, latch: Boolean, colour: Color, modifier: Modifier, onHold: (Boolean) -> Unit) {
     val c = Acid.colors
     val cb by rememberUpdatedState(onHold)
-    var held by remember { mutableStateOf(false) }
+    val current by rememberUpdatedState(on)
+    val latched by rememberUpdatedState(latch)
     Box(
-        modifier.clip(RoundedCornerShape(6.dp)).background(if (held) c.red.copy(alpha = 0.3f) else c.raised)
+        modifier.clip(RoundedCornerShape(6.dp)).background(if (on) colour.copy(alpha = 0.3f) else c.raised)
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     down.consume()
-                    held = true
-                    cb(true)
+                    val latchedNow = latched
+                    cb(if (latchedNow) !current else true)
                     while (true) {
                         val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
                         change.consume()
                         if (!change.pressed) break
                     }
-                    held = false
-                    cb(false)
+                    if (!latchedNow) cb(false)
                 }
             },
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = if (held) c.red else c.textMid, fontSize = 13.sp) }
+    ) { Text(label, color = if (on) colour else c.textMid, fontSize = 13.sp) }
 }
 
 /**
- * Across, a filter: low pass to the left of the middle, high pass to the
- * right. Up, how much of the mix is thrown into the echo. Let go and both go
- * back to rest, and the echo rings out.
+ * The pad. Held, it goes back to rest when the finger lifts; latched, it
+ * stays where it was left.
  */
 @Composable
-private fun XyPad(modifier: Modifier, onMove: (Float, Float) -> Unit) {
+private fun XyPad(at: Offset?, latch: Boolean, modifier: Modifier, onMove: (Offset?) -> Unit) {
     val c = Acid.colors
     val cb by rememberUpdatedState(onMove)
-    var finger by remember { mutableStateOf<Offset?>(null) }
+    val latched by rememberUpdatedState(latch)
     Box(modifier.clip(RoundedCornerShape(6.dp)).background(c.raised)) {
         Canvas(
             Modifier.fillMaxSize().pointerInput(Unit) {
                 awaitEachGesture {
-                    fun send(p: Offset) {
-                        val x = (p.x / size.width).coerceIn(0f, 1f)
-                        val y = (1f - p.y / size.height).coerceIn(0f, 1f)
-                        finger = Offset(x, y)
-                        cb(x, y)
-                    }
+                    fun send(p: Offset) = cb(
+                        Offset((p.x / size.width).coerceIn(0f, 1f), (1f - p.y / size.height).coerceIn(0f, 1f)),
+                    )
                     val down = awaitFirstDown()
                     down.consume()
                     send(down.position)
@@ -203,14 +334,13 @@ private fun XyPad(modifier: Modifier, onMove: (Float, Float) -> Unit) {
                         if (!change.pressed) break
                         send(change.position)
                     }
-                    finger = null
-                    cb(0.5f, 0f)
+                    if (!latched) cb(null)
                 }
             },
         ) {
             val mid = size.width / 2f
             drawLine(c.line, Offset(mid, 0f), Offset(mid, size.height), strokeWidth = 1.dp.toPx())
-            finger?.let { f ->
+            at?.let { f ->
                 drawCircle(c.accent, radius = 14.dp.toPx(), center = Offset(f.x * size.width, (1f - f.y) * size.height))
             }
         }

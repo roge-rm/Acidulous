@@ -78,7 +78,8 @@ unlike sends.
 ## The mixer
 
 The mixer button opens a strip for each track, plus the master. The tabs down
-its left edge switch between the mixer and the **perform** page.
+its left edge switch between the mixer and the three perform pages (see
+**Perform** below).
 
 - **Fader and meter** for each track, with mute and solo.
 - **Two send amounts** per track, going to two effects shared by the whole song.
@@ -96,23 +97,38 @@ or insert to choose its effect and set it up.
 
 ## Perform
 
-The perform page has effects you play by holding them down. They work on the
-whole mix, after the master inserts, and they turn off as soon as you let go.
+The tabs down the mixer's left edge are **mix**, **hold**, **pad** and
+**live**. The last three are for playing the song rather than mixing it.
 
-- **repeat** loops the last slice of the song while you hold it. The five
-  buttons are the slice length, from a beat down to a sixteenth. Slide along
-  them without letting go to change the length. While the song is playing the
-  slice starts on the beat, so it stays in time.
+The effects on **hold** and **pad** work on the whole mix, after the master
+inserts. They're only on while you hold them, unless **latch** is on. With
+latch on, a tap turns something on and another tap turns it off, and the pad
+stays where you leave it. Turning latch off lets go of everything on that page.
+
+If you're recording, everything you do on **hold** and **pad** is recorded into
+the clip of the last track you opened, as automation, and the song plays it
+back the same way. Stopping the song lets go of anything held.
+
+### Hold
+
+- **repeat** loops the last slice of the song. The five buttons are the slice
+  length, from a beat down to a sixteenth. Slide along them without letting go
+  to change the length. While the song is playing the slice starts on the beat,
+  so it stays in time.
 - **stop** slows the song down to a stop like a tape machine losing power. Let
   go and it spins back up. **stop** under it sets how long it takes.
-- **The pad**: left and right is a filter (low pass to the left of the middle,
-  high pass to the right). Up is how much of the mix goes into an echo. Let go
-  and the echo keeps repeating and dies away. **echo** sets the echo's time and
-  **feedback** how long it lasts.
 
-If you're recording, everything you do here is recorded into the clip of the
-last track you opened, as automation. The song plays it back the same way.
-Stopping the song lets go of anything held.
+### Pad
+
+Left and right is a filter: low pass to the left of the middle, high pass to
+the right. Up is how much of the mix goes into an echo. Let go and the echo
+keeps repeating and dies away. **echo** sets its time and **feedback** how long
+it lasts.
+
+### Live
+
+A mute button for every track (the same mute as the mixer's), and **fill**.
+Notes set to play on fill only play while it's held. Fill isn't recorded.
 
 ## Master inserts
 

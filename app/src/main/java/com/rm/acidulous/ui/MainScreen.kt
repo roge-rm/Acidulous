@@ -35,6 +35,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -166,6 +167,10 @@ fun MainScreen(
     var showMixer by remember { mutableStateOf(false) }
     // The slide-up panel's two pages: the mixer, and the held effects.
     var panelPage by rememberSaveable { mutableStateOf(0) }
+    // What the perform pages are holding, kept here so a latch survives a
+    // change of tab. A stop lets go of everything in the engine, so here too.
+    val performState = remember { PerformState() }
+    LaunchedEffect(playing) { if (!playing) performState.forgetHeld() }
     var panelH by remember { mutableStateOf(Dp.Unspecified) }
 
     // **Sideways the transport stands in the header** - the same move the
@@ -713,7 +718,7 @@ fun MainScreen(
         if (showMixer) {
             // The tabs are turned, down the left edge, so they cost the
             // strips a little width rather than any of their height. The
-            // perform page is made the mixer's height, so switching between
+            // perform pages are made the mixer's height, so switching between
             // them does not move the grid.
             val density = androidx.compose.ui.platform.LocalDensity.current
             Row(Modifier.fillMaxWidth().background(Acid.colors.panelAlt)) {
@@ -721,18 +726,16 @@ fun MainScreen(
                     Modifier.width(PANEL_TAB_W).padding(start = 4.dp, top = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    PanelTab("mix", panelPage == 0) { panelPage = 0 }
-                    PanelTab("perform", panelPage == 1) { panelPage = 1 }
+                    PANEL_PAGES.forEachIndexed { i, label -> PanelTab(label, panelPage == i) { panelPage = i } }
                 }
-                if (panelPage == 0) {
-                    MixerPanel(
+                val pageModifier = Modifier.weight(1f).height(if (panelH == Dp.Unspecified) PERFORM_H else panelH)
+                when (panelPage) {
+                    1 -> HoldPage(song, editor, performTrack, performState, pageModifier)
+                    2 -> PadPage(song, editor, performTrack, performState, pageModifier)
+                    3 -> LivePage(song, editor, pageModifier)
+                    else -> MixerPanel(
                         song, editor, rackPeaks, masterPeak, clickOn, onClick,
                         Modifier.weight(1f).onSizeChanged { panelH = with(density) { it.height.toDp() } },
-                    )
-                } else {
-                    PerformPanel(
-                        song, editor, performTrack,
-                        Modifier.weight(1f).height(if (panelH == Dp.Unspecified) PERFORM_H else panelH),
                     )
                 }
             }
@@ -1280,6 +1283,9 @@ private data class SongCell(val trackW: Dp, val cellW: Dp, val cellH: Dp, val sc
 private val LocalSongCell = compositionLocalOf { SongCell(TRACK_W, CELL_W, CELL_H, SCENE_H) }
 
 private val PANEL_TAB_W = 26.dp
+/** The slide-up panel's pages, in the order of their tabs. */
+private val PANEL_PAGES = listOf("mix", "hold", "pad", "live")
+private val PANEL_TAB_H = 64.dp
 /** The perform page's height before the mixer has been measured once: about a strip's. */
 private val PERFORM_H = 320.dp
 
@@ -1288,9 +1294,9 @@ private val PERFORM_H = 320.dp
 private fun PanelTab(label: String, on: Boolean, onClick: () -> Unit) {
     val c = Acid.colors
     Box(
-        Modifier.width(22.dp).height(76.dp).clip(RoundedCornerShape(4.dp))
+        Modifier.width(22.dp).height(PANEL_TAB_H).clip(RoundedCornerShape(4.dp))
             .background(if (on) c.accent.copy(alpha = 0.25f) else c.raised)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { SideText(label, if (on) c.accent else c.textMid, 11.sp, length = 76.dp) }
+    ) { SideText(label, if (on) c.accent else c.textMid, 11.sp, length = PANEL_TAB_H) }
 }
