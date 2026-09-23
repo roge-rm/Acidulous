@@ -271,6 +271,7 @@ fun Song.renameGroup(group: Int, name: String): Song = withGroup(group) { it.cop
 fun Song.withGroupVolume(group: Int, volume: Float): Song = withGroup(group) { it.copy(volume = volume) }
 fun Song.withGroupMute(group: Int, mute: Boolean): Song = withGroup(group) { it.copy(mute = mute) }
 fun Song.withGroupSolo(group: Int, solo: Boolean): Song = withGroup(group) { it.copy(solo = solo) }
+fun Song.withGroupPan(group: Int, pan: Float): Song = withGroup(group) { it.copy(pan = pan) }
 
 private fun Song.withGroupInsertSlot(group: Int, slot: Int, f: (UnitSlot) -> UnitSlot): Song {
     if (slot !in 0 until GROUP_INSERT_SLOTS) return this
@@ -320,7 +321,7 @@ fun Song.busTracksToGroups(): Song {
     for ((i, b) in buses.withIndex()) {
         if (i < room) {
             val t = tracks[b]
-            groups = groups + MixGroup(t.name, t.mixer.volume, t.mixer.mute, t.mixer.solo, t.effects)
+            groups = groups + MixGroup(t.name, t.mixer.volume, t.mixer.mute, t.mixer.solo, t.effects, t.mixer.pan)
             groupOf[b + 1] = groups.size
         } else {
             groupOf[b + 1] = 0

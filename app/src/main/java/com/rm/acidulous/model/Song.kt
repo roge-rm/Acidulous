@@ -446,6 +446,7 @@ data class MixGroup(
     val mute: Boolean = false,
     val solo: Boolean = false,
     val inserts: List<UnitSlot> = emptyList(),
+    val pan: Float = 0f,
 ) {
     fun insertAt(slot: Int): UnitSlot = inserts.getOrNull(slot) ?: UnitSlot()
 }

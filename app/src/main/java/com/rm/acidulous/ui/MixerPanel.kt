@@ -5,6 +5,7 @@ import com.rm.acidulous.model.withGroupInsertBypass
 import com.rm.acidulous.model.withGroupInsertParam
 import com.rm.acidulous.model.withGroupInsert
 import com.rm.acidulous.model.withGroupSolo
+import com.rm.acidulous.model.withGroupPan
 import com.rm.acidulous.model.withGroupMute
 import com.rm.acidulous.model.withGroupVolume
 import com.rm.acidulous.model.deleteGroup
@@ -241,10 +242,14 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(
-            group.name, color = c.accent, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.onLongPress { deleting = true }.clickable { renaming = true },
-        )
+        // The name renames on a tap; the cross beside it removes the group.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                group.name, color = c.accent, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).onLongPress { deleting = true }.clickable { renaming = true },
+            )
+            Text("✕", color = c.textDim, fontSize = 11.sp, modifier = Modifier.clickable { deleting = true }.padding(horizontal = 3.dp))
+        }
         Row(Modifier.height(faderH), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Meter(peak, Modifier.width(8.dp).fillMaxHeight())
             VerticalFader(
@@ -259,18 +264,30 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
                 onEnd = { editor.endSongGesture() },
             )
         }
-        // What is routed here, in the room a channel spends on pan and sends.
+        Labeled("pan") {
+            MiniSlider(
+                value = EngineParams.pan01(group.pan), centered = true,
+                modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(MapTargets.param(0, "master", "g${n}pan")),
+                onStart = { editor.beginSongGesture() },
+                onChange = { v ->
+                    NativeEngine.setParam(0, "master", "g${n}pan", v)
+                    editor.updateSongGesture { s -> s.withGroupPan(g, EngineParams.panFrom01(v)) }
+                },
+                onEnd = { editor.endSongGesture() },
+            )
+        }
+        // What is routed here, in the room a channel spends on its sends.
         val members = song.tracks.filter { it.mixer.output == g + 1 }.map { it.name }
         Text(
             if (members.isEmpty()) "nothing routed here" else members.joinToString("\n"),
             color = c.textDim, fontSize = 10.sp, lineHeight = 13.sp,
-            maxLines = 6, overflow = TextOverflow.Ellipsis,
+            maxLines = 4, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
         )
         if (fullH != Dp.Unspecified) Spacer(Modifier.weight(1f))
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            ToggleChip("M", group.mute, c.red) { editor.editSong { s -> s.withGroupMute(g, !group.mute) } }
-            ToggleChip("S", group.solo, c.accent) { editor.editSong { s -> s.withGroupSolo(g, !group.solo) } }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            GridChip("M", group.mute, c.red, Modifier.weight(1f)) { editor.editSong { s -> s.withGroupMute(g, !group.mute) } }
+            GridChip("S", group.solo, c.accent, Modifier.weight(1f)) { editor.editSong { s -> s.withGroupSolo(g, !group.solo) } }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             for (slot in 0 until GROUP_INSERT_SLOTS) {
@@ -559,12 +576,22 @@ private fun MasterStrip(
         }
         // Under the limiter rather than over the fader, so the master's fader
         // lines up with every channel's.
-        Column(Modifier.fillMaxWidth().clickable { NativeEngine.resetLoudness() }) {
-            Text("${fmt(lufs[2])} LUFS", color = c.text, fontSize = 10.sp, maxLines = 1)
-            Text("TP ${fmt(lufs[3])}", color = if (lufs[3] > -1f) c.red else c.textDim, fontSize = 9.sp, maxLines = 1)
+        // It takes whatever height the strip has left between the limiter and
+        // the buttons, so the buttons always fit and the reading is as large as
+        // the room allows.
+        Column(
+            Modifier.fillMaxWidth().then(if (fullH != Dp.Unspecified) Modifier.weight(1f) else Modifier)
+                .clip(RoundedCornerShape(4.dp)).background(c.cardAlt)
+                .clickable { NativeEngine.resetLoudness() }.padding(horizontal = 2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text("${fmt(lufs[2])} LUFS", color = c.textHi, fontSize = 15.sp, maxLines = 1, softWrap = false)
+            Text(
+                "S ${fmt(lufs[1])} TP ${fmt(lufs[3])}",
+                color = if (lufs[3] > -1f) c.red else c.textMid, fontSize = 9.sp, maxLines = 1, softWrap = false,
+            )
         }
-        // The buttons sit at the foot of the strip, level with the channels'.
-        if (fullH != Dp.Unspecified) Spacer(Modifier.weight(1f))
         // **Six buttons in a grid of three rows, so the strip is no taller
         // than a channel's.** The two sends, the two master inserts, then the
         // limiter and the click. Tap switches one off and on; hold opens a
@@ -588,21 +615,21 @@ private fun MasterStrip(
             for (slot in 0 until SEND_SLOTS) {
                 val send = master.sendAt(slot)
                 GridChip(if (send.isEmpty) "s${slot + 1}" else shortFx(send.type), !send.isEmpty && !send.bypass, c.teal,
-                         Modifier.weight(1f).onLongPress { editing = slot }) { sendTap(slot) }
+                         Modifier.weight(1f).onLongPress { editing = slot }, height = 26.dp) { sendTap(slot) }
             }
         }
         Row(grid, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             for (slot in 0 until MASTER_INSERT_SLOTS) {
                 val fx = master.insertAt(slot)
                 GridChip(if (fx.isEmpty) "fx${slot + 1}" else shortFx(fx.type), !fx.isEmpty && !fx.bypass, c.accent,
-                         Modifier.weight(1f).onLongPress { editingInsert = slot }) { insertTap(slot) }
+                         Modifier.weight(1f).onLongPress { editingInsert = slot }, height = 26.dp) { insertTap(slot) }
             }
         }
         Row(grid, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            GridChip("lim", master.limiter.on, c.teal, Modifier.weight(1f).mappable(map("limiteron"))) {
+            GridChip("lim", master.limiter.on, c.teal, Modifier.weight(1f).mappable(map("limiteron")), height = 26.dp) {
                 editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
             }
-            GridChip("♩", clickOn, c.accent, Modifier.weight(1f)) { onClick(!clickOn) }
+            GridChip("♩", clickOn, c.accent, Modifier.weight(1f), height = 26.dp) { onClick(!clickOn) }
         }
     }
 }
@@ -627,16 +654,16 @@ private fun shortFx(type: String): String = when (type) {
 
 /** A half-width chip for the master strip's grid. */
 @Composable
-private fun GridChip(label: String, on: Boolean, colour: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun GridChip(label: String, on: Boolean, colour: Color, modifier: Modifier = Modifier, height: Dp = 28.dp, onClick: () -> Unit) {
     val c = Acid.colors
     Box(
         modifier
-            .height(20.dp)
+            .height(height)
             .clip(RoundedCornerShape(4.dp))
             .background(if (on) colour.copy(alpha = 0.25f) else c.raised)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = if (on) colour else c.textMid, fontSize = 10.sp, maxLines = 1) }
+    ) { Text(label, color = if (on) colour else c.textMid, fontSize = 12.sp, maxLines = 1, softWrap = false) }
 }
 
 @Composable

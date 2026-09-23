@@ -41,6 +41,8 @@ class MasterBus {
         // The four groups' faders: gain, mute and solo each, appended.
         G1Gain, G1Mute, G1Solo, G2Gain, G2Mute, G2Solo,
         G3Gain, G3Mute, G3Solo, G4Gain, G4Mute, G4Solo,
+        // And their pans, appended after them.
+        G1Pan, G2Pan, G3Pan, G4Pan,
         Count
     };
     /** Group [g]'s gain parameter; mute and solo follow it. */

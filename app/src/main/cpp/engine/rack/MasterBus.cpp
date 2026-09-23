@@ -22,6 +22,8 @@ const ParamDef kDefs[MasterBus::Count] = {
     {"g3solo", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
     {"g4gain", 0.0f, 1.5f, 1.0f, Curve::Linear, 0, ""}, {"g4mute", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
     {"g4solo", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+    {"g1pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""}, {"g2pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+    {"g3pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""}, {"g4pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
 };
 } // namespace
 
@@ -100,10 +102,14 @@ void MasterBus::process(Rack *racks, int32_t rackCount, float *out, int32_t fram
             fx->run(groupL[g], groupR[g], frames, true);
         }
         const float gain = params_.get(groupParam(g) + 1) >= 0.5f ? 0.0f : params_.get(groupParam(g));
+        // Pan as a balance on the stereo group, with the same law a track's
+        // pan uses, so the centre is unity.
+        const float angle = (params_.get(G1Pan + g) + 1.0f) * 0.25f * 3.14159265f;
+        const float gl = gain * std::cos(angle) * 1.4142f, gr = gain * std::sin(angle) * 1.4142f;
         float peak = 0.0f;
         for (int32_t i = 0; i < frames; ++i) {
-            groupL[g][i] *= gain;
-            groupR[g][i] *= gain;
+            groupL[g][i] *= gl;
+            groupR[g][i] *= gr;
             sumL[i] += groupL[g][i];
             sumR[i] += groupR[g][i];
             peak = std::fmax(peak, std::fmax(std::fabs(groupL[g][i]), std::fabs(groupR[g][i])));

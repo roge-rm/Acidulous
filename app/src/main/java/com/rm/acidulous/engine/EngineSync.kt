@@ -624,6 +624,7 @@ object EngineSync {
             NativeEngine.setParam(0, "master", "g${g + 1}gain", EngineParams.volume01(group.volume), record = false)
             NativeEngine.setParam(0, "master", "g${g + 1}mute", EngineParams.bool01(group.mute), record = false)
             NativeEngine.setParam(0, "master", "g${g + 1}solo", EngineParams.bool01(group.solo), record = false)
+            NativeEngine.setParam(0, "master", "g${g + 1}pan", EngineParams.pan01(group.pan), record = false)
         }
         NativeEngine.setParam(0, "master", "limiteron", EngineParams.bool01(m.limiter.on), record = false)
         NativeEngine.setParam(0, "master", "limiterdrive", EngineParams.unit01(m.limiter.drive), record = false)
