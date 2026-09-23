@@ -17,6 +17,29 @@ For a melodic machine it's a piano roll: pitch up the side, time across.
 
 For a drum machine it's a step grid with one row per sound. Tap to add a hit.
 
+## Generating
+
+The die button at the top of the editor writes notes for you. The clip changes
+as you turn the knobs, so you can listen while the song plays. **OK**
+keeps the notes and **Cancel** puts the clip back. Undo takes back the whole
+visit in one step.
+
+- **rhythm** spreads a number of hits as evenly as it can over a number of
+  steps. **turn** moves the pattern round. A pattern shorter than the bar
+  drifts against it.
+- **line** writes a line in the track's scale, or in the song's key. With
+  neither, it uses a minor pentatonic on the lowest note. **leaps** is how
+  often it jumps instead of moving to a nearby note.
+- **mutate** changes some of the notes already there: some move a step in the
+  scale, some go, a few new ones appear, and velocities shift. **amount** is
+  how much.
+
+On a drum machine, rhythm and **scatter** work on one sound and leave the
+others alone. Mutate moves drums in time, not pitch.
+
+**roll** gives a new set of random choices. The same settings and roll always
+give the same notes.
+
 ## Recording
 
 Press record, then play. What you play goes into the clip, quantised to the

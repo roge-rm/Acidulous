@@ -127,12 +127,17 @@ class SongEditor(
     }
 
     /** [f] is applied to the gesture's *base* track, so it must describe the total change so far. */
-    fun updateGesture(f: (Track) -> Track) {
+    fun updateGesture(pushNow: Boolean = false, f: (Track) -> Track) {
         val g = gesture ?: return
-        commit(g.trackIndex, f(g.base), pushNow = false)
+        commit(g.trackIndex, f(g.base), pushNow)
     }
 
-    fun updateGestureClip(sceneId: String, f: (Clip) -> Clip) = updateGesture { track ->
+    /**
+     * [pushNow] for a gesture made of separate steps rather than one drag:
+     * the throttle that keeps a drag cheap would otherwise hold back the last
+     * step until the gesture ends, and that step is the one being listened to.
+     */
+    fun updateGestureClip(sceneId: String, pushNow: Boolean = false, f: (Clip) -> Clip) = updateGesture(pushNow) { track ->
         val current = track.clips[sceneId] ?: song.emptyClipFor(sceneId)
         track.copy(clips = track.clips + (sceneId to f(current)))
     }

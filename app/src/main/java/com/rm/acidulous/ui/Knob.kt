@@ -1,5 +1,10 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.first
+import kotlin.math.roundToInt
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -173,5 +178,69 @@ fun Knob(
             maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
         )
+    }
+}
+
+/**
+ * A knob over a whole number, for a window rather than a machine: it reports
+ * only when the number changes, so whatever it drives moves a step at a time
+ * rather than on every pixel of the drag.
+ *
+ * With [choices] - one name per step, from the bottom of [range] - holding it
+ * opens them as a list. A knob is the right shape for a feel and the wrong one
+ * for an exact answer out of thirty: Dan, on the tempo window's scale knob,
+ * asked for the list so a precise choice is easy.
+ */
+@Composable
+internal fun CountKnob(
+    label: String, value: Int, range: IntRange, display: String = "$value", accent: Color = Acid.colors.teal,
+    /** Wider than a knob, for a value that is a word - a scale's name. */
+    width: Dp? = null,
+    choices: List<String>? = null,
+    /** Around a drag, for a caller that makes the drag one undo step. */
+    onStart: () -> Unit = {},
+    onEnd: () -> Unit = {},
+    /** A pick from the list, where it must differ from a step of a drag. */
+    pick: ((Int) -> Unit)? = null,
+    set: (Int) -> Unit,
+) {
+    val span = (range.last - range.first).coerceAtLeast(1)
+    var open by remember { mutableStateOf(false) }
+    androidx.compose.foundation.layout.Box {
+        Knob(
+            label = label, value = (value - range.first).toFloat() / span, display = display,
+            modifier = if (width != null) Modifier.width(width) else panelKnobWidth(), accent = accent,
+            onStart = onStart,
+            onChange = { v -> val n = range.first + (v * span).roundToInt(); if (n != value) set(n.coerceIn(range)) },
+            onEnd = onEnd,
+            onReset = if (choices != null) ({ open = true }) else null,
+        )
+        if (choices != null) {
+            val scroll = androidx.compose.foundation.rememberScrollState()
+            androidx.compose.material3.DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                ScaledMenu(scroll) {
+                    choices.forEachIndexed { i, name ->
+                        val v = range.first + i
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = {
+                                Text(
+                                    name, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+                                    color = if (v == value) Acid.colors.accent else Acid.colors.text,
+                                )
+                            },
+                            onClick = { open = false; if (v != value) (pick ?: set)(v) },
+                        )
+                    }
+                }
+            }
+            // Open where the current value is rather than at the top of a
+            // list of a hundred and twenty-eight.
+            androidx.compose.runtime.LaunchedEffect(open) {
+                if (!open) return@LaunchedEffect
+                val max = androidx.compose.runtime.snapshotFlow { scroll.maxValue }.first { it > 0 && it < Int.MAX_VALUE }
+                val at = (value - range.first).toFloat() / (choices.size - 1).coerceAtLeast(1)
+                scroll.scrollTo((max * at).roundToInt())
+            }
+        }
     }
 }

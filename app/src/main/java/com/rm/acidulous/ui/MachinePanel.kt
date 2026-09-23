@@ -765,6 +765,31 @@ internal fun panelKnobWidth(): Modifier =
 internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
     val info = b.infoOf(name) ?: return
     val idx = info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)
+    SwitchGrid(
+        label, labels, idx,
+        Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
+    ) { i -> b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
+}
+
+/**
+ * A switch's face, for a choice that is not a machine parameter - the
+ * generators' step sizes and drum voices sit in the same cards as knobs and
+ * have to look like the switches beside them. [selected] out of range lights
+ * nothing, which makes a one-cell grid a button.
+ */
+@Composable
+internal fun SwitchGrid(
+    label: String,
+    labels: List<String>,
+    selected: Int,
+    modifier: Modifier = Modifier,
+    /** Cells to a row; by default two rows at most. */
+    columns: Int = 0,
+    /** Which cells can be pressed; all of them when null. */
+    enabled: List<Boolean>? = null,
+    onPick: (Int) -> Unit,
+) {
+    val idx = selected
     // Two rows at most, one column when there are only two options.
     //
     // A Material TextButton is 58dp wide whatever is written in it, and this
@@ -773,9 +798,9 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
     // aligned against knobs that are a hundred dp tall to its seventy-two,
     // so there was space going spare directly above it. The second row is
     // free, and paying for it halves the width.
-    val cols = if (labels.size <= 2) 1 else (labels.size + 1) / 2
+    val cols = if (columns > 0) columns else if (labels.size <= 2) 1 else (labels.size + 1) / 2
     Column(
-        Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name))
+        modifier
             // Fill the row's height, but never more than a control's worth of
             // it. Without the ceiling this asks its parent how tall to be
             // while the parent is asking it the same question - Group's row
@@ -805,14 +830,15 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
                     cells.forEachIndexed { col, l ->
                         val i = row * cols + col
                         val on = i == idx
+                        val live = enabled?.getOrNull(i) ?: true
                         Box(
                             Modifier.weight(1f).fillMaxHeight()
                                 .background(if (on) Acid.colors.green else Acid.colors.control)
-                                .clickable { b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) },
+                                .clickable(enabled = live) { onPick(i) },
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                l, color = if (on) Acid.colors.onAccent else Acid.colors.textMid,
+                                l, color = if (on) Acid.colors.onAccent else if (live) Acid.colors.textMid else Acid.colors.textFaint,
                                 fontSize = 10.sp, maxLines = 1, softWrap = false,
                                 modifier = Modifier.padding(horizontal = 6.dp),
                             )

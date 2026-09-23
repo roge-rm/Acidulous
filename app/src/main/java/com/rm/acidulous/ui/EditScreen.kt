@@ -152,6 +152,7 @@ fun EditScreen(
     var modifierSlot by remember { mutableStateOf(-1) }
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var scaleDialog by remember { mutableStateOf(false) }
+    var generateDialog by remember { mutableStateOf(false) }
     // Folding the strip is a preference, not a property of this clip, so it
     // is held for the whole app and across launches - see UiPrefs.
     val landscape = isLandscape()
@@ -490,6 +491,9 @@ fun EditScreen(
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
+            // The generators. In the header because the bar below is full,
+            // and because it is about the clip, as the title beside it is.
+            if (kind != MachineKind.Audio) HeaderButton("\u2684") { generateDialog = true }
             // Paging lives here rather than in a row of its own: a whole row of
             // chrome to show one number costs more height than a phone has to
             // spare, and the header already has the two buttons it belongs with.
@@ -1181,6 +1185,20 @@ fun EditScreen(
         ) { modifierSlot = -1 }
     }
 
+    if (generateDialog) {
+        GenerateDialog(
+            editor = editor,
+            trackIndex = trackIndex,
+            sceneId = sceneId,
+            base = clip,
+            clipTicks = clipLen,
+            ticksPerBeat = PPQN * 4 / song.signatureOf(scene).unit,
+            pitchClasses = Scales.activeFor(song, track),
+            voices = if (kind == MachineKind.Drums) voices else emptyList(),
+            spelling = Scales.spellingFor(song, track),
+            onDismiss = { generateDialog = false; selection = emptySet() },
+        )
+    }
     if (scaleDialog) {
         ScaleDialog(
             current = currentScale(),
