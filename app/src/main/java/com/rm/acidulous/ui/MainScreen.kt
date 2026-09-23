@@ -364,7 +364,7 @@ fun MainScreen(
                     onLongPress = { if (!UiPrefs.mapMode) panicEverything() },
                 ) {
                     when {
-                        !playing -> NativeEngine.transportPlay(if (clipMode) 0 else position.scene)
+                        !playing -> com.rm.acidulous.engine.EngineSync.play(if (clipMode) 0 else position.scene, clipMode)
                         clipMode && anyLaunched && !anyStopping -> NativeEngine.stopAllClips()
                         else -> NativeEngine.transportStop()
                     }
@@ -623,7 +623,7 @@ fun MainScreen(
                                         song.tracks.forEachIndexed { t, tr ->
                                             if (tr.clips[scene.id] != null) NativeEngine.launchClip(t, scene.engineId)
                                         }
-                                        if (!playing) NativeEngine.transportPlay(0)
+                                        if (!playing) com.rm.acidulous.engine.EngineSync.play(0, clipMode)
                                     }
                                     // Already running: a tap says "finish the
                                     // repeats you owe and stop", and another
@@ -633,11 +633,11 @@ fun MainScreen(
                                     // up rather than cutting in. Tap again to
                                     // take it out of the queue.
                                     playing -> NativeEngine.queuedScene = if (queuedScene == index) -1 else index
-                                    else -> { onLoopScene(true); NativeEngine.transportPlay(index) }
+                                    else -> { onLoopScene(true); com.rm.acidulous.engine.EngineSync.play(index, clipMode) }
                                 }
                             },
-                            onLoopThis = { onLoopScene(true); NativeEngine.transportPlay(index) },
-                            onPlayThrough = { onLoopScene(false); NativeEngine.transportPlay(index) },
+                            onLoopThis = { onLoopScene(true); com.rm.acidulous.engine.EngineSync.play(index, clipMode) },
+                            onPlayThrough = { onLoopScene(false); com.rm.acidulous.engine.EngineSync.play(index, clipMode) },
                             onSettings = { dialog = Dialog.SceneSettings(index) },
                             onInsertAfter = { editor.editSong { it.addScene(afterIndex = index) } },
                             onDuplicate = { editor.editSong { it.duplicateScene(index) } },
@@ -704,7 +704,7 @@ fun MainScreen(
                                         // tap already waiting is taken on the
                                         // first block, so the first clip you
                                         // touch sounds immediately.
-                                        if (!playing) NativeEngine.transportPlay(0)
+                                        if (!playing) com.rm.acidulous.engine.EngineSync.play(0, clipMode)
                                     }
                                 },
                             )

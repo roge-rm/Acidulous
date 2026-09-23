@@ -64,6 +64,14 @@ The strip under the per-note lane records and draws a parameter over time. Turn
 a knob while recording and the movement is written there. You can also pick a
 parameter and draw it in by hand.
 
+A knob with a lane in the open clip has a **∿** on its dial. It won't stay
+where you put it while the clip plays, because the lane moves it.
+
+A lane leaves its knob where it finished. When you press play, every automated
+knob goes back to where it's set in the song first, so the song starts the same
+every time, and so does an export. In the launcher it doesn't: a clip you
+launch carries on from wherever the last one left things.
+
 ## Folding things away
 
 The lanes, the machine panel and the keyboard each fold away with the small

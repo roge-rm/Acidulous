@@ -1104,10 +1104,10 @@ private fun App(modifier: Modifier = Modifier) {
                 com.rm.acidulous.ui.UiPrefs.holdFill(pressed)
             } else if (pressed) {
                 when (m.action) {
-                    com.rm.acidulous.model.Action.Play.name -> NativeEngine.transportPlay()
+                    com.rm.acidulous.model.Action.Play.name -> EngineSync.play(launcher = com.rm.acidulous.ui.UiPrefs.clipMode)
                     com.rm.acidulous.model.Action.Stop.name -> NativeEngine.transportStop()
                     com.rm.acidulous.model.Action.PlayStop.name ->
-                        if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay()
+                        if (playing) NativeEngine.transportStop() else EngineSync.play(launcher = com.rm.acidulous.ui.UiPrefs.clipMode)
                     com.rm.acidulous.model.Action.Panic.name -> com.rm.acidulous.ui.panicEverything()
                     com.rm.acidulous.model.Action.RecordArm.name -> { armed = !armed; onArm(armed) }
                     com.rm.acidulous.model.Action.LoopScene.name -> onLoopScene(!loopScene)

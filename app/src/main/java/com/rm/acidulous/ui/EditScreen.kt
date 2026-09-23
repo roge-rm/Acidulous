@@ -120,6 +120,10 @@ fun EditScreen(
     val track = song.tracks.getOrNull(trackIndex) ?: return
     val scene = song.scenes.firstOrNull { it.id == sceneId } ?: return
     val clip = track.clips[sceneId] ?: song.emptyClipFor(sceneId)
+    // Which of the panel's knobs a lane in this clip moves; see AutomationMarks.
+    val markedLanes = clip.automation.keys
+    androidx.compose.runtime.SideEffect { AutomationMarks.lanes = markedLanes }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { AutomationMarks.lanes = emptySet() } }
     val ticksPerBar = song.signatureOf(scene).ticksPerBar
     val clipLen = song.clipLengthTicks(sceneId, clip)
 
@@ -424,7 +428,7 @@ fun EditScreen(
                 // press in mapping mode to forget what drives a control.
                 onLongPress = { if (!UiPrefs.mapMode) panicEverything() },
             ) {
-                if (playing) NativeEngine.transportStop() else NativeEngine.transportPlay(song.scenes.indexOf(scene))
+                if (playing) NativeEngine.transportStop() else com.rm.acidulous.engine.EngineSync.play(song.scenes.indexOf(scene), UiPrefs.clipMode)
             }
         }
         }

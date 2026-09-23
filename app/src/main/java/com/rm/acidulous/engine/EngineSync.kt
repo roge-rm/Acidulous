@@ -462,7 +462,63 @@ object EngineSync {
         }
     }
 
+    /** The song as last synced, for [play] to put its automated values back from. */
+    private var synced: Song? = null
+
+    /**
+     * Play, with every automated parameter back where the song says first.
+     *
+     * A lane leaves its parameter where it finished, and a scene with no lane
+     * of its own for it plays on from there - so the second time through, the
+     * top of the song did not sound like the first. Starting the arranger now
+     * puts them back, the way an export starts (see [pushForRender]). Nothing
+     * is said on screen: the knob moves back, which is its own notice, and
+     * `PanelKnob` marks the ones a lane moves.
+     *
+     * Not in the launcher: a clip launched mid-set carries on from where the
+     * last one left things, which is what launching live is for.
+     */
+    fun play(sceneIdx: Int = -1, launcher: Boolean = false) {
+        if (!launcher) synced?.let { resetAutomated(it) }
+        NativeEngine.transportPlay(sceneIdx)
+    }
+
+    /** Every parameter a lane moves, back to the document's value or its default. */
+    fun resetAutomated(song: Song) {
+        song.tracks.forEachIndexed { rack, track ->
+            if (rack >= RACKS) return@forEachIndexed
+            val lanes = track.clips.values.flatMap { it.automation.keys }.toSet()
+            if (lanes.isEmpty()) return@forEachIndexed
+            var channel = false
+            for (key in lanes) {
+                val unit = laneUnit(key)
+                val name = laneParam(key)
+                val fxSlot = effectSlotOf(unit)
+                val modSlot = modifierSlotOf(unit)
+                val value: Float? = when {
+                    unit == "machine" -> track.machine.params[name]
+                        ?: machineTable(track.machine.type).firstOrNull { it.name == name }?.defaultNormalized
+                    fxSlot != null -> track.effectAt(fxSlot).takeIf { !it.isEmpty }?.let { fx ->
+                        if (name == "bypass") EngineParams.bool01(fx.bypass)
+                        else fx.params[name] ?: effectTable(fx.type).firstOrNull { it.name == name }?.defaultNormalized
+                    }
+                    modSlot != null -> track.modifierAt(modSlot).takeIf { !it.isEmpty }?.let { mod ->
+                        if (name == "bypass") EngineParams.bool01(mod.bypass)
+                        else mod.params[name] ?: modifierTable(mod.type).firstOrNull { it.name == name }?.defaultNormalized
+                    }
+                    unit == "channel" -> { channel = true; null }
+                    // The held effects are let go by a stop, and the wheel
+                    // and pressure are a controller's, not the song's.
+                    else -> null
+                }
+                if (value != null) NativeEngine.setParam(rack, unit, name, value, record = false)
+            }
+            if (channel) pushChannel(rack, track.mixer, song.swingOf(track))
+        }
+    }
+
     fun sync(song: Song): Boolean {
+        synced = song
         ensureMachines(song)
         ensureSamples(song)
         ensureEffects(song)

@@ -105,6 +105,8 @@ object Manual {
             ManualBlock(ManualKind.Para, "While **MIDI mapping** is on, holding a control clears its mapping instead."),
             ManualBlock(ManualKind.Heading, "Automation"),
             ManualBlock(ManualKind.Para, "The strip under the per-note lane records and draws a parameter over time. Turn a knob while recording and the movement is written there. You can also pick a parameter and draw it in by hand."),
+            ManualBlock(ManualKind.Para, "A knob with a lane in the open clip has a **∿** on its dial. It won't stay where you put it while the clip plays, because the lane moves it."),
+            ManualBlock(ManualKind.Para, "A lane leaves its knob where it finished. When you press play, every automated knob goes back to where it's set in the song first, so the song starts the same every time, and so does an export. In the launcher it doesn't: a clip you launch carries on from wherever the last one left things."),
             ManualBlock(ManualKind.Heading, "Folding things away"),
             ManualBlock(ManualKind.Para, "The lanes, the machine panel and the keyboard each fold away with the small arrow at their edge, which gives the grid more room."),
         )),

@@ -717,10 +717,23 @@ internal val PanelTeal: Color @Composable get() = Acid.colors.teal
 internal val PanelAmber: Color @Composable get() = Acid.colors.accent
 internal val PanelPink: Color @Composable get() = Acid.colors.pink
 
+/**
+ * The lanes in the clip the editor has open, as lane keys ("machine:cutoff").
+ *
+ * A knob a lane moves will not stay where it is put, and until this nothing
+ * on the panel said why - only the mixer marked its automated controls. The
+ * editor sets it; every [PanelKnob] and [PanelStepKnob] reads it and draws a
+ * ∿ on the dial when its own key is in it.
+ */
+object AutomationMarks {
+    var lanes by androidx.compose.runtime.mutableStateOf(emptySet<String>())
+}
+
 @Composable
 internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal) {
     Knob(
         label = label, value = b.value(name), display = b.display(name), accent = accent,
+        automated = com.rm.acidulous.model.laneKey(b.unit, name) in AutomationMarks.lanes,
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
         onReset = { b.reset(name) },
@@ -1049,6 +1062,7 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
     val info = b.infoOf(name) ?: return
     Knob(
         label = label, value = b.value(name), accent = accent,
+        automated = com.rm.acidulous.model.laneKey(b.unit, name) in AutomationMarks.lanes,
         display = labels.getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
