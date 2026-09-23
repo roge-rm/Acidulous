@@ -88,8 +88,13 @@ android {
         // 0.7.1: groups are strips in the mixer, not tracks. A song saved with
         // 0.7.0 has its bus tracks turned into groups when it opens. Groups
         // have pan, and the demo uses everything 0.7 added.
-        versionCode = 12
-        versionName = "0.7.1"
+        //
+        // 0.7.2: the perform pages (hold, pad, live), five demo songs, exports
+        // that repeat again, and play putting automated knobs back where the
+        // song has them. The rest of 0.8 - the looper, pattern generators and
+        // step locks - comes before 0.8.0.
+        versionCode = 13
+        versionName = "0.7.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
