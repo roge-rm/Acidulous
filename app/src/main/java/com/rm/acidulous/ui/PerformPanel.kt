@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.model.GATE_LENGTHS
+import com.rm.acidulous.model.PAD_X_MODES
+import com.rm.acidulous.model.PAD_Y_MODES
 import com.rm.acidulous.model.REPEAT_LENGTHS
 import com.rm.acidulous.model.RISER_LENGTHS
 import com.rm.acidulous.model.STOP_LENGTHS
@@ -161,7 +163,8 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
 
 /**
  * Shaping the sound: the pad, and the kills under it. Across the pad is a
- * filter, up it is how much of the mix is thrown into the echo.
+ * filter or a crush, and up it is how much of the mix is thrown into an echo
+ * or a wash.
  */
 @Composable
 fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier) {
@@ -171,9 +174,24 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
     Column(modifier.background(c.panelAlt).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Setting("echo", THROW_TIMES[settings.throwTime], Modifier.fillMaxWidth()) {
-                    editor.editSong { s ->
-                        s.copy(master = s.master.copy(perform = s.master.perform.copy(throwTime = (s.master.perform.throwTime + 1) % THROW_TIMES.size)))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Setting("x", PAD_X_MODES[settings.xMode], Modifier.weight(1f)) {
+                        editor.editSong { s ->
+                            s.copy(master = s.master.copy(perform = s.master.perform.copy(xMode = (s.master.perform.xMode + 1) % PAD_X_MODES.size)))
+                        }
+                    }
+                    Setting("y", PAD_Y_MODES[settings.yMode], Modifier.weight(1f)) {
+                        editor.editSong { s ->
+                            s.copy(master = s.master.copy(perform = s.master.perform.copy(yMode = (s.master.perform.yMode + 1) % PAD_Y_MODES.size)))
+                        }
+                    }
+                }
+                // A wash has a time of its own; only the echo's is a setting.
+                if (settings.yMode == 0) {
+                    Setting("echo", THROW_TIMES[settings.throwTime], Modifier.fillMaxWidth()) {
+                        editor.editSong { s ->
+                            s.copy(master = s.master.copy(perform = s.master.perform.copy(throwTime = (s.master.perform.throwTime + 1) % THROW_TIMES.size)))
+                        }
                     }
                 }
                 Caption("feedback")
@@ -198,7 +216,12 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
                     state.padLatch = !state.padLatch
                 }
             }
-            XyPad(state.pad, state.padLatch, Modifier.weight(1.4f).fillMaxHeight()) { at ->
+            XyPad(
+                state.pad, state.padLatch, Modifier.weight(1.4f).fillMaxHeight(),
+                left = if (settings.xMode == 0) "low" else "rate",
+                right = if (settings.xMode == 0) "high" else "bits",
+                up = if (settings.yMode == 0) "throw" else "wash",
+            ) { at ->
                 state.pad = at
                 out.pad(at)
             }
@@ -370,7 +393,15 @@ private fun HoldPad(label: String, on: Boolean, latch: Boolean, colour: Color, m
  * stays where it was left.
  */
 @Composable
-private fun XyPad(at: Offset?, latch: Boolean, modifier: Modifier, onMove: (Offset?) -> Unit) {
+private fun XyPad(
+    at: Offset?,
+    latch: Boolean,
+    modifier: Modifier,
+    left: String,
+    right: String,
+    up: String,
+    onMove: (Offset?) -> Unit,
+) {
     val c = Acid.colors
     val cb by rememberUpdatedState(onMove)
     val latched by rememberUpdatedState(latch)
@@ -400,8 +431,8 @@ private fun XyPad(at: Offset?, latch: Boolean, modifier: Modifier, onMove: (Offs
                 drawCircle(c.accent, radius = 14.dp.toPx(), center = Offset(f.x * size.width, (1f - f.y) * size.height))
             }
         }
-        Text("low", color = c.textDim, fontSize = 10.sp, modifier = Modifier.align(Alignment.BottomStart).padding(6.dp))
-        Text("high", color = c.textDim, fontSize = 10.sp, modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp))
-        Text("throw", color = c.textDim, fontSize = 10.sp, modifier = Modifier.align(Alignment.TopCenter).padding(6.dp))
+        Text(left, color = c.textDim, fontSize = 10.sp, modifier = Modifier.align(Alignment.BottomStart).padding(6.dp))
+        Text(right, color = c.textDim, fontSize = 10.sp, modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp))
+        Text(up, color = c.textDim, fontSize = 10.sp, modifier = Modifier.align(Alignment.TopCenter).padding(6.dp))
     }
 }

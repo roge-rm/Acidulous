@@ -132,6 +132,15 @@ the right. Up is how much of the mix goes into an echo. Let go and the echo
 keeps repeating and dies away. **echo** sets its time and **feedback** how long
 it lasts.
 
+**x** and **y** change what the pad does:
+
+- **x crush** makes left and right a bit crusher instead of a filter: fewer
+  samples to the left of the middle, fewer bits to the right. It crushes a
+  quiet mix as much as a loud one.
+- **y wash** throws into a short smeared echo that sounds more like a big
+  reverb than repeats. It has no time setting; **feedback** still sets how long
+  it lasts.
+
 Under the pad, **kill low**, **kill mid** and **kill high** take that part of
 the sound out while you hold them: below 250 Hz, 250 Hz to 2.5 kHz, and above
 2.5 kHz.

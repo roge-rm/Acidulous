@@ -447,6 +447,68 @@ void riserClimbs() {
     ok("let go, it snaps back, bit for bit", diff == 0, std::to_string(diff) + " differ");
 }
 
+/** How far [out] is from [in] over [from, to), relative to [in]'s own level, in dB. */
+double errorDb(const std::vector<float> &in, const std::vector<float> &out, int from, int to) {
+    double e = 0, p = 0;
+    for (int i = from; i < to; ++i) { const double d = out[i] - in[i]; e += d * d; p += in[i] * in[i]; }
+    return 10.0 * std::log10(std::max(e, 1e-30) / std::max(p, 1e-30));
+}
+
+void padCrushes() {
+    printf("the pad's crush\n");
+    const int N = kBlock * 800;
+    auto run = [&](float x, float amp, float hz) {
+        Rig rig;
+        set(rig.p, Perform::XMode, 1.0f);
+        set(rig.p, Perform::X, x);
+        std::vector<float> L(N), R(N), oL(N), oR(N);
+        for (int i = 0; i < N; ++i) L[i] = R[i] = amp * std::sin(2.0f * 3.14159265f * hz * i / kSr);
+        rig.run(L.data(), R.data(), oL.data(), oR.data(), N);
+        return errorDb(L, oL, N / 2, N);
+    };
+    ok("in the middle, bit for bit", run(0.5f, 0.5f, 440.0f) < -300.0, num(run(0.5f, 0.5f, 440.0f)) + " dB");
+    const double loud = run(1.0f, 1.0f, 440.0f), quiet = run(1.0f, 0.1f, 440.0f);
+    ok("hard right, the bits are crushed", loud > -40.0, num(loud) + " dB");
+    ok("and as much at -20 dB as at 0 dB (within 3 dB)", std::fabs(loud - quiet) < 3.0,
+       num(loud) + " and " + num(quiet) + " dB");
+    const double held = run(0.0f, 0.5f, 5000.0f);
+    ok("hard left, the samples are held", held > -10.0, num(held) + " dB");
+}
+
+void washSmears() {
+    printf("the pad's wash\n");
+    Rig rig;
+    set(rig.p, Perform::YMode, 1.0f);
+    const int N = kBlock * 20000; // 26 s: the tail is long
+    std::vector<float> L(N, 0.0f), R(N, 0.0f), oL(N), oR(N);
+    set(rig.p, Perform::Y, 1.0f);
+    rig.run(L.data(), R.data(), oL.data(), oR.data(), kBlock * 20);
+    const int hit = kBlock * 20;
+    L[hit] = R[hit] = 1.0f;
+    rig.run(L.data() + hit, R.data() + hit, oL.data() + hit, oR.data() + hit, kBlock);
+    set(rig.p, Perform::Y, 0.0f);
+    const int from = hit + kBlock;
+    rig.run(L.data() + from, R.data() + from, oL.data() + from, oR.data() + from, N - from);
+    // Dense: from the first return on, no stretch of 15 ms goes quiet. The
+    // echo's repeats leave hundreds of milliseconds between them.
+    const int first = hit + static_cast<int>(0.09f * kSr);
+    int longest = 0, run = 0;
+    for (int f = first + 1000; f < first + static_cast<int>(0.5f * kSr); ++f) {
+        run = (std::fabs(oL[f]) < 1e-4f) ? run + 1 : 0;
+        longest = std::max(longest, run);
+    }
+    ok("a smear, not repeats: no gap of 15 ms in the first half second", longest < static_cast<int>(0.015f * kSr),
+       std::to_string(longest) + " frames");
+    Noise n;
+    const int M = kBlock * 200;
+    std::vector<float> nL(M), nR(M), mL(M), mR(M);
+    for (int i = 0; i < M; ++i) { nL[i] = n.next(); nR[i] = n.next(); }
+    rig.run(nL.data(), nR.data(), mL.data(), mR.data(), M);
+    int diff = 0;
+    for (int i = 0; i < M; ++i) diff += (mL[i] != nL[i]) + (mR[i] != nR[i]);
+    ok("once it has died away, bit for bit again", diff == 0, std::to_string(diff) + " differ");
+}
+
 void resetRepeats() {
     printf("reset\n");
     auto perform = [](Rig &rig, std::vector<float> &oL) {
@@ -494,6 +556,8 @@ int main() {
     gateChopsInTime();
     killsTakeBandsOut();
     riserClimbs();
+    padCrushes();
+    washSmears();
     resetRepeats();
     printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

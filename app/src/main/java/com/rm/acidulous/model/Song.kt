@@ -546,6 +546,9 @@ data class Track(
     val feedback: Float = 0.55f,
     /** Indexes [RISER_LENGTHS]. */
     val riserLen: Int = 1,
+    /** What the pad does across and up: index [PAD_X_MODES] and [PAD_Y_MODES]. */
+    val xMode: Int = 0,
+    val yMode: Int = 0,
 )
 
 /** How long a tape stop takes, as labels; mirrors `Perform::StopLen`. */
@@ -554,6 +557,10 @@ val STOP_LENGTHS = listOf("1/4", "1/2", "1 beat", "2 beats")
 val THROW_TIMES = listOf("1/16", "1/8", "3/16", "1/4", "3/8")
 /** The repeat's slice lengths, 1..5 in `Perform::Repeat`; 0 is off. */
 val REPEAT_LENGTHS = listOf("1", "1/2", "1/4", "1/8", "1/16")
+/** What the pad does across: a filter, or a crush. Mirrors `Perform::XMode`. */
+val PAD_X_MODES = listOf("filter", "crush")
+/** What the pad does up: throws into an echo, or into a wash. Mirrors `Perform::YMode`. */
+val PAD_Y_MODES = listOf("echo", "wash")
 /** How long the riser takes to climb; mirrors `Perform::RiserLen`. */
 val RISER_LENGTHS = listOf("1 bar", "2 bars", "4 bars")
 /** The gate's rates, 1..5 in `Perform::Gate`; 0 is off. */

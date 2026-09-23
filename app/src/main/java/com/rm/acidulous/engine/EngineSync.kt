@@ -637,6 +637,8 @@ object EngineSync {
         NativeEngine.setParam(0, "perform", "throwtime", m.perform.throwTime / (THROW_TIMES.size - 1f), record = false)
         NativeEngine.setParam(0, "perform", "feedback", (m.perform.feedback / 0.9f).coerceIn(0f, 1f), record = false)
         NativeEngine.setParam(0, "perform", "riserlen", m.perform.riserLen / (RISER_LENGTHS.size - 1f), record = false)
+        NativeEngine.setParam(0, "perform", "xmode", m.perform.xMode.toFloat(), record = false)
+        NativeEngine.setParam(0, "perform", "ymode", m.perform.yMode.toFloat(), record = false)
     }
 
     /**

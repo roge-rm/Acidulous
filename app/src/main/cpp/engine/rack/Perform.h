@@ -56,6 +56,10 @@ class Perform {
         Riser,
         /** How long the riser takes to get to the top: 1, 2 or 4 bars. */
         RiserLen,
+        /** What the pad does across: 0 a filter, 1 a crush. */
+        XMode,
+        /** What the pad does up: 0 an echo, 1 a wash. */
+        YMode,
         Count
     };
 
@@ -79,6 +83,8 @@ class Perform {
             {"killhigh", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
             {"riser", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
             {"riserlen", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+            {"xmode", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+            {"ymode", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         };
         params_.init(kDefs, Count);
         // Allocated here as well as in [prepare], so an engine that is never
@@ -102,6 +108,16 @@ class Perform {
         mixStep = 1.0f / std::max(1.0f, 0.005f * sr);
         gateStep = 1.0f / std::max(1.0f, 0.002f * sr);
         riserStep = 1.0f / std::max(1.0f, 0.010f * sr);
+        envRelease = std::exp(-1.0f / (0.04f * sr));
+        // The wash's diffusers: all-passes at prime lengths that between them
+        // cover about one lap of the wash, different on each side so the two
+        // smear apart.
+        const int32_t lens[2][4] = {{557, 1123, 1601, 2203}, {613, 1051, 1709, 2141}};
+        for (int c = 0; c < 2; ++c) {
+            for (int k = 0; k < 4; ++k) {
+                diffuse[c][k].len = std::clamp(static_cast<int32_t>(lens[c][k] * sr / 48000.0f), 1, Diffuser::kMax - 1);
+            }
+        }
         // The crossovers: Linkwitz-Riley, two Butterworth sections each, so
         // the three bands add back up flat. The low band goes through the
         // upper crossover's all-pass as well, which is what keeps it in step
@@ -152,6 +168,10 @@ class Perform {
         killMix = 0.0f;
         for (float &g : killGain) g = 1.0f;
         for (auto &x : xo) x.reset();
+        crushAcc = 1.0f;
+        crushEnv = 0.0f;
+        heldL = heldR = 0.0f;
+        for (auto &side : diffuse) for (auto &d : side) d.reset();
         riserOn = false;
         riserHeld = false;
         riserMix = 0.0f;
@@ -314,12 +334,17 @@ class Perform {
         // --- The pad ------------------------------------------------------
         const float xTarget = params_.target(X);
         const float yTarget = params_.target(Y);
+        const bool crush = params_.get(XMode) >= 0.5f;
+        const bool wash = params_.get(YMode) >= 0.5f;
         const float throwBeats[5] = {0.25f, 0.5f, 0.75f, 1.0f, 1.5f};
-        const float echoTarget = std::min(
+        // A wash is short and fixed, not a note value: it is a smear, not
+        // repeats, and its time is what makes it one.
+        const float echoTarget = wash ? 0.09f * sr : std::min(
             throwBeats[std::clamp(static_cast<int32_t>(params_.get(ThrowTime) + 0.5f), 0, 4)] * spb,
             static_cast<float>(kSize - 4));
-        if (echoLen < 0.0f) echoLen = echoTarget;
-        const float fb = params_.get(Feedback);
+        if (echoLen < 0.0f || wash != washWas) echoLen = echoTarget; // a change of mode jumps, a tempo glides
+        washWas = wash;
+        const float fb = wash ? std::min(0.93f, 0.7f + 0.3f * params_.get(Feedback)) : params_.get(Feedback);
         const bool echoAwake = yTarget > 0.0f || ys > 1e-7f || w - lastLoud <= static_cast<int64_t>(echoLen) + 2;
         const bool padIdle = xTarget == 0.5f && xs == 0.5f && !filterOn;
 
@@ -477,8 +502,30 @@ class Perform {
                     highPass = d > 0.0f;
                     coefAge = 15;
                 }
-                l += amt * (svf(0, l) - l);
-                r += amt * (svf(1, r) - r);
+                if (!crush) {
+                    l += amt * (svf(0, l) - l);
+                    r += amt * (svf(1, r) - r);
+                } else {
+                    const float t = std::clamp((std::fabs(d) - 0.02f) / 0.48f, 0.0f, 1.0f);
+                    crushEnv = std::max({std::fabs(l), std::fabs(r), crushEnv * envRelease});
+                    float cl = l, cr = r;
+                    if (d < 0.0f) {
+                        // Left: fewer samples, held between.
+                        crushAcc += 1.0f / (1.0f + t * 15.0f);
+                        if (crushAcc >= 1.0f) { crushAcc -= 1.0f; heldL = l; heldR = r; }
+                        cl = heldL;
+                        cr = heldR;
+                    } else {
+                        // Right: fewer bits, counted from the level the signal
+                        // is at rather than from full scale, so a quiet mix
+                        // crushes the same as a loud one.
+                        const float step = std::max(crushEnv, 1e-4f) * std::exp2(-(15.0f - t * 12.0f));
+                        cl = std::round(l / step) * step;
+                        cr = std::round(r / step) * step;
+                    }
+                    l += amt * (cl - l);
+                    r += amt * (cr - r);
+                }
             } else if (filterOn && xs == 0.5f) {
                 filterOn = false;
             }
@@ -494,8 +541,14 @@ class Perform {
                 const int32_t i0 = static_cast<int32_t>(wrapped) & kMask;
                 frac = wrapped - std::floor(wrapped);
                 const int32_t i1 = (i0 + 1) & kMask;
-                const float dl = echo[0][i0] + frac * (echo[0][i1] - echo[0][i0]);
-                const float dr = echo[1][i0] + frac * (echo[1][i1] - echo[1][i0]);
+                float dl = echo[0][i0] + frac * (echo[0][i1] - echo[0][i0]);
+                float dr = echo[1][i0] + frac * (echo[1][i1] - echo[1][i0]);
+                if (wash) {
+                    // Smeared on the way out, so what is heard and what goes
+                    // round again are both a wash rather than repeats.
+                    for (auto &d : diffuse[0]) dl = d.process(dl);
+                    for (auto &d : diffuse[1]) dr = d.process(dr);
+                }
                 // Crossed, so each repeat answers from the other side, and
                 // darkened and thinned on every pass, the way a tape echo is.
                 const float inL = l * ys + fb * tone(0, dr, lpCoef, hpCoef);
@@ -532,6 +585,21 @@ class Perform {
             const float h = high[1].process(high[0].process(r0));
             const float lowAligned = apLo[1].process(apLo[0].process(l0)) + apHi[1].process(apHi[0].process(l0));
             return gain[0] * lowAligned + gain[1] * m + gain[2] * h;
+        }
+    };
+
+    /** A Schroeder all-pass, for the wash. */
+    struct Diffuser {
+        static constexpr int32_t kMax = 4096;
+        float buf[kMax] = {};
+        int32_t len = 100, at = 0;
+        void reset() { std::fill(buf, buf + kMax, 0.0f); at = 0; }
+        float process(float x) {
+            const float delayed = buf[at];
+            const float y = -0.6f * x + delayed;
+            buf[at] = x + 0.6f * y;
+            if (++at >= len) at = 0;
+            return y;
         }
     };
 
@@ -595,6 +663,9 @@ class Perform {
     float revMix = 0.0f;
 
     Crossover xo[2];
+    Diffuser diffuse[2][4];
+    bool washWas = false;
+    float crushAcc = 1.0f, crushEnv = 0.0f, envRelease = 0.9995f, heldL = 0.0f, heldR = 0.0f;
     bool killsOn = false;
     float killMix = 0.0f;
     float killGain[3] = {1.0f, 1.0f, 1.0f};
