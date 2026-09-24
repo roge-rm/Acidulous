@@ -96,6 +96,10 @@ private fun DisplayTab() {
             SwitchGrid("while playing", listOf("stay awake", "let it sleep"), if (UiPrefs.keepAwake) 0 else 1) {
                 UiPrefs.chooseKeepAwake(it == 0)
             }
+            // The numbers kept for finding faults, everywhere they appear.
+            SwitchGrid("diagnostics", listOf("show", "hide"), if (UiPrefs.showDiagnostics) 0 else 1) {
+                UiPrefs.chooseDiagnostics(it == 0)
+            }
         }
     }
     // A line only when the screen cannot give what was asked for, which is
@@ -236,7 +240,7 @@ private fun AudioTab(trackNames: List<String>) {
         3 -> "this device refused it"
         else -> "on"
     }
-    WindowCards {
+    if (UiPrefs.showDiagnostics) WindowCards {
         WindowCard("readings · since opened") {
             for (l in lines) {
                 Text(l, color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth())

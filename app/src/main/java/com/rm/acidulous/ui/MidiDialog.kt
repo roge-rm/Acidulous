@@ -163,7 +163,7 @@ private fun DevicesTab(context: android.content.Context) {
             // The numbers to report when something sounds loose. "late" is
             // how far past its own timestamp a message was handed to the
             // framework: if that grows, the trim is not the problem.
-            Line {
+            if (UiPrefs.showDiagnostics) Line {
                 Readout(
                     "${MidiHub.produced} out · ${MidiHub.sent} sent · late %.1f ms".format(MidiHub.outLateMs) +
                         (if (MidiHub.anchored) " · timed to the audio" else " · no anchor yet"),

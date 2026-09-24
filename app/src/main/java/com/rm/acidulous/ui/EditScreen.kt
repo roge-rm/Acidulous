@@ -508,11 +508,13 @@ fun EditScreen(
             // the header and it did nothing; on a phone held one-handed the
             // arrow alone is a small target at the far corner.
             Text(
-                "${track.name} · ${scene.name} · ${clip.bars}b · " +
+                "${track.name} · ${scene.name} · ${clip.bars}b" +
                     // A tape holds takes, not notes, and "0n" beside four lanes
                     // of audio is a reading of the wrong thing.
-                    (if (kind == MachineKind.Audio) "${clip.audioLaneCount()} lane" else "${clip.notes.size}n") +
-                    (if (clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a") +
+                    (if (kind == MachineKind.Audio) " · ${clip.audioLaneCount()} lane" else "") +
+                    // Counts of notes and lane points: diagnostics.
+                    (if (!UiPrefs.showDiagnostics || kind == MachineKind.Audio) "" else " · ${clip.notes.size}n") +
+                    (if (!UiPrefs.showDiagnostics || clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a") +
                     // The selection count reads here rather than in the bar.
                     // It is a reading, and this line is where this screen's
                     // readings are; in the bar it was forty dp reserved

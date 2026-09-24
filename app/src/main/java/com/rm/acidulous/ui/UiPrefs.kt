@@ -46,6 +46,13 @@ const val KeysFractionMax = 0.62f
 const val KeysStretchMin = 0.65f
 const val KeysStretchMax = 3f
 
+/**
+ * Whether the fault-finding numbers show on a phone that has never been told.
+ * **Set to false for 1.0** (Dan, 2026-09-23): until then everybody using it
+ * is testing it, and the numbers are what a report needs.
+ */
+const val DIAGNOSTICS_BY_DEFAULT = true
+
 object UiPrefs {
     private var store: SharedPreferences? = null
 
@@ -260,6 +267,14 @@ object UiPrefs {
     // --- Screen ----------------------------------------------------------
     /** Keep the screen awake while the transport is running. */
     var keepAwake by mutableStateOf(true)
+    /**
+     * The numbers kept for finding faults: the line under the transport, the
+     * readings in Settings, the MIDI counters, the editor's note count. One
+     * switch in Settings for all of them. On until 1.0, off from then - see
+     * [DIAGNOSTICS_BY_DEFAULT].
+     */
+    var showDiagnostics by mutableStateOf(DIAGNOSTICS_BY_DEFAULT)
+        private set
     /** Was Link on last time? Acted on by MainActivity, which has a Context. */
     var linkWanted by mutableStateOf(false)
         private set
@@ -358,6 +373,7 @@ object UiPrefs {
         recordBits = p.getInt(KEY_BITS, 24)
         inputDevice = p.getInt(KEY_INPUT_DEVICE, 0)
         keepAwake = p.getBoolean(KEY_AWAKE, true)
+        showDiagnostics = p.getBoolean(KEY_DIAGNOSTICS, DIAGNOSTICS_BY_DEFAULT)
         linkWanted = p.getBoolean(KEY_LINK, false)
         com.rm.acidulous.engine.LinkHub.chooseStartStop(p.getBoolean(KEY_LINK_STARTSTOP, true))
         mappings = runCatching {
@@ -627,6 +643,11 @@ object UiPrefs {
         NativeEngine.setCountInBars(countInBars)
     }
 
+    fun chooseDiagnostics(on: Boolean) {
+        showDiagnostics = on
+        store?.edit()?.putBoolean(KEY_DIAGNOSTICS, on)?.apply()
+    }
+
     fun chooseKeepAwake(on: Boolean) {
         keepAwake = on
         store?.edit()?.putBoolean(KEY_AWAKE, on)?.apply()
@@ -729,6 +750,7 @@ object UiPrefs {
     private const val KEY_BITS = "record_bits"
     private const val KEY_INPUT_DEVICE = "input_device"
     private const val KEY_AWAKE = "keep_awake"
+    private const val KEY_DIAGNOSTICS = "diagnostics"
     private const val KEY_MAPPINGS = "cc_mappings"
     private const val KEY_CLICK_VOICE = "click_voice"
     private const val KEY_CLICK_DIV = "click_div"

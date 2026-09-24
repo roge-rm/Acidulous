@@ -239,7 +239,7 @@ fun MainScreen(
                 },
                 if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi,
             )
-            BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
+            if (UiPrefs.showDiagnostics) BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
     }
 
     /** What the *song* is doing, as against what the transport is doing. */

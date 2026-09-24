@@ -9,14 +9,18 @@ these.
 - **theme** - dark, light, or follow the phone.
 - **interface size** - makes everything bigger, in four steps.
 - **screen while playing** - whether the screen can turn off while playing.
+- **diagnostics** - shows or hides the numbers for tracking down problems: the
+  line under the transport, the readings on the audio page, the MIDI send
+  counts, and the note count in the editor's title.
 
 ## audio
 
 - **audio buffer** - tight, balanced or safe. Tight has the lowest latency but
-  may crackle on a slower phone; safe gives the phone more time. The line under
-  it shows the buffer size, the latency, and how many dropouts there have been.
-- **worst block** - the longest any block of audio took to make, against the
-  time it had, and where that time went. The load meter is an average and can
+  may crackle on a slower phone; safe gives the phone more time. With
+  **diagnostics** on, a line under it shows the buffer size, the latency, and
+  how many dropouts there have been.
+- **worst block** (with **diagnostics** on) - the longest any block of audio
+  took to make, against the time it had, and where that time went. The load meter is an average and can
   miss short spikes, which is why a phone can show a low load and still click.
   **reset** clears it.
 
@@ -25,8 +29,8 @@ these.
   block is high, the song is asking too much: freeze tracks or use **lean**. If
   it's high, the phone is busy with other things; closing other apps will help
   more.
-- **worst track** - what each track costs, most expensive first, so you know
-  what to freeze. A **❄** means the track was frozen when it cost that much,
+- **worst track** (with **diagnostics** on) - what each track costs, most
+  expensive first, so you know what to freeze. A **❄** means the track was frozen when it cost that much,
   which should be close to nothing.
 
   This is each track's worst block in a hundred, so one unlucky moment doesn't
