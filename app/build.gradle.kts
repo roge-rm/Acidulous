@@ -117,8 +117,14 @@ android {
         // call, another app's music or headphones pulled out; crashes and
         // freezes leave a report on the phone that can be shared; backup
         // keeps the songs and not the samples; and the release is shrunk.
-        versionCode = 17
-        versionName = "0.9.2"
+        //
+        // 0.9.3: every word the app shows comes from string resources, the
+        // machine panels' too, so it can be translated; counts say "1 note"
+        // rather than "1 notes". One demo song, an acid track that opens on
+        // the first run, in place of the five and their menu. The first
+        // release on GitHub and in the F-Droid repo.
+        versionCode = 18
+        versionName = "0.9.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
