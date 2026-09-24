@@ -8,7 +8,7 @@ into scenes of music and play them in order or pick and choose to generate somet
 In many ways this is an homage to the wonderful musical creation tool Caustic, many of the machines
 here are heavily inspired by Caustic and I have had it in mind through this whole process. I have also
 been inspired by many other synths, drum machines, and sequencers but I have tried to put my own stamp
-on every inspiration and bring some of my own.
+on every inspiration and to bring some of my own.
 
 Read below for more details on the machines, sequencer, and app capabilities. 
 
