@@ -176,3 +176,25 @@ object PatchStore {
 
 
 
+
+/** How a machine remembers which patch it is on, in its settings. */
+object PatchMark {
+    /** Which patch a machine is showing. A name, not a reference to anything. */
+    const val NAME = "patch_name"
+
+    /**
+     * What that patch's knobs were, so the name can admit when it is out of date.
+     *
+     * A hash rather than the values: the honest version of this is "are the
+     * parameters still the ones the patch set", and the only way to answer that
+     * after the app has been closed and reopened is to have written down what
+     * they were. Writing down two hundred floats per machine would put tens of
+     * kilobytes of nothing into every song file, so it is a 64-bit FNV of the
+     * same numbers in a fixed order.
+     */
+    const val STAMP = "patch_stamp"
+
+    /** The parameters as one comparable value. Sorted, so map order cannot lie. */
+    fun stampOf(params: Map<String, Float>): String =
+        fnv1a64(params.entries.sortedBy { it.key }.joinToString(",") { "${it.key}=${it.value}" }).toString(16)
+}

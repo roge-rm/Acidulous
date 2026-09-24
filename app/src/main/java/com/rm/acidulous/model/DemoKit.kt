@@ -18,10 +18,15 @@ internal object DemoKit {
     fun fx(type: String, patchName: String): UnitSlot =
         UnitSlot(type, PatchStore.factory(PatchStore.effectKey(type)).firstOrNull { it.name == patchName }?.params ?: emptyMap())
 
-    /** A machine on a factory patch: its knobs, and its settings - which is where a Nexus patch keeps its graph. */
+    /**
+     * A machine on a factory patch: its knobs, its settings - which is where a
+     * Nexus patch keeps its graph - and the patch's name, marked the way
+     * loading it from the panel marks it, so the panel says which it is.
+     */
     fun machine(type: String, patchName: String): Machine {
-        val p = PatchStore.factory(type).firstOrNull { it.name == patchName }
-        return Machine(type = type, params = p?.params ?: emptyMap(), settings = p?.settings ?: emptyMap())
+        val p = PatchStore.factory(type).firstOrNull { it.name == patchName } ?: return Machine(type = type)
+        val mark = mapOf(PatchMark.NAME to patchName, PatchMark.STAMP to PatchMark.stampOf(p.params))
+        return Machine(type = type, params = p.params, settings = p.settings + mark)
     }
 
     fun clip(bars: Int, notes: List<Note>, block: Clip.() -> Clip = { this }): Clip =

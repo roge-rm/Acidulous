@@ -733,26 +733,9 @@ internal fun PatchPicker(
     }
 }
 
-/** Which patch a machine is showing. A name, not a reference to anything. */
-private const val kPatchName = "patch_name"
-
-/**
- * What that patch's knobs were, so the name can admit when it is out of date.
- *
- * A hash rather than the values: the honest version of this is "are the
- * parameters still the ones the patch set", and the only way to answer that
- * after the app has been closed and reopened is to have written down what
- * they were. Writing down two hundred floats per machine would put tens of
- * kilobytes of nothing into every song file, so it is a 64-bit FNV of the
- * same numbers in a fixed order.
- */
-private const val kPatchStamp = "patch_stamp"
-
-/** The parameters as one comparable value. Sorted, so map order cannot lie. */
-private fun stampOf(params: Map<String, Float>): String =
-    com.rm.acidulous.model.fnv1a64(
-        params.entries.sortedBy { it.key }.joinToString(",") { "${it.key}=${it.value}" },
-    ).toString(16)
+private const val kPatchName = com.rm.acidulous.model.PatchMark.NAME
+private const val kPatchStamp = com.rm.acidulous.model.PatchMark.STAMP
+private fun stampOf(params: Map<String, Float>): String = com.rm.acidulous.model.PatchMark.stampOf(params)
 
 // The panel palette. Teal is the ordinary control; amber marks the knob that
 // gives a group its character; pink marks drive and output. See the style
