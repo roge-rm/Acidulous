@@ -302,7 +302,7 @@ fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modif
                     for (i in row) {
                         val track = song.tracks[i]
                         TrackMute(
-                            track.name, trackColour(i), track.mixer.mute, waiting[i],
+                            track.name, trackColour(i, track.colour), track.mixer.mute, waiting[i],
                             Modifier.weight(1f).fillMaxHeight(),
                         ) { toggle(i) }
                     }

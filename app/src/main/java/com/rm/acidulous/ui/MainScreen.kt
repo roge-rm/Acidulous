@@ -561,9 +561,9 @@ fun MainScreen(
                     }
                     TrackHeader(
                         hot = straining && rackHot.getOrElse(index) { false },
-                        name = track.name, machine = track.machine.type, colour = trackColour(index),
+                        name = track.name, machine = track.machine.type, colour = trackColour(index, track.colour),
                         onChangeMachine = { dialog = Dialog.PickMachine(index) },
-                        onTuning = if (com.rm.acidulous.model.MachineUi.takesTuning(track.machine.type)) ({ dialog = Dialog.TrackTuning(index) }) else null,
+                        onSettings = { dialog = Dialog.TrackSettings(index) },
                         onRename = { dialog = Dialog.RenameTrack(index) },
                         onDuplicate = { editor.editSong { it.duplicateTrack(index) } },
                         onDelete = { editor.editSong { it.deleteTrack(index) } },
@@ -679,7 +679,7 @@ fun MainScreen(
                             ClipCell(
                                 clip = clip,
                                 ticksPerBar = song.signatureOf(scene).ticksPerBar,
-                                colour = trackColour(trackIndex),
+                                colour = trackColour(trackIndex, track.colour),
                                 playing = playing && live,
                                 // Whether it draws a playhead is a composition
                                 // decision and changes rarely; where the head
@@ -840,26 +840,12 @@ fun MainScreen(
             }
             dialog = null
         }
-        is Dialog.TrackTuning -> song.tracks.getOrNull(d.index)?.let { track ->
-            // One knob, first choice "song": follow the song's tuning.
+        is Dialog.TrackSettings -> if (d.index in song.tracks.indices) {
             val ctx = androidx.compose.ui.platform.LocalContext.current
             val tunings = remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot(ctx)) }
-            var chosen by remember(d.index) { mutableStateOf(track.tuning) }
-            PlainDialog(
-                title = "Tuning · ${track.name}",
-                onDismiss = { dialog = null },
-                confirmLabel = "OK",
-                onConfirm = {
-                    editor.edit(d.index) { it.copy(tuning = chosen) }
-                    dialog = null
-                },
-                spacing = 6.dp,
-            ) {
-                WindowCards {
-                    WindowCard("tuning · song is ${song.tuning?.name ?: "equal"}") {
-                        TuningKnob(chosen, tunings, { chosen = it }, followLabel = "song")
-                    }
-                }
+            TrackSettingsDialog(song, d.index, tunings, onDismiss = { dialog = null }) { edited ->
+                editor.edit(d.index) { edited }
+                dialog = null
             }
         }
         is Dialog.RenameTrack -> TextInputDialog("Track name", song.tracks.getOrNull(d.index)?.name ?: "", onDismiss = { dialog = null }) { name ->
@@ -927,7 +913,7 @@ private sealed class Dialog {
     data class ClipSettings(val track: Int, val sceneId: String) : Dialog()
     data class PickMachine(val track: Int?) : Dialog() // null = new track
     data class RenameTrack(val index: Int) : Dialog()
-    data class TrackTuning(val index: Int) : Dialog()
+    data class TrackSettings(val index: Int) : Dialog()
     object Tempo : Dialog()
     object Songs : Dialog()
     object Demos : Dialog()
@@ -1032,8 +1018,8 @@ private fun TrackHeader(
     name: String, machine: String, colour: Color,
     onChangeMachine: () -> Unit, onRename: () -> Unit, onDuplicate: () -> Unit, onDelete: () -> Unit,
     freezable: Int, frozen: Int, onFreeze: () -> Unit, onThaw: () -> Unit,
-    /** Null where tuning means nothing: a drum machine, a tape. */
-    onTuning: (() -> Unit)? = null,
+    /** The track's own settings: a hold on the header, or the menu. */
+    onSettings: () -> Unit = {},
 ) {
     val cell = LocalSongCell.current
     var menu by remember { mutableStateOf(false) }
@@ -1052,7 +1038,7 @@ private fun TrackHeader(
             .width(cell.trackW).height(cell.cellH).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(if (hot) Acid.colors.red.copy(alpha = glow) else Acid.colors.control)
-            .combinedClickable(onClick = { menu = true }),
+            .combinedClickable(onClick = { menu = true }, onLongClick = onSettings),
     ) {
         Box(Modifier.width(4.dp).fillMaxHeight().background(if (hot) Acid.colors.red else colour))
         Column(Modifier.padding(start = 10.dp, top = 4.dp, end = 4.dp)) {
@@ -1066,7 +1052,7 @@ private fun TrackHeader(
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             ScaledMenu(menuScroll) {
                 DropdownMenuItem(text = { Text("Change machine…") }, onClick = { menu = false; onChangeMachine() })
-                if (onTuning != null) DropdownMenuItem(text = { Text("Tuning…") }, onClick = { menu = false; onTuning() })
+                DropdownMenuItem(text = { Text("Settings…") }, onClick = { menu = false; onSettings() })
                 DropdownMenuItem(text = { Text("Rename…") }, onClick = { menu = false; onRename() })
                 if (freezable > 0) {
                     DropdownMenuItem(text = { Text("Freeze track ($freezable)") }, onClick = { menu = false; onFreeze() })

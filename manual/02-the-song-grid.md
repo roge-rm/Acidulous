@@ -31,6 +31,26 @@ that repeats four times only slows at the very end. The next scene then starts
 at its own tempo. The header shows ↘ or ↗ on a scene with a ramp, and a MIDI
 export writes it as a tempo change on every beat.
 
+## Tracks
+
+Tap a track's name for its menu: change machine, settings, rename, freeze,
+duplicate and delete. Hold the name, or pick **Settings…**, for the track's
+own settings:
+
+- **name** and **colour**. A track's colour otherwise comes from where it sits.
+- **transpose** - moves every note up or down as it plays, from the clip and
+  from your fingers alike. The clip keeps what was written, so setting it back
+  to 0 puts the part back. Not on drum machines, whose notes pick sounds.
+- **tuning** - the song's, or the track's own. See
+  [Tunings](05-effects-and-mixing.md).
+- **velocity** - **as played**, or every note at one velocity.
+- **swing** - the song's, or the track's own amount.
+- **midi out** and **channel** - **off**, **both** (the machine and the
+  hardware) or **only** (the hardware, with the machine silent).
+- **output** - the master or one of the mixer's groups.
+
+The last two are also on the track's mixer strip.
+
 ## As a launcher
 
 Tap the corner square and the grid becomes a clip launcher. Each track plays its

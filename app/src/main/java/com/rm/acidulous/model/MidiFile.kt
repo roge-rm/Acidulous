@@ -305,7 +305,10 @@ object MidiFile {
         } else {
             emptyMap()
         }
-        fun out(pitch: Int) = drumNames[pitch]?.let { GM_DRUM_NOTE[it] } ?: pitch
+        // And as the track plays them: its transpose and its fixed velocity,
+        // so the file is what was heard rather than what was written.
+        val shift = if (MachineUi.takesTranspose(track.machine.type)) track.transpose else 0
+        fun out(pitch: Int) = drumNames[pitch]?.let { GM_DRUM_NOTE[it] } ?: (pitch + shift)
         val events = mutableListOf<Event>()
         events += Event(0, 0, meta(0x03, track.name.toByteArray(Charsets.UTF_8)))
 
@@ -346,7 +349,7 @@ object MidiFile {
                             val span = minOf(note.length, clipTicks - note.tick).coerceAtLeast(1)
                             val rat = note.ratchet.coerceIn(1, 8)
                             val step = if (rat > 1) (span / rat).coerceAtLeast(1) else span
-                            val velocity = note.velocity.coerceIn(1, 127)
+                            val velocity = (track.velocity ?: note.velocity).coerceIn(1, 127)
                             for (j in 0 until rat) {
                                 val on = start + j * step
                                 if (on >= at + sceneTicks) break

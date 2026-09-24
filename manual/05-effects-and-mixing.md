@@ -255,8 +255,8 @@ A tuning is counted from the song's **root**. The root's own note in the middle
 of the keyboard keeps its usual pitch, so an A tuning leaves A at 440 and the
 rest move around it. Change the root and the tuning follows.
 
-A track can have its own: **Tuning…** in the track menu. **song** there means
-it uses the song's. Drum machines, the organ and Nexus always play in equal
+A track can have its own: hold the track's name for its settings, where
+**song** means it uses the song's. Drum machines, the organ and Nexus always play in equal
 temperament.
 
 Your own tunings come in as Scala files (.scl): use **Import…** in the file
@@ -268,7 +268,8 @@ the same on a phone that has never seen the file.
 Swing moves the offbeats later without changing the order of notes, so a
 loosely played part swings along with everything else.
 
-A **track can have its own swing**, e.g. swung drums over a straight bass.
+A **track can have its own swing**, e.g. swung drums over a straight bass. Set
+it in the track's settings: hold the track's name.
 
 **What you record is stored straight.** When you play against a swung song, the
 swing is taken back out before the notes are written. The roll shows where you

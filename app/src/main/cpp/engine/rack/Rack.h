@@ -18,7 +18,8 @@ namespace acidulous {
 
 class Rack {
   public:
-    enum ChannelParam : int32_t { Gain, Pan, Mute, Solo, SendReverb, SendDelay, MidiMode, MidiChannel, Swing, Output, ChannelCount };
+    enum ChannelParam : int32_t { Gain, Pan, Mute, Solo, SendReverb, SendDelay, MidiMode, MidiChannel, Swing, Output,
+                                  Transpose, Velocity, ChannelCount };
 
     /**
      * A channel parameter where it is going, not where it has smoothed to.
@@ -274,6 +275,17 @@ class Rack {
     static constexpr int32_t kMaxHeld = 128;
     uint8_t held[kMaxHeld]{};
     int32_t heldCount = 0;
+
+    /**
+     * Where each note that was started went, after the track's transpose: so
+     * its note-off, its pressure and its bend find the voice it started even
+     * when the transpose has moved since. Every entry is its own note while
+     * nothing is held.
+     */
+    uint8_t sentTo[128]{};
+    void resetSentTo() {
+        for (int32_t n = 0; n < 128; ++n) sentTo[n] = static_cast<uint8_t>(n);
+    }
 
     const FrozenSet *frozenSet = nullptr;
     const FrozenClip *frozenNow = nullptr;

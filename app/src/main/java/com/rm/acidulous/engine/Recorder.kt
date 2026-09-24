@@ -276,6 +276,7 @@ class Recorder {
          */
         val CHANNEL_PARAMS = listOf(
             "gain", "pan", "mute", "solo", "sendreverb", "senddelay", "midimode", "midichannel", "swing",
+            "output", "transpose", "velocity",
         )
         const val EFFECT_BYPASS_INDEX = -2 // mirrors kEffectBypassIndex
     }

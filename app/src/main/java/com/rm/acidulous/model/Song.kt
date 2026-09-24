@@ -509,6 +509,16 @@ data class Track(
     /** This track's own tuning, or null to follow the song's. */
     @EncodeDefault(EncodeDefault.Mode.NEVER) val tuning: Tuning? = null,
     /**
+     * Semitones added to every note as it plays, from a clip or a finger.
+     * The clip keeps what was written; a drum machine ignores it, since its
+     * notes pick sounds (see [MachineUi.takesTranspose]).
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val transpose: Int = 0,
+    /** Every note played at this velocity, 1..127, or null for as played. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val velocity: Int? = null,
+    /** The track's colour as a place in the palette, or null for its position's. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val colour: Int? = null,
+    /**
      * This track's own swing, or null to follow the song's.
      *
      * Null rather than a sentinel percentage, because "the same as the song"

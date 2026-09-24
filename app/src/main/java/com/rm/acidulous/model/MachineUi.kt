@@ -40,6 +40,9 @@ object MachineUi {
      * to tune; the organ's wheels are one shared generator, and Nexus blocks
      * are machines of their own, so neither reads the table yet.
      */
+    /** Machines whose notes are pitches, and so can be transposed: not drums, not tape. */
+    fun takesTranspose(type: String): Boolean = kindOf(type) == MachineKind.Keyboard
+
     fun takesTuning(type: String): Boolean =
         kindOf(type) == MachineKind.Keyboard && type != "Manual" && type != "Nexus"
 

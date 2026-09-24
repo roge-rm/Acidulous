@@ -498,7 +498,7 @@ object EngineSync {
                 val value = documentValue(track, key)
                 if (value != null) NativeEngine.setParam(rack, unit, laneParam(key), value, record = false)
             }
-            if (channel) pushChannel(rack, track.mixer, song.swingOf(track))
+            if (channel) pushChannel(rack, track, song.swingOf(track))
         }
     }
 
@@ -693,7 +693,7 @@ object EngineSync {
         val ok = NativeEngine.snapshotCommit(handle) // consumes the handle either way
         song.tracks.forEachIndexed { rack, track ->
             if (rack < RACKS) {
-                pushChannel(rack, track.mixer, song.swingOf(track))
+                pushChannel(rack, track, song.swingOf(track))
                 pushMachineParams(rack, track.machine.params)
                 for (slot in 0 until EFFECT_SLOTS) pushSlot(rack, effectUnit(slot), track.effectAt(slot))
                 for (slot in 0 until MODIFIER_SLOTS) pushSlot(rack, modifierUnit(slot), track.modifierAt(slot))
@@ -778,7 +778,7 @@ object EngineSync {
         var sent = 0
         song.tracks.forEachIndexed { rack, track ->
             if (rack >= RACKS) return@forEachIndexed
-            pushChannel(rack, track.mixer, song.swingOf(track))
+            pushChannel(rack, track, song.swingOf(track))
             for ((name, v) in track.machine.params) {
                 NativeEngine.setParam(rack, "machine", name, v, record = false)
                 if (++sent % 200 == 0) Thread.sleep(15)
@@ -805,6 +805,14 @@ object EngineSync {
     }
 
     // --- Mixer parameters: cheap enough to send whole on every push ------------------
+
+    /** The channel, and what the track itself does to its notes on the way to the machine. */
+    fun pushChannel(rack: Int, track: com.rm.acidulous.model.Track, swing: Float) {
+        pushChannel(rack, track.mixer, swing)
+        val shift = if (MachineUi.takesTranspose(track.machine.type)) track.transpose.coerceIn(-48, 48) else 0
+        NativeEngine.setParam(rack, "channel", "transpose", (shift + 48) / 96f, record = false)
+        NativeEngine.setParam(rack, "channel", "velocity", (track.velocity ?: 0).coerceIn(0, 127) / 127f, record = false)
+    }
 
     fun pushChannel(rack: Int, m: Mixer, swing: Float = SWING_STRAIGHT) {
         NativeEngine.setParam(rack, "channel", "gain", EngineParams.volume01(m.volume), record = false)

@@ -11,8 +11,9 @@ You can export the whole song, the current scene, or stems.
 - **WAV** and **AIFF** - 16 or 24 bit, or 32-bit float.
 - **FLAC** - lossless and smaller.
 - **MP3** and **AAC** - at the bitrate you choose.
-- **MIDI** - the notes, not the sound. Drum tracks go on channel 10 as General
-  MIDI drums, so other programs hear the right sounds.
+- **MIDI** - the notes, not the sound, with each track's transpose and fixed
+  velocity applied. Drum tracks go on channel 10 as General MIDI drums, so
+  other programs hear the right sounds.
 - **Song bundle** - the song and the samples it uses, in one file you can share.
 
 ## Stems
@@ -59,7 +60,7 @@ happens depends on what it is:
 - **A sound** (WAV, AIFF, FLAC or MP3) goes into the sound library, up to ten
   minutes of it.
 - **A tuning** (a Scala .scl file) joins the tuning list, under key in the
-  tempo window and in each track's **Tuning…**.
+  tempo window and in each track's settings.
 
 An imported song never replaces one you've saved: if the name is taken, it gets
 a number after it.

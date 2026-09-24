@@ -1,4 +1,5 @@
 #include "Rack.h"
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <cstdlib> // std::llabs, which the NDK happens to pull in and a host g++ does not
@@ -34,11 +35,17 @@ const ParamDef kChannelDefs[Rack::ChannelCount] = {
     // and a stepped parameter's count is what a saved value is normalised
     // against. A decision like `midimode`, so it never ramps.
     {"output", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
+    // Semitones added to every note on its way to the machine, from a clip
+    // or a finger alike; nought for a drum machine, whose notes are sounds.
+    {"transpose", -48.0f, 48.0f, 0.0f, Curve::Stepped, 97, "st"},
+    // Every note at this velocity, or nought for as played.
+    {"velocity", 0.0f, 127.0f, 0.0f, Curve::Stepped, 128, ""},
 };
 } // namespace
 
 Rack::Rack() {
     channel.init(kChannelDefs, ChannelCount);
+    resetSentTo();
     // Here, because it allocates: seventeen kilobytes of overlap buffer per
     // rack, and a rack is built long before the audio thread exists.
     frozenStretch.prepare();
@@ -97,6 +104,28 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
     // by the other door and are not written down again.
     if (live && modifiedSink != nullptr) modifiedSink->onModifiedNote(rackIndex, status, d1, d2);
 
+    // The track's transpose and fixed velocity, after the recording tap so a
+    // take keeps what was played, and before the hardware so a synthesizer
+    // on the other end hears what the machine would. A note-off goes where
+    // its note-on went, whatever the transpose is now.
+    {
+        const uint8_t k = status & 0xf0;
+        if (k == 0x90 && d2 > 0) {
+            const int32_t shift = static_cast<int32_t>(std::lround(channel.target(Transpose)));
+            const int32_t to = std::clamp(static_cast<int32_t>(d1) + shift, 0, 127);
+            sentTo[d1 & 0x7f] = static_cast<uint8_t>(to);
+            d1 = static_cast<uint8_t>(to);
+            const int32_t fixed = static_cast<int32_t>(std::lround(channel.target(Velocity)));
+            if (fixed > 0) d2 = static_cast<uint8_t>(std::min(fixed, 127));
+        } else if (k == 0x80 || k == 0x90) {
+            const uint8_t played = d1 & 0x7f;
+            d1 = sentTo[played];
+            sentTo[played] = played;
+        } else if (k == 0xa0) {
+            d1 = sentTo[d1 & 0x7f];
+        }
+    }
+
     // After the modifiers, so what leaves for the hardware is what you hear -
     // arpeggiated and scale-corrected. Before the voice limiter, which is a
     // property of the machine and no business of a synthesizer on the other
@@ -144,6 +173,7 @@ void Rack::playSequenced(uint8_t status, uint8_t d1, uint8_t d2) { toMachine(sta
 
 void Rack::noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, float bendSemis) {
     if (machine == nullptr) return;
+    note = sentTo[note & 0x7f];
     switch (kind) {
     case 0xe0: {
         const float bend14 = static_cast<float>((d2 << 7) | d1) - 8192.0f;
@@ -158,6 +188,7 @@ void Rack::noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, fl
 
 void Rack::noteExpressionValue(int32_t kind, uint8_t note, float v01) {
     if (machine == nullptr) return;
+    note = sentTo[note & 0x7f];
     switch (static_cast<Expr>(kind)) {
     case Expr::Bend: machine->noteBend(note, exprBendFrom01(v01)); break;
     case Expr::Pressure: machine->notePressure(note, expr7From01(v01)); break;
@@ -175,6 +206,7 @@ void Rack::allNotesOff() {
     // frozen ring-out stops with everything else that was still sounding.
     tailClip = nullptr;
     heldCount = 0;
+    resetSentTo();
 }
 
 void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {

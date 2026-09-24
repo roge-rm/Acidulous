@@ -174,7 +174,7 @@ fun MixerPanel(
             // The first strip is measured, and the groups and the master are
             // made its height, so the whole row ends on one line.
             Box(if (index == 0) Modifier.onSizeChanged { stripH = with(density) { it.height.toDp() } } else Modifier) {
-                ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index), automated, faderH, room, tight, sendNames, groups)
+                ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index, track.colour), automated, faderH, room, tight, sendNames, groups)
             }
         }
         val fullH = if (song.tracks.isEmpty() || tight) Dp.Unspecified else stripH
@@ -719,7 +719,9 @@ private fun ToggleChip(
     }
 }
 
-internal fun trackColour(index: Int): Color = PALETTE[index % PALETTE.size]
+/** A track's colour: the one it was given, or its position's. */
+internal fun trackColour(index: Int, chosen: Int? = null): Color = PALETTE[(chosen ?: index).mod(PALETTE.size)]
+internal val TRACK_COLOURS: Int get() = PALETTE.size
 
 // A track's stripe is how that track is recognised at a glance, so it is
 // the same colour in both themes - it belongs to the track, not to the

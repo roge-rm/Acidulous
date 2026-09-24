@@ -915,6 +915,77 @@ std::vector<float> renderTuned(int32_t blocks, bool tuned, uint8_t pitch) {
     return out;
 }
 
+/**
+ * A track's transpose and fixed velocity, set as the channel parameters the
+ * app sends: [shift] semitones, [fixed] a velocity or nought for as played.
+ */
+std::vector<float> renderShifted(int32_t blocks, int32_t shift, int32_t fixed, uint8_t pitch) {
+    Fixture f;
+    f.clip(0, 0, pitch);
+    f.engine.racks[0].setParam(Unit::Channel, Rack::Transpose, (shift + 48) / 96.0f);
+    f.engine.racks[0].setParam(Unit::Channel, Rack::Velocity, fixed / 127.0f);
+    f.engine.panicFlag.store(true, std::memory_order_release);
+    float scratch[kBlockFrames * 2];
+    f.engine.renderBlock(nullptr, scratch);
+    f.engine.transport.requestPlay(0);
+    std::vector<float> out(static_cast<size_t>(blocks) * kBlockFrames * 2);
+    for (int32_t b = 0; b < blocks; ++b) {
+        f.engine.renderBlock(nullptr, out.data() + static_cast<size_t>(b) * kBlockFrames * 2);
+    }
+    return out;
+}
+
+void aTrackCanBeTransposed() {
+    printf("- a transposed track, and one at a fixed velocity\n");
+    constexpr int32_t kBlocks = 750;
+    const auto plain = renderShifted(kBlocks, 0, 0, 36);
+    const auto up = renderShifted(kBlocks, 5, 0, 36);
+    const auto written = renderShifted(kBlocks, 0, 0, 41);
+    ok("a transpose changes what a track plays", largestDifference(plain, up) > 0.05f, std::to_string(largestDifference(plain, up)));
+    ok("five up is the notes written five up", largestDifference(up, written) < 1e-6f, std::to_string(largestDifference(up, written)));
+    const auto fixed = renderShifted(kBlocks, 0, 0, 36);
+    ok("as played is as played", largestDifference(plain, fixed) < 1e-6f, std::to_string(largestDifference(plain, fixed)));
+    const auto hard = renderShifted(kBlocks, 0, 127, 36);
+    ok("a fixed velocity changes the accents", largestDifference(plain, hard) > 0.05f, std::to_string(largestDifference(plain, hard)));
+}
+
+/**
+ * A note let go after the transpose has moved must still stop: its note-off
+ * goes where its note-on went, not where a note-on would go now. On a poly
+ * machine a note-off sent to the wrong key leaves the right one sounding.
+ */
+void aTransposeLetsGoOfWhatItStarted() {
+    printf("- a note held across a change of transpose\n");
+    auto tail = [](bool move) {
+        Fixture f;
+        Rack &rack = f.engine.racks[0];
+        delete rack.swapMachine(MachineRegistry::create("Trinity"));
+        Machine *m = rack.currentMachine();
+        m->prepare(kSampleRate);
+        m->reset();
+        m->params().jumpAll();
+        float scratch[kBlockFrames * 2];
+        rack.playSequenced(0x90, 60, 100);
+        for (int32_t b = 0; b < 50; ++b) f.engine.renderBlock(nullptr, scratch);
+        if (move) rack.setParam(Unit::Channel, Rack::Transpose, (7 + 48) / 96.0f);
+        rack.playSequenced(0x80, 60, 0);
+        float held = 0.0f, last = 0.0f;
+        for (int32_t b = 0; b < 1500; ++b) {
+            f.engine.renderBlock(nullptr, scratch);
+            float peak = 0.0f;
+            for (float v : scratch) peak = std::max(peak, std::fabs(v));
+            if (b < 10) held = std::max(held, peak);
+            if (b >= 1400) last = std::max(last, peak);
+        }
+        return std::make_pair(held, last);
+    };
+    const auto still = tail(false);
+    const auto moved = tail(true);
+    ok("the note sounded", still.first > 0.01f, std::to_string(still.first));
+    ok("and stops when let go", still.second < 1e-4f, std::to_string(still.second));
+    ok("and stops when let go after the transpose moved", moved.second < 1e-4f, std::to_string(moved.second));
+}
+
 void aTrackCanBeTuned() {
     printf("- a tuned track\n");
     constexpr int32_t kBlocks = 750;
@@ -940,6 +1011,8 @@ int main() {
     aStepCanBeLocked();
     aSceneCanSlowDown();
     aTrackCanBeTuned();
+    aTrackCanBeTransposed();
+    aTransposeLetsGoOfWhatItStarted();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
