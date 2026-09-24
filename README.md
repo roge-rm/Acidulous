@@ -128,11 +128,6 @@ Each has the usual controls plus one extra, and a page in the manual.
 - Ableton Link, and MIDI clock in and out. Clock in can follow on its own when a clock arrives.
 - Map any MIDI CC or note to any control.
 
-### Demo song
-
-Squelch, an acid house track that opens the first time you run the app. It uses
-most of what the app can do, and it's saved with your songs.
-
 ### Import and export
 
 Export WAV, AIFF, FLAC, MP3 or AAC, as the whole song or one scene, or as stems. Also MIDI files and a song bundle you can share.
