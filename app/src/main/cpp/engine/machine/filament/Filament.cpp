@@ -173,6 +173,8 @@ void Filament::reset() {
         v.pressure = v.timbre = -1.0f;
     }
     for (auto &s : sympathetic) s.clear();
+    dampersUp = false;
+    damperMix = 0.0f;
     // Retuned from the next note, not kept from the last one.
     lastRoot = 0.0f;
     lastTuning = -1;
@@ -410,6 +412,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             for (auto &bq : body) bq.reset();
             asleep = true;
         }
+        damperMix = dampersUp ? 1.0f : 0.0f;
         for (int32_t n = 0; n < frames; ++n) L[n] = R[n] = 0.0f;
         return true;
     }
@@ -430,7 +433,12 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     const float couple = paramOf(Couple);
     const bool symOn = steppedOf(SympatheticOn) != 0;
     const float symLevel = paramOf(SympatheticLevel);
-    const float symDamping = paramOf(SympatheticDamping);
+    // Undamped strings ring longer: the pedal down is at least nearly the
+    // longest the bank can ring.
+    const float symDamping = dampersUp ? std::fmax(paramOf(SympatheticDamping), 0.95f)
+                                       : paramOf(SympatheticDamping);
+    const float damperCoeff = 1.0f - std::exp(-1.0f / (0.03f * sampleRate));
+    const float damperTarget = dampersUp ? 1.0f : 0.0f;
     const bool bodyOn = steppedOf(BodyOn) != 0;
     const float bodyMix = paramOf(BodyMix);
     const float drive = paramOf(Drive);
@@ -737,8 +745,12 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             }
         }
 
-        // The sympathetic bank hears everything and answers.
-        if (symOn) {
+        // The sympathetic bank hears everything and answers - always when it
+        // is switched on, and as far as the pedal has lifted the dampers when
+        // it is not.
+        damperMix += (damperTarget - damperMix) * damperCoeff;
+        const float symGate = symOn ? 1.0f : damperMix;
+        if (symGate > 1.0e-4f) {
             // ...per turn as well, and for the same reason: six strings each
             // given eight per cent of the played one every sample is forty
             // times a turn at the bottom of the range, and they never stopped.
@@ -746,7 +758,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             float symOut = 0.0f;
             for (int i = 0; i < kSympathetic; ++i)
                 symOut += sympathetic[i].step(symFeed * sympathetic[i].turnScale());
-            symOut *= 0.2f * clampf(symLevel + symMod, 0.0f, 1.0f);
+            symOut *= 0.2f * clampf(symLevel + symMod, 0.0f, 1.0f) * symGate;
             mixL += symOut;
             mixR += symOut * 0.85f;
         }

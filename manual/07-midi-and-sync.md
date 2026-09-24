@@ -13,6 +13,20 @@ looking at.
 that note. You set the zone and bend range here. Per-note bend, pressure and
 slide are recorded too.
 
+### Pedals
+
+A pedal plugged into your keyboard works on every melodic machine:
+
+- **Sustain** (the right pedal) keeps notes sounding after you let go of the
+  keys, until you lift it. On Filament it also lifts the dampers, so the
+  strings you aren't playing ring along.
+- **Sostenuto** (the middle one) holds only the keys that were down when you
+  pressed it. Notes you play after that stop as usual.
+- **Soft** (the left one) plays notes in more quietly while it's down.
+
+Pedals are recorded as lanes in the automation strip, one each, and you can
+draw them there by hand too. Drum machines ignore them.
+
 ## Mapping a controller
 
 Long-press redo to enter mapping mode. Controls that can be mapped are

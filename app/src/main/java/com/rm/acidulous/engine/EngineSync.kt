@@ -35,6 +35,7 @@ import com.rm.acidulous.model.reelSpec
 import com.rm.acidulous.model.sendUnit
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.laneParam
+import com.rm.acidulous.model.isPedalLane
 import com.rm.acidulous.model.laneUnit
 
 /**
@@ -525,6 +526,9 @@ object EngineSync {
                 if (name == "bypass") EngineParams.bool01(mod.bypass)
                 else mod.params[name] ?: modifierTable(mod.type).firstOrNull { it.name == name }?.defaultNormalized
             }
+            // A pedal's document value is up: play starts with it up, and
+            // its lane puts it down where it says.
+            com.rm.acidulous.model.isPedalLane(key) -> 0f
             else -> null
         }
     }
@@ -614,10 +618,17 @@ object EngineSync {
         var marshalled = 0
         song.tracks.forEachIndexed { rack, track ->
             if (rack >= RACKS) return@forEachIndexed
+            // The pedals this track uses anywhere. A clip that does not
+            // mention one is sent a lane that holds it up from its first tick,
+            // or a pedal the last clip left down would stay down through it.
+            val pedals = track.clips.values.flatMap { it.automation.keys }.filter { isPedalLane(it) }.toSet()
             song.scenes.forEachIndexed forEachIndexedInner@{ sceneIdx, scene ->
                 val clip = track.clips[scene.id] ?: return@forEachIndexedInner
+                val implicit = pedals - clip.automation.keys
                 // Unchanged since the last push? Then it is one lookup, not a marshal.
-                val rev = lockedRev(track, clip)
+                val rev = lockedRev(track, clip).let { r ->
+                    if (implicit.isEmpty()) r else r xor (implicit.sorted().hashCode().toLong() shl 20) xor 0x5a5a
+                }
                 if (NativeEngine.snapshotSetClipCached(handle, rack, sceneIdx, rev)) {
                     cached++
                     return@forEachIndexedInner
@@ -680,6 +691,11 @@ object EngineSync {
                         ?: modifierSlotOf(unit)?.let { track.modifierAt(it).type }
                         ?: track.machine.type
                     NativeEngine.snapshotSetLane(handle, rack, sceneIdx, ownerType, unit, laneParam(key), lane.linear, pts)
+                }
+                for (key in implicit) {
+                    NativeEngine.snapshotSetLane(
+                        handle, rack, sceneIdx, track.machine.type, laneUnit(key), laneParam(key), false, floatArrayOf(0f, 0f),
+                    )
                 }
             }
         }

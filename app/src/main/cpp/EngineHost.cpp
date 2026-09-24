@@ -787,6 +787,12 @@ void EngineHost::controlChange(int rack, uint8_t cc, uint8_t value, bool record)
         pushPerformance(rack, kPerfMod, value, record);
         return;
     }
+    // The pedals take the same detour as the wheel, so they are recorded
+    // into a lane and played back from it.
+    if (cc == 64 || cc == 66 || cc == 67) {
+        pushPerformance(rack, cc == 64 ? kPerfSustain : cc == 66 ? kPerfSostenuto : kPerfSoft, value, record);
+        return;
+    }
     sEngine.pushMidi({static_cast<uint8_t>(0xb0 | rack), cc, value});
 }
 
@@ -828,8 +834,8 @@ void EngineHost::midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2, uin
     // parallel one that has to be kept in step with it. Everything else
     // still goes straight through as MIDI: the machine hears it, and nothing
     // yet knows what a lane for it would mean.
-    if (kind == 0xb0 && d1 == 1) {
-        controlChange(rack, 1, d2);
+    if (kind == 0xb0 && (d1 == 1 || d1 == 64 || d1 == 66 || d1 == 67)) {
+        controlChange(rack, d1, d2);
         return;
     }
     if (kind == 0xd0) {
@@ -891,6 +897,9 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
     if (u == Unit::Performance) {
         if (name == "mod") return kPerfMod;
         if (name == "pressure") return kPerfPressure;
+        if (name == "sustain") return kPerfSustain;
+        if (name == "sostenuto") return kPerfSostenuto;
+        if (name == "soft") return kPerfSoft;
         return -1;
     }
     if (u == Unit::Effect1 || u == Unit::Effect2) {

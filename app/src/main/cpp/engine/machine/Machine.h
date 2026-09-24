@@ -49,6 +49,12 @@ class Machine {
     virtual void noteOff(uint8_t note) = 0;
     virtual void allNotesOff() = 0;
     virtual void controlChange(uint8_t /*cc*/, uint8_t /*value*/) {}
+    /**
+     * The sustain pedal's other half. The rack holds the notes; this tells a
+     * machine that models dampers that they are off the strings, so what is
+     * not being played can ring in sympathy with what is. Most have none.
+     */
+    virtual void setDampers(bool /*lifted*/) {}
     virtual void channelPressure(uint8_t /*value*/) {}
     virtual void pitchBend(int16_t /*value14*/) {}
 

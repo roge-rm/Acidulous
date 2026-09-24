@@ -89,6 +89,7 @@ class Filament final : public Machine {
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
     void controlChange(uint8_t cc, uint8_t value) override;
+    void setDampers(bool lifted) override { dampersUp = lifted; }
     void channelPressure(uint8_t value) override;
     void pitchBend(int16_t value14) override;
     void noteBend(uint8_t note, float semitones) override;
@@ -158,6 +159,14 @@ class Filament final : public Machine {
     /** Blocks in a row with no voice and nothing over -120 dB; see `render`. */
     int32_t quietBlocks = 0;
     bool asleep = false;
+    /**
+     * The sustain pedal: dampers off the strings, so the sympathetic bank
+     * rings whether or not "sympathy" is on - a piano with the pedal down
+     * answers itself. [damperMix] follows it over thirty milliseconds, so the
+     * bank fades in and out rather than switching.
+     */
+    bool dampersUp = false;
+    float damperMix = 0.0f;
 
     float bendSemis = 0.0f, modWheel = 0.0f, pressure = 0.0f;
     float bpm = 120.0f;

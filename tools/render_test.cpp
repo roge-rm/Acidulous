@@ -986,6 +986,109 @@ void aTransposeLetsGoOfWhatItStarted() {
     ok("and stops when let go after the transpose moved", moved.second < 1e-4f, std::to_string(moved.second));
 }
 
+/**
+ * The pedals, on a rack with a poly machine and nothing playing: the notes
+ * are sent by hand so the test says exactly when each key goes down and up.
+ */
+struct PedalRig {
+    Fixture f;
+    Rack &rack;
+    float scratch[kBlockFrames * 2];
+    explicit PedalRig(const char *type) : rack(f.engine.racks[0]) {
+        delete rack.swapMachine(MachineRegistry::create(type));
+        Machine *m = rack.currentMachine();
+        m->prepare(kSampleRate);
+        m->reset();
+        m->params().jumpAll();
+    }
+    void pedal(int32_t which, bool down) { rack.setParam(Unit::Performance, which, down ? 1.0f : 0.0f); }
+    /** The loudest sample over [blocks] blocks. */
+    float run(int32_t blocks) {
+        float peak = 0.0f;
+        for (int32_t b = 0; b < blocks; ++b) {
+            f.engine.renderBlock(nullptr, scratch);
+            for (float v : scratch) peak = std::max(peak, std::fabs(v));
+        }
+        return peak;
+    }
+};
+
+void thePedalsHoldWhatTheyShould() {
+    printf("- sustain, sostenuto and soft\n");
+    {
+        PedalRig r("Trinity");
+        r.rack.playSequenced(0x90, 60, 100);
+        r.run(50);
+        r.pedal(kPerfSustain, true);
+        r.rack.playSequenced(0x80, 60, 0);
+        const float held = r.run(400);
+        const float stillHeld = r.run(50);
+        r.pedal(kPerfSustain, false);
+        r.run(1400);
+        const float after = r.run(100);
+        ok("sustain keeps a note sounding after its key is up", stillHeld > 0.01f, std::to_string(stillHeld));
+        ok("and lets it go when the pedal lifts", after < 1e-4f && held > 0.01f, std::to_string(after));
+    }
+    {
+        // 60 is down when sostenuto goes down; 67 is played after. Both keys
+        // are let go: 60 must go on sounding and 67 must not.
+        auto probe = [](bool withSostenuto, uint8_t second) {
+            PedalRig r("Trinity");
+            r.rack.playSequenced(0x90, 60, 100);
+            r.run(20);
+            if (withSostenuto) r.pedal(kPerfSostenuto, true);
+            r.rack.playSequenced(0x90, second, 100);
+            r.run(20);
+            r.rack.playSequenced(0x80, 60, 0);
+            r.rack.playSequenced(0x80, second, 0);
+            r.run(1400);
+            return r.run(50);
+        };
+        const float caught = probe(true, 67);
+        const float plain = probe(false, 67);
+        ok("sostenuto holds the key that was down", caught > 0.01f, std::to_string(caught));
+        ok("and nothing when it was not pressed", plain < 1e-4f, std::to_string(plain));
+        // Which of the two it held: the same, with 60 never played, is silent.
+        PedalRig r("Trinity");
+        r.pedal(kPerfSostenuto, true);
+        r.rack.playSequenced(0x90, 67, 100);
+        r.run(20);
+        r.rack.playSequenced(0x80, 67, 0);
+        r.run(1400);
+        const float lateKey = r.run(50);
+        ok("but not a key played after it went down", lateKey < 1e-4f, std::to_string(lateKey));
+    }
+    {
+        auto loud = [](bool soft) {
+            PedalRig r("Trinity");
+            if (soft) r.pedal(kPerfSoft, true);
+            r.rack.playSequenced(0x90, 60, 110);
+            return r.run(200);
+        };
+        const float full = loud(false), softened = loud(true);
+        ok("soft plays what comes in softer", softened < full * 0.95f && softened > 0.0f,
+           std::to_string(softened) + " of " + std::to_string(full));
+    }
+    {
+        // Filament with its sympathetic bank switched off: the pedal down
+        // lifts the dampers anyway, so the same note sounds different.
+        auto string = [](bool pedal) {
+            PedalRig r("Filament");
+            if (pedal) r.pedal(kPerfSustain, true);
+            r.rack.playSequenced(0x90, 48, 100);
+            std::vector<float> out;
+            for (int32_t b = 0; b < 300; ++b) {
+                r.f.engine.renderBlock(nullptr, r.scratch);
+                out.insert(out.end(), r.scratch, r.scratch + kBlockFrames * 2);
+            }
+            return out;
+        };
+        const auto damped = string(false), lifted = string(true);
+        ok("Filament's strings answer with the dampers up", largestDifference(damped, lifted) > 1e-3f,
+           std::to_string(largestDifference(damped, lifted)));
+    }
+}
+
 void aTrackCanBeTuned() {
     printf("- a tuned track\n");
     constexpr int32_t kBlocks = 750;
@@ -1013,6 +1116,7 @@ int main() {
     aTrackCanBeTuned();
     aTrackCanBeTransposed();
     aTransposeLetsGoOfWhatItStarted();
+    thePedalsHoldWhatTheyShould();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

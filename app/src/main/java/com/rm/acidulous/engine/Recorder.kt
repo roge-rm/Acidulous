@@ -238,6 +238,7 @@ class Recorder {
      * stop are switches, so they step rather than slide between points.
      */
     private fun newLane(unit: String, name: String, tick: Int): Lane {
+        if (unit == "performance") return com.rm.acidulous.model.newLaneFor(laneKey(unit, name), tick)
         if (unit != "perform") return Lane()
         val rest = PERFORM_REST[name] ?: return Lane()
         val stepped = name in PERFORM_STEPPED
@@ -254,7 +255,8 @@ class Recorder {
         const val CMD_EXPRESSION = 0xf1
         val NO_CURVES = listOf<Lane?>(null, null, null)
         /** Unit::Performance's two indices; see kPerfMod in Messages.h. */
-        val PERF_PARAMS = listOf("mod", "pressure")
+        /** Mirrors kPerfMod.. in Messages.h, by index: the wheel, pressure, then the pedals. */
+        val PERF_PARAMS = listOf("mod", "pressure", "sustain", "sostenuto", "soft")
         /** Mirrors `Perform::P`, by index. */
         val PERFORM_PARAMS = listOf("repeat", "stop", "x", "y", "stoplen", "throwtime", "feedback", "reverse", "gate",
             "killlow", "killmid", "killhigh", "riser", "riserlen", "xmode", "ymode", "target",

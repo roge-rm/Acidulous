@@ -287,6 +287,23 @@ class Rack {
         for (int32_t n = 0; n < 128; ++n) sentTo[n] = static_cast<uint8_t>(n);
     }
 
+    /**
+     * The pedals, held here rather than in each machine so every one of them
+     * has them. Sustain keeps every note sounding past its key; sostenuto
+     * only the keys that were down when it went down; soft plays what comes
+     * in softer. A note whose key is up but a pedal is holding it has its
+     * off in [pedalHeld], and is let go when neither pedal wants it.
+     */
+    bool sustainDown = false;
+    bool sostenutoDown = false;
+    bool softDown = false;
+    bool keyDown[128]{};
+    bool pedalHeld[128]{};
+    bool sostenutoSet[128]{};
+    void setPedal(int32_t which, bool down);
+    void releasePedalled();
+    void resetPedals();
+
     const FrozenSet *frozenSet = nullptr;
     const FrozenClip *frozenNow = nullptr;
     int64_t frozenCursor = 0;

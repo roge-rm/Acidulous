@@ -312,4 +312,13 @@ fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
             } else {
                 emptyList()
             }
+            ) +
+        // The pedals, on anything melodic: a MIDI pedal plays them, and the
+        // lane can be drawn by hand.
+        (
+            if (com.rm.acidulous.model.MachineUi.takesTranspose(track.machine.type)) {
+                com.rm.acidulous.model.PEDAL_LANES.map { laneKey("performance", it) }
+            } else {
+                emptyList()
+            }
             )

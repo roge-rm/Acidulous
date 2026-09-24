@@ -101,6 +101,11 @@ enum class Unit : uint8_t {
 /** Indices within Unit::Performance. */
 constexpr int32_t kPerfMod = 0;      // CC 1
 constexpr int32_t kPerfPressure = 1; // channel aftertouch
+// The three pedals, appended: a lane keyed by name costs old songs nothing,
+// but the index crosses the record queue, so these never move.
+constexpr int32_t kPerfSustain = 2;   // CC 64, the dampers
+constexpr int32_t kPerfSostenuto = 3; // CC 66, the keys already down
+constexpr int32_t kPerfSoft = 4;      // CC 67, una corda
 
 struct ParamMessage {
     int32_t rack = 0;

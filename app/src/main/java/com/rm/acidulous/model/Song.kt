@@ -171,6 +171,19 @@ fun Lane.trimmedTo(length: Int): Lane? {
 }
 
 fun laneKey(unit: String, name: String): String = "$unit:$name"
+
+/**
+ * The pedals' lanes, on the performance pseudo-unit beside the wheel and
+ * pressure: sustain, sostenuto and soft. Switches, so they step; and they
+ * rest up, so a pedal pressed on beat three does not hold beat one.
+ */
+val PEDAL_LANES = listOf("sustain", "sostenuto", "soft")
+fun isPedalLane(key: String): Boolean = laneUnit(key) == "performance" && laneParam(key) in PEDAL_LANES
+
+/** A new, empty lane for [key]: stepped and resting up for a pedal, a plain glide otherwise. */
+fun newLaneFor(key: String, firstTick: Int): Lane =
+    if (isPedalLane(key)) Lane(if (firstTick > 0) listOf(LanePoint(0, 0f)) else emptyList(), linear = false)
+    else Lane()
 fun laneUnit(key: String): String = key.substringBefore(':')
 fun laneParam(key: String): String = key.substringAfter(':')
 

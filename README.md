@@ -104,6 +104,7 @@ Each has the usual controls plus one extra, and a page in the manual.
 ### Playing and syncing
 
 - MIDI in over USB and Bluetooth LE, MIDI out with clock.
+- Sustain, sostenuto and soft pedals, recorded as lanes.
 - MPE.
 - Ableton Link, and MIDI clock in and out. Clock in can follow on its own when a clock arrives.
 - Map any MIDI CC or note to any control.

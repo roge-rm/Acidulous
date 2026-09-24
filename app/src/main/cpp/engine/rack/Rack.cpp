@@ -140,6 +140,19 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
     const uint8_t kind = status & 0xf0;
     const bool on = kind == 0x90 && d2 > 0;
     const bool off = kind == 0x80 || (kind == 0x90 && d2 == 0);
+    // The pedals. A key let go while one of them holds it is not let go yet:
+    // its off waits in pedalHeld for the pedal to come up.
+    if (on) {
+        keyDown[d1 & 0x7f] = true;
+        pedalHeld[d1 & 0x7f] = false;
+        if (softDown) d2 = static_cast<uint8_t>(std::max(1, (d2 * 5) / 8));
+    } else if (off) {
+        keyDown[d1 & 0x7f] = false;
+        if (sustainDown || sostenutoSet[d1 & 0x7f]) {
+            pedalHeld[d1 & 0x7f] = true;
+            return;
+        }
+    }
     if (on) {
         forgetHeld(d1); // a retrigger is not a second note
         int32_t limit = EngineSettings::get().voiceLimit.load(std::memory_order_relaxed);
@@ -149,6 +162,7 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
                 const uint8_t oldest = held[0];
                 machine->handleMidi(0x80, oldest, 0);
                 forgetHeld(oldest);
+                pedalHeld[oldest & 0x7f] = false;
             }
         }
         if (heldCount < kMaxHeld) held[heldCount++] = d1;
@@ -156,6 +170,49 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
         forgetHeld(d1);
     }
     machine->handleMidi(status, d1, d2);
+}
+
+void Rack::setPedal(int32_t which, bool down) {
+    // To the hardware as the pedal itself: a synthesizer on the other end
+    // of a cable has its own pedal logic, and holding its note-offs back
+    // here as well would be holding them twice.
+    const uint8_t cc = which == kPerfSustain ? 64 : which == kPerfSostenuto ? 66 : 67;
+    if (lastOutMode != OutInternal && outQueue != nullptr) {
+        outQueue->push({outFrame, static_cast<uint8_t>(0xb0 | lastOutChannel), cc,
+                        static_cast<uint8_t>(down ? 127 : 0), static_cast<uint8_t>(rackIndex)});
+    }
+    if (which == kPerfSoft) {
+        softDown = down;
+        return;
+    }
+    if (which == kPerfSustain) {
+        if (down == sustainDown) return;
+        sustainDown = down;
+        if (machine != nullptr) machine->setDampers(down);
+    } else {
+        if (down == sostenutoDown) return;
+        sostenutoDown = down;
+        // What it catches is decided the moment it goes down: the keys held
+        // then, and nothing played after.
+        for (int32_t n = 0; n < 128; ++n) sostenutoSet[n] = down && keyDown[n];
+    }
+    if (!down) releasePedalled();
+}
+
+void Rack::releasePedalled() {
+    if (machine == nullptr) return;
+    for (int32_t n = 0; n < 128; ++n) {
+        if (!pedalHeld[n] || sustainDown || sostenutoSet[n]) continue;
+        pedalHeld[n] = false;
+        forgetHeld(static_cast<uint8_t>(n));
+        machine->handleMidi(0x80, static_cast<uint8_t>(n), 0);
+    }
+}
+
+void Rack::resetPedals() {
+    sustainDown = sostenutoDown = softDown = false;
+    for (int32_t n = 0; n < 128; ++n) keyDown[n] = pedalHeld[n] = sostenutoSet[n] = false;
+    if (machine != nullptr) machine->setDampers(false);
 }
 
 void Rack::forgetHeld(uint8_t note) {
@@ -207,6 +264,7 @@ void Rack::allNotesOff() {
     tailClip = nullptr;
     heldCount = 0;
     resetSentTo();
+    resetPedals();
 }
 
 void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
@@ -590,6 +648,9 @@ void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
             handleMidi(0xb0, 1, byte);
         } else if (index == kPerfPressure) {
             handleMidi(0xd0, byte, 0);
+        } else if (index == kPerfSustain || index == kPerfSostenuto || index == kPerfSoft) {
+            // Down from the middle up, as MIDI has it.
+            setPedal(index, byte >= 64);
         }
         break;
     }
