@@ -63,7 +63,6 @@
     <string name="songs_delete_title">Delete \"%s\"?</string>
     <string name="songs_delete">Delete</string>
     <string name="songs_delete_note">This deletes the file. If it\'s the song you have open, it stays open.</string>
-    <string name="demos_title">Demo songs</string>
 
     <!-- Patches -->
     <string name="patches_title">%s patches</string>

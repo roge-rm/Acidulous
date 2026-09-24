@@ -7,8 +7,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The demo songs are the first thing anybody hears, and every name in them is
- * a string looked up at build time.
+ * The demo song is the first thing anybody hears, and every name in it is a
+ * string looked up at build time.
  *
  * A misspelt patch name does not fail: `PatchStore.factory(...).firstOrNull`
  * returns null and the machine is built on its defaults, so the song still
@@ -16,24 +16,15 @@ import org.junit.Test
  * finds by reading the file. Same for a machine or effect type that no registry
  * knows, or a lane on a parameter that does not exist: the song looks fine.
  *
- * So this checks the names resolve, not that the music is any good. Every
- * check runs on every demo; the last few check each shows what it is there to
- * show.
+ * So this checks the names resolve, not that the music is any good, and then
+ * that the demo shows what it is there to show.
  */
 class DemoSongTest {
 
-    private val demos = DemoSongs.all.map { it to it.build() }
-    private fun song(name: String) = demos.first { it.first.name == name }.second
+    private val demos = listOf(Demo("Squelch") to DemoSong.build())
+    private class Demo(val name: String)
     private fun Song.clips() = tracks.flatMap { it.clips.values }
     private fun Song.notes() = clips().flatMap { it.notes }
-
-    @Test
-    fun theMenuNamesAreTheSongs() {
-        // The dialog marks the open song by name, so they must agree.
-        for ((demo, song) in demos) assertEquals(demo.name, song.name)
-        assertEquals(demos.size, demos.map { it.first.name }.distinct().size)
-        assertEquals("the first run opens the dub", "Riddim", DemoSong.build().name)
-    }
 
     @Test
     fun everyMachineAndEffectNameIsReal() {
@@ -162,14 +153,15 @@ class DemoSongTest {
     }
 
     @Test
-    fun theyNeedNothingFromDisk() {
-        // A demo has to play on a phone that has never recorded anything, so
-        // no machine in one may hold audio and no clip may carry a take.
+    fun itNeedsNothingFromDisk() {
+        // The demo has to play on a phone that has never recorded anything, so
+        // no machine in it may hold audio and no clip may carry a take. A
+        // Nexus graph is a setting, but it is text, not a file.
         val needsMedia = setOf("Forage", "Mosaic", "Pollen", "Dice", "Molt", "Bias")
         for ((demo, song) in demos) {
             for (track in song.tracks) {
                 assertFalse("${demo.name}: '${track.name}' needs a sample", track.machine.type in needsMedia)
-                assertTrue("${demo.name}: '${track.name}' names a file", track.machine.settings.isEmpty())
+                assertTrue("${demo.name}: '${track.name}' names a file", (track.machine.settings.keys - "nexus").isEmpty())
             }
             for (clip in song.clips()) {
                 assertTrue("${demo.name}: a clip carries audio", clip.audio == null)
@@ -179,34 +171,57 @@ class DemoSongTest {
     }
 
     @Test
-    fun theySurviveBeingSavedAndOpened() {
+    fun itSurvivesBeingSavedAndOpened() {
         for ((demo, song) in demos) assertEquals(demo.name, song, SongStore.decode(SongStore.encode(song)))
     }
 
+    // --- what it is there to show -----------------------------------------------------
+
     @Test
-    fun betweenThemEveryMachineThatNeedsNoFilePlays() {
-        val needsMedia = setOf("Forage", "Mosaic", "Pollen", "Dice", "Molt", "Bias", "Cipher", "Nexus")
-        val used = demos.flatMap { (_, song) -> song.tracks.map { it.machine.type } }.toSet()
-        val all = MachineUi.machineGroups.flatMap { it.machines }.filter { it !in needsMedia }
-        assertEquals("machines no demo uses", emptyList<String>(), all.filter { it !in used })
+    fun theFirstRunOpensIt() {
+        assertEquals("Squelch", DemoSong.build().name)
     }
 
-    // --- what each one is there to show ---------------------------------------------
+    @Test
+    fun itShowsTheAcid() {
+        val song = DemoSong.build()
+        val lines = song.tracks.filter { it.machine.type == "Reflux" }
+        assertTrue("not two acid lines", lines.size >= 2)
+        val acid = lines.first().clips.values.flatMap { it.notes }.sortedBy { it.tick }
+        assertTrue("no slides: nothing overlaps the next note", acid.zipWithNext().any { (a, b) -> a.tick + a.length > b.tick })
+        assertTrue("no accents", acid.map { it.velocity }.distinct().size > 1)
+        assertTrue("no filter sweep", song.clips().any { laneKey("machine", "cutoff") in it.automation })
+        assertTrue("no step locks", song.clips().any { c -> c.automation.values.any { Locks.isLocks(it) } })
+    }
 
     @Test
-    fun riddimShowsTheSong() {
-        val song = song("Riddim")
+    fun itShowsThePerformPages() {
+        val song = DemoSong.build()
+        val performed = song.clips().flatMap { it.automation.keys }.filter { laneUnit(it) == "perform" }.map { laneParam(it) }.toSet()
+        assertTrue("the performance lanes are missing: $performed", performed.containsAll(listOf("repeat", "riser", "gate", "y")))
+        assertTrue("no fill-only notes", song.notes().any { it.trig == Trig.Fill })
+    }
+
+    @Test
+    fun itShowsTheSong() {
+        val song = DemoSong.build()
         assertTrue("no scene repeats", song.scenes.any { it.repeat > 1 })
-        assertTrue("no scene has its own tempo", song.scenes.any { it.tempo != null })
         assertTrue("clips are all one length", song.clips().map { it.bars }.distinct().size > 1)
         assertTrue("nothing swings", song.swing > SWING_STRAIGHT)
         assertNotNull("no song key", song.key)
-        assertTrue("no track disagrees with the song's swing", song.tracks.any { it.swing != null && it.swing != song.swing })
         assertEquals("both sends should be filled", 2, song.master.sends.count { it.type.isNotEmpty() })
-        assertTrue("no trig conditions", song.notes().any { it.hasTrig })
+        assertTrue("no trig conditions", song.notes().any { it.trig != Trig.Always && it.trig != Trig.Fill })
+        assertTrue("no chances", song.notes().any { it.chance < 100 })
+        assertTrue("no ratchets", song.notes().any { it.ratchet > 1 })
         assertTrue("nothing rolls free", song.clips().any { it.freeRoll })
         assertTrue("no one-shot clip", song.clips().any { it.playMode == PlayMode.OneShot })
         assertTrue("no note expression", song.notes().any { it.hasExpression })
+        assertTrue("no modifier", song.tracks.any { t -> t.modifiers.any { it.type.isNotEmpty() } })
+    }
+
+    @Test
+    fun itShowsTheMixer() {
+        val song = DemoSong.build()
         assertTrue("no sidechain", song.tracks.flatMap { it.effects }.any { (it.params[SIDECHAIN_PARAM] ?: 0f) > 0f })
         assertTrue("no group", song.master.groups.isNotEmpty())
         assertTrue("no track routed into a group", song.tracks.any { it.mixer.output in 1..song.master.groups.size })
@@ -214,44 +229,9 @@ class DemoSongTest {
     }
 
     @Test
-    fun squelchShowsAcidAndThePerformPages() {
-        val song = song("Squelch")
-        val acid = song.tracks.first { it.machine.type == "Reflux" }.clips.values.flatMap { it.notes }.sortedBy { it.tick }
-        assertTrue("no slides: nothing overlaps the next note", acid.zipWithNext().any { (a, b) -> a.tick + a.length > b.tick })
-        assertTrue("no accents", acid.map { it.velocity }.distinct().size > 1)
-        val performed = song.clips().flatMap { it.automation.keys }.filter { laneUnit(it) == "perform" }.map { laneParam(it) }.toSet()
-        assertTrue("the performance lanes are missing: $performed", performed.containsAll(listOf("repeat", "riser", "gate", "y")))
-        assertTrue("no fill-only notes", song.notes().any { it.trig == Trig.Fill })
-        assertTrue("no sidechain", song.tracks.flatMap { it.effects }.any { (it.params[SIDECHAIN_PARAM] ?: 0f) > 0f })
-        assertTrue("no filter sweep", song.clips().any { laneKey("machine", "cutoff") in it.automation })
-    }
-
-    @Test
-    fun nightDriveShowsFmFadesAndExpression() {
-        val song = song("Night Drive")
-        assertTrue("no FM", song.tracks.any { it.machine.type == "Ratio" })
-        assertTrue("nothing fades in", song.scenes.any { it.fadeIn })
-        assertTrue("nothing fades out", song.scenes.any { it.fadeOut })
-        assertTrue("no note expression", song.notes().any { it.bend != null })
-    }
-
-    @Test
-    fun cartridgeShowsTheChipAndAnOddBar() {
-        val song = song("Cartridge")
-        assertTrue("not all chip", song.tracks.all { it.machine.type == "Formulate" })
-        val odd = song.scenes.mapNotNull { it.signature }
-        assertTrue("no scene in its own time", odd.any { it.beats == 7 && it.unit == 8 })
-        assertTrue("no ratchets", song.notes().any { it.ratchet > 1 })
-        assertTrue("no every-other-pass notes", song.notes().any { it.trig != Trig.Always })
-    }
-
-    @Test
-    fun lanternShowsTheModelledInstrumentsInThree() {
-        val song = song("Lantern")
-        val types = song.tracks.map { it.machine.type }.toSet()
-        assertTrue("not all three models", types.containsAll(listOf("Filament", "Timber", "Brazen")))
-        assertEquals("not in three", Signature(3, 4), song.signature)
-        assertTrue("no ritardando", song.scenes.any { it.tempo?.smooth == true })
-        assertTrue("the horn is not blown", song.clips().any { laneKey("machine", "pressure") in it.automation })
+    fun itShowsTheModular() {
+        val nexus = DemoSong.build().tracks.firstOrNull { it.machine.type == "Nexus" }
+        assertNotNull("no Nexus track", nexus)
+        assertTrue("the Nexus patch has no graph", NexusPatch.decode(nexus!!.machine.settings["nexus"]).modules.isNotEmpty())
     }
 }

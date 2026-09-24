@@ -109,10 +109,10 @@ Each has the usual controls plus one extra, and a page in the manual.
 - Ableton Link, and MIDI clock in and out. Clock in can follow on its own when a clock arrives.
 - Map any MIDI CC or note to any control.
 
-### Demo songs
+### Demo song
 
-Five, in the file menu: dub, acid house, synthwave, chiptune and a chamber piece
-in 3/4. Between them they use every machine that doesn't need a sample.
+Squelch, an acid house track that opens the first time you run the app. It uses
+most of what the app can do, and it's saved with your songs.
 
 ### Import and export
 

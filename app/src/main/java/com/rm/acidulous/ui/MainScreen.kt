@@ -146,8 +146,6 @@ fun MainScreen(
     onSave: () -> Unit,
     onSaveAs: (String) -> Unit,
     onNew: (String) -> Unit,
-    /** A fresh copy of one of the demo songs, replacing whatever is open. */
-    onDemo: (com.rm.acidulous.model.Demo) -> Unit,
     onLoad: (String) -> Unit,
     onDelete: (String) -> Unit,
     songNames: () -> List<String>,
@@ -444,7 +442,6 @@ fun MainScreen(
                         // No dialog and no confirmation, because this replaces
                         // the open song exactly as loading one from Songs does,
                         // and that has never asked either.
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_demo_songs)) }, onClick = { fileMenu = false; dialog = Dialog.Demos })
                         DropdownMenuItem(text = { Text(stringResource(R.string.main_save_as)) }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
                         DropdownMenuItem(text = { Text(stringResource(R.string.main_songs)) }, onClick = { fileMenu = false; dialog = Dialog.Songs })
                         DropdownMenuItem(text = { Text(stringResource(R.string.main_import)) }, onClick = { fileMenu = false; onImport() })
@@ -893,11 +890,6 @@ fun MainScreen(
             editor.editSong { edited }
             dialog = null
         }
-        Dialog.Demos -> DemoSongsDialog(
-            current = song.name,
-            onPick = { demo -> onDemo(demo); dialog = null },
-            onDismiss = { dialog = null },
-        )
         Dialog.Songs -> SongBrowserDialog(
             names = songNames(), current = song.name,
             onLoad = { name -> onLoad(name); dialog = null },
@@ -946,7 +938,6 @@ private sealed class Dialog {
     data class TrackSettings(val index: Int) : Dialog()
     object Tempo : Dialog()
     object Songs : Dialog()
-    object Demos : Dialog()
     object SaveAs : Dialog()
     object NewSong : Dialog()
     object Midi : Dialog()

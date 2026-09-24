@@ -261,6 +261,10 @@ class MainActivity : ComponentActivity() {
 
 private const val TAG = "Acidulous.UI"
 
+/** Where the app remembers that the demo has been opened once: see the start of [App]. */
+private const val FIRST_RUN = "first_run"
+private const val DEMO_OPENED = "demo_opened"
+
 /**
  * What the file picker offers when it is asked for audio.
  *
@@ -874,15 +878,22 @@ private fun App(modifier: Modifier = Modifier) {
             if (com.rm.acidulous.ui.UiPrefs.linkWanted) {
                 com.rm.acidulous.engine.LinkHub.setEnabled(context, true)
             }
-            // Come back to whatever was open. Only a first run falls through
-            // to the demo - reloading it every launch used to overwrite
-            // Demo.json and throw away the session.
+            // Come back to whatever was open. The demo comes up once, on the
+            // first run after installing, and is saved with the songs so it can
+            // be opened again from there; a session that will not load after
+            // that is a new song rather than the demo every time.
             val restored = runCatching { SongStore.loadSession(context) }.getOrNull()
-            val loaded = restored ?: DemoSong.build().also {
-                if (!SongStore.exists(context, it.name)) SongStore.save(context, it)
+            val firstRun = context.getSharedPreferences(FIRST_RUN, android.content.Context.MODE_PRIVATE)
+            val loaded = when {
+                restored != null -> restored
+                !firstRun.getBoolean(DEMO_OPENED, false) -> DemoSong.build().also {
+                    if (!SongStore.exists(context, it.name)) SongStore.save(context, it)
+                }
+                else -> com.rm.acidulous.ui.UiPrefs.newSong(resources.getString(R.string.main_untitled))
             }
+            firstRun.edit().putBoolean(DEMO_OPENED, true).apply()
             editor.replace(loaded)
-            Log.i(TAG, if (restored != null) "resumed '${loaded.name}'" else "first run: built the demo")
+            Log.i(TAG, if (restored != null) "resumed '${loaded.name}'" else "no session: opened '${loaded.name}'")
             status = "${NativeEngine.sampleRate / 1000}k · burst ${NativeEngine.framesPerBurst}"
         } else {
             status = "engine failed to start"
@@ -1006,7 +1017,7 @@ private fun App(modifier: Modifier = Modifier) {
     /** A MIDI file read and waiting for its import window: its name and its parts. */
     var midiImport by remember { mutableStateOf<Pair<String, com.rm.acidulous.model.MidiFile.Parsed>?>(null) }
 
-    /** A song name nothing saved already has: "Riddim", then "Riddim (2)". */
+    /** A song name nothing saved already has: "Squelch", then "Squelch (2)". */
     fun freeSongName(wanted: String): String {
         val taken = SongStore.list(context).toSet()
         if (wanted !in taken) return wanted
@@ -1621,12 +1632,6 @@ private fun App(modifier: Modifier = Modifier) {
                 swapSong(fresh)
                 SongStore.save(context, fresh)
             },
-            // Rebuilt, not reloaded: it comes from its `build()` every
-            // time, so it is the demo this build ships rather than whatever an
-            // older one happened to write to Demo.json. Deliberately not saved
-            // either - if it is worth keeping, Save as says so, and until then
-            // a saved song of somebody's own called "Demo" is left alone.
-            onDemo = { demo -> swapSong(demo.build()) },
             // **The same swap, and for the same reason.** Loading had the
             // identical fault a new song had: the transport carried straight
             // on into a song it had never seen, playing whatever scenes

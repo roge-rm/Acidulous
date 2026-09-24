@@ -4,265 +4,252 @@ import com.rm.acidulous.model.DemoKit.BAR
 import com.rm.acidulous.model.DemoKit.E
 import com.rm.acidulous.model.DemoKit.Q
 import com.rm.acidulous.model.DemoKit.S
+import com.rm.acidulous.model.DemoKit.chord
 import com.rm.acidulous.model.DemoKit.clip
 import com.rm.acidulous.model.DemoKit.duckUnder
 import com.rm.acidulous.model.DemoKit.fx
-import com.rm.acidulous.model.DemoKit.patch
+import com.rm.acidulous.model.DemoKit.machine
+import com.rm.acidulous.model.DemoKit.ramp
+import com.rm.acidulous.model.DemoKit.steps
 
 /**
- * Riddim, the song that opens on a first run: a dub, in four scenes, with one
- * of most things the app can do somewhere in it. The first of [DemoSongs].
+ * Squelch, the song a first run opens: acid house at 126, in A minor, and the
+ * one demo. It is the fastest way to find out what is here, so it puts a
+ * working example of most ideas where a person will meet them:
  *
- * A demo earns its place by being the fastest way to find out what is here,
- * so this one puts a working example of each idea where a person will meet it:
- *
- *  - **Scenes of different lengths**, with a repeat count on the first and a
- *    smoothed tempo change into the last: the dub drags from 74 to 70 as it
- *    strips down, and looping the song picks the tempo back up on the way
- *    into Intro, which has no override of its own.
- *  - **Swing per track.** The song lilts its sixteenths; the bass overrides
- *    it back to straight, which is what a swing setting is usually for.
- *  - **A song key**, so the roll shades what is out of it and a new track
- *    arrives in A minor.
- *  - **Insert effects and both send buses**, with factory patches rather than
- *    bare defaults, because a demo should sound like somebody set it up. The
- *    sends are a dub delay and a dark room, and they are most of the sound.
- *  - **Automation**: in the dub the skank is thrown into the delay at the end
- *    of every other bar - a stepped lane, on and off like a fader pushed and
- *    pulled back - and the bass's filter closes and opens again.
- *  - **Trig conditions**: hand drums that are never quite the same bar twice
- *    - chances, a ratchet, and one hit that only lands every other pass.
- *  - **A one-shot clip**: the siren fires once per pass of the dub rather
- *    than looping inside it.
- *  - **Note expression**: the siren *is* a bend - one held note whose pitch is
- *    drawn as a curve, whooping up and falling back.
- *  - **A sidechain**: the bass has a compressor keyed to the drums, so it ducks
- *    out of the kick's way on every hit.
- *  - **A group**: the drums and the hand drums are routed into Rhythm, a
- *    group in the mixer with one glue compressor on the pair of them.
- *  - **Master inserts**: a warm tilt and a gentle compressor on the whole mix,
- *    before the limiter.
+ *  - **Reflux the way it is meant to be played**: accents are velocity and
+ *    slides are notes that overlap the next one, so the line is written, not
+ *    programmed with special steps. Two of them, the second answering the
+ *    first in the drop.
+ *  - **Automation**: the filter opened over the groove and pulled shut over
+ *    the outro, the resonance swelling through the break - and **step locks**,
+ *    a longer decay on the accents of the drop.
+ *  - **The perform pages, recorded**: an echo throw, a riser and a gate over
+ *    the build, a sixteenth repeat into the end of the drop. They are lanes on
+ *    the drums' clips, the same as what recording a performance writes.
+ *  - **Fill**: snare rolls that play only while fill is held.
+ *  - **Trig conditions**: percussion that is never the same bar twice -
+ *    chances, a ratchet, and a clave that lands on every other pass.
+ *  - **A modifier**: the arp is a held chord, turned into sixteenths by an Arp
+ *    on the way in.
+ *  - **A one-shot clip**: one stab into the break that is left to ring.
+ *  - **Note expression**: the riser is one held note, and all of it is a bend.
+ *  - **The modular**: the bleeps are Nexus, a patch you can open and rewire.
+ *  - **A sidechain, a group and master inserts**: the pad ducks under the
+ *    kick, the drums and the percussion share a glue compressor, and the mix
+ *    goes through an EQ and a compressor before the limiter.
  *
  * Nothing here needs a file on disk, so it plays on a phone that has never
- * recorded anything. That rules out the machines that hold audio - the sampler,
- * the slicer, the granular, the multisample player, the vocal machine and the
- * four-track.
+ * recorded anything.
  *
- * **In A minor at 74.** i - i - iv - v, Am Am Dm Em: a riddim is a loop that
- * goes round for the whole record, so it wants chords that pull back to the
- * top rather than ones that go anywhere.
+ * **i - VI - VII - v**, Am F G Em, under a line that stays on A: the chords
+ * move and the acid does not, which is the style.
  */
 object DemoSong {
 
-    // Genesis counts from 36: kick, snare, clap, rim, three toms, then hats.
+    // Genesis: kick, snare, clap, rim, three toms, hats, crash, ride, cowbell.
     private const val KICK = 36
+    private const val SNARE = 37
+    private const val CLAP = 38
     private const val RIM = 39
-    private const val TOM_LO = 40
-    private const val TOM_MID = 41
-    private const val TOM_HI = 42
     private const val HAT = 43
     private const val OPEN_HAT = 44
+    private const val CRASH = 45
+    private const val RIDE = 46
 
-    /** The skank's voicings, in the middle of the keyboard: Am Am Dm Em. */
-    private val CHORDS = listOf(
-        listOf(57, 60, 64), // Am
-        listOf(57, 60, 64), // Am
-        listOf(57, 62, 65), // Dm
-        listOf(59, 64, 67), // Em
-    )
+    // Hexbeat, for the percussion: rim, cowbell, clave.
+    private const val P_RIM = 37
+    private const val P_COWBELL = 47
+    private const val P_CLAVE = 48
 
-    /**
-     * The organ's two hands. The patch splits the keyboard at 64, so the low
-     * voicing lands on the lower manual and the high one on the upper - which
-     * is the bubble: two hands, two registers, taking turns.
-     */
-    private val BUBBLE_LOW = listOf(
-        listOf(52, 57, 60),
-        listOf(52, 57, 60),
-        listOf(53, 57, 62),
-        listOf(52, 55, 59),
-    )
-    private val BUBBLE_HIGH = listOf(
-        listOf(69, 72, 76),
-        listOf(69, 72, 76),
-        listOf(69, 74, 77),
-        listOf(67, 71, 76),
-    )
-
-    /** Where the bass sits under each bar: A1 A1 D2 E2. */
-    private val ROOTS = listOf(33, 33, 38, 40)
-
-    /** The mixer group the drums and hand drums play through: group 1. */
+    /** The mixer group the drums and the percussion play through: group 1. */
     private const val RHYTHM = 1
 
-    // --- the parts -------------------------------------------------------------------
-
-    /**
-     * The one drop: nothing on the one, kick and rim together on the three.
-     *
-     * The first beat of the bar is left empty on purpose, and that space is
-     * the style - the bass fills it, and everybody else leans on the three.
-     * Hats on the eighths with a ghost before the drop; the last bar of a
-     * four-bar phrase opens a hat, and with [fills] it rolls down the toms
-     * into the next pass.
-     */
-    private fun oneDrop(bars: Int, fills: Boolean = false): List<Note> {
-        val out = ArrayList<Note>()
-        for (b in 0 until bars) {
-            val o = b * BAR
-            out += Note(o + 2 * Q, 40, KICK, 118)
-            out += Note(o + 2 * Q, 40, RIM, 104)
-            for (i in 0 until 8) out += Note(o + i * E, 20, HAT, if (i % 2 == 1) 78 else 56)
-            out += Note(o + 2 * Q - S, 16, HAT, 42)
-            val last = b == bars - 1
-            if (last) out += Note(o + 3 * Q + E, 30, OPEN_HAT, 70)
-            if (last && fills) {
-                out += Note(o + 3 * Q, 30, TOM_HI, 86)
-                out += Note(o + 3 * Q + S, 30, TOM_HI, 70)
-                out += Note(o + 3 * Q + S * 2, 30, TOM_MID, 88)
-                out += Note(o + 3 * Q + S * 3, 30, TOM_LO, 96)
-            }
-        }
-        return out
-    }
-
-    /**
-     * The dub's drums: the kick and rim alone, the hats thinned to quarters,
-     * and a tom answering the drop on the last beat.
-     */
-    private fun dubDrums(bars: Int): List<Note> {
-        val out = ArrayList<Note>()
-        for (b in 0 until bars) {
-            val o = b * BAR
-            out += Note(o + 2 * Q, 40, KICK, 118)
-            out += Note(o + 2 * Q, 40, RIM, 96)
-            for (i in 0 until 4) out += Note(o + i * Q + E, 20, HAT, 52)
-            if (b % 2 == 1) out += Note(o + 3 * Q + E, 40, TOM_LO, 90)
-        }
-        return out
-    }
-
-    /**
-     * The bass: round, low and in no hurry.
-     *
-     * It starts a half-beat late, in the gap the drums leave, walks up the
-     * chord and comes back down to the root before the bar turns over.
-     * [drop] leaves every other bar empty, which is what a dub does to a bass
-     * line - takes it away so that its coming back is the event.
-     */
-    private fun bassLine(bars: Int, drop: Boolean = false): List<Note> {
-        val shape = listOf(
-            Triple(E, Q, 0),
-            Triple(Q + E, S * 3 - 20, 0),
-            Triple(2 * Q, E, 7),
-            Triple(2 * Q + E + S, S, 5),
-            Triple(3 * Q, E - 10, 3),
-            Triple(3 * Q + E, E - 10, 0),
-        )
-        val out = ArrayList<Note>()
-        for (b in 0 until bars) {
-            if (drop && b % 2 == 1) continue
-            val root = ROOTS[b % ROOTS.size]
-            shape.forEachIndexed { i, (at, len, step) ->
-                out += Note(b * BAR + at, len, root + step, if (i == 0) 108 else 92)
-            }
-        }
-        return out
-    }
-
-    /** The skank: a short chord on the two and the four, and nothing else. */
-    private fun skank(bars: Int): List<Note> =
-        (0 until bars).flatMap { b ->
-            val chord = CHORDS[b % CHORDS.size]
-            listOf(Q, 3 * Q).flatMap { at -> chord.map { Note(b * BAR + at, S + 10, it, 92) } }
-        }
-
-    /**
-     * The organ bubble: the left hand on the second and fourth sixteenths of
-     * every beat, the right hand on the offbeat between them.
-     */
-    private fun bubble(bars: Int): List<Note> {
-        val out = ArrayList<Note>()
-        for (b in 0 until bars) {
-            val low = BUBBLE_LOW[b % BUBBLE_LOW.size]
-            val high = BUBBLE_HIGH[b % BUBBLE_HIGH.size]
-            for (beat in 0 until 4) {
-                val o = b * BAR + beat * Q
-                low.forEach { out += Note(o + S, S - 30, it, 62) }
-                high.forEach { out += Note(o + E, S - 20, it, 74) }
-                low.forEach { out += Note(o + 3 * S, S - 30, it, 56) }
-            }
-        }
-        return out
-    }
-
-    /**
-     * Hand drums that are never the same bar twice.
-     *
-     * Every kind of trig in one part: two chances, a ratchet, and a hit that
-     * only lands on the first of every two passes. The clip rolls free, so the
-     * chances are redrawn each pass instead of repeating.
-     */
-    private fun handDrums(bars: Int): List<Note> {
-        val out = ArrayList<Note>()
-        for (b in 0 until bars) {
-            val o = b * BAR
-            out += Note(o, 60, 36, 88)
-            out += Note(o + Q + E, 60, 39, 76, chance = 70)
-            out += Note(o + 2 * Q + S * 3, 60, 37, 84, ratchet = 2)
-            out += Note(o + 3 * Q + E, 60, 38, 80, trig = Trig.N1of2)
-            out += Note(o + 3 * Q + S * 3, 60, 39, 64, chance = 50)
-        }
-        return out
-    }
-
-    /**
-     * The melodica, over the version's four bars: a pentatonic tune in the
-     * top of the reed's range, with rests long enough for the tape echo to
-     * answer each phrase.
-     */
-    private fun melodica(): List<Note> = listOf(
-        Note(0, Q + E, 76, 100),
-        Note(Q + E, E, 74, 86),
-        Note(2 * Q, Q, 72, 92),
-        Note(3 * Q, Q, 69, 88),
-        Note(BAR + E, E, 72, 84),
-        Note(BAR + Q, E, 74, 88),
-        Note(BAR + Q + E, Q + E, 76, 100),
-        Note(BAR + 3 * Q, Q, 79, 96),
-        Note(2 * BAR, Q, 81, 104),
-        Note(2 * BAR + Q, E, 79, 88),
-        Note(2 * BAR + Q + E, E, 77, 86),
-        Note(2 * BAR + 2 * Q, Q + E, 74, 94),
-        Note(3 * BAR, 2 * Q, 76, 100),
-        Note(3 * BAR + 2 * Q + E, E, 74, 84),
-        Note(3 * BAR + 3 * Q, Q - 20, 71, 90),
+    /** Am9, Fmaj7, G6, Em7, a bar each, in the middle of the keyboard. */
+    private val PROGRESSION = listOf(
+        listOf(57, 60, 64, 67, 71),
+        listOf(53, 57, 60, 64),
+        listOf(55, 59, 62, 64),
+        listOf(52, 55, 59, 62),
     )
 
-    /** The horns: two stabs answering the melodica at the ends of its phrases. */
-    private fun horns(): List<Note> =
-        listOf(64, 69, 72).map { Note(BAR + 3 * Q + E, S * 3, it, 100) } +
-            listOf(64, 67, 71).map { Note(3 * BAR + 2 * Q + E, E, it, 96) } +
-            listOf(64, 67, 71).map { Note(3 * BAR + 3 * Q, S * 3, it, 104) }
+    /** The same chords, four notes and closer, for short stabs. */
+    private val STABS = listOf(
+        listOf(57, 60, 64, 67),
+        listOf(53, 57, 60, 64),
+        listOf(55, 59, 62, 67),
+        listOf(55, 59, 62, 64),
+    )
+
+    // --- the drums -------------------------------------------------------------------
 
     /**
-     * The siren: one note held for two bars, and all of it is the bend.
-     *
-     * A dub siren is a pitch being swept by hand, so this is written as what
-     * a hand would do - rise, fall back, rise, then a long climb that holds at
-     * the top. Its ticks are the note's own.
+     * Four to the floor, claps on two and four, sixteenth hats leaning on the
+     * offbeat, and a fill-only snare roll over the last beat of every four
+     * bars. The switches take things away for the quieter scenes; the drop
+     * adds a ride and opens with a crash.
      */
-    private fun siren(): List<Note> = listOf(
+    private fun drums(
+        bars: Int,
+        kick: Boolean = true,
+        clap: Boolean = true,
+        openHats: Boolean = true,
+        ride: Boolean = false,
+        crash: Boolean = false,
+    ): List<Note> {
+        val out = ArrayList<Note>()
+        for (b in 0 until bars) {
+            val o = b * BAR
+            for (beat in 0 until 4) {
+                if (kick) out += Note(o + beat * Q, 60, KICK, 120)
+                if (clap && beat % 2 == 1) out += Note(o + beat * Q, 60, CLAP, 100)
+                for (s in 0 until 4) out += Note(o + beat * Q + s * S, 30, HAT, listOf(58, 36, 92, 40)[s])
+                if (openHats) out += Note(o + beat * Q + E, 50, OPEN_HAT, 70)
+                if (ride) out += Note(o + beat * Q, 60, RIDE, 64)
+            }
+            out += Note(o + 3 * Q + 3 * S, 30, RIM, 70, chance = 60)
+            if (b % 4 == 3) {
+                for (s in 0 until 4) {
+                    out += Note(o + 3 * Q + s * S, S - 10, SNARE, 60 + s * 16, trig = Trig.Fill, ratchet = if (s == 3) 2 else 1)
+                }
+            }
+        }
+        if (crash) out += Note(0, 2 * Q, CRASH, 100)
+        return out
+    }
+
+    /**
+     * The build: no kick for a bar, then kicks on the eighths, under a snare
+     * that goes from quarters to sixteenths and a ratchet at the very end.
+     */
+    private fun buildUp(): List<Note> {
+        val out = ArrayList<Note>()
+        for (i in 0 until 4) out += Note(i * Q, 40, SNARE, 70 + i * 4)
+        for (i in 0 until 8) out += Note(BAR + i * E, 60, KICK, 110)
+        for (i in 0 until 12) out += Note(BAR + i * S, 30, SNARE, 80 + i * 3)
+        out += Note(BAR + 3 * Q, S, SNARE, 124, ratchet = 4)
+        for (b in 0 until 2) for (s in 0 until 16) out += Note(b * BAR + s * S, 30, HAT, if (s % 2 == 1) 70 + b * 20 else 40)
+        return out
+    }
+
+    /**
+     * Percussion that is never the same bar twice: a cowbell that turns up
+     * seven times in ten, a rim that ratchets, and a clave on the tresillo
+     * whose last hit lands only on the first of every two passes. The clip
+     * rolls free, so the chances are drawn again each time round.
+     */
+    private fun percussion(bars: Int): List<Note> {
+        val out = ArrayList<Note>()
+        for (b in 0 until bars) {
+            val o = b * BAR
+            out += Note(o, 40, P_CLAVE, 90)
+            out += Note(o + Q + E, 40, P_CLAVE, 84)
+            out += Note(o + 3 * Q, 40, P_CLAVE, 88, trig = Trig.N1of2)
+            out += Note(o + E, 40, P_COWBELL, 70, chance = 70)
+            out += Note(o + 2 * Q + E, 40, P_COWBELL, 76, chance = 70)
+            out += Note(o + 3 * Q + S * 3, 30, P_RIM, 72, ratchet = 2)
+            out += Note(o + Q + 3 * S, 30, P_RIM, 54, chance = 40)
+        }
+        return out
+    }
+
+    // --- the acid --------------------------------------------------------------------
+
+    /**
+     * The acid lines, two bars of sixteenths. Each step is a pitch, or null
+     * for a rest; `!` accents it and `~` slides into the next step.
+     */
+    private val LINE = listOf(
+        "A1!", "A1", "A2~", "A1", null, "C2", "A1!", "G2~", "A2", null, "E2!", "A1", "C3~", "A2", "G2!", "E2",
+        "A1!", null, "A2", "A1~", "C2", "D2", "A1!", "A2~", "G2", null, "E2!", "E2", "A2~", "G2", "E2!", "D2",
+    )
+
+    /** The drop's, busier at the top: the same shape, pushed up and leaning on the accents. */
+    private val LINE_DROP = listOf(
+        "A1!", "A2", "A2~", "C3", null, "A1", "A2!", "G2~", "A2", "C3", "E3!", "A1", "C3~", "D3", "G2!", "E2",
+        "A1!", "A1", "A2~", "C3~", "D3", "C3", "A1!", "A2~", "G2", null, "E3!", "D3", "C3~", "A2", "G2!", "E2~",
+    )
+
+    /** The answer, high and sparse, in the gaps the first line leaves. */
+    private val ANSWER = listOf(
+        null, null, "E3!", null, null, "G3~", "A3", null, null, null, "C4!", null, "A3~", "G3", null, null,
+        null, null, "E3!", null, "D3~", "E3", null, null, "G3!", null, "A3~", "C4", null, "A3!", null, null,
+    )
+
+    private fun pitchOf(name: String): Int {
+        val letter = mapOf('C' to 0, 'D' to 2, 'E' to 4, 'F' to 5, 'G' to 7, 'A' to 9, 'B' to 11)[name[0]]!!
+        return 12 * (name[1].digitToInt() + 1) + letter
+    }
+
+    private fun acid(bars: Int, line: List<String?> = LINE): List<Note> {
+        val out = ArrayList<Note>()
+        for (pair in 0 until bars step 2) {
+            for ((i, step) in line.withIndex()) {
+                if (step == null) continue
+                val bar = pair + i / 16
+                if (bar >= bars) break
+                val slide = step.endsWith("~")
+                val accent = step.endsWith("!")
+                val pitch = pitchOf(step.trimEnd('!', '~'))
+                // A slide is a note that runs past the start of the next.
+                val length = if (slide) S + 24 else S - 30
+                out += Note(bar * BAR + (i % 16) * S, length, pitch, if (accent) 122 else 82)
+            }
+        }
+        return out.filter { it.tick < bars * BAR }
+    }
+
+    /**
+     * The drop's decay, locked longer on its accented steps: those notes ring
+     * and the rest stay short. A lock follows the knob everywhere else, so
+     * turning decay for the whole clip still moves every other step.
+     */
+    private fun decayLocks(bars: Int): Lane? {
+        val accents = acid(bars, LINE_DROP).filter { it.velocity > 100 }
+        return Locks.lane(accents.map { Lock(it.tick, it.tick + S, 0.72f) }, bars * BAR)
+    }
+
+    // --- the chords, the arp and the pad ----------------------------------------------
+
+    /** Stabs on the offbeats, a chord a bar. */
+    private fun stabs(bars: Int): List<Note> = (0 until bars).flatMap { b ->
+        val voicing = STABS[b % STABS.size]
+        chord(b * BAR + E, S, voicing, 96) + chord(b * BAR + 2 * Q + E, S, voicing, 88) +
+            chord(b * BAR + 3 * Q + E + S, S, voicing, 76)
+    }
+
+    /** One long stab into the break: a one-shot clip rings once, where a loop would hit every bar. */
+    private fun stabIntoTheBreak(): List<Note> = chord(0, 2 * Q, STABS[0], 110)
+
+    /** The progression held, a chord a bar: the arp and the pad both play from it. */
+    private fun held(bars: Int, velocity: Int): List<Note> = (0 until bars).flatMap { b ->
+        chord(b * BAR, BAR - 20, PROGRESSION[b % PROGRESSION.size], velocity)
+    }
+
+    // --- the bleeps and the riser -----------------------------------------------------
+
+    /** A call over the break, with room after each phrase for the echo to answer. */
+    private fun bleeps(): List<Note> = listOf(
+        Note(0, Q, 76, 100), Note(Q, E, 72, 84), Note(Q + E, E, 71, 80), Note(2 * Q, Q, 69, 92),
+        Note(BAR, Q + E, 72, 96), Note(BAR + Q + E, E, 69, 82), Note(BAR + 2 * Q, 2 * Q, 64, 90),
+        Note(2 * BAR, Q, 74, 100), Note(2 * BAR + Q, E, 71, 84), Note(2 * BAR + Q + E, E, 67, 80), Note(2 * BAR + 2 * Q, Q, 71, 92),
+        Note(3 * BAR, 2 * Q, 67, 96),
+    )
+
+    /** The outro's echo of the call: two notes, falling. */
+    private fun bleepsFading(): List<Note> = listOf(Note(0, Q, 76, 90), Note(2 * BAR, Q, 69, 80))
+
+    /**
+     * The riser: one note held over the build, and all of it is the bend - an
+     * octave below to an octave above, climbing slowly and then all at once.
+     */
+    private fun riser(): List<Note> = listOf(
         Note(
-            0, 2 * BAR - 20, 76, 96,
+            0, 2 * BAR - 20, 57, 100,
             bend = Lane(
                 listOf(
-                    LanePoint(0, Note.bendTo01(-7f)),
-                    LanePoint(Q, Note.bendTo01(5f)),
-                    LanePoint(2 * Q, Note.bendTo01(-7f)),
-                    LanePoint(3 * Q, Note.bendTo01(5f)),
-                    LanePoint(BAR, Note.bendTo01(-7f)),
-                    LanePoint(BAR + 2 * Q + E, Note.bendTo01(12f)),
+                    LanePoint(0, Note.bendTo01(-12f)),
+                    LanePoint(BAR, Note.bendTo01(-3f)),
                     LanePoint(2 * BAR - 20, Note.bendTo01(12f)),
                 ),
             ),
@@ -272,149 +259,154 @@ object DemoSong {
     // --- the song --------------------------------------------------------------------
 
     fun build(): Song {
-        val intro = Scene(id = "s-intro", name = "Intro", repeat = 2)
-        val riddim = Scene(id = "s-riddim", name = "Riddim")
-        val version = Scene(id = "s-version", name = "Version")
-        val dub = Scene(id = "s-dub", name = "Dub", tempo = SceneTempo(bpm = 70f, smooth = true))
+        val intro = Scene(id = "s-intro", name = "Intro")
+        val groove = Scene(id = "s-groove", name = "Groove", repeat = 2)
+        val breakdown = Scene(id = "s-break", name = "Break")
+        val rise = Scene(id = "s-build", name = "Build")
+        val drop = Scene(id = "s-drop", name = "Drop", repeat = 2)
+        val outro = Scene(id = "s-outro", name = "Outro")
 
-        // The skank thrown into the delay on the last beat of every other
-        // bar: a stepped lane, so the send jumps up and drops back the way a
-        // hand on a fader does, and the echo carries on after the chord stops.
-        val throws = Lane(
-            points = listOf(
-                LanePoint(0, 0.10f),
-                LanePoint(BAR + 3 * Q, 0.95f),
-                LanePoint(2 * BAR, 0.10f),
-                LanePoint(3 * BAR + 3 * Q, 0.95f),
-                LanePoint(4 * BAR - 1, 0.10f),
-            ),
-            linear = false,
+        // The cutoff, normalised: opening from almost shut over the intro,
+        // and further over the groove; pulled down and brought back in the
+        // break; closing for good over the outro.
+        val cutoff = laneKey("machine", "cutoff")
+        val openingUp = ramp(0 to 0.12f, 4 * BAR - 1 to 0.34f)
+        val sweepUp = ramp(0 to 0.28f, 4 * BAR - 1 to 0.62f)
+        val sweepBreak = ramp(0 to 0.60f, 2 * BAR to 0.22f, 4 * BAR - 1 to 0.55f)
+        val resonanceUp = ramp(0 to 0.70f, 3 * BAR to 0.70f, 4 * BAR - 1 to 0.86f)
+        val closing = ramp(0 to 0.58f, 4 * BAR - 1 to 0.10f)
+
+        // The performance, as lanes on the drums' clips. Each starts and
+        // ends at rest, so nothing is left held when the scene moves on.
+        val throwAtTheEnd = mapOf(
+            laneKey("perform", "y") to steps(0 to 0f, 4 * BAR - Q to 0.75f, 4 * BAR - 10 to 0f),
         )
-        // And the bass's filter closing over the dub's second bar and opening
-        // again over its fourth.
-        val bassFilter = Lane(
-            listOf(
-                LanePoint(0, 0.52f),
-                LanePoint(BAR, 0.52f),
-                LanePoint(2 * BAR, 0.30f),
-                LanePoint(3 * BAR, 0.30f),
-                LanePoint(4 * BAR - 1, 0.52f),
+        val riserAndGate = mapOf(
+            laneKey("perform", "riser") to steps(0 to 0f, 10 to 1f, 2 * BAR - 10 to 0f),
+            laneKey("perform", "gate") to steps(0 to 0f, BAR to 0.4f, 2 * BAR - 10 to 0f), // sixteenths
+        )
+        val stutter = mapOf(
+            laneKey("perform", "repeat") to steps(0 to 0f, 4 * BAR - 2 * Q to 0.8f, 4 * BAR - Q to 1f, 4 * BAR - 10 to 0f),
+        )
+
+        // An Arp on the way in: sixteenths, up and down, over two octaves.
+        val arp = UnitSlot(
+            "Arp",
+            mapOf(
+                "rate" to 7f / 9f,    // 1/16
+                "mode" to 2f / 12f,   // up-down
+                "octaves" to 1f / 3f, // two
             ),
         )
 
         return Song(
-            name = "Riddim",
-            tempo = 74f,
-            swing = 58f,
-            swingUnit = 0,
+            name = "Squelch",
+            tempo = 126f,
+            swing = 54f,
             key = SongKey(root = 9, scale = 5), // A Aeolian
             loopSong = true,
             tracks = listOf(
                 Track(
-                    id = "t-drums",
-                    name = "Drums",
-                    machine = Machine(type = "Genesis", params = patch("Genesis", "Rimshot")),
+                    id = "t-drums", name = "Drums",
+                    machine = machine("Genesis", "Straight"),
                     clips = mapOf(
-                        intro.id to clip(2, oneDrop(2, fills = true)),
-                        riddim.id to clip(4, oneDrop(4, fills = true)),
-                        version.id to clip(4, oneDrop(4)),
-                        dub.id to clip(4, dubDrums(4)),
+                        intro.id to clip(4, drums(4, clap = false, openHats = false)),
+                        groove.id to clip(4, drums(4)) { copy(automation = throwAtTheEnd) },
+                        breakdown.id to clip(4, drums(4, kick = false, clap = false, openHats = false)),
+                        rise.id to clip(2, buildUp()) { copy(automation = riserAndGate) },
+                        drop.id to clip(4, drums(4, ride = true, crash = true)) { copy(automation = stutter) },
+                        outro.id to clip(4, drums(4, openHats = false)) { copy(automation = throwAtTheEnd) },
                     ),
-                    mixer = Mixer(volume = 0.86f, sendReverb = 0.14f, sendDelay = 0.08f, output = RHYTHM),
+                    mixer = Mixer(volume = 0.84f, sendReverb = 0.06f, output = RHYTHM),
                 ),
                 Track(
-                    id = "t-bass",
-                    name = "Bass",
-                    // Ducked under the kick: a compressor that listens to the
-                    // drums (track 1) rather than to the bass itself.
+                    id = "t-perc", name = "Perc",
+                    machine = machine("Hexbeat", "Tight"),
+                    clips = mapOf(
+                        groove.id to clip(2, percussion(2)) { copy(freeRoll = true) },
+                        drop.id to clip(2, percussion(2)) { copy(freeRoll = true) },
+                        outro.id to clip(2, percussion(2)) { copy(freeRoll = true) },
+                    ),
+                    mixer = Mixer(volume = 0.46f, pan = -0.2f, sendReverb = 0.18f, sendDelay = 0.10f, output = RHYTHM),
+                ),
+                Track(
+                    id = "t-acid", name = "Acid",
+                    machine = machine("Reflux", "Squelch"),
+                    effects = listOf(fx("Distortion", "Warm"), fx("Delay", "Eighth Sync")),
+                    clips = mapOf(
+                        intro.id to clip(4, acid(4)) { copy(automation = mapOf(cutoff to openingUp)) },
+                        groove.id to clip(4, acid(4)) { copy(automation = mapOf(cutoff to sweepUp)) },
+                        breakdown.id to clip(4, acid(4)) {
+                            copy(automation = mapOf(cutoff to sweepBreak, laneKey("machine", "resonance") to resonanceUp))
+                        },
+                        drop.id to clip(4, acid(4, LINE_DROP)) {
+                            copy(automation = listOfNotNull(decayLocks(4)?.let { laneKey("machine", "decay") to it }).toMap())
+                        },
+                        outro.id to clip(4, acid(4)) { copy(automation = mapOf(cutoff to closing)) },
+                    ),
+                    mixer = Mixer(volume = 0.76f, sendReverb = 0.06f, sendDelay = 0.10f),
+                ),
+                Track(
+                    id = "t-answer", name = "Acid 2",
+                    machine = machine("Reflux", "Wasp"),
+                    effects = listOf(fx("Delay", "Ping Pong")),
+                    clips = mapOf(drop.id to clip(2, acid(2, ANSWER))),
+                    mixer = Mixer(volume = 0.40f, pan = 0.35f, sendReverb = 0.16f, sendDelay = 0.20f),
+                ),
+                Track(
+                    id = "t-stabs", name = "Stabs",
+                    machine = machine("Ratio", "Sync Stab"),
+                    clips = mapOf(
+                        groove.id to clip(4, stabs(4)),
+                        // Four bars of scene, one of clip, played once: the
+                        // stab rings into the break and is not repeated.
+                        breakdown.id to clip(1, stabIntoTheBreak()) { copy(playMode = PlayMode.OneShot) },
+                        drop.id to clip(4, stabs(4)),
+                    ),
+                    mixer = Mixer(volume = 0.40f, pan = 0.2f, sendReverb = 0.26f, sendDelay = 0.20f),
+                ),
+                Track(
+                    id = "t-arp", name = "Arp",
+                    machine = machine("Trinity", "Pluck Wide"),
+                    // Chord, scale, arp: each modifier has its own slot, and the arp's is the third.
+                    modifiers = listOf(UnitSlot(), UnitSlot(), arp),
+                    clips = mapOf(breakdown.id to clip(4, held(4, 88)), drop.id to clip(4, held(4, 80))),
+                    mixer = Mixer(volume = 0.34f, pan = -0.3f, sendReverb = 0.24f, sendDelay = 0.18f),
+                ),
+                Track(
+                    id = "t-pad", name = "Pad",
+                    machine = machine("Cumulus", "Deep Wash"),
+                    // Ducked under the kick: the pad breathes with the drums.
                     effects = listOf(duckUnder(track = 1)),
-                    machine = Machine(type = "Trinity", params = patch("Trinity", "Sub Bass")),
-                    // **Straight, against a song that lilts.** The one
-                    // sentence the per-track override exists for.
-                    swing = SWING_STRAIGHT,
-                    clips = mapOf(
-                        riddim.id to clip(4, bassLine(4)),
-                        version.id to clip(4, bassLine(4)),
-                        dub.id to clip(4, bassLine(4, drop = true)) {
-                            copy(automation = mapOf(laneKey("machine", "f1_freq") to bassFilter))
-                        },
-                    ),
-                    mixer = Mixer(volume = 0.84f),
+                    clips = mapOf(breakdown.id to clip(4, held(4, 72)), drop.id to clip(4, held(4, 66))),
+                    mixer = Mixer(volume = 0.44f, pan = -0.1f, sendReverb = 0.30f),
                 ),
                 Track(
-                    id = "t-skank",
-                    name = "Skank",
-                    machine = Machine(type = "Trinity", params = patch("Trinity", "Clav")),
-                    clips = mapOf(
-                        intro.id to clip(2, skank(2)),
-                        riddim.id to clip(4, skank(4)),
-                        version.id to clip(4, skank(4)),
-                        dub.id to clip(4, skank(4)) {
-                            copy(automation = mapOf(laneKey("channel", "senddelay") to throws))
-                        },
-                    ),
-                    effects = listOf(fx("Eq", "Low Cut")),
-                    mixer = Mixer(volume = 0.42f, pan = 0.2f, sendReverb = 0.18f, sendDelay = 0.10f),
+                    id = "t-bleeps", name = "Bleeps",
+                    machine = machine("Nexus", "Subtractive"),
+                    clips = mapOf(breakdown.id to clip(4, bleeps()), outro.id to clip(4, bleepsFading())),
+                    mixer = Mixer(volume = 0.36f, pan = 0.25f, sendReverb = 0.28f, sendDelay = 0.40f),
                 ),
                 Track(
-                    id = "t-bubble",
-                    name = "Bubble",
-                    machine = Machine(type = "Manual", params = patch("Manual", "Comping")),
-                    clips = mapOf(
-                        riddim.id to clip(4, bubble(4)),
-                        version.id to clip(4, bubble(4)),
-                    ),
-                    mixer = Mixer(volume = 0.30f, pan = -0.25f, sendReverb = 0.12f),
-                ),
-                Track(
-                    id = "t-hands",
-                    name = "Hands",
-                    machine = Machine(type = "Resonance", params = patch("Resonance", "Skins")),
-                    clips = mapOf(
-                        riddim.id to clip(2, handDrums(2)) { copy(freeRoll = true) },
-                        version.id to clip(2, handDrums(2)) { copy(freeRoll = true) },
-                        dub.id to clip(2, handDrums(2)) { copy(freeRoll = true) },
-                    ),
-                    mixer = Mixer(volume = 0.40f, pan = -0.15f, sendReverb = 0.22f, sendDelay = 0.22f, output = RHYTHM),
-                ),
-                Track(
-                    id = "t-melodica",
-                    name = "Melodica",
-                    machine = Machine(type = "Manual", params = patch("Manual", "Melodeon")),
-                    clips = mapOf(version.id to clip(4, melodica())),
-                    effects = listOf(fx("Delay", "Tape")),
-                    mixer = Mixer(volume = 0.50f, pan = 0.1f, sendReverb = 0.24f, sendDelay = 0.30f),
-                ),
-                Track(
-                    id = "t-horns",
-                    name = "Horns",
-                    machine = Machine(type = "Brazen", params = patch("Brazen", "Section")),
-                    clips = mapOf(version.id to clip(4, horns())),
-                    mixer = Mixer(volume = 0.42f, pan = -0.1f, sendReverb = 0.30f, sendDelay = 0.20f),
-                ),
-                Track(
-                    id = "t-siren",
-                    name = "Siren",
-                    machine = Machine(type = "Trinity", params = patch("Trinity", "Whistle")),
-                    // Two bars, one shot: it sounds on the first half of each
-                    // pass of the dub and leaves the second half to the echo,
-                    // which a looping clip cannot do.
-                    clips = mapOf(dub.id to clip(2, siren()) { copy(playMode = PlayMode.OneShot) }),
-                    mixer = Mixer(volume = 0.30f, pan = 0.3f, sendReverb = 0.40f, sendDelay = 0.55f),
+                    id = "t-riser", name = "Riser",
+                    machine = machine("Trinity", "Noise Sweep"),
+                    clips = mapOf(rise.id to clip(2, riser())),
+                    mixer = Mixer(volume = 0.34f, sendReverb = 0.36f),
                 ),
             ),
-            scenes = listOf(intro, riddim, version, dub),
-            // **0.64, not the default 0.8.** The demo should arrive with
-            // headroom in it: the limiter is there for the day somebody turns
-            // the bass up, not to hold the factory song together.
+            scenes = listOf(intro, groove, breakdown, rise, drop, outro),
             master = Master(
+                // With headroom: the limiter is there for the day somebody
+                // turns the acid up, not to hold the factory song together.
                 volume = 0.64f,
-                sends = listOf(fx("Reverb", "Dark"), fx("Delay", "Dub")),
+                sends = listOf(fx("Reverb", "Room"), fx("Delay", "Eighth Sync")),
                 // On the whole mix, before the limiter: a little warmth, and
-                // a gentle compressor to hold it together.
-                inserts = listOf(fx("Eq", "Warmer"), fx("Compressor", "Gentle")),
-                // The drums and the hand drums share one glue compressor.
+                // a compressor to hold it together.
+                inserts = listOf(fx("Eq", "Warmer"), fx("Compressor", "Bus")),
+                // The drums and the percussion share one glue compressor.
                 groups = listOf(MixGroup("Rhythm", inserts = listOf(fx("Compressor", "Glue")))),
+                // The riser climbs over two bars, the length of the build.
+                perform = PerformSettings(riserLen = 1),
             ),
         )
     }
