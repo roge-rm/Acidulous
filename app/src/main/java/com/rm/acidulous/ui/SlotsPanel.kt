@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -136,6 +137,14 @@ fun SlotDialog(
         // into rows the arp's seventeen need nearer all of it, and the shell
         // caps the card to the window anyway, so asking for more cannot push
         // the Done button off a turned phone.
+        // Turned, the unit's own row - what it is, and whether it is on -
+        // goes up into the header beside the title (Dan, 2026-09-23), and the
+        // cards get the height it took.
+        wideHeader = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true)
+            }
+        },
     ) {
         SlotRow(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true, onRevert = { revert.value = it })
     }
@@ -168,14 +177,13 @@ private fun SlotRow(
     // The slot as the window found it. Bypass is not a parameter, so it is not
     // in the binding's baseline and has to be remembered here.
     val openedBypass = remember(kind, slot, trackIndex) { fx.bypass }
-    var menu by remember { mutableStateOf(false) }
     // Per slot, and kept across a rotation, the same as a machine panel's.
     // Two effects and an modifier can fill a phone between them, and most of
     // the time what you want from a slot you are not editing is the one line
     // that says what it is and whether it is on.
     var minimized by rememberSaveable(kind.label, slot) { mutableStateOf(false) }
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
-        Row(
+        if (!(wrap && LocalDialogWide.current)) Row(
             if (wrap) Modifier.fillMaxWidth() else Modifier,
             verticalAlignment = Alignment.CenterVertically,
             // Centred in a window, packed left in a panel: a panel's row is a
@@ -187,48 +195,7 @@ private fun SlotRow(
                 Arrangement.spacedBy(4.dp)
             },
         ) {
-            if (fixedType == null) Text("${kind.label}${slot + 1}", color = Acid.colors.teal, fontSize = 10.sp)
-            if (fixedType == null) TextButton(onClick = { menu = true }) {
-                Text(if (fx.isEmpty) "none ▾" else "${fx.type} ▾", color = Acid.colors.accent, fontSize = 12.sp)
-            }
-            val menuScroll = rememberScrollState()
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                ScaledMenu(menuScroll) {
-                    DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
-                        menu = false
-                        editor.edit(trackIndex) { t -> kind.withType(t, slot, "") }
-                    })
-                    for (t in types) DropdownMenuItem(text = { Text(t, fontSize = 12.sp) }, onClick = {
-                        menu = false
-                        if (t != fx.type) editor.edit(trackIndex) { tr -> kind.withType(tr, slot, t) }
-                    })
-                }
-            }
-            if (!fx.isEmpty) {
-                val on = !fx.bypass
-                TextButton(
-                    onClick = {
-                        val bypass = !fx.bypass
-                        // The document push mounts nothing new; the flag goes straight to the running effect too.
-                        editor.edit(trackIndex) { t -> kind.withBypass(t, slot, bypass) }
-                        NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (bypass) 1f else 0f, record = true)
-                    },
-                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
-                ) { Text(if (on) "on" else "bypass", color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
-                // Folding the face away is a *panel* control: two effects and a
-                // modifier can fill a phone, so a slot you are not editing is
-                // worth reducing to the line that says what it is. A window is
-                // the opposite - it exists to show the face - so the mark is
-                // not offered there, and the row stops carrying a wide gap to
-                // hold a control that would only make the window pointless.
-                if (!wrap) {
-                    Spacer(Modifier.weight(1f))
-                    TextButton(
-                        onClick = { minimized = !minimized },
-                        contentPadding = PaddingValues(horizontal = 8.dp),
-                    ) { Text(if (minimized) "\u25B4" else "\u25BE", color = Acid.colors.textMid, fontSize = 13.sp) }
-                }
-            }
+            SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap, minimized) { minimized = !minimized }
         }
         if (!fx.isEmpty && !minimized) {
             SlotFace(kind, fx.type, trackIndex, slot, editor, wrap) { b ->
@@ -329,23 +296,29 @@ private fun SlotFace(
             // A card per group, stacked down the window, each wrapping its own
             // controls. `LocalPanelStacked` is what tells `Group` to wrap
             // rather than to lay one row and let it run off the side.
-            androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true) {
-                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    for ((title, group) in groupsFor(type, shown)) {
-                        Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
-                            for (p in group) control(p)
-                        }
+            val wide = LocalDialogWide.current
+            WindowCards {
+                for ((title, group) in groupsFor(type, shown)) {
+                    Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
+                        for (p in group) control(p)
                     }
                 }
+                // Turned, the steps are a card among the others, two lines of
+                // eight, rather than a strip under them the window has no
+                // height left for.
+                if (type == "Arp" && wide) {
+                    Group("steps", background = Acid.colors.cardAlt) { ArpStepGrid(b) }
+                }
             }
+            if (type == "Arp" && !wide) ArpSteps(b)
         } else {
             Row(
                 Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.Bottom,
             ) { for (p in shown) control(p) }
+            if (type == "Arp") ArpSteps(b)
         }
-        if (type == "Arp") ArpSteps(b)
     }
 }
 
@@ -438,6 +411,29 @@ private fun ArpSteps(b: ParamBinding) {
                     .clickable { b.set(name, if (on) 0f else 1f) },
                 contentAlignment = Alignment.Center,
             ) { Text("$i", color = if (!inRange) Acid.colors.textFaint else if (on) Color.White else Acid.colors.text, fontSize = 8.sp) }
+        }
+    }
+}
+
+/** The same sixteen steps as [ArpSteps], as two lines of eight for a card. */
+@Composable
+private fun ArpStepGrid(b: ParamBinding) {
+    val length = b.infoOf("length")?.map(b.value("length"))?.toInt() ?: 16
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        for (row in 0 until 2) {
+            Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                for (i in row * 8 + 1..row * 8 + 8) {
+                    val name = "s%02d".format(i)
+                    val on = b.value(name) >= 0.5f
+                    val inRange = i <= length
+                    Box(
+                        Modifier.width(28.dp).height(30.dp).clip(RoundedCornerShape(3.dp))
+                            .background(if (on && inRange) Acid.colors.green else if (on) Acid.colors.greenDim else Acid.colors.control)
+                            .clickable { b.set(name, if (on) 0f else 1f) },
+                        contentAlignment = Alignment.Center,
+                    ) { Text("$i", color = if (!inRange) Acid.colors.textFaint else if (on) Color.White else Acid.colors.text, fontSize = 9.sp) }
+                }
+            }
         }
     }
 }
@@ -572,13 +568,67 @@ internal fun SongSlotFace(
             )
         }
     }
-    androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true) {
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            for ((title, group) in groupsFor(type, info)) {
-                Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
-                    for (p in group) control(p)
-                }
+    WindowCards {
+        for ((title, group) in groupsFor(type, info)) {
+            Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
+                for (p in group) control(p)
             }
         }
     }
 }
+
+/**
+ * A slot's own line: its name, the unit in it, and whether it is on - in a
+ * panel, over its face; in a window, over its cards upright and in the
+ * header turned.
+ */
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
+    kind: SlotKind, track: Track, trackIndex: Int, slot: Int, types: List<String>, editor: SongEditor,
+    fixedType: String?, wrap: Boolean, minimized: Boolean = false, onMinimize: () -> Unit = {},
+) {
+    val fx = kind.at(track, slot)
+    var menu by remember { mutableStateOf(false) }
+            if (fixedType == null) Text("${kind.label}${slot + 1}", color = Acid.colors.teal, fontSize = 10.sp)
+            if (fixedType == null) TextButton(onClick = { menu = true }) {
+                Text(if (fx.isEmpty) "none ▾" else "${fx.type} ▾", color = Acid.colors.accent, fontSize = 12.sp)
+            }
+            val menuScroll = rememberScrollState()
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                ScaledMenu(menuScroll) {
+                    DropdownMenuItem(text = { Text("none", fontSize = 12.sp) }, onClick = {
+                        menu = false
+                        editor.edit(trackIndex) { t -> kind.withType(t, slot, "") }
+                    })
+                    for (t in types) DropdownMenuItem(text = { Text(t, fontSize = 12.sp) }, onClick = {
+                        menu = false
+                        if (t != fx.type) editor.edit(trackIndex) { tr -> kind.withType(tr, slot, t) }
+                    })
+                }
+            }
+            if (!fx.isEmpty) {
+                val on = !fx.bypass
+                TextButton(
+                    onClick = {
+                        val bypass = !fx.bypass
+                        // The document push mounts nothing new; the flag goes straight to the running effect too.
+                        editor.edit(trackIndex) { t -> kind.withBypass(t, slot, bypass) }
+                        NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (bypass) 1f else 0f, record = true)
+                    },
+                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
+                ) { Text(if (on) "on" else "bypass", color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
+                // Folding the face away is a *panel* control: two effects and a
+                // modifier can fill a phone, so a slot you are not editing is
+                // worth reducing to the line that says what it is. A window is
+                // the opposite - it exists to show the face - so the mark is
+                // not offered there, and the row stops carrying a wide gap to
+                // hold a control that would only make the window pointless.
+                if (!wrap) {
+                    Spacer(Modifier.weight(1f))
+                    TextButton(
+                        onClick = { onMinimize() },
+                        contentPadding = PaddingValues(horizontal = 8.dp),
+                    ) { Text(if (minimized) "\u25B4" else "\u25BE", color = Acid.colors.textMid, fontSize = 13.sp) }
+                }
+            }
+        }

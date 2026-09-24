@@ -104,38 +104,36 @@ fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onD
         onConfirm = { onConfirm(z) },
         spacing = 6.dp,
     ) {
-        CompositionLocalProvider(LocalPanelStacked provides true) {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                // Which notes reach it, by key and by how hard.
-                ZoneCard("range") {
-                    CountKnob("low key", z.lowKey, 0..127, noteName(z.lowKey), PanelAmber, choices = ZONE_KEYS) {
-                        z = z.copy(lowKey = it, highKey = maxOf(it, z.highKey))
-                    }
-                    CountKnob("high key", z.highKey, 0..127, noteName(z.highKey), PanelAmber, choices = ZONE_KEYS) {
-                        z = z.copy(highKey = it, lowKey = minOf(it, z.lowKey))
-                    }
-                    CountKnob("low vel", z.lowVel, 1..127) { z = z.copy(lowVel = it, highVel = maxOf(it, z.highVel)) }
-                    CountKnob("high vel", z.highVel, 1..127) { z = z.copy(highVel = it, lowVel = minOf(it, z.lowVel)) }
+        WindowCards {
+            // Which notes reach it, by key and by how hard.
+            ZoneCard("range") {
+                CountKnob("low key", z.lowKey, 0..127, noteName(z.lowKey), PanelAmber, choices = ZONE_KEYS) {
+                    z = z.copy(lowKey = it, highKey = maxOf(it, z.highKey))
                 }
-                // What it sounds like once it does.
-                ZoneCard("sound") {
-                    CountKnob("root", z.rootKey, 0..127, noteName(z.rootKey), choices = ZONE_KEYS) { z = z.copy(rootKey = it) }
-                    // Cents in steps of five: a zone is tuned to a sample, not
-                    // swept, and 2400 stops on one knob is a dial nobody can land.
-                    CountKnob("tune", (z.tuneCents / 5f).roundToInt(), -240..240, "%.0f¢".format(z.tuneCents)) {
-                        z = z.copy(tuneCents = it * 5f)
-                    }
-                    CountKnob("gain", (z.gain * 100f).roundToInt(), 0..200, "%.2f".format(z.gain)) { z = z.copy(gain = it / 100f) }
-                    CountKnob("pan", (z.pan * 100f).roundToInt(), -100..100, "%+.2f".format(z.pan)) { z = z.copy(pan = it / 100f) }
+                CountKnob("high key", z.highKey, 0..127, noteName(z.highKey), PanelAmber, choices = ZONE_KEYS) {
+                    z = z.copy(highKey = it, lowKey = minOf(it, z.lowKey))
                 }
-                // Deleting is not the window's action, so it is not the
-                // window's button - a third thing beside OK and Cancel is the
-                // one you hit by accident. It is a cell of its own, in a card
-                // of its own.
-                ZoneCard("zone") {
-                    SwitchGrid("loop", listOf("off", "on"), if (z.loop) 1 else 0) { z = z.copy(loop = it == 1) }
-                    SwitchGrid("remove", listOf("delete"), -1) { onDelete() }
+                CountKnob("low vel", z.lowVel, 1..127) { z = z.copy(lowVel = it, highVel = maxOf(it, z.highVel)) }
+                CountKnob("high vel", z.highVel, 1..127) { z = z.copy(highVel = it, lowVel = minOf(it, z.lowVel)) }
+            }
+            // What it sounds like once it does.
+            ZoneCard("sound") {
+                CountKnob("root", z.rootKey, 0..127, noteName(z.rootKey), choices = ZONE_KEYS) { z = z.copy(rootKey = it) }
+                // Cents in steps of five: a zone is tuned to a sample, not
+                // swept, and 2400 stops on one knob is a dial nobody can land.
+                CountKnob("tune", (z.tuneCents / 5f).roundToInt(), -240..240, "%.0f¢".format(z.tuneCents)) {
+                    z = z.copy(tuneCents = it * 5f)
                 }
+                CountKnob("gain", (z.gain * 100f).roundToInt(), 0..200, "%.2f".format(z.gain)) { z = z.copy(gain = it / 100f) }
+                CountKnob("pan", (z.pan * 100f).roundToInt(), -100..100, "%+.2f".format(z.pan)) { z = z.copy(pan = it / 100f) }
+            }
+            // Deleting is not the window's action, so it is not the
+            // window's button - a third thing beside OK and Cancel is the
+            // one you hit by accident. It is a cell of its own, in a card
+            // of its own.
+            ZoneCard("zone") {
+                SwitchGrid("loop", listOf("off", "on"), if (z.loop) 1 else 0) { z = z.copy(loop = it == 1) }
+                SwitchGrid("remove", listOf("delete"), -1) { onDelete() }
             }
         }
     }

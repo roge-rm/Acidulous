@@ -115,43 +115,41 @@ fun SceneSettingsDialog(
         // Dan wants every editor window to look like that one. Nine
         // signatures are a stepped knob that names its step - as chips they
         // wrapped, and as a slider they were a dotted line.
-        androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true) {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                WindowCard("time") {
-                    val sigIndex = signature?.let { SIGNATURES.indexOf(it) + 1 } ?: 0
-                    CountKnob(
-                        "signature", sigIndex, 0..SIGNATURES.size,
-                        if (sigIndex == 0) "song ${songSignature.beats}/${songSignature.unit}"
-                        else SIGNATURES[sigIndex - 1].let { "${it.beats}/${it.unit}" },
-                        choices = listOf("song ${songSignature.beats}/${songSignature.unit}") + SIGNATURES.map { "${it.beats}/${it.unit}" },
-                    ) { i -> signature = if (i == 0) null else SIGNATURES[i - 1] }
-                    CountKnob("repeat", repeat, 1..32, "×$repeat", choices = (1..32).map { "×$it" }) { repeat = it }
-                    SwitchGrid("fade in", listOf("off", "on"), if (fadeIn) 1 else 0) { fadeIn = it == 1 }
-                    SwitchGrid("fade out", listOf("off", "on"), if (fadeOut) 1 else 0) { fadeOut = it == 1 }
+        WindowCards {
+            WindowCard("time") {
+                val sigIndex = signature?.let { SIGNATURES.indexOf(it) + 1 } ?: 0
+                CountKnob(
+                    "signature", sigIndex, 0..SIGNATURES.size,
+                    if (sigIndex == 0) "song ${songSignature.beats}/${songSignature.unit}"
+                    else SIGNATURES[sigIndex - 1].let { "${it.beats}/${it.unit}" },
+                    choices = listOf("song ${songSignature.beats}/${songSignature.unit}") + SIGNATURES.map { "${it.beats}/${it.unit}" },
+                ) { i -> signature = if (i == 0) null else SIGNATURES[i - 1] }
+                CountKnob("repeat", repeat, 1..32, "×$repeat", choices = (1..32).map { "×$it" }) { repeat = it }
+                SwitchGrid("fade in", listOf("off", "on"), if (fadeIn) 1 else 0) { fadeIn = it == 1 }
+                SwitchGrid("fade out", listOf("off", "on"), if (fadeOut) 1 else 0) { fadeOut = it == 1 }
+            }
+            WindowCard("tempo") {
+                SwitchGrid("from", listOf("song", "own"), if (ownTempo) 1 else 0) { ownTempo = it == 1 }
+                if (ownTempo) {
+                    // Whole beats a minute, set only when the knob moves, so
+                    // a scene written at 72.5 keeps it until it is turned.
+                    CountKnob("bpm", bpm.roundToInt(), 40..240, "%.0f".format(bpm), PanelAmber) { bpm = it.toFloat() }
+                    SwitchGrid("change", listOf("jump", "glide"), if (smooth) 1 else 0) { smooth = it == 1 }
                 }
-                WindowCard("tempo") {
-                    SwitchGrid("from", listOf("song", "own"), if (ownTempo) 1 else 0) { ownTempo = it == 1 }
-                    if (ownTempo) {
-                        // Whole beats a minute, set only when the knob moves, so
-                        // a scene written at 72.5 keeps it until it is turned.
-                        CountKnob("bpm", bpm.roundToInt(), 40..240, "%.0f".format(bpm), PanelAmber) { bpm = it.toFloat() }
-                        SwitchGrid("change", listOf("jump", "glide"), if (smooth) 1 else 0) { smooth = it == 1 }
-                    }
-                    // A tempo change inside the scene, on its last pass:
-                    // slowing into what comes next, or speeding up across it.
-                    val start = if (ownTempo) bpm else songTempo
-                    SwitchGrid("ramp at end", listOf("off", "on"), if (ramp != null) 1 else 0) {
-                        ramp = if (it == 1) (ramp ?: com.rm.acidulous.model.TempoRamp((start * 0.75f).roundToInt().toFloat(), minOf(2, bars))) else null
-                    }
-                    ramp?.let { r ->
-                        CountKnob("to", r.toBpm.roundToInt(), 40..240, "%.0f".format(r.toBpm), PanelAmber) { ramp = r.copy(toBpm = it.toFloat()) }
-                        val most = bars.coerceAtLeast(1)
-                        CountKnob(
-                            "over", r.bars.coerceIn(1, most), 1..most,
-                            if (r.bars == 1) "1 bar" else "${r.bars.coerceAtMost(most)} bars",
-                            choices = (1..most).map { if (it == 1) "1 bar" else "$it bars" },
-                        ) { ramp = r.copy(bars = it) }
-                    }
+                // A tempo change inside the scene, on its last pass:
+                // slowing into what comes next, or speeding up across it.
+                val start = if (ownTempo) bpm else songTempo
+                SwitchGrid("ramp at end", listOf("off", "on"), if (ramp != null) 1 else 0) {
+                    ramp = if (it == 1) (ramp ?: com.rm.acidulous.model.TempoRamp((start * 0.75f).roundToInt().toFloat(), minOf(2, bars))) else null
+                }
+                ramp?.let { r ->
+                    CountKnob("to", r.toBpm.roundToInt(), 40..240, "%.0f".format(r.toBpm), PanelAmber) { ramp = r.copy(toBpm = it.toFloat()) }
+                    val most = bars.coerceAtLeast(1)
+                    CountKnob(
+                        "over", r.bars.coerceIn(1, most), 1..most,
+                        if (r.bars == 1) "1 bar" else "${r.bars.coerceAtMost(most)} bars",
+                        choices = (1..most).map { if (it == 1) "1 bar" else "$it bars" },
+                    ) { ramp = r.copy(bars = it) }
                 }
             }
         }
@@ -221,47 +219,45 @@ fun ClipSettingsDialog(
         }.ifEmpty { "empty" }
         val frozen = clip.frozen
         val stale = frozen != null && tempo > 0f && kotlin.math.abs(frozen.bpm - tempo) >= 0.01f
-        androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true) {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                // The card's title says what is in it, which is what the
-                // actions in it act on.
-                WindowCard("clip · $what") {
-                    SwitchGrid(
-                        if (held != null) "has ${ClipClipboard.from}" else "clipboard",
-                        listOf("copy", "cut", "paste", "clear"), -1, columns = 2,
-                        enabled = listOf(clip.hasContent() || clip.notes.isNotEmpty(), clip.hasContent(), held != null, clip.hasContent()),
-                    ) { i ->
-                        when (i) {
-                            0 -> onCopy()
-                            1 -> onCut()
-                            2 -> if (clip.hasContent()) confirmPaste = true else onPaste()
-                            else -> confirmClear = true
-                        }
-                    }
-                    // Freeze is an action rather than a setting, so it does
-                    // its own thing and closes; everything else waits for OK.
-                    if (frozen != null) {
-                        SwitchGrid(if (stale) "stale" else "audio", listOf("thaw"), -1) { onThaw() }
-                    } else if (clip.notes.isNotEmpty()) {
-                        SwitchGrid("audio", listOf("freeze"), -1) { onFreeze() }
+        WindowCards {
+            // The card's title says what is in it, which is what the
+            // actions in it act on.
+            WindowCard("clip · $what") {
+                SwitchGrid(
+                    if (held != null) "has ${ClipClipboard.from}" else "clipboard",
+                    listOf("copy", "cut", "paste", "clear"), -1, columns = 2,
+                    enabled = listOf(clip.hasContent() || clip.notes.isNotEmpty(), clip.hasContent(), held != null, clip.hasContent()),
+                ) { i ->
+                    when (i) {
+                        0 -> onCopy()
+                        1 -> onCut()
+                        2 -> if (clip.hasContent()) confirmPaste = true else onPaste()
+                        else -> confirmClear = true
                     }
                 }
-                WindowCard("length") {
-                    CountKnob("bars", bars, 1..16, choices = (1..16).map { if (it == 1) "1 bar" else "$it bars" }) { bars = it }
-                    SwitchGrid("grid", GRIDS.map { it.first }, GRIDS.indexOfFirst { it.second == grid }, columns = 3) { grid = GRIDS[it].second }
+                // Freeze is an action rather than a setting, so it does
+                // its own thing and closes; everything else waits for OK.
+                if (frozen != null) {
+                    SwitchGrid(if (stale) "stale" else "audio", listOf("thaw"), -1) { onThaw() }
+                } else if (clip.notes.isNotEmpty()) {
+                    SwitchGrid("audio", listOf("freeze"), -1) { onFreeze() }
                 }
-                WindowCard("plays") {
-                    SwitchGrid("mode", listOf("loop", "once"), if (mode == PlayMode.OneShot) 1 else 0) {
-                        mode = if (it == 1) PlayMode.OneShot else PlayMode.Loop
-                    }
-                    SwitchGrid("mute", listOf("off", "on"), if (mute) 1 else 0) { mute = it == 1 }
-                    // Only where the clip actually gambles. A control for a
-                    // feature this clip is not using is clutter, and most
-                    // clips never will be.
-                    if (rolls) {
-                        SwitchGrid("dice", listOf("seeded", "free"), if (free) 1 else 0) { free = it == 1 }
-                        if (!free) CountKnob("seed", seed, 0..63) { seed = it }
-                    }
+            }
+            WindowCard("length") {
+                CountKnob("bars", bars, 1..16, choices = (1..16).map { if (it == 1) "1 bar" else "$it bars" }) { bars = it }
+                SwitchGrid("grid", GRIDS.map { it.first }, GRIDS.indexOfFirst { it.second == grid }, columns = 3) { grid = GRIDS[it].second }
+            }
+            WindowCard("plays") {
+                SwitchGrid("mode", listOf("loop", "once"), if (mode == PlayMode.OneShot) 1 else 0) {
+                    mode = if (it == 1) PlayMode.OneShot else PlayMode.Loop
+                }
+                SwitchGrid("mute", listOf("off", "on"), if (mute) 1 else 0) { mute = it == 1 }
+                // Only where the clip actually gambles. A control for a
+                // feature this clip is not using is clutter, and most
+                // clips never will be.
+                if (rolls) {
+                    SwitchGrid("dice", listOf("seeded", "free"), if (free) 1 else 0) { free = it == 1 }
+                    if (!free) CountKnob("seed", seed, 0..63) { seed = it }
                 }
             }
         }
@@ -620,12 +616,44 @@ private fun TempoPage(
 
 private fun unit(u: Int) = if (u == 1) 1 else 0
 
+/**
+ * A window's cards: stacked down it upright, each wrapping its controls;
+ * side by side when the phone is turned, each a row, the way a machine's
+ * panel lays them - a turned window is wide and about four hundred dp tall,
+ * and a column of cards in it was a scroll by the second card.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 internal fun WindowCards(content: @Composable () -> Unit) {
+    if (LocalDialogWide.current) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides false) {
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) { content() }
+        }
+        return
+    }
     androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) { content() }
     }
 }
+
+/**
+ * A row of text or readings inside a card: the card's whole width when the
+ * cards are stacked, and its own width, up to a limit, when they stand side
+ * by side - where filling the row would give it everything or nothing, and a
+ * line of text given nothing comes out one letter wide.
+ */
+@Composable
+internal fun Modifier.cardLine(): Modifier =
+    if (LocalDialogWide.current) this.widthIn(max = CardLineW) else this.fillMaxWidth()
+
+private val CardLineW = 480.dp
+
+/** Whether this window is laid out turned: see [DialogShell] and [WindowCards]. */
+internal val LocalDialogWide = androidx.compose.runtime.compositionLocalOf { false }
 
 /**
  * The tempo: a number you can type, with a step either side.
@@ -864,11 +892,18 @@ fun PlainDialog(
     onConfirm: (() -> Unit)? = null,
     maxBodyHeight: Dp = 560.dp,
     spacing: Dp = 16.dp,
+    /**
+     * Something that belongs in the header row when the window is turned,
+     * between the title and the buttons - a unit's bypass. Upright there is
+     * no header row, and the window draws it in its body instead.
+     */
+    wideHeader: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     DialogShell(
         title, onDismiss, dismissLabel, maxBodyHeight,
         confirmLabel = confirmLabel, confirmEnabled = confirmEnabled, onConfirm = onConfirm, chips = null,
+        wideHeader = wideHeader,
     ) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(spacing)) { content() }
     }
@@ -885,6 +920,7 @@ private fun DialogShell(
     confirmEnabled: Boolean = true,
     onConfirm: (() -> Unit)? = null,
     chips: (@Composable () -> Unit)?,
+    wideHeader: (@Composable () -> Unit)? = null,
     body: @Composable () -> Unit,
 ) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
@@ -922,18 +958,51 @@ private fun DialogShell(
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
         ScaledWindow {
+            // **Turned, the header is one row**: the title, the tabs and the
+            // buttons across the top, and the body the rest of the height.
+            // Upright the three are stacked and the footer is its own row;
+            // turned that cost a window of four hundred dp over half its
+            // height, and every window of cards scrolled by its second card.
+            val wide = isLandscape()
             androidx.compose.material3.Surface(
-                Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp)
+                Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = if (wide) 1100.dp else 720.dp)
                     .heightIn(max = cardMax),
                 shape = RoundedCornerShape(16.dp),
                 color = c.card,
             ) {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                    Text(title, color = c.text, fontSize = 20.sp)
-                    if (chips != null) {
-                        Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) { chips() }
+                val footer = dismissLabel.isNotEmpty() || onConfirm != null
+                @Composable
+                fun Buttons() {
+                    if (dismissLabel.isNotEmpty()) {
+                        TextButton(onClick = onDismiss) { Text(dismissLabel) }
+                    }
+                    if (onConfirm != null) {
+                        Button(onClick = onConfirm, enabled = confirmEnabled) { Text(confirmLabel) }
+                    }
+                }
+                Column(Modifier.padding(horizontal = 16.dp, vertical = if (wide) 10.dp else 14.dp)) {
+                    if (wide) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                title, color = c.text, fontSize = 20.sp, maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                modifier = Modifier.widthIn(max = 280.dp).padding(end = 12.dp),
+                            )
+                            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                if (chips != null) chips() else wideHeader?.invoke()
+                            }
+                            if (footer) {
+                                Row(Modifier.padding(start = 8.dp), verticalAlignment = Alignment.CenterVertically) { Buttons() }
+                            }
+                        }
+                        Box(Modifier.padding(top = 8.dp))
                     } else {
-                        Box(Modifier.padding(top = 10.dp))
+                        Text(title, color = c.text, fontSize = 20.sp)
+                        if (chips != null) {
+                            Box(Modifier.padding(top = 12.dp, bottom = 6.dp)) { chips() }
+                        } else {
+                            Box(Modifier.padding(top = 10.dp))
+                        }
                     }
                     Box(
                         // The position bar is drawn on the outer edge of this
@@ -949,24 +1018,17 @@ private fun DialogShell(
                             .verticalScrollWithBar(rememberScrollState())
                             .padding(end = 10.dp),
                     ) {
-                        body()
+                        androidx.compose.runtime.CompositionLocalProvider(LocalDialogWide provides wide) { body() }
                     }
                     // An empty dismiss label and no action means no footer at
                     // all - for a window that is reporting rather than asking,
                     // and that must not be dismissed while it works.
-                    if (dismissLabel.isNotEmpty() || onConfirm != null) {
+                    if (footer && !wide) {
                         Row(
                             Modifier.fillMaxWidth().padding(top = 8.dp),
                             horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            if (dismissLabel.isNotEmpty()) {
-                                TextButton(onClick = onDismiss) { Text(dismissLabel) }
-                            }
-                            if (onConfirm != null) {
-                                Button(onClick = onConfirm, enabled = confirmEnabled) { Text(confirmLabel) }
-                            }
-                        }
+                        ) { Buttons() }
                     }
                 }
             }

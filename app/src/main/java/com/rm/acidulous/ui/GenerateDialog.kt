@@ -3,6 +3,7 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -141,9 +142,7 @@ private val STEPS = listOf("1/8" to PPQN / 2, "1/16" to PPQN / 4, "1/32" to PPQN
  */
 @Composable
 private fun Cards(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalPanelStacked provides true) {
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) { content() }
-    }
+    WindowCards { content() }
 }
 
 @Composable
@@ -186,7 +185,7 @@ private fun RhythmPage(drums: Boolean, voices: List<DrumVoice>, spelling: Map<In
         Text(
             Generate.euclid(e.hits, e.steps, e.rotate).joinToString("") { if (it) "x" else "·" },
             color = Acid.colors.accent, fontFamily = FontFamily.Monospace, fontSize = 14.sp,
-            modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1,
+            modifier = Modifier.cardLine().padding(vertical = 8.dp), textAlign = TextAlign.Center, maxLines = 1,
         )
         Card("note") {
             if (drums) VoiceSwitch(voices, changed)

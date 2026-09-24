@@ -333,7 +333,7 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
             SwitchGrid("bits", listOf("16", "24"), if (UiPrefs.recordBits == 16) 0 else 1, columns = 1, enabled = listOf(!recording, !recording)) {
                 UiPrefs.chooseRecordBits(if (it == 0) 16 else 24)
             }
-            if (fromInput && opened.isNotEmpty()) Box(Modifier.fillMaxWidth()) { Readout(opened, good = true) }
+            if (fromInput && opened.isNotEmpty()) Box(Modifier.cardLine()) { Readout(opened, good = true) }
         }
         if (fromInput) {
             WindowCard("input · monitor on headphones only") {
@@ -347,7 +347,7 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
                 }
                 // Tuning comes before anything else a person does after
                 // plugging in, so it is in the card they set the input in.
-                if (havePermission) Box(Modifier.fillMaxWidth()) { TunerStrip(tunerHz) }
+                if (havePermission) Box(Modifier.cardLine()) { TunerStrip(tunerHz) }
             }
         }
     }

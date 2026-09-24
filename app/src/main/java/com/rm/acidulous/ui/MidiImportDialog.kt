@@ -75,7 +75,7 @@ fun MidiImportDialog(
                     sceneBars = listOf(4, 8, 16)[it]
                 }
                 val sig = song.signature
-                Box(Modifier.fillMaxWidth()) {
+                Box(Modifier.cardLine()) {
                     Readout(
                         "${song.scenes.size} scene${if (song.scenes.size == 1) "" else "s"} · $totalBars bars · " +
                             "%.0f bpm · %d/%d".format(song.tempo, sig.beats, sig.unit),
@@ -83,8 +83,11 @@ fun MidiImportDialog(
                 }
             }
             WindowCard("tracks") {
-                parsed.parts.forEachIndexed { i, part ->
-                    PartRow(part, machines[i]) { machines[i] = it }
+                // A list, one part a line, however the cards are laid.
+                Column(Modifier.cardLine(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    parsed.parts.forEachIndexed { i, part ->
+                        PartRow(part, machines[i]) { machines[i] = it }
+                    }
                 }
             }
         }

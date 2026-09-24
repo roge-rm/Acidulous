@@ -86,7 +86,7 @@ private val TABS = listOf("devices", "notes", "control")
  */
 @Composable
 private fun Line(content: @Composable () -> Unit) =
-    androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth()) { content() }
+    androidx.compose.foundation.layout.Box(Modifier.cardLine()) { content() }
 
 /** What is plugged in, and the hunt for what is not. */
 @Composable
@@ -276,7 +276,7 @@ private fun MappingCard(song: Song) {
         if (all.isEmpty()) Line { Readout("nothing mapped") }
         for ((m, whose) in all.sortedWith(compareBy({ it.first.cc ?: 1000 }, { it.first.note ?: 1000 }))) {
             val track = m.rack?.let { song.tracks.getOrNull(it) } ?: song.tracks.firstOrNull()
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.cardLine(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     m.sourceLabel().padEnd(10),
                     color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,

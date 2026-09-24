@@ -242,8 +242,15 @@ private fun AudioTab(trackNames: List<String>) {
     }
     if (UiPrefs.showDiagnostics) WindowCards {
         WindowCard("readings · since opened") {
-            for (l in lines) {
-                Text(l, color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth())
+            // Lines of prose in a card of controls: a column of a set width
+            // when the cards are side by side, where filling the row would
+            // squeeze each line to a letter wide.
+            androidx.compose.foundation.layout.Column(
+                Modifier.cardLine(),
+            ) {
+                for (l in lines) {
+                    Text(l, color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth())
+                }
             }
             SwitchGrid("peaks", listOf("reset"), -1) {
                 worst = 0
