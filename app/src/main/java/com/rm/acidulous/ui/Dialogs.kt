@@ -963,7 +963,18 @@ private fun DialogShell(
             // Upright the three are stacked and the footer is its own row;
             // turned that cost a window of four hundred dp over half its
             // height, and every window of cards scrolled by its second card.
-            val wide = isLandscape()
+            // Square too: a square phone is as short as a turned one.
+            val wide = screenShape() != ScreenShape.Tall
+            // **Side by side only where two cards fit side by side.** A square
+            // phone is short like a turned one but narrow like an upright one,
+            // and cards laid in rows there could never pair: each stood alone
+            // and a busy one was squeezed rather than wrapped. Below this
+            // width the cards stack and wrap as they do upright, and the
+            // tabs, which would not fit beside the title and the buttons,
+            // have a row of their own.
+            val roomy = with(androidx.compose.ui.platform.LocalDensity.current) {
+                androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
+            } >= WideCardsMinW
             androidx.compose.material3.Surface(
                 Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = if (wide) 1100.dp else 720.dp)
                     .heightIn(max = cardMax),
@@ -989,12 +1000,15 @@ private fun DialogShell(
                                 modifier = Modifier.widthIn(max = 280.dp).padding(end = 12.dp),
                             )
                             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                                if (chips != null) chips() else wideHeader?.invoke()
+                                // The unit's own row comes up here only when its
+                                // body is laid wide and leaves it out - see SlotRow.
+                                if (roomy) { if (chips != null) chips() else wideHeader?.invoke() }
                             }
                             if (footer) {
                                 Row(Modifier.padding(start = 8.dp), verticalAlignment = Alignment.CenterVertically) { Buttons() }
                             }
                         }
+                        if (chips != null && !roomy) Box(Modifier.padding(top = 6.dp)) { chips() }
                         Box(Modifier.padding(top = 8.dp))
                     } else {
                         Text(title, color = c.text, fontSize = 20.sp)
@@ -1018,7 +1032,7 @@ private fun DialogShell(
                             .verticalScrollWithBar(rememberScrollState())
                             .padding(end = 10.dp),
                     ) {
-                        androidx.compose.runtime.CompositionLocalProvider(LocalDialogWide provides wide) { body() }
+                        androidx.compose.runtime.CompositionLocalProvider(LocalDialogWide provides (wide && roomy)) { body() }
                     }
                     // An empty dismiss label and no action means no footer at
                     // all - for a window that is reporting rather than asking,
@@ -1044,6 +1058,9 @@ private fun DialogShell(
  * looking like one.
  */
 private val DialogEdgeH = 24.dp
+
+/** The narrowest window that lays a window's cards side by side; see [DialogShell]. */
+private val WideCardsMinW = 600.dp
 
 /** Measures every page, shows one, and takes the height of the biggest. */
 @Composable

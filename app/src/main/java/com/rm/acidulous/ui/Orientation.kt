@@ -2,6 +2,7 @@ package com.rm.acidulous.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.dp
 
 /**
  * Is the long edge across?
@@ -18,7 +19,40 @@ import androidx.compose.ui.platform.LocalWindowInfo
  * that knew the phone had turned. M43 turns all four, so it lives here.
  */
 @Composable
-fun isLandscape(): Boolean {
+fun isLandscape(): Boolean = screenShape() == ScreenShape.Wide
+
+/**
+ * Three shapes, not two. A phone held upright is about twice as tall as it
+ * is wide, and turned it is twice as wide as it is tall; the layouts for
+ * those are [Tall] and [Wide]. A square screen - the Titan Pocket's 716 x 720,
+ * the Clicks Communicator's 1080 x 1280 - is neither, and given either layout
+ * it came out broken: upright the roll had no height left, and the Clicks
+ * turned was too narrow for the turned editor's side columns.
+ */
+enum class ScreenShape { Tall, Wide, Square }
+
+/**
+ * Which of the three this window is.
+ *
+ * **Square when the long side is less than [SquareRatio] times the short,
+ * and the short side is phone-sized.** A 4:3 tablet is nearly as square as
+ * the Clicks, but it has eight hundred dp each way and the two layouts it
+ * already had work there; [SquareShortMax] keeps it on them.
+ */
+@Composable
+fun screenShape(): ScreenShape {
     val size = LocalWindowInfo.current.containerSize
-    return size.width > size.height
+    if (size.width <= 0 || size.height <= 0) return ScreenShape.Tall
+    val long = maxOf(size.width, size.height).toFloat()
+    val short = minOf(size.width, size.height)
+    val shortDp = with(androidx.compose.ui.platform.LocalDensity.current) { short.toDp() }
+    return when {
+        long / short < SquareRatio && shortDp < SquareShortMax -> ScreenShape.Square
+        size.width > size.height -> ScreenShape.Wide
+        else -> ScreenShape.Tall
+    }
 }
+
+/** The Clicks is 1.19; the squarest ordinary phone is past 1.9. */
+private const val SquareRatio = 1.4f
+private val SquareShortMax = 600.dp

@@ -119,3 +119,10 @@ launch carries on from wherever the last one left things.
 
 The lanes, the machine panel and the keyboard each fold away with the small
 arrow at their edge, which gives the grid more room.
+
+## On a square screen
+
+On a phone about as wide as it is tall, the grid takes the top of the screen
+and the keyboard or the machine panel takes the bottom, one at a time.
+**keys** at the start of the bottom bar (**pads** on a drum machine) swaps
+between them; **fx** and the mixer bring the panel up.

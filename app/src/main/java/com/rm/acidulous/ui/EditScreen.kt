@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -195,15 +196,23 @@ fun EditScreen(
     }
     // Folding the strip is a preference, not a property of this clip, so it
     // is held for the whole app and across launches - see UiPrefs.
-    val landscape = isLandscape()
+    val shape = screenShape()
+    val landscape = shape == ScreenShape.Wide
+    // Square: the roll on top, and under it the keyboard *or* the panel -
+    // there is not the height for both. See the square body below.
+    val square = shape == ScreenShape.Square
+    // What the square editor's lower half is showing.
+    var squareKeys by rememberSaveable { mutableStateOf(true) }
     // **A fold is about the shape of the screen, so there is one of each per
     // shape.** Sideways a lane costs eighty-eight dp of the three hundred and
     // ninety-three there are, which left the roll about four rows of pitch;
     // both start folded there. Folding one sideways must not put it away
     // upright, and opening one upright must not open it sideways, so the two
     // pairs are separate flags rather than one shared one.
-    val autoFolded = if (landscape) UiPrefs.automationFoldedLand else UiPrefs.automationFolded
-    val noteFolded = if (landscape) UiPrefs.noteLaneFoldedLand else UiPrefs.noteLaneFolded
+    // A square screen is as short as a turned one, so it shares the turned
+    // flags: the lanes start folded there too.
+    val autoFolded = if (landscape || square) UiPrefs.automationFoldedLand else UiPrefs.automationFolded
+    val noteFolded = if (landscape || square) UiPrefs.noteLaneFoldedLand else UiPrefs.noteLaneFolded
     // Which of a note's properties the lane is showing. Per track, like the
     // roll's zoom: it is how you are working, not a property of the music.
     var noteProp by remember(trackIndex) { mutableStateOf(NoteProp.Velocity) }
@@ -378,8 +387,9 @@ fun EditScreen(
         val hasFill = clip.notes.any {
             it.trig == com.rm.acidulous.model.Trig.Fill || it.trig == com.rm.acidulous.model.Trig.NotFill
         }
+        val hasKeysPill = square && kind != MachineKind.Audio
         val views = 1 + (if (hasStrength) 1 else 0) + (if (hasSteps) 1 else 0) +
-            (if (!steps) 1 else 0) + (if (hasFill) 1 else 0)
+            (if (!steps) 1 else 0) + (if (hasFill) 1 else 0) + (if (hasKeysPill) 1 else 0)
         BottomBar(
             // Sideways it stands in the header, so it is a row again and the
             // header says where. **And it has no fold of its own any more.**
@@ -393,10 +403,20 @@ fun EditScreen(
             // fx first, at the head of the row. It is the pair to mix at the
             // other end - both swap what the panel under the roll is showing -
             // and the two beside it are about the roll itself.
+            // Square only: the lower half shows the instrument or the panel,
+            // and this says which. Lit while the instrument is up; fx and the
+            // mixer bring the panel up by being pressed.
+            if (hasKeysPill) BarButton(
+                if (kind == MachineKind.Drums) "pads" else "keys", view,
+                colour = if (squareKeys) Acid.colors.accent else Color.Unspecified,
+            ) { squareKeys = !squareKeys }
             BarButton(
                 "fx", view,
-                colour = if (panel == 1) Acid.colors.accent else Color.Unspecified,
-            ) { panel = if (panel == 1) 0 else 1 }
+                colour = if (panel == 1 && !(square && squareKeys)) Acid.colors.accent else Color.Unspecified,
+            ) {
+                if (square && squareKeys) { squareKeys = false; panel = 1 }
+                else panel = if (panel == 1) 0 else 1
+            }
             // How hard the instrument hits: a wedge for velocity off the
             // height of the strike, a solid block for the same full strength
             // wherever it lands.
@@ -442,8 +462,11 @@ fun EditScreen(
             // the two labels that had to be shortened for landscape.
             BarButton(
                 "\u21C5", anchor,
-                colour = if (panel == 2) Acid.colors.accent else Color.Unspecified,
-            ) { panel = if (panel == 2) 0 else 2 }
+                colour = if (panel == 2 && !(square && squareKeys)) Acid.colors.accent else Color.Unspecified,
+            ) {
+                if (square && squareKeys) { squareKeys = false; panel = 2 }
+                else panel = if (panel == 2) 0 else 2
+            }
             BarButton(
                 // The glyph carries two states, because the pill carries two
                 // controls: a tap arms, a long press turns the click on, and
@@ -1173,6 +1196,38 @@ fun EditScreen(
                     )
                 }
             }
+        } else if (square) {
+            // **Square: the roll on top, and one thing under it.** Upright
+            // every piece has a stated height and the roll is what is left,
+            // which on a screen as tall as it is wide was nothing: the lanes,
+            // the panel and the keyboard used it all. Here the lanes start
+            // folded, and the keyboard and the panel take turns in the lower
+            // part - the keys pill in the footer says which, and fx and the
+            // mixer bring the panel up. The roll keeps the rest, and never
+            // less than [SquareRollMin].
+            BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
+                val total = maxHeight
+                val keysFolded = UiPrefs.keysFolded
+                val keysShown = squareKeys && kind != MachineKind.Audio
+                val keysH = if (keysFolded) {
+                    if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H
+                } else {
+                    (total * SquareKeysShare).coerceAtMost((total - SquareRollMin).coerceAtLeast(0.dp))
+                }
+                Column(Modifier.fillMaxSize().then(pad)) {
+                    gridSlot()
+                    if (kind != MachineKind.Audio) noteLaneSlot(LaneH)
+                    automationSlot(LaneH)
+                    if (keysShown) {
+                        keysSlot(keysH, Modifier)
+                    } else {
+                        Box(Modifier.fillMaxWidth().heightIn(max = (total - SquareRollMin).coerceAtLeast(0.dp))) {
+                            Column { panelSlot(true, true) }
+                        }
+                    }
+                }
+            }
+            footerSlot()
         } else {
             // The bar is outside the padding, so it reaches the edges of
             // the screen as the arranger's does; everything above it keeps
@@ -1288,6 +1343,12 @@ fun EditScreen(
  * bigger than that wants the roll folded rather than starved.
  */
 private val RollMinH = 96.dp
+
+/** The least roll the square editor leaves, whatever is under it. */
+private val SquareRollMin = 140.dp
+
+/** The keyboard's share of the square editor's height, header and footer aside. */
+private const val SquareKeysShare = 0.40f
 
 private val FoldMarkW = 22.dp
 

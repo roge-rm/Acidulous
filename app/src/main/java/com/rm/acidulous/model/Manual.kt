@@ -146,6 +146,8 @@ object Manual {
             ManualBlock(ManualKind.Para, "A lane leaves its knob where it finished. When you press play, every automated knob goes back to where it's set in the song first, so the song starts the same every time, and so does an export. In the launcher it doesn't: a clip you launch carries on from wherever the last one left things."),
             ManualBlock(ManualKind.Heading, "Folding things away"),
             ManualBlock(ManualKind.Para, "The lanes, the machine panel and the keyboard each fold away with the small arrow at their edge, which gives the grid more room."),
+            ManualBlock(ManualKind.Heading, "On a square screen"),
+            ManualBlock(ManualKind.Para, "On a phone about as wide as it is tall, the grid takes the top of the screen and the keyboard or the machine panel takes the bottom, one at a time. **keys** at the start of the bottom bar (**pads** on a drum machine) swaps between them; **fx** and the mixer bring the panel up."),
         )),
         ManualSection("The machines", "Nineteen instruments, a four-track, and what each is for.", listOf(
             ManualBlock(ManualKind.Para, "Every track has one machine. You pick it when you add the track, and you can change it any time from the name at the top of the editor. **Each machine has its own page below.** This page is for finding the right one."),

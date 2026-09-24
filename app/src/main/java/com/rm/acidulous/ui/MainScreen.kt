@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -188,7 +189,8 @@ fun MainScreen(
     // the scene grid a row. Dan: "that will bring parity with the other
     // screens". The readout stays at the bottom either way; it is two
     // lines of numbers and there is no room for it up there.
-    val landscape = isLandscape()
+    val shape = screenShape()
+    val landscape = shape == ScreenShape.Wide
     val scene = song.scenes.getOrNull(position.scene)
     val ticksPerBar = scene?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
     val bar = position.tickInIteration / ticksPerBar + 1
@@ -204,7 +206,7 @@ fun MainScreen(
      * name and eight pills.
      */
     val readoutSlot: @Composable ColumnScope.() -> Unit = {
-            BarReadout(
+            val where =
                 if (clipMode) {
                     // One entry per sounding track: which scene it took its
                     // clip from and how far through its own cycle it is. Every
@@ -236,10 +238,23 @@ fun MainScreen(
                         position.scene + 1, song.scenes.size, scene?.name ?: "-",
                         position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
                     )
-                },
-                if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi,
-            )
-            if (UiPrefs.showDiagnostics) BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
+                }
+            val whereColour = if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi
+            // **Square, the two lines are one.** A square screen is as short
+            // as a turned one and the grid is what pays for every line down
+            // here: the position first, the engine's numbers after it in the
+            // space that is left, cut where they run out.
+            if (shape == ScreenShape.Square) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BarReadout(where, whereColour)
+                    if (UiPrefs.showDiagnostics) Box(Modifier.weight(1f).padding(start = 12.dp)) {
+                        BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
+                    }
+                }
+            } else {
+                BarReadout(where, whereColour)
+                if (UiPrefs.showDiagnostics) BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
+            }
     }
 
     /** What the *song* is doing, as against what the transport is doing. */
@@ -736,7 +751,21 @@ fun MainScreen(
             // perform pages are made the mixer's height, so switching between
             // them does not move the grid.
             val density = androidx.compose.ui.platform.LocalDensity.current
-            Row(Modifier.fillMaxWidth().background(Acid.colors.panelAlt)) {
+            // **Square, the mixer is given a ceiling.** It sizes itself from
+            // its strips, which upright is a third of the screen and on a
+            // square one is most of it: the grid went to nothing and the bar
+            // under it was squeezed to half its height. The strips already
+            // shorten their faders to the room they are given, so the room
+            // is what is set.
+            val mixerCap = if (shape == ScreenShape.Square) {
+                with(density) { androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp() } * SquareMixerShare
+            } else {
+                Dp.Unspecified
+            }
+            Row(
+                Modifier.fillMaxWidth().background(Acid.colors.panelAlt)
+                    .then(if (mixerCap != Dp.Unspecified) Modifier.heightIn(max = mixerCap) else Modifier),
+            ) {
                 Column(
                     Modifier.width(PANEL_TAB_W).padding(start = 4.dp, top = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -1359,3 +1388,6 @@ private fun PanelTab(label: String, on: Boolean, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) { SideText(label, if (on) c.accent else c.textMid, 11.sp, length = PANEL_TAB_H) }
 }
+
+/** How much of a square screen the mixer and the perform pages may take. */
+private const val SquareMixerShare = 0.55f
