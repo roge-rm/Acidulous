@@ -98,8 +98,8 @@ android {
         // auto setting, pattern generators write notes, a step can lock any
         // knob, and every window with settings in it is cards of knobs and
         // switches. A song with step locks means something 0.7 cannot play.
-        versionCode = 15
-        versionName = "0.9.0"
+        versionCode = 16
+        versionName = "0.9.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
