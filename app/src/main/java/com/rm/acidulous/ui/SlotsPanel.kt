@@ -273,7 +273,7 @@ private fun SlotFace(
                     // a few choices: buttons; many (note values): a stepped knob that names its step
                     p.curve == 2 && labels != null && labels.size <= 4 -> PanelSwitch(b, p.name, labels, label = shortLabel)
                     p.curve == 2 && labels != null -> Knob(
-                        label = shortLabel, value = b.value(p.name), accent = accent,
+                        label = panelWord(shortLabel), value = b.value(p.name), accent = accent,
                         // The step's *position* in the range, not its value.
                         //
                         // `p.map` gives the parameter in its own units, and
@@ -282,7 +282,7 @@ private fun SlotFace(
                         // runs -7..7, so a default of +2 read `labels[2]` and
                         // the knob said "-5". The normalised value is already
                         // the position, which is what a list wants.
-                        display = labels[(b.value(p.name) * (labels.size - 1))
+                        display = panelWords(labels)[(b.value(p.name) * (labels.size - 1))
                             .roundToInt().coerceIn(0, labels.size - 1)],
                         onStart = { b.start(p.name) }, onChange = { v -> b.change(p.name, v) }, onEnd = { b.end() },
                         onReset = { b.reset(p.name) },

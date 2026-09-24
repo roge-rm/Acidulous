@@ -136,6 +136,8 @@ fun PatchScreen(
     val info = remember(track.machine.settings["nexus"]) { NativeEngine.nexusPalette() }
     val measurer = rememberTextMeasurer()
     val monoTag = stringResource(R.string.patch_mono_tag)
+    val resources = androidx.compose.ui.platform.LocalResources.current
+    val word: (String) -> String = remember(resources) { { resources.panelWord(it) } }
     val binding = rememberParamBinding(trackIndex, "Nexus", remember { NativeEngine.machineParamInfo("Nexus") }, editor)
 
     fun write(next: NexusPatch) {
@@ -317,7 +319,7 @@ fun PatchScreen(
                     }
                 },
             ) {
-                drawPatch(patch, pan, scale, zoom, selection, pulling, scope, activity, measurer, c, monoTag)
+                drawPatch(patch, pan, scale, zoom, selection, pulling, scope, activity, measurer, c, monoTag, word)
             }
         }
 
@@ -411,6 +413,8 @@ private fun DrawScope.drawPatch(
     col: AcidColors,
     /** What a module that plays one voice says after its name. */
     monoTag: String,
+    /** A jack's name in the phone's language: see PanelText.kt. */
+    word: (String) -> String,
 ) {
     fun screen(w: Offset) = Offset((w.x - pan.x) * zoom, (w.y - pan.y) * zoom)
 
@@ -533,7 +537,7 @@ private fun DrawScope.drawPatch(
             drawCircle(col.teal, JACK_R * zoom, pos)
             if (labels && name.isNotEmpty()) {
                 val t = measurer.measure(
-                    AnnotatedString(name),
+                    AnnotatedString(word(name)),
                     TextStyle(color = col.textDim, fontSize = (7f * textZoom).sp, fontFamily = FontFamily.Monospace),
                 )
                 drawText(t, topLeft = pos + Offset(JACK_R * zoom + 2f * zoom, -t.size.height / 2f))
@@ -544,7 +548,7 @@ private fun DrawScope.drawPatch(
             drawCircle(col.accent, JACK_R * zoom, pos)
             if (labels && name.isNotEmpty()) {
                 val t = measurer.measure(
-                    AnnotatedString(name),
+                    AnnotatedString(word(name)),
                     TextStyle(color = col.textDim, fontSize = (7f * textZoom).sp, fontFamily = FontFamily.Monospace),
                 )
                 drawText(t, topLeft = pos - Offset(t.size.width + JACK_R * zoom + 2f * zoom, t.size.height / 2f))

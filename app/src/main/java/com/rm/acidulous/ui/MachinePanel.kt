@@ -71,6 +71,10 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.DrawbarBlack
 import com.rm.acidulous.ui.theme.DrawbarBrown
 import com.rm.acidulous.ui.theme.DrawbarWhite
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringArrayResource
+import com.rm.acidulous.R
+import androidx.compose.ui.res.pluralStringResource
 
 /**
  * The machine's face in the Edit screen.
@@ -631,6 +635,7 @@ private val SideNameSp = 9.sp
  * it can decide how much of the column to give it, and computing it twice in
  * two files is how the box and the text it holds come to disagree.
  */
+@Composable
 internal fun patchLabel(current: String?, edited: Boolean): String {
     // The name once there is one. "patch" told you what the button was for
     // and nothing about what you were listening to, and a rack of eight
@@ -639,7 +644,11 @@ internal fun patchLabel(current: String?, edited: Boolean): String {
     // The star is not a warning, it is an accuracy: the sound is no longer
     // the one that name refers to, and "save as..." is next to it.
     val shown = current?.ifBlank { null }
-    return (shown ?: "patch") + (if (shown != null && edited) " *" else "")
+    return when {
+        shown == null -> stringResource(R.string.machine_patch)
+        edited -> stringResource(R.string.machine_patch_edited, shown)
+        else -> shown
+    }
 }
 
 /**
@@ -689,7 +698,7 @@ internal fun PatchPicker(
     } else {
         TextButton(onClick = { menu = true }, contentPadding = PaddingValues(horizontal = 8.dp)) {
             Text(
-                "$label ▾",
+                stringResource(R.string.machine_patch_menu, label),
                 color = Acid.colors.accent, fontSize = 11.sp, maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 modifier = Modifier.widthIn(max = 120.dp),
@@ -711,7 +720,7 @@ internal fun PatchPicker(
             for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
         }
     }
-    if (saving) TextInputDialog("Patch name", "", onDismiss = { saving = false }) { name -> onSave(name); saving = false }
+    if (saving) TextInputDialog(stringResource(R.string.machine_patch_name), "", onDismiss = { saving = false }) { name -> onSave(name); saving = false }
     if (browsing) {
         val factory = remember(title) { factoryPatches() }
         val user = remember(title, listRev) { userNames() }
@@ -798,7 +807,7 @@ internal fun com.rm.acidulous.model.Clip.withLane(key: String, lane: com.rm.acid
 internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal) {
     val key = com.rm.acidulous.model.laneKey(b.unit, name)
     Knob(
-        label = label, value = b.value(name), display = b.display(name), accent = accent,
+        label = panelWord(label), value = b.value(name), display = b.display(name), accent = accent,
         automated = key in AutomationMarks.lanes && key !in AutomationMarks.locks,
         locked = key in AutomationMarks.locks,
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
@@ -833,7 +842,7 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
     val info = b.infoOf(name) ?: return
     val idx = info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)
     SwitchGrid(
-        label, labels, idx,
+        panelWord(label), panelWords(labels), idx,
         Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
     ) { i -> b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
 }
@@ -983,7 +992,9 @@ internal fun PanelSections(content: @Composable () -> Unit) {
 
 /** Which group of groups is showing. Only machines too big for one row need it. */
 @Composable
-internal fun SectionChips(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+internal fun SectionChips(english: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    // A panel's own sections are English words; a window's arrive translated and pass through.
+    val labels = panelWords(english)
     if (LocalPanelStacked.current) {
         SectionChipsSide(labels, selected, onSelect)
         return
@@ -1119,10 +1130,11 @@ internal fun SectionChipsStyled(
  */
 @Composable
 internal fun SectionChipsScrolling(
-    labels: List<String>,
+    english: List<String>,
     selected: Int,
     onSelect: (Int) -> Unit,
 ) {
+    val labels = panelWords(english)
     Row(
         Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()).padding(bottom = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -1154,10 +1166,10 @@ internal fun SectionChipsScrolling(
 internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, label: String = name, accent: Color = PanelTeal) {
     val info = b.infoOf(name) ?: return
     Knob(
-        label = label, value = b.value(name), accent = accent,
+        label = panelWord(label), value = b.value(name), accent = accent,
         automated = com.rm.acidulous.model.laneKey(b.unit, name).let { it in AutomationMarks.lanes && it !in AutomationMarks.locks },
         locked = com.rm.acidulous.model.laneKey(b.unit, name) in AutomationMarks.locks,
-        display = labels.getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
+        display = panelWords(labels).getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
         onReset = { b.reset(name) },
@@ -1259,7 +1271,9 @@ internal fun Group(
         Modifier.then(if (stacked) Modifier.fillMaxWidth() else Modifier)
             .clip(RoundedCornerShape(6.dp)).background(background).padding(6.dp),
     ) {
-        Text(title, color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        // A panel's own English title is translated here; a window's card
+        // arrives translated already and passes through untouched.
+        Text(panelWord(title), color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         // IntrinsicSize.Max so the row knows how tall its tallest control is
         // - a knob, almost always - and anything that wants to can fill it.
         // Switches do, so their cells line up with the knobs beside them
@@ -1466,9 +1480,9 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
     // of four, and thirteen samples chosen by hand is not something to lose
     // to a fat finger - the settings would be gone before the undo was found.
     if (clearing) PlainDialog(
-        title = "Clear the kit",
+        title = stringResource(R.string.kit_clear_title),
         onDismiss = { clearing = false },
-        confirmLabel = "Clear",
+        confirmLabel = stringResource(R.string.kit_clear),
         onConfirm = {
             clearing = false
             onClearKit()
@@ -1484,16 +1498,21 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         },
     ) {
         Text(
-            "Removes the samples from all thirteen pads and the slice file. " +
-                "The files stay in the app under samples….",
+            stringResource(R.string.kit_clear_note),
             color = Acid.colors.textMid, fontSize = 12.sp,
         )
     }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("pad ${p + 1}", color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+            Text(stringResource(R.string.kit_pad, p + 1), color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
             Text(
-                if (info.isEmpty()) (rel?.let { "$it (not loaded)" } ?: "no sample") else info.substringBefore('|') + "  " + (info.split('|').getOrNull(1)?.toIntOrNull()?.let { "%.2fs".format(it / 48000f) } ?: "") + (if (info.endsWith("|1")) " st" else " mono"),
+                if (info.isEmpty()) (rel?.let { stringResource(R.string.kit_not_loaded, it) } ?: stringResource(R.string.kit_no_sample))
+                else stringResource(
+                    R.string.kit_sample_info,
+                    info.substringBefore('|'),
+                    info.split('|').getOrNull(1)?.toIntOrNull()?.let { "%.2fs".format(it / 48000f) } ?: "",
+                    stringResource(if (info.endsWith("|1")) R.string.kit_stereo_short else R.string.kit_mono),
+                ),
                 color = Acid.colors.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f), maxLines = 1,
             )
             if (rel != null) Text(peakDb, color = Acid.colors.textDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
@@ -1501,7 +1520,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                 val from = b.infoOf(n("start"))?.map(b.value(n("start"))) ?: 0f
                 val to = b.infoOf(n("end"))?.map(b.value(n("end"))) ?: 0f
                 Text(
-                    "slice ${p + 1} of ${track.machine.settings["slice_count"]}  %.0f%%-%.0f%%".format(from * 100, to * 100),
+                    stringResource(R.string.kit_slice_of, p + 1, track.machine.settings["slice_count"].orEmpty(), from * 100, to * 100),
                     color = Acid.colors.textDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                 )
             }
@@ -1509,14 +1528,14 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             // kit moved into the group row below: seven controls and a line of
             // text do not fit across a phone, and what gave way was the last
             // one - `match` came out as a column of single letters.
-            TextButton(onClick = { resetTrim(p); onImport(p) }) { Text("load…", color = hot, fontSize = 11.sp) }
-            TextButton(onClick = { picking = true }) { Text("samples…", color = hot, fontSize = 11.sp) }
+            TextButton(onClick = { resetTrim(p); onImport(p) }) { Text(stringResource(R.string.kit_load), color = hot, fontSize = 11.sp) }
+            TextButton(onClick = { picking = true }) { Text(stringResource(R.string.kit_samples), color = hot, fontSize = 11.sp) }
             // Only where there is something to trim - the page is a picture of
             // a sample and an empty pad has none.
             if (info.isNotEmpty()) {
-                TextButton(onClick = { onOpenSample(p) }) { Text("edit…", color = hot, fontSize = 11.sp) }
+                TextButton(onClick = { onOpenSample(p) }) { Text(stringResource(R.string.kit_edit), color = hot, fontSize = 11.sp) }
             }
-            if (rel != null) TextButton(onClick = { resetTrim(p); onClear(p) }) { Text("clear", color = Acid.colors.textMid, fontSize = 11.sp) }
+            if (rel != null) TextButton(onClick = { resetTrim(p); onClear(p) }) { Text(stringResource(R.string.kit_clear_pad), color = Acid.colors.textMid, fontSize = 11.sp) }
         }
         Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev"), "reverse"); PanelSwitch(b, n("play"), listOf("once", "loop", "hold"), "play") }
@@ -1527,12 +1546,12 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             // The whole kit at once, where there is room for them to be read.
             Group("kit") {
                 PanelActions(
-                    Triple("kit…", hot) { onImportKit(p) },
-                    Triple(if (sliceBusy) "slicing…" else "slice…", hot) {
+                    Triple(stringResource(R.string.kit_kit), hot) { onImportKit(p) },
+                    Triple(stringResource(if (sliceBusy) R.string.kit_slicing else R.string.kit_slice), hot) {
                         if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
                     },
-                    Triple("match", Acid.colors.textMid) { matchLevels() },
-                    Triple("clear", Acid.colors.textMid) { clearing = true },
+                    Triple(stringResource(R.string.kit_match), Acid.colors.textMid) { matchLevels() },
+                    Triple(stringResource(R.string.kit_clear_kit), Acid.colors.textMid) { clearing = true },
                 )
             }
         }
@@ -1553,39 +1572,38 @@ private fun SliceDialog(name: String, onChoose: () -> Unit, onDismiss: () -> Uni
     var mode by remember { mutableStateOf(0) }
     var count by remember { mutableStateOf(13) }
     PlainDialog(
-        title = "Slice across the pads",
+        title = stringResource(R.string.slice_title),
         onDismiss = onDismiss,
-        confirmLabel = if (name.isEmpty()) "" else "Slice",
+        confirmLabel = if (name.isEmpty()) "" else stringResource(R.string.slice_confirm),
         confirmEnabled = name.isNotEmpty(),
         onConfirm = if (name.isEmpty()) null else ({ onApply(mode, count) }),
         spacing = 10.dp,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                name.ifEmpty { "no file chosen" },
+                name.ifEmpty { stringResource(R.string.slice_no_file) },
                 color = if (name.isEmpty()) Acid.colors.textDim else Acid.colors.textHi,
                 fontSize = 12.sp, fontFamily = FontFamily.Monospace,
                 modifier = Modifier.weight(1f), maxLines = 1,
             )
             TextButton(onClick = onChoose) {
-                Text(if (name.isEmpty()) "choose…" else "change…", color = Acid.colors.accent, fontSize = 12.sp)
+                Text(stringResource(if (name.isEmpty()) R.string.slice_choose else R.string.slice_change), color = Acid.colors.accent, fontSize = 12.sp)
             }
         }
-        Text("where to cut", color = Acid.colors.textDim, fontSize = 11.sp)
+        Text(stringResource(R.string.slice_where), color = Acid.colors.textDim, fontSize = 11.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("transients", "even").forEachIndexed { i, label ->
+            stringArrayResource(R.array.slice_modes).forEachIndexed { i, label ->
                 TextButton(onClick = { mode = i }) {
                     Text(label, color = if (mode == i) Acid.colors.accent else Acid.colors.textMid, fontSize = 12.sp)
                 }
             }
         }
         Text(
-            if (mode == 0) "Cuts at the hits. If there are too many, the loudest are used; too few and it cuts evenly."
-            else "Equal pieces.",
+            stringResource(if (mode == 0) R.string.slice_transients_note else R.string.slice_even_note),
             color = Acid.colors.textDim, fontSize = 11.sp,
         )
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("slices", color = Acid.colors.textDim, fontSize = 11.sp)
+            Text(stringResource(R.string.slice_count), color = Acid.colors.textDim, fontSize = 11.sp)
             TextButton(onClick = { count = (count - 1).coerceAtLeast(2) }) {
                 Text("−", color = Acid.colors.accent, fontSize = 15.sp)
             }
@@ -1595,8 +1613,7 @@ private fun SliceDialog(name: String, onChoose: () -> Unit, onDismiss: () -> Uni
             }
         }
         Text(
-            "Pads 1 to $count get a slice each. Pads that already have their own " +
-                "sample keep it; clear them to use the slice.",
+            stringResource(R.string.slice_count_note, count),
             color = Acid.colors.textDim, fontSize = 11.sp,
         )
     }
@@ -2137,7 +2154,7 @@ private fun InputListen() {
         }
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("input", color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text(stringResource(R.string.machine_input), color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         TextButton(onClick = {
             if (running) {
                 NativeEngine.stopInput()
@@ -2149,7 +2166,7 @@ private fun InputListen() {
             } else {
                 ask.launch(android.Manifest.permission.RECORD_AUDIO)
             }
-        }) { Text(if (running) "listening" else "open", color = if (running) PanelTeal else PanelAmber, fontSize = 11.sp) }
+        }) { Text(stringResource(if (running) R.string.machine_listening else R.string.machine_open), color = if (running) PanelTeal else PanelAmber, fontSize = 11.sp) }
         Meter(level, Modifier.width(70.dp).height(8.dp), vertical = false)
     }
 }
@@ -2547,7 +2564,7 @@ private fun FormulaButton(track: Track, error: String, onEdit: () -> Unit) {
     val text = track.machine.settings["formula"].orEmpty()
     Column(Modifier.widthIn(min = 150.dp, max = 300.dp)) {
         Text(
-            text.ifEmpty { "no formula" },
+            text.ifEmpty { stringResource(R.string.formula_none) },
             color = if (text.isEmpty()) c.textDim else c.textHi,
             fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 2,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -2555,7 +2572,7 @@ private fun FormulaButton(track: Track, error: String, onEdit: () -> Unit) {
         if (error.isNotEmpty()) {
             Text(error, color = c.red, fontSize = 10.sp, maxLines = 2)
         }
-        TextButton(onClick = onEdit) { Text("edit…", color = Acid.colors.accent, fontSize = 12.sp) }
+        TextButton(onClick = onEdit) { Text(stringResource(R.string.formula_edit), color = Acid.colors.accent, fontSize = 12.sp) }
     }
 }
 
@@ -2587,15 +2604,15 @@ private fun FormulaDialog(
                 color = c.card,
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Formula", color = c.text, fontSize = 20.sp)
+                    Text(stringResource(R.string.formula_title), color = c.text, fontSize = 20.sp)
                     androidx.compose.material3.OutlinedTextField(
                         value = formula, onValueChange = { formula = it },
-                        label = { Text("expression in t, f, n, v, x, a, b, c, s, r") },
+                        label = { Text(stringResource(R.string.formula_expression)) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     if (error.isNotEmpty()) Text(error, color = c.red, fontSize = 12.sp)
-                    Text("examples", color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                    Text(stringResource(R.string.formula_examples), color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                     Column(
                         Modifier.heightIn(max = 180.dp).verticalScrollWithBar(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -2607,32 +2624,32 @@ private fun FormulaDialog(
                             ) {
                                 Text(example, color = c.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                                     modifier = Modifier.weight(1f), maxLines = 1)
-                                Text(what, color = c.textDim, fontSize = 10.sp, maxLines = 1)
+                                Text(panelWord(what), color = c.textDim, fontSize = 10.sp, maxLines = 1)
                             }
                         }
                     }
-                    Text("step tables - values, and | where it loops back", color = c.teal, fontSize = 10.sp,
+                    Text(stringResource(R.string.formula_tables), color = c.teal, fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace)
                     androidx.compose.material3.OutlinedTextField(
-                        value = arp, onValueChange = { arp = it }, label = { Text("arp, semitones") },
+                        value = arp, onValueChange = { arp = it }, label = { Text(stringResource(R.string.formula_arp)) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
                         singleLine = true, modifier = Modifier.fillMaxWidth(),
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         androidx.compose.material3.OutlinedTextField(
-                            value = duty, onValueChange = { duty = it }, label = { Text("duty 0-255") },
+                            value = duty, onValueChange = { duty = it }, label = { Text(stringResource(R.string.formula_duty)) },
                             textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
                             singleLine = true, modifier = Modifier.weight(1f),
                         )
                         androidx.compose.material3.OutlinedTextField(
-                            value = vol, onValueChange = { vol = it }, label = { Text("volume 0-255") },
+                            value = vol, onValueChange = { vol = it }, label = { Text(stringResource(R.string.formula_volume)) },
                             textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
                             singleLine = true, modifier = Modifier.weight(1f),
                         )
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = onDismiss) { Text("Cancel") }
-                        TextButton(onClick = { onApply(formula, arp, duty, vol) }) { Text("OK") }
+                        TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                        TextButton(onClick = { onApply(formula, arp, duty, vol) }) { Text(stringResource(R.string.ok)) }
                     }
                 }
             }
@@ -2762,9 +2779,9 @@ private fun ResonancePanel(b: ParamBinding, pad: Int) {
     val hot = Acid.colors.accent
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("object ${p + 1}", color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+            Text(stringResource(R.string.resonance_object, p + 1), color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
             Text(
-                "a struck object that rings with the others",
+                stringResource(R.string.resonance_about),
                 color = Acid.colors.textDim, fontSize = 10.sp, maxLines = 1,
             )
         }
@@ -2849,14 +2866,14 @@ private fun MoltPanel(
                     Group("take") {
                         Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
                             Text(
-                                sample.substringAfterLast('/').ifEmpty { "no take" },
+                                sample.substringAfterLast('/').ifEmpty { stringResource(R.string.machine_no_take) },
                                 color = if (sample.isEmpty()) c.textDim else c.textHi,
                                 fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
                             Row {
-                                TextButton(onClick = onImport) { Text("import…", color = c.textMid, fontSize = 11.sp) }
-                                TextButton(onClick = { picking = true }) { Text("samples…", color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = onImport) { Text(stringResource(R.string.machine_import), color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = { picking = true }) { Text(stringResource(R.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
                             }
                         }
                     }
@@ -2872,7 +2889,7 @@ private fun MoltPanel(
                     // is most of the work.
                     Group("sing") {
                         PanelActions(
-                            Triple("record…", PanelAmber) { recording = true },
+                            Triple(stringResource(R.string.machine_record), PanelAmber) { recording = true },
                         )
                     }
                     Group("phrase") {
@@ -2947,7 +2964,7 @@ private fun DicePanel(
         SectionChips(listOf("loop", "dice", "slice", "tone"), section) { section = it }
         if (section == 2) {
             Text(
-                "slice ${p + 1} - chosen with the pads",
+                stringResource(R.string.dice_slice, p + 1),
                 color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                 modifier = Modifier.padding(bottom = 2.dp),
             )
@@ -2958,14 +2975,14 @@ private fun DicePanel(
                     Group("loop") {
                         Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
                             Text(
-                                sample.substringAfterLast('/').ifEmpty { "no loop" },
+                                sample.substringAfterLast('/').ifEmpty { stringResource(R.string.machine_no_loop) },
                                 color = if (sample.isEmpty()) c.textDim else c.textHi,
                                 fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
                             Row {
-                                TextButton(onClick = onImport) { Text("import…", color = c.textMid, fontSize = 11.sp) }
-                                TextButton(onClick = { picking = true }) { Text("samples…", color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = onImport) { Text(stringResource(R.string.machine_import), color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = { picking = true }) { Text(stringResource(R.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
                             }
                         }
                     }
@@ -3075,20 +3092,20 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     Group("file") {
                         Column(Modifier.widthIn(min = 140.dp, max = 260.dp)) {
                             Text(
-                                sample.substringAfterLast('/').ifEmpty { "no file" },
+                                sample.substringAfterLast('/').ifEmpty { stringResource(R.string.machine_no_file) },
                                 color = if (sample.isEmpty()) c.textDim else c.textHi,
                                 fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
                             if (live) {
                                 Text(
-                                    "live input: not saved with the song, silent in exports",
+                                    stringResource(R.string.pollen_live),
                                     color = c.accent, fontSize = 9.sp, maxLines = 2,
                                 )
                             }
                             Row {
-                                TextButton(onClick = onImport) { Text("import…", color = c.textMid, fontSize = 11.sp) }
-                                TextButton(onClick = { picking = true }) { Text("samples…", color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = onImport) { Text(stringResource(R.string.machine_import), color = c.textMid, fontSize = 11.sp) }
+                                TextButton(onClick = { picking = true }) { Text(stringResource(R.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
                             }
                         }
                     }
@@ -3207,7 +3224,7 @@ private fun MomentaryButton(b: ParamBinding, name: String, label: String) {
     TextButton(onClick = {
         b.set(name, 1f)
         scope.launch { delay(120); b.set(name, 0f) }
-    }) { Text(label, color = Acid.colors.accent, fontSize = 12.sp) }
+    }) { Text(panelWord(label), color = Acid.colors.accent, fontSize = 12.sp) }
 }
 
 // --- Bias -------------------------------------------------------------------------
@@ -3318,17 +3335,17 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                         if (take != null && !track.followsTempo() &&
                             kotlin.math.abs(take.bpm - sceneBpm) > 0.05f) {
                             Text(
-                                "%.1f bpm".format(take.bpm), color = c.accent,
+                                stringResource(R.string.bias_take_bpm, take.bpm), color = c.accent,
                                 fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                             )
                         }
                         Row {
                             TextButton(onClick = { picking = lane }) {
-                                Text("audio…", color = c.textMid, fontSize = 11.sp)
+                                Text(stringResource(R.string.bias_audio), color = c.textMid, fontSize = 11.sp)
                             }
                             if (take != null) TextButton(onClick = {
                                 editor.editClip(trackIndex, sceneId) { cl -> cl.withTake(lane, null) }
-                            }) { Text("clear", color = c.textMid, fontSize = 11.sp) }
+                            }) { Text(stringResource(R.string.bias_clear), color = c.textMid, fontSize = 11.sp) }
                         }
                     }
                     PanelKnob(b, "lane${lane + 1}", "level")
@@ -3698,13 +3715,17 @@ private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
                 0 -> {
                     Group("patch") {
                         Column(horizontalAlignment = Alignment.Start) {
-                            Text("${patch.modules.size} modules · ${patch.cables.size} cables",
+                            Text(
+                                listOf(
+                                    pluralStringResource(R.plurals.nexus_modules, patch.modules.size, patch.modules.size),
+                                    pluralStringResource(R.plurals.nexus_cables, patch.cables.size, patch.cables.size),
+                                ).joinToString(" · "),
                                 color = Acid.colors.text, fontSize = 11.sp, maxLines = 1)
                             Text(patch.modules.take(6).joinToString(" ") { it.type },
                                 color = Acid.colors.textDim, fontSize = 9.sp,
                                 fontFamily = FontFamily.Monospace, maxLines = 1)
                             TextButton(onClick = onOpenPatch) {
-                                Text("patch…", color = PanelAmber, fontSize = 11.sp)
+                                Text(stringResource(R.string.nexus_patch), color = PanelAmber, fontSize = 11.sp)
                             }
                         }
                     }
@@ -3787,7 +3808,7 @@ private fun MosaicPanel(
                 // A SoundFont preset carries its own map; the file owns it, so
                 // it is shown rather than edited.
                 Text(
-                    "SoundFont: ${sf2.substringAfterLast('/')}   ${info.ifEmpty { "loading…" }}",
+                    stringResource(R.string.mosaic_soundfont, sf2.substringAfterLast('/'), info.ifEmpty { stringResource(R.string.mosaic_loading) }),
                     color = Acid.colors.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(bottom = 4.dp), maxLines = 1,
                 )
@@ -3798,26 +3819,26 @@ private fun MosaicPanel(
                 0 -> {
                     Group("instrument") {
                         Column(horizontalAlignment = Alignment.Start) {
-                            Text(info.split('|').firstOrNull().orEmpty().ifEmpty { "nothing loaded" },
+                            Text(info.split('|').firstOrNull().orEmpty().ifEmpty { stringResource(R.string.mosaic_nothing) },
                                 color = Acid.colors.text, fontSize = 11.sp, maxLines = 1)
                             Text(
                                 info.split('|').let { f ->
-                                    if (f.size >= 4) "${f[1]} zones · ${f[2]} samples · %.1fs".format(f[3].toFloatOrNull() ?: 0f)
+                                    if (f.size >= 4) stringResource(R.string.mosaic_preset_info, f[1], f[2], f[3].toFloatOrNull() ?: 0f)
                                     else " "
                                 },
                                 color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                             )
                             Row {
-                                TextButton(onClick = onImportSoundFont) { Text("soundfont…", color = PanelAmber, fontSize = 10.sp) }
-                                if (sf2.isNotEmpty()) TextButton(onClick = onPickPreset) { Text("preset…", color = PanelAmber, fontSize = 10.sp) }
-                                TextButton(onClick = onImportZoneSamples) { Text("samples…", color = Acid.colors.textMid, fontSize = 10.sp) }
-                                TextButton(onClick = { pickingZone = true }) { Text("samples…", color = Acid.colors.textMid, fontSize = 10.sp) }
+                                TextButton(onClick = onImportSoundFont) { Text(stringResource(R.string.mosaic_import_soundfont), color = PanelAmber, fontSize = 10.sp) }
+                                if (sf2.isNotEmpty()) TextButton(onClick = onPickPreset) { Text(stringResource(R.string.mosaic_preset), color = PanelAmber, fontSize = 10.sp) }
+                                TextButton(onClick = onImportZoneSamples) { Text(stringResource(R.string.mosaic_samples), color = Acid.colors.textMid, fontSize = 10.sp) }
+                                TextButton(onClick = { pickingZone = true }) { Text(stringResource(R.string.mosaic_samples), color = Acid.colors.textMid, fontSize = 10.sp) }
                             }
                         }
                     }
                     if (sf2.isEmpty()) Group("zones") {
                         Column {
-                            Text("${zones.size} zone${if (zones.size == 1) "" else "s"}", color = Acid.colors.text, fontSize = 11.sp)
+                            Text(pluralStringResource(R.plurals.mosaic_zones, zones.size, zones.size), color = Acid.colors.text, fontSize = 11.sp)
                             Row {
                                 TextButton(
                                     onClick = {
@@ -3832,9 +3853,9 @@ private fun MosaicPanel(
                                         }
                                     },
                                     enabled = zones.size > 1,
-                                ) { Text("spread", color = PanelAmber, fontSize = 10.sp) }
+                                ) { Text(stringResource(R.string.mosaic_spread), color = PanelAmber, fontSize = 10.sp) }
                                 TextButton(onClick = { putZones(emptyList()) }, enabled = zones.isNotEmpty()) {
-                                    Text("clear", color = Acid.colors.red, fontSize = 10.sp)
+                                    Text(stringResource(R.string.mosaic_clear), color = Acid.colors.red, fontSize = 10.sp)
                                 }
                             }
                         }

@@ -42,9 +42,9 @@ data class Mapping(
     }
 
     /** And the target. [track] only to name the unit it belongs to. */
-    fun targetLabel(track: Track?): String = when {
+    fun targetLabel(track: Track?, word: (String) -> String = { it }): String = when {
         action != null -> action.lowercase()
-        unit != null && name != null && track != null -> laneLabel(track, laneKey(unit, name))
+        unit != null && name != null && track != null -> laneLabel(track, laneKey(unit, name), word)
         unit != null && name != null -> "$unit · $name"
         else -> "?"
     }

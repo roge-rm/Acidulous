@@ -265,6 +265,8 @@ private fun ControlTab(context: android.content.Context, song: Song) {
 @Composable
 private fun MappingCard(song: Song) {
     val device = UiPrefs.mappings
+    val resources = androidx.compose.ui.platform.LocalResources.current
+    val laneWord: (String) -> String = { resources.panelWord(it) }
     // What survives of the explanation is the half nothing on screen can
     // tell you: that the mode has a gesture of its own, and where - the
     // title says it.
@@ -288,7 +290,7 @@ private fun MappingCard(song: Song) {
                     color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                 )
                 Text(
-                    if (m.rack != null) stringResource(R.string.midi_mapping_track, m.targetLabel(track), m.rack + 1) else m.targetLabel(track),
+                    m.targetLabel(track, laneWord).let { if (m.rack != null) stringResource(R.string.midi_mapping_track, it, m.rack + 1) else it },
                     color = Acid.colors.text, fontSize = 11.sp, modifier = Modifier.weight(1f),
                 )
                 Text(whose, color = Acid.colors.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace)

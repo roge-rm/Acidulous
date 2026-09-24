@@ -202,6 +202,12 @@ android {
             }
             if (signing != null) signingConfig = signingConfigs.getByName("release")
         }
+        debug {
+            // A phone set to English (XA) shows every string resource
+            // [ŵîţĥ åççéñţš], so a word on screen without them is one that
+            // is still written in the code.
+            isPseudoLocalesEnabled = true
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

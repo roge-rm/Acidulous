@@ -347,7 +347,7 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
         selected = tab,
         dismissLabel = stringResource(R.string.cancel),
         onDismiss = onDismiss,
-        chips = { SectionChipsStyled(groups.map { chipLabel(it.label) }, tab) { tab = it } },
+        chips = { SectionChipsStyled(groups.map { chipLabel(stringResource(it.label)) }, tab) { tab = it } },
         pages = contents.map { types ->
             {
                 run {
@@ -363,7 +363,7 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
                         ) {
                             Text(type, color = if (on) c.accent else c.text, fontSize = 14.sp)
                             Text(
-                                com.rm.acidulous.model.MachineUi.describe(type),
+                                com.rm.acidulous.model.MachineUi.describe(type)?.let { stringResource(it) }.orEmpty(),
                                 color = c.textDim, fontSize = 11.sp, maxLines = 2,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )

@@ -819,6 +819,8 @@ fun EditScreen(
         }
 
         val automationSlot: @Composable (Dp) -> Unit = { open ->
+        val resources = androidx.compose.ui.platform.LocalResources.current
+        val laneWord: (String) -> String = { resources.panelWord(it) }
         // Automation: the parameter strip under the notes.
         AutomationStrip(
             clip = clip,
@@ -827,8 +829,8 @@ fun EditScreen(
             firstTick = firstTick,
             visibleTicks = pageTicks.toInt(),
             laneKeys = laneKeys,
-            nameOf = { com.rm.acidulous.model.laneLabel(track, it) },
-            shortOf = { com.rm.acidulous.model.laneShortLabel(track, it) },
+            nameOf = { com.rm.acidulous.model.laneLabel(track, it, laneWord) },
+            shortOf = { com.rm.acidulous.model.laneShortLabel(track, it, laneWord) },
             selected = laneKey,
             onSelect = { laneKey = it },
             onGestureBegin = { editor.beginGesture(trackIndex) },

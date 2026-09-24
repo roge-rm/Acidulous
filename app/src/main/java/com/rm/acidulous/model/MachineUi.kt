@@ -1,5 +1,8 @@
 package com.rm.acidulous.model
 
+import com.rm.acidulous.R
+import androidx.annotation.StringRes
+
 /**
  * What the editor needs to know about a machine type beyond its parameters:
  * whether it is played from a keyboard or pads, and what the pads are called.
@@ -60,38 +63,39 @@ object MachineUi {
      * order inside a group is the order they were built, which is also
      * roughly simplest first.
      */
-    data class MachineGroup(val label: String, val machines: List<String>)
+    data class MachineGroup(@StringRes val label: Int, val machines: List<String>)
 
     val machineGroups: List<MachineGroup> = listOf(
-        MachineGroup("synths", listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
-        MachineGroup("drums", listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
-        MachineGroup("realish", listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
-        MachineGroup("beyond", listOf("Cipher", "Nexus", "Bias")),
+        MachineGroup(R.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
+        MachineGroup(R.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
+        MachineGroup(R.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
+        MachineGroup(R.string.machines_beyond, listOf("Cipher", "Nexus", "Bias")),
     )
 
     /** One line per machine: what it is, not what it has. */
-    fun describe(type: String): String = when (type) {
-        "Reflux" -> "acid bass: one oscillator and a screaming filter"
-        "Trinity" -> "three-oscillator poly synth with wavetables and two filters"
-        "Ratio" -> "six-operator FM that morphs between algorithms"
-        "Cumulus" -> "big pads built from a spectrum"
-        "Formulate" -> "8-bit chip synth, and waveforms you type as formulas"
-        "Hexbeat" -> "synthesized drums, classic small-box style"
-        "Genesis" -> "the big drum box, with a kick that pumps the kit"
-        "Resonance" -> "eight struck objects that ring into each other"
-        "Dice" -> "loop slicer with chance on every slice"
-        "Forage" -> "sample drum machine with thirteen pads"
-        "Manual" -> "organ with two manuals, pedals and a rotary cabinet"
-        "Filament" -> "modelled strings: pluck, pick, bow or blow"
-        "Brazen" -> "modelled brass, from trumpet to tuba"
-        "Timber" -> "modelled woodwinds: reeds and flutes"
-        "Mosaic" -> "multisample player for SoundFonts and your samples"
-        "Pollen" -> "granular clouds from a file or the live input"
-        "Molt" -> "sing a take and tune it with the piano roll"
-        "Cipher" -> "vocoder with a band map you can rearrange"
-        "Nexus" -> "modular synth built from the other machines"
-        "Bias" -> "four-track for audio recordings"
-        else -> ""
+    @StringRes
+    fun describe(type: String): Int? = when (type) {
+        "Reflux" -> R.string.machine_about_reflux
+        "Trinity" -> R.string.machine_about_trinity
+        "Ratio" -> R.string.machine_about_ratio
+        "Cumulus" -> R.string.machine_about_cumulus
+        "Formulate" -> R.string.machine_about_formulate
+        "Hexbeat" -> R.string.machine_about_hexbeat
+        "Genesis" -> R.string.machine_about_genesis
+        "Resonance" -> R.string.machine_about_resonance
+        "Dice" -> R.string.machine_about_dice
+        "Forage" -> R.string.machine_about_forage
+        "Manual" -> R.string.machine_about_manual
+        "Filament" -> R.string.machine_about_filament
+        "Brazen" -> R.string.machine_about_brazen
+        "Timber" -> R.string.machine_about_timber
+        "Mosaic" -> R.string.machine_about_mosaic
+        "Pollen" -> R.string.machine_about_pollen
+        "Molt" -> R.string.machine_about_molt
+        "Cipher" -> R.string.machine_about_cipher
+        "Nexus" -> R.string.machine_about_nexus
+        "Bias" -> R.string.machine_about_bias
+        else -> null
     }
 
     /**

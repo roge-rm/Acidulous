@@ -1,0 +1,113 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- ui/MachinePanel.kt: what the panels say besides their controls' labels, which are in strings_panel_words.xml. -->
+
+    <!-- A track with no patch chosen. -->
+    <string name="machine_patch">patch</string>
+    <!-- A patch that has been changed since it was loaded. -->
+    <string name="machine_patch_edited">%s *</string>
+    <string name="machine_patch_menu">%s ▾</string>
+    <string name="machine_patch_name">Patch name</string>
+
+    <!-- The drum kit (Forage) -->
+    <string name="kit_clear_title">Clear the kit</string>
+    <string name="kit_clear">Clear</string>
+    <string name="kit_clear_note">Removes the samples from all thirteen pads and the slice file. The files stay in the app under samples….</string>
+    <string name="kit_pad">pad %d</string>
+    <string name="kit_not_loaded">%s (not loaded)</string>
+    <string name="kit_no_sample">no sample</string>
+    <!-- A pad's sample: its name, its length, and stereo or mono. -->
+    <string name="kit_sample_info">%1$s  %2$s %3$s</string>
+    <string name="kit_stereo_short">st</string>
+    <string name="kit_mono">mono</string>
+    <!-- A pad playing part of the slice file, and which part. -->
+    <string name="kit_slice_of">slice %1$d of %2$s  %3$.0f%%-%4$.0f%%</string>
+    <string name="kit_load">load…</string>
+    <string name="kit_samples">samples…</string>
+    <string name="kit_edit">edit…</string>
+    <string name="kit_clear_pad">clear</string>
+    <string name="kit_kit">kit…</string>
+    <string name="kit_slice">slice…</string>
+    <string name="kit_slicing">slicing…</string>
+    <!-- Level the pads against each other. -->
+    <string name="kit_match">match</string>
+    <string name="kit_clear_kit">clear</string>
+
+    <!-- Slicing a file across the pads -->
+    <string name="slice_title">Slice across the pads</string>
+    <string name="slice_confirm">Slice</string>
+    <string name="slice_no_file">no file chosen</string>
+    <string name="slice_choose">choose…</string>
+    <string name="slice_change">change…</string>
+    <string name="slice_where">where to cut</string>
+    <string-array name="slice_modes">
+        <item>transients</item>
+        <item>even</item>
+    </string-array>
+    <string name="slice_transients_note">Cuts at the hits. If there are too many, the loudest are used; too few and it cuts evenly.</string>
+    <string name="slice_even_note">Equal pieces.</string>
+    <string name="slice_count">slices</string>
+    <string name="slice_count_note" tools:ignore="PluralsCandidate">Pads 1 to %d get a slice each. Pads that already have their own sample keep it; clear them to use the slice.</string>
+
+    <!-- The organ\'s input, and other listening -->
+    <string name="machine_input">input</string>
+    <string name="machine_listening">listening</string>
+    <string name="machine_open">open</string>
+
+    <!-- Formulate -->
+    <string name="formula_none">no formula</string>
+    <string name="formula_edit">edit…</string>
+    <string name="formula_title">Formula</string>
+    <!-- The letters are the formula\'s own variables and stay as they are. -->
+    <string name="formula_expression">expression in t, f, n, v, x, a, b, c, s, r</string>
+    <string name="formula_examples">examples</string>
+    <string name="formula_tables">step tables - values, and | where it loops back</string>
+    <string name="formula_arp">arp, semitones</string>
+    <string name="formula_duty" tools:ignore="TypographyDashes">duty 0-255</string>
+    <string name="formula_volume" tools:ignore="TypographyDashes">volume 0-255</string>
+
+    <!-- Resonance -->
+    <string name="resonance_object">object %d</string>
+    <string name="resonance_about">a struck object that rings with the others</string>
+
+    <!-- Files a machine plays -->
+    <string name="machine_no_take">no take</string>
+    <string name="machine_no_loop">no loop</string>
+    <string name="machine_no_file">no file</string>
+    <string name="machine_import">import…</string>
+    <string name="machine_samples">samples…</string>
+    <string name="machine_record">record…</string>
+    <string name="dice_slice">slice %d - chosen with the pads</string>
+    <string name="pollen_live">live input: not saved with the song, silent in exports</string>
+
+    <!-- Bias: a lane\'s take, when it was sung at another tempo. -->
+    <string name="bias_take_bpm">%.1f bpm</string>
+    <string name="bias_audio">audio…</string>
+    <string name="bias_clear">clear</string>
+
+    <!-- Nexus -->
+    <plurals name="nexus_modules">
+        <item quantity="one">%d module</item>
+        <item quantity="other">%d modules</item>
+    </plurals>
+    <plurals name="nexus_cables">
+        <item quantity="one">%d cable</item>
+        <item quantity="other">%d cables</item>
+    </plurals>
+    <string name="nexus_patch">patch…</string>
+
+    <!-- Mosaic -->
+    <string name="mosaic_soundfont">SoundFont: %1$s   %2$s</string>
+    <string name="mosaic_loading">loading…</string>
+    <string name="mosaic_nothing">nothing loaded</string>
+    <!-- A SoundFont preset: zones, samples, and how long they are in all. -->
+    <string name="mosaic_preset_info">%1$s zones · %2$s samples · %3$.1fs</string>
+    <string name="mosaic_import_soundfont">soundfont…</string>
+    <string name="mosaic_preset">preset…</string>
+    <string name="mosaic_samples">samples…</string>
+    <plurals name="mosaic_zones">
+        <item quantity="one">%d zone</item>
+        <item quantity="other">%d zones</item>
+    </plurals>
+    <string name="mosaic_spread">spread</string>
+    <string name="mosaic_clear">clear</string>
+</resources>

@@ -16,6 +16,10 @@ package com.rm.acidulous.model
  * list of sixty entries needs to say whether "cutoff" is the machine's or the
  * filter effect's. The short one is the parameter alone, for the strip's
  * gutter, where there is room for one word turned on its side.
+ *
+ * Every word goes through a `word` function on its way out, which the app
+ * passes to put it into the phone's language (ui/PanelText.kt); left alone
+ * it is English, which is what a test reads.
  */
 
 private val WORDS = mapOf(
@@ -37,46 +41,46 @@ private val WORDS = mapOf(
 )
 
 /** The engine's name for a parameter, spelled out as far as it can be. */
-fun humanise(name: String): String =
+fun humanise(name: String, word: (String) -> String = { it }): String =
     name.split('_', '.', '-')
         .filter { it.isNotEmpty() }
         .joinToString(" ") { part ->
-            WORDS[part.lowercase()] ?: run {
+            WORDS[part.lowercase()]?.let(word) ?: run {
                 // "f2freq" and the like: a digit glued to a word is a numbered one.
                 val m = Regex("^([a-zA-Z]+)(\\d+)$").find(part)
-                if (m != null) "${WORDS[m.groupValues[1].lowercase()] ?: m.groupValues[1]} ${m.groupValues[2]}"
-                else part
+                if (m != null) "${word(WORDS[m.groupValues[1].lowercase()] ?: m.groupValues[1])} ${m.groupValues[2]}"
+                else word(part)
             }
         }
 
 /** The unit a lane belongs to, named the way the track shows it. */
-fun laneUnitLabel(track: Track, key: String): String = when (val unit = laneUnit(key)) {
+fun laneUnitLabel(track: Track, key: String, word: (String) -> String = { it }): String = when (val unit = laneUnit(key)) {
     "machine" -> track.machine.type
-    "channel" -> "mixer"
-    "performance" -> "perform"
+    "channel" -> word("mixer")
+    "performance" -> word("perform")
     else -> {
         val slot = unit.takeLast(1).toIntOrNull()?.minus(1) ?: 0
         when {
-            unit.startsWith("effect") -> (track.effectAt(slot).type.ifEmpty { "effect" }) + " fx${slot + 1}"
-            unit.startsWith("mod") -> (track.modifierAt(slot).type.ifEmpty { "modifier" }) + " mod${slot + 1}"
+            unit.startsWith("effect") -> track.effectAt(slot).type.ifEmpty { word("effect") } + " " + word("fx${slot + 1}")
+            unit.startsWith("mod") -> track.modifierAt(slot).type.ifEmpty { word("modifier") } + " " + word("mod${slot + 1}")
             else -> unit
         }
     }
 }
 
 /** The parameter alone: the panel's word for it, else the name spelled out. */
-fun laneShortLabel(track: Track, key: String): String {
+fun laneShortLabel(track: Track, key: String, word: (String) -> String = { it }): String {
     val param = laneParam(key)
     if (laneUnit(key) == "machine") {
-        PANEL_SHORT["${track.machine.type}:$param"]?.let { return it }
-        PANEL_LABELS["${track.machine.type}:$param"]?.let { return it }
+        PANEL_SHORT["${track.machine.type}:$param"]?.let { return word(it) }
+        PANEL_LABELS["${track.machine.type}:$param"]?.let { return it.split('|').joinToString(" ", transform = word) }
     }
-    return humanise(param)
+    return humanise(param, word)
 }
 
 /** Unit and parameter, for a list where one "cutoff" must be told from another. */
-fun laneLabel(track: Track, key: String): String {
+fun laneLabel(track: Track, key: String, word: (String) -> String = { it }): String {
     val param = laneParam(key)
     val named = if (laneUnit(key) == "machine") PANEL_LABELS["${track.machine.type}:$param"] else null
-    return "${laneUnitLabel(track, key)} · ${named ?: humanise(param)}"
+    return "${laneUnitLabel(track, key, word)} · ${named?.split('|')?.joinToString(" ", transform = word) ?: humanise(param, word)}"
 }

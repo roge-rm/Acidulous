@@ -1,0 +1,29 @@
+<resources>
+    <!-- model/MachineUi.kt: the machine picker. Machine names are names and stay as they are. -->
+    <string name="machines_synths">synths</string>
+    <string name="machines_drums">drums</string>
+    <!-- Instruments modelled on real ones. The picker sets a trailing "ish" in italic, where there is one. -->
+    <string name="machines_realish">realish</string>
+    <string name="machines_beyond">beyond</string>
+    <!-- One line per machine: what it is, not what it has. -->
+    <string name="machine_about_reflux">acid bass: one oscillator and a screaming filter</string>
+    <string name="machine_about_trinity">three-oscillator poly synth with wavetables and two filters</string>
+    <string name="machine_about_ratio">six-operator FM that morphs between algorithms</string>
+    <string name="machine_about_cumulus">big pads built from a spectrum</string>
+    <string name="machine_about_formulate">8-bit chip synth, and waveforms you type as formulas</string>
+    <string name="machine_about_hexbeat">synthesized drums, classic small-box style</string>
+    <string name="machine_about_genesis">the big drum box, with a kick that pumps the kit</string>
+    <string name="machine_about_resonance">eight struck objects that ring into each other</string>
+    <string name="machine_about_dice">loop slicer with chance on every slice</string>
+    <string name="machine_about_forage">sample drum machine with thirteen pads</string>
+    <string name="machine_about_manual">organ with two manuals, pedals and a rotary cabinet</string>
+    <string name="machine_about_filament">modelled strings: pluck, pick, bow or blow</string>
+    <string name="machine_about_brazen">modelled brass, from trumpet to tuba</string>
+    <string name="machine_about_timber">modelled woodwinds: reeds and flutes</string>
+    <string name="machine_about_mosaic">multisample player for SoundFonts and your samples</string>
+    <string name="machine_about_pollen">granular clouds from a file or the live input</string>
+    <string name="machine_about_molt">sing a take and tune it with the piano roll</string>
+    <string name="machine_about_cipher">vocoder with a band map you can rearrange</string>
+    <string name="machine_about_nexus">modular synth built from the other machines</string>
+    <string name="machine_about_bias">four-track for audio recordings</string>
+</resources>
