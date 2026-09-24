@@ -36,6 +36,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
@@ -162,6 +165,7 @@ fun PianoKeys(
                 }
             },
     ) {
+        KeysForTalkBack(rack, base, scale, noteSpelling)
         Canvas(Modifier.fillMaxSize().padding(horizontal = EdgeGrab).clip(RoundedCornerShape(3.dp))) {
             val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale)
             val down = held.values.toSet()
@@ -277,7 +281,10 @@ fun ScaleChip(
      * running - and which scale it is, is what holding it open is for.
      */
     icon: String? = null,
-) = SlotChip(icon ?: label ?: stringResource(R.string.scale_chip), label != null, onToggle, onOpen, modifier, vertical, icon != null)
+) = SlotChip(
+    icon ?: label ?: stringResource(R.string.scale_chip), label != null, onToggle, onOpen, modifier, vertical, icon != null,
+    said = label ?: stringResource(R.string.scale_chip),
+)
 
 /**
  * The chip grammar the keyboard strip uses for everything that sits between
@@ -302,6 +309,8 @@ fun SlotChip(
      * never ellipsised, because there is nothing to ellipsise.
      */
     icon: Boolean = false,
+    /** What TalkBack calls it, where [text] is a glyph. */
+    said: String = text,
 ) {
     val c = Acid.colors
     // **The callbacks have to be the current ones.** `pointerInput` restarts
@@ -318,7 +327,12 @@ fun SlotChip(
     val cb by rememberUpdatedState(onToggle to onOpen)
     Box(
         modifier.clip(RoundedCornerShape(4.dp)).background(if (on) c.accentDim else c.card)
-            .pointerInput(Unit) { detectTapGestures(onLongPress = { cb.second() }, onTap = { cb.first() }) },
+            .pointerInput(Unit) { detectTapGestures(onLongPress = { cb.second() }, onTap = { cb.first() }) }
+            .button(
+                said, stringResource(if (on) R.string.a11y_on else R.string.a11y_off),
+                listOf(action(stringResource(R.string.a11y_open_it)) { cb.second() }),
+                onClick = { cb.first() },
+            ),
         contentAlignment = Alignment.Center,
     ) {
         val tint = if (on) c.accent else c.textDim
@@ -605,6 +619,60 @@ private fun Pill(label: String, on: Boolean, onClick: () -> Unit) {
     val c = Acid.colors
     Box(
         Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) c.green else c.controlAlt)
-            .clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 4.dp),
+            .clickable(onClick = onClick).choice(label, on).padding(horizontal = 8.dp, vertical = 4.dp),
     ) { Text(label, color = if (on) Color.White else c.textMid, fontSize = 11.sp) }
+}
+
+/**
+ * The keys, one node each, for TalkBack: the canvas under them is one picture,
+ * and a keyboard that says nothing but "keyboard" cannot be played. Each is laid
+ * over its key, named for its note, and a double tap plays it for a moment.
+ */
+@Composable
+private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: Map<Int, String>) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = EdgeGrab)) {
+        val w = with(density) { maxWidth.toPx() }
+        val h = with(density) { maxHeight.toPx() }
+        val layout = Layout(w, h, base, with(density) { MinKey.toPx() }, scale)
+        // Left to right, whites and blacks in pitch order, which is the order
+        // TalkBack walks them.
+        val keys = ArrayList<Triple<Int, Float, Float>>() // note, x, width
+        val blackH: Float
+        if (layout.scaleKeys != null) {
+            layout.scaleKeys.forEachIndexed { i, note -> keys += Triple(note, i * layout.keyW, layout.keyW) }
+            blackH = 0f
+        } else {
+            for (i in 0 until layout.whiteCount) keys += Triple(layout.whiteNote(i), i * layout.keyW, layout.keyW)
+            for ((x, note) in layout.blacks()) keys += Triple(note, x, layout.blackW)
+            blackH = layout.blackH
+        }
+        for ((note, x, kw) in keys.sortedBy { it.first }) {
+            val black = layout.scaleKeys == null && ((note % 12) in intArrayOf(1, 3, 6, 8, 10))
+            Box(
+                Modifier
+                    .offset { androidx.compose.ui.unit.IntOffset(x.toInt(), 0) }
+                    .size(with(density) { kw.toDp() }, with(density) { (if (black) blackH else h).toDp() })
+                    .button(spokenNote(note, spelling, resources), onClick = {
+                        NativeEngine.noteOn(rack, note, 100)
+                        scope.launch { kotlinx.coroutines.delay(300); NativeEngine.noteOff(rack, note) }
+                    }),
+            )
+        }
+    }
+}
+
+/** A note as it is said rather than written: "C sharp 4", not "C#4". */
+internal fun spokenNote(pitch: Int, spelling: Map<Int, String>, resources: android.content.res.Resources): String {
+    val written = noteName(pitch, spelling)
+    val octave = pitch / 12 - 1
+    val name = written.dropLast(octave.toString().length)
+    val letter = name.take(1)
+    return when {
+        name.contains('#') || name.contains('♯') -> resources.getString(R.string.a11y_note_sharp, letter, octave)
+        name.length > 1 && (name[1] == 'b' || name[1] == '♭') -> resources.getString(R.string.a11y_note_flat, letter, octave)
+        else -> resources.getString(R.string.a11y_note, letter, octave)
+    }
 }

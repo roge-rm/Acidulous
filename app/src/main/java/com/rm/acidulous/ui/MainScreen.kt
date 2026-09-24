@@ -296,6 +296,15 @@ fun MainScreen(
                 },
                 modifier = word.mappable(MapTargets.action(Action.LoopScene.name)),
                 colour = if (repeating) Acid.colors.teal else Acid.colors.textDim,
+                description = stringResource(R.string.a11y_loop),
+                state = stringResource(
+                    when {
+                        !repeating -> R.string.a11y_loop_none
+                        loopScene -> R.string.a11y_loop_scene
+                        else -> R.string.a11y_loop_song
+                    },
+                ),
+                holdName = stringResource(if (repeating) R.string.a11y_loop_stop else R.string.a11y_loop_again),
                 onLongPress = {
                     val on = !repeating
                     editor.replace(song.copy(loopSong = on))
@@ -353,6 +362,7 @@ fun MainScreen(
                 // either way: the undo for whatever this screen edits.
                 BarButton(
                     "\u21B6", Modifier.width(BarAnchor), enabled = editor.canUndoSong(),
+                    description = stringResource(R.string.a11y_undo),
                 ) { editor.undoSong() }
                 // Mapping mode hangs off a long press of redo rather than a
                 // button of its own. It is a mode you step into for a minute and
@@ -362,10 +372,18 @@ fun MainScreen(
                     Modifier.width(BarAnchor).onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
                     colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
                     enabled = editor.canRedoSong(),
+                    description = stringResource(R.string.a11y_redo),
+                    actions = listOf(
+                        action(stringResource(if (UiPrefs.mapMode) R.string.a11y_mapping_off else R.string.a11y_mapping_on)) {
+                            UiPrefs.chooseMapMode(!UiPrefs.mapMode)
+                        },
+                    ),
                 ) { editor.redoSong() }
                 BarButton(
                     "\u21C5", Modifier.width(BarAnchor),
                     colour = if (showMixer) Acid.colors.accent else Color.Unspecified,
+                    description = stringResource(R.string.a11y_panel),
+                    state = stringResource(if (showMixer) R.string.a11y_open else R.string.a11y_closed),
                 ) { showMixer = !showMixer }
                 BarButton(
                     // The glyph carries two states, because the pill carries two
@@ -378,6 +396,10 @@ fun MainScreen(
                     Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name)),
                     border = if (armed) Acid.colors.red else null,
                     onLongPress = { if (!UiPrefs.mapMode) onClick(!clickOn) },
+                    description = stringResource(R.string.a11y_record),
+                    state = stringResource(if (armed) R.string.a11y_armed else R.string.a11y_not_armed)
+                        .let { if (clickOn) stringResource(R.string.a11y_with_click, it) else it },
+                    holdName = stringResource(if (clickOn) R.string.a11y_click_off else R.string.a11y_click_on),
                 ) { onArm(!armed) }
                 BarButton(
                     if (playing) "\u25A0" else "\u25B6",
@@ -389,6 +411,8 @@ fun MainScreen(
                     // a long press there to forget what drives a control, and
                     // one gesture must not do both.
                     onLongPress = { if (!UiPrefs.mapMode) panicEverything() },
+                    description = stringResource(if (playing) R.string.a11y_stop else R.string.a11y_play),
+                    holdName = stringResource(R.string.a11y_stop_all),
                 ) {
                     when {
                         !playing -> com.rm.acidulous.engine.EngineSync.play(if (clipMode) 0 else position.scene, clipMode)
@@ -417,6 +441,7 @@ fun MainScreen(
             // this is where it says so. Nothing else on the screen would.
             HeaderTextButton(
                 "%.1f".format(bpm),
+                description = stringResource(R.string.a11y_tempo, "%.1f".format(bpm)),
                 color = if (clickOn) Acid.colors.accent else Acid.colors.text,
             ) { dialog = Dialog.Tempo }
             HeaderTextButton(stringResource(R.string.main_save), onClick = onSave)
@@ -426,7 +451,7 @@ fun MainScreen(
             // nowhere near the button that was pressed. Boxed, the anchor is
             // the button, and the menu drops under it against the right edge.
             Box {
-                HeaderTextButton(stringResource(R.string.main_file), color = Acid.colors.accent) { fileMenu = true }
+                HeaderTextButton(stringResource(R.string.main_file), description = stringResource(R.string.a11y_file_menu), color = Acid.colors.accent) { fileMenu = true }
                 // A position bar, because this menu scrolls - nine items is
                 // taller than a phone held sideways, and until it had one the
                 // last of them looked like the last there was. See
@@ -688,6 +713,7 @@ fun MainScreen(
                             val live = if (clipMode) launch.scene == sceneIndex else position.scene == sceneIndex
                             ClipCell(
                                 clip = clip,
+                                name = stringResource(R.string.a11y_cell, track.name, scene.name),
                                 ticksPerBar = song.signatureOf(scene).ticksPerBar,
                                 colour = trackColour(trackIndex, track.colour),
                                 playing = playing && live,
@@ -980,7 +1006,24 @@ private fun SceneHeader(
                     else -> Acid.colors.control
                 },
             )
-            .combinedClickable(onClick = onAudition, onLongClick = { menu = true }),
+            .combinedClickable(onClick = onAudition, onLongClick = { menu = true })
+            .button(
+                listOfNotNull(
+                    stringResource(R.string.a11y_scene, index + 1, name),
+                    pluralStringResource(R.plurals.a11y_cell_bars, bars, bars),
+                    pluralStringResource(R.plurals.a11y_scene_repeats, repeat, repeat),
+                    if (hasTempo) stringResource(R.string.a11y_scene_tempo) else null,
+                    if (rampMark != null) stringResource(R.string.a11y_scene_ramp) else null,
+                ).joinToString(stringResource(R.string.list_separator)),
+                when {
+                    finishing -> stringResource(R.string.a11y_scene_finishing)
+                    queued -> stringResource(R.string.a11y_queued)
+                    holding -> stringResource(R.string.a11y_scene_looping)
+                    progress != null -> stringResource(R.string.a11y_playing)
+                    else -> null
+                },
+                listOf(action(stringResource(R.string.a11y_scene_menu)) { menu = true }),
+            ),
     ) {
         if (progress != null) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)).background(Acid.colors.sceneProgress))
@@ -1059,7 +1102,12 @@ private fun TrackHeader(
             .width(cell.trackW).height(cell.cellH).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(if (hot) Acid.colors.red.copy(alpha = glow) else Acid.colors.control)
-            .combinedClickable(onClick = { menu = true }, onLongClick = onSettings),
+            .combinedClickable(onClick = { menu = true }, onLongClick = onSettings)
+            .button(
+                stringResource(R.string.a11y_track, name, machine),
+                if (hot) stringResource(R.string.a11y_track_hot) else null,
+                listOf(action(stringResource(R.string.a11y_track_settings)) { onSettings() }),
+            ),
     ) {
         Box(Modifier.width(4.dp).fillMaxHeight().background(if (hot) Acid.colors.red else colour))
         Column(Modifier.padding(start = 10.dp, top = 4.dp, end = 4.dp)) {
@@ -1091,6 +1139,8 @@ private fun TrackHeader(
 @Composable
 private fun ClipCell(
     clip: com.rm.acidulous.model.Clip?, ticksPerBar: Int, colour: Color, playing: Boolean,
+    /** Its track and scene, for TalkBack: "Drums, Intro". */
+    name: String = "",
     /**
      * How far through its own loop this clip is, 0..1, or null when silent.
      *
@@ -1135,6 +1185,27 @@ private fun ClipCell(
         animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse), label = "queuedclip",
     )
     val recording = loopPhase == Looper.Phase.Open || loopPhase == Looper.Phase.Overdub
+    // What TalkBack says: which cell, what is in it, and what it is doing.
+    val said = listOfNotNull(
+        name,
+        if (clip == null) stringResource(R.string.a11y_cell_empty)
+        else pluralStringResource(R.plurals.a11y_cell_bars, clip.bars, clip.bars),
+        if (clip?.playMode == com.rm.acidulous.model.PlayMode.OneShot) stringResource(R.string.a11y_cell_once) else null,
+        if (clip?.mute == true) stringResource(R.string.a11y_cell_muted) else null,
+        if (frozen) stringResource(if (stale) R.string.a11y_cell_stale else R.string.a11y_cell_frozen) else null,
+        if (audioLanes > 0) pluralStringResource(R.plurals.a11y_cell_takes, audioLanes, audioLanes) else null,
+    ).joinToString(stringResource(R.string.list_separator))
+    val doing = when {
+        recording -> stringResource(R.string.a11y_looping)
+        queued -> stringResource(R.string.a11y_queued)
+        stopping -> stringResource(R.string.a11y_stopping)
+        playing -> stringResource(R.string.a11y_playing)
+        else -> null
+    }
+    val a11yActions = listOfNotNull(
+        action(stringResource(R.string.a11y_clip_settings)) { settingsNow() },
+        if (clipMode && clip != null) action(stringResource(R.string.a11y_open_editor)) { openNow() } else null,
+    )
     val edge = when {
         loopPhase == Looper.Phase.Open -> Acid.colors.red.copy(alpha = pulse)
         loopPhase == Looper.Phase.Overdub -> Acid.colors.red
@@ -1178,7 +1249,10 @@ private fun ClipCell(
                 } else {
                     Modifier.combinedClickable(onClick = onOpen, onLongClick = onSettings)
                 },
-            ),
+            )
+            // A tap launches in the launcher, which the gesture detector does
+            // not tell TalkBack, so the click is stated here.
+            .button(said, doing, a11yActions, onClick = if (clipMode) ({ launchNow() }) else null),
     ) {
         if (clip == null) {
             Text("+", color = Acid.colors.textFaint, fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))
@@ -1313,7 +1387,11 @@ private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
             .width(cell.trackW).height(cell.sceneH).padding(3.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(if (clipMode) Acid.colors.accentDim else Acid.colors.control)
-            .clickable { onClipMode(!clipMode) },
+            .clickable { onClipMode(!clipMode) }
+            .button(
+                stringResource(R.string.a11y_grid_mode),
+                stringResource(if (clipMode) R.string.a11y_grid_clips else R.string.a11y_grid_song),
+            ),
         contentAlignment = Alignment.Center,
     ) {
         // The same colour in both modes: the background says which one this
@@ -1385,7 +1463,8 @@ private fun PanelTab(label: String, on: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.width(22.dp).height(PANEL_TAB_H).clip(RoundedCornerShape(4.dp))
             .background(if (on) c.accent.copy(alpha = 0.25f) else c.raised)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .choice(label, on, tab = true),
         contentAlignment = Alignment.Center,
     ) { SideText(label, if (on) c.accent else c.textMid, 11.sp, length = PANEL_TAB_H) }
 }

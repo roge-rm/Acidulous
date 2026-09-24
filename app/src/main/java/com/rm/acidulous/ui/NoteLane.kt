@@ -199,7 +199,8 @@ fun NoteLane(
                     // passing through three you did not. Dan asked for the
                     // chooser, and the strip's own menu is what it looks
                     // like.
-                    Modifier.weight(1f).fillMaxWidth().clickable { menu = true },
+                    Modifier.weight(1f).fillMaxWidth().clickable { menu = true }
+                        .button(stringResource(R.string.a11y_note_lane), stringResource(prop.label)),
                     contentAlignment = Alignment.Center,
                 ) {
                     // **The value goes in the gutter, not next to the bar.**
@@ -240,7 +241,8 @@ fun NoteLane(
             Box(
                 Modifier.fillMaxWidth()
                     .then(if (collapsed) Modifier.fillMaxHeight() else Modifier.height(18.dp))
-                    .clickable { onToggleCollapse() },
+                    .clickable { onToggleCollapse() }
+                    .button(stringResource(if (collapsed) R.string.a11y_unfold_lane else R.string.a11y_fold_lane)),
                 contentAlignment = Alignment.Center,
             ) { Text(if (collapsed) "▴" else "▾", color = c.textMid, fontSize = 11.sp) }
             // A position bar: this grows a row per distinct pitch in the clip, so on a

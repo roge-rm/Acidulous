@@ -33,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -665,10 +667,11 @@ private fun BpmRow(bpm: Float, onBpm: (Float) -> Unit) {
     // half-finished number - "1", or an empty field mid-delete - does not
     // become the tempo and snap the field back under the finger.
     var typed by remember(bpm) { mutableStateOf(formatBpm(bpm)) }
+    val fieldSaid = stringResource(R.string.a11y_tempo_field)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(stringResource(R.string.tempo_bpm), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            StepButton("\u2212") { onBpm((bpm - 1f).coerceIn(BPM_MIN, BPM_MAX)) }
+            StepButton("\u2212", stringResource(R.string.a11y_tempo_down)) { onBpm((bpm - 1f).coerceIn(BPM_MIN, BPM_MAX)) }
             OutlinedTextField(
                 value = typed,
                 onValueChange = { text ->
@@ -680,18 +683,18 @@ private fun BpmRow(bpm: Float, onBpm: (Float) -> Unit) {
                 textStyle = LocalTextStyle.current.copy(
                     fontSize = 20.sp, fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center,
                 ),
-                modifier = Modifier.width(120.dp),
+                modifier = Modifier.width(120.dp).semantics { contentDescription = fieldSaid },
             )
-            StepButton("+") { onBpm((bpm + 1f).coerceIn(BPM_MIN, BPM_MAX)) }
+            StepButton("+", stringResource(R.string.a11y_tempo_up)) { onBpm((bpm + 1f).coerceIn(BPM_MIN, BPM_MAX)) }
         }
     }
 }
 
 @Composable
-private fun StepButton(label: String, onClick: () -> Unit) {
+private fun StepButton(label: String, said: String, onClick: () -> Unit) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
     Box(
-        Modifier.size(44.dp).clip(RoundedCornerShape(6.dp)).background(c.control).clickable(onClick = onClick),
+        Modifier.size(44.dp).clip(RoundedCornerShape(6.dp)).background(c.control).clickable(onClick = onClick).button(said),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = c.accent, fontSize = 20.sp) }
 }
@@ -1134,6 +1137,7 @@ internal fun Choice(
         modifier.clip(RoundedCornerShape(4.dp))
             .background(if (on) c.accent else c.control)
             .clickable(enabled = enabled, onClick = onPick)
+            .choice(label, on)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -1175,7 +1179,7 @@ internal fun DialogRow(
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(mark, color = c.accent, fontSize = 13.sp, modifier = Modifier.padding(end = 8.dp))
+        Text(mark, color = c.accent, fontSize = 13.sp, modifier = Modifier.padding(end = 8.dp).silent())
         Column(Modifier.weight(1f)) {
             Text(name, color = if (on) c.accent else c.text, fontSize = 14.sp, maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -1189,10 +1193,12 @@ internal fun DialogRow(
             Text(trailing, color = if (on) c.teal else c.textDim, fontSize = 10.sp)
         }
         if (onRemove != null) {
+            val said = stringResource(R.string.a11y_delete, name)
             Text(
                 "✕", color = c.red, fontSize = 14.sp,
                 modifier = Modifier.clip(RoundedCornerShape(4.dp))
                     .clickable(onClick = onRemove)
+                    .button(said, onClick = onRemove)
                     .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
             )
         }

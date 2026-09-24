@@ -157,13 +157,17 @@ def from_model():
     words.update(m.group(1) for m in re.finditer(r'"[^"]*"\s+to\s+"([^"]*)"', lanes))
     for m in re.finditer(r'"([^"]*)"', re.sub(r"//[^\n]*|/\*.*?\*/", "", lanes.split("fun laneUnitLabel")[1].split("fun laneShortLabel")[0], flags=re.S)):
         words.add(template(m.group(1)).strip())
+    # The drum machines' voices, which the drum grid names to TalkBack.
+    voices = (MODEL / "MachineUi.kt").read_text()
+    words.update(template(m.group(1)) for m in re.finditer(r'DrumVoice\([^,]+,\s*"([^"]*)"', voices))
     banks = (MODEL / "FactoryBanks.kt").read_text()
     words.update(m.group(1) for m in re.finditer(r'family\s*=\s*"([^"]*)"', banks))
     return words
 
 
-# Words gen_param_labels.py adds to a lane's name that no panel says itself.
-LANE_WORDS = {"pad %d"}
+# Words said that no panel writes as a literal: gen_param_labels.py's "pad %d"
+# in a lane's name, and Forage's unloaded pads.
+LANE_WORDS = {"pad %d", "Pad %d"}
 
 
 def harvest():

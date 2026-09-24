@@ -127,12 +127,12 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
             Spacer(Modifier.weight(1f))
             TargetChip(song, editor, Modifier)
         }
-        LengthStrip(REPEAT_LENGTHS, state.repeat, state.holdLatch, Modifier.fillMaxWidth().weight(1f)) { k ->
+        LengthStrip(REPEAT_LENGTHS, state.repeat, state.holdLatch, Modifier.fillMaxWidth().weight(1f), name = stringResource(R.string.perform_repeat)) { k ->
             state.repeat = k
             out.repeat(k)
         }
         Caption(stringResource(R.string.perform_gate))
-        LengthStrip(GATE_LENGTHS, state.gate, state.holdLatch, Modifier.fillMaxWidth().weight(1f)) { k ->
+        LengthStrip(GATE_LENGTHS, state.gate, state.holdLatch, Modifier.fillMaxWidth().weight(1f), name = stringResource(R.string.perform_gate)) { k ->
             state.gate = k
             out.gate(k)
         }
@@ -378,7 +378,8 @@ private fun LatchChip(on: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val c = Acid.colors
     Box(
         modifier.height(28.dp).clip(RoundedCornerShape(4.dp))
-            .background(if (on) c.accent.copy(alpha = 0.25f) else c.raised).clickable(onClick = onClick),
+            .background(if (on) c.accent.copy(alpha = 0.25f) else c.raised).clickable(onClick = onClick)
+            .button(stringResource(R.string.perform_latch), stringResource(if (on) R.string.a11y_on else R.string.a11y_off)),
         contentAlignment = Alignment.Center,
     ) { Text(stringResource(R.string.perform_latch), color = if (on) c.accent else c.textMid, fontSize = 11.sp) }
 }
@@ -396,7 +397,14 @@ private fun TrackMute(name: String, colour: Color, muted: Boolean, waiting: Bool
         modifier.clip(shape)
             .background(if (muted) c.red.copy(alpha = 0.25f) else c.raised)
             .then(if (waiting != null) Modifier.border(2.dp, if (waiting) c.red else c.textMid, shape) else Modifier)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .button(
+                name,
+                listOfNotNull(
+                    if (muted) stringResource(R.string.a11y_muted) else null,
+                    if (waiting != null) stringResource(R.string.a11y_mute_pending) else null,
+                ).joinToString(stringResource(R.string.list_separator)).ifEmpty { null },
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.width(3.dp).fillMaxHeight().background(colour))
@@ -413,7 +421,7 @@ private fun TrackMute(name: String, colour: Color, muted: Boolean, waiting: Bool
  * another to change.
  */
 @Composable
-private fun LengthStrip(labels: List<String>, held: Int, latch: Boolean, modifier: Modifier, onChange: (Int) -> Unit) {
+private fun LengthStrip(labels: List<String>, held: Int, latch: Boolean, modifier: Modifier, name: String = "", onChange: (Int) -> Unit) {
     val c = Acid.colors
     val cb by rememberUpdatedState(onChange)
     val current by rememberUpdatedState(held)
@@ -444,7 +452,9 @@ private fun LengthStrip(labels: List<String>, held: Int, latch: Boolean, modifie
         labels.forEachIndexed { i, label ->
             val on = held == i + 1
             Box(
-                Modifier.weight(1f).fillMaxHeight().background(if (on) c.accent.copy(alpha = 0.35f) else c.raised),
+                Modifier.weight(1f).fillMaxHeight().background(if (on) c.accent.copy(alpha = 0.35f) else c.raised)
+                    // A double tap holds it, and another lets go.
+                    .choice(stringResource(R.string.a11y_named, name, label), on) { cb(if (on) 0 else i + 1) },
                 contentAlignment = Alignment.Center,
             ) { Text(label, color = if (on) c.accent else c.textMid, fontSize = 12.sp, maxLines = 1, softWrap = false) }
         }
@@ -460,6 +470,7 @@ private fun HoldPad(label: String, on: Boolean, latch: Boolean, colour: Color, m
     val latched by rememberUpdatedState(latch)
     Box(
         modifier.clip(RoundedCornerShape(6.dp)).background(if (on) colour.copy(alpha = 0.3f) else c.raised)
+            .button(label, stringResource(if (on) R.string.a11y_on else R.string.a11y_off), onClick = { cb(!current) })
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
@@ -495,7 +506,16 @@ private fun XyPad(
     val c = Acid.colors
     val cb by rememberUpdatedState(onMove)
     val latched by rememberUpdatedState(latch)
-    Box(modifier.clip(RoundedCornerShape(6.dp)).background(c.raised)) {
+    Box(
+        modifier.clip(RoundedCornerShape(6.dp)).background(c.raised)
+            .button(
+                stringResource(R.string.a11y_xy, left, right, up),
+                actions = listOf(
+                    action(stringResource(R.string.a11y_xy_press)) { cb(Offset(0.5f, 0.6f)) },
+                    action(stringResource(R.string.a11y_xy_release)) { cb(null) },
+                ),
+            ),
+    ) {
         Canvas(
             Modifier.fillMaxSize().pointerInput(Unit) {
                 awaitEachGesture {

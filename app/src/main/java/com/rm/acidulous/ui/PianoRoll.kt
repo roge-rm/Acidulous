@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
@@ -156,8 +158,19 @@ fun PianoRoll(
     var rubberBand by remember { mutableStateOf<Rect?>(null) }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
 
+    // TalkBack hears the roll as a summary: one picture cannot be walked
+    // note by note. Notes go in by playing the keys while recording.
+    val resources = androidx.compose.ui.platform.LocalResources.current
+    val summary = if (clip.notes.isEmpty()) resources.getString(R.string.a11y_roll_empty) else {
+        val low = clip.notes.minOf { it.pitch }
+        val high = clip.notes.maxOf { it.pitch }
+        resources.getQuantityString(
+            R.plurals.a11y_roll, clip.notes.size, clip.notes.size,
+            spokenNote(low, noteSpelling, resources), spokenNote(high, noteSpelling, resources),
+        )
+    }
     Canvas(
-        modifier = modifier.pointerInput(Unit) {
+        modifier = modifier.semantics { contentDescription = summary }.pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
                 val geo = Geometry(

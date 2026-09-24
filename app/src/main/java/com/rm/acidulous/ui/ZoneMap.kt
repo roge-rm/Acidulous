@@ -37,6 +37,7 @@ import com.rm.acidulous.ui.theme.AcidColors
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringArrayResource
 import com.rm.acidulous.R
+import androidx.compose.ui.res.pluralStringResource
 
 /**
  * The map itself: key across, velocity up, one rectangle per zone. Tapping a
@@ -54,8 +55,10 @@ fun ZoneMapView(
     val c = Acid.colors
     val pick by rememberUpdatedState(onSelect)
     val list by rememberUpdatedState(zones)
+    val edit = zones.mapIndexed { i, z -> action(stringResource(R.string.a11y_edit_zone, i + 1, z.name)) { pick(i) } }
     Canvas(
         modifier
+            .button(pluralStringResource(R.plurals.a11y_zones, zones.size, zones.size), actions = edit)
             .clip(RoundedCornerShape(6.dp))
             .background(c.bg)
             .pointerInput(Unit) {

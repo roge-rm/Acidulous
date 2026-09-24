@@ -1,0 +1,219 @@
+<resources>
+    <!-- What TalkBack says about controls that are drawn rather than written: ui/Accessibility.kt and its callers. -->
+    <string name="a11y_reset">Reset</string>
+    <string name="a11y_choose">Choose from list</string>
+    <!-- After a knob's value, when a lane or step locks move it. -->
+    <string name="a11y_automated">%s, automated</string>
+    <string name="a11y_locked">%s, locked on some steps</string>
+    <!-- A control's name and one of its choices, or its value: "wave: saw". -->
+    <string name="a11y_named">%1$s: %2$s</string>
+
+    <!-- The transport -->
+    <string name="a11y_play">Play</string>
+    <string name="a11y_stop">Stop</string>
+    <string name="a11y_stop_all">Stop all sound</string>
+    <string name="a11y_undo">Undo</string>
+    <string name="a11y_redo">Redo</string>
+    <string name="a11y_mapping_on">Turn MIDI mapping on</string>
+    <string name="a11y_mapping_off">Turn MIDI mapping off</string>
+    <string name="a11y_panel">Mixer and perform pages</string>
+    <string name="a11y_open">open</string>
+    <string name="a11y_closed">closed</string>
+    <string name="a11y_record">Record</string>
+    <string name="a11y_armed">armed</string>
+    <string name="a11y_not_armed">not armed</string>
+    <!-- Record's state, when the metronome is on too. -->
+    <string name="a11y_with_click">%s, click on</string>
+    <string name="a11y_click_on">Turn the click on</string>
+    <string name="a11y_click_off">Turn the click off</string>
+    <string name="a11y_loop">Loop</string>
+    <string name="a11y_loop_song">the whole song</string>
+    <string name="a11y_loop_scene">this scene</string>
+    <string name="a11y_loop_none">plays to the end and stops</string>
+    <string name="a11y_loop_stop">Play to the end and stop</string>
+    <string name="a11y_loop_again">Loop again</string>
+    <string name="a11y_on">on</string>
+    <string name="a11y_off">off</string>
+
+    <!-- The editor's bar and header -->
+    <string name="a11y_back">Back</string>
+    <string name="a11y_generate">Generate notes</string>
+    <string name="a11y_lock">Lock steps</string>
+    <string name="a11y_prev_page">Previous page</string>
+    <string name="a11y_next_page">Next page</string>
+    <string name="a11y_page">page %1$d of %2$d</string>
+    <string name="a11y_velocity">Velocity</string>
+    <string name="a11y_velocity_touch">from where you touch</string>
+    <string name="a11y_velocity_full">full</string>
+    <string name="a11y_step_view">Step view</string>
+    <string name="a11y_edit_mode">Edit mode</string>
+    <string name="a11y_draw">draw</string>
+    <string name="a11y_select">select</string>
+    <string name="a11y_fill_start">Hold fill</string>
+    <string name="a11y_fill_stop">Let go of fill</string>
+    <string name="a11y_held">held</string>
+
+    <!-- The song grid -->
+    <!-- A cell: its track and scene. -->
+    <string name="a11y_cell">%1$s, %2$s</string>
+    <string name="a11y_cell_empty">empty</string>
+    <plurals name="a11y_cell_bars">
+        <item quantity="one">%d bar</item>
+        <item quantity="other">%d bars</item>
+    </plurals>
+    <string name="a11y_cell_once">plays once</string>
+    <string name="a11y_cell_muted">muted</string>
+    <string name="a11y_cell_frozen">frozen</string>
+    <string name="a11y_cell_stale">frozen at another tempo</string>
+    <plurals name="a11y_cell_takes">
+        <item quantity="one">%d recording</item>
+        <item quantity="other">%d recordings</item>
+    </plurals>
+    <string name="a11y_playing">playing</string>
+    <string name="a11y_queued">waiting to start</string>
+    <string name="a11y_stopping">stopping at the end of its loop</string>
+    <string name="a11y_looping">recording a loop</string>
+    <string name="a11y_clip_settings">Clip settings</string>
+    <string name="a11y_open_editor">Open in the editor</string>
+    <string name="a11y_launch">Launch</string>
+
+    <!-- A scene's header -->
+    <string name="a11y_scene">Scene %1$d, %2$s</string>
+    <plurals name="a11y_scene_repeats">
+        <item quantity="one">plays once</item>
+        <item quantity="other">plays %d times</item>
+    </plurals>
+    <string name="a11y_scene_tempo">own tempo</string>
+    <string name="a11y_scene_ramp">tempo ramps at the end</string>
+    <string name="a11y_scene_looping">looping</string>
+    <string name="a11y_scene_finishing">finishing</string>
+    <string name="a11y_scene_menu">Scene menu</string>
+
+    <!-- A track's header -->
+    <string name="a11y_track">%1$s, %2$s</string>
+    <string name="a11y_track_hot">costing the most while the phone is behind</string>
+    <string name="a11y_track_settings">Track settings</string>
+
+    <string name="a11y_grid_mode">Grid</string>
+    <string name="a11y_grid_song">the song, played in order</string>
+    <string name="a11y_grid_clips">the clip launcher</string>
+    <string name="a11y_tempo">Tempo, %s bpm</string>
+    <string name="a11y_step_gate">Gate</string>
+    <string name="a11y_step_accent">Accent</string>
+    <string name="a11y_step_slide">Slide</string>
+
+    <!-- The mixer: each control named for its strip -->
+    <string name="a11y_volume">%s volume</string>
+    <string name="a11y_pan">%s pan</string>
+    <string name="a11y_send">%1$s, %2$s send</string>
+    <string name="a11y_mute">%s mute</string>
+    <string name="a11y_solo">%s solo</string>
+    <string name="a11y_midi_out">%s MIDI out</string>
+    <string name="a11y_midi_channel">%s MIDI channel</string>
+    <string name="a11y_output">%s output</string>
+    <string name="a11y_centre">centre</string>
+    <string name="a11y_left">left %d</string>
+    <string name="a11y_right">right %d</string>
+    <string name="a11y_master">Master</string>
+    <string name="a11y_limit_drive">Limiter drive</string>
+    <string name="a11y_limiter">Limiter</string>
+    <!-- An effect slot: whose, which, and what is in it. -->
+    <string name="a11y_insert">%1$s insert %2$d: %3$s</string>
+    <string name="a11y_send_slot">Send %1$d: %2$s</string>
+    <string name="a11y_slot_empty">empty</string>
+    <string name="a11y_edit">Edit</string>
+    <string name="a11y_click">Metronome</string>
+    <string name="a11y_file_menu">File menu</string>
+
+    <!-- The drum grid: a voice and a step -->
+    <string name="a11y_step">%1$s, step %2$d</string>
+    <string name="a11y_step_hit">on</string>
+    <string name="a11y_hit_accent">accented</string>
+    <string name="a11y_step_empty">off</string>
+    <string name="a11y_step_condition">%s, with a condition</string>
+    <string name="a11y_step_locked">%s, locked</string>
+    <string name="a11y_step_chosen">%s, chosen</string>
+    <string name="a11y_accent_add">Accent</string>
+    <string name="a11y_accent_remove">Remove the accent</string>
+
+    <!-- Pads and keys -->
+    <string name="a11y_pad_selected">selected</string>
+    <string name="a11y_pad_empty">no sample</string>
+    <!-- A note's name spoken: its letter, an accidental, and the octave. -->
+    <string name="a11y_note_sharp">%1$s sharp %2$d</string>
+    <string name="a11y_note_flat">%1$s flat %2$d</string>
+    <string name="a11y_note">%1$s %2$d</string>
+    <string name="a11y_open_it">Open</string>
+
+    <!-- The machine panel's header -->
+    <string name="a11y_fold">Fold the panel</string>
+    <string name="a11y_unfold">Unfold the panel</string>
+    <string name="a11y_next_patch">Next patch</string>
+    <string name="a11y_prev_patch">Previous patch</string>
+    <string name="a11y_browse_patches">Browse patches</string>
+    <string name="a11y_save_patch">Save as a patch</string>
+
+    <!-- The piano roll, which TalkBack hears as a summary -->
+    <string name="a11y_roll_empty">Piano roll, no notes. Play the keys while recording to add some.</string>
+    <plurals name="a11y_roll">
+        <item quantity="one">Piano roll, %1$d note: %2$s</item>
+        <item quantity="other">Piano roll, %1$d notes, from %2$s to %3$s</item>
+    </plurals>
+
+    <!-- The perform pages. TalkBack cannot hold, so a double tap switches a held effect on and off. -->
+    <string name="a11y_xy">Pad: %1$s to %2$s across, %3$s going up</string>
+    <string name="a11y_xy_press">Press in the middle</string>
+    <string name="a11y_xy_release">Let go</string>
+    <string name="a11y_muted">muted</string>
+    <string name="a11y_mute_pending">changes at the next line</string>
+
+    <string name="a11y_octave_down">Octave down</string>
+    <string name="a11y_octave_up">Octave up</string>
+    <string name="a11y_keys_from">Keyboard from %s</string>
+    <!-- A step in the acid line's step view. -->
+    <string name="a11y_step_n">Step %d</string>
+    <string name="a11y_word_locked">locked</string>
+    <string name="a11y_word_chosen">chosen</string>
+
+    <!-- The lanes under the grid, and folding things away -->
+    <string name="a11y_auto_lane">Automation lane</string>
+    <string name="a11y_note_lane">Per-note lane</string>
+    <string name="a11y_choose_lane">Choose a lane</string>
+    <string name="a11y_none_chosen">none chosen</string>
+    <string name="a11y_fold_lane">Fold the lane</string>
+    <string name="a11y_unfold_lane">Unfold the lane</string>
+    <string name="a11y_fold_keys">Fold the keyboard</string>
+    <string name="a11y_unfold_keys">Unfold the keyboard</string>
+    <string name="a11y_fold_slot">Fold this effect</string>
+    <string name="a11y_unfold_slot">Unfold this effect</string>
+
+    <!-- The tempo window -->
+    <string name="a11y_tempo_down">Slower</string>
+    <string name="a11y_tempo_up">Faster</string>
+    <string name="a11y_tempo_field">Tempo in beats a minute</string>
+
+    <!-- The four-track's lanes -->
+    <string name="a11y_lane_mute">Lane %d mute</string>
+    <string name="a11y_lane_arm">Lane %d record</string>
+    <!-- A sample's trim, as a share of the whole sound. -->
+    <string name="a11y_trim_start">Trim start</string>
+    <string name="a11y_trim_end">Trim end</string>
+    <!-- The multisample map -->
+    <plurals name="a11y_zones">
+        <item quantity="one">Zone map, %d zone</item>
+        <item quantity="other">Zone map, %d zones</item>
+    </plurals>
+    <string name="a11y_edit_zone">Edit zone %1$d, %2$s</string>
+    <!-- The modular's canvas -->
+    <plurals name="a11y_patch">
+        <item quantity="one">Patch, %1$d module, %2$s. Choose a module from the actions to see its knobs.</item>
+        <item quantity="other">Patch, %1$d modules, %2$s. Choose a module from the actions to see its knobs.</item>
+    </plurals>
+    <plurals name="a11y_patch_cables">
+        <item quantity="one">%d cable</item>
+        <item quantity="other">%d cables</item>
+    </plurals>
+    <string name="a11y_select_module">Select %1$d, %2$s</string>
+    <!-- The cross at the end of a song in the list. -->
+    <string name="a11y_delete">Delete %1$s</string>
+</resources>

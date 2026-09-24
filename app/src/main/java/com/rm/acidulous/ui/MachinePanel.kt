@@ -42,6 +42,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -437,7 +439,7 @@ private val BarIconV = 16.dp
 private val SideMarkGap = 10.dp
 
 @Composable
-private fun BarIcon(glyph: String, tint: Color, vertical: Boolean = false, onClick: () -> Unit) {
+private fun BarIcon(glyph: String, tint: Color, vertical: Boolean = false, said: String = glyph, onClick: () -> Unit) {
     Box(
         // Turned, the box turns with it - 24 x 28 is a target measured for a
         // row of marks and a column of them wants the long side across - and
@@ -447,7 +449,8 @@ private fun BarIcon(glyph: String, tint: Color, vertical: Boolean = false, onCli
         // patch name came out a character short of "patch".
         Modifier.size(width = if (vertical) 28.dp else 24.dp, height = if (vertical) BarIconV else 28.dp)
             .clip(RoundedCornerShape(4.dp))
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .button(said),
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, color = tint, fontSize = 13.sp, maxLines = 1, softWrap = false)
@@ -522,13 +525,13 @@ private fun PatchBar(
             // right edge, `◂` brings them back. The strip itself is always
             // there, which is what lets it keep the mark that brings them
             // back without needing a folded state of its own.
-            BarIcon(if (minimized) "\u25C2" else "\u25B8", Acid.colors.textMid, vertical = true) {
+            BarIcon(if (minimized) "\u25C2" else "\u25B8", Acid.colors.textMid, vertical = true, said = stringResource(if (minimized) R.string.a11y_unfold else R.string.a11y_fold)) {
                 onToggleMinimized()
             }
             Spacer(Modifier.height(SideMarkGap))
-            BarIcon("\u203A", Acid.colors.accent, vertical = true) { step(1) }
+            BarIcon("\u203A", Acid.colors.accent, vertical = true, said = stringResource(R.string.a11y_next_patch)) { step(1) }
             Spacer(Modifier.height(SideMarkGap))
-            BarIcon("\u2039", Acid.colors.accent, vertical = true) { step(-1) }
+            BarIcon("\u2039", Acid.colors.accent, vertical = true, said = stringResource(R.string.a11y_prev_patch)) { step(-1) }
             // **The names sit together, and the slack is above them.**
             //
             // They were a weight each, which spread them to the ends of the
@@ -601,14 +604,14 @@ private fun PatchBar(
             Text(type, color = Acid.colors.text, fontSize = 13.sp, maxLines = 1)
             PatchPicker(type, patchNames, onSave, onLoad, factoryPatches, userNames, onDelete, current, edited)
         }
-        BarIcon("\u2039", Acid.colors.accent) { step(-1) }
-        BarIcon("\u203A", Acid.colors.accent) { step(1) }
+        BarIcon("\u2039", Acid.colors.accent, said = stringResource(R.string.a11y_prev_patch)) { step(-1) }
+        BarIcon("\u203A", Acid.colors.accent, said = stringResource(R.string.a11y_next_patch)) { step(1) }
         // A gap before the fold, because it is not one of the pair. The three
         // touch targets were flush against each other, so the arrow that
         // steps a patch and the one that hides the whole panel were a
         // thumb's width apart and did very different things.
         Spacer(Modifier.width(18.dp))
-        BarIcon(if (minimized) "▴" else "▾", Acid.colors.textMid) { onToggleMinimized() }
+        BarIcon(if (minimized) "▴" else "▾", Acid.colors.textMid, said = stringResource(if (minimized) R.string.a11y_unfold else R.string.a11y_fold)) { onToggleMinimized() }
     }
 }
 
@@ -681,9 +684,9 @@ internal fun PatchPicker(
     if (vertical) {
         // Browse, save, then the name - which is the name, then save, then
         // browse of the row upright, read from the bottom. See [PatchBar].
-        BarIcon("\u2630", Acid.colors.textMid, true) { browsing = true }
+        BarIcon("\u2630", Acid.colors.textMid, true, said = stringResource(R.string.a11y_browse_patches)) { browsing = true }
         Spacer(Modifier.height(SideMarkGap))
-        BarIcon("\u21A7", Acid.colors.textMid, true) { saving = true }
+        BarIcon("\u21A7", Acid.colors.textMid, true, said = stringResource(R.string.a11y_save_patch)) { saving = true }
         Spacer(Modifier.height(SideMarkGap))
         // No Material button around it sideways: one is 58 dp of *width*
         // whatever is in it, and in a column that width is the column.
@@ -711,8 +714,8 @@ internal fun PatchPicker(
     // two step arrows and the fold. Down arrow into a line for putting one
     // away, a list for looking through them.
     if (!vertical) {
-        BarIcon("\u21A7", Acid.colors.textMid) { saving = true }
-        BarIcon("\u2630", Acid.colors.textMid) { browsing = true }
+        BarIcon("\u21A7", Acid.colors.textMid, said = stringResource(R.string.a11y_save_patch)) { saving = true }
+        BarIcon("\u2630", Acid.colors.textMid, said = stringResource(R.string.a11y_browse_patches)) { browsing = true }
     }
     val menuScroll = rememberScrollState()
     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -868,10 +871,11 @@ internal fun SwitchGrid(
             // and pushed the piano roll and the keyboard clean off the
             // screen. The cap is what a knob measures, which is what the
             // filling was for in the first place.
-            .heightIn(max = PanelControlH).fillMaxHeight(),
+            .heightIn(max = PanelControlH).fillMaxHeight().together(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        // Said as part of each cell's name instead.
+        Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.silent())
         // IntrinsicSize.Max, then a weight on every cell: the grid takes the
         // width of its widest row and the weights divide it evenly, so all
         // the cells in one switch are the size of its longest label and the
@@ -890,10 +894,13 @@ internal fun SwitchGrid(
                         val i = row * cols + col
                         val on = i == idx
                         val live = enabled?.getOrNull(i) ?: true
+                        val name = stringResource(R.string.a11y_named, label, l)
                         Box(
                             Modifier.weight(1f).fillMaxHeight()
                                 .background(if (on) Acid.colors.green else Acid.colors.control)
-                                .clickable(enabled = live) { onPick(i) },
+                                .clickable(enabled = live) { onPick(i) }
+                                // Nothing lit is a row of actions; one lit is a choice.
+                                .then(if (idx >= 0) Modifier.choice(name, on) else Modifier.button(name)),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
@@ -1035,7 +1042,8 @@ private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int
                         .then(if (scrolls) Modifier.height(kChipFloor) else Modifier.weight(1f))
                         .clip(RoundedCornerShape(4.dp))
                         .background(if (on) Acid.colors.green else Acid.colors.control)
-                        .clickable { onSelect(i) },
+                        .clickable { onSelect(i) }
+                        .choice(l, on, tab = true),
                     contentAlignment = Alignment.Center,
                 ) {
                     SideText(
@@ -1087,7 +1095,7 @@ internal fun SectionChipsStyled(
                 // tabs, and a row of tabs that stops half way reads as broken.
                 Modifier.weight(1f).clip(RoundedCornerShape(4.dp))
                     .background(if (on) Acid.colors.green else Acid.colors.control)
-                    .clickable { onSelect(i) }.padding(vertical = 5.dp),
+                    .clickable { onSelect(i) }.choice(l.text, on, tab = true).padding(vertical = 5.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -1128,6 +1136,7 @@ internal fun SectionChipsScrolling(
                 Modifier.clip(RoundedCornerShape(4.dp))
                     .background(if (on) Acid.colors.green else Acid.colors.control)
                     .clickable { onSelect(i) }
+                    .choice(l, on, tab = true)
                     .padding(horizontal = 9.dp, vertical = 5.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -1153,6 +1162,7 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
         automated = com.rm.acidulous.model.laneKey(b.unit, name).let { it in AutomationMarks.lanes && it !in AutomationMarks.locks },
         locked = com.rm.acidulous.model.laneKey(b.unit, name) in AutomationMarks.locks,
         display = panelWords(labels).getOrElse(info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)) { "" },
+        steps = labels.size,
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
         onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
         onReset = { b.reset(name) },
@@ -1252,11 +1262,15 @@ internal fun Group(
     val stacked = LocalPanelStacked.current
     Column(
         Modifier.then(if (stacked) Modifier.fillMaxWidth() else Modifier)
-            .clip(RoundedCornerShape(6.dp)).background(background).padding(6.dp),
+            .clip(RoundedCornerShape(6.dp)).background(background).padding(6.dp).together(),
     ) {
         // A panel's own English title is translated here; a window's card
         // arrives translated already and passes through untouched.
-        Text(panelWord(title), color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text(
+            panelWord(title), color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
+            // A card's title is a heading, so TalkBack can jump card to card.
+            modifier = Modifier.semantics { heading() },
+        )
         // IntrinsicSize.Max so the row knows how tall its tallest control is
         // - a knob, almost always - and anything that wants to can fill it.
         // Switches do, so their cells line up with the knobs beside them

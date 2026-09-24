@@ -111,7 +111,8 @@ fun LoadMeter(modifier: Modifier = Modifier) {
     val c = Acid.colors
     val load = rememberEngineLoad()
     val colour = loadColour(load)
-    Canvas(modifier.padding(horizontal = 3.dp).width(5.dp).height(22.dp)) {
+    // A reading that moves many times a second; the tracks that glow say what matters.
+    Canvas(modifier.padding(horizontal = 3.dp).width(5.dp).height(22.dp).silent()) {
         val radius = CornerRadius(2.dp.toPx())
         drawRoundRect(c.raised, Offset.Zero, size, radius)
         val h = size.height * if (load.dropped) 1f else load.level

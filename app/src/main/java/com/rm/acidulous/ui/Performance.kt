@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * The performance controls, shaped like the things they are.
@@ -174,14 +176,15 @@ fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Mod
         // costs: a stepper missing an arrow is a control that does not work.
         // Sharing, the two are always the same size as each other and always
         // both there, whatever the row can spare.
-        StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp)) {
+        StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(R.string.a11y_octave_down)) {
             onOctave(octave - 1)
         }
         Text(
             "C${octave + 1}", color = Acid.colors.accent, fontSize = 10.sp,
             fontFamily = FontFamily.Monospace, maxLines = 1,
+            modifier = Modifier.button(stringResource(R.string.a11y_keys_from, spokenNote(12 * (octave + 1), emptyMap(), androidx.compose.ui.platform.LocalResources.current))),
         )
-        StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp)) {
+        StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(R.string.a11y_octave_up)) {
             onOctave(octave + 1)
         }
     }
@@ -192,11 +195,12 @@ private fun StepArrow(
     glyph: String,
     enabled: Boolean,
     modifier: Modifier = Modifier,
+    said: String = glyph,
     onClick: () -> Unit,
 ) {
     val c = Acid.colors
     Box(
-        modifier.fillMaxHeight().clickable(enabled = enabled, onClick = onClick),
+        modifier.fillMaxHeight().clickable(enabled = enabled, onClick = onClick).button(said),
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, color = if (enabled) c.text else c.textFaint, fontSize = 12.sp)

@@ -24,12 +24,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.model.DrumVoice
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.ui.theme.Acid
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 // How hard the top and the bottom of a pad hit. Not 1 at the bottom: below
 // about forty most of these machines barely speak, and a pad that can be
@@ -108,8 +111,20 @@ private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> 
     // simply has nothing to play - and a Forage track with thirteen of these
     // now says at a glance that it is waiting for samples, which it did not
     // when every empty pad was labelled with its own number.
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val state = listOfNotNull(
+        if (selected) stringResource(R.string.a11y_pad_selected) else null,
+        if (!voice.loaded) stringResource(R.string.a11y_pad_empty) else null,
+    ).joinToString(stringResource(R.string.list_separator)).ifEmpty { null }
     Box(
         modifier
+            // A double tap plays it, as a touch would, for a moment.
+            .button(panelWord(voice.name), state, onClick = {
+                NativeEngine.noteOn(rack, voice.note, 100)
+                onSelect()
+                if (!current.loaded) onEmpty()
+                scope.launch { kotlinx.coroutines.delay(250); NativeEngine.noteOff(rack, voice.note) }
+            })
             .clip(RoundedCornerShape(4.dp))
             .background(
                 when {

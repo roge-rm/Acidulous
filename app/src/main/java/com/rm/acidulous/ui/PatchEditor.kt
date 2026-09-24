@@ -168,7 +168,7 @@ fun PatchScreen(
             ),
             spacing = 2.dp,
         ) {
-            HeaderButton("◀") { onBack() }
+            HeaderButton("◀", description = stringResource(R.string.a11y_back)) { onBack() }
             Text(
                 listOf(
                     track.name,
@@ -203,7 +203,19 @@ fun PatchScreen(
         val canvasAndInspector: @Composable () -> Unit = {
         Box(if (landscape) Modifier.fillMaxHeight().weight(1f) else Modifier.fillMaxWidth().weight(1f)) {
             Canvas(
-                Modifier.fillMaxSize().pointerInput(Unit) {
+                Modifier.fillMaxSize()
+                    // One picture to TalkBack, with a way into each module:
+                    // selecting one puts its knobs in the inspector below.
+                    .button(
+                        pluralStringResource(
+                            R.plurals.a11y_patch, patch.modules.size, patch.modules.size,
+                            pluralStringResource(R.plurals.a11y_patch_cables, patch.cables.size, patch.cables.size),
+                        ),
+                        actions = patch.modules.map { m ->
+                            action(stringResource(R.string.a11y_select_module, m.slot, m.type)) { selection = Selection.Module(m.slot) }
+                        },
+                    )
+                    .pointerInput(Unit) {
                     awaitEachGesture {
                         val down = awaitFirstDown()
                         val world = { p: Offset -> Offset(p.x / (zoom * density) + pan.x, p.y / (zoom * density) + pan.y) }

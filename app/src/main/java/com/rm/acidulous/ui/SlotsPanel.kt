@@ -286,6 +286,7 @@ private fun SlotFace(
                             .roundToInt().coerceIn(0, labels.size - 1)],
                         onStart = { b.start(p.name) }, onChange = { v -> b.change(p.name, v) }, onEnd = { b.end() },
                         onReset = { b.reset(p.name) },
+                        steps = labels.size,
                     )
                     else -> PanelKnob(b, p.name, label = shortLabel, accent = accent)
                 }
@@ -632,6 +633,7 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
                     TextButton(
                         onClick = { onMinimize() },
                         contentPadding = PaddingValues(horizontal = 8.dp),
+                        modifier = Modifier.button(stringResource(if (minimized) R.string.a11y_unfold_slot else R.string.a11y_fold_slot)),
                     ) { Text(if (minimized) "\u25B4" else "\u25BE", color = Acid.colors.textMid, fontSize = 13.sp) }
                 }
             }

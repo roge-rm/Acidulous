@@ -117,6 +117,10 @@ fun AutomationStrip(
                             }
                         },
                         onLongClick = { menu = true },
+                    ).button(
+                        stringResource(R.string.a11y_auto_lane),
+                        current?.let { nameOf(it) } ?: stringResource(R.string.a11y_none_chosen),
+                        listOf(action(stringResource(R.string.a11y_choose_lane)) { menu = true }),
                     ),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -133,7 +137,8 @@ fun AutomationStrip(
             Box(
                 Modifier.fillMaxWidth()
                     .then(if (collapsed) Modifier.fillMaxHeight() else Modifier.height(18.dp))
-                    .clickable { onToggleCollapse() },
+                    .clickable { onToggleCollapse() }
+                    .button(stringResource(if (collapsed) R.string.a11y_unfold_lane else R.string.a11y_fold_lane)),
                 contentAlignment = Alignment.Center,
             ) { Text(if (collapsed) "▴" else "▾", color = Acid.colors.textMid, fontSize = 11.sp) }
             val menuScroll = rememberScrollState()

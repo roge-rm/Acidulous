@@ -192,7 +192,8 @@ fun AudioLanes(
                         Modifier.fillMaxWidth().weight(1f)
                             .clip(RoundedCornerShape(3.dp))
                             .background(if (isMuted) c.card else c.control)
-                            .clickable { b.set("mute${lane + 1}", if (isMuted) 0f else 1f) },
+                            .clickable { b.set("mute${lane + 1}", if (isMuted) 0f else 1f) }
+                            .button(stringResource(R.string.a11y_lane_mute, lane + 1), stringResource(if (isMuted) R.string.a11y_on else R.string.a11y_off)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -205,7 +206,8 @@ fun AudioLanes(
                         Modifier.fillMaxWidth().weight(1f).padding(top = 1.dp)
                             .clip(RoundedCornerShape(3.dp))
                             .background(if (isArmed) c.red.copy(alpha = 0.35f) else c.card)
-                            .clickable { BiasArm.arm(trackIndex, lane) },
+                            .clickable { BiasArm.arm(trackIndex, lane) }
+                            .button(stringResource(R.string.a11y_lane_arm, lane + 1), stringResource(if (isArmed) R.string.a11y_armed else R.string.a11y_not_armed)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(

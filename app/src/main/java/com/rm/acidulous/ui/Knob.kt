@@ -40,6 +40,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * A knob: 270° arc, vertical drag (200 px for the full range), label above,
@@ -105,6 +107,10 @@ fun Knob(
     automated: Boolean = false,
     /** Steps in the open clip lock this one: marked with a ◆. */
     locked: Boolean = false,
+    /** How many values it has, for TalkBack to step through; 0 for a continuous one. */
+    steps: Int = 0,
+    /** A hold that opens a list rather than resetting: named for TalkBack. */
+    holdOpensList: Boolean = false,
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val reset by rememberUpdatedState(onReset)
@@ -161,7 +167,19 @@ fun Knob(
                 Offset(c.x + outer * cos(a).toFloat(), c.y + outer * sin(a).toFloat()), 3f)
         }
     }
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    val resetName = stringResource(if (holdOpensList) R.string.a11y_choose else R.string.a11y_reset)
+    val state = when {
+        locked -> stringResource(R.string.a11y_locked, display)
+        automated -> stringResource(R.string.a11y_automated, display)
+        else -> display
+    }
+    Column(
+        modifier.adjustable(
+            label, state, value, steps = (steps - 2).coerceAtLeast(0),
+            actions = onReset?.let { listOf(action(resetName, it)) } ?: emptyList(),
+        ) { v -> cb.first(); cb.second(v); cb.third() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Text(
             label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
             maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
@@ -216,6 +234,8 @@ internal fun CountKnob(
             onChange = { v -> val n = range.first + (v * span).roundToInt(); if (n != value) set(n.coerceIn(range)) },
             onEnd = onEnd,
             onReset = if (choices != null) ({ open = true }) else null,
+            steps = span + 1,
+            holdOpensList = choices != null,
         )
         if (choices != null) {
             val scroll = androidx.compose.foundation.rememberScrollState()

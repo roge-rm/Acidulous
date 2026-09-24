@@ -110,14 +110,17 @@
     <string name="pw_chord_4b3a0b">chord</string>
     <string name="pw_chorus">Chorus</string>
     <string name="pw_circuit">circuit</string>
-    <string name="pw_clap">clap</string>
+    <string name="pw_clap">Clap</string>
+    <string name="pw_clap_c19ab8">clap</string>
     <string name="pw_classic">classic</string>
-    <string name="pw_clave">clave</string>
+    <string name="pw_clave">Clave</string>
+    <string name="pw_clave_8927bd">clave</string>
     <string name="pw_clean">clean</string>
     <string name="pw_click">click</string>
     <string name="pw_clip">clip</string>
     <string name="pw_clock">clock</string>
     <string name="pw_closed">closed</string>
+    <string name="pw_closed_hat">Closed Hat</string>
     <string name="pw_cloud">cloud</string>
     <string name="pw_coarse">coarse</string>
     <string name="pw_colour">colour</string>
@@ -134,8 +137,10 @@
     <string name="pw_couple">couple</string>
     <string name="pw_coupling">coupling</string>
     <string name="pw_course">course</string>
-    <string name="pw_cowbell">cowbell</string>
-    <string name="pw_crash">crash</string>
+    <string name="pw_cowbell">Cowbell</string>
+    <string name="pw_cowbell_8d2602">cowbell</string>
+    <string name="pw_crash">Crash</string>
+    <string name="pw_crash_2fc7f1">crash</string>
     <string name="pw_crossfade">crossfade</string>
     <string name="pw_crossing">crossing</string>
     <string name="pw_crunch">crunch</string>
@@ -322,6 +327,7 @@
     <string name="pw_hats">hats</string>
     <string name="pw_head_bump">head bump</string>
     <string name="pw_hi">hi</string>
+    <string name="pw_hi_tom">Hi Tom</string>
     <string name="pw_high">high</string>
     <string name="pw_high_cut">high cut</string>
     <string name="pw_high_pass">high pass</string>
@@ -375,7 +381,8 @@
     <string name="pw_keyed">keyed</string>
     <string name="pw_keys">keys</string>
     <string name="pw_keytrack">keytrack</string>
-    <string name="pw_kick">kick</string>
+    <string name="pw_kick">Kick</string>
+    <string name="pw_kick_eac613">kick</string>
     <string name="pw_kick_ducks">kick ducks</string>
     <string name="pw_kind">kind</string>
     <string name="pw_kit">kit</string>
@@ -420,6 +427,7 @@
     <string name="pw_low">low</string>
     <string name="pw_low_cut">low cut</string>
     <string name="pw_low_pass">low pass</string>
+    <string name="pw_low_tom">Low Tom</string>
     <string name="pw_lower">lower</string>
     <string name="pw_lower_a">lower A</string>
     <string name="pw_lower_b">lower B</string>
@@ -453,6 +461,7 @@
     <string name="pw_mic">mic</string>
     <string name="pw_mics">mics</string>
     <string name="pw_mid">mid</string>
+    <string name="pw_mid_tom">Mid Tom</string>
     <string name="pw_midfreq">midfreq</string>
     <string name="pw_midgain">midgain</string>
     <string name="pw_midq">midq</string>
@@ -491,6 +500,7 @@
     <string name="pw_note">note</string>
     <string name="pw_number">number</string>
     <string name="pw_object">object</string>
+    <string name="pw_object_n">Object %d</string>
     <string name="pw_oct">oct</string>
     <string name="pw_octave">octave</string>
     <string name="pw_octaves">octaves</string>
@@ -508,6 +518,7 @@
     <string name="pw_op">op</string>
     <string name="pw_op_n">op %d</string>
     <string name="pw_open">open</string>
+    <string name="pw_open_hat">Open Hat</string>
     <string name="pw_order">order</string>
     <string name="pw_organ">Organ</string>
     <string name="pw_osc">osc</string>
@@ -515,7 +526,8 @@
     <string name="pw_oscillator">oscillator</string>
     <string name="pw_out">out</string>
     <string name="pw_pad">pad</string>
-    <string name="pw_pad_n">pad %d</string>
+    <string name="pw_pad_n">Pad %d</string>
+    <string name="pw_pad_n_bf5aa1">pad %d</string>
     <string name="pw_pan">pan</string>
     <string name="pw_panel">panel</string>
     <string name="pw_para">para</string>
@@ -626,8 +638,10 @@
     <string name="pw_reverb_send">reverb send</string>
     <string name="pw_reverse">reverse</string>
     <string name="pw_rhythm">rhythm</string>
-    <string name="pw_ride">ride</string>
-    <string name="pw_rim">rim</string>
+    <string name="pw_ride">Ride</string>
+    <string name="pw_ride_320ef6">ride</string>
+    <string name="pw_rim">Rim</string>
+    <string name="pw_rim_5f1d1f">rim</string>
     <string name="pw_ring">ring</string>
     <string name="pw_ring_it_against_a_sine">ring it against a sine</string>
     <string name="pw_ring_loop">ring loop</string>
@@ -702,6 +716,7 @@
     <string name="pw_skip">skip</string>
     <string name="pw_slew">slew</string>
     <string name="pw_slice">slice</string>
+    <string name="pw_slice_n">Slice %d</string>
     <string name="pw_slide">slide</string>
     <string name="pw_slope">slope</string>
     <string name="pw_slot">slot</string>
@@ -710,7 +725,8 @@
     <string name="pw_smooth">smooth</string>
     <string name="pw_snap">snap</string>
     <string name="pw_snappy">snappy</string>
-    <string name="pw_snare">snare</string>
+    <string name="pw_snare">Snare</string>
+    <string name="pw_snare_c1104d">snare</string>
     <string name="pw_soft">soft</string>
     <string name="pw_source">source</string>
     <string name="pw_speed">speed</string>

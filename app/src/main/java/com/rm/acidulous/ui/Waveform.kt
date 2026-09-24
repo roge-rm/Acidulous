@@ -27,6 +27,8 @@ import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * A picture of a sound, with two handles and a window onto it.
@@ -247,6 +249,22 @@ fun Waveform(
                 color = c.textDim, fontSize = 12.sp,
                 modifier = Modifier.align(Alignment.Center),
             )
+        }
+        // The trim's two ends as controls TalkBack can adjust: dragging them
+        // is the only other way, and it has no equivalent there.
+        if (shape.isNotEmpty()) {
+            androidx.compose.foundation.layout.Row(Modifier.matchParentSize()) {
+                Box(
+                    Modifier.weight(1f).fillMaxSize().adjustable(
+                        stringResource(R.string.a11y_trim_start), "%.0f%%".format(start * 100f), start,
+                    ) { setStart(it.coerceAtMost(endState)) },
+                )
+                Box(
+                    Modifier.weight(1f).fillMaxSize().adjustable(
+                        stringResource(R.string.a11y_trim_end), "%.0f%%".format(end * 100f), end,
+                    ) { setEnd(it.coerceAtLeast(startState)) },
+                )
+            }
         }
     }
 }

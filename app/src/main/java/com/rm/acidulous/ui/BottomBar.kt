@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Action
 import com.rm.acidulous.ui.theme.Acid
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * The bar along the bottom of a screen, and the pills in it.
@@ -403,8 +405,14 @@ fun BarHoldButton(
     onHold: (Boolean) -> Unit,
 ) {
     val hold by rememberUpdatedState(onHold)
+    // TalkBack cannot hold a button down, so holding becomes a pair of actions.
+    val press = stringResource(R.string.a11y_fill_start)
+    val release = stringResource(R.string.a11y_fill_stop)
     OutlinedButton(
-        modifier = modifier.pointerInput(Unit) {
+        modifier = modifier.button(
+            label, stringResource(if (held) R.string.a11y_held else R.string.a11y_off),
+            listOf(if (held) action(release) { hold(false) } else action(press) { hold(true) }),
+        ).pointerInput(Unit) {
             awaitEachGesture {
                 awaitFirstDown(requireUnconsumed = false)
                 hold(true)
@@ -462,6 +470,14 @@ fun BarButton(
      * tell apart. One detector owning both gestures cannot do that.
      */
     onLongPress: (() -> Unit)? = null,
+    /** What TalkBack calls it, where [label] is a glyph. */
+    description: String? = null,
+    /** What it is set to, for TalkBack. */
+    state: String? = null,
+    /** What a hold does, named for TalkBack's actions menu. */
+    holdName: String? = null,
+    /** Actions a hold elsewhere does - a `Modifier.onLongPress` at the call site. */
+    actions: List<androidx.compose.ui.semantics.CustomAccessibilityAction> = emptyList(),
     onClick: () -> Unit,
 ) {
     var suppressClick by remember { mutableStateOf(false) }
@@ -469,8 +485,13 @@ fun BarButton(
         suppressClick = true
         onLongPress()
     }
+    val named = actions + listOfNotNull(if (holdName != null && onLongPress != null) action(holdName, onLongPress) else null)
     OutlinedButton(
-        modifier = gestures,
+        modifier = if (description != null || state != null || named.isNotEmpty()) {
+            gestures.button(description ?: label, state, named)
+        } else {
+            gestures
+        },
         onClick = { if (suppressClick) suppressClick = false else onClick() },
         enabled = enabled,
         contentPadding = PaddingValues(horizontal = 4.dp),

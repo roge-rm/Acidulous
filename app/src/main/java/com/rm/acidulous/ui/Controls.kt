@@ -27,6 +27,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.log10
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * Touch-native mixer controls. All values are 0..1; the caller maps to units.
@@ -44,12 +46,22 @@ fun VerticalFader(
     onEnd: () -> Unit = {},
     /** Hold it to put it back where it was when the panel opened; see [Knob]. */
     onReset: (() -> Unit)? = null,
+    /** What TalkBack calls it, and what it is set to; unnamed, TalkBack skips it. */
+    name: String = "",
+    state: String = "",
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val reset by rememberUpdatedState(onReset)
+    val resetName = stringResource(R.string.a11y_reset)
     val c = Acid.colors
     Canvas(
-        modifier.pointerInput(Unit) {
+        modifier.then(
+            if (name.isEmpty()) Modifier
+            else Modifier.adjustable(
+                name, state.ifEmpty { "%.0f%%".format(value * 100f) }, value,
+                actions = onReset?.let { listOf(action(resetName, it)) } ?: emptyList(),
+            ) { v -> cb.first(); cb.second(v); cb.third() },
+        ).pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
                 // Before anything moves. A fader jumps to where you touched
@@ -100,12 +112,22 @@ fun MiniSlider(
     onEnd: () -> Unit = {},
     /** Hold it to put it back where it was when the panel opened; see [Knob]. */
     onReset: (() -> Unit)? = null,
+    /** What TalkBack calls it, and what it is set to; unnamed, TalkBack skips it. */
+    name: String = "",
+    state: String = "",
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val reset by rememberUpdatedState(onReset)
+    val resetName = stringResource(R.string.a11y_reset)
     val c = Acid.colors
     Canvas(
-        modifier.pointerInput(Unit) {
+        modifier.then(
+            if (name.isEmpty()) Modifier
+            else Modifier.adjustable(
+                name, state.ifEmpty { "%.0f%%".format(value * 100f) }, value,
+                actions = onReset?.let { listOf(action(resetName, it)) } ?: emptyList(),
+            ) { v -> cb.first(); cb.second(v); cb.third() },
+        ).pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
                 // Before the jump, for the reason the fader above gives.
@@ -162,7 +184,8 @@ fun Meter(
     track: Color = Acid.colors.card,
 ) {
     val c = Acid.colors
-    Canvas(modifier) {
+    // Changing many times a second: TalkBack would talk over the music.
+    Canvas(modifier.silent()) {
         val db = if (peak <= 1e-5f) -60f else (20f * log10(peak)).coerceIn(-60f, 0f)
         val frac = (db + 60f) / 60f
         drawRect(track)
@@ -208,13 +231,17 @@ fun HeaderButton(
      */
     width: Dp = 42.dp,
     modifier: Modifier = Modifier,
+    /** What TalkBack calls it: the glyph is not a word. */
+    description: String? = null,
+    state: String? = null,
     onClick: () -> Unit,
 ) {
     val c = Acid.colors
     Box(
         modifier.size(width = width, height = LocalHeaderBand.current)
             .clip(RoundedCornerShape(4.dp))
-            .clickable(enabled = enabled, onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick)
+            .then(if (description != null) Modifier.button(description, state) else Modifier),
         contentAlignment = Alignment.Center,
     ) { Text(glyph, color = color ?: if (enabled) c.text else c.textFaint, fontSize = 14.sp) }
 }
@@ -225,13 +252,16 @@ fun HeaderTextButton(
     label: String,
     color: Color = Acid.colors.textMid,
     enabled: Boolean = true,
+    /** What TalkBack says, where the label is a number with no name. */
+    description: String? = null,
     onClick: () -> Unit,
 ) {
     val c = Acid.colors
     Box(
         Modifier.height(LocalHeaderBand.current)
             .clip(RoundedCornerShape(4.dp))
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+            .then(if (description != null) Modifier.button(description) else Modifier)
             .padding(horizontal = 10.dp),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = if (enabled) color else c.textFaint, fontSize = 13.sp, maxLines = 1) }
