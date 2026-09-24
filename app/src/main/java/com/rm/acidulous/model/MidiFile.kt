@@ -107,7 +107,20 @@ object MidiFile {
         // The first General MIDI program each part asks for, which is how a
         // file that never names its tracks still says what they are.
         val programs = HashMap<Pair<Int, Int>, Int>()
+        // What a part does besides notes: its controllers as lane points,
+        // its bends, and the bend range it asked for, if it did.
+        val controls = HashMap<Pair<Int, Int>, MutableMap<String, MutableList<LanePoint>>>()
+        val bends = HashMap<Pair<Int, Int>, MutableList<Pair<Int, Int>>>()
+        val bendRange = HashMap<Pair<Int, Int>, Int>()
+        val rpn = HashMap<Pair<Int, Int>, Int>()
+        val tempos = mutableListOf<Pair<Int, Float>>()
         fun ticks(fileTicks: Long) = ((fileTicks * PPQN + division / 2) / division).toInt()
+        fun control(where: Pair<Int, Int>, name: String, tick: Int, value: Float) {
+            controls.getOrPut(where) { mutableMapOf() }.getOrPut(name) { mutableListOf() }.let { pts ->
+                if (pts.lastOrNull()?.tick == tick) pts[pts.size - 1] = LanePoint(tick, value)
+                else if (pts.lastOrNull()?.value != value) pts += LanePoint(tick, value)
+            }
+        }
 
         for (t in 0 until trackCount) {
             if (r.remaining < 8) break
@@ -138,9 +151,12 @@ object MidiFile {
                         val data = r.bytes(r.varLen().toInt())
                         when (type) {
                             0x03 -> names.putIfAbsent(t, data.decodeToString().trim())
-                            0x51 -> if (tempo == null && data.size >= 3) {
+                            0x51 -> if (data.size >= 3) {
                                 val us = ((data[0].toInt() and 0xff) shl 16) or ((data[1].toInt() and 0xff) shl 8) or (data[2].toInt() and 0xff)
-                                if (us > 0) tempo = 60_000_000f / us
+                                if (us > 0) {
+                                    if (tempo == null) tempo = 60_000_000f / us
+                                    tempos += ticks(at) to 60_000_000f / us
+                                }
                             }
                             0x58 -> if (signature == null && data.size >= 2) {
                                 signature = Signature(data[0].toInt().coerceIn(1, 32), 1 shl data[1].toInt().coerceIn(0, 5))
@@ -156,6 +172,21 @@ object MidiFile {
                         val d2 = if (kind == 0xc0 || kind == 0xd0) 0 else r.byte()
                         val key = (channel shl 8) or d1
                         if (kind == 0xc0) programs.putIfAbsent(t to channel, d1)
+                        val where = t to channel
+                        if (kind == 0xb0) when (d1) {
+                            1 -> control(where, "mod", ticks(at), d2 / 127f)
+                            // The pedals are switches: down from the middle up.
+                            64 -> control(where, "sustain", ticks(at), if (d2 >= 64) 1f else 0f)
+                            66 -> control(where, "sostenuto", ticks(at), if (d2 >= 64) 1f else 0f)
+                            67 -> control(where, "soft", ticks(at), if (d2 >= 64) 1f else 0f)
+                            // Registered parameter 0 is the bend range, set
+                            // by data entry once 101 and 100 have chosen it.
+                            101 -> rpn[where] = (d2 shl 7) or ((rpn[where] ?: 0) and 0x7f)
+                            100 -> rpn[where] = ((rpn[where] ?: 0) and (0x7f shl 7)) or d2
+                            6 -> if (rpn[where] == 0) bendRange[where] = d2
+                        }
+                        if (kind == 0xd0) control(where, "pressure", ticks(at), d1 / 127f)
+                        if (kind == 0xe0) bends.getOrPut(where) { mutableListOf() } += ticks(at) to (((d2 shl 7) or d1) - 8192)
                         if (kind == 0x90 && d2 > 0) {
                             open.getOrPut(key) { ArrayDeque() }.addLast(at to d2)
                         } else if (kind == 0x80 || (kind == 0x90 && d2 == 0)) {
@@ -179,6 +210,8 @@ object MidiFile {
             // Unnamed parts are called what their instrument is, and told
             // apart by channel only when two would share a name.
             val family = program?.let { GM_FAMILIES[(it / 8).coerceIn(0, 15)] }
+            val range = (bendRange[where] ?: 2).coerceIn(1, 48).toFloat()
+            val bendEvents = bends[where].orEmpty()
             Part(
                 name = when {
                     name == null && channel == DRUM_CHANNEL -> "Drums"
@@ -188,12 +221,33 @@ object MidiFile {
                     else -> name
                 },
                 channel = channel,
-                notes = notes.sortedWith(compareBy({ it.tick }, { it.pitch })),
+                notes = notes.sortedWith(compareBy({ it.tick }, { it.pitch }))
+                    .map { n -> bendCurve(n, bendEvents, range)?.let { n.copy(bend = it) } ?: n },
                 program = program,
+                lanes = controls[where].orEmpty().mapValues { (_, pts) -> pts.toList() },
             )
         }
-        return Parsed(tempo, signature, out)
+        return Parsed(tempo, signature, out, tempos.sortedBy { it.first })
     }
+
+    /**
+     * A channel's bend, as the curve of one note under it: the bend in force
+     * when the note starts, then every change while it sounds, in the note's
+     * own ticks. Null where the note never leaves the centre, so a file with
+     * no bend at all adds nothing to its notes.
+     */
+    private fun bendCurve(note: Note, events: List<Pair<Int, Int>>, range: Float): Lane? {
+        if (events.isEmpty()) return null
+        val before = events.lastOrNull { it.first <= note.tick }?.second ?: 0
+        val during = events.filter { it.first > note.tick && it.first < note.tick + note.length }
+        if (before == 0 && during.all { it.second == 0 }) return null
+        fun v(raw: Int) = Note.bendTo01(raw / 8192f * range)
+        return Lane(listOf(LanePoint(0, v(before))) + during.map { LanePoint(it.first - note.tick, v(it.second)) })
+    }
+
+    /** The performance lanes as MIDI: a controller number, or -1 for channel pressure. */
+    private val PERFORMANCE_CC = mapOf("mod" to 1, "pressure" to -1, "sustain" to 64, "sostenuto" to 66, "soft" to 67)
+    private val PEDAL_CCS = setOf(64, 66, 67)
 
     /** Channel 10, counted from nought: where General MIDI keeps the drums. */
     const val DRUM_CHANNEL = 9
@@ -207,7 +261,11 @@ object MidiFile {
     )
 
     /** [program] is the General MIDI instrument the file asked for, if it asked. */
-    data class Part(val name: String, val channel: Int, val notes: List<Note>, val program: Int? = null)
+    data class Part(
+        val name: String, val channel: Int, val notes: List<Note>, val program: Int? = null,
+        /** The part's mod wheel, pressure and pedals, by performance lane name, in song ticks. */
+        val lanes: Map<String, List<LanePoint>> = emptyMap(),
+    )
 
     /** General MIDI's sixteen families, eight programs each. */
     val GM_FAMILIES = listOf(
@@ -215,7 +273,11 @@ object MidiFile {
         "Reed", "Pipe", "Lead", "Pad", "Synth FX", "Ethnic", "Percussion", "Effects",
     )
 
-    data class Parsed(val tempo: Float?, val signature: Signature?, val parts: List<Part>)
+    /** [tempos] is every tempo the file states, where it states it; [tempo] is the first. */
+    data class Parsed(
+        val tempo: Float?, val signature: Signature?, val parts: List<Part>,
+        val tempos: List<Pair<Int, Float>> = emptyList(),
+    )
 
     private class Reader(val b: ByteArray) {
         var pos = 0
@@ -365,6 +427,28 @@ object MidiFile {
                             }
                             any = true
                         }
+                        // The mod wheel, pressure and the pedals, as the
+                        // controllers they arrived as.
+                        for ((key, lane) in clip.automation) {
+                            if (laneUnit(key) != "performance") continue
+                            val cc = PERFORMANCE_CC[laneParam(key)] ?: continue
+                            for (pt in lane.points) {
+                                val t = origin + pt.tick
+                                if (t < at || t >= at + sceneTicks) continue
+                                val v = (pt.value * 127f + 0.5f).toInt().coerceIn(0, 127)
+                                events += Event(t, 0,
+                                    if (cc < 0) byteArrayOf((0xd0 or channel).toByte(), v.toByte())
+                                    else byteArrayOf((0xb0 or channel).toByte(), cc.toByte(), v.toByte()),
+                                )
+                            }
+                        }
+                    }
+                    // A pedal is let up where its scene ends: the next scene
+                    // may not mention it, and another program would hold
+                    // every note after it for ever.
+                    for (name in clip.automation.keys.filter { laneUnit(it) == "performance" }.map { laneParam(it) }) {
+                        val cc = PERFORMANCE_CC[name]?.takeIf { it in PEDAL_CCS } ?: continue
+                        events += Event(at + sceneTicks, 0, byteArrayOf((0xb0 or channel).toByte(), cc.toByte(), 0))
                     }
                 }
                 at += sceneTicks

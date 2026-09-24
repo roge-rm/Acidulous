@@ -53,16 +53,22 @@ object MidiImport {
                 machine = Machine(type),
             ) to notesFor(part, type)
         }
+        val lanesOf = chosen.map { parsed.parts[it].lanes }
+        val firstTempo = (parsed.tempo ?: 120f).coerceIn(20f, 300f)
+        // The tempo in force at a tick: the file's own, where it changes.
+        fun tempoAt(tick: Int): Float =
+            (parsed.tempos.lastOrNull { it.first <= tick }?.second ?: firstTempo).coerceIn(20f, 300f)
         val end = tracks.flatMap { (_, notes) -> notes.map { it.tick + it.length } }.maxOrNull() ?: 0
         val bars = ((end + tpb - 1) / tpb).coerceAtLeast(1)
         val per = sceneBars.coerceIn(1, 16)
 
-        data class Cut(val bars: Int, val clips: List<List<Note>>)
+        data class Cut(val bars: Int, val clips: List<List<Note>>, val lanes: List<Map<String, Lane>>, val bpm: Float)
         val cuts = (0 until (bars + per - 1) / per).map { k ->
             val from = k * per * tpb
             val cutBars = minOf(per, bars - k * per)
             val to = from + cutBars * tpb
-            Cut(cutBars, tracks.map { (_, notes) ->
+            val lanes = lanesOf.map { byName -> byName.mapNotNull { (name, pts) -> laneIn(name, pts, from, to)?.let { laneKey("performance", name) to it } }.toMap() }
+            Cut(cutBars, lanes = lanes, bpm = tempoAt(from), clips = tracks.map { (_, notes) ->
                 notes.filter { it.tick in from until to }
                     // A note held over the cut is cut with it: the next
                     // scene's clip starts fresh, as any clip does.
@@ -81,10 +87,14 @@ object MidiImport {
             last = cut
             // Named for the bar it starts on, so the file's own map of where
             // things happen can still be read off the song.
-            val scene = Scene(id = newId("s"), name = "bar ${k * per + 1}")
+            // A tempo of its own where the file has moved away from its first.
+            val scene = Scene(
+                id = newId("s"), name = "bar ${k * per + 1}",
+                tempo = cut.bpm.takeIf { kotlin.math.abs(it - firstTempo) > 0.01f }?.let { SceneTempo(it) },
+            )
             scenes += scene
             cut.clips.forEachIndexed { t, notes ->
-                if (notes.isNotEmpty()) clipsByTrack[t][scene.id] = Clip(bars = cut.bars, notes = notes)
+                if (notes.isNotEmpty()) clipsByTrack[t][scene.id] = Clip(bars = cut.bars, notes = notes, automation = cut.lanes[t])
             }
             // A scene is as long as its longest clip, so a stretch where
             // nothing plays needs an empty one to keep its length - or the
@@ -96,7 +106,7 @@ object MidiImport {
 
         return Song(
             name = name,
-            tempo = (parsed.tempo ?: 120f).coerceIn(20f, 300f),
+            tempo = firstTempo,
             signature = signature,
             tracks = tracks.mapIndexed { t, (track, _) -> track.copy(clips = clipsByTrack[t]) },
             scenes = scenes,
@@ -104,6 +114,32 @@ object MidiImport {
     }
 
     /** A part's notes, moved onto the machine's own drum notes where it has them. */
+    /**
+     * One cut's share of a part's controller: its points between [from] and
+     * [to], moved to the cut's start, and the value in force as the cut begins
+     * at its first tick - a pedal already down, a wheel already moved. The
+     * pedals rest up rather than holding their first value back to the top.
+     * Null where the lane says nothing in this cut.
+     */
+    private fun laneIn(name: String, pts: List<LanePoint>, from: Int, to: Int): Lane? {
+        val pedal = name in PEDALS
+        val inside = pts.filter { it.tick in from until to }.map { it.copy(tick = it.tick - from) }
+        val before = pts.lastOrNull { it.tick < from }?.value
+        val start = when {
+            inside.firstOrNull()?.tick == 0 -> null
+            before != null -> LanePoint(0, before)
+            pedal && inside.isNotEmpty() -> LanePoint(0, 0f)
+            else -> null
+        }
+        val points = listOfNotNull(start) + inside
+        // A pedal lane saying only "up" is nothing - unless the pedal came in
+        // down, when "up" is the thing it says.
+        if (points.isEmpty() || (pedal && points.all { it.value == 0f } && (before ?: 0f) == 0f)) return null
+        return Lane(points, linear = !pedal)
+    }
+
+    private val PEDALS = setOf("sustain", "sostenuto", "soft")
+
     fun notesFor(part: MidiFile.Part, type: String): List<Note> {
         if (part.channel != MidiFile.DRUM_CHANNEL || MachineUi.kindOf(type) != MachineKind.Drums) return part.notes
         val byName = MachineUi.voicesOf(type).associate { it.name to it.note }

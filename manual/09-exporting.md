@@ -12,7 +12,7 @@ You can export the whole song, the current scene, or stems.
 - **FLAC** - lossless and smaller.
 - **MP3** and **AAC** - at the bitrate you choose.
 - **MIDI** - the notes, not the sound, with each track's transpose and fixed
-  velocity applied. Drum tracks go on channel 10 as General MIDI drums, so
+  velocity applied, and its pedal, mod wheel and pressure lanes. Drum tracks go on channel 10 as General MIDI drums, so
   other programs hear the right sounds.
 - **Song bundle** - the song and the samples it uses, in one file you can share.
 
@@ -52,7 +52,10 @@ happens depends on what it is:
   machine: an organ goes to Manual, brass to Brazen.
 - The file is cut into scenes of 4, 8 or 16 bars. A stretch that's the same as
   the one before becomes a repeat, so a loop comes in as one scene played
-  several times. The tempo and time signature come from the file.
+  several times. The tempo and time signature come from the file, and where
+  the tempo changes, the scenes after it get a tempo of their own.
+- Pedals, the mod wheel and pressure come in as lanes, and pitch bend as bends
+  on the notes.
 - It opens as a new song and is saved straight away.
 - **A song bundle** (a .zip made by Export) opens as a song, with its samples.
   If you already have a sample with the same name, yours is kept and the

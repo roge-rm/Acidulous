@@ -225,4 +225,87 @@ class MidiImportTest {
         assertEquals("Hexbeat", MidiImport.defaultMachine(parsed.parts[2]))
         assertEquals("Trinity", MidiImport.defaultMachine(parsed.parts[0]))
     }
+
+    // --- controllers, pedals, bends and tempo -------------------------------------------
+
+    @Test
+    fun pedalsComeInAsSteppedLanesCutWithTheirScenes() {
+        val bytes = file(1, PPQN, track(
+            0 to b(0x90, 60, 100),
+            PPQN to b(0xb0, 64, 127),          // sustain down on beat 2
+            PPQN to b(0x80, 60, 0),
+            (4 * 4 - 1) * PPQN to b(0xb0, 64, 0), // up again on beat 2 of bar 5
+            0 to b(0xb0, 66, 100),              // sostenuto down there
+            0 to b(0x90, 62, 90),
+            PPQN to b(0x80, 62, 0),
+        ))
+        val parsed = MidiFile.read(bytes)
+        val song = MidiImport.build("pedals", parsed, listOf("Trinity"), 4)
+        val clips = song.scenes.map { song.tracks.single().clips[it.id]!! }
+        val first = clips[0].automation[laneKey("performance", "sustain")]!!
+        assertEquals(false, first.linear)
+        // Up from the top of the clip, down on beat two, still down at the end.
+        assertEquals(listOf(LanePoint(0, 0f), LanePoint(PPQN, 1f)), first.points)
+        // The second clip begins with the pedal already down and lifts it.
+        val second = clips[1].automation[laneKey("performance", "sustain")]!!
+        assertEquals(LanePoint(0, 1f), second.points.first())
+        assertEquals(0f, second.points.last().value)
+        assertTrue(clips[1].automation.containsKey(laneKey("performance", "sostenuto")))
+    }
+
+    @Test
+    fun aTempoChangeGivesTheScenesAfterItTheirOwnTempo() {
+        val bytes = file(1, PPQN, track(
+            0 to b(0xff, 0x51, 3, 0x07, 0xa1, 0x20),   // 120
+            0 to b(0x90, 60, 100),
+            PPQN to b(0x80, 60, 0),
+            (4 * 4 - 1) * PPQN to b(0xff, 0x51, 3, 0x09, 0x27, 0xc0), // 100, at bar 5
+            0 to b(0x90, 62, 100),
+            PPQN to b(0x80, 62, 0),
+        ))
+        val song = MidiImport.build("tempo", MidiFile.read(bytes), listOf("Trinity"), 4)
+        assertEquals(120f, song.tempo, 0.01f)
+        assertEquals(null, song.scenes[0].tempo)
+        assertEquals(100f, song.scenes[1].tempo!!.bpm, 0.01f)
+    }
+
+    @Test
+    fun bendBecomesACurveOnTheNoteItBends() {
+        val bytes = file(1, PPQN, track(
+            0 to b(0xb0, 101, 0), 0 to b(0xb0, 100, 0), 0 to b(0xb0, 6, 12), // range: an octave
+            0 to b(0x90, 60, 100),
+            PPQN / 2 to b(0xe0, 0x00, 0x60),          // half way up: +6 semitones
+            PPQN / 2 to b(0x80, 60, 0),
+            0 to b(0xe0, 0x00, 0x40),                 // centre again
+            0 to b(0x90, 64, 100),
+            PPQN to b(0x80, 64, 0),
+        ))
+        val notes = MidiFile.read(bytes).parts.single().notes
+        val bent = notes.first { it.pitch == 60 }.bend!!
+        assertEquals(PPQN / 2, bent.points.last().tick)
+        assertEquals(6f, Note.bendFrom01(bent.points.last().value), 0.05f)
+        assertEquals(null, notes.first { it.pitch == 64 }.bend)
+    }
+
+    @Test
+    fun aPedalLaneGoesOutAsTheControllerAndComesBack() {
+        val scene = Scene(id = "s", name = "s")
+        val pedal = Lane(listOf(LanePoint(0, 0f), LanePoint(PPQN, 1f), LanePoint(3 * PPQN, 0f)), linear = false)
+        val song = Song(
+            name = "ped",
+            tracks = listOf(Track(id = "t", name = "Keys", machine = Machine("Trinity"), clips = mapOf("s" to Clip(
+                bars = 1, notes = listOf(Note(0, PPQN, 60, 100)),
+                automation = mapOf(laneKey("performance", "sustain") to pedal),
+            )))),
+            scenes = listOf(scene),
+        )
+        val tmp = File.createTempFile("ped", ".mid")
+        try {
+            MidiFile.write(song, tmp)
+            val back = MidiFile.read(tmp.readBytes()).parts.single().lanes["sustain"]!!
+            assertEquals(listOf(LanePoint(0, 0f), LanePoint(PPQN, 1f), LanePoint(3 * PPQN, 0f)), back.filter { it.tick < 4 * PPQN })
+        } finally {
+            tmp.delete()
+        }
+    }
 }
