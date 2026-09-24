@@ -10,7 +10,7 @@ There are sixteen effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level
 trim, because turning up the wet/dry mix can change the level.
 
-**Each effect has its own page below.**
+Each effect has its own page below.
 
 ## Time
 
@@ -267,10 +267,10 @@ the same on a phone that has never seen the file.
 Swing moves the offbeats later without changing the order of notes, so a
 loosely played part swings along with everything else.
 
-A **track can have its own swing**, e.g. swung drums over a straight bass. Set
+A track can have its own swing, e.g. swung drums over a straight bass. Set
 it in the track's settings: hold the track's name.
 
-**What you record is stored straight.** When you play against a swung song, the
+What you record is stored straight. When you play against a swung song, the
 swing is taken back out before the notes are written. The roll shows where you
 meant the notes, playback puts them where you played them, and if you turn the
 swing down later the part is straight rather than lopsided.

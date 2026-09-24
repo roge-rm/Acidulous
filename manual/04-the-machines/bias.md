@@ -21,7 +21,7 @@ through, so a scene played twice plays one continuous take.
 Tap the red dot next to a lane, arm record on the transport, and press play. The
 song plays while you record, and the other lanes keep playing.
 
-**When you stop, the take is cut at the scene lines**: one cell per scene, and
+When you stop, the take is cut at the scene lines: one cell per scene, and
 cells are created in scenes where the track was empty. The whole recording also
 stays in the sound library, so you can undo the split and place it by hand.
 

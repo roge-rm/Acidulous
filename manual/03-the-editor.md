@@ -95,7 +95,7 @@ you want it.
 The machine's panel sits between the grid and the keyboard. Inserts, modifiers
 and sends open the same kind of panel in a window.
 
-**Hold a knob to reset it** to where it was when you opened the panel (not to
+Hold a knob to reset it to where it was when you opened the panel (not to
 the factory value). Faders and sliders work the same way, including in the
 mixer.
 

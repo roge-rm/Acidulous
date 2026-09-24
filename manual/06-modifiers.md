@@ -9,11 +9,11 @@ the chord modifier on and you hear three notes, and if you're recording, the
 clip gets three notes. Notes from a MIDI keyboard or controller go through the
 modifiers too.
 
-**The clip is what you hear.** Clips play straight to the machine without going
+The clip is what you hear. Clips play straight to the machine without going
 through the modifiers, so the piano roll always shows exactly what plays, and
 you can edit the notes afterwards.
 
-**They don't change what's already recorded.** Turning the arp off doesn't
+They don't change what's already recorded. Turning the arp off doesn't
 un-arpeggiate a part you played with it on. If you want it different, undo and
 play it again.
 

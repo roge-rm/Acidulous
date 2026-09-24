@@ -20,8 +20,8 @@ load or the live input, recorded into a loop as you play.
 ## Live input
 
 **source** switches to the input. **buffer** sets how much is kept, **freeze**
-holds it, and **capture** grabs what's in it. A live buffer **isn't saved with
-the song and is silent in an export**, and the panel reminds you of that.
+holds it, and **capture** grabs what's in it. A live buffer isn't saved with
+the song and is silent in an export, and the panel reminds you of that.
 
 ## Pollination
 

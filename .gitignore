@@ -31,3 +31,6 @@ local.properties
 # in case one ever lands in here by accident.
 *.jks
 *.keystore
+
+# Kotlin compiler caches.
+/.kotlin/

@@ -51,7 +51,7 @@ these.
   holding keep the quality they started with; only tails you've already let go
   of can be cut short.
 
-  **Exports and freezing always use full quality.**
+  Exports and freezing always use full quality.
 - **scheduler hint** - whether the phone accepted the app's request to treat
   the audio as time-critical. Some phones refuse; nothing to do about it here.
 

@@ -139,11 +139,11 @@ again.
 
 ## When the phone can't keep up
 
-If the engine starts falling behind while you play, **the tracks costing the
-most glow red**, and so does the load meter in the header. Nothing stops.
+If the engine starts falling behind while you play, the tracks costing the
+most glow red, and so does the load meter in the header. Nothing stops.
 
 A track only glows when the engine is running late right then *and* that track
 is a big part of the load. Freezing it is usually the answer.
 
-**Settings · audio** has the details: the worst block, where the time went, and
-each track's cost.
+With **diagnostics** on, **Settings · audio** has the details: the worst block,
+where the time went, and each track's cost.

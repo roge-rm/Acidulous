@@ -36,8 +36,9 @@ constexpr float kHouse = 0.57f; // -4.9 dB, set so Init sits on the house line
 // So these are not computed from the raw voices; they are *solved* against
 // the balance heard through the bus, the way the bank's volumes are solved
 // against the house line: measure, correct, measure again. Three passes to
-// land every voice within four tenths of where a 909 kit puts it - the kick
-// on top, the snare just under, the cymbals five decibels back.
+// land every voice within four tenths of where the classic big-box kits put
+// them - the kick on top, the snare just under, the cymbals five decibels
+// back.
 constexpr float kLevelTrim[] = {
     1.000f, // Kick      reference
     0.680f, // Snare     -0.2 dB

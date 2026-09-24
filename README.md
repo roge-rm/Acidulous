@@ -143,6 +143,17 @@ Anything exported can go straight to the share sheet, and a song can be shared a
 
 ---
 
+## Installing
+
+The easiest way to install Acidulous and keep it up to date is through my F-Droid repo:
+
+[https://roge-rm.gitlab.io/repo](https://roge-rm.gitlab.io/repo?fingerprint=80438B253C257BCCE05CDCB9E3AC9B6174C2250659962B14FCBE7F32FD42D53E)
+
+Then search for Acidulous in F-Droid. When a new version comes out, F-Droid will offer it as an update.
+
+You can also download the APK from the [Releases](https://github.com/roge-rm/Acidulous/releases)
+page and sideload it.
+
 ## Building
 
 You need the Android SDK and NDK. The NDK version is pinned in
@@ -191,7 +202,7 @@ alongside my ears when voicing the preset banks.
 
 ```sh
 tools/audition.sh bank Trinity            # every patch in a bank
-tools/audition.sh play Reflux Acid        # one patch
+tools/audition.sh play Reflux Squelch     # one patch
 tools/audition.sh params Mosaic           # the parameter table
 ```
 

@@ -33,7 +33,7 @@ the way in, so songs load quickly.
 arm record on the transport, and press play. The song plays while you record,
 and the other lanes keep playing.
 
-**When you stop, the take is cut at the scene lines.** One recording over the
+When you stop, the take is cut at the scene lines. One recording over the
 whole song becomes one cell per scene, all pointing at the same file, and cells
 are created in scenes where the track was empty. The full recording also stays
 in the sound library, so you can undo the split and place it by hand.
