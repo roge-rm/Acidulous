@@ -957,6 +957,10 @@ object Manual {
             ManualBlock(ManualKind.Bullet, "**A song bundle** (a .zip made by Export) opens as a song, with its samples. If you already have a sample with the same name, yours is kept and the bundle's comes in under a new name."),
             ManualBlock(ManualKind.Bullet, "**A sound** (WAV, AIFF, FLAC or MP3) goes into the sound library, up to ten minutes of it."),
             ManualBlock(ManualKind.Para, "An imported song never replaces one you've saved: if the name is taken, it gets a number after it."),
+            ManualBlock(ManualKind.Heading, "Sharing"),
+            ManualBlock(ManualKind.Para, "When an export finishes, **Share** sends it straight on through the phone's share sheet: email, Drive, a chat, or another app. Stems go as all their files together."),
+            ManualBlock(ManualKind.Para, "**Share song…** in the file menu sends the open song as a bundle, samples included, for someone else to open in Acidulous."),
+            ManualBlock(ManualKind.Para, "The other way works too. Open a MIDI file, a bundle or a sound with Acidulous, or share one to it, and it goes wherever **Import…** would have put it."),
         )),
         ManualSection("Settings", "Settings for you and this phone, not the song.", listOf(
             ManualBlock(ManualKind.Para, "Nothing here is saved in a song, so opening someone else's song never changes these."),

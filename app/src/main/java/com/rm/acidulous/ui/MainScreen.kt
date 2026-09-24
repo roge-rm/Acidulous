@@ -149,6 +149,9 @@ fun MainScreen(
     onExport: () -> Unit,
     /** A file from outside: a MIDI file, a song bundle, or a sound. */
     onImport: () -> Unit = {},
+    /** The open song, as a bundle, through the share sheet. */
+    onShareSong: () -> Unit = {},
+    onShareExport: (ExportState.Done) -> Unit = {},
     exportState: ExportState?,
     onExportCancel: () -> Unit,
     onExportDismiss: () -> Unit,
@@ -426,6 +429,7 @@ fun MainScreen(
                         DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
                         DropdownMenuItem(text = { Text("Import…") }, onClick = { fileMenu = false; onImport() })
                         DropdownMenuItem(text = { Text("Export…") }, onClick = { fileMenu = false; onExport() })
+                        DropdownMenuItem(text = { Text("Share song…") }, onClick = { fileMenu = false; onShareSong() })
                         DropdownMenuItem(text = { Text("MIDI…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
                         DropdownMenuItem(text = { Text("Sound…") }, onClick = { fileMenu = false; dialog = Dialog.Sound })
                         DropdownMenuItem(text = { Text("Settings…") }, onClick = { fileMenu = false; dialog = Dialog.Settings })
@@ -885,7 +889,7 @@ fun MainScreen(
             dialog = null
         }
     }
-    exportState?.let { ExportDialog(it, onCancel = onExportCancel, onDismiss = onExportDismiss) }
+    exportState?.let { ExportDialog(it, onCancel = onExportCancel, onDismiss = onExportDismiss, onShare = onShareExport) }
 }
 
 private sealed class Dialog {

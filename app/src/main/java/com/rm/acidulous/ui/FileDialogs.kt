@@ -164,19 +164,27 @@ sealed class ExportState {
         val files: Int = 1, val format: String = "wav", val bits: Int = 24,
         /** Kilobits a second, where the format has a rate rather than a depth. */
         val rate: Int = 0,
+        /** The files as written, for the share sheet; empty where there is nothing to share. */
+        val uris: List<android.net.Uri> = emptyList(),
+        val mime: String = "*/*",
     ) : ExportState()
     data class Failed(val error: String) : ExportState()
 }
 
 @Composable
-fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit) {
+fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit, onShare: (ExportState.Done) -> Unit = {}) {
     val running = state is ExportState.Running
+    // Finished, it can go straight on to somebody else: the share sheet, with
+    // the file or files just written.
+    val done = (state as? ExportState.Done)?.takeIf { it.uris.isNotEmpty() }
     PlainDialog(
         title = "Export",
         // While it renders the only thing to do is stop it, so the one
         // button says so; afterwards the only thing to do is read it.
         onDismiss = { if (running) onCancel() else onDismiss() },
         dismissLabel = if (running) "Cancel" else "OK",
+        confirmLabel = if (done != null) "Share" else "",
+        onConfirm = done?.let { d -> { onShare(d) } },
         spacing = 8.dp,
     ) {
         when (state) {

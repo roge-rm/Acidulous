@@ -77,9 +77,58 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * A file another app opened with this one, or shared to it, waiting for the
+ * app to be ready to import it. Filled by the activity from its intent; taken
+ * by the composition once the session is back, so what arrives is not then
+ * replaced by the song that was open last time.
+ */
+internal object Incoming {
+    var uri by mutableStateOf<android.net.Uri?>(null)
+
+    fun from(intent: android.content.Intent?) {
+        intent ?: return
+        uri = when (intent.action) {
+            android.content.Intent.ACTION_VIEW -> intent.data
+            android.content.Intent.ACTION_SEND ->
+                @Suppress("DEPRECATION") (intent.getParcelableExtra(android.content.Intent.EXTRA_STREAM) as? android.net.Uri)
+            else -> null
+        } ?: return
+    }
+}
+
+/**
+ * The share sheet, with [uris] readable by whatever app is chosen - for the
+ * length of that app's visit, not for ever.
+ */
+internal fun share(context: android.content.Context, uris: List<android.net.Uri>, mime: String, title: String) {
+    if (uris.isEmpty()) return
+    val send = if (uris.size == 1) {
+        android.content.Intent(android.content.Intent.ACTION_SEND).putExtra(android.content.Intent.EXTRA_STREAM, uris[0])
+    } else {
+        android.content.Intent(android.content.Intent.ACTION_SEND_MULTIPLE)
+            .putParcelableArrayListExtra(android.content.Intent.EXTRA_STREAM, ArrayList(uris))
+    }
+    send.type = mime
+    // The grant travels on the clip data; without it the chosen app is handed
+    // a link it may not open.
+    send.clipData = android.content.ClipData.newRawUri(title, uris[0]).apply {
+        uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) }
+    }
+    send.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    context.startActivity(android.content.Intent.createChooser(send, title))
+}
+
 class MainActivity : ComponentActivity() {
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        Incoming.from(intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Only on a fresh start: a recreated activity has already taken it.
+        if (savedInstanceState == null) Incoming.from(intent)
         com.rm.acidulous.ui.UiPrefs.init(this)
         com.rm.acidulous.midi.MidiHub.start(this)
         EngineAssets.install(this)
@@ -702,13 +751,19 @@ private fun App(modifier: Modifier = Modifier) {
             }
         }
 
-    fun finish(options: com.rm.acidulous.ui.ExportOptions, files: List<File>, error: String, where: String) {
+    fun finish(
+        options: com.rm.acidulous.ui.ExportOptions, files: List<File>, error: String, where: String,
+        /** Where the files went, for the share button. */
+        written: List<android.net.Uri> = emptyList(),
+    ) {
         exportState = if (error.isEmpty()) {
             com.rm.acidulous.ui.ExportState.Done(
                 NativeEngine.renderedSeconds, NativeEngine.renderedPeak, where, files.size,
                 options.format.label,
                 if (options.format.audio && !options.format.lossy) options.bits else 0,
                 if (options.format.lossy) options.rate else 0,
+                uris = written,
+                mime = options.format.mime,
             )
         } else {
             com.rm.acidulous.ui.ExportState.Failed(error)
@@ -744,7 +799,7 @@ private fun App(modifier: Modifier = Modifier) {
                 }.getOrElse { it.message ?: "copy failed" }
             }
             ticker.cancel()
-            finish(options, files, copyError, displayName(context, uri))
+            finish(options, files, copyError, displayName(context, uri), listOf(uri))
         }
     }
 
@@ -762,6 +817,7 @@ private fun App(modifier: Modifier = Modifier) {
                 }
             }
             val (files, error) = produceExport(options)
+            val created = mutableListOf<android.net.Uri>()
             val copyError = if (error.isNotEmpty()) error else withContext(Dispatchers.IO) {
                 runCatching {
                     val parentId = android.provider.DocumentsContract.getTreeDocumentId(tree)
@@ -770,6 +826,7 @@ private fun App(modifier: Modifier = Modifier) {
                         val target = android.provider.DocumentsContract.createDocument(
                             context.contentResolver, parent, options.format.mime, file.name,
                         ) ?: error("could not create ${file.name}")
+                        created += target
                         context.contentResolver.openOutputStream(target, "wt")!!.use { out ->
                             file.inputStream().use { it.copyTo(out) }
                         }
@@ -778,7 +835,7 @@ private fun App(modifier: Modifier = Modifier) {
                 }.getOrElse { it.message ?: "copy failed" }
             }
             ticker.cancel()
-            finish(options, files, copyError, displayName(context, tree))
+            finish(options, files, copyError, displayName(context, tree), created)
         }
     }
 
@@ -923,7 +980,8 @@ private fun App(modifier: Modifier = Modifier) {
     /**
      * One door for everything that comes from outside, told apart by its
      * name: the system picker offers every file, and a MIDI file, a bundle
-     * and a WAV go to three different places.
+     * and a WAV go to three different places. Also where a file shared to
+     * the app, or opened with it, arrives.
      */
     fun importFile(uri: android.net.Uri) {
         val name = displayNameOf(context, uri, "file")
@@ -968,7 +1026,29 @@ private fun App(modifier: Modifier = Modifier) {
     val importPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) importFile(uri)
     }
+    // Opened with the app or shared to it. Declared after the session is
+    // restored, so it runs after it and is not replaced by it.
+    LaunchedEffect(Incoming.uri) {
+        val uri = Incoming.uri ?: return@LaunchedEffect
+        Incoming.uri = null
+        importFile(uri)
+    }
 
+    /** The open song as a bundle, through the share sheet. */
+    fun shareSong() {
+        scope.launch {
+            val uri = withContext(Dispatchers.IO) {
+                runCatching {
+                    val dir = File(context.cacheDir, "shared").apply { deleteRecursively(); mkdirs() }
+                    val file = File(dir, safeName(song.name) + ".zip")
+                    com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(context), file)
+                    androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", file)
+                }
+            }
+            uri.onSuccess { share(context, listOf(it), "application/zip", song.name) }
+                .onFailure { notice = "That would not share" to (it.message ?: "The bundle could not be written.") }
+        }
+    }
     midiImport?.let { (name, parsed) ->
         com.rm.acidulous.ui.MidiImportDialog(
             fileName = name,
@@ -1506,6 +1586,8 @@ private fun App(modifier: Modifier = Modifier) {
             songNames = { SongStore.list(context) },
             onExport = { if (!playing) exportAsk = true },
             onImport = { importPicker.launch(arrayOf("*/*")) },
+            onShareSong = { shareSong() },
+            onShareExport = { done -> share(context, done.uris, done.mime, done.fileName) },
             exportState = exportState,
             onExportCancel = { NativeEngine.cancelRender() },
             onExportDismiss = { exportState = null },

@@ -117,6 +117,8 @@ Export WAV, AIFF, FLAC, MP3 or AAC, as the whole song or one scene, or as stems.
 
 Import MIDI files as a new song, with a machine chosen for each part and General MIDI drums moved onto the drum machine's sounds. Song bundles open with their samples, and sounds go into the library.
 
+Anything exported can go straight to the share sheet, and a song can be shared as a bundle. Files shared to the app or opened with it are imported.
+
 ---
 
 ## Building

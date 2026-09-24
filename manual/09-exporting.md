@@ -62,3 +62,14 @@ happens depends on what it is:
 An imported song never replaces one you've saved: if the name is taken, it gets
 a number after it.
 
+## Sharing
+
+When an export finishes, **Share** sends it straight on through the phone's
+share sheet: email, Drive, a chat, or another app. Stems go as all their files
+together.
+
+**Share song…** in the file menu sends the open song as a bundle, samples
+included, for someone else to open in Acidulous.
+
+The other way works too. Open a MIDI file, a bundle or a sound with Acidulous,
+or share one to it, and it goes wherever **Import…** would have put it.
