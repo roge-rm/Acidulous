@@ -1584,7 +1584,11 @@ std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::stri
 
 std::string EngineHost::loadReel(int rack, const std::string &spec) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
-    if (awaitMachine(sEngine, rack, "Bias") == nullptr) return "that rack is not a Bias";
+    // An empty reel is a clear, and it arrives after an audio track is
+    // deleted - by when the rack has let the Bias go. Its reel went with it,
+    // so there is nothing to clear, and saying so was an error on every
+    // deletion.
+    if (awaitMachine(sEngine, rack, "Bias") == nullptr) return spec.empty() ? "" : "that rack is not a Bias";
 
     auto reel = std::make_unique<audio::Reel>();
     std::string error;
