@@ -186,8 +186,13 @@ android {
 
     buildTypes {
         release {
+            // Shrunk and optimised: the debug APK is 22 MB, most of it code
+            // nothing calls. What must survive is in proguard-rules.pro.
             optimization {
-                enable = false
+                enable = true
+                keepRules {
+                    files.add(file("proguard-rules.pro"))
+                }
             }
             if (signing != null) signingConfig = signingConfigs.getByName("release")
         }
