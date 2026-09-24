@@ -28,6 +28,10 @@ struct SceneInfo {
     int32_t repeat = 1;
     float bpmOverride = 0.0f; // 0 = follow the song tempo
     bool smooth = false;      // glide into bpmOverride over the first bar
+    // A tempo change inside the scene: to this, over the last rampBars bars of
+    // its last pass. 0 = none. The next scene sets its own tempo as ever.
+    float rampToBpm = 0.0f;
+    int32_t rampBars = 0;
     bool fadeIn = false;      // honoured once the mixer exists (M5)
     bool fadeOut = false;
 

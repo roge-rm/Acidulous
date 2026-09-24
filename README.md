@@ -86,7 +86,7 @@ Each has the usual controls plus one extra, and a page in the manual.
 
 ### Sequencing
 
-- Songs are built from scenes. Clips in a scene can be different lengths, and scenes can repeat.
+- Songs are built from scenes. Clips in a scene can be different lengths, and scenes can repeat, change tempo, or slow down and speed up inside themselves.
 - A clip launcher view of the same song for playing live, where any empty cell is a looper.
 - Piano roll and drum grid.
 - Scale, chord and arp that act on notes as you play them in, so the clip holds what you hear.

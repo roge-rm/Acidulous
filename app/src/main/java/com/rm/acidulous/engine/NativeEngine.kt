@@ -353,7 +353,9 @@ object NativeEngine {
     fun snapshotAddScene(
         handle: Long, sceneId: Long, ticksPerBar: Int, repeat: Int, bpmOverride: Float,
         smooth: Boolean, fadeIn: Boolean, fadeOut: Boolean,
-    ): Boolean = nativeSnapshotAddScene(handle, sceneId, ticksPerBar, repeat, bpmOverride, smooth, fadeIn, fadeOut)
+        /** A tempo change over the scene's last [rampBars] bars; 0 for none. */
+        rampToBpm: Float = 0f, rampBars: Int = 0,
+    ): Boolean = nativeSnapshotAddScene(handle, sceneId, ticksPerBar, repeat, bpmOverride, rampToBpm, rampBars, smooth, fadeIn, fadeOut)
     /** True if the engine still has this clip rev and reused it; false means marshal it. */
     fun snapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean =
         nativeSnapshotSetClipCached(handle, rack, scene, rev)
@@ -904,6 +906,7 @@ object NativeEngine {
     private external fun nativeSnapshotBegin(): Long
     private external fun nativeSnapshotAddScene(
         handle: Long, sceneId: Long, ticksPerBar: Int, repeat: Int, bpmOverride: Float,
+        rampToBpm: Float, rampBars: Int,
         smooth: Boolean, fadeIn: Boolean, fadeOut: Boolean,
     ): Boolean
     private external fun nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean

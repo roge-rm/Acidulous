@@ -1033,8 +1033,10 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotBegin(JNIEnv *, jobject)
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotAddScene(JNIEnv *, jobject, jlong handle, jlong sceneId,
                                                                  jint ticksPerBar, jint repeat, jfloat bpmOverride,
+                                                                 jfloat rampToBpm, jint rampBars,
                                                                  jboolean smooth, jboolean fadeIn, jboolean fadeOut) {
-    return host().snapshotAddScene(handle, sceneId, ticksPerBar, repeat, bpmOverride, smooth == JNI_TRUE,
+    return host().snapshotAddScene(handle, sceneId, ticksPerBar, repeat, bpmOverride, rampToBpm, rampBars,
+                                   smooth == JNI_TRUE,
                                    fadeIn == JNI_TRUE, fadeOut == JNI_TRUE)
                ? JNI_TRUE
                : JNI_FALSE;

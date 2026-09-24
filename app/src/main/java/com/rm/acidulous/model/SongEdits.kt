@@ -442,15 +442,31 @@ fun Track.withModifierBypass(slot: Int, bypass: Boolean): Track = withModifierSl
 fun modifierUnit(slot: Int): String = "mod${slot + 1}"
 fun modifierSlotOf(unit: String): Int? = when (unit) { "mod1" -> 0; "mod2" -> 1; "mod3" -> 2; else -> null }
 
-/** How long the song plays once through: per-scene tempo honoured, smooth ramps ignored. */
+/** How long the song plays once through: per-scene tempo and ramps honoured, glides into a scene ignored. */
 fun Song.durationSeconds(): Float {
     var total = 0f
     for (scene in scenes) {
-        val bpm = scene.tempo?.bpm ?: tempo
-        val beats = signatureOf(scene).ticksPerBar.toFloat() / PPQN
-        total += barsOf(scene) * scene.repeat * beats * 60f / bpm
+        total += passSeconds(scene, last = false) * (scene.repeat - 1) + passSeconds(scene, last = true)
     }
     return total
+}
+
+/**
+ * One pass of [scene], in seconds. A ramp happens on the last pass only, and
+ * a tempo moving evenly from b0 to b1 over n beats takes 60 n ln(b1/b0) /
+ * (b1 - b0) seconds - the time is the integral of one over the tempo.
+ */
+fun Song.passSeconds(scene: Scene, last: Boolean): Float {
+    val bpm = scene.tempo?.bpm ?: tempo
+    val beatsPerBar = signatureOf(scene).ticksPerBar.toFloat() / PPQN
+    val bars = barsOf(scene)
+    val ramp = scene.ramp?.takeIf { last && it.toBpm > 0f && it.toBpm != bpm }
+        ?: return bars * beatsPerBar * 60f / bpm
+    val rampBars = ramp.bars.coerceIn(1, bars)
+    val steady = (bars - rampBars) * beatsPerBar * 60f / bpm
+    val beats = rampBars * beatsPerBar
+    val ramped = 60f * beats * kotlin.math.ln(ramp.toBpm / bpm) / (ramp.toBpm - bpm)
+    return steady + ramped
 }
 
 /**

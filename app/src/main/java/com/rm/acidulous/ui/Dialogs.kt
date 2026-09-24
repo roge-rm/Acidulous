@@ -68,7 +68,14 @@ import com.rm.acidulous.model.SongKey
  * A `FlowRow` of chips fits them at any width.
  */
 @Composable
-fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () -> Unit, onConfirm: (Scene) -> Unit) {
+fun SceneSettingsDialog(
+    scene: Scene, songSignature: Signature, onDismiss: () -> Unit,
+    /** How long the scene is, which is as far as a ramp can reach back. */
+    bars: Int = 16,
+    /** The tempo it starts from when it has none of its own. */
+    songTempo: Float = 120f,
+    onConfirm: (Scene) -> Unit,
+) {
     var name by remember { mutableStateOf(scene.name) }
     var signature by remember { mutableStateOf(scene.signature) } // null = song default
     var repeat by remember { mutableStateOf(scene.repeat) }
@@ -77,6 +84,7 @@ fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () ->
     var smooth by remember { mutableStateOf(scene.tempo?.smooth ?: false) }
     var fadeIn by remember { mutableStateOf(scene.fadeIn) }
     var fadeOut by remember { mutableStateOf(scene.fadeOut) }
+    var ramp by remember { mutableStateOf(scene.ramp) }
 
     PlainDialog(
         title = "Scene",
@@ -91,6 +99,7 @@ fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () ->
                     tempo = if (ownTempo) SceneTempo(bpm = bpm, smooth = smooth) else null,
                     fadeIn = fadeIn,
                     fadeOut = fadeOut,
+                    ramp = ramp,
                 ),
             )
         },
@@ -127,6 +136,21 @@ fun SceneSettingsDialog(scene: Scene, songSignature: Signature, onDismiss: () ->
                         // a scene written at 72.5 keeps it until it is turned.
                         CountKnob("bpm", bpm.roundToInt(), 40..240, "%.0f".format(bpm), PanelAmber) { bpm = it.toFloat() }
                         SwitchGrid("change", listOf("jump", "glide"), if (smooth) 1 else 0) { smooth = it == 1 }
+                    }
+                    // A tempo change inside the scene, on its last pass:
+                    // slowing into what comes next, or speeding up across it.
+                    val start = if (ownTempo) bpm else songTempo
+                    SwitchGrid("ramp at end", listOf("off", "on"), if (ramp != null) 1 else 0) {
+                        ramp = if (it == 1) (ramp ?: com.rm.acidulous.model.TempoRamp((start * 0.75f).roundToInt().toFloat(), minOf(2, bars))) else null
+                    }
+                    ramp?.let { r ->
+                        CountKnob("to", r.toBpm.roundToInt(), 40..240, "%.0f".format(r.toBpm), PanelAmber) { ramp = r.copy(toBpm = it.toFloat()) }
+                        val most = bars.coerceAtLeast(1)
+                        CountKnob(
+                            "over", r.bars.coerceIn(1, most), 1..most,
+                            if (r.bars == 1) "1 bar" else "${r.bars.coerceAtMost(most)} bars",
+                            choices = (1..most).map { if (it == 1) "1 bar" else "$it bars" },
+                        ) { ramp = r.copy(bars = it) }
                     }
                 }
             }

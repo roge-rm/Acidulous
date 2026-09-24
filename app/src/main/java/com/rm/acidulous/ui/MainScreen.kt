@@ -604,6 +604,8 @@ fun MainScreen(
                         SceneHeader(
                             index = index, name = scene.name, repeat = scene.repeat, bars = bars,
                             hasTempo = scene.tempo != null,
+                            // Which way the ramp goes, if the scene has one.
+                            rampMark = scene.ramp?.let { r -> if (r.toBpm < (scene.tempo?.bpm ?: song.tempo)) "↘" else "↗" },
                             progress = when {
                                 onThisScene != null && cycleTicks > 0 ->
                                     onThisScene.second.tickInCycle.toFloat() / cycleTicks
@@ -780,7 +782,7 @@ fun MainScreen(
     when (val d = dialog) {
         null -> {}
         is Dialog.SceneSettings -> song.scenes.getOrNull(d.index)?.let { scene ->
-            SceneSettingsDialog(scene, song.signature, onDismiss = { dialog = null }) { edited ->
+            SceneSettingsDialog(scene, song.signature, onDismiss = { dialog = null }, bars = song.barsOf(scene), songTempo = song.tempo) { edited ->
                 editor.editSong { it.updateScene(d.index) { edited } }
                 dialog = null
             }
@@ -913,6 +915,7 @@ private sealed class Dialog {
 @Composable
 private fun SceneHeader(
     index: Int, name: String, repeat: Int, bars: Int, hasTempo: Boolean,
+    rampMark: String? = null,
     progress: Float?, repeatIdx: Int?, holding: Boolean, finishing: Boolean, queued: Boolean,
     onAudition: () -> Unit, onLoopThis: () -> Unit, onPlayThrough: () -> Unit,
     onSettings: () -> Unit, onInsertAfter: () -> Unit,
@@ -962,6 +965,7 @@ private fun SceneHeader(
                 buildString {
                     append("×$repeat ${bars}b")
                     if (hasTempo) append(" ♩")
+                    if (rampMark != null) append(" $rampMark")
                     if (repeatIdx != null) append(" r${repeatIdx + 1}")
                 },
                 color = Acid.colors.textMid, fontSize = 10.sp, fontFamily = FontFamily.Monospace,

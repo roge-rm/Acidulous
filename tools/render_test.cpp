@@ -861,6 +861,36 @@ void aStepCanBeLocked() {
     ok("and the next one is back to the knob", largestDifference(a, b) < 1e-4f, std::to_string(largestDifference(a, b)));
 }
 
+/**
+ * A scene that slows into the next: 120 to 60 over its last bar. A bar at
+ * 120 is 1500 blocks; a bar gliding evenly from 120 to 60 takes 4 ln 2 s,
+ * 2.77 s, which is 2079 more - so the next scene starts about 3579 blocks
+ * in, at the song's own tempo again.
+ */
+void aSceneCanSlowDown() {
+    printf("- a tempo ramp inside a scene\n");
+    Fixture f;
+    f.snap->scenes[0].rampToBpm = 60.0f;
+    f.snap->scenes[0].rampBars = 1;
+    f.engine.panicFlag.store(true, std::memory_order_release);
+    float scratch[kBlockFrames * 2];
+    f.engine.renderBlock(nullptr, scratch);
+    f.engine.transport.requestPlay(0);
+    float before = 0.0f, late = 0.0f, after = 0.0f;
+    int32_t changed = -1;
+    for (int32_t b = 0; b < 4000; ++b) {
+        f.engine.renderBlock(nullptr, scratch);
+        if (b == 1400) before = f.engine.clock.bpm();
+        if (b == 3500) late = f.engine.clock.bpm();
+        if (changed < 0 && f.engine.scheduler.currentScene() == 1) changed = b;
+        if (b == 3700) after = f.engine.clock.bpm();
+    }
+    ok("the first bar keeps the scene's tempo", before == 120.0f, std::to_string(before));
+    ok("and the last slows to nearly the target", late < 62.0f && late > 59.0f, std::to_string(late));
+    ok("so the next scene starts late by the ramp's time", changed >= 3570 && changed <= 3590, std::to_string(changed));
+    ok("at the song's tempo again", after == 120.0f, std::to_string(after));
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -874,6 +904,7 @@ int main() {
     aMuteWaitsForTheBar();
     theEffectsCanPlayOnAGroup();
     aStepCanBeLocked();
+    aSceneCanSlowDown();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

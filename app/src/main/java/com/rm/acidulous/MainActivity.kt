@@ -66,6 +66,7 @@ import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.SongStore
 import com.rm.acidulous.model.durationSeconds
+import com.rm.acidulous.model.passSeconds
 import com.rm.acidulous.model.withSetting
 import java.io.File
 import com.rm.acidulous.ui.EditScreen
@@ -625,11 +626,9 @@ private fun App(modifier: Modifier = Modifier) {
         text.replace(Regex("[^A-Za-z0-9 _-]"), "_").trim().ifEmpty { "export" }
 
     /** One pass of a scene, in seconds: its own length, repeats aside. */
-    fun sceneSeconds(scene: com.rm.acidulous.model.Scene): Float {
-        val bpm = scene.tempo?.bpm ?: song.tempo
-        val beats = song.signatureOf(scene).ticksPerBar.toFloat() / com.rm.acidulous.model.PPQN
-        return song.barsOf(scene) * beats * 60f / bpm
-    }
+    // A scene export is its first pass, which is its last only when it
+    // plays once - and only the last pass carries a ramp.
+    fun sceneSeconds(scene: com.rm.acidulous.model.Scene): Float = song.passSeconds(scene, last = scene.repeat <= 1)
 
     /** What the export will produce, before it produces it, for the progress bar. */
     fun expectedSeconds(options: com.rm.acidulous.ui.ExportOptions): Float {

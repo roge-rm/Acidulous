@@ -18,6 +18,19 @@ the next scene starts.
   loops at all: **⟳** loops forever, **⇥ end** plays through once and stops.
 - Stop means stop. The next play starts from the top of the song.
 
+### A scene's tempo
+
+In a scene's settings, **tempo** can follow the song or be the scene's own. An
+own tempo either jumps in when the scene starts or glides in over its first
+bar.
+
+**Ramp at end** changes the tempo inside the scene: to the bpm set by **to**,
+over the last bars set by **over**. Slow down into the next scene, or speed up
+across a whole one. It happens on the scene's last time through, so a scene
+that repeats four times only slows at the very end. The next scene then starts
+at its own tempo. The header shows ↘ or ↗ on a scene with a ramp, and a MIDI
+export writes it as a tempo change on every beat.
+
 ## As a launcher
 
 Tap the corner square and the grid becomes a clip launcher. Each track plays its

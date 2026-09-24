@@ -374,6 +374,15 @@ object ClipRev {
 @Serializable
 data class SceneTempo(val bpm: Float, val smooth: Boolean = false)
 
+/**
+ * A change of tempo inside a scene: to [toBpm], over the scene's last [bars]
+ * bars, on its last pass - a ritardando into what comes next, or an
+ * accelerando across the whole of it. The next scene sets its own tempo as
+ * it starts, as any scene does.
+ */
+@Serializable
+data class TempoRamp(val toBpm: Float, val bars: Int = 1)
+
 @Serializable
 data class Scene(
     val id: String,
@@ -384,6 +393,7 @@ data class Scene(
     val tempo: SceneTempo? = null,
     val fadeIn: Boolean = false,
     val fadeOut: Boolean = false,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val ramp: TempoRamp? = null,
 ) {
     /** The id as the engine sees it: a 64-bit FNV-1a of [id]. */
     val engineId: Long get() = fnv1a64(id)

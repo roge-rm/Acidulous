@@ -145,6 +145,7 @@ class SceneScheduler {
         repeatIdx = rp;
         lastTickInIteration = tickIn;
         iterationOrigin = clock->position() - tickIn;
+        rampHeld = false;
         pointClipPlayers();
     }
 
@@ -293,6 +294,7 @@ class SceneScheduler {
      * So the latch is taken here, where a playing begins, and nowhere else.
      */
     void beginning() {
+        rampHeld = false;
         if (transport != nullptr) {
             launcherWas = transport->launcherMode();
         }
@@ -386,6 +388,7 @@ class SceneScheduler {
             const int64_t iterLen = std::max<int64_t>(1, sc.iterationTicks());
             const int64_t iterEnd = iterationOrigin + iterLen;
             const int64_t segEnd = std::min(blockEnd, iterEnd);
+            startRamp(sc, iterEnd, segEnd);
             if (segEnd > cur) {
                 fire(cur, segEnd);
                 cur = segEnd;
@@ -396,6 +399,9 @@ class SceneScheduler {
                 iterationOrigin = iterEnd;
                 if (++repeatIdx >= sc.repeat) {
                     repeatIdx = 0;
+                    // A scene that plays again - looped, or the only one -
+                    // starts again at its own tempo, not where its ramp ended.
+                    rampHeld = false;
                     // This boundary is where everything queued from the UI
                     // lands: a scene waiting its turn, or an armed finish.
                     const int32_t queued = transport->takeQueuedScene();
@@ -692,7 +698,23 @@ class SceneScheduler {
         }
     }
 
+    /**
+     * The scene's ramp, started when its last pass comes within the ramp's
+     * bars of the end. The clock's own glide does the work, timed to arrive
+     * exactly at the scene's end; from then until the next scene the tempo
+     * is held at the target, or [followTempo] would put it back.
+     */
+    void startRamp(const SceneInfo &sc, int64_t iterEnd, int64_t segEnd) {
+        if (rampHeld || sc.rampToBpm <= 0.0f || sc.rampBars <= 0 || repeatIdx != sc.repeat - 1) return;
+        if (transport != nullptr && transport->externalSync()) return;
+        const int64_t length = std::min<int64_t>(sc.iterationTicks(), static_cast<int64_t>(sc.rampBars) * sc.ticksPerBar);
+        if (segEnd <= iterEnd - length) return;
+        rampHeld = true;
+        clock->rampTempo(sc.rampToBpm, std::max<int64_t>(1, iterEnd - clock->position()));
+    }
+
     void enterScene(int32_t idx, bool allowSmooth) {
+        rampHeld = false;
         sceneIdx = idx;
         repeatIdx = 0;
         pointClipPlayers();
@@ -721,7 +743,8 @@ class SceneScheduler {
             return;
         }
         const SceneInfo &sc = snap->scenes[sceneIdx];
-        const float want = sc.bpmOverride > 0.0f ? sc.bpmOverride : clock->songTempoRequested();
+        const float want = rampHeld ? sc.rampToBpm
+            : sc.bpmOverride > 0.0f ? sc.bpmOverride : clock->songTempoRequested();
         if (want != clock->bpm()) {
             clock->setTempo(want);
         }
@@ -774,6 +797,8 @@ class SceneScheduler {
     int32_t sceneIdx = 0;
     int32_t repeatIdx = 0;
     int64_t iterationOrigin = 0;
+    /** The scene's ramp has begun this pass; see [startRamp]. */
+    bool rampHeld = false;
     int64_t swingPair = Swing::kSixteenths;
     int64_t lastTickInIteration = 0;
 };

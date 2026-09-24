@@ -1326,7 +1326,7 @@ int64_t EngineHost::snapshotBegin() {
 }
 
 bool EngineHost::snapshotAddScene(int64_t handle, int64_t sceneId, int ticksPerBar, int repeat, float bpmOverride,
-                                  bool smooth, bool fadeIn, bool fadeOut) {
+                                  float rampToBpm, int rampBars, bool smooth, bool fadeIn, bool fadeOut) {
     auto *snap = fromHandle(handle);
     if (snap == nullptr || ticksPerBar <= 0) return false;
     seq::SceneInfo sc;
@@ -1335,6 +1335,8 @@ bool EngineHost::snapshotAddScene(int64_t handle, int64_t sceneId, int ticksPerB
     sc.repeat = std::max(1, repeat);
     sc.bpmOverride = bpmOverride > 0.0f ? bpmOverride : 0.0f;
     sc.smooth = smooth;
+    sc.rampToBpm = rampToBpm > 0.0f && rampBars > 0 ? rampToBpm : 0.0f;
+    sc.rampBars = rampBars > 0 ? rampBars : 0;
     sc.fadeIn = fadeIn;
     sc.fadeOut = fadeOut;
     snap->scenes.push_back(sc);

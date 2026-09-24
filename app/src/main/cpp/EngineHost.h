@@ -291,6 +291,7 @@ class EngineHost {
     // --- Song snapshot builder -------------------------------------------------
     int64_t snapshotBegin();
     bool snapshotAddScene(int64_t handle, int64_t sceneId, int ticksPerBar, int repeat, float bpmOverride,
+                          float rampToBpm, int rampBars,
                           bool smooth, bool fadeIn, bool fadeOut);
     bool snapshotSetClipCached(int64_t handle, int rack, int scene, int64_t rev);
     // notes: flat [tick, length, pitch, velocity, curvePointCount, trig] x count,

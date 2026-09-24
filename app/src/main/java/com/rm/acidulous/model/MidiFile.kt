@@ -260,11 +260,23 @@ object MidiFile {
                 // Only write a change when it *is* one: a tempo event every
                 // scene would make the map unreadable in another program.
                 if (bpm != lastBpm) {
-                    val usPerQuarter = (60_000_000.0 / bpm).toInt()
-                    events += Event(at, 0, meta(0x51, byteArrayOf(
-                        (usPerQuarter shr 16).toByte(), (usPerQuarter shr 8).toByte(), usPerQuarter.toByte(),
-                    )))
+                    events += tempoEvent(at, bpm)
                     lastBpm = bpm
+                }
+                // A ramp, on the last pass, as a step every beat: a MIDI file
+                // has no glide, and a beat is fine enough that nobody hears
+                // the stairs.
+                val ramp = scene.ramp
+                if (ramp != null && repeat == scene.repeat - 1 && ramp.toBpm > 0f && ramp.bars > 0) {
+                    val length = minOf(sceneTicks, ramp.bars * signature.ticksPerBar)
+                    val from = at + sceneTicks - length
+                    var t = 0
+                    while (t < length) {
+                        t += PPQN
+                        val v = bpm + (ramp.toBpm - bpm) * minOf(1f, t.toFloat() / length)
+                        events += tempoEvent(from + t - PPQN, v)
+                    }
+                    lastBpm = ramp.toBpm
                 }
                 if (signature != lastSignature) {
                     // The denominator is stored as its power of two, and the
@@ -356,6 +368,13 @@ object MidiFile {
             }
         }
         return if (any) trackBytes(events) else null
+    }
+
+    private fun tempoEvent(at: Int, bpm: Float): Event {
+        val usPerQuarter = (60_000_000.0 / bpm).toInt()
+        return Event(at, 0, meta(0x51, byteArrayOf(
+            (usPerQuarter shr 16).toByte(), (usPerQuarter shr 8).toByte(), usPerQuarter.toByte(),
+        )))
     }
 
     // --- the bytes ----------------------------------------------------------------

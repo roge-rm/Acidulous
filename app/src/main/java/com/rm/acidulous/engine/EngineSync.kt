@@ -580,6 +580,8 @@ object EngineSync {
                 smooth = scene.tempo?.smooth ?: false,
                 fadeIn = scene.fadeIn,
                 fadeOut = scene.fadeOut,
+                rampToBpm = scene.ramp?.toBpm ?: 0f,
+                rampBars = scene.ramp?.bars ?: 0,
             )
             if (!ok) {
                 NativeEngine.snapshotAbandon(handle)
