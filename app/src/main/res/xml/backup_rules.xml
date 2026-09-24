@@ -1,13 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    What Android's backup keeps, below Android 12 (data_extraction_rules.xml
+    says the same from 12 up).
+
+    The songs, the working session, patches, tunings and the app's settings -
+    the things that are yours and small. Not the samples: a backup over its
+    25 MB allowance is skipped whole, and one long recording would cost every
+    song with it. Not the freeze renders or anything in the cache, which are
+    made again from the songs. Any include makes the list exclusive, so what
+    is not named here is not backed up.
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <include domain="file" path="user/songs" />
+    <include domain="file" path="user/session.json" />
+    <include domain="file" path="user/patches" />
+    <include domain="file" path="user/tunings" />
+    <include domain="sharedpref" path="." />
 </full-backup-content>
