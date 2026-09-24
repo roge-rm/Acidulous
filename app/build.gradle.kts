@@ -98,6 +98,19 @@ android {
         // auto setting, pattern generators write notes, a step can lock any
         // knob, and every window with settings in it is cards of knobs and
         // switches. A song with step locks means something 0.7 cannot play.
+        //
+        // 0.9.0: in and out. MIDI files and song bundles import, exports go
+        // to the share sheet and files open with the app. Scenes ramp their
+        // tempo, songs and tracks take tunings, and each track has its own
+        // settings. One switch for the diagnostics, panic in About, and
+        // layouts for turned and square phones. A song with a tempo ramp or
+        // a tuning means something 0.8 cannot play.
+        //
+        // 0.9.1: sustain, sostenuto and soft pedals, recorded as lanes; MIDI
+        // files bring their pedals, controllers, bends and tempo changes;
+        // the organ and Nexus take tunings. A point release on the way to
+        // 1.0, though a song with pedal lanes plays without them in 0.9.0
+        // (Dan's call: it was 0.10.0 for a minute).
         versionCode = 16
         versionName = "0.9.1"
 
