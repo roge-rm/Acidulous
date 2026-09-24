@@ -75,10 +75,10 @@ object SongBundle {
                     target.parentFile?.mkdirs()
                     val incoming = zip.readBytes()
                     if (!target.exists()) {
-                        target.writeBytes(incoming)
+                        target.writeBytesSafely(incoming)
                     } else if (!target.readBytes().contentEquals(incoming)) {
                         val fresh = freeName(target)
-                        fresh.writeBytes(incoming)
+                        fresh.writeBytesSafely(incoming)
                         renamed[entry.name] = fresh.relativeTo(rootPath).invariantSeparatorsPath
                     }
                 }

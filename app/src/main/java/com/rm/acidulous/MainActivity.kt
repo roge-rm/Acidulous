@@ -68,6 +68,7 @@ import com.rm.acidulous.model.SongStore
 import com.rm.acidulous.model.durationSeconds
 import com.rm.acidulous.model.passSeconds
 import com.rm.acidulous.model.withSetting
+import com.rm.acidulous.model.writeTextSafely
 import java.io.File
 import com.rm.acidulous.ui.EditScreen
 import com.rm.acidulous.ui.MainScreen
@@ -1025,7 +1026,7 @@ private fun App(modifier: Modifier = Modifier) {
                         val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() }
                         val tuning = com.rm.acidulous.model.Tunings.parseScl(text, stem)
                         val dir = com.rm.acidulous.model.TuningStore.directory(EngineAssets.userRoot(context))
-                        File(dir, stem.replace(Regex("[^A-Za-z0-9 _.-]"), "_") + ".scl").writeText(text)
+                        File(dir, stem.replace(Regex("[^A-Za-z0-9 _.-]"), "_") + ".scl").writeTextSafely(text)
                         tuning
                     }
                 }

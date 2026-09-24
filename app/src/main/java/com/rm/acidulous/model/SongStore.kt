@@ -83,7 +83,7 @@ object SongStore {
     fun fileFor(context: Context, name: String): File = File(directory(context), "${safeName(name)}.json")
 
     fun save(context: Context, song: Song): File =
-        fileFor(context, song.name).also { it.writeText(encode(song)) }
+        fileFor(context, song.name).also { it.writeTextSafely(encode(song)) }
 
     fun load(context: Context, name: String): Song = decode(fileFor(context, name).readText())
 
@@ -95,10 +95,8 @@ object SongStore {
     fun sessionFile(context: Context): File = File(EngineAssets.userRoot(context), "session.json")
 
     fun saveSession(context: Context, song: Song) {
-        val f = sessionFile(context)
-        val tmp = File(f.parentFile, "session.json.tmp")
-        tmp.writeText(encode(song))
-        tmp.renameTo(f) // a kill mid-write leaves the previous session intact
+        // A kill mid-write leaves the previous session intact.
+        sessionFile(context).writeTextSafely(encode(song))
     }
 
     fun loadSession(context: Context): Song? =

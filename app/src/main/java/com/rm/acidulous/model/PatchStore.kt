@@ -68,7 +68,7 @@ object PatchStore {
         if (machine.startsWith(FX)) "patches/fx/${machine.removePrefix(FX)}" else "patches/$machine"
 
     fun save(context: Context, patch: Patch): File =
-        File(directory(context, patch.machine), "${safe(patch.name)}.json").also { it.writeText(json.encodeToString(Patch.serializer(), patch)) }
+        File(directory(context, patch.machine), "${safe(patch.name)}.json").also { it.writeTextSafely(json.encodeToString(Patch.serializer(), patch)) }
 
     fun load(context: Context, machine: String, name: String): Patch? =
         factory(machine).firstOrNull { it.name == name }
