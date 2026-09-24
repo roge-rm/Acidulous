@@ -87,6 +87,14 @@ private fun AppTab() {
                 "machines and samplers, arranged in scenes.",
         )
         Body("Copyright © 2026 Dan Hunke")
+        // The one place that *names* it, which a gesture has no way to be:
+        // holding play does the same and is the fast path. Here rather than
+        // in the file menu (Dan, 2026-09-23), where it sat among things you
+        // choose rather than things you reach for.
+        androidx.compose.material3.OutlinedButton(
+            onClick = { panicEverything() },
+            border = androidx.compose.foundation.BorderStroke(1.dp, c.red),
+        ) { Text("Panic · stop all sound", color = c.red) }
     }
 }
 

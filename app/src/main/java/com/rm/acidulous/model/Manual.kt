@@ -52,6 +52,7 @@ object Manual {
             ManualBlock(ManualKind.Bullet, "Hold a scene's header for its menu: settings, insert, duplicate, delete, and move left or right."),
             ManualBlock(ManualKind.Bullet, "The loop button at the left of the bottom bar: **tap** it to choose what loops, the whole song or the current scene. **Hold** it to choose whether it loops at all: **⟳** loops forever, **⇥ end** plays through once and stops."),
             ManualBlock(ManualKind.Bullet, "Stop means stop. The next play starts from the top of the song."),
+            ManualBlock(ManualKind.Bullet, "If something keeps sounding, **hold play** to silence everything: every note, echo and tail. **Panic** under About… in the file menu does the same."),
             ManualBlock(ManualKind.Para, "### A scene's tempo"),
             ManualBlock(ManualKind.Para, "In a scene's settings, **tempo** can follow the song or be the scene's own. An own tempo either jumps in when the scene starts or glides in over its first bar."),
             ManualBlock(ManualKind.Para, "**Ramp at end** changes the tempo inside the scene: to the bpm set by **to**, over the last bars set by **over**. Slow down into the next scene, or speed up across a whole one. It happens on the scene's last time through, so a scene that repeats four times only slows at the very end. The next scene then starts at its own tempo. The header shows ↘ or ↗ on a scene with a ramp, and a MIDI export writes it as a tempo change on every beat."),

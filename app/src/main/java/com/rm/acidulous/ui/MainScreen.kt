@@ -438,13 +438,6 @@ fun MainScreen(
                         // read once.
                         DropdownMenuItem(text = { Text("Help…") }, onClick = { fileMenu = false; dialog = Dialog.Help })
                         DropdownMenuItem(text = { Text("About…") }, onClick = { fileMenu = false; dialog = Dialog.About })
-                        // Not the fast path - holding play is - but the only
-                        // thing on screen that *names* it, which is what a
-                        // gesture otherwise has no way to be found by.
-                        DropdownMenuItem(
-                            text = { Text("Panic · stop all sound") },
-                            onClick = { fileMenu = false; panicEverything() },
-                        )
                     }
                 }
             }

@@ -17,6 +17,8 @@ the next scene starts.
   loops, the whole song or the current scene. **Hold** it to choose whether it
   loops at all: **⟳** loops forever, **⇥ end** plays through once and stops.
 - Stop means stop. The next play starts from the top of the song.
+- If something keeps sounding, **hold play** to silence everything: every
+  note, echo and tail. **Panic** under About… in the file menu does the same.
 
 ### A scene's tempo
 
