@@ -15,7 +15,6 @@ using namespace dsp;
 
 namespace {
 constexpr float kPiF = 3.14159265f;
-float noteToHz(float note) { return 440.0f * std::pow(2.0f, (note - 69.0f) / 12.0f); }
 // Intervals in semitones for the sympathetic bank, by tuning.
 const int kSymIntervals[Filament::SymCount][Filament::kSympathetic] = {
     {-24, -12, 0, 12, 24, 36},   // octaves
@@ -239,7 +238,7 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     v->pressure = v->timbre = -1.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
-    v->target = noteToHz(static_cast<float>(note));
+    v->target = noteHz(static_cast<float>(note));
     v->freq = v->target;
     v->damp = 0.0f;
     rngState = rngState * 1664525u + 1013904223u;

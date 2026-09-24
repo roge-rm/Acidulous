@@ -227,10 +227,10 @@ float Molt::layGrain(Voice &v, float formantRatio, float tune, float rateSec, bo
     // --- what this grain is pulled to --------------------------------------
     float targetPeriod;
     if (e.voiced || robot) {
-        const float noteHz = mtof(static_cast<float>(v.note) +
+        const float pitchHz = noteHz(static_cast<float>(v.note) +
                                   static_cast<float>(steppedOf(Transpose)) +
                                   12.0f * static_cast<float>(steppedOf(Octave)) + v.bend);
-        const float logNote = std::log2(noteHz);
+        const float logNote = std::log2(pitchHz);
         float want = logNote;
         if (!robot && u->rootHz > 0.0f && e.voiced) {
             // How far this moment is from the take's own root, kept in part:

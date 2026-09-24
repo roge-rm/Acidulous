@@ -1018,8 +1018,24 @@ private fun App(modifier: Modifier = Modifier) {
                 bringIn(uri, "sample.wav", NativeEngine.SLICE_SECONDS) { rel ->
                     notice = "Added to the sound library" to "${rel.substringAfterLast('/')} is in the library, ready for any machine that plays a sound."
                 }
+            // A tuning: checked by reading it, then kept as the file it is.
+            "scl" -> scope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() }
+                        val tuning = com.rm.acidulous.model.Tunings.parseScl(text, stem)
+                        val dir = com.rm.acidulous.model.TuningStore.directory(EngineAssets.userRoot(context))
+                        File(dir, stem.replace(Regex("[^A-Za-z0-9 _.-]"), "_") + ".scl").writeText(text)
+                        tuning
+                    }
+                }
+                result.onSuccess {
+                    notice = "Tuning added" to
+                        "${it.name} (${it.cents.size} notes) is in the tuning list: under key in the tempo window, or Tuning… in a track's menu."
+                }.onFailure { notice = "That would not open" to "$name - ${it.message}." }
+            }
             else -> notice = "That would not open" to
-                "Acidulous imports MIDI files, its own song bundles (.zip), and WAV, AIFF, FLAC and MP3 sounds."
+                "Acidulous imports MIDI files, its own song bundles (.zip), Scala tunings (.scl), and WAV, AIFF, FLAC and MP3 sounds."
         }
     }
     val importPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->

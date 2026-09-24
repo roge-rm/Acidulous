@@ -33,7 +33,6 @@ constexpr float kKeyLevel = 0.1f;
 
 namespace {
 constexpr float kTwoPi = 6.28318530718f;
-float mtof(float note) { return 440.0f * std::pow(2.0f, (note - 69.0f) / 12.0f); }
 } // namespace
 
 Timber::Timber() { initParams(); }
@@ -173,7 +172,7 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
 }
 
 void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) {
-    v.glideFrom = slurred ? v.freq : mtof(static_cast<float>(note));
+    v.glideFrom = slurred ? v.freq : noteHz(static_cast<float>(note));
     v.glidePos = slurred ? 0.0f : 1.0f;
     v.freq = v.glideFrom;
     v.used = true;
@@ -307,9 +306,9 @@ bool Timber::render(float *L, float *R, int32_t frames) {
 
         if (v.glidePos < 1.0f) {
             v.glidePos = std::min(1.0f, v.glidePos + (glide > 0.001f ? dt * frames / glide : 1.0f));
-            v.freq = v.glideFrom + (mtof(static_cast<float>(v.note)) - v.glideFrom) * v.glidePos;
+            v.freq = v.glideFrom + (noteHz(static_cast<float>(v.note)) - v.glideFrom) * v.glidePos;
         } else {
-            v.freq = mtof(static_cast<float>(v.note));
+            v.freq = noteHz(static_cast<float>(v.note));
         }
 
         const float vibratoDepth = v.vibratoLeft > 0.0f ? 0.0f : vibrato * (0.35f + modWheel * 0.65f);

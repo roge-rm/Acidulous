@@ -36,6 +36,14 @@ object MachineUi {
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
     /**
+     * Machines that play a tuning. Drums and the audio track have no scale
+     * to tune; the organ's wheels are one shared generator, and Nexus blocks
+     * are machines of their own, so neither reads the table yet.
+     */
+    fun takesTuning(type: String): Boolean =
+        kindOf(type) == MachineKind.Keyboard && type != "Manual" && type != "Nexus"
+
+    /**
      * Machines that hold one sample of their own, under the plain key
      * "sample" - as against Forage, whose thirteen pads each have their own.
      */

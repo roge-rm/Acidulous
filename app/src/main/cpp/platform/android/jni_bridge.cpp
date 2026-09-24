@@ -900,6 +900,17 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSetExternalSync(JNIEnv *, jobjec
 }
 
 JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeSetTuning(JNIEnv *env, jobject, jint rack, jfloatArray ratios) {
+    if (ratios == nullptr || env->GetArrayLength(ratios) < 128) {
+        host().setTuning(rack, nullptr);
+        return;
+    }
+    jfloat buf[128];
+    env->GetFloatArrayRegion(ratios, 0, 128, buf);
+    host().setTuning(rack, buf);
+}
+
+JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeSetLink(JNIEnv *, jobject, jboolean on) {
     host().setLinkEnabled(on == JNI_TRUE);
 }

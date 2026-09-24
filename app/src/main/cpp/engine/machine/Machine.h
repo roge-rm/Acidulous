@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <cstdint>
 #include <engine/core/Params.h>
 
@@ -36,6 +37,13 @@ class Machine {
      */
     virtual void onScene(int64_t /*sceneId*/, int64_t /*cycleTick*/, bool /*playing*/,
                          bool /*clipMuted*/) {}
+    /**
+     * The track's tuning: for each MIDI note, its ratio to equal temperament,
+     * or null for equal temperament. The rack hands it over before every
+     * block; [noteHz] is how a machine reads it.
+     */
+    void setTuning(const float *ratios) { tuning_ = ratios; }
+
     virtual void reset() = 0; // silence, forget held notes
     virtual void noteOn(uint8_t note, uint8_t velocity) = 0;
     virtual void noteOff(uint8_t note) = 0;
@@ -123,6 +131,28 @@ class Machine {
     int32_t steppedTargetOf(int32_t p) const {
         return static_cast<int32_t>(params_.target(p) + 0.5f);
     }
+
+  protected:
+    /**
+     * A note's pitch in hertz, in the track's tuning.
+     *
+     * Between two notes - a glide, a bend written as a fractional note - the
+     * tuning is interpolated on a log scale, so a slide from a tuned C to a
+     * tuned D passes evenly through the pitches between them.
+     */
+    float noteHz(float note) const {
+        const float equal = 440.0f * std::exp2((note - 69.0f) / 12.0f);
+        if (tuning_ == nullptr) return equal;
+        const float n = note < 0.0f ? 0.0f : (note > 127.0f ? 127.0f : note);
+        const int i = static_cast<int>(n);
+        const float frac = n - static_cast<float>(i);
+        const float a = tuning_[i];
+        const float r = (frac <= 0.0f || i >= 127) ? a : a * std::pow(tuning_[i + 1] / a, frac);
+        return equal * r;
+    }
+
+  private:
+    const float *tuning_ = nullptr;
 };
 
 /**

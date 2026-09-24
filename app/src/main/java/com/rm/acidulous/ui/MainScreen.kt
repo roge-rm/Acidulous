@@ -563,6 +563,7 @@ fun MainScreen(
                         hot = straining && rackHot.getOrElse(index) { false },
                         name = track.name, machine = track.machine.type, colour = trackColour(index),
                         onChangeMachine = { dialog = Dialog.PickMachine(index) },
+                        onTuning = if (com.rm.acidulous.model.MachineUi.takesTuning(track.machine.type)) ({ dialog = Dialog.TrackTuning(index) }) else null,
                         onRename = { dialog = Dialog.RenameTrack(index) },
                         onDuplicate = { editor.editSong { it.duplicateTrack(index) } },
                         onDelete = { editor.editSong { it.deleteTrack(index) } },
@@ -839,11 +840,38 @@ fun MainScreen(
             }
             dialog = null
         }
+        is Dialog.TrackTuning -> song.tracks.getOrNull(d.index)?.let { track ->
+            // One knob, first choice "song": follow the song's tuning.
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            val tunings = remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot(ctx)) }
+            var chosen by remember(d.index) { mutableStateOf(track.tuning) }
+            PlainDialog(
+                title = "Tuning · ${track.name}",
+                onDismiss = { dialog = null },
+                confirmLabel = "OK",
+                onConfirm = {
+                    editor.edit(d.index) { it.copy(tuning = chosen) }
+                    dialog = null
+                },
+                spacing = 6.dp,
+            ) {
+                WindowCards {
+                    WindowCard("tuning · song is ${song.tuning?.name ?: "equal"}") {
+                        TuningKnob(chosen, tunings, { chosen = it }, followLabel = "song")
+                    }
+                }
+            }
+        }
         is Dialog.RenameTrack -> TextInputDialog("Track name", song.tracks.getOrNull(d.index)?.name ?: "", onDismiss = { dialog = null }) { name ->
             editor.editSong { it.renameTrack(d.index, name) }
             dialog = null
         }
-        Dialog.Tempo -> TempoDialog(song, onDismiss = { dialog = null }) { edited ->
+        Dialog.Tempo -> TempoDialog(
+            song, onDismiss = { dialog = null },
+            tunings = androidx.compose.ui.platform.LocalContext.current.let { ctx ->
+                remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot(ctx)) }
+            },
+        ) { edited ->
             // The whole of the window's page comes back as one edit, so the
             // tempo, the bar, the swing and the key are one undo between them.
             editor.editSong { edited }
@@ -899,6 +927,7 @@ private sealed class Dialog {
     data class ClipSettings(val track: Int, val sceneId: String) : Dialog()
     data class PickMachine(val track: Int?) : Dialog() // null = new track
     data class RenameTrack(val index: Int) : Dialog()
+    data class TrackTuning(val index: Int) : Dialog()
     object Tempo : Dialog()
     object Songs : Dialog()
     object Demos : Dialog()
@@ -1003,6 +1032,8 @@ private fun TrackHeader(
     name: String, machine: String, colour: Color,
     onChangeMachine: () -> Unit, onRename: () -> Unit, onDuplicate: () -> Unit, onDelete: () -> Unit,
     freezable: Int, frozen: Int, onFreeze: () -> Unit, onThaw: () -> Unit,
+    /** Null where tuning means nothing: a drum machine, a tape. */
+    onTuning: (() -> Unit)? = null,
 ) {
     val cell = LocalSongCell.current
     var menu by remember { mutableStateOf(false) }
@@ -1035,6 +1066,7 @@ private fun TrackHeader(
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             ScaledMenu(menuScroll) {
                 DropdownMenuItem(text = { Text("Change machine…") }, onClick = { menu = false; onChangeMachine() })
+                if (onTuning != null) DropdownMenuItem(text = { Text("Tuning…") }, onClick = { menu = false; onTuning() })
                 DropdownMenuItem(text = { Text("Rename…") }, onClick = { menu = false; onRename() })
                 if (freezable > 0) {
                     DropdownMenuItem(text = { Text("Freeze track ($freezable)") }, onClick = { menu = false; onFreeze() })

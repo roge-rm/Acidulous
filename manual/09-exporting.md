@@ -58,6 +58,8 @@ happens depends on what it is:
   bundle's comes in under a new name.
 - **A sound** (WAV, AIFF, FLAC or MP3) goes into the sound library, up to ten
   minutes of it.
+- **A tuning** (a Scala .scl file) joins the tuning list, under key in the
+  tempo window and in each track's **Tuning…**.
 
 An imported song never replaces one you've saved: if the name is taken, it gets
 a number after it.

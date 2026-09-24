@@ -91,6 +91,7 @@ Each has the usual controls plus one extra, and a page in the manual.
 - Piano roll and drum grid.
 - Scale, chord and arp that act on notes as you play them in, so the clip holds what you hear.
 - Swing per song, with a per-track override.
+- Tunings per song, with a per-track override: just, meantone and others built in, or your own from Scala files.
 - Automation lanes, mod wheel and pressure lanes, and per-note pitch bend, pressure and slide.
 - Probability, conditions, ratchets and micro-timing on individual notes.
 - Pattern generators: even rhythms, lines in key, and mutation of what is there.

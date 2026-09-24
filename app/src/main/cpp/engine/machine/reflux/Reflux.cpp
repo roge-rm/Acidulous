@@ -188,7 +188,7 @@ bool Reflux::render(float *L, float * /*R*/, int32_t frames) {
             pitch += (targetPitch - pitch) * glideCoeff;
             if (std::fabs(targetPitch - pitch) < 0.001f) { pitch = targetPitch; gliding = false; }
         }
-        const float hz = dsp::mtof(pitch + tune);
+        const float hz = noteHz(pitch + tune);
         osc.setFrequency(hz);
         sub.setFrequency(hz * 0.5f);
         float s = pulse ? osc.pulse(pw) : osc.saw();

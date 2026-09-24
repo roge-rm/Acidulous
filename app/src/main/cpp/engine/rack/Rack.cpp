@@ -422,6 +422,9 @@ void Rack::render(int32_t frames) {
             return;
         }
     } else {
+        // The track's tuning, whichever of the two tables is the current one.
+        const int t = tuningIndex.load(std::memory_order_acquire);
+        machine->setTuning(t < 0 ? nullptr : tuningTables[t]);
         stereo = machine->render(bufL, bufR, frames);
         for (int32_t s = 0; s < kEffectSlots; ++s) {
             if (effects[s] != nullptr) stereo = effects[s]->run(bufL, bufR, frames, stereo);
@@ -561,6 +564,19 @@ void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
     case Unit::Perform: if (performSink != nullptr) performSink->set(index, v01); break;
     case Unit::Master: break; // never addressed at a rack
     }
+}
+
+void Rack::setTuning(const float *ratios) {
+    if (ratios == nullptr) {
+        tuningIndex.store(-1, std::memory_order_release);
+        return;
+    }
+    // Written into whichever table the audio thread is not reading, then
+    // handed over in one store. Two changes inside one block could still
+    // write the table being read; tunings change by hand, not that fast.
+    const int next = tuningIndex.load(std::memory_order_acquire) == 0 ? 1 : 0;
+    for (int i = 0; i < 128; ++i) tuningTables[next][i] = ratios[i];
+    tuningIndex.store(next, std::memory_order_release);
 }
 
 } // namespace acidulous

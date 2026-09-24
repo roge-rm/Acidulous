@@ -266,6 +266,8 @@ class EngineHost {
     int drainMidiOut(int64_t *out, int maxEvents);
     bool audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate) const;
     void setExternalSync(bool on);
+    /** A track's tuning: 128 ratios to equal temperament, or null for none. */
+    void setTuning(int rack, const float *ratios);
 
     // --- Ableton Link -------------------------------------------------------
     /** On opens the discovery sockets and hands the tempo to the session. */

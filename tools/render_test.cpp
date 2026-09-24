@@ -891,6 +891,40 @@ void aSceneCanSlowDown() {
     ok("at the song's tempo again", after == 120.0f, std::to_string(after));
 }
 
+/**
+ * A track's tuning. A table that raises every note by a hundred cents must
+ * sound like the same clip written a semitone higher, and not like it
+ * written where it is.
+ */
+std::vector<float> renderTuned(int32_t blocks, bool tuned, uint8_t pitch) {
+    Fixture f;
+    f.clip(0, 0, pitch);
+    if (tuned) {
+        float up[128];
+        for (float &r : up) r = std::exp2(1.0f / 12.0f);
+        f.engine.racks[0].setTuning(up);
+    }
+    f.engine.panicFlag.store(true, std::memory_order_release);
+    float scratch[kBlockFrames * 2];
+    f.engine.renderBlock(nullptr, scratch);
+    f.engine.transport.requestPlay(0);
+    std::vector<float> out(static_cast<size_t>(blocks) * kBlockFrames * 2);
+    for (int32_t b = 0; b < blocks; ++b) {
+        f.engine.renderBlock(nullptr, out.data() + static_cast<size_t>(b) * kBlockFrames * 2);
+    }
+    return out;
+}
+
+void aTrackCanBeTuned() {
+    printf("- a tuned track\n");
+    constexpr int32_t kBlocks = 750;
+    const auto plain = renderTuned(kBlocks, false, 36);
+    const auto tuned = renderTuned(kBlocks, true, 36);
+    const auto higher = renderTuned(kBlocks, false, 37);
+    ok("a tuning changes what a track plays", largestDifference(plain, tuned) > 0.05f, std::to_string(largestDifference(plain, tuned)));
+    ok("a hundred cents up is a semitone up", largestDifference(tuned, higher) < 0.02f, std::to_string(largestDifference(tuned, higher)));
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -905,6 +939,7 @@ int main() {
     theEffectsCanPlayOnAGroup();
     aStepCanBeLocked();
     aSceneCanSlowDown();
+    aTrackCanBeTuned();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

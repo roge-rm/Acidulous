@@ -201,7 +201,7 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
 
     const float glideSeconds = targetOf(Glide);
     const bool gliding = glideSeconds > 0.001f && v.used && (stepOf(GlideMode) == 0 || v.gate);
-    v.glideFrom = gliding ? v.freq : mtof(static_cast<float>(note));
+    v.glideFrom = gliding ? v.freq : noteHz(static_cast<float>(note));
     v.glidePos = gliding ? 0.0f : 1.0f;
     v.freq = v.glideFrom;
     v.used = true;
@@ -524,7 +524,7 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
 
     const float glideSeconds = paramOf(Glide);
     const float glideStep = glideSeconds > 0.001f ? 1.0f / (glideSeconds * sampleRate) : 1.0f;
-    const float targetFreq = mtof(static_cast<float>(v.note));
+    const float targetFreq = noteHz(static_cast<float>(v.note));
     const float glideOctaves = v.glidePos < 1.0f ? std::log2(targetFreq / v.glideFrom) : 0.0f;
 
     // Grain settings, all modulatable.

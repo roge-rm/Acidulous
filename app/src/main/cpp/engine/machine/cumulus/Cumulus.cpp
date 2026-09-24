@@ -17,7 +17,6 @@ using cumulus::CloudTable;
 
 namespace {
 constexpr float kSemitone = 1.0594630943592953f;
-float mtof(float note) { return 440.0f * std::pow(2.0f, (note - 69.0f) / 12.0f); }
 } // namespace
 
 Cumulus::Cumulus() { initParams(); }
@@ -181,7 +180,7 @@ Cumulus::Voice *Cumulus::allocate() {
 
 void Cumulus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     const float glide = targetOf(Glide);
-    const float target = mtof(static_cast<float>(note));
+    const float target = noteHz(static_cast<float>(note));
     const bool gliding = glide > 0.001f && v.used;
     v.glideFrom = gliding ? v.freq : target;
     v.glidePos = gliding ? 0.0f : 1.0f;
@@ -328,9 +327,9 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
         if (v.glidePos < 1.0f) {
             const float step = glide > 0.001f ? (dt * frames) / glide : 1.0f;
             v.glidePos = std::min(1.0f, v.glidePos + step);
-            v.freq = v.glideFrom + (mtof(static_cast<float>(v.note)) - v.glideFrom) * v.glidePos;
+            v.freq = v.glideFrom + (noteHz(static_cast<float>(v.note)) - v.glideFrom) * v.glidePos;
         } else {
-            v.freq = mtof(static_cast<float>(v.note));
+            v.freq = noteHz(static_cast<float>(v.note));
         }
         const float bendMul = std::pow(2.0f, bend * bendRange / 12.0f);
         const float baseRate = v.freq * bendMul * noteBendMul(v) * tune * lfoPitch / ta.baseHz;

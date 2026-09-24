@@ -162,6 +162,14 @@ class Rack {
      */
     void setParam(Unit unit, int32_t index, float v01, bool jump = false);
 
+    /**
+     * The track's tuning, as a ratio to equal temperament for each of the 128
+     * notes, or null for equal temperament. Any thread; the machine sees it
+     * from the next block. Not given to drum or audio tracks - their notes
+     * choose a sound, not a pitch.
+     */
+    void setTuning(const float *ratios);
+
     // While recording, a parameter the user moves wins over its lane for the
     // rest of the current pass, so the lane cannot fight the knob it is
     // about to overwrite. Cleared at each iteration boundary.
@@ -176,6 +184,9 @@ class Rack {
         return false;
     }
     void clearTouched() { touchedCount = 0; }
+
+    float tuningTables[2][128]{};
+    std::atomic<int> tuningIndex{-1};
 
     float bufL[kBlockFrames]{};
     float bufR[kBlockFrames]{};

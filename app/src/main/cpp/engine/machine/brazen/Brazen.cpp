@@ -28,7 +28,6 @@ constexpr float kSilent = 3.0e-5f;
 
 namespace {
 constexpr float kTwoPi = 6.28318530718f;
-float mtof(float note) { return 440.0f * std::pow(2.0f, (note - 69.0f) / 12.0f); }
 } // namespace
 
 Brazen::Brazen() { initParams(); }
@@ -136,7 +135,7 @@ Brazen::Voice *Brazen::allocate() {
 void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     const float glide = targetOf(Glide);
     const bool gliding = glide > 0.001f && v.used;
-    v.glideFrom = gliding ? v.freq : mtof(static_cast<float>(note));
+    v.glideFrom = gliding ? v.freq : noteHz(static_cast<float>(note));
     v.glidePos = gliding ? 0.0f : 1.0f;
     v.freq = v.glideFrom;
     v.used = true;
@@ -174,7 +173,7 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
             // instead of sixteen times as long. Needs the note and a solved
             // loop first, so the frequency goes in here and `tongue` is
             // called after the tune in render.
-            p.bore.setFrequency(mtof(static_cast<float>(note)));
+            p.bore.setFrequency(noteHz(static_cast<float>(note)));
             p.tongue = true;
         }
     }
@@ -283,9 +282,9 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
 
         if (v.glidePos < 1.0f) {
             v.glidePos = std::min(1.0f, v.glidePos + (glide > 0.001f ? dt * frames / glide : 1.0f));
-            v.freq = v.glideFrom + (mtof(static_cast<float>(v.note)) - v.glideFrom) * v.glidePos;
+            v.freq = v.glideFrom + (noteHz(static_cast<float>(v.note)) - v.glideFrom) * v.glidePos;
         } else {
-            v.freq = mtof(static_cast<float>(v.note));
+            v.freq = noteHz(static_cast<float>(v.note));
         }
 
         // --- the section listens to itself --------------------------------

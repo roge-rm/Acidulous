@@ -211,7 +211,7 @@ Trinity::Voice *Trinity::allocate() {
 void Trinity::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger) {
     const float glideSeconds = targetOf(Glide);
     const bool gliding = glideSeconds > 0.001f && v.used && (stepOf(GlideMode) == 0 || v.gate);
-    v.glideFrom = gliding ? v.freq : mtof(static_cast<float>(note));
+    v.glideFrom = gliding ? v.freq : noteHz(static_cast<float>(note));
     v.glidePos = gliding ? 0.0f : 1.0f;
     v.used = true;
     v.gate = true;
@@ -502,7 +502,7 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
     const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * kHouse;
     const float glideSeconds = paramOf(Glide);
     const float glideStep = glideSeconds > 0.001f ? 1.0f / (glideSeconds * sampleRate) : 1.0f;
-    const float targetFreq = mtof(static_cast<float>(v.note));
+    const float targetFreq = noteHz(static_cast<float>(v.note));
     const float glideOctaves = v.glidePos < 1.0f ? std::log2(targetFreq / v.glideFrom) : 0.0f;
     float peak = 0.0f;
     // Nought means every sample, which is what this did before it was

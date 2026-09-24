@@ -31,7 +31,6 @@ using namespace dsp;
 
 namespace {
 constexpr float kPiF = 3.14159265f;
-float noteToHz(float note) { return 440.0f * std::pow(2.0f, (note - 69.0f) / 12.0f); }
 } // namespace
 
 Cipher::Cipher() { initParams(); }
@@ -257,7 +256,7 @@ void Cipher::noteOn(uint8_t note, uint8_t velocity) {
     v->bend = 0.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
-    v->target = noteToHz(static_cast<float>(note));
+    v->target = noteHz(static_cast<float>(note));
     if (wasIdle) v->freq = v->target;
     v->amp.set(0.0f, targetOf(AmpAttack), targetOf(AmpDecay), targetOf(AmpSustain), targetOf(AmpRelease), false);
     v->amp.retrigger();
@@ -572,9 +571,9 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             const float env = v.amp.next();
             if (!v.gate && env < 0.0003f) { v.used = false; continue; }
             if (track && trackedHz > 20.0f) {
-                v.target = trackedHz * trackAmount + noteToHz(static_cast<float>(v.note)) * (1.0f - trackAmount);
+                v.target = trackedHz * trackAmount + noteHz(static_cast<float>(v.note)) * (1.0f - trackAmount);
             } else {
-                v.target = noteToHz(static_cast<float>(v.note));
+                v.target = noteHz(static_cast<float>(v.note));
             }
             const float velGain = 1.0f - velAmt + velAmt * v.velocity;
             carrier += carrierSample(v, glideK, detuneMul, pitchScale, waveA, waveB, mix, pw, sub) *

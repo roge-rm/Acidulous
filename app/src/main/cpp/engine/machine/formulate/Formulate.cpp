@@ -16,7 +16,6 @@ using formulate::Program;
 using formulate::Vars;
 
 namespace {
-float mtof(float note) { return 440.0f * std::pow(2.0f, (note - 69.0f) / 12.0f); }
 /** The pulse's four classic duties, and everything between them. */
 constexpr uint32_t kFull = 0xffffffffu;
 } // namespace
@@ -130,7 +129,7 @@ void Formulate::noteOn(uint8_t note, uint8_t velocity) {
     if (v == nullptr) return;
     const float glide = targetOf(Glide);
     const bool gliding = glide > 0.001f && v->used;
-    v->glideFrom = gliding ? v->freq : mtof(static_cast<float>(note));
+    v->glideFrom = gliding ? v->freq : noteHz(static_cast<float>(note));
     v->glidePos = gliding ? 0.0f : 1.0f;
     v->freq = v->glideFrom;
     v->used = true;
@@ -290,9 +289,9 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
 
             if (v.glidePos < 1.0f) {
                 v.glidePos = std::min(1.0f, v.glidePos + (glide > 0.001f ? dt / glide : 1.0f));
-                v.freq = v.glideFrom + (mtof(static_cast<float>(v.note)) - v.glideFrom) * v.glidePos;
+                v.freq = v.glideFrom + (noteHz(static_cast<float>(v.note)) - v.glideFrom) * v.glidePos;
             } else {
-                v.freq = mtof(static_cast<float>(v.note));
+                v.freq = noteHz(static_cast<float>(v.note));
             }
             const float freq = v.freq * tune * bendMul * noteBendMul(v) *
                                std::pow(2.0f, static_cast<float>(arpSemis) / 12.0f);

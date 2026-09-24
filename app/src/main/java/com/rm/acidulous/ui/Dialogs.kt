@@ -480,12 +480,18 @@ private val TEMPO_TABS = listOf("tempo", "click", "link")
  * nothing about them.
  */
 @Composable
-fun TempoDialog(song: Song, onDismiss: () -> Unit, onConfirm: (Song) -> Unit) {
+fun TempoDialog(
+    song: Song, onDismiss: () -> Unit,
+    /** The tunings there are to choose from: built in, and imported. */
+    tunings: List<com.rm.acidulous.model.Tuning> = com.rm.acidulous.model.Tunings.builtIn,
+    onConfirm: (Song) -> Unit,
+) {
     var bpm by remember { mutableStateOf(song.tempo) }
     var signature by remember { mutableStateOf(song.signature) }
     var swing by remember { mutableStateOf(song.swing) }
     var swingUnit by remember { mutableStateOf(song.swingUnit) }
     var key by remember { mutableStateOf(song.key) }
+    var tuning by remember { mutableStateOf(song.tuning) }
     var tab by rememberSaveable { mutableStateOf(0) }
     TabbedDialog(
         title = "Tempo",
@@ -498,6 +504,7 @@ fun TempoDialog(song: Song, onDismiss: () -> Unit, onConfirm: (Song) -> Unit) {
                 song.copy(
                     tempo = bpm, signature = signature,
                     swing = swing, swingUnit = swingUnit, key = key,
+                    tuning = tuning?.takeIf { !it.isEqual },
                 ),
             )
         },
@@ -509,6 +516,7 @@ fun TempoDialog(song: Song, onDismiss: () -> Unit, onConfirm: (Song) -> Unit) {
                     bpm, signature, swing, swingUnit, key,
                     onBpm = { bpm = it }, onSignature = { signature = it },
                     onSwing = { swing = it }, onSwingUnit = { swingUnit = it }, onKey = { key = it },
+                    tuning = tuning, tunings = tunings, onTuning = { tuning = it },
                 )
             },
             { ClickPage() },
@@ -571,6 +579,9 @@ private fun TempoPage(
     bpm: Float, signature: Signature, swing: Float, swingUnit: Int, key: SongKey?,
     onBpm: (Float) -> Unit, onSignature: (Signature) -> Unit,
     onSwing: (Float) -> Unit, onSwingUnit: (Int) -> Unit, onKey: (SongKey?) -> Unit,
+    tuning: com.rm.acidulous.model.Tuning? = null,
+    tunings: List<com.rm.acidulous.model.Tuning> = emptyList(),
+    onTuning: (com.rm.acidulous.model.Tuning?) -> Unit = {},
 ) {
     // Cards, the arp window's shape, so this reads like every other window a
     // player reaches for mid-song. The tempo itself stays a field with a step
@@ -603,7 +614,7 @@ private fun TempoPage(
                 },
             ) { onSwing(if (it == 0) SWING_STRAIGHT else SWING_TRIPLET) }
         }
-        KeySection(key, onKey)
+        KeySection(key, onKey, tuning, tunings, onTuning)
     }
 }
 
@@ -715,7 +726,12 @@ private fun TapTempo(onBpm: (Float) -> Unit) {
  * retuned sixteen tracks would be a thing people turned off and left off.
  */
 @Composable
-private fun KeySection(key: SongKey?, onKey: (SongKey?) -> Unit) {
+private fun KeySection(
+    key: SongKey?, onKey: (SongKey?) -> Unit,
+    tuning: com.rm.acidulous.model.Tuning? = null,
+    tunings: List<com.rm.acidulous.model.Tuning> = emptyList(),
+    onTuning: (com.rm.acidulous.model.Tuning?) -> Unit = {},
+) {
     WindowCard("key") {
         // Nought is no key; then the twelve roots, spelled against the chosen
         // scale, so E flat major is E♭ and not D♯: `Scales.rootName` is the
@@ -729,11 +745,37 @@ private fun KeySection(key: SongKey?, onKey: (SongKey?) -> Unit) {
             onKey(if (i == 0) null else SongKey(i - 1, scale))
         }
         if (key != null) {
-            CountKnob("scale", key.scale, 0 until Scales.names.size, Scales.names[key.scale], width = 132.dp, choices = Scales.names) {
+            CountKnob("scale", key.scale, 0 until Scales.names.size, Scales.names[key.scale], width = 108.dp, choices = Scales.names) {
                 onKey(key.copy(scale = it))
             }
         }
+        // How the notes are tuned, counted from the root. A song's own tuning
+        // that this phone has no file for - one that came in a bundle - is
+        // kept, at the top of the list.
+        if (tunings.isNotEmpty()) TuningKnob(tuning, tunings, onTuning)
     }
+}
+
+/**
+ * Which tuning, as a knob that names it and opens the list on a hold.
+ * [followLabel] adds a first choice meaning "none of my own" - a track's
+ * "song", following the song's tuning.
+ */
+@Composable
+internal fun TuningKnob(
+    tuning: com.rm.acidulous.model.Tuning?,
+    tunings: List<com.rm.acidulous.model.Tuning>,
+    onTuning: (com.rm.acidulous.model.Tuning?) -> Unit,
+    followLabel: String? = null,
+) {
+    val current = tuning ?: if (followLabel == null) com.rm.acidulous.model.Tunings.EQUAL else null
+    val list = if (current != null && tunings.none { it == current }) listOf(current) + tunings else tunings
+    val entries: List<com.rm.acidulous.model.Tuning?> = (if (followLabel != null) listOf(null) else emptyList()) + list
+    val index = entries.indexOfFirst { it == current }.coerceAtLeast(0)
+    CountKnob(
+        "tuning", index, 0 until entries.size, entries[index]?.name ?: followLabel!!, width = 108.dp,
+        choices = entries.map { it?.name ?: followLabel!! },
+    ) { onTuning(entries[it]) }
 }
 
 private const val BPM_MIN = 20f

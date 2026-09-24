@@ -17,7 +17,6 @@ import com.rm.acidulous.model.effectUnit
 import com.rm.acidulous.model.MODIFIER_SLOTS
 import com.rm.acidulous.model.modifierSlotOf
 import com.rm.acidulous.model.modifierUnit
-import com.rm.acidulous.model.MachineKind
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Master
 import com.rm.acidulous.model.Mixer
@@ -563,7 +562,29 @@ object EngineSync {
         ensureTakes(song)
         ensureReels(song)
         ensureFrozen(song)
+        ensureTunings(song)
         return push(song)
+    }
+
+    /** What each rack was last told about its tuning, so a push is only a change. */
+    private val pushedTuning = arrayOfNulls<String>(RACKS)
+
+    /**
+     * Every melodic track's tuning - its own, or the song's - from the song's
+     * key. Drums and tape are left in equal temperament: a drum's note picks
+     * a sound, and a tape's pitch is the recording's.
+     */
+    private fun ensureTunings(song: Song) {
+        val root = song.key?.root ?: 0
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            val tuning = if (track == null || !MachineUi.takesTuning(track.machine.type)) null
+            else (track.tuning ?: song.tuning)?.takeIf { !it.isEqual }
+            val key = tuning?.let { "${it.name}|${it.cents.hashCode()}|$root" } ?: "equal"
+            if (pushedTuning[rack] == key) continue
+            pushedTuning[rack] = key
+            NativeEngine.setTuning(rack, tuning?.let { com.rm.acidulous.model.Tunings.ratios(it, root) })
+        }
     }
 
     fun push(song: Song): Boolean {

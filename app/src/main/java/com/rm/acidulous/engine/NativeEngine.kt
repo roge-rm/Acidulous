@@ -327,6 +327,8 @@ object NativeEngine {
     // --- Clock in ------------------------------------------------------------
     /** Follow an incoming clock rather than the song's own tempo. */
     fun setExternalSync(on: Boolean) = nativeSetExternalSync(on)
+    /** A track's tuning: 128 ratios to equal temperament, or null for equal temperament. */
+    fun setTuning(rack: Int, ratios: FloatArray?) = nativeSetTuning(rack, ratios)
 
     // --- Ableton Link -------------------------------------------------------
     fun setLink(on: Boolean) = nativeSetLink(on)
@@ -883,6 +885,7 @@ object NativeEngine {
     private external fun nativeDrainMidiOut(out: LongArray): Int
     private external fun nativeAudioAnchor(out: LongArray)
     private external fun nativeSetExternalSync(on: Boolean)
+    private external fun nativeSetTuning(rack: Int, ratios: FloatArray?)
     private external fun nativeSetLink(on: Boolean)
     private external fun nativeLinkEnabled(): Boolean
     private external fun nativeSetLinkStartStop(on: Boolean)

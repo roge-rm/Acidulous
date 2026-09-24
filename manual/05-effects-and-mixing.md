@@ -233,8 +233,35 @@ Tap the tempo in the song header to open the song's settings.
 - **key** - the song's key and scale. The piano roll shades notes outside it,
   and a new track gets a matching scale. It doesn't change any notes, and
   doesn't override a track with its own scale set.
+- **tuning** - how the notes are tuned. Hold it for the list.
 
 The **click** and **link** pages are in the same window.
+
+## Tunings
+
+Equal temperament is the usual tuning: every semitone the same size. The others
+make some intervals purer and others rougher.
+
+- **just** - fifths and thirds as pure as they get. Great in the key it's
+  tuned to, rough in keys far from it.
+- **pythagorean** - pure fifths, bright thirds.
+- **meantone** - pure thirds, slightly narrow fifths.
+- **werckmeister** - a well temperament: every key usable, each one a
+  little different.
+- **19 equal** and **24 equal** - more than twelve notes an octave. The octave
+  is 19 or 24 keys up, so the keyboard plays small steps. 24 is quarter tones.
+
+A tuning is counted from the song's **root**. The root's own note in the middle
+of the keyboard keeps its usual pitch, so an A tuning leaves A at 440 and the
+rest move around it. Change the root and the tuning follows.
+
+A track can have its own: **Tuning…** in the track menu. **song** there means
+it uses the song's. Drum machines, the organ and Nexus always play in equal
+temperament.
+
+Your own tunings come in as Scala files (.scl): use **Import…** in the file
+menu and it joins the list. The tuning is saved inside the song, so it plays
+the same on a phone that has never seen the file.
 
 ## How swing works
 

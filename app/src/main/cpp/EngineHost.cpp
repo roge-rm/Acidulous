@@ -1239,6 +1239,10 @@ bool EngineHost::audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate
 }
 
 void EngineHost::setExternalSync(bool on) { sEngine.transport.setExternalSync(on); }
+void EngineHost::setTuning(int rack, const float *ratios) {
+    if (rack < 0 || rack >= kRackCount) return;
+    sEngine.racks[rack].setTuning(ratios);
+}
 
 // --- Ableton Link -----------------------------------------------------------
 //

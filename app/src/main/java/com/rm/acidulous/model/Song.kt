@@ -506,6 +506,8 @@ data class Track(
     val id: String,
     val name: String,
     val machine: Machine,
+    /** This track's own tuning, or null to follow the song's. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val tuning: Tuning? = null,
     /**
      * This track's own swing, or null to follow the song's.
      *
@@ -681,6 +683,8 @@ data class Song(
      * modifier, which is where it always said it.
      */
     val key: SongKey? = null,
+    /** How the notes are tuned, from the key's root; null is equal temperament. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val tuning: Tuning? = null,
     val signature: Signature = Signature(),
     val loopSong: Boolean = true,
     /** Index is the rack id. */
