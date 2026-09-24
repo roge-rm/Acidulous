@@ -37,6 +37,8 @@ import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.laneParam
 import com.rm.acidulous.model.isPedalLane
 import com.rm.acidulous.model.laneUnit
+import com.rm.acidulous.R
+import androidx.annotation.StringRes
 
 /**
  * The one place the document meets the engine.
@@ -101,11 +103,12 @@ object EngineSync {
      * kind of error message on an error." The host sets this; nothing else
      * reads it.
      */
-    var onProblem: ((String) -> Unit)? = null
+    var onProblem: ((Int, Array<out Any>) -> Unit)? = null
 
-    private fun problem(message: String) {
-        Log.w(TAG, message)
-        onProblem?.invoke(message)
+    /** A string resource and what goes in it, so the host says it in the phone's language. */
+    private fun problem(@StringRes message: Int, vararg args: Any) {
+        Log.w(TAG, "problem $message: ${args.joinToString(" | ")}")
+        onProblem?.invoke(message, args)
     }
 
     /** A file's own name, which is what the player recognises. */
@@ -126,7 +129,7 @@ object EngineSync {
                 // reported once rather than on every sync for the rest of the
                 // session. Changing the setting is what asks again.
                 loadedSamples[key] = rel
-                if (err.isNotEmpty()) problem("Pad ${pad + 1}: ${shortName(rel)} would not load - $err.")
+                if (err.isNotEmpty()) problem(R.string.sync_pad_failed, pad + 1, shortName(rel), err)
             }
             // And the shared file the pads slice, in the slot above them. One
             // copy for all thirteen: mounting it per pad would decode an
@@ -143,7 +146,7 @@ object EngineSync {
                     maxSeconds = NativeEngine.SLICE_SECONDS,
                 )
                 loadedSamples[sliceKey] = sliceRel
-                if (err.isNotEmpty()) problem("${shortName(sliceRel)} would not load - $err.")
+                if (err.isNotEmpty()) problem(R.string.sync_file_failed, shortName(sliceRel), err)
             }
         }
     }
@@ -366,7 +369,7 @@ object EngineSync {
                 val error = NativeEngine.loadReel(rack, wanted)
                 mapStatus = ""
                 if (error.isNotEmpty()) {
-                    problem("The audio on this track would not load - $error.")
+                    problem(R.string.sync_tape_failed, error)
                     loadedReels[rack] = null // let a retry happen
                 } else if (wanted.isNotEmpty()) {
                     Log.i(TAG, "rack $rack holds ${wanted.count { it == '\n' }} audio region(s)")
@@ -460,7 +463,7 @@ object EngineSync {
                 // Reported and not retried: a file that will not decode will
                 // not decode the second time either, and `loadedTakes` is
                 // already set, so asking again means changing the setting.
-                if (error.isNotEmpty()) problem("${shortName(wanted)} would not load - $error.")
+                if (error.isNotEmpty()) problem(R.string.sync_file_failed, shortName(wanted), error)
             }
         }
     }
@@ -861,10 +864,10 @@ object EngineSync {
         NativeEngine.setParam(0, "master", "limiterdrive", EngineParams.unit01(m.limiter.drive), record = false)
         // The held effects' settings. Addressed at a rack like everything on
         // this unit, though they belong to the master.
-        NativeEngine.setParam(0, "perform", "stoplen", m.perform.stopLen / (STOP_LENGTHS.size - 1f), record = false)
+        NativeEngine.setParam(0, "perform", "stoplen", m.perform.stopLen / (STOP_LENGTHS - 1f), record = false)
         NativeEngine.setParam(0, "perform", "throwtime", m.perform.throwTime / (THROW_TIMES.size - 1f), record = false)
         NativeEngine.setParam(0, "perform", "feedback", (m.perform.feedback / 0.9f).coerceIn(0f, 1f), record = false)
-        NativeEngine.setParam(0, "perform", "riserlen", m.perform.riserLen / (RISER_LENGTHS.size - 1f), record = false)
+        NativeEngine.setParam(0, "perform", "riserlen", m.perform.riserLen / (RISER_LENGTHS - 1f), record = false)
         NativeEngine.setParam(0, "perform", "xmode", m.perform.xMode.toFloat(), record = false)
         NativeEngine.setParam(0, "perform", "ymode", m.perform.yMode.toFloat(), record = false)
         // A target past the groups there are is the whole mix; the engine falls

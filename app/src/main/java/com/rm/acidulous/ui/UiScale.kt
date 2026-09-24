@@ -30,11 +30,11 @@ import androidx.compose.ui.unit.dp
  * as the floor also settles the touch-target question for nothing: a control
  * that clears a finger today cannot stop clearing one, because nothing ever
  * gets smaller than it is now.
+ *
+ * What each step is called is the string array `settings_size_choices`, in
+ * this order.
  */
 val UiScaleSteps = listOf(1.0f, 1.1f, 1.2f, 1.3f)
-
-/** What each step is called in the settings window. */
-val UiScaleLabels = listOf("normal", "large", "larger", "largest")
 
 /**
  * The narrowest and shortest the app may be asked to lay itself out in.

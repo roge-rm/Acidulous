@@ -32,6 +32,9 @@ import com.rm.acidulous.model.MidiFile
 import com.rm.acidulous.model.MidiImport
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.ui.theme.Acid
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import com.rm.acidulous.R
 
 /**
  * A MIDI file, before it becomes a song: which machine each part goes to,
@@ -62,27 +65,31 @@ fun MidiImportDialog(
     val totalBars = song.scenes.sumOf { song.barsOf(it) * it.repeat }
 
     PlainDialog(
-        title = "Import MIDI",
+        title = stringResource(R.string.import_title),
         onDismiss = onDismiss,
-        confirmLabel = "Import",
+        confirmLabel = stringResource(R.string.import_confirm),
         confirmEnabled = song.tracks.isNotEmpty(),
         onConfirm = { onImport(song) },
         spacing = 6.dp,
     ) {
         WindowCards {
-            WindowCard("arrangement · $fileName") {
-                SwitchGrid("scenes of", listOf("4 bars", "8 bars", "16 bars"), listOf(4, 8, 16).indexOf(sceneBars), columns = 3) {
+            WindowCard(stringResource(R.string.import_arrangement, fileName)) {
+                SwitchGrid(stringResource(R.string.import_scenes_of), listOf(4, 8, 16).map { pluralStringResource(R.plurals.bars, it, it) }, listOf(4, 8, 16).indexOf(sceneBars), columns = 3) {
                     sceneBars = listOf(4, 8, 16)[it]
                 }
                 val sig = song.signature
                 Box(Modifier.cardLine()) {
                     Readout(
-                        "${song.scenes.size} scene${if (song.scenes.size == 1) "" else "s"} · $totalBars bars · " +
-                            "%.0f bpm · %d/%d".format(song.tempo, sig.beats, sig.unit),
+                        stringResource(
+                            R.string.import_summary,
+                            pluralStringResource(R.plurals.import_scenes, song.scenes.size, song.scenes.size),
+                            pluralStringResource(R.plurals.bars, totalBars, totalBars),
+                            song.tempo, sig.beats, sig.unit,
+                        ),
                     )
                 }
             }
-            WindowCard("tracks") {
+            WindowCard(stringResource(R.string.import_tracks)) {
                 // A list, one part a line, however the cards are laid.
                 Column(Modifier.cardLine(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     parsed.parts.forEachIndexed { i, part ->
@@ -107,7 +114,10 @@ private fun PartRow(part: MidiFile.Part, machine: String?, pick: (String?) -> Un
             Text(part.name, color = if (machine == null) c.textDim else c.text, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val lost = machine?.let { MidiImport.unmatched(part, it) } ?: 0
             Text(
-                "ch ${part.channel + 1} · ${part.notes.size} notes" + if (lost > 0) " · $lost with no sound here" else "",
+                pluralStringResource(R.plurals.import_notes, part.notes.size, part.notes.size).let { notes ->
+                    if (lost > 0) stringResource(R.string.import_part_lost, part.channel + 1, notes, lost)
+                    else stringResource(R.string.import_part, part.channel + 1, notes)
+                },
                 color = c.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
             )
         }
@@ -119,12 +129,12 @@ private fun PartRow(part: MidiFile.Part, machine: String?, pick: (String?) -> Un
                     .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(machine ?: "skip", color = if (machine == null) c.textMid else c.onAccent, fontSize = 12.sp)
+                Text(machine ?: stringResource(R.string.import_skip), color = if (machine == null) c.textMid else c.onAccent, fontSize = 12.sp)
             }
             val scroll = rememberScrollState()
             DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
                 ScaledMenu(scroll) {
-                    DropdownMenuItem(text = { Text("skip", fontSize = 12.sp) }, onClick = { open = false; pick(null) })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.import_skip), fontSize = 12.sp) }, onClick = { open = false; pick(null) })
                     for (m in PLAYABLE) {
                         DropdownMenuItem(
                             text = { Text(m, fontSize = 12.sp, color = if (m == machine) c.accent else c.text) },

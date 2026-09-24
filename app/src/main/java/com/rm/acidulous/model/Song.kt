@@ -572,38 +572,41 @@ data class Track(
  * The held effects' settings. What is held (repeat, stop, the pad) is not
  * here: it is a performance, and it is kept as lanes in a clip.
  *
- * [stopLen] indexes [STOP_LENGTHS], [throwTime] indexes [THROW_TIMES], and
+ * [stopLen] counts up to [STOP_LENGTHS], [throwTime] indexes [THROW_TIMES], and
  * [feedback] is the echo's, 0..0.9.
  */
 @Serializable data class PerformSettings(
     val stopLen: Int = 2,
     val throwTime: Int = 2,
     val feedback: Float = 0.55f,
-    /** Indexes [RISER_LENGTHS]. */
+    /** Counts up to [RISER_LENGTHS]. */
     val riserLen: Int = 1,
-    /** What the pad does across and up: index [PAD_X_MODES] and [PAD_Y_MODES]. */
+    /** What the pad does across and up: below [PAD_X_MODES] and [PAD_Y_MODES]. */
     val xMode: Int = 0,
     val yMode: Int = 0,
-    /** When a mute on the live page lands: indexes [MUTE_ON]. */
+    /** When a mute on the live page lands: [MUTE_ON_BAR], [MUTE_ON_BEAT] or [MUTE_ON_NOW]. */
     val muteOn: Int = 0,
     /** Where the held effects run: 0 the whole mix, 1..4 one of the groups. */
     val target: Int = 0,
 )
 
-/** How long a tape stop takes, as labels; mirrors `Perform::StopLen`. */
-val STOP_LENGTHS = listOf("1/4", "1/2", "1 beat", "2 beats")
+/** How many tape stop lengths there are; mirrors `Perform::StopLen`. Named in `perform_stop_lengths`. */
+const val STOP_LENGTHS = 4
 /** The echo's time, as labels; mirrors `Perform::ThrowTime`. */
 val THROW_TIMES = listOf("1/16", "1/8", "3/16", "1/4", "3/8")
 /** The repeat's slice lengths, 1..5 in `Perform::Repeat`; 0 is off. */
 val REPEAT_LENGTHS = listOf("1", "1/2", "1/4", "1/8", "1/16")
-/** When a mute tapped on the live page lands, while the song plays. */
-val MUTE_ON = listOf("bar", "beat", "now")
+/** When a mute tapped on the live page lands, while the song plays: on the bar, the beat, or now. */
+const val MUTE_ON_BAR = 0
+const val MUTE_ON_BEAT = 1
+const val MUTE_ON_NOW = 2
+const val MUTE_ON = 3
 /** What the pad does across: a filter, or a crush. Mirrors `Perform::XMode`. */
-val PAD_X_MODES = listOf("filter", "crush")
+const val PAD_X_MODES = 2
 /** What the pad does up: throws into an echo, or into a wash. Mirrors `Perform::YMode`. */
-val PAD_Y_MODES = listOf("echo", "wash")
-/** How long the riser takes to climb; mirrors `Perform::RiserLen`. */
-val RISER_LENGTHS = listOf("1 bar", "2 bars", "4 bars")
+const val PAD_Y_MODES = 2
+/** How many riser lengths there are; mirrors `Perform::RiserLen`. Named in `perform_riser_lengths`. */
+const val RISER_LENGTHS = 3
 /** The gate's rates, 1..5 in `Perform::Gate`; 0 is off. */
 val GATE_LENGTHS = listOf("1/8", "1/16", "1/32", "1/8T", "1/16T")
 

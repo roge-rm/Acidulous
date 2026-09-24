@@ -1,0 +1,74 @@
+<resources>
+    <!-- The editor's smaller parts: zones, note lanes, scale, automation, tape lanes, steps. Note names are notation and stay as they are. -->
+
+    <!-- ui/ZoneMap.kt: one zone of a multisample. -->
+    <string name="zone_title">Zone</string>
+    <string name="zone_range">range</string>
+    <string name="zone_low_key">low key</string>
+    <string name="zone_high_key">high key</string>
+    <string name="zone_low_vel">low vel</string>
+    <string name="zone_high_vel">high vel</string>
+    <string name="zone_sound">sound</string>
+    <string name="zone_root">root</string>
+    <string name="zone_tune">tune</string>
+    <string name="zone_gain">gain</string>
+    <string name="zone_pan">pan</string>
+    <string name="zone_zone">zone</string>
+    <string name="zone_loop">loop</string>
+    <string name="zone_remove">remove</string>
+    <string name="zone_delete">delete</string>
+
+    <!-- ui/NoteLane.kt: what the lane under the roll edits, short and in full. -->
+    <string name="note_prop_velocity_short">vel</string>
+    <string name="note_prop_velocity">note volume</string>
+    <string name="note_prop_chance_short">prob</string>
+    <string name="note_prop_chance">probability</string>
+    <string name="note_prop_cond_short">trig</string>
+    <string name="note_prop_cond">trig condition</string>
+    <string name="note_prop_ratchet_short">ratch</string>
+    <string name="note_prop_ratchet">ratchet</string>
+    <string name="note_prop_nudge_short">nudge</string>
+    <string name="note_prop_nudge">micro timing</string>
+    <string name="note_lane_all_notes">all notes</string>
+
+    <!-- ui/PianoKeys.kt: the scale chip and window. Scale names are names. -->
+    <string name="scale_chip">scale</string>
+    <string name="scale_title">Scale</string>
+    <string name="scale_group_modes">Modes</string>
+    <string name="scale_group_minor">Minor variants</string>
+    <string name="scale_group_pentatonic">Pentatonic &amp; blues</string>
+    <string name="scale_group_world">World &amp; exotic</string>
+    <string name="scale_group_jazz">Jazz</string>
+    <string name="scale_group_symmetric">Symmetric</string>
+    <string name="scale_off">off</string>
+    <string name="scale_snap">snap</string>
+    <string name="scale_degrees">degrees</string>
+    <string-array name="scale_snap_choices">
+        <item>nearest</item>
+        <item>down</item>
+        <item>up</item>
+    </string-array>
+
+    <!-- ui/PianoRoll.kt: the roll's corner, which says how it shows a scale: none, all, dimmed, fitted. -->
+    <string name="roll_scale_none">scl</string>
+    <string name="roll_scale_chromatic">chr</string>
+    <string name="roll_scale_dim">dim</string>
+    <string name="roll_scale_fit">fit</string>
+
+    <!-- ui/AutomationStrip.kt -->
+    <!-- The lane strip with no lane chosen. -->
+    <string name="auto_none">∿ auto</string>
+    <string name="auto_clear">Clear %s</string>
+
+    <!-- ui/AudioLanes.kt: a tape\'s lanes. -->
+    <!-- A muted lane, one letter. -->
+    <string name="tape_muted_short">M</string>
+    <string name="tape_comp_failed">That cell would not flatten - %s.</string>
+    <!-- Flatten the lanes into one take. -->
+    <string name="tape_comp">comp</string>
+
+    <!-- ui/StepEditor.kt: a step\'s gate, accent and slide, on small buttons. -->
+    <string name="step_on">on</string>
+    <string name="step_accent">acc</string>
+    <string name="step_slide">sld</string>
+</resources>

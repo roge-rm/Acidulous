@@ -35,6 +35,8 @@ import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * One pad's sample, with its start and end set against the picture.
@@ -111,12 +113,12 @@ fun SampleDialog(
     val end = endDef?.map(b.value(n("end"))) ?: 1f
 
     val seconds = meta.split('|').getOrNull(1)?.toFloatOrNull()?.let { it / 48000f } ?: 0f
-    val name = meta.substringBefore('|').ifEmpty { "no sample" }
+    val name = meta.substringBefore('|').ifEmpty { stringResource(R.string.pad_no_sample) }
 
     PlainDialog(
-        title = "Pad ${pad + 1}",
+        title = stringResource(R.string.pad_title, pad + 1),
         onDismiss = onBack,
-        dismissLabel = "Done",
+        dismissLabel = stringResource(R.string.done),
         spacing = 6.dp,
     ) {
         Row(
@@ -131,17 +133,17 @@ fun SampleDialog(
             )
             androidx.compose.material3.TextButton(
                 onClick = { NativeEngine.noteOn(trackIndex, 36 + pad, 110) },
-            ) { Text("play", color = c.accent, fontSize = 12.sp) }
+            ) { Text(stringResource(R.string.pad_play), color = c.accent, fontSize = 12.sp) }
             androidx.compose.material3.TextButton(onClick = {
                 if (startDef != null) b.set(startDef.name, startDef.unmap(0f))
                 if (endDef != null) b.set(endDef.name, endDef.unmap(1f))
-            }) { Text("all", color = c.accent, fontSize = 12.sp) }
+            }) { Text(stringResource(R.string.pad_all), color = c.accent, fontSize = 12.sp) }
             // Only where there is something to come back from. A zoom with no
             // way out but pinching back is a trap, and a permanent button for
             // it would be a word on the row saying nothing most of the time.
             if (zoomed) {
                 androidx.compose.material3.TextButton(onClick = { viewFrom = 0.0; viewSpan = 1.0 }) {
-                    Text("fit", color = c.teal, fontSize = 12.sp)
+                    Text(stringResource(R.string.pad_fit), color = c.teal, fontSize = 12.sp)
                 }
             }
         }
@@ -162,7 +164,7 @@ fun SampleDialog(
             onStart = { at -> startDef?.let { b.set(it.name, it.unmap(at)) } },
             onEnd = { at -> endDef?.let { b.set(it.name, it.unmap(at)) } },
             modifier = Modifier.fillMaxWidth().height(200.dp),
-            empty = "This pad has no sample. Load one from the machine panel.",
+            empty = stringResource(R.string.pad_empty),
         )
 
         // Where the trim actually falls, in seconds - the number a player
@@ -173,11 +175,11 @@ fun SampleDialog(
         ) {
             val from = min(start, end)
             val to = max(start, end)
-            Text("start %.3fs".format(from * seconds), color = c.textDim, fontSize = 11.sp,
+            Text(stringResource(R.string.pad_start, from * seconds), color = c.textDim, fontSize = 11.sp,
                  fontFamily = FontFamily.Monospace)
-            Text("end %.3fs".format(to * seconds), color = c.textDim, fontSize = 11.sp,
+            Text(stringResource(R.string.pad_end, to * seconds), color = c.textDim, fontSize = 11.sp,
                  fontFamily = FontFamily.Monospace)
-            Text("plays %.3fs".format((to - from) * seconds), color = c.textHi, fontSize = 11.sp,
+            Text(stringResource(R.string.pad_plays, (to - from) * seconds), color = c.textHi, fontSize = 11.sp,
                  fontFamily = FontFamily.Monospace)
             if (zoomed) {
                 // How far in, and how much of the sound is on screen. The

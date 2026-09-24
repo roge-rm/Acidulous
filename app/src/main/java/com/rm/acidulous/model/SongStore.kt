@@ -128,7 +128,7 @@ object SongStore {
         tracks = listOf(
             Track(id = newId("t"), name = machine, machine = Machine(machine)),
         ),
-        scenes = listOf(Scene(id = newId("s"), name = "Scene 1")),
+        scenes = listOf(Scene(id = newId("s"), name = Names.scene(1))),
     )
 
     fun list(context: Context): List<String> =

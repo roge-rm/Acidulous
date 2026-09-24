@@ -1,0 +1,89 @@
+<resources>
+    <!-- ui/RecorderDialog.kt: the sound window - record, edit, library. -->
+    <string name="sound_title">Sound</string>
+    <string name="sound_recording_button">Recording…</string>
+    <string-array name="sound_tabs">
+        <item>record</item>
+        <item>edit</item>
+        <item>library</item>
+    </string-array>
+
+    <!-- Recording -->
+    <string name="sound_stereo">stereo</string>
+    <string name="sound_mono">mono</string>
+    <!-- What the input opened as: channels, then its rate. -->
+    <string name="sound_opened">%1$s · %2$d Hz</string>
+    <string name="sound_opened_resampled">%1$s · %2$d Hz · resampled</string>
+    <string name="sound_name">name</string>
+    <string name="sound_saved">saved</string>
+    <string name="sound_saved_take">saved %1$s, %2$.1f s</string>
+    <string name="sound_stop">stop</string>
+    <string name="sound_record">record</string>
+    <string name="sound_recording">recording  %1$.1f s  peak %2$.2f</string>
+    <string name="sound_overflowed">the recorder fell behind, so this take has a gap</string>
+    <string name="sound_deaf">no input: this take is silent</string>
+    <string name="sound_permission">Recording needs permission to use the microphone.</string>
+    <string name="sound_allow">allow</string>
+    <string name="sound_take">take</string>
+    <string name="sound_source">source</string>
+    <string-array name="sound_source_choices">
+        <item>in</item>
+        <item>resample</item>
+    </string-array>
+    <string name="sound_input">input</string>
+    <string name="sound_bits">bits</string>
+    <string name="sound_input_card">input · monitor on headphones only</string>
+    <string name="sound_gain">gain</string>
+    <string name="sound_monitor">monitor</string>
+    <string name="sound_printed">printed into the take</string>
+    <!-- Kinds of input. Anything else is called by its product name. -->
+    <string name="sound_input_default">default</string>
+    <string name="sound_input_builtin">built-in</string>
+    <string name="sound_input_headset">headset</string>
+    <string name="sound_input_usb">usb</string>
+    <string name="sound_input_bluetooth">bluetooth</string>
+    <string name="sound_input_line">line</string>
+
+    <!-- Editing -->
+    <string name="sound_edit_none">Record something or pick a sample from the library to edit it here.</string>
+    <string name="sound_play">play</string>
+    <!-- Trim back out to the whole sample. -->
+    <string name="sound_all">all</string>
+    <!-- Short for normalise, on a small button. -->
+    <string name="sound_norm">norm</string>
+    <!-- Short for reverse, on a small button. -->
+    <string name="sound_rev">rev</string>
+    <!-- Zoom back out to show the whole sample. -->
+    <string name="sound_fit">fit</string>
+    <string name="sound_unreadable">That file could not be read.</string>
+    <!-- The file, its length, stereo or mono, and how much of it the trim keeps. -->
+    <string name="sound_file_readout">%1$s · %2$.2f s · %3$s · keeping %4$.2f s</string>
+    <string name="sound_level">level</string>
+    <string name="sound_fade_in">fade in</string>
+    <string name="sound_fade_out">fade out</string>
+    <string name="sound_squash">squash</string>
+    <string name="sound_off">off</string>
+    <string name="sound_tone">tone</string>
+    <string name="sound_low_cut">low cut</string>
+    <string name="sound_cutoff">cutoff</string>
+    <string name="sound_reso">reso</string>
+    <string name="sound_filter">filter</string>
+    <string-array name="sound_filter_choices">
+        <item>low</item>
+        <item>high</item>
+    </string-array>
+    <string name="sound_save_as">save as</string>
+    <string name="sound_saved_file">saved %s</string>
+    <string name="sound_apply">apply</string>
+    <string name="sound_revert">revert</string>
+
+    <!-- The library -->
+    <string name="sound_library_none">Nothing here yet. Record one, or import a WAV.</string>
+    <string name="sound_delete_armed">delete this? tap the cross again</string>
+    <!-- When the file was made, and its size. -->
+    <string name="sound_file_info">%1$s · %2$.0f kB</string>
+    <string name="sound_file_info_used">%1$s · %2$.0f kB · a track is playing this</string>
+    <string name="sound_edit">edit</string>
+    <string name="sound_rename">rename</string>
+    <string name="sound_rename_title">Rename</string>
+</resources>

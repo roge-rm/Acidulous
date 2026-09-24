@@ -3297,8 +3297,8 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                 return@GroupRow
             }
             if (sceneId.isNotEmpty()) Group("flatten") {
-                CompButton(trackIndex, sceneId, editor, scope) {
-                    com.rm.acidulous.engine.EngineSync.onProblem?.invoke(it)
+                CompButton(trackIndex, sceneId, editor, scope) { message, args ->
+                    com.rm.acidulous.engine.EngineSync.onProblem?.invoke(message, args)
                 }
             }
             for (lane in 0 until BIAS_LANES) {

@@ -1,0 +1,51 @@
+<resources>
+    <!-- ui/MixerPanel.kt: channel strips, groups, the master. Effect names and their short forms are names, and stay as they are. -->
+    <!-- An empty send slot. -->
+    <string name="mixer_send">send %d</string>
+    <string name="mixer_group_name_title">Group name</string>
+    <!-- A new group\'s name. -->
+    <string name="mixer_group_default">Group %d</string>
+    <string name="mixer_group_delete_title">Delete %s?</string>
+    <string name="mixer_delete">Delete</string>
+    <string name="mixer_group_delete_note">Its tracks go back to the master.</string>
+    <!-- A group\'s insert slot: the group\'s name, then which slot. -->
+    <string name="mixer_group_insert">%1$s fx%2$d</string>
+    <!-- An empty insert slot. -->
+    <string name="mixer_fx_slot">fx%d</string>
+    <string name="mixer_pan">pan</string>
+    <string name="mixer_nothing_routed">nothing routed here</string>
+    <!-- Mute and solo, one letter each. -->
+    <string name="mixer_mute_short">M</string>
+    <string name="mixer_solo_short">S</string>
+    <!-- Turned on its side, at the end of the groups. -->
+    <string name="mixer_add_group">+ group</string>
+    <string name="mixer_clear_title">Clear automation on %s?</string>
+    <string name="mixer_clear">Clear</string>
+    <!-- The channel\'s controls that have lanes, as a list. -->
+    <plurals name="mixer_clear_note">
+        <item quantity="one">This channel\'s %s is automated, so the control won\'t stay where you put it. Clearing removes those lanes from every clip on this track. Notes aren\'t touched.</item>
+        <item quantity="other">This channel\'s %s are automated, so the control won\'t stay where you put it. Clearing removes those lanes from every clip on this track. Notes aren\'t touched.</item>
+    </plurals>
+    <!-- Where the track\'s notes go: MIDI out and the machine, MIDI out only, or the machine only. -->
+    <string name="mixer_midi_both">both</string>
+    <string name="mixer_midi_out">out</string>
+    <string name="mixer_midi_off">midi</string>
+    <string name="mixer_to">→ %s</string>
+    <string name="mixer_master">master</string>
+    <!-- A master insert slot. -->
+    <string name="mixer_master_insert">master %d</string>
+    <string name="mixer_limit_drive">limit drive</string>
+    <!-- Short-term loudness, and true peak. -->
+    <string name="mixer_lufs_short">S</string>
+    <string name="mixer_true_peak">TP</string>
+    <!-- An empty send, on a small button. -->
+    <string name="mixer_send_short">s%d</string>
+    <!-- The limiter, on a small button. -->
+    <string name="mixer_limiter">lim</string>
+    <!-- An effect on the way in. -->
+    <string name="mixer_input">on the way in %d</string>
+    <!-- An empty input slot, on a small button. -->
+    <string name="mixer_input_short">in%d</string>
+    <string name="mixer_none">none</string>
+    <string name="mixer_menu">%s ▾</string>
+</resources>

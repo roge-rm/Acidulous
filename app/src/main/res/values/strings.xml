@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">Acidulous</string>
+    <!-- The notification while the transport runs, and its channel in the system settings. -->
+    <string name="playing">Playing</string>
+    <string name="playing_channel_note">Shown while the transport is running.</string>
+
+    <!--
+        The words every window shares. Everything else a screen says is in
+        strings_<area>.xml beside it, named for where it appears: the same
+        English word in two places can want two words in another language.
+    -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="done">Done</string>
+    <string name="close">Close</string>
+    <string name="none">none</string>
+    <string-array name="off_on">
+        <item>off</item>
+        <item>on</item>
+    </string-array>
+    <!-- Between the items of a short list: "2 notes, 1 lane, frozen". -->
+    <string name="list_separator">", "</string>
+    <plurals name="bars">
+        <item quantity="one">%d bar</item>
+        <item quantity="other">%d bars</item>
+    </plurals>
 </resources>

@@ -1,0 +1,103 @@
+<resources>
+    <!-- ui/MidiDialog.kt. Readouts shown only with diagnostics on stay in English. -->
+    <string name="midi_title">MIDI</string>
+    <string-array name="midi_tabs">
+        <item>devices</item>
+        <item>notes</item>
+        <item>control</item>
+    </string-array>
+    <string name="midi_unsupported">This device has no MIDI support.</string>
+    <!-- The marks are the ones the rows use: a cable, and Bluetooth. -->
+    <string name="midi_inputs">inputs · ⎓ cable, ᛒ bluetooth</string>
+    <string name="midi_listening">listening</string>
+    <string name="midi_tap_to_open">tap to open</string>
+    <string name="midi_no_inputs">nothing connected - plug in over USB, or search</string>
+    <string name="midi_bluetooth">bluetooth</string>
+    <string name="midi_bluetooth_off">bluetooth is off</string>
+    <string name="midi_search">search</string>
+    <string name="midi_stop">stop</string>
+    <!-- A Bluetooth device's address, when it did not say it speaks MIDI. -->
+    <string name="midi_no_service">%s  (no MIDI service)</string>
+    <string name="midi_connect">connect</string>
+    <string name="midi_outputs">outputs</string>
+    <string name="midi_sending">sending</string>
+    <string name="midi_no_outputs">nothing to send to</string>
+    <string name="midi_send_ahead">send ahead</string>
+    <string name="midi_test">test</string>
+    <string-array name="midi_test_notes">
+        <item>note</item>
+        <item>wheel</item>
+    </string-array>
+    <string name="midi_nothing_received">nothing received yet</string>
+    <!-- How many messages, and the last one. -->
+    <plurals name="midi_received">
+        <item quantity="one">%1$d message · %2$s</item>
+        <item quantity="other">%1$d messages · %2$s</item>
+    </plurals>
+    <string name="midi_clock">clock</string>
+    <string name="midi_clock_send">send</string>
+    <string name="midi_clock_follow">follow</string>
+    <string-array name="midi_clock_follow_choices">
+        <item>off</item>
+        <item>auto</item>
+        <item>on</item>
+    </string-array>
+    <string name="midi_test_clock">clock</string>
+    <string name="midi_follow_link">Link has the tempo; following turns Link off</string>
+    <string name="midi_follow_off">not following</string>
+    <string name="midi_follow_nothing">nothing coming in · own clock</string>
+    <string name="midi_follow_waiting">following · nothing coming in</string>
+    <!-- The tempo followed, whether it has settled, and how far the last pulse was from where it was expected. -->
+    <string name="midi_following">following %1$.2f bpm · %2$s · phase %3$+.2f ms · scene tempos ignored</string>
+    <string name="midi_follow_locked">locked</string>
+    <string name="midi_follow_settling">settling</string>
+    <string name="midi_mapping">mapping · also on a hold of redo ↷</string>
+    <string name="midi_mapping_mode">mode</string>
+    <string name="midi_device_mappings">device mappings</string>
+    <string name="midi_forget">forget</string>
+    <!-- Whose a mapping is: it travels with the song, or with this phone. -->
+    <string name="midi_mapping_song">song</string>
+    <string name="midi_mapping_device">device</string>
+    <string name="midi_nothing_mapped">nothing mapped</string>
+    <string name="midi_mapping_track">%1$s  (track %2$d)</string>
+    <!-- A list of notes that a mapping has taken over. -->
+    <string name="midi_claimed_notes">notes %s trigger their mapping instead of playing</string>
+    <string name="midi_mpe">mpe</string>
+    <string name="midi_mpe_zone">zone</string>
+    <string-array name="midi_mpe_zone_choices">
+        <item>off</item>
+        <item>lower</item>
+        <item>upper</item>
+    </string-array>
+    <string name="midi_mpe_fingers">fingers</string>
+    <string name="midi_mpe_bend">bend</string>
+    <!-- A pitch bend range in semitones. -->
+    <string name="midi_mpe_bend_st">±%d st</string>
+    <string name="midi_mpe_cc74">cc 74</string>
+    <string-array name="midi_mpe_cc74_choices">
+        <item>timbre</item>
+        <item>plain</item>
+    </string-array>
+    <string name="midi_mpe_none_held">no member channel is holding a note</string>
+    <string name="midi_mpe_held">channels %s are holding a note</string>
+    <string name="midi_test_mpe">mpe</string>
+
+    <!-- midi/MidiHub.kt: what the hub says about devices and scans. -->
+    <!-- A device that gave no name. -->
+    <string name="midi_device">MIDI device</string>
+    <string name="midi_unnamed">unnamed</string>
+    <plurals name="midi_released">
+        <item quantity="one">released %d held note</item>
+        <item quantity="other">released %d held notes</item>
+    </plurals>
+    <string name="midi_scan_running">a scan is already running</string>
+    <string name="midi_scan_refused_restart">Android refused the scan; turn Bluetooth off and on</string>
+    <string name="midi_scan_unsupported">this phone cannot scan for Bluetooth LE</string>
+    <string name="midi_scan_failed">the scan failed (code %d)</string>
+    <string name="midi_scan_refused">Android refused the scan: allow Nearby devices</string>
+    <string name="midi_scan_widened">Nothing is advertising MIDI. Showing everything nearby - a device that keeps its service in the scan response will still open.</string>
+    <string name="midi_scan_nothing">Nothing found. Check the device is switched on and not already paired in Android\'s own Bluetooth settings - a paired BLE MIDI device stops advertising.</string>
+    <string name="midi_opening">opening…</string>
+    <string name="midi_open_failed">Could not open that device. If it is paired in Android\'s Bluetooth settings, forget it there and scan again.</string>
+    <string name="midi_connect_refused">Android refused the connection: allow Nearby devices</string>
+</resources>

@@ -1,0 +1,16 @@
+<resources>
+    <!-- ui/SlotsPanel.kt: a track's effect and modifier slots. Each unit's own controls come with the machine panels. -->
+    <!-- A slot's name: which kind, and which of the two. -->
+    <string name="slot_fx">FX%d</string>
+    <string name="slot_mod">MOD%d</string>
+    <string name="slot_none">none</string>
+    <!-- The slot's menu button: what is in it, or none. -->
+    <string name="slot_menu">%s ▾</string>
+    <string name="slot_on">on</string>
+    <string name="slot_bypass">bypass</string>
+    <!-- A sidechain's first choice: the unit listens to its own track. -->
+    <string name="slot_sidechain_own">own</string>
+    <!-- A sidechain choice for a track number with no track there yet. -->
+    <string name="slot_sidechain_empty">%d -</string>
+    <string name="slot_steps">steps</string>
+</resources>

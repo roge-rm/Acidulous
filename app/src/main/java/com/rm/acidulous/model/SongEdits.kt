@@ -42,7 +42,7 @@ fun newId(prefix: String): String = prefix + "-" + UUID.randomUUID().toString().
 
 /** Appends a blank scene, or inserts one after [afterIndex]. */
 fun Song.addScene(afterIndex: Int? = null, name: String? = null): Song {
-    val scene = Scene(id = newId("s"), name = name ?: "Scene ${scenes.size + 1}")
+    val scene = Scene(id = newId("s"), name = name ?: Names.scene(scenes.size + 1))
     val at = afterIndex?.let { (it + 1).coerceIn(0, scenes.size) } ?: scenes.size
     return copy(scenes = scenes.toMutableList().also { it.add(at, scene) })
 }
@@ -50,7 +50,7 @@ fun Song.addScene(afterIndex: Int? = null, name: String? = null): Song {
 /** Inserts a copy after [index]: the scene's settings and every track's clip for it. */
 fun Song.duplicateScene(index: Int): Song {
     val source = scenes.getOrNull(index) ?: return this
-    val dup = source.copy(id = newId("s"), name = source.name + " copy")
+    val dup = source.copy(id = newId("s"), name = Names.copyOf(source.name))
     val newScenes = scenes.toMutableList().also { it.add(index + 1, dup) }
     val newTracks = tracks.map { t ->
         val clip = t.clips[source.id] ?: return@map t
@@ -121,7 +121,7 @@ fun Song.deleteTrack(index: Int): Song {
 fun Song.duplicateTrack(index: Int): Song {
     val source = tracks.getOrNull(index) ?: return this
     if (tracks.size >= MAX_TRACKS) return this
-    val dup = source.copy(id = newId("t"), name = source.name + " copy", clips = source.clips.mapValues { it.value.copy() })
+    val dup = source.copy(id = newId("t"), name = Names.copyOf(source.name), clips = source.clips.mapValues { it.value.copy() })
     // The copy goes in after its source, so everything past it moves down one.
     return copy(tracks = tracks.toMutableList().also { it.add(index + 1, dup) })
         .remapSidechains { k -> if (k - 1 > index) k + 1 else k }

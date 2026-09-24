@@ -30,6 +30,9 @@ import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.Tuning
 import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringArrayResource
+import com.rm.acidulous.R
 
 /**
  * Everything that belongs to one track rather than to its machine or its
@@ -56,14 +59,14 @@ fun TrackSettingsDialog(
     val groups = song.master.groups.map { it.name }
 
     PlainDialog(
-        title = "Settings · ${original.name}",
+        title = stringResource(R.string.track_title, original.name),
         onDismiss = onDismiss,
-        confirmLabel = "OK",
+        confirmLabel = stringResource(R.string.ok),
         onConfirm = { onConfirm(track.copy(name = name.trim().ifEmpty { original.name })) },
         spacing = 6.dp,
     ) {
         WindowCards {
-            WindowCard("track") {
+            WindowCard(stringResource(R.string.track_track)) {
                 // One piece of a known width, so it sits the same in a stack
                 // upright and in a row of cards turned.
                 Column(Modifier.widthIn(max = 300.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -77,45 +80,49 @@ fun TrackSettingsDialog(
             // A tape's notes are recordings, not pitches or hits: nothing
             // here would change them.
             if (kind != MachineKind.Audio) {
-                WindowCard("notes") {
+                WindowCard(stringResource(R.string.track_notes)) {
                     if (MachineUi.takesTranspose(type)) {
                         CountKnob(
-                            "transpose", track.transpose, -48..48, signed(track.transpose),
+                            stringResource(R.string.track_transpose), track.transpose, -48..48, signed(track.transpose),
                             choices = (-48..48).map { signed(it) },
                         ) { track = track.copy(transpose = it) }
                     }
                     if (MachineUi.takesTuning(type)) {
-                        TuningKnob(track.tuning, tunings, { track = track.copy(tuning = it) }, followLabel = "song")
+                        TuningKnob(track.tuning, tunings, { track = track.copy(tuning = it) }, followLabel = stringResource(R.string.track_tuning_song))
                     }
+                    val asPlayed = stringResource(R.string.track_velocity_as_played)
                     CountKnob(
-                        "velocity", track.velocity ?: 0, 0..127, velocityName(track.velocity ?: 0),
-                        choices = (0..127).map { velocityName(it) },
+                        stringResource(R.string.track_velocity), track.velocity ?: 0, 0..127, velocityName(track.velocity ?: 0, asPlayed),
+                        choices = (0..127).map { velocityName(it, asPlayed) },
                     ) { track = track.copy(velocity = it.takeIf { v -> v > 0 }) }
                     // Nought is "the song's"; the rest are the amounts.
                     val swingSteps = SWING_STRAIGHT.toInt()..SWING_MAX.toInt()
                     val own = track.swing?.roundToInt()?.coerceIn(swingSteps)
+                    val song = stringResource(R.string.track_swing_song)
+                    val straight = stringResource(R.string.track_swing_straight)
                     CountKnob(
-                        "swing", own?.let { it - swingSteps.first + 1 } ?: 0, 0..(swingSteps.last - swingSteps.first + 1),
-                        swingName(own), PanelAmber,
-                        choices = listOf(swingName(null)) + swingSteps.map { swingName(it) },
+                        stringResource(R.string.track_swing), own?.let { it - swingSteps.first + 1 } ?: 0, 0..(swingSteps.last - swingSteps.first + 1),
+                        swingName(own, song, straight), PanelAmber,
+                        choices = listOf(song) + swingSteps.map { swingName(it, song, straight) },
                     ) { track = track.copy(swing = if (it == 0) null else (swingSteps.first + it - 1).toFloat()) }
                 }
             }
-            WindowCard("routing") {
+            WindowCard(stringResource(R.string.track_routing)) {
                 if (kind != MachineKind.Audio) {
                     val m = track.mixer
-                    SwitchGrid("midi out", listOf("off", "both", "only"), m.midiMode, columns = 3) {
+                    SwitchGrid(stringResource(R.string.track_midi_out), stringArrayResource(R.array.track_midi_out_choices).toList(), m.midiMode, columns = 3) {
                         track = track.copy(mixer = m.copy(midiMode = it))
                     }
                     CountKnob(
-                        "channel", m.midiChannel + 1, 1..16, "${m.midiChannel + 1}",
+                        stringResource(R.string.track_channel), m.midiChannel + 1, 1..16, "${m.midiChannel + 1}",
                         choices = (1..16).map { "$it" },
                     ) { track = track.copy(mixer = m.copy(midiChannel = it - 1)) }
                 }
                 val out = track.mixer.output.takeIf { it in 0..groups.size } ?: 0
+                val master = stringResource(R.string.track_output_master)
                 CountKnob(
-                    "output", out, 0..groups.size, if (out == 0) "master" else groups[out - 1],
-                    choices = listOf("master") + groups,
+                    stringResource(R.string.track_output), out, 0..groups.size, if (out == 0) master else groups[out - 1],
+                    choices = listOf(master) + groups,
                 ) { track = track.copy(mixer = track.mixer.copy(output = it)) }
             }
         }
@@ -123,10 +130,10 @@ fun TrackSettingsDialog(
 }
 
 private fun signed(n: Int) = if (n > 0) "+$n" else "$n"
-private fun velocityName(v: Int) = if (v == 0) "as played" else "$v"
-private fun swingName(amount: Int?) = when {
-    amount == null -> "song"
-    amount <= SWING_STRAIGHT.toInt() -> "straight"
+private fun velocityName(v: Int, asPlayed: String) = if (v == 0) asPlayed else "$v"
+private fun swingName(amount: Int?, song: String, straight: String) = when {
+    amount == null -> song
+    amount <= SWING_STRAIGHT.toInt() -> straight
     else -> "$amount%"
 }
 

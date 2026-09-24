@@ -45,6 +45,8 @@ import com.rm.acidulous.model.laneParam
 import kotlin.math.roundToInt
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * The parameter strip under the piano roll: one lane at a time, drawn as
@@ -123,7 +125,7 @@ fun AutomationStrip(
                     // because this gutter is always eighty-eight dp tall, so
                     // a hundred and twenty is simply more than enough.
                     SideText(
-                        current?.let { shortOf(it) } ?: "∿ auto",
+                        current?.let { shortOf(it) } ?: stringResource(R.string.auto_none),
                         Acid.colors.accent, 9.sp, length = 120.dp, family = FontFamily.Monospace,
                     )
                 }
@@ -152,7 +154,7 @@ fun AutomationStrip(
                         )
                     }
                     if (current != null) {
-                        DropdownMenuItem(text = { Text("Clear ${shortOf(current)}") }, onClick = { menu = false; onClear(current) })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.auto_clear, shortOf(current))) }, onClick = { menu = false; onClear(current) })
                     }
                 }
             }
@@ -239,7 +241,7 @@ fun AutomationStrip(
             // The graph keeps drawing while folded, so the name needs a ground
             // of its own or it reads as part of the curve.
             Text(
-                current?.let { shortOf(it) } ?: "∿ auto",
+                current?.let { shortOf(it) } ?: stringResource(R.string.auto_none),
                 color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                 maxLines = 1, softWrap = false,
                 modifier = Modifier.align(Alignment.CenterStart)

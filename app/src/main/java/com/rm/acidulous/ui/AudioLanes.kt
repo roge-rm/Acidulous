@@ -56,6 +56,8 @@ import com.rm.acidulous.model.lengthTicks
 import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * The four-track's editor: four lanes under one ruler, along this cell's cycle.
@@ -194,7 +196,7 @@ fun AudioLanes(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            if (isMuted) "M" else "${lane + 1}",
+                            if (isMuted) stringResource(R.string.tape_muted_short) else "${lane + 1}",
                             color = if (isMuted) c.red else c.textHi,
                             fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                         )
@@ -333,7 +335,8 @@ fun AudioLanes(
 fun CompButton(
     trackIndex: Int, sceneId: String, editor: SongEditor,
     scope: kotlinx.coroutines.CoroutineScope,
-    onProblem: (String) -> Unit,
+    /** A string resource and what goes in it, as `EngineSync.onProblem` takes them. */
+    onProblem: (Int, Array<out Any>) -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val c = Acid.colors
@@ -359,7 +362,7 @@ fun CompButton(
                                           file.absolutePath, peak)
                 }
                 if (error.isNotEmpty()) {
-                    onProblem("That cell would not flatten - $error.")
+                    onProblem(R.string.tape_comp_failed, arrayOf(error))
                     file.delete()
                     return@launch
                 }
@@ -382,7 +385,7 @@ fun CompButton(
             }
         },
     ) {
-        Text("comp", color = if (lanes > 0) c.textMid else c.textFaint, fontSize = 11.sp)
+        Text(stringResource(R.string.tape_comp), color = if (lanes > 0) c.textMid else c.textFaint, fontSize = 11.sp)
     }
 }
 

@@ -16,6 +16,8 @@ import com.rm.acidulous.model.withModifier
 import com.rm.acidulous.model.withModifierBypass
 import com.rm.acidulous.model.withModifierParam
 import com.rm.acidulous.ui.theme.ThemeMode
+import com.rm.acidulous.R
+import androidx.annotation.StringRes
 
 /**
  * The settings that belong to the person and the device, not to the song.
@@ -222,8 +224,8 @@ object UiPrefs {
      * device will go and will crackle on a phone that cannot keep up; safe
      * buys a phone that cannot the room to finish late.
      */
-    enum class Buffer(val bursts: Int, val label: String) {
-        Tight(1, "tight"), Balanced(2, "balanced"), Safe(4, "safe")
+    enum class Buffer(val bursts: Int, @StringRes val label: Int) {
+        Tight(1, R.string.settings_buffer_tight), Balanced(2, R.string.settings_buffer_balanced), Safe(4, R.string.settings_buffer_safe)
     }
 
     var buffer by mutableStateOf(Buffer.Balanced)

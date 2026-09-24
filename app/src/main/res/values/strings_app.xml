@@ -1,0 +1,79 @@
+<resources>
+    <!-- MainActivity.kt: what the app says about files coming in and going out, recording, and a crash. -->
+    <string name="app_crash_report_subject">Acidulous crash report</string>
+
+    <!-- A sound that would not load -->
+    <string name="app_load_failed_title">That would not load</string>
+    <string name="app_load_formats">Acidulous can import WAV, AIFF, FLAC and MP3, mono or stereo, at any sample rate. It can\'t read M4A, Ogg or WMA.</string>
+    <string name="app_converting">Converting</string>
+    <string name="app_converting_of">Converting %1$d of %2$d</string>
+    <plurals name="app_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="app_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+    <!-- A length, then the files that were cut to it. -->
+    <string name="app_truncated">Only the first %1$s of %2$s was imported. That\'s the most a sample can hold.</string>
+    <string name="app_file_failed">That file would not load - %s.</string>
+    <string name="app_files_refused">These would not load: %s.</string>
+
+    <!-- Export errors, shown after "Export failed:" -->
+    <string name="app_export_unmeasured">could not measure the song</string>
+    <string name="app_export_midi_failed">could not write the MIDI file</string>
+    <string name="app_export_bundle_failed">could not write the bundle</string>
+    <string name="app_export_no_tracks">no tracks to render</string>
+    <string name="app_export_copy_failed">copy failed</string>
+    <string name="app_export_create_failed">could not create %s</string>
+    <!-- Where an export went, when the system will not name it. -->
+    <string name="app_the_folder">the folder</string>
+    <string name="app_the_file">the file</string>
+
+    <!-- A crash last time -->
+    <string name="app_crashed_title">Acidulous stopped</string>
+    <string name="app_crashed_share">Share report</string>
+    <string name="app_crashed_note">It closed unexpectedly last time. A report was saved on this phone; sharing it helps get it fixed.</string>
+
+    <!-- Importing -->
+    <!-- A song made from a file whose name is only an extension. -->
+    <string name="app_imported">Imported</string>
+    <string name="app_import_empty_title">Nothing to import</string>
+    <string name="app_import_empty">%s has no notes in it.</string>
+    <string name="app_open_failed_title">That would not open</string>
+    <!-- A file, then what went wrong. -->
+    <string name="app_open_failed">%1$s - %2$s.</string>
+    <string name="app_not_a_bundle">%s is not a song bundle from Acidulous.</string>
+    <string name="app_sound_added_title">Added to the sound library</string>
+    <string name="app_sound_added">%s is in the library, ready for any machine that plays a sound.</string>
+    <string name="app_tuning_added_title">Tuning added</string>
+    <plurals name="app_tuning_added">
+        <item quantity="one">%1$s (%2$d note) is in the tuning list: under key in the tempo window, or Tuning… in a track\'s menu.</item>
+        <item quantity="other">%1$s (%2$d notes) is in the tuning list: under key in the tempo window, or Tuning… in a track\'s menu.</item>
+    </plurals>
+    <string name="app_import_what">Acidulous imports MIDI files, its own song bundles (.zip), Scala tunings (.scl), and WAV, AIFF, FLAC and MP3 sounds.</string>
+    <string name="app_share_failed_title">That would not share</string>
+    <string name="app_share_failed">The bundle could not be written.</string>
+
+    <!-- Freezing -->
+    <string name="app_freezing">freezing %1$d of %2$d…</string>
+
+    <!-- Recording onto a tape -->
+    <string name="app_record_failed">Recording did not start - %s.</string>
+    <string name="app_record_gap">The recording has a gap in it, so it wasn\'t split. It\'s in the sound library.</string>
+    <string name="app_record_unplaced">Nothing was recorded against a scene. The take is in the sound library.</string>
+    <string name="app_record_too_short">That take was too short to place. It\'s in the sound library.</string>
+    <string name="app_record_permission">Recording needs permission to use the microphone.</string>
+
+    <string name="app_soundfont_preset">SoundFont preset</string>
+
+    <!-- Names the song gives things it makes: model/Names.kt. -->
+    <string name="name_scene">Scene %d</string>
+    <string name="name_copy">%s copy</string>
+
+    <!-- engine/EngineSync.kt: a file a machine was pointed at, and what the engine said about it. -->
+    <string name="sync_pad_failed">Pad %1$d: %2$s would not load - %3$s.</string>
+    <string name="sync_file_failed">%1$s would not load - %2$s.</string>
+    <string name="sync_tape_failed">The audio on this track would not load - %s.</string>
+</resources>

@@ -72,6 +72,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import com.rm.acidulous.R
 
 /**
  * The edit screen, phone-sized: header, piano roll, footer, and the
@@ -407,11 +410,11 @@ fun EditScreen(
             // and this says which. Lit while the instrument is up; fx and the
             // mixer bring the panel up by being pressed.
             if (hasKeysPill) BarButton(
-                if (kind == MachineKind.Drums) "pads" else "keys", view,
+                stringResource(if (kind == MachineKind.Drums) R.string.edit_pads else R.string.edit_keys), view,
                 colour = if (squareKeys) Acid.colors.accent else Color.Unspecified,
             ) { squareKeys = !squareKeys }
             BarButton(
-                "fx", view,
+                stringResource(R.string.edit_fx), view,
                 colour = if (panel == 1 && !(square && squareKeys)) Acid.colors.accent else Color.Unspecified,
             ) {
                 if (square && squareKeys) { squareKeys = false; panel = 1 }
@@ -429,7 +432,7 @@ fun EditScreen(
             }
             if (hasFill) {
                 BarHoldButton(
-                    "fill",
+                    stringResource(R.string.edit_fill),
                     view.mappable(MapTargets.action(com.rm.acidulous.model.Action.Fill.name)),
                     held = UiPrefs.fillHeld,
                 ) { UiPrefs.holdFill(it) }
@@ -531,19 +534,21 @@ fun EditScreen(
             // the header and it did nothing; on a phone held one-handed the
             // arrow alone is a small target at the far corner.
             Text(
-                "${track.name} · ${scene.name} · ${clip.bars}b" +
+                listOfNotNull(
+                    track.name, scene.name, stringResource(R.string.main_bars_short, clip.bars),
                     // A tape holds takes, not notes, and "0n" beside four lanes
                     // of audio is a reading of the wrong thing.
-                    (if (kind == MachineKind.Audio) " · ${clip.audioLaneCount()} lane" else "") +
+                    if (kind == MachineKind.Audio) clip.audioLaneCount().let { pluralStringResource(R.plurals.clip_lanes, it, it) } else null,
                     // Counts of notes and lane points: diagnostics.
-                    (if (!UiPrefs.showDiagnostics || kind == MachineKind.Audio) "" else " · ${clip.notes.size}n") +
-                    (if (!UiPrefs.showDiagnostics || clip.automation.isEmpty()) "" else " · ${clip.automation.values.sumOf { it.points.size }}a") +
+                    if (!UiPrefs.showDiagnostics || kind == MachineKind.Audio) null else "${clip.notes.size}n",
+                    if (!UiPrefs.showDiagnostics || clip.automation.isEmpty()) null else "${clip.automation.values.sumOf { it.points.size }}a",
                     // The selection count reads here rather than in the bar.
                     // It is a reading, and this line is where this screen's
                     // readings are; in the bar it was forty dp reserved
                     // against a number that is usually not there, and that
                     // forty dp is what the buttons beside it needed.
-                    (if (selection.isEmpty()) "" else " · ${selection.size} sel"),
+                    if (selection.isEmpty()) null else stringResource(R.string.edit_selected, selection.size),
+                ).joinToString(" · "),
                 color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                 // The band's own height rather than fillMaxHeight: the row is
                 // a SubcomposeLayout and does not hand children a bounded

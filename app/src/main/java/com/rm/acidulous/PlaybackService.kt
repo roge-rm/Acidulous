@@ -46,8 +46,8 @@ class PlaybackService : Service() {
         val manager = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && manager.getNotificationChannel(CHANNEL) == null) {
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL, "Playing", NotificationManager.IMPORTANCE_LOW).apply {
-                    description = "Shown while the transport is running."
+                NotificationChannel(CHANNEL, getString(R.string.playing), NotificationManager.IMPORTANCE_LOW).apply {
+                    description = getString(R.string.playing_channel_note)
                     setShowBadge(false)
                 },
             )
@@ -66,7 +66,7 @@ class PlaybackService : Service() {
         }
         return builder
             .setContentTitle(getString(R.string.app_name))
-            .setContentText("Playing")
+            .setContentText(getString(R.string.playing))
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(open)
             .setOngoing(true)

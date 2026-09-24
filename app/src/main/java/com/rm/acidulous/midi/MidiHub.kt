@@ -24,6 +24,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateListOf
 import com.rm.acidulous.engine.NativeEngine
+import com.rm.acidulous.R
+import androidx.annotation.StringRes
 
 /**
  * Playing Acidulous from real keys.
@@ -70,6 +72,9 @@ object MidiHub {
 
     private var manager: MidiManager? = null
     private var appContext: Context? = null
+
+    /** One of the hub's own messages, in the phone's language. */
+    private fun say(@StringRes id: Int, vararg args: Any): String = appContext?.getString(id, *args).orEmpty()
     private var worker: HandlerThread? = null
     private var handler: Handler? = null
     private val opened = HashMap<Int, MidiDevice>()
@@ -159,7 +164,7 @@ object MidiHub {
             NativeEngine.midiEvent(h.rack, 0x80, h.note, 0, NativeEngine.NO_CHANNEL)
         }
         if (freed.isNotEmpty()) {
-            lastMessage = "released ${freed.size} held note${if (freed.size == 1) "" else "s"}"
+            lastMessage = appContext?.resources?.getQuantityString(R.plurals.midi_released, freed.size, freed.size).orEmpty()
         }
     }
 
@@ -214,7 +219,7 @@ object MidiHub {
             ports += Port(
                 id = info.id,
                 name = props.getString(MidiDeviceInfo.PROPERTY_NAME)
-                    ?: props.getString(MidiDeviceInfo.PROPERTY_PRODUCT) ?: "MIDI device",
+                    ?: props.getString(MidiDeviceInfo.PROPERTY_PRODUCT) ?: say(R.string.midi_device),
                 maker = props.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER).orEmpty(),
                 bluetooth = info.type == MidiDeviceInfo.TYPE_BLUETOOTH,
                 open = opened.containsKey(info.id),
@@ -227,7 +232,7 @@ object MidiHub {
             destinations += Destination(
                 id = info.id,
                 name = props.getString(MidiDeviceInfo.PROPERTY_NAME)
-                    ?: props.getString(MidiDeviceInfo.PROPERTY_PRODUCT) ?: "MIDI device",
+                    ?: props.getString(MidiDeviceInfo.PROPERTY_PRODUCT) ?: say(R.string.midi_device),
                 open = outPorts.containsKey(info.id),
             )
         }
@@ -673,11 +678,11 @@ object MidiHub {
                 result.device.name ?: result.scanRecord?.deviceName
             } catch (e: SecurityException) {
                 null
-            } ?: "unnamed"
+            }
             val isMidi = result.scanRecord?.serviceUuids?.contains(BLE_MIDI_SERVICE) == true
-            if (wide && !isMidi && name == "unnamed") return // nothing to show and nothing to pick
+            if (wide && !isMidi && name == null) return // nothing to show and nothing to pick
             val at = discovered.indexOfFirst { it.address == result.device.address }
-            val found = Found(result.device.address, name, isMidi)
+            val found = Found(result.device.address, name ?: say(R.string.midi_unnamed), isMidi)
             if (at < 0) {
                 discovered += found
             } else if (isMidi && !discovered[at].midi) {
@@ -688,10 +693,10 @@ object MidiHub {
         override fun onScanFailed(errorCode: Int) {
             Log.w(TAG, "BLE scan failed: $errorCode")
             scanStatus = when (errorCode) {
-                SCAN_FAILED_ALREADY_STARTED -> "a scan is already running"
-                SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> "Android refused the scan; turn Bluetooth off and on"
-                SCAN_FAILED_FEATURE_UNSUPPORTED -> "this phone cannot scan for Bluetooth LE"
-                else -> "the scan failed (code $errorCode)"
+                SCAN_FAILED_ALREADY_STARTED -> say(R.string.midi_scan_running)
+                SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> say(R.string.midi_scan_refused_restart)
+                SCAN_FAILED_FEATURE_UNSUPPORTED -> say(R.string.midi_scan_unsupported)
+                else -> say(R.string.midi_scan_failed, errorCode)
             }
             scanning = false
         }
@@ -705,7 +710,7 @@ object MidiHub {
             scanning = true
         } catch (e: SecurityException) {
             Log.w(TAG, "scan refused: ${e.message}")
-            scanStatus = "Android refused the scan: allow Nearby devices"
+            scanStatus = say(R.string.midi_scan_refused)
             scanning = false
         }
     }
@@ -740,16 +745,14 @@ object MidiHub {
                 Log.w(TAG, "stop refused: ${e.message}")
             }
             wide = true
-            scanStatus = "Nothing is advertising MIDI. Showing everything nearby - a device that keeps " +
-                "its service in the scan response will still open."
+            scanStatus = say(R.string.midi_scan_widened)
             beginScan(filtered = false)
         }.also { handler?.postDelayed(it, 6_000) }
         endTask = Runnable {
             val none = discovered.isEmpty()
             stopScan()
             if (none) {
-                scanStatus = "Nothing found. Check the device is switched on and not already paired " +
-                    "in Android's own Bluetooth settings - a paired BLE MIDI device stops advertising."
+                scanStatus = say(R.string.midi_scan_nothing)
             }
         }.also { handler?.postDelayed(it, 16_000) }
     }
@@ -776,7 +779,7 @@ object MidiHub {
             Log.w(TAG, "bad address $address"); return
         }
         stopScan()
-        scanStatus = "opening…"
+        scanStatus = say(R.string.midi_opening)
         try {
             manager?.openBluetoothDevice(device, { opened ->
                 if (opened == null) {
@@ -784,8 +787,7 @@ object MidiHub {
                     // is not a MIDI device at all, or it is already paired in
                     // the system's Bluetooth settings and so is not listening.
                     Log.w(TAG, "openBluetoothDevice gave nothing for $address")
-                    scanStatus = "Could not open that device. If it is paired in Android's Bluetooth " +
-                        "settings, forget it there and scan again."
+                    scanStatus = say(R.string.midi_open_failed)
                 } else {
                     scanStatus = ""
                     attach(opened.info.id, opened)
@@ -793,7 +795,7 @@ object MidiHub {
             }, handler)
         } catch (e: SecurityException) {
             Log.w(TAG, "connect refused: ${e.message}")
-            scanStatus = "Android refused the connection: allow Nearby devices"
+            scanStatus = say(R.string.midi_connect_refused)
         }
     }
 

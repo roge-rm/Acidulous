@@ -1,0 +1,71 @@
+<resources>
+    <!-- ui/SettingsDialog.kt. The readings card shows only with diagnostics on and stays in English. -->
+    <string name="settings_title">Settings</string>
+    <string-array name="settings_tabs">
+        <item>display</item>
+        <item>audio</item>
+        <item>record</item>
+        <item>songs</item>
+    </string-array>
+    <string name="settings_screen">screen</string>
+    <string name="settings_theme">theme</string>
+    <string-array name="settings_theme_choices">
+        <item>auto</item>
+        <item>light</item>
+        <item>dark</item>
+    </string-array>
+    <string name="settings_size">size</string>
+    <string-array name="settings_size_choices">
+        <item>normal</item>
+        <item>large</item>
+        <item>larger</item>
+        <item>largest</item>
+    </string-array>
+    <string name="settings_while_playing">while playing</string>
+    <string-array name="settings_while_playing_choices">
+        <item>stay awake</item>
+        <item>let it sleep</item>
+    </string-array>
+    <string name="settings_diagnostics">diagnostics</string>
+    <string-array name="settings_diagnostics_choices">
+        <item>show</item>
+        <item>hide</item>
+    </string-array>
+    <!-- Under the size switch, when the screen is too small for the size chosen. -->
+    <string name="settings_size_capped">This screen can give %.2fx of it.</string>
+    <string name="settings_engine">engine</string>
+    <string name="settings_buffer">buffer</string>
+    <string name="settings_buffer_tight">tight</string>
+    <string name="settings_buffer_balanced">balanced</string>
+    <string name="settings_buffer_safe">safe</string>
+    <string name="settings_voices">voices</string>
+    <string name="settings_voices_all">all</string>
+    <string name="settings_quality">quality</string>
+    <string-array name="settings_quality_choices">
+        <item>full</item>
+        <item>lean</item>
+        <item>auto</item>
+    </string-array>
+    <string name="settings_recording">recording and export</string>
+    <string name="settings_depth">depth</string>
+    <string-array name="settings_depth_choices">
+        <item>24-bit</item>
+        <item>16-bit</item>
+    </string-array>
+    <string name="settings_new_song">new song</string>
+    <string name="settings_tempo">tempo</string>
+    <string name="settings_signature">signature</string>
+    <string name="settings_machine">machine</string>
+    <string name="settings_new_scale">new track scale</string>
+    <string name="settings_use">use</string>
+    <string name="settings_root">root</string>
+    <string name="settings_scale">scale</string>
+    <string name="settings_arriving">where arriving notes go</string>
+    <string name="settings_arriving_to">to</string>
+    <string-array name="settings_arriving_choices">
+        <item>follow</item>
+        <item>pinned</item>
+        <item>by channel</item>
+    </string-array>
+    <string name="settings_arriving_track">track</string>
+</resources>

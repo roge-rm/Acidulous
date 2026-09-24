@@ -1,0 +1,24 @@
+<resources>
+    <!-- ui/TrackSettings.kt: a track's own settings. -->
+    <string name="track_title">Settings · %s</string>
+    <string name="track_track">track</string>
+    <string name="track_notes">notes</string>
+    <string name="track_transpose">transpose</string>
+    <!-- The first tuning choice: follow the song's. -->
+    <string name="track_tuning_song">song</string>
+    <string name="track_velocity">velocity</string>
+    <string name="track_velocity_as_played">as played</string>
+    <string name="track_swing">swing</string>
+    <string name="track_swing_song">song</string>
+    <string name="track_swing_straight">straight</string>
+    <string name="track_routing">routing</string>
+    <string name="track_midi_out">midi out</string>
+    <string-array name="track_midi_out_choices">
+        <item>off</item>
+        <item>both</item>
+        <item>only</item>
+    </string-array>
+    <string name="track_channel">channel</string>
+    <string name="track_output">output</string>
+    <string name="track_output_master">master</string>
+</resources>

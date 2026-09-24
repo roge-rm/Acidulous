@@ -1,0 +1,95 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- ui/EditScreen.kt, ui/PerformPanel.kt, ui/PatchEditor.kt. -->
+
+    <!-- The editor's bar: show the instrument, as pads or keys; the effects; the fill. -->
+    <string name="edit_pads">pads</string>
+    <string name="edit_keys">keys</string>
+    <string name="edit_fx">fx</string>
+    <string name="edit_fill">fill</string>
+    <!-- How many notes are selected, on the header line. -->
+    <string name="edit_selected" tools:ignore="PluralsCandidate">%d sel</string>
+
+    <!-- The perform pages -->
+    <string name="perform_repeat">repeat</string>
+    <string name="perform_gate">gate</string>
+    <string name="perform_reverse">reverse</string>
+    <string name="perform_stop">stop</string>
+    <string name="perform_riser">riser</string>
+    <string name="perform_echo">echo</string>
+    <string name="perform_feedback">feedback</string>
+    <string name="perform_mute">mute</string>
+    <string name="perform_fill">fill</string>
+    <string name="perform_mute_on">mute on</string>
+    <string name="perform_latch">latch</string>
+    <!-- A setting you tap through: its name, then what it is set to. -->
+    <string name="perform_setting">%1$s %2$s</string>
+    <!-- Where the held effects run: the whole mix, or one group. -->
+    <string name="perform_on">on %s</string>
+    <string name="perform_on_all">all</string>
+    <!-- The pad's two axes. -->
+    <string name="perform_x">x</string>
+    <string name="perform_y">y</string>
+    <!-- The pad's edges: across it low to high, or rate to bits; up it, how much is thrown. -->
+    <string name="perform_pad_low">low</string>
+    <string name="perform_pad_high">high</string>
+    <string name="perform_pad_rate">rate</string>
+    <string name="perform_pad_bits">bits</string>
+    <string name="perform_pad_throw">throw</string>
+    <string name="perform_pad_wash">wash</string>
+    <string-array name="perform_kills">
+        <item>kill low</item>
+        <item>kill mid</item>
+        <item>kill high</item>
+    </string-array>
+    <!-- How long a tape stop takes. -->
+    <string-array name="perform_stop_lengths" tools:ignore="TypographyFractions">
+        <item>1/4</item>
+        <item>1/2</item>
+        <item>1 beat</item>
+        <item>2 beats</item>
+    </string-array>
+    <!-- How long the riser takes to climb. -->
+    <string-array name="perform_riser_lengths">
+        <item>1 bar</item>
+        <item>2 bars</item>
+        <item>4 bars</item>
+    </string-array>
+    <!-- When a mute tapped on the live page lands. -->
+    <string-array name="perform_mute_on_choices">
+        <item>bar</item>
+        <item>beat</item>
+        <item>now</item>
+    </string-array>
+    <!-- What the pad does across. -->
+    <string-array name="perform_pad_x_modes">
+        <item>filter</item>
+        <item>crush</item>
+    </string-array>
+    <!-- What the pad does up. -->
+    <string-array name="perform_pad_y_modes">
+        <item>echo</item>
+        <item>wash</item>
+    </string-array>
+
+    <!-- The modular's patch editor. Module names are names. -->
+    <plurals name="patch_modules">
+        <item quantity="one">%d module</item>
+        <item quantity="other">%d modules</item>
+    </plurals>
+    <plurals name="patch_cables">
+        <item quantity="one">%d cable</item>
+        <item quantity="other">%d cables</item>
+    </plurals>
+    <string name="patch_add">add</string>
+    <string name="patch_fit">fit</string>
+    <!-- On a module on the canvas that plays one voice. -->
+    <string name="patch_mono_tag">" ·mono"</string>
+    <string name="patch_gone">gone</string>
+    <string name="patch_poly">poly</string>
+    <string name="patch_mono">mono</string>
+    <string name="patch_remove">remove</string>
+    <!-- A cable past the ones that have automatable depths. -->
+    <string name="patch_beyond">beyond the automatable two dozen</string>
+    <string name="patch_cut">cut</string>
+    <string name="patch_add_title">Add a module</string>
+</resources>

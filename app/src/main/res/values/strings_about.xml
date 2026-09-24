@@ -1,0 +1,32 @@
+<resources>
+    <!-- ui/HelpDialog.kt and ui/AboutDialog.kt. The manual itself is generated from manual/*.md. -->
+    <string name="help_title">Help</string>
+    <string name="help_manual">the manual</string>
+    <string name="help_back">Back</string>
+    <string name="help_in_detail">in detail</string>
+
+    <string name="about_title">About</string>
+    <string-array name="about_tabs">
+        <item>app</item>
+        <item>licence</item>
+        <item>components</item>
+    </string-array>
+    <string name="about_version">version %s</string>
+    <string name="about_version_unknown">unknown</string>
+    <string name="about_what">A music studio for Android: up to sixteen tracks of synths, drum machines and samplers, arranged in scenes.</string>
+    <string name="about_panic">Panic · stop all sound</string>
+    <string name="about_share_crash">Share the last crash report</string>
+    <string name="about_gpl_1">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
+    <string name="about_gpl_2">It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the licence for the details.</string>
+    <string name="about_licence_itself">the licence itself</string>
+    <string name="about_licence_app">the app is under this</string>
+    <string name="about_not_ours">not ours</string>
+    <string name="about_not_ours_note">Everything else was written for this app, including the engine, the machines and effects, the sequencer and the file writers. No DSP code, presets or samples come from anywhere else.</string>
+    <!-- A component: its name and version, then what it does here. -->
+    <string name="about_oboe">Oboe 1.10.0 · the audio stream</string>
+    <string name="about_lame">LAME 3.100 · MP3 encoding, as its own library</string>
+    <string name="about_link">Ableton Link 4.0 · a tempo shared over Wi-Fi</string>
+    <string name="about_asio">asio 1.36.0 · the network, underneath Link</string>
+    <string name="about_read">read</string>
+    <string name="about_licence_missing">The licence text is missing from this build. See %s.</string>
+</resources>

@@ -33,6 +33,9 @@ import com.rm.acidulous.midi.MidiHub
 import com.rm.acidulous.model.Scales
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.ThemeMode
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringArrayResource
+import com.rm.acidulous.R
 
 /**
  * Everything that belongs to the person and the device rather than to the
@@ -56,7 +59,7 @@ fun SettingsDialog(trackNames: List<String> = emptyList(), onDismiss: () -> Unit
     // body is as tall as the tallest tab, so the window does not resize and
     // the Done button does not move when you change tab.
     TabbedDialog(
-        title = "Settings",
+        title = stringResource(R.string.settings_title),
         selected = tab,
         pages = listOf(
             { DisplayTab() },
@@ -66,7 +69,7 @@ fun SettingsDialog(trackNames: List<String> = emptyList(), onDismiss: () -> Unit
         ),
         onDismiss = onDismiss,
         spacing = 6.dp,
-        chips = { SectionChips(TABS, tab) { tab = it } },
+        chips = { SectionChips(stringArrayResource(R.array.settings_tabs).toList(), tab) { tab = it } },
     )
 }
 
@@ -75,29 +78,28 @@ fun SettingsDialog(trackNames: List<String> = emptyList(), onDismiss: () -> Unit
 // which is where somebody goes when a keyboard is not playing what they
 // expect. Two places to change one setting is one place too many, and the
 // other four chips are wider for it.
-private val TABS = listOf("display", "audio", "record", "songs")
 
 @Composable
 private fun DisplayTab() {
     // Cards of switches, the arp window's shape, like every window with
     // settings in it (Dan, 2026-09-23).
     WindowCards {
-        WindowCard("screen") {
+        WindowCard(stringResource(R.string.settings_screen)) {
             SwitchGrid(
-                "theme", listOf("auto", "light", "dark"),
+                stringResource(R.string.settings_theme), stringArrayResource(R.array.settings_theme_choices).toList(),
                 when (UiPrefs.theme) { ThemeMode.Auto -> 0; ThemeMode.Light -> 1; ThemeMode.Dark -> 2 },
                 columns = 1,
             ) { UiPrefs.chooseTheme(listOf(ThemeMode.Auto, ThemeMode.Light, ThemeMode.Dark)[it]) }
             // The one setting whose effect is the window it is being read in:
             // the cells grow under the finger that taps them.
-            SwitchGrid("size", UiScaleLabels, UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
+            SwitchGrid(stringResource(R.string.settings_size), stringArrayResource(R.array.settings_size_choices).toList(), UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
                 UiPrefs.chooseUiScale(UiScaleSteps[it])
             }
-            SwitchGrid("while playing", listOf("stay awake", "let it sleep"), if (UiPrefs.keepAwake) 0 else 1) {
+            SwitchGrid(stringResource(R.string.settings_while_playing), stringArrayResource(R.array.settings_while_playing_choices).toList(), if (UiPrefs.keepAwake) 0 else 1) {
                 UiPrefs.chooseKeepAwake(it == 0)
             }
             // The numbers kept for finding faults, everywhere they appear.
-            SwitchGrid("diagnostics", listOf("show", "hide"), if (UiPrefs.showDiagnostics) 0 else 1) {
+            SwitchGrid(stringResource(R.string.settings_diagnostics), stringArrayResource(R.array.settings_diagnostics_choices).toList(), if (UiPrefs.showDiagnostics) 0 else 1) {
                 UiPrefs.chooseDiagnostics(it == 0)
             }
         }
@@ -106,7 +108,7 @@ private fun DisplayTab() {
     // the one thing the switch cannot show - see ui/UiScale.kt for the cap.
     val applied = LocalUiScale.current
     if (applied < UiPrefs.uiScale - 0.001f) {
-        Text("This screen can give %.2fx of it.".format(applied), color = Acid.colors.textDim, fontSize = 11.sp)
+        Text(stringResource(R.string.settings_size_capped, applied), color = Acid.colors.textDim, fontSize = 11.sp)
     }
 }
 
@@ -124,20 +126,21 @@ private fun AudioTab(trackNames: List<String>) {
     val drops = NativeEngine.xRunCount
     // The three things to set, in a card; everything under it is a reading.
     WindowCards {
-        WindowCard("engine") {
-            SwitchGrid("buffer", UiPrefs.Buffer.entries.map { it.label }, UiPrefs.buffer.ordinal, columns = 1) {
+        WindowCard(stringResource(R.string.settings_engine)) {
+            SwitchGrid(stringResource(R.string.settings_buffer), UiPrefs.Buffer.entries.map { stringResource(it.label) }, UiPrefs.buffer.ordinal, columns = 1) {
                 UiPrefs.chooseBuffer(UiPrefs.Buffer.entries[it])
             }
             val limits = listOf(4, 8, 16, 32, 48, 64, 0)
             val li = limits.indexOf(UiPrefs.voiceLimit).coerceAtLeast(0)
+            val all = stringResource(R.string.settings_voices_all)
             CountKnob(
-                "voices", li, 0 until limits.size, if (UiPrefs.voiceLimit == 0) "all" else "${UiPrefs.voiceLimit}",
-                choices = limits.map { if (it == 0) "all" else "$it" },
+                stringResource(R.string.settings_voices), li, 0 until limits.size, if (UiPrefs.voiceLimit == 0) all else "${UiPrefs.voiceLimit}",
+                choices = limits.map { if (it == 0) all else "$it" },
             ) { UiPrefs.chooseVoiceLimit(limits[it]) }
             // Auto decides between the other two, so while it is on they
             // show which one it chose rather than being chosen.
             SwitchGrid(
-                "quality", listOf("full", "lean", "auto"),
+                stringResource(R.string.settings_quality), stringArrayResource(R.array.settings_quality_choices).toList(),
                 if (UiPrefs.autoQuality) 2 else if (UiPrefs.fullQuality) 0 else 1,
                 columns = 1,
             ) { i ->
@@ -267,8 +270,8 @@ private fun AudioTab(trackNames: List<String>) {
 private fun RecordTab() {
     WindowCards {
         // 48 kHz either way; only the depth is a choice.
-        WindowCard("recording and export") {
-            SwitchGrid("depth", listOf("24-bit", "16-bit"), if (UiPrefs.recordBits == 24) 0 else 1) {
+        WindowCard(stringResource(R.string.settings_recording)) {
+            SwitchGrid(stringResource(R.string.settings_depth), stringArrayResource(R.array.settings_depth_choices).toList(), if (UiPrefs.recordBits == 24) 0 else 1) {
                 UiPrefs.chooseRecordBits(if (it == 0) 24 else 16)
             }
         }
@@ -280,32 +283,32 @@ private fun NewSongSection() {
     val sig = UiPrefs.newSignature
     var pickingMachine by remember { mutableStateOf(false) }
     WindowCards {
-        WindowCard("new song") {
-            CountKnob("tempo", UiPrefs.newTempo.roundToInt(), 40..240, "%.0f".format(UiPrefs.newTempo), PanelAmber) {
+        WindowCard(stringResource(R.string.settings_new_song)) {
+            CountKnob(stringResource(R.string.settings_tempo), UiPrefs.newTempo.roundToInt(), 40..240, "%.0f".format(UiPrefs.newTempo), PanelAmber) {
                 UiPrefs.chooseNewTempo(it.toFloat())
             }
             val sigIndex = SIGNATURES.indexOf(sig).coerceAtLeast(0)
             CountKnob(
-                "signature", sigIndex, 0 until SIGNATURES.size, "${sig.beats}/${sig.unit}",
+                stringResource(R.string.settings_signature), sigIndex, 0 until SIGNATURES.size, "${sig.beats}/${sig.unit}",
                 choices = SIGNATURES.map { "${it.beats}/${it.unit}" },
             ) { UiPrefs.chooseNewSignature(SIGNATURES[it]) }
             // What the one track of a new song holds, behind the same picker
             // the arranger's "+ track" uses: nineteen machines is not a switch.
-            SwitchGrid("machine", listOf(UiPrefs.newMachine), -1) { pickingMachine = true }
+            SwitchGrid(stringResource(R.string.settings_machine), listOf(UiPrefs.newMachine), -1) { pickingMachine = true }
         }
         // The scale a new track starts in: a Scale modifier is fitted to it,
         // so the keyboard and the roll agree with the song from the first
         // note. Root and scale are knobs that open as lists on a hold, which
         // retires the window of its own this used to open.
-        WindowCard("new track scale") {
-            SwitchGrid("use", listOf("off", "on"), if (UiPrefs.newScaleOn) 1 else 0) { UiPrefs.chooseNewScale(it == 1) }
+        WindowCard(stringResource(R.string.settings_new_scale)) {
+            SwitchGrid(stringResource(R.string.settings_use), stringArrayResource(R.array.off_on).toList(), if (UiPrefs.newScaleOn) 1 else 0) { UiPrefs.chooseNewScale(it == 1) }
             if (UiPrefs.newScaleOn) {
                 val key = UiPrefs.newScaleKey
                 val scale = UiPrefs.newScaleIndex
-                CountKnob("root", key, 0..11, Scales.rootName(key, scale), PanelAmber, choices = (0 until 12).map { Scales.rootName(it, scale) }) {
+                CountKnob(stringResource(R.string.settings_root), key, 0..11, Scales.rootName(key, scale), PanelAmber, choices = (0 until 12).map { Scales.rootName(it, scale) }) {
                     UiPrefs.chooseNewScale(true, it, scale)
                 }
-                CountKnob("scale", scale, 0 until Scales.names.size, Scales.names[scale], width = 132.dp, choices = Scales.names) {
+                CountKnob(stringResource(R.string.settings_scale), scale, 0 until Scales.names.size, Scales.names[scale], width = 132.dp, choices = Scales.names) {
                     UiPrefs.chooseNewScale(true, key, it)
                 }
             }
@@ -323,15 +326,15 @@ private fun NewSongSection() {
 @Composable
 internal fun MidiRoutingSection(trackNames: List<String>, more: @Composable () -> Unit = {}) {
     val routes = listOf(MidiHub.Routing.SelectedTrack, MidiHub.Routing.FixedTrack, MidiHub.Routing.ChannelToRack)
-    WindowCard("where arriving notes go") {
+    WindowCard(stringResource(R.string.settings_arriving)) {
         // Follow: whichever track is open. Pinned: one track, even while
         // another is open. By channel: channel 1 to track 1, and so on.
-        SwitchGrid("to", listOf("follow", "pinned", "by channel"), routes.indexOf(MidiHub.routing), columns = 1) {
+        SwitchGrid(stringResource(R.string.settings_arriving_to), stringArrayResource(R.array.settings_arriving_choices).toList(), routes.indexOf(MidiHub.routing), columns = 1) {
             UiPrefs.chooseMidiRouting(routes[it])
         }
         if (MidiHub.routing == MidiHub.Routing.FixedTrack && trackNames.isNotEmpty()) {
             val at = MidiHub.fixedRack.coerceIn(0, trackNames.size - 1)
-            CountKnob("track", at, 0 until trackNames.size, trackNames[at], PanelAmber, width = 96.dp, choices = trackNames) {
+            CountKnob(stringResource(R.string.settings_arriving_track), at, 0 until trackNames.size, trackNames[at], PanelAmber, width = 96.dp, choices = trackNames) {
                 UiPrefs.chooseMidiRouting(MidiHub.Routing.FixedTrack, it)
             }
         }

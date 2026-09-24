@@ -35,6 +35,8 @@ import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Note
 import kotlin.math.roundToInt
 import com.rm.acidulous.ui.theme.Acid
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * Reflux's step sequencer: the old way of entering a line, as a second editor
@@ -136,9 +138,9 @@ private fun StepColumn(
         ) {
             Text(if (gate) noteName(pitch) else "·", color = if (gate) Color.White else Acid.colors.textFaint, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         }
-        Toggle("on", gate, Acid.colors.teal, onGate)
-        Toggle("acc", accent, Acid.colors.accent, onAccent, enabled = gate)
-        Toggle("sld", slide, Acid.colors.pink, onSlide, enabled = gate)
+        Toggle(stringResource(R.string.step_on), gate, Acid.colors.teal, onGate)
+        Toggle(stringResource(R.string.step_accent), accent, Acid.colors.accent, onAccent, enabled = gate)
+        Toggle(stringResource(R.string.step_slide), slide, Acid.colors.pink, onSlide, enabled = gate)
     }
 }
 

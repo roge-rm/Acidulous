@@ -42,6 +42,9 @@ import com.rm.acidulous.model.Trig
 import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
+import androidx.annotation.StringRes
 
 /**
  * What a note carries besides its pitch.
@@ -61,12 +64,12 @@ import kotlin.math.roundToInt
  * an automation lane is a curve sampled anywhere, and this is one value per
  * note and nothing in between.
  */
-enum class NoteProp(val short: String, val label: String) {
-    Velocity("vel", "note volume"),
-    Chance("prob", "probability"),
-    Cond("trig", "trig condition"),
-    Ratchet("ratch", "ratchet"),
-    Nudge("nudge", "micro timing"),
+enum class NoteProp(@StringRes val short: Int, @StringRes val label: Int) {
+    Velocity(R.string.note_prop_velocity_short, R.string.note_prop_velocity),
+    Chance(R.string.note_prop_chance_short, R.string.note_prop_chance),
+    Cond(R.string.note_prop_cond_short, R.string.note_prop_cond),
+    Ratchet(R.string.note_prop_ratchet_short, R.string.note_prop_ratchet),
+    Nudge(R.string.note_prop_nudge_short, R.string.note_prop_nudge),
 }
 
 /** How far a note may be pushed off the grid: half a sixteenth either way. */
@@ -227,7 +230,7 @@ fun NoteLane(
                         // just emptier. On its side, as the automation
                         // strip's is: the width belongs to the notes.
                         SideText(
-                            prop.short + (pitchFilter?.let { " " + pitchName(it) } ?: ""),
+                            stringResource(prop.short) + (pitchFilter?.let { " " + pitchName(it) } ?: ""),
                             if (pitchFilter != null) c.accent else c.teal,
                             9.sp, length = 120.dp, family = FontFamily.Monospace,
                         )
@@ -249,7 +252,7 @@ fun NoteLane(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    (if (p == prop) "● " else "  ") + p.label,
+                                    (if (p == prop) "● " else "  ") + stringResource(p.label),
                                     fontSize = 12.sp, fontFamily = FontFamily.Monospace,
                                 )
                             },
@@ -269,7 +272,7 @@ fun NoteLane(
                                 text = {
                                     Text(
                                         (if (pitch == pitchFilter) "● " else "  ") +
-                                            (pitch?.let { pitchName(it) } ?: "all notes"),
+                                            (pitch?.let { pitchName(it) } ?: stringResource(R.string.note_lane_all_notes)),
                                         fontSize = 12.sp, fontFamily = FontFamily.Monospace,
                                     )
                                 },

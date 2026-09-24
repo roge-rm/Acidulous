@@ -17,6 +17,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.ui.theme.Acid
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringArrayResource
+import com.rm.acidulous.R
 
 /**
  * Who wrote this, what it is under, and whose work came with it.
@@ -39,7 +42,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
     var reading by remember { mutableStateOf<Licence?>(null) }
 
     TabbedDialog(
-        title = "About",
+        title = stringResource(R.string.about_title),
         selected = tab,
         pages = listOf(
             { AppTab() },
@@ -47,15 +50,13 @@ fun AboutDialog(onDismiss: () -> Unit) {
             { ComponentsTab { reading = it } },
         ),
         onDismiss = onDismiss,
-        dismissLabel = "Done",
+        dismissLabel = stringResource(R.string.done),
         spacing = 16.dp,
-        chips = { SectionChips(TABS, tab) { tab = it } },
+        chips = { SectionChips(stringArrayResource(R.array.about_tabs).toList(), tab) { tab = it } },
     )
 
     reading?.let { LicenceTextDialog(it) { reading = null } }
 }
-
-private val TABS = listOf("app", "licence", "components")
 
 /** The three texts the app ships, and where the build staged each one. */
 private enum class Licence(val title: String, val asset: String) {
@@ -70,6 +71,7 @@ private enum class Licence(val title: String, val asset: String) {
 private fun AppTab() {
     val c = Acid.colors
     val context = LocalContext.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
     // Asked of the package manager rather than of BuildConfig, so it is the
     // version of the APK that is actually installed and not of the module
     // that happened to be compiled.
@@ -77,15 +79,12 @@ private fun AppTab() {
         runCatching {
             val info = context.packageManager.getPackageInfo(context.packageName, 0)
             "%s (%d)".format(info.versionName, info.longVersionCode)
-        }.getOrDefault("unknown")
+        }.getOrDefault(resources.getString(R.string.about_version_unknown))
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Acidulous", color = c.text, fontSize = 22.sp)
-        Readout("version $version")
-        Body(
-            "A music studio for Android: up to sixteen tracks of synths, drum " +
-                "machines and samplers, arranged in scenes.",
-        )
+        Readout(stringResource(R.string.about_version, version))
+        Body(stringResource(R.string.about_what))
         Body("Copyright © 2026 Dan Hunke")
         // The one place that *names* it, which a gesture has no way to be:
         // holding play does the same and is the fast path. Here rather than
@@ -94,13 +93,13 @@ private fun AppTab() {
         androidx.compose.material3.OutlinedButton(
             onClick = { panicEverything() },
             border = androidx.compose.foundation.BorderStroke(1.dp, c.red),
-        ) { Text("Panic · stop all sound", color = c.red) }
+        ) { Text(stringResource(R.string.about_panic), color = c.red) }
         // The last crash report, while there is one, for whoever asks for it.
         val report = remember { com.rm.acidulous.CrashReports.latest(context) }
         if (report != null) {
             androidx.compose.material3.TextButton(
                 onClick = { com.rm.acidulous.shareCrashReport(context, report) },
-            ) { Text("Share the last crash report") }
+            ) { Text(stringResource(R.string.about_share_crash)) }
         }
     }
 }
@@ -108,20 +107,10 @@ private fun AppTab() {
 @Composable
 private fun LicenceTab(onRead: (Licence) -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Body(
-            "This program is free software: you can redistribute it and/or " +
-                "modify it under the terms of the GNU General Public License as " +
-                "published by the Free Software Foundation, either version 3 of " +
-                "the License, or (at your option) any later version.",
-        )
-        Body(
-            "It is distributed in the hope that it will be useful, but WITHOUT " +
-                "ANY WARRANTY; without even the implied warranty of " +
-                "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the " +
-                "licence for the details.",
-        )
-        ListSection("the licence itself") {
-            LicenceRow(Licence.Gpl3, "the app is under this", onRead)
+        Body(stringResource(R.string.about_gpl_1))
+        Body(stringResource(R.string.about_gpl_2))
+        ListSection(stringResource(R.string.about_licence_itself)) {
+            LicenceRow(Licence.Gpl3, stringResource(R.string.about_licence_app), onRead)
         }
     }
 }
@@ -129,21 +118,19 @@ private fun LicenceTab(onRead: (Licence) -> Unit) {
 @Composable
 private fun ComponentsTab(onRead: (Licence) -> Unit) {
     ListSection(
-        "not ours",
-        "Everything else was written for this app, including the engine, the " +
-            "machines and effects, the sequencer and the file writers. No DSP code, " +
-            "presets or samples come from anywhere else.",
+        stringResource(R.string.about_not_ours),
+        stringResource(R.string.about_not_ours_note),
     ) {
-        LicenceRow(Licence.Apache2, "Oboe 1.10.0 · the audio stream", onRead)
-        LicenceRow(Licence.Lgpl2, "LAME 3.100 · MP3 encoding, as its own library", onRead)
-        LicenceRow(Licence.Gpl2, "Ableton Link 4.0 · a tempo shared over Wi-Fi", onRead)
-        LicenceRow(Licence.Bsl1, "asio 1.36.0 · the network, underneath Link", onRead)
+        LicenceRow(Licence.Apache2, stringResource(R.string.about_oboe), onRead)
+        LicenceRow(Licence.Lgpl2, stringResource(R.string.about_lame), onRead)
+        LicenceRow(Licence.Gpl2, stringResource(R.string.about_link), onRead)
+        LicenceRow(Licence.Bsl1, stringResource(R.string.about_asio), onRead)
     }
 }
 
 @Composable
 private fun LicenceRow(licence: Licence, under: String, onRead: (Licence) -> Unit) =
-    DialogRow("¶", licence.title, under = under, trailing = "read") { onRead(licence) }
+    DialogRow("¶", licence.title, under = under, trailing = stringResource(R.string.about_read)) { onRead(licence) }
 
 /**
  * One licence, whole. Monospace, because these texts are written to a fixed
@@ -156,12 +143,13 @@ private fun LicenceRow(licence: Licence, under: String, onRead: (Licence) -> Uni
 @Composable
 private fun LicenceTextDialog(licence: Licence, onDismiss: () -> Unit) {
     val context = LocalContext.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
     val text = remember(licence) {
         runCatching {
             context.assets.open(licence.asset).bufferedReader().use { it.readText() }
-        }.getOrElse { "The licence text is missing from this build. See ${licence.asset}." }
+        }.getOrElse { resources.getString(R.string.about_licence_missing, licence.asset) }
     }
-    PlainDialog(licence.title, onDismiss = onDismiss, dismissLabel = "Close", spacing = 0.dp) {
+    PlainDialog(licence.title, onDismiss = onDismiss, dismissLabel = stringResource(R.string.close), spacing = 0.dp) {
         Text(
             text,
             color = Acid.colors.textMid,

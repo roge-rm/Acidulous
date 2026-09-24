@@ -27,6 +27,10 @@ import com.rm.acidulous.model.Mapping
 import com.rm.acidulous.model.Mappings
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.ui.theme.Acid
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringArrayResource
+import com.rm.acidulous.R
 
 /**
  * Everything MIDI, in four tabs.
@@ -59,11 +63,11 @@ fun MidiDialog(song: Song, onDismiss: () -> Unit) {
     LaunchedEffect(Unit) { MidiHub.refresh() }
 
     TabbedDialog(
-        title = "MIDI",
+        title = stringResource(R.string.midi_title),
         selected = tab,
         onDismiss = { MidiHub.stopScan(); onDismiss() },
         spacing = 6.dp,
-        chips = { SectionChips(TABS, tab) { tab = it } },
+        chips = { SectionChips(stringArrayResource(R.array.midi_tabs).toList(), tab) { tab = it } },
         pages = listOf(
             { DevicesTab(context) },
             { InTab(trackNames, mpeHeld) },
@@ -77,7 +81,6 @@ fun MidiDialog(song: Song, onDismiss: () -> Unit) {
 // both ways, with the output's timing beside the outputs it applies to; then
 // the notes arriving; then the two things that steer the app from outside -
 // someone else's clock, and the knobs mapped onto its controls.
-private val TABS = listOf("devices", "notes", "control")
 
 /**
  * The tabs are the arp window's shape, like every window with settings in it
@@ -99,24 +102,24 @@ private fun DevicesTab(context: android.content.Context) {
 
     WindowCards {
         if (!MidiHub.supported) {
-            Text("This device has no MIDI support.", color = Acid.colors.red, fontSize = 12.sp)
+            Text(stringResource(R.string.midi_unsupported), color = Acid.colors.red, fontSize = 12.sp)
         }
-        WindowCard("inputs · ⎓ cable, ᛒ bluetooth") {
+        WindowCard(stringResource(R.string.midi_inputs)) {
             ports.forEach { port ->
                 DialogRow(
                     mark = if (port.bluetooth) "ᛒ" else "⎓",
                     name = port.name,
                     under = port.maker,
-                    trailing = if (port.open) "listening" else "tap to open",
+                    trailing = stringResource(if (port.open) R.string.midi_listening else R.string.midi_tap_to_open),
                     on = port.open,
                 ) { MidiHub.toggle(port.id) }
             }
-            if (ports.isEmpty()) Line { Readout("nothing connected - plug in over USB, or search") }
+            if (ports.isEmpty()) Line { Readout(stringResource(R.string.midi_no_inputs)) }
             // A cable appears by itself; a Bluetooth instrument has to be
             // looked for, which is the one thing on this tab you *do*.
             SwitchGrid(
-                if (MidiHub.bluetoothReady(context)) "bluetooth" else "bluetooth is off",
-                listOf(if (MidiHub.scanning) "stop" else "search"), if (MidiHub.scanning) 0 else -1,
+                stringResource(if (MidiHub.bluetoothReady(context)) R.string.midi_bluetooth else R.string.midi_bluetooth_off),
+                listOf(stringResource(if (MidiHub.scanning) R.string.midi_stop else R.string.midi_search)), if (MidiHub.scanning) 0 else -1,
             ) {
                 if (MidiHub.scanning) {
                     MidiHub.stopScan()
@@ -137,27 +140,27 @@ private fun DevicesTab(context: android.content.Context) {
                 DialogRow(
                     mark = if (device.midi) "ᛒ" else "·",
                     name = device.name,
-                    under = if (device.midi) device.address else device.address + "  (no MIDI service)",
-                    trailing = "connect",
+                    under = if (device.midi) device.address else stringResource(R.string.midi_no_service, device.address),
+                    trailing = stringResource(R.string.midi_connect),
                     monoUnder = true,
                 ) { MidiHub.connectBluetooth(context, device.address) }
             }
         }
         // Each track chooses whether it sends, in the mixer; this is where to,
         // and how early.
-        WindowCard("outputs") {
+        WindowCard(stringResource(R.string.midi_outputs)) {
             MidiHub.destinations.forEach { dest ->
                 DialogRow(
                     mark = "→",
                     name = dest.name,
-                    trailing = if (dest.open) "sending" else "tap to open",
+                    trailing = stringResource(if (dest.open) R.string.midi_sending else R.string.midi_tap_to_open),
                     on = dest.open,
                 ) { MidiHub.toggleDestination(dest.id) }
             }
-            if (MidiHub.destinations.isEmpty()) Line { Readout("nothing to send to") }
+            if (MidiHub.destinations.isEmpty()) Line { Readout(stringResource(R.string.midi_no_outputs)) }
             // Raise it if the external part drags behind what you hear.
             CountKnob(
-                "send ahead", MidiHub.outOffsetMs, -50..50, "%+d ms".format(MidiHub.outOffsetMs), PanelAmber,
+                stringResource(R.string.midi_send_ahead), MidiHub.outOffsetMs, -50..50, "%+d ms".format(MidiHub.outOffsetMs), PanelAmber,
                 choices = (-50..50).map { "%+d ms".format(it) },
             ) { UiPrefs.chooseMidiOffset(it) }
             // The numbers to report when something sounds loose. "late" is
@@ -182,11 +185,11 @@ private fun InTab(trackNames: List<String>, mpeHeld: Int) {
     WindowCards {
         // Where they go, with the proof that they do in the same card.
         MidiRoutingSection(trackNames) {
-            SwitchGrid("test", listOf("note", "wheel"), -1, columns = 1) { if (it == 0) MidiHub.testNote() else MidiHub.testWheel() }
+            SwitchGrid(stringResource(R.string.midi_test), stringArrayResource(R.array.midi_test_notes).toList(), -1, columns = 1) { if (it == 0) MidiHub.testNote() else MidiHub.testWheel() }
             Line {
                 Readout(
-                    if (MidiHub.received == 0) "nothing received yet"
-                    else "${MidiHub.received} messages · ${MidiHub.lastMessage}",
+                    if (MidiHub.received == 0) stringResource(R.string.midi_nothing_received)
+                    else pluralStringResource(R.plurals.midi_received, MidiHub.received, MidiHub.received, MidiHub.lastMessage),
                     good = MidiHub.received > 0,
                 )
             }
@@ -212,29 +215,30 @@ private fun ControlTab(context: android.content.Context, song: Song) {
         UiPrefs.chooseFollow(mode)
     }
     WindowCards {
-        WindowCard("clock") {
+        WindowCard(stringResource(R.string.midi_clock)) {
             // Sent to every open output, with start, stop and song position.
-            SwitchGrid("send", listOf("off", "on"), if (MidiHub.clockOut) 1 else 0) { UiPrefs.chooseClockOut(it == 1) }
+            SwitchGrid(stringResource(R.string.midi_clock_send), stringArrayResource(R.array.off_on).toList(), if (MidiHub.clockOut) 1 else 0) { UiPrefs.chooseClockOut(it == 1) }
             SwitchGrid(
-                "follow", listOf("off", "auto", "on"),
+                stringResource(R.string.midi_clock_follow), stringArrayResource(R.array.midi_clock_follow_choices).toList(),
                 when (follow) { MidiHub.Follow.Off -> 0; MidiHub.Follow.Auto -> 1; MidiHub.Follow.On -> 2 },
                 columns = 1,
             ) { choose(listOf(MidiHub.Follow.Off, MidiHub.Follow.Auto, MidiHub.Follow.On)[it]) }
             // Ten seconds of a perfect 120, from inside the app.
-            SwitchGrid("test", listOf("clock"), -1, enabled = listOf(follow != MidiHub.Follow.Off)) { MidiHub.testClock() }
+            SwitchGrid(stringResource(R.string.midi_test), listOf(stringResource(R.string.midi_test_clock)), -1, enabled = listOf(follow != MidiHub.Follow.Off)) { MidiHub.testClock() }
             // A tempo can look right while the phase wanders, so the second
             // number is the one that says whether this is really working: it
             // is the last pulse's distance from where the loop expected it.
             Line {
                 Readout(
                     when {
-                        link -> "Link has the tempo; following turns Link off"
-                        follow == MidiHub.Follow.Off -> "not following"
-                        !MidiHub.clockIn -> "nothing coming in · own clock"
-                        MidiHub.followBpm <= 0f -> "following · nothing coming in"
-                        else -> "following %.2f bpm · %s · phase %+.2f ms · scene tempos ignored".format(
+                        link -> stringResource(R.string.midi_follow_link)
+                        follow == MidiHub.Follow.Off -> stringResource(R.string.midi_follow_off)
+                        !MidiHub.clockIn -> stringResource(R.string.midi_follow_nothing)
+                        MidiHub.followBpm <= 0f -> stringResource(R.string.midi_follow_waiting)
+                        else -> stringResource(
+                            R.string.midi_following,
                             MidiHub.followBpm,
-                            if (MidiHub.followLocked) "locked" else "settling",
+                            stringResource(if (MidiHub.followLocked) R.string.midi_follow_locked else R.string.midi_follow_settling),
                             MidiHub.followErrorMs,
                         )
                     },
@@ -264,16 +268,18 @@ private fun MappingCard(song: Song) {
     // What survives of the explanation is the half nothing on screen can
     // tell you: that the mode has a gesture of its own, and where - the
     // title says it.
-    WindowCard("mapping · also on a hold of redo ↷") {
-        SwitchGrid("mode", listOf("off", "on"), if (UiPrefs.mapMode) 1 else 0) { UiPrefs.chooseMapMode(it == 1) }
+    WindowCard(stringResource(R.string.midi_mapping)) {
+        SwitchGrid(stringResource(R.string.midi_mapping_mode), stringArrayResource(R.array.off_on).toList(), if (UiPrefs.mapMode) 1 else 0) { UiPrefs.chooseMapMode(it == 1) }
         SwitchGrid(
-            "device mappings", listOf("forget"), -1, enabled = listOf(device.isNotEmpty()),
+            stringResource(R.string.midi_device_mappings), listOf(stringResource(R.string.midi_forget)), -1, enabled = listOf(device.isNotEmpty()),
         ) { UiPrefs.chooseMappings(emptyList()); UiPrefs.chooseMapWaiting(null) }
         // One list, each marked with whose it is: the device's travel with
         // the controller and the song's with the music, and when both claim
         // a controller the song wins.
-        val all = song.mappings.map { it to "song" } + device.map { it to "device" }
-        if (all.isEmpty()) Line { Readout("nothing mapped") }
+        val songs = stringResource(R.string.midi_mapping_song)
+        val devices = stringResource(R.string.midi_mapping_device)
+        val all = song.mappings.map { it to songs } + device.map { it to devices }
+        if (all.isEmpty()) Line { Readout(stringResource(R.string.midi_nothing_mapped)) }
         for ((m, whose) in all.sortedWith(compareBy({ it.first.cc ?: 1000 }, { it.first.note ?: 1000 }))) {
             val track = m.rack?.let { song.tracks.getOrNull(it) } ?: song.tracks.firstOrNull()
             Row(Modifier.cardLine(), verticalAlignment = Alignment.CenterVertically) {
@@ -282,7 +288,7 @@ private fun MappingCard(song: Song) {
                     color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                 )
                 Text(
-                    m.targetLabel(track) + if (m.rack != null) "  (track ${m.rack + 1})" else "",
+                    if (m.rack != null) stringResource(R.string.midi_mapping_track, m.targetLabel(track), m.rack + 1) else m.targetLabel(track),
                     color = Acid.colors.text, fontSize = 11.sp, modifier = Modifier.weight(1f),
                 )
                 Text(whose, color = Acid.colors.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
@@ -292,8 +298,10 @@ private fun MappingCard(song: Song) {
         if (claimed.isNotEmpty()) {
             Line {
                 Readout(
-                    "notes " + claimed.joinToString(", ") { Mapping(note = it).sourceLabel().removePrefix("note ") } +
-                        " trigger their mapping instead of playing",
+                    stringResource(
+                        R.string.midi_claimed_notes,
+                        claimed.joinToString(stringResource(R.string.list_separator)) { Mapping(note = it).sourceLabel().removePrefix("note ") },
+                    ),
                 )
             }
         }
@@ -312,21 +320,22 @@ private fun MappingCard(song: Song) {
 @Composable
 private fun MpeSection(mpeHeld: Int) {
     val zone = MidiHub.mpeZone
-    WindowCard("mpe") {
+    WindowCard(stringResource(R.string.midi_mpe)) {
         // Lower: channel 1 is the zone and the ones above it are fingers;
         // upper: channel 16, and the ones below.
-        SwitchGrid("zone", listOf("off", "lower", "upper"), zone, columns = 1) { UiPrefs.chooseMpe(zone = it) }
+        SwitchGrid(stringResource(R.string.midi_mpe_zone), stringArrayResource(R.array.midi_mpe_zone_choices).toList(), zone, columns = 1) { UiPrefs.chooseMpe(zone = it) }
         if (zone != 0) {
             // 15 unless the controller says otherwise.
-            CountKnob("fingers", MidiHub.mpeMembers, 1..15, choices = (1..15).map { "$it" }) { UiPrefs.chooseMpe(members = it) }
+            CountKnob(stringResource(R.string.midi_mpe_fingers), MidiHub.mpeMembers, 1..15, choices = (1..15).map { "$it" }) { UiPrefs.chooseMpe(members = it) }
             // Per finger. The standard says 48; many controllers use 24.
             CountKnob(
-                "bend", MidiHub.mpeBendSemis.roundToInt(), 1..96, "±%.0f st".format(MidiHub.mpeBendSemis), PanelAmber,
-                choices = (1..96).map { "±$it st" },
+                stringResource(R.string.midi_mpe_bend), MidiHub.mpeBendSemis.roundToInt(), 1..96,
+                stringResource(R.string.midi_mpe_bend_st, MidiHub.mpeBendSemis.roundToInt()), PanelAmber,
+                choices = (1..96).map { stringResource(R.string.midi_mpe_bend_st, it) },
             ) { UiPrefs.chooseMpe(bendSemis = it.toFloat()) }
             // Timbre: CC 74 drives each machine's slide knob. Plain: it is
             // a controller like any other, free to map.
-            SwitchGrid("cc 74", listOf("timbre", "plain"), if (MidiHub.mpeTimbre) 0 else 1, columns = 1) {
+            SwitchGrid(stringResource(R.string.midi_mpe_cc74), stringArrayResource(R.array.midi_mpe_cc74_choices).toList(), if (MidiHub.mpeTimbre) 0 else 1, columns = 1) {
                 UiPrefs.chooseMpe(timbre = it == 0)
             }
             // Is it reaching the voices? Two notes, then the first alone is
@@ -335,12 +344,12 @@ private fun MpeSection(mpeHeld: Int) {
             val held = (0 until 16).filter { (mpeHeld shr it) and 1 == 1 }.map { it + 1 }
             Line {
                 Readout(
-                    if (held.isEmpty()) "no member channel is holding a note"
-                    else "channels ${held.joinToString(", ")} are holding a note",
+                    if (held.isEmpty()) stringResource(R.string.midi_mpe_none_held)
+                    else stringResource(R.string.midi_mpe_held, held.joinToString(stringResource(R.string.list_separator))),
                     good = held.isNotEmpty(),
                 )
             }
-            SwitchGrid("test", listOf("mpe"), -1) { MidiHub.testMpe() }
+            SwitchGrid(stringResource(R.string.midi_test), listOf(stringResource(R.string.midi_test_mpe)), -1) { MidiHub.testMpe() }
         }
     }
 }

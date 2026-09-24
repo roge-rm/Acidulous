@@ -1,0 +1,74 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- ui/ExportOptionsDialog.kt and ui/FileDialogs.kt: songs, patches, export. -->
+
+    <!-- The export options -->
+    <string name="export_title">Export</string>
+    <string name="export_confirm">Export</string>
+    <string name="export_file">file</string>
+    <string name="export_format">format</string>
+    <!-- The format that is the song and its samples in one zip. The other formats are their own names. -->
+    <string name="export_format_bundle">bundle</string>
+    <string name="export_what">what</string>
+    <string name="export_what_song">song</string>
+    <string name="export_what_scene">this scene</string>
+    <string name="export_what_stems">stems</string>
+    <string name="export_sound">sound</string>
+    <string name="export_kbps">kbps</string>
+    <string name="export_bits">bits</string>
+    <string name="export_bits_float">32 float</string>
+    <string name="export_tail">tail</string>
+    <string-array name="export_tail_choices">
+        <item>none</item>
+        <item>2 s</item>
+        <item>5 s</item>
+    </string-array>
+    <string name="export_loudness">loudness</string>
+    <string name="export_loudness_as_mixed">as mixed</string>
+    <string name="export_loudness_lufs">%d LUFS</string>
+    <string name="export_about_aiff">A WAV with a different header.</string>
+    <string name="export_about_flac">Lossless, about half the size.</string>
+    <!-- LAME's licence asks that its use be acknowledged: keep the name. -->
+    <string name="export_about_mp3">Lossy. Encoded by LAME.</string>
+    <string name="export_about_aac">Lossy.</string>
+    <string name="export_about_midi">The notes, not the sound.</string>
+    <string name="export_about_bundle">The song and every sample it uses, in one file.</string>
+    <string name="export_about_song">Every scene in order, with its repeats.</string>
+    <!-- The same, naming the scene. -->
+    <string name="export_about_scene_named">The open scene, once through. (%s)</string>
+    <string name="export_about_stems">One file per track (after the fader), plus the mix.</string>
+    <string name="export_about_normalise">Renders twice: once to measure, once to write.</string>
+    <string name="export_about_no_tail">Cuts any reverb on the last note.</string>
+    <!-- Between the lines above, which run on as one paragraph. -->
+    <string name="export_about_separator">" "</string>
+
+    <!-- The export running, and done -->
+    <string name="export_share">Share</string>
+    <string name="export_rendering">rendering %1$.1f s of about %2$.1f s</string>
+    <!-- Only ever more than one. -->
+    <plurals name="export_files_in">
+        <item quantity="one">%1$d file in %2$s/</item>
+        <item quantity="other">%1$d files in %2$s/</item>
+    </plurals>
+    <!-- Length, format, depth or rate, and the loudest sample. -->
+    <string name="export_done">%1$.1f s · 48 kHz · %2$s · %3$s stereo · peak %4$.3f</string>
+    <string name="export_kbit" tools:ignore="PluralsCandidate">%d kbit</string>
+    <string name="export_bit_float">32-bit float</string>
+    <string name="export_bit">%d-bit</string>
+    <string name="export_failed">Export failed: %s</string>
+
+    <!-- Songs -->
+    <string name="songs_title">Songs</string>
+    <string name="songs_none">Nothing saved yet.</string>
+    <string name="songs_open">open</string>
+    <string name="songs_delete_title">Delete \"%s\"?</string>
+    <string name="songs_delete">Delete</string>
+    <string name="songs_delete_note">This deletes the file. If it\'s the song you have open, it stays open.</string>
+    <string name="demos_title">Demo songs</string>
+
+    <!-- Patches -->
+    <string name="patches_title">%s patches</string>
+    <string name="patches_factory">factory</string>
+    <string name="patches_user">user</string>
+    <string name="patches_other">other</string>
+    <string name="patches_user_none">Nothing saved yet - \"save as…\" on the panel.</string>
+</resources>

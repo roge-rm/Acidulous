@@ -41,6 +41,9 @@ import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringArrayResource
+import com.rm.acidulous.R
 
 /**
  * The keyboard, in two shapes.
@@ -274,7 +277,7 @@ fun ScaleChip(
      * running - and which scale it is, is what holding it open is for.
      */
     icon: String? = null,
-) = SlotChip(icon ?: label ?: "scale", label != null, onToggle, onOpen, modifier, vertical, icon != null)
+) = SlotChip(icon ?: label ?: stringResource(R.string.scale_chip), label != null, onToggle, onOpen, modifier, vertical, icon != null)
 
 /**
  * The chip grammar the keyboard strip uses for everything that sits between
@@ -437,12 +440,12 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
 data class ScaleSetting(val on: Boolean, val key: Int, val scale: Int, val degree: Boolean, val snap: Int)
 
 private val ScaleGroups = listOf(
-    "Modes" to 0..6,
-    "Minor variants" to 7..8,
-    "Pentatonic & blues" to 9..13,
-    "World & exotic" to 14..23,
-    "Jazz" to 24..29,
-    "Symmetric" to 30..32,
+    R.string.scale_group_modes to 0..6,
+    R.string.scale_group_minor to 7..8,
+    R.string.scale_group_pentatonic to 9..13,
+    R.string.scale_group_world to 14..23,
+    R.string.scale_group_jazz to 24..29,
+    R.string.scale_group_symmetric to 30..32,
 )
 
 @Composable
@@ -499,16 +502,16 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
             ) {
-                Pill("off", !s.on) { s = s.copy(on = false) }
-                Pill("snap", s.on && !s.degree) { s = s.copy(on = true, degree = false) }
-                Pill("degrees", s.on && s.degree) { s = s.copy(on = true, degree = true) }
+                Pill(stringResource(R.string.scale_off), !s.on) { s = s.copy(on = false) }
+                Pill(stringResource(R.string.scale_snap), s.on && !s.degree) { s = s.copy(on = true, degree = false) }
+                Pill(stringResource(R.string.scale_degrees), s.on && s.degree) { s = s.copy(on = true, degree = true) }
             }
             if (s.on && !s.degree) {
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
                 ) {
-                    listOf("nearest", "down", "up").forEachIndexed { i, n ->
+                    stringArrayResource(R.array.scale_snap_choices).forEachIndexed { i, n ->
                         Pill(n, s.snap == i) { s = s.copy(snap = i) }
                     }
                 }
@@ -541,11 +544,11 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
     }
 
     TabbedDialog(
-        title = "Scale",
+        title = stringResource(R.string.scale_title),
         selected = tab,
         onDismiss = onDismiss,
-        dismissLabel = "Cancel",
-        confirmLabel = "OK",
+        dismissLabel = stringResource(R.string.cancel),
+        confirmLabel = stringResource(R.string.ok),
         onConfirm = { onApply(s) },
         // **Wrapped, not shared out by weight.** The shared chip row gives every
         // tab the same slice of the width and cuts the words to fit, which is
@@ -559,7 +562,7 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                 horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
-                ScaleGroups.forEachIndexed { i, (title, _) -> Pill(title, i == tab) { tab = i } }
+                ScaleGroups.forEachIndexed { i, (title, _) -> Pill(stringResource(title), i == tab) { tab = i } }
             }
         },
         // **Tabs with the scales under them, like the machine picker.** The

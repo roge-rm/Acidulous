@@ -1,0 +1,14 @@
+<resources>
+    <!-- ui/SampleDialog.kt: one pad of a sample machine, and its trim. -->
+    <string name="pad_title">Pad %d</string>
+    <string name="pad_no_sample">no sample</string>
+    <string name="pad_play">play</string>
+    <!-- Trim back out to the whole sample. -->
+    <string name="pad_all">all</string>
+    <!-- Zoom back out to show the whole sample. -->
+    <string name="pad_fit">fit</string>
+    <string name="pad_empty">This pad has no sample. Load one from the machine panel.</string>
+    <string name="pad_start">start %.3fs</string>
+    <string name="pad_end">end %.3fs</string>
+    <string name="pad_plays">plays %.3fs</string>
+</resources>

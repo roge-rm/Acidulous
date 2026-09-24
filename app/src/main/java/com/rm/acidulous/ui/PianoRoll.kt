@@ -40,6 +40,8 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 enum class EditMode { Draw, Select }
 
@@ -113,6 +115,10 @@ fun PianoRoll(
     modifier: Modifier = Modifier,
 ) {
     val textMeasurer = rememberTextMeasurer()
+    val scaleWords = listOf(
+        stringResource(R.string.roll_scale_none), stringResource(R.string.roll_scale_chromatic),
+        stringResource(R.string.roll_scale_dim), stringResource(R.string.roll_scale_fit),
+    )
     // The pointer handler must survive the clip changing under it mid-drag
     // (every updateGesture commits a new clip), so it reads through these.
     val clipState by rememberUpdatedState(clip)
@@ -397,7 +403,7 @@ fun PianoRoll(
         drawNameGutter(geo, textMeasurer, scale, c, noteSpelling)
         drawPitchPosition(geo, c)
         drawBarRuler(geo, size, textMeasurer, playheadTick, c)
-        drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView, c)
+        drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView, c, scaleWords)
     }
 }
 
@@ -730,7 +736,11 @@ private class Hit(val index: Int, val onEdge: Boolean)
  * the roll treats the scale. It greys out and stops responding when no scale
  * is running, because there would be nothing to cycle through.
  */
-private fun DrawScope.drawScaleCorner(geo: Geometry, measurer: TextMeasurer, hasScale: Boolean, view: ScaleView, c: AcidColors) {
+private fun DrawScope.drawScaleCorner(
+    geo: Geometry, measurer: TextMeasurer, hasScale: Boolean, view: ScaleView, c: AcidColors,
+    /** What the corner says: no scale, then [ScaleView]'s three, in order. */
+    words: List<String>,
+) {
     drawRect(c.bg, Offset.Zero, Size(geo.originX, geo.originY))
     // Drawn as a key, not as a label: the corner of a table reads as blank
     // unless something in it says otherwise, and this one is a button.
@@ -746,10 +756,10 @@ private fun DrawScope.drawScaleCorner(geo: Geometry, measurer: TextMeasurer, has
         androidx.compose.ui.geometry.CornerRadius(3f, 3f),
         style = Stroke(width = 1f),
     )
-    val label = if (!hasScale) "scl" else when (view) {
-        ScaleView.Chromatic -> "chr"
-        ScaleView.Dim -> "dim"
-        ScaleView.Fold -> "fit"
+    val label = if (!hasScale) words[0] else when (view) {
+        ScaleView.Chromatic -> words[1]
+        ScaleView.Dim -> words[2]
+        ScaleView.Fold -> words[3]
     }
     val colour = when {
         !hasScale -> c.textDim

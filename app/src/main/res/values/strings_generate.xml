@@ -1,0 +1,44 @@
+<resources>
+    <!-- ui/GenerateDialog.kt: making notes from a pattern, a line, or a mutation. -->
+    <string name="generate_title">generate</string>
+    <string-array name="generate_tabs">
+        <item>rhythm</item>
+        <item>line</item>
+        <item>mutate</item>
+    </string-array>
+    <!-- The same three for a drum machine, where the line scatters hits on one drum. -->
+    <string-array name="generate_tabs_drums">
+        <item>rhythm</item>
+        <item>scatter</item>
+        <item>mutate</item>
+    </string-array>
+    <string name="generate_step">step</string>
+    <string name="generate_voice">voice</string>
+    <string name="generate_seed">seed %d</string>
+    <string name="generate_roll">roll</string>
+    <string name="generate_pattern">pattern</string>
+    <string name="generate_hits">hits</string>
+    <!-- One of the choices for how many hits: "3 of 8". -->
+    <string name="generate_hits_of">%1$d of %2$d</string>
+    <string name="generate_steps">steps</string>
+    <!-- How far the pattern is rotated. -->
+    <string name="generate_turn">turn</string>
+    <string name="generate_note">note</string>
+    <string name="generate_velocity">velocity</string>
+    <string name="generate_notes">notes</string>
+    <string name="generate_density">density</string>
+    <string name="generate_leaps">leaps</string>
+    <string name="generate_range">range</string>
+    <string name="generate_lowest">lowest</string>
+    <string name="generate_octaves">octaves</string>
+    <string name="generate_time">time</string>
+    <string name="generate_length">length</string>
+    <string-array name="generate_length_choices">
+        <item>short</item>
+        <item>step</item>
+        <item>tied</item>
+    </string-array>
+    <string name="generate_hits_card">hits</string>
+    <string name="generate_mutate">mutate</string>
+    <string name="generate_amount">amount</string>
+</resources>

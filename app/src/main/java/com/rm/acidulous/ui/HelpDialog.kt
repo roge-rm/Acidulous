@@ -25,6 +25,8 @@ import com.rm.acidulous.model.ManualBlock
 import com.rm.acidulous.model.ManualKind
 import com.rm.acidulous.model.ManualSection
 import com.rm.acidulous.ui.theme.Acid
+import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.R
 
 /**
  * The manual, inside the app.
@@ -48,9 +50,9 @@ fun HelpDialog(onDismiss: () -> Unit) {
     var reading by remember { mutableStateOf<ManualSection?>(null) }
     var page by remember { mutableStateOf<ManualSection?>(null) }
 
-    PlainDialog(title = "Help", onDismiss = onDismiss, dismissLabel = "Done") {
+    PlainDialog(title = stringResource(R.string.help_title), onDismiss = onDismiss, dismissLabel = stringResource(R.string.done)) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            ListSection("the manual") {
+            ListSection(stringResource(R.string.help_manual)) {
                 for (section in Manual.sections) {
                     DialogRow(
                         mark = "›",
@@ -63,7 +65,7 @@ fun HelpDialog(onDismiss: () -> Unit) {
     }
 
     reading?.let { section ->
-        PlainDialog(section.title, onDismiss = { reading = null }, dismissLabel = "Back", spacing = 0.dp) {
+        PlainDialog(section.title, onDismiss = { reading = null }, dismissLabel = stringResource(R.string.help_back), spacing = 0.dp) {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 for (block in section.blocks) ManualLine(block)
                 // **A page of its own for each of them, under the summary.**
@@ -72,7 +74,7 @@ fun HelpDialog(onDismiss: () -> Unit) {
                 // the list is for finding the machine and the page is for
                 // learning it.
                 if (section.children.isNotEmpty()) {
-                    ListSection("in detail") {
+                    ListSection(stringResource(R.string.help_in_detail)) {
                         for (child in section.children) {
                             DialogRow(mark = "›", name = child.title, under = child.summary) {
                                 page = child
@@ -85,7 +87,7 @@ fun HelpDialog(onDismiss: () -> Unit) {
     }
 
     page?.let { child ->
-        PlainDialog(child.title, onDismiss = { page = null }, dismissLabel = "Back", spacing = 0.dp) {
+        PlainDialog(child.title, onDismiss = { page = null }, dismissLabel = stringResource(R.string.help_back), spacing = 0.dp) {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 for (block in child.blocks) ManualLine(block)
             }

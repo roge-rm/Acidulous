@@ -69,6 +69,9 @@ import kotlin.math.hypot
 import kotlin.math.log10
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import com.rm.acidulous.R
 
 // The patch editor.
 //
@@ -132,6 +135,7 @@ fun PatchScreen(
 
     val info = remember(track.machine.settings["nexus"]) { NativeEngine.nexusPalette() }
     val measurer = rememberTextMeasurer()
+    val monoTag = stringResource(R.string.patch_mono_tag)
     val binding = rememberParamBinding(trackIndex, "Nexus", remember { NativeEngine.machineParamInfo("Nexus") }, editor)
 
     fun write(next: NexusPatch) {
@@ -164,12 +168,16 @@ fun PatchScreen(
         ) {
             HeaderButton("◀") { onBack() }
             Text(
-                "${track.name} · ${patch.modules.size} modules · ${patch.cables.size} cables",
+                listOf(
+                    track.name,
+                    pluralStringResource(R.plurals.patch_modules, patch.modules.size, patch.modules.size),
+                    pluralStringResource(R.plurals.patch_cables, patch.cables.size, patch.cables.size),
+                ).joinToString(" · "),
                 color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                 modifier = Modifier.flexible().padding(horizontal = 4.dp), maxLines = 1,
             )
-            HeaderTextButton("add") { adding = true }
-            HeaderTextButton("fit") {
+            HeaderTextButton(stringResource(R.string.patch_add)) { adding = true }
+            HeaderTextButton(stringResource(R.string.patch_fit)) {
                 if (patch.modules.isNotEmpty()) {
                     pan = Offset(patch.modules.minOf { it.x } - 30f, patch.modules.minOf { it.y } - 30f)
                     zoom = 0.9f
@@ -309,7 +317,7 @@ fun PatchScreen(
                     }
                 },
             ) {
-                drawPatch(patch, pan, scale, zoom, selection, pulling, scope, activity, measurer, c)
+                drawPatch(patch, pan, scale, zoom, selection, pulling, scope, activity, measurer, c, monoTag)
             }
         }
 
@@ -401,6 +409,8 @@ private fun DrawScope.drawPatch(
     activity: FloatArray,
     measurer: TextMeasurer,
     col: AcidColors,
+    /** What a module that plays one voice says after its name. */
+    monoTag: String,
 ) {
     fun screen(w: Offset) = Offset((w.x - pan.x) * zoom, (w.y - pan.y) * zoom)
 
@@ -509,7 +519,7 @@ private fun DrawScope.drawPatch(
         )
         if (textZoom > 0.55f) {
             val title = measurer.measure(
-                AnnotatedString("${m.slot} ${m.type}${if (m.poly) "" else " \u00b7mono"}"),
+                AnnotatedString("${m.slot} ${m.type}${if (m.poly) "" else monoTag}"),
                 TextStyle(color = tint, fontSize = (9f * textZoom).sp, fontFamily = FontFamily.Monospace),
             )
             drawText(title, topLeft = at + Offset(6f * zoom, 2f * zoom))
@@ -583,7 +593,7 @@ private fun Inspector(
                 val m = patch.moduleAt(selection.slot)
                 val meta = m?.let { NexusPalette.of(it.type) }
                 if (m == null || meta == null) {
-                    Text("gone", color = Acid.colors.textDim, fontSize = 11.sp)
+                    Text(stringResource(R.string.patch_gone), color = Acid.colors.textDim, fontSize = 11.sp)
                 } else {
                     GroupRow {
                         Group("${m.slot} ${m.type}") {
@@ -597,10 +607,10 @@ private fun Inspector(
                         Group("slot") {
                             Column {
                                 TextButton(onClick = onTogglePoly, enabled = meta.canPoly && meta.canMono) {
-                                    Text(if (m.poly) "poly" else "mono", color = PanelAmber, fontSize = 11.sp)
+                                    Text(stringResource(if (m.poly) R.string.patch_poly else R.string.patch_mono), color = PanelAmber, fontSize = 11.sp)
                                 }
                                 TextButton(onClick = onDelete) {
-                                    Text("remove", color = Acid.colors.red, fontSize = 11.sp)
+                                    Text(stringResource(R.string.patch_remove), color = Acid.colors.red, fontSize = 11.sp)
                                 }
                             }
                         }
@@ -615,7 +625,7 @@ private fun Inspector(
                             PanelKnob(binding, nexusCableA(selection.index), "depth A", PanelAmber)
                             PanelKnob(binding, nexusCableB(selection.index), "depth B", PanelAmber)
                         } else {
-                            Text("beyond the automatable two dozen", color = Acid.colors.textDim, fontSize = 10.sp)
+                            Text(stringResource(R.string.patch_beyond), color = Acid.colors.textDim, fontSize = 10.sp)
                         }
                     }
                     Group("wire") {
@@ -625,7 +635,7 @@ private fun Inspector(
                                 color = Acid.colors.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                             )
                             TextButton(onClick = onDelete) {
-                                Text("cut", color = Acid.colors.red, fontSize = 11.sp)
+                                Text(stringResource(R.string.patch_cut), color = Acid.colors.red, fontSize = 11.sp)
                             }
                         }
                     }
@@ -655,9 +665,9 @@ private fun AddModuleDialog(
 ) {
     val c = Acid.colors
     PlainDialog(
-        title = "Add a module",
+        title = stringResource(R.string.patch_add_title),
         onDismiss = onDismiss,
-        dismissLabel = "Cancel",
+        dismissLabel = stringResource(R.string.cancel),
         maxBodyHeight = 420.dp,
         spacing = 3.dp,
     ) {

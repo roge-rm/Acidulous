@@ -25,6 +25,9 @@ import com.rm.acidulous.model.Generate
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.ui.theme.Acid
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringArrayResource
+import com.rm.acidulous.R
 
 /**
  * The generators, over the clip being edited.
@@ -54,7 +57,7 @@ fun GenerateDialog(
     onDismiss: () -> Unit,
 ) {
     val drums = voices.isNotEmpty()
-    val tabs = if (drums) listOf("rhythm", "scatter", "mutate") else listOf("rhythm", "line", "mutate")
+    val tabs = stringArrayResource(if (drums) R.array.generate_tabs_drums else R.array.generate_tabs).toList()
     var tab by remember { mutableStateOf(GenerateMemory.tab.coerceIn(0, tabs.size - 1)) }
     var touched by remember { mutableStateOf(false) }
     val m = GenerateMemory
@@ -97,11 +100,11 @@ fun GenerateDialog(
     }
 
     TabbedDialog(
-        title = "generate",
+        title = stringResource(R.string.generate_title),
         selected = tab,
         onDismiss = onDismiss,
-        dismissLabel = "Cancel",
-        confirmLabel = "OK",
+        dismissLabel = stringResource(R.string.cancel),
+        confirmLabel = stringResource(R.string.ok),
         onConfirm = {
             editor.endGesture()
             onDismiss()
@@ -156,18 +159,18 @@ private fun ShareKnob(label: String, value: Float, min: Float = 0f, set: (Float)
 
 @Composable
 private fun StepSwitch(ticks: Int, pick: (Int) -> Unit) =
-    SwitchGrid("step", STEPS.map { it.first }, STEPS.indexOfFirst { it.second == ticks }, columns = 3) { pick(STEPS[it].second) }
+    SwitchGrid(stringResource(R.string.generate_step), STEPS.map { it.first }, STEPS.indexOfFirst { it.second == ticks }, columns = 3) { pick(STEPS[it].second) }
 
 @Composable
 private fun VoiceSwitch(voices: List<DrumVoice>, changed: () -> Unit) =
     SwitchGrid(
-        "voice", voices.map { it.short }, voices.indexOfFirst { it.note == GenerateMemory.voice },
+        stringResource(R.string.generate_voice), voices.map { it.short }, voices.indexOfFirst { it.note == GenerateMemory.voice },
         columns = ((voices.size + 1) / 2).coerceAtMost(8),
     ) { GenerateMemory.voice = voices[it].note; changed() }
 
 /** A new roll of the dice, as a one-cell switch so it sits in a card like the rest. */
 @Composable
-private fun RollButton(seed: Int, roll: () -> Unit) = SwitchGrid("seed $seed", listOf("roll"), -1) { roll() }
+private fun RollButton(seed: Int, roll: () -> Unit) = SwitchGrid(stringResource(R.string.generate_seed, seed), listOf(stringResource(R.string.generate_roll)), -1) { roll() }
 
 @Composable
 private fun RhythmPage(drums: Boolean, voices: List<DrumVoice>, spelling: Map<Int, String>, changed: () -> Unit) {
@@ -175,10 +178,10 @@ private fun RhythmPage(drums: Boolean, voices: List<DrumVoice>, spelling: Map<In
     val e = m.euclid
     fun set(next: Generate.Euclid) { m.euclid = next; changed() }
     Cards {
-        Card("pattern") {
-            CountKnob("hits", e.hits, 0..e.steps, "${e.hits}/${e.steps}", choices = (0..e.steps).map { "$it of ${e.steps}" }) { set(e.copy(hits = it)) }
-            CountKnob("steps", e.steps, 2..32, choices = (2..32).map { "$it" }) { n -> set(e.copy(steps = n, hits = e.hits.coerceAtMost(n), rotate = e.rotate.coerceAtMost(n - 1))) }
-            CountKnob("turn", e.rotate, 0..(e.steps - 1).coerceAtLeast(1)) { set(e.copy(rotate = it.coerceAtMost(e.steps - 1))) }
+        Card(stringResource(R.string.generate_pattern)) {
+            CountKnob(stringResource(R.string.generate_hits), e.hits, 0..e.steps, "${e.hits}/${e.steps}", choices = (0..e.steps).map { stringResource(R.string.generate_hits_of, it, e.steps) }) { set(e.copy(hits = it)) }
+            CountKnob(stringResource(R.string.generate_steps), e.steps, 2..32, choices = (2..32).map { "$it" }) { n -> set(e.copy(steps = n, hits = e.hits.coerceAtMost(n), rotate = e.rotate.coerceAtMost(n - 1))) }
+            CountKnob(stringResource(R.string.generate_turn), e.rotate, 0..(e.steps - 1).coerceAtLeast(1)) { set(e.copy(rotate = it.coerceAtMost(e.steps - 1))) }
             StepSwitch(e.stepTicks) { set(e.copy(stepTicks = it)) }
         }
         // The pattern as it will fall, one character a step.
@@ -187,10 +190,10 @@ private fun RhythmPage(drums: Boolean, voices: List<DrumVoice>, spelling: Map<In
             color = Acid.colors.accent, fontFamily = FontFamily.Monospace, fontSize = 14.sp,
             modifier = Modifier.cardLine().padding(vertical = 8.dp), textAlign = TextAlign.Center, maxLines = 1,
         )
-        Card("note") {
+        Card(stringResource(R.string.generate_note)) {
             if (drums) VoiceSwitch(voices, changed)
-            else CountKnob("note", e.pitch, 24..96, noteName(e.pitch, spelling), PanelAmber, choices = (24..96).map { noteName(it, spelling) }) { set(e.copy(pitch = it)) }
-            CountKnob("velocity", e.velocity, 1..127) { set(e.copy(velocity = it)) }
+            else CountKnob(stringResource(R.string.generate_note), e.pitch, 24..96, noteName(e.pitch, spelling), PanelAmber, choices = (24..96).map { noteName(it, spelling) }) { set(e.copy(pitch = it)) }
+            CountKnob(stringResource(R.string.generate_velocity), e.velocity, 1..127) { set(e.copy(velocity = it)) }
         }
     }
 }
@@ -201,17 +204,17 @@ private fun LinePage(spelling: Map<Int, String>, changed: () -> Unit) {
     val l = m.line
     fun set(next: Generate.Line) { m.line = next; changed() }
     Cards {
-        Card("notes") {
-            ShareKnob("density", l.density, 0.05f) { set(l.copy(density = it)) }
-            ShareKnob("leaps", l.leap) { set(l.copy(leap = it)) }
+        Card(stringResource(R.string.generate_notes)) {
+            ShareKnob(stringResource(R.string.generate_density), l.density, 0.05f) { set(l.copy(density = it)) }
+            ShareKnob(stringResource(R.string.generate_leaps), l.leap) { set(l.copy(leap = it)) }
             RollButton(l.seed) { set(l.copy(seed = l.seed + 1)) }
         }
-        Card("range") {
-            CountKnob("lowest", l.low, 24..84, noteName(l.low, spelling), PanelAmber, choices = (24..84).map { noteName(it, spelling) }) { set(l.copy(low = it)) }
-            SwitchGrid("octaves", listOf("1", "2", "3"), l.octaves - 1, columns = 3) { set(l.copy(octaves = it + 1)) }
+        Card(stringResource(R.string.generate_range)) {
+            CountKnob(stringResource(R.string.generate_lowest), l.low, 24..84, noteName(l.low, spelling), PanelAmber, choices = (24..84).map { noteName(it, spelling) }) { set(l.copy(low = it)) }
+            SwitchGrid(stringResource(R.string.generate_octaves), listOf("1", "2", "3"), l.octaves - 1, columns = 3) { set(l.copy(octaves = it + 1)) }
         }
-        Card("time") {
-            SwitchGrid("length", listOf("short", "step", "tied"), l.length, columns = 3) { set(l.copy(length = it)) }
+        Card(stringResource(R.string.generate_time)) {
+            SwitchGrid(stringResource(R.string.generate_length), stringArrayResource(R.array.generate_length_choices).toList(), l.length, columns = 3) { set(l.copy(length = it)) }
             StepSwitch(l.stepTicks) { set(l.copy(stepTicks = it)) }
         }
     }
@@ -224,12 +227,12 @@ private fun ScatterPage(voices: List<DrumVoice>, changed: () -> Unit) {
     val l = m.line
     fun set(next: Generate.Line) { m.line = next; changed() }
     Cards {
-        Card("hits") {
-            ShareKnob("density", l.density, 0.05f) { set(l.copy(density = it)) }
+        Card(stringResource(R.string.generate_hits_card)) {
+            ShareKnob(stringResource(R.string.generate_density), l.density, 0.05f) { set(l.copy(density = it)) }
             RollButton(l.seed) { set(l.copy(seed = l.seed + 1)) }
             StepSwitch(l.stepTicks) { set(l.copy(stepTicks = it)) }
         }
-        Card("note") { VoiceSwitch(voices, changed) }
+        Card(stringResource(R.string.generate_note)) { VoiceSwitch(voices, changed) }
     }
 }
 
@@ -239,8 +242,8 @@ private fun MutatePage(changed: () -> Unit) {
     val mu = m.mutation
     fun set(next: Generate.Mutation) { m.mutation = next; changed() }
     Cards {
-        Card("mutate") {
-            ShareKnob("amount", mu.amount) { set(mu.copy(amount = it)) }
+        Card(stringResource(R.string.generate_mutate)) {
+            ShareKnob(stringResource(R.string.generate_amount), mu.amount) { set(mu.copy(amount = it)) }
             RollButton(mu.seed) { set(mu.copy(seed = mu.seed + 1)) }
         }
     }

@@ -47,6 +47,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringArrayResource
+import com.rm.acidulous.R
 
 /**
  * Recording, editing and keeping the material.
@@ -109,14 +112,14 @@ fun RecorderDialog(
     }
 
     TabbedDialog(
-        title = "Sound",
+        title = stringResource(R.string.sound_title),
         selected = tab,
         // While it is recording the window will not go away by itself:
         // tapping outside mid-take and losing it is not a thing to allow.
         onDismiss = { if (!recording) onDismiss() },
-        dismissLabel = if (recording) "Recording…" else "Close",
+        dismissLabel = stringResource(if (recording) R.string.sound_recording_button else R.string.close),
         spacing = 6.dp,
-        chips = { SectionChips(listOf("record", "edit", "library"), tab) { tab = it } },
+        chips = { SectionChips(stringArrayResource(R.array.sound_tabs).toList(), tab) { tab = it } },
         pages = listOf(
             {
                 RecordPage(
@@ -165,6 +168,7 @@ fun RecorderDialog(
 private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean) -> Unit,
                        onRecorded: (File) -> Unit) {
     val context = LocalContext.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
     val c = Acid.colors
 
     var fromInput by remember { mutableStateOf(true) }
@@ -233,9 +237,9 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
                 peak = NativeEngine.capturedPeak
             }
             opened = if (NativeEngine.inputRunning) {
-                val ch = if (NativeEngine.inputChannels > 1) "stereo" else "mono"
+                val ch = resources.getString(if (NativeEngine.inputChannels > 1) R.string.sound_stereo else R.string.sound_mono)
                 val rate = NativeEngine.inputRate
-                if (rate > 0 && rate != 48000) "$ch · $rate Hz · resampled" else "$ch · $rate Hz"
+                resources.getString(if (rate > 0 && rate != 48000) R.string.sound_opened_resampled else R.string.sound_opened, ch, rate)
             } else ""
             delay(60)
         }
@@ -257,7 +261,7 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
     ) {
         OutlinedTextField(
             value = name, onValueChange = { name = it }, singleLine = true,
-            label = { Text("name", fontSize = 11.sp) },
+            label = { Text(stringResource(R.string.sound_name), fontSize = 11.sp) },
             modifier = Modifier.weight(1f), enabled = !recording,
         )
         Button(
@@ -265,7 +269,7 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
                 if (recording) {
                     NativeEngine.stopCapture()
                     val file = lastFile
-                    message = if (file != null) "saved ${file.name}, %.1f s".format(seconds) else "saved"
+                    message = if (file != null) resources.getString(R.string.sound_saved_take, file.name, seconds) else resources.getString(R.string.sound_saved)
                     name = nextTakeName(samples)
                     if (file != null) onRecorded(file)
                 } else {
@@ -282,7 +286,7 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
                 }
             },
             enabled = !fromInput || havePermission,
-        ) { Text(if (recording) "stop" else "record") }
+        ) { Text(stringResource(if (recording) R.string.sound_stop else R.string.sound_record)) }
     }
 
     // Under the button, because while it is running this is the thing being
@@ -291,14 +295,14 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
 
     if (recording) {
         Text(
-            "recording  %.1f s  peak %.2f".format(seconds, peak),
+            stringResource(R.string.sound_recording, seconds, peak),
             color = c.red, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
         )
         if (NativeEngine.captureOverflowed) {
-            Text("the recorder fell behind, so this take has a gap", color = c.accent, fontSize = 10.sp)
+            Text(stringResource(R.string.sound_overflowed), color = c.accent, fontSize = 10.sp)
         }
         if (NativeEngine.captureDeaf) {
-            Text("no input: this take is silent", color = c.red, fontSize = 10.sp)
+            Text(stringResource(R.string.sound_deaf), color = c.red, fontSize = 10.sp)
         }
     } else if (message.isNotEmpty()) {
         Text(message, color = c.textDim, fontSize = 11.sp)
@@ -308,9 +312,9 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
     // it, and a disabled button with its explanation below the fold is a
     // button that looks broken.
     if (fromInput && !havePermission) {
-        Text("Recording needs permission to use the microphone.", color = c.red, fontSize = 11.sp)
+        Text(stringResource(R.string.sound_permission), color = c.red, fontSize = 11.sp)
         TextButton(onClick = { ask.launch(Manifest.permission.RECORD_AUDIO) }) {
-            Text("allow", color = c.accent, fontSize = 12.sp)
+            Text(stringResource(R.string.sound_allow), color = c.accent, fontSize = 12.sp)
         }
     }
 
@@ -318,31 +322,31 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
     // with settings in it (Dan, 2026-09-23). They read in the order a signal
     // travels, from where it comes from to what it is written as.
     WindowCards {
-        WindowCard("take") {
+        WindowCard(stringResource(R.string.sound_take)) {
             // In records the input; resample records what the app is playing.
-            SwitchGrid("source", listOf("in", "resample"), if (fromInput) 0 else 1, columns = 1, enabled = listOf(!recording, !recording)) {
+            SwitchGrid(stringResource(R.string.sound_source), stringArrayResource(R.array.sound_source_choices).toList(), if (fromInput) 0 else 1, columns = 1, enabled = listOf(!recording, !recording)) {
                 fromInput = it == 0
             }
             if (fromInput && havePermission && devices.size > 1) {
                 // Only where there is a choice to make. On a phone with nothing
                 // plugged in this would be one cell saying "built-in".
-                SwitchGrid("input", devices.map { it.label }, devices.indexOfFirst { it.id == device }, columns = 1) {
+                SwitchGrid(stringResource(R.string.sound_input), devices.map { it.label }, devices.indexOfFirst { it.id == device }, columns = 1) {
                     if (!recording) device = devices[it].id
                 }
             }
-            SwitchGrid("bits", listOf("16", "24"), if (UiPrefs.recordBits == 16) 0 else 1, columns = 1, enabled = listOf(!recording, !recording)) {
+            SwitchGrid(stringResource(R.string.sound_bits), listOf("16", "24"), if (UiPrefs.recordBits == 16) 0 else 1, columns = 1, enabled = listOf(!recording, !recording)) {
                 UiPrefs.chooseRecordBits(if (it == 0) 16 else 24)
             }
             if (fromInput && opened.isNotEmpty()) Box(Modifier.cardLine()) { Readout(opened, good = true) }
         }
         if (fromInput) {
-            WindowCard("input · monitor on headphones only") {
-                Knob(label = "gain", value = gain / 4f, display = "%.2f".format(gain), modifier = panelKnobWidth(), onChange = { gain = it * 4f })
-                SwitchGrid("monitor", listOf("off", "on"), if (monitor) 1 else 0) { monitor = it == 1 }
+            WindowCard(stringResource(R.string.sound_input_card)) {
+                Knob(label = stringResource(R.string.sound_gain), value = gain / 4f, display = "%.2f".format(gain), modifier = panelKnobWidth(), onChange = { gain = it * 4f })
+                SwitchGrid(stringResource(R.string.sound_monitor), stringArrayResource(R.array.off_on).toList(), if (monitor) 1 else 0) { monitor = it == 1 }
                 // **The title is the explanation**: these are printed into
                 // the take, so they are named for what happens to the file.
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("printed into the take", color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                    Text(stringResource(R.string.sound_printed), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { InputChainChips(editor) }
                 }
                 // Tuning comes before anything else a person does after
@@ -359,9 +363,10 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
 @Composable
 private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
     val c = Acid.colors
+    val resources = androidx.compose.ui.platform.LocalResources.current
     if (file == null) {
         Text(
-            "Record something or pick a sample from the library to edit it here.",
+            stringResource(R.string.sound_edit_none),
             color = c.textDim, fontSize = 12.sp,
         )
         return
@@ -415,19 +420,19 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         // the width to be read whole.
         Spacer(Modifier.weight(1f))
         TextButton(onClick = { NativeEngine.auditionFile(file.absolutePath) }) {
-            Text("play", color = c.accent, fontSize = 12.sp)
+            Text(stringResource(R.string.sound_play), color = c.accent, fontSize = 12.sp)
         }
-        TextButton(onClick = { start = 0f; end = 1f }) { Text("all", color = c.accent, fontSize = 12.sp) }
+        TextButton(onClick = { start = 0f; end = 1f }) { Text(stringResource(R.string.sound_all), color = c.accent, fontSize = 12.sp) }
         // Normalise and reverse are yes-or-no to the whole file, so they sit
         // with the other things said about the whole file, up here.
         TextButton(onClick = { normalise = !normalise }) {
-            Text("norm", color = if (normalise) c.accent else c.textMid, fontSize = 12.sp)
+            Text(stringResource(R.string.sound_norm), color = if (normalise) c.accent else c.textMid, fontSize = 12.sp)
         }
         TextButton(onClick = { reverse = !reverse }) {
-            Text("rev", color = if (reverse) c.accent else c.textMid, fontSize = 12.sp)
+            Text(stringResource(R.string.sound_rev), color = if (reverse) c.accent else c.textMid, fontSize = 12.sp)
         }
         if (view.zoomed) {
-            TextButton(onClick = { view = WaveView() }) { Text("fit", color = c.teal, fontSize = 12.sp) }
+            TextButton(onClick = { view = WaveView() }) { Text(stringResource(R.string.sound_fit), color = c.teal, fontSize = 12.sp) }
         }
     }
 
@@ -441,15 +446,16 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         onStart = { start = it },
         onEnd = { end = it },
         modifier = Modifier.fillMaxWidth().height(120.dp),
-        empty = "That file could not be read.",
+        empty = stringResource(R.string.sound_unreadable),
     )
 
     val seconds = if (rate > 0) frames.toFloat() / rate else 0f
     Readout(
-        "%s · %.2f s · %s · keeping %.2f s".format(
+        stringResource(
+            R.string.sound_file_readout,
             file.name,
             seconds,
-            if (meta.split('|').getOrNull(2) == "2") "stereo" else "mono",
+            stringResource(if (meta.split('|').getOrNull(2) == "2") R.string.sound_stereo else R.string.sound_mono),
             seconds * (maxOf(start, end) - minOf(start, end)),
         ),
     )
@@ -457,25 +463,26 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
     // Cards that wrap rather than one row that scrolls sideways - the arp
     // window's shape, which every window with settings in it follows.
     WindowCards {
-        WindowCard("level") {
-            EditKnob("fade in", fadeIn, "%.0f ms".format(fadeIn * 2000f)) { fadeIn = it }
-            EditKnob("fade out", fadeOut, "%.0f ms".format(fadeOut * 2000f)) { fadeOut = it }
-            EditKnob("gain", (gainDb + 24f) / 48f, "%+.1f dB".format(gainDb), PanelAmber) {
+        val off = stringResource(R.string.sound_off)
+        WindowCard(stringResource(R.string.sound_level)) {
+            EditKnob(stringResource(R.string.sound_fade_in), fadeIn, "%.0f ms".format(fadeIn * 2000f)) { fadeIn = it }
+            EditKnob(stringResource(R.string.sound_fade_out), fadeOut, "%.0f ms".format(fadeOut * 2000f)) { fadeOut = it }
+            EditKnob(stringResource(R.string.sound_gain), (gainDb + 24f) / 48f, "%+.1f dB".format(gainDb), PanelAmber) {
                 gainDb = it * 48f - 24f
             }
-            EditKnob("squash", squash, if (squash <= 0f) "off" else "%.2f".format(squash), PanelPink) {
+            EditKnob(stringResource(R.string.sound_squash), squash, if (squash <= 0f) off else "%.2f".format(squash), PanelPink) {
                 squash = it
             }
         }
-        WindowCard("tone") {
-            EditKnob("low cut", lowCut, if (lowCut <= 0f) "off" else "%.0f Hz".format(hzOf(lowCut))) {
+        WindowCard(stringResource(R.string.sound_tone)) {
+            EditKnob(stringResource(R.string.sound_low_cut), lowCut, if (lowCut <= 0f) off else "%.0f Hz".format(hzOf(lowCut))) {
                 lowCut = it
             }
-            EditKnob("cutoff", cutoff, if (cutoff <= 0f) "off" else "%.0f Hz".format(hzOf(cutoff)), PanelAmber) {
+            EditKnob(stringResource(R.string.sound_cutoff), cutoff, if (cutoff <= 0f) off else "%.0f Hz".format(hzOf(cutoff)), PanelAmber) {
                 cutoff = it
             }
-            EditKnob("reso", reso, "%.2f".format(reso)) { reso = it }
-            SwitchGrid("filter", listOf("low", "high"), if (filterType == 5) 1 else 0) { filterType = if (it == 1) 5 else 1 }
+            EditKnob(stringResource(R.string.sound_reso), reso, "%.2f".format(reso)) { reso = it }
+            SwitchGrid(stringResource(R.string.sound_filter), stringArrayResource(R.array.sound_filter_choices).toList(), if (filterType == 5) 1 else 0) { filterType = if (it == 1) 5 else 1 }
         }
     }
 
@@ -488,7 +495,7 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
     ) {
         OutlinedTextField(
             value = saveAs, onValueChange = { saveAs = it }, singleLine = true,
-            label = { Text("save as", fontSize = 11.sp) },
+            label = { Text(stringResource(R.string.sound_save_as), fontSize = 11.sp) },
             modifier = Modifier.weight(1f), enabled = !busy,
         )
         Button(
@@ -518,18 +525,18 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
                 val error = NativeEngine.editSample(file.absolutePath, target.absolutePath, ops)
                 busy = false
                 if (error.isEmpty()) {
-                    message = "saved ${target.name}"
+                    message = resources.getString(R.string.sound_saved_file, target.name)
                     onSaved(target)
                 } else {
                     message = error
                 }
             },
-        ) { Text(if (busy) "…" else "apply") }
+        ) { Text(if (busy) "…" else stringResource(R.string.sound_apply)) }
         TextButton(onClick = {
             start = 0f; end = 1f; fadeIn = 0f; fadeOut = 0f; gainDb = 0f
             normalise = false; reverse = false; lowCut = 0f; cutoff = 0f; reso = 0f
             squash = 0f; message = ""
-        }) { Text("revert", color = c.textMid, fontSize = 12.sp) }
+        }) { Text(stringResource(R.string.sound_revert), color = c.textMid, fontSize = 12.sp) }
     }
 }
 
@@ -557,7 +564,7 @@ private fun LibraryPage(
     var renaming by remember { mutableStateOf<File?>(null) }
 
     if (files.isEmpty()) {
-        Text("Nothing here yet. Record one, or import a WAV.", fontSize = 12.sp, color = c.textDim)
+        Text(stringResource(R.string.sound_library_none), fontSize = 12.sp, color = c.textDim)
     }
     files.forEach { file ->
         val rel = "samples/${file.name}"
@@ -572,9 +579,9 @@ private fun LibraryPage(
             },
             name = file.name,
             under = when {
-                isArmed -> "delete this? tap the cross again"
-                used -> "$stamp · %.0f kB · a track is playing this".format(file.length() / 1024f)
-                else -> "$stamp · %.0f kB".format(file.length() / 1024f)
+                isArmed -> stringResource(R.string.sound_delete_armed)
+                used -> stringResource(R.string.sound_file_info_used, stamp, file.length() / 1024f)
+                else -> stringResource(R.string.sound_file_info, stamp, file.length() / 1024f)
             },
             on = isArmed || file == chosen,
             monoUnder = !isArmed,
@@ -593,16 +600,16 @@ private fun LibraryPage(
         ) { armed = null; onChoose(file) }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             TextButton(onClick = { NativeEngine.auditionFile(file.absolutePath) }) {
-                Text("play", color = c.accent, fontSize = 11.sp)
+                Text(stringResource(R.string.sound_play), color = c.accent, fontSize = 11.sp)
             }
-            TextButton(onClick = { onEdit(file) }) { Text("edit", color = c.teal, fontSize = 11.sp) }
-            TextButton(onClick = { renaming = file }) { Text("rename", color = c.textMid, fontSize = 11.sp) }
+            TextButton(onClick = { onEdit(file) }) { Text(stringResource(R.string.sound_edit), color = c.teal, fontSize = 11.sp) }
+            TextButton(onClick = { renaming = file }) { Text(stringResource(R.string.sound_rename), color = c.textMid, fontSize = 11.sp) }
         }
     }
 
     renaming?.let { file ->
         TextInputDialog(
-            title = "Rename",
+            title = stringResource(R.string.sound_rename_title),
             initial = file.nameWithoutExtension,
             onDismiss = { renaming = null },
             onConfirm = { typed ->
@@ -667,21 +674,21 @@ private data class InputChoice(val id: Int, val label: String)
  */
 private fun inputsOf(context: Context): List<InputChoice> {
     val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-        ?: return listOf(InputChoice(0, "default"))
+        ?: return listOf(InputChoice(0, context.getString(R.string.sound_input_default)))
     val found = audio.getDevices(AudioManager.GET_DEVICES_INPUTS).mapNotNull { d ->
         val word = when (d.type) {
-            AudioDeviceInfo.TYPE_BUILTIN_MIC -> "built-in"
-            AudioDeviceInfo.TYPE_WIRED_HEADSET -> "headset"
+            AudioDeviceInfo.TYPE_BUILTIN_MIC -> context.getString(R.string.sound_input_builtin)
+            AudioDeviceInfo.TYPE_WIRED_HEADSET -> context.getString(R.string.sound_input_headset)
             AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_HEADSET,
-            AudioDeviceInfo.TYPE_USB_ACCESSORY -> "usb"
-            AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "bluetooth"
-            AudioDeviceInfo.TYPE_LINE_ANALOG, AudioDeviceInfo.TYPE_LINE_DIGITAL -> "line"
+            AudioDeviceInfo.TYPE_USB_ACCESSORY -> context.getString(R.string.sound_input_usb)
+            AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> context.getString(R.string.sound_input_bluetooth)
+            AudioDeviceInfo.TYPE_LINE_ANALOG, AudioDeviceInfo.TYPE_LINE_DIGITAL -> context.getString(R.string.sound_input_line)
             AudioDeviceInfo.TYPE_TELEPHONY, AudioDeviceInfo.TYPE_FM_TUNER -> null
             else -> d.productName?.toString()?.lowercase()?.take(12)
         } ?: return@mapNotNull null
         InputChoice(d.id, word)
     }
-    return listOf(InputChoice(0, "default")) + found.distinctBy { it.label }
+    return listOf(InputChoice(0, context.getString(R.string.sound_input_default))) + found.distinctBy { it.label }
 }
 
 /** Devices come and go; re-listing on every recomposition is the cheap answer. */
