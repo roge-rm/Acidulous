@@ -138,6 +138,19 @@ object NativeEngine {
     }
 
     /**
+     * What a loop file is to a machine that follows the song: how many bars it
+     * guesses the loop is (nought when no whole number fits) and how long it
+     * is in seconds. Null if the file will not read. Decodes the file, so call
+     * it off the main thread.
+     */
+    fun loopShape(absolutePath: String): Pair<Float, Float>? =
+        nativeLoopShape(absolutePath).split('|').takeIf { it.size == 2 }?.let { (b, s) ->
+            val bars = b.toFloatOrNull() ?: return@let null
+            val seconds = s.toFloatOrNull() ?: return@let null
+            bars to seconds
+        }
+
+    /**
      * Where [count] slices fall in a file, as fractions of its length.
      *
      * [mode] 0 finds transients, 1 divides evenly. Returns count+1 boundaries
@@ -816,6 +829,7 @@ object NativeEngine {
     private external fun nativeSampleMapInfo(rackId: Int): String
     private external fun nativeSampleInfo(rackId: Int, slot: Int): String
     private external fun nativeSlicePoints(path: String, mode: Int, count: Int): String
+    private external fun nativeLoopShape(path: String): String
     private external fun nativeImportAudio(path: String, maxSeconds: Int): String
     private external fun nativeSampleShape(rack: Int, pad: Int, out: FloatArray, fromFrame: Int, toFrame: Int): Int
     private external fun nativeMachineTypes(): Array<String>

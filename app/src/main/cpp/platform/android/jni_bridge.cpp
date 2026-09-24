@@ -235,6 +235,15 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSlicePoints(JNIEnv *env, jobject
     return env->NewStringUTF(out.c_str());
 }
 
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_NativeEngine_nativeLoopShape(JNIEnv *env, jobject, jstring path) {
+    const char *p = env->GetStringUTFChars(path, nullptr);
+    std::string error;
+    const std::string out = host().loopShape(p != nullptr ? p : "", error);
+    env->ReleaseStringUTFChars(path, p);
+    return env->NewStringUTF(out.c_str());
+}
+
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOn(JNIEnv *, jobject,
                                                 jint rackId, jint note, jint velocity) {

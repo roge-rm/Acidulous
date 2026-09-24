@@ -51,6 +51,7 @@
     <string name="pw_at">at</string>
     <string name="pw_att">att</string>
     <string name="pw_attack">attack</string>
+    <string name="pw_auto">auto</string>
     <string name="pw_aux">aux</string>
     <string name="pw_a_b">A→B</string>
     <string name="pw_b">b</string>
@@ -525,6 +526,7 @@
     <string name="pw_osc_n">osc %d</string>
     <string name="pw_oscillator">oscillator</string>
     <string name="pw_out">out</string>
+    <string name="pw_own">own</string>
     <string name="pw_pad">pad</string>
     <string name="pw_pad_n">Pad %d</string>
     <string name="pw_pad_n_bf5aa1">pad %d</string>
@@ -564,6 +566,7 @@
     <string name="pw_played">played</string>
     <string name="pw_player">player</string>
     <string name="pw_players">players</string>
+    <string name="pw_plays_at">plays at</string>
     <string name="pw_pluck">pluck</string>
     <string name="pw_plucked">plucked</string>
     <string name="pw_pollen">pollen</string>
@@ -728,6 +731,7 @@
     <string name="pw_snare">Snare</string>
     <string name="pw_snare_c1104d">snare</string>
     <string name="pw_soft">soft</string>
+    <string name="pw_song">song</string>
     <string name="pw_source">source</string>
     <string name="pw_speed">speed</string>
     <string name="pw_split">split</string>

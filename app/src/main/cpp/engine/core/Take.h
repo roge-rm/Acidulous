@@ -56,8 +56,15 @@ struct Take {
     int32_t frames = 0;
     std::vector<int32_t> onsets; // sorted, in frames
     std::string name;
+    /**
+     * How many bars of four beats the take most likely is, for a machine that
+     * plays it at the song's tempo: a half, or 1, 2, 4, 8 or 16. Nought when
+     * no whole number of bars puts it between 70 and 180 bpm.
+     */
+    float bars = 0.0f;
 
     void detect(float sampleRate);
+    float guessBars(float sampleRate) const;
 };
 
 /** What a reader actually reads. Resolved once per block. */

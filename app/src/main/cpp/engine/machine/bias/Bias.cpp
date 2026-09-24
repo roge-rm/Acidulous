@@ -211,6 +211,11 @@ bool Bias::render(float *L, float *R, int32_t frames) {
         // cell and sings the same notes.
         if (stretching && r.bpm > 1.0f && std::fabs(songBpm / r.bpm - 1.0f) > 0.002f) {
             const float rate = songBpm / r.bpm;
+            // A loop goes round inside the stretcher, so its end joins its
+            // start like any two hops rather than losing its last window.
+            const int64_t regionEnd =
+                r.offset + (r.frames < src.frames - r.offset ? r.frames : src.frames - r.offset);
+            stretcher[lane].setLoop(r.loop);
             // Seeded at the top of the cycle and free-running after it; the
             // clock inside the stretcher is exact, so nothing drifts.
             if (reseed) {
@@ -219,25 +224,29 @@ bool Bias::render(float *L, float *R, int32_t frames) {
                 const double perSongTick =
                     static_cast<double>(sampleRate) * 60.0 / (static_cast<double>(songBpm) * kPPQN);
                 const auto out = static_cast<int64_t>(static_cast<double>(into) * perSongTick);
-                stretcher[lane].seek(r.offset + static_cast<int64_t>(out * rate));
+                auto from = static_cast<int64_t>(out * rate);
+                if (r.loop && regionEnd > r.offset) from %= regionEnd - r.offset;
+                stretcher[lane].seek(r.offset + from);
             }
-            float taken[kBlockFrames] = {0.0f};
-            const int32_t got = stretcher[lane].fill(
-                taken, frames, src.lp, r.offset,
-                r.offset + (r.frames < src.frames - r.offset ? r.frames : src.frames - r.offset),
-                rate);
+            float takenL[kBlockFrames] = {0.0f}, takenR[kBlockFrames] = {0.0f};
+            float *taken[2] = {takenL, takenR};
+            const int16_t *from2[2] = {src.lp, src.stereo && src.rp != nullptr ? src.rp : src.lp};
+            const int32_t got = stretcher[lane].fill(taken, from2, r.offset, regionEnd, frames, rate);
             // The fade is measured in the take's own frames, so a stretched
             // take fades over the same *audio* rather than the same seconds -
             // which is what makes a crossfade hold together when the tempo
             // moves.
             const int64_t base = stretcher[lane].sourcePosition() - r.offset;
             for (int32_t i = 0; i < got; ++i) {
-                const float v = taken[i] * r.fadeAt(base + static_cast<int64_t>(i * rate));
-                L[i] += v * level;
-                R[i] += v * level;
+                int64_t at = base + static_cast<int64_t>(i * rate);
+                if (r.loop && r.frames > 0) at %= r.frames;
+                const float env = r.fadeAt(at);
+                const float l = takenL[i] * env, rr = takenR[i] * env;
+                L[i] += l * level;
+                R[i] += rr * level;
                 if (bleeding) {
-                    bleedL[i] += v * raw;
-                    bleedR[i] += v * raw;
+                    bleedL[i] += l * raw;
+                    bleedR[i] += rr * raw;
                 }
             }
             continue;

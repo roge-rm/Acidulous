@@ -50,6 +50,7 @@ echo "--- modsource"; "$ROOT/tools/modsource_test.sh" | tail -2 || fail=1
 echo "--- bias";  "$ROOT/tools/bias_test.sh" | tail -2 || fail=1
 echo "--- marks"; "$ROOT/tools/marks_test.sh" | tail -2 || fail=1
 echo "--- stretch"; "$ROOT/tools/stretch_test.sh" | tail -2 || fail=1
+echo "--- dice follow"; "$ROOT/tools/dice_follow_test.sh" | tail -2 || fail=1
 echo "--- oversample"; "$ROOT/tools/oversample_test.sh" | tail -2 || fail=1
 echo "--- amp";  "$ROOT/tools/amp_test.sh" | tail -2 || fail=1
 echo "--- inputfx"; "$ROOT/tools/inputfx_test.sh" | tail -2 || fail=1

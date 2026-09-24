@@ -54,6 +54,11 @@ or follows the song's tempo. When it follows, it's time-stretched without
 changing pitch. When it doesn't, it starts on the bar and plays at its own
 speed, and the cell turns amber.
 
+A loop added from the library with **audio…** gets its tempo worked out the way
+Dice does it, from its length and where its hits fall. It loops round to fill
+the cell, and if the loop's tempo isn't the scene's, **tempo › takes** is
+switched to follow so it plays at the song's tempo.
+
 ## Playing a guitar through it
 
 **monitor**, under **tempo**, feeds the input into this track's output before its

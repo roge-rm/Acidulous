@@ -563,6 +563,22 @@ std::string EngineHost::slicePoints(const std::string &path, int mode, int count
     return out;
 }
 
+std::string EngineHost::loopShape(const std::string &path, std::string &error) const {
+    auto decoded = decodeAudio(path, kSampleRate, error, kMaxSliceSeconds);
+    if (!decoded || decoded->frames <= 0) return "";
+    // The same detection Dice runs on the loop it is given, so the panel says
+    // what the machine will do.
+    audio::Take take;
+    take.frames = decoded->frames;
+    take.left = decoded->left;
+    take.right = decoded->stereo && !decoded->right.empty() ? decoded->right : decoded->left;
+    take.detect(static_cast<float>(kSampleRate));
+    char buf[48];
+    std::snprintf(buf, sizeof(buf), "%.2f|%.6f", static_cast<double>(take.bars),
+                  static_cast<double>(decoded->frames) / kSampleRate);
+    return buf;
+}
+
 std::string EngineHost::soundFontPresets(const std::string &path, std::string &error) {
     std::vector<Sf2Reader::PresetInfo> presets;
     if (!Sf2Reader::listPresets(path, presets, error)) return "";

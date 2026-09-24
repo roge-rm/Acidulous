@@ -107,8 +107,12 @@ class Bias final : public Machine {
 
     bias::Colour colour;
     dsp::Biquad bleedHp[2];
-    /** One stretcher a lane, seeded at the top of every cycle. */
-    dsp::Wsola stretcher[audio::kReelLanes];
+    /**
+     * One stretcher a lane, seeded at the top of every cycle. Stereo, with
+     * one search for both sides, so a stereo loop keeps its image when it
+     * follows the song; a mono take reads its one channel on both.
+     */
+    dsp::Stretcher<int16_t, 2> stretcher[audio::kReelLanes];
     float songBpm = 120.0f;
     int64_t lastCycleTick = -1;
     /** Set when a cycle comes round; the one moment a stretcher may be moved. */

@@ -31,6 +31,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -2957,6 +2958,17 @@ private fun DicePanel(
     val p = pad.coerceIn(0, 15)
     fun n(name: String) = "s%02d_%s".format(p, name)
     val sample = track.machine.settings["sample"].orEmpty()
+    // What the loop is to the song: the engine's guess at its bars, which the
+    // bars knob can overrule, and its length - and so its tempo.
+    val context = LocalContext.current
+    val shape by produceState<Pair<Float, Float>?>(null, sample) {
+        value = if (sample.isEmpty()) null else withContext(Dispatchers.IO) {
+            NativeEngine.loopShape(java.io.File(com.rm.acidulous.engine.EngineAssets.userRoot(context), sample).absolutePath)
+        }
+    }
+    val barsAt = b.infoOf("bars")?.map(b.value("bars"))?.toInt() ?: 0
+    val loopBars = if (barsAt == 0) shape?.first ?: 0f else DICE_BARS.getOrElse(barsAt - 1) { 0f }
+    val loopBpm = shape?.second?.takeIf { it > 0f && loopBars > 0f }?.let { loopBars * 4f * 60f / it }
     PanelSections {
         SectionChips(listOf("loop", "dice", "slice", "tone"), section) { section = it }
         if (section == 2) {
@@ -2977,11 +2989,29 @@ private fun DicePanel(
                                 fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
+                            if (shape != null) {
+                                Text(
+                                    if (loopBpm == null) stringResource(R.string.dice_loop_no_tempo)
+                                    else pluralStringResource(
+                                        R.plurals.dice_loop_tempo, if (loopBars <= 1f) 1 else 2,
+                                        if (loopBars < 1f) "½" else loopBars.toInt().toString(), kotlin.math.round(loopBpm).toInt(),
+                                    ),
+                                    color = if (loopBpm == null) c.accent else c.textMid,
+                                    fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                                )
+                            }
                             Row {
                                 TextButton(onClick = onImport) { Text(stringResource(R.string.machine_import), color = c.textMid, fontSize = 11.sp) }
                                 TextButton(onClick = { picking = true }) { Text(stringResource(R.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
                             }
                         }
+                    }
+                    // Follow plays the loop at the song's tempo, stretched so it
+                    // keeps its pitch; bars is what its own tempo is worked out
+                    // from, and auto is the engine's guess.
+                    Group("tempo") {
+                        PanelSwitch(b, "follow", listOf("own", "song"), "plays at")
+                        PanelStepKnob(b, "bars", listOf("auto", "½", "1", "2", "4", "8", "16"), "bars", PanelAmber)
                     }
                     Group("cut") {
                         PanelSwitch(b, "cut", DICE_CUTS, "at")
@@ -3051,6 +3081,9 @@ private fun DicePanel(
         onDismiss = { picking = false },
     )
 }
+
+/** The bars knob past auto, as Dice's engine reads it. */
+private val DICE_BARS = listOf(0.5f, 1f, 2f, 4f, 8f, 16f)
 
 // --- Pollen ----------------------------------------------------------------------
 

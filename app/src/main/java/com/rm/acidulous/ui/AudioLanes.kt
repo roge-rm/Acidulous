@@ -41,6 +41,8 @@ import com.rm.acidulous.model.ENGINE_RATE
 import com.rm.acidulous.model.audioLaneCount
 import com.rm.acidulous.model.cycleTicks
 import com.rm.acidulous.model.bpmOf
+import com.rm.acidulous.model.emptyClipFor
+import com.rm.acidulous.model.loopTempo
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.BIAS_LANES
 import com.rm.acidulous.model.SongEditor
@@ -551,11 +553,25 @@ fun TakePicker(
                 val survey = withContext(Dispatchers.Default) {
                     TakePeaks.survey(EngineSync.sampleRoot, rel)
                 } ?: return@launch
-                editor.editClip(trackIndex, sceneId) { clip ->
-                    clip.withTake(
-                        lane,
-                        song.takeForWholeFile(sceneId, clip, rel, survey.frames)
-                            .copy(peaks = survey.peaks),
+                // **A loop fits the song.** Its tempo is worked out from how
+                // long it is and where its hits fall, and the track is set to
+                // follow the song if it did not already, so a 90 bpm break
+                // dropped into a 126 bpm scene plays at 126 rather than
+                // drifting off the grid. A file that is not a loop has no
+                // tempo to find and is stamped with the scene's, as before.
+                val loopBpm: Float? = withContext(Dispatchers.Default) {
+                    val root = EngineSync.sampleRoot ?: return@withContext null
+                    loopTempo(NativeEngine.loopShape(java.io.File(root, rel).absolutePath))
+                }
+                editor.edit(trackIndex) { track ->
+                    val clip = track.clips[sceneId] ?: song.emptyClipFor(sceneId)
+                    // And a loop loops: two bars in a four-bar cell plays twice.
+                    val take = song.takeForWholeFile(sceneId, clip, rel, survey.frames, loopBpm)
+                        .copy(peaks = survey.peaks, loop = loopBpm != null)
+                    val follow = loopBpm != null && kotlin.math.abs(loopBpm - song.bpmOf(sceneId)) > 0.05f
+                    track.copy(
+                        clips = track.clips + (sceneId to clip.withTake(lane, take)),
+                        machine = if (follow) track.machine.copy(params = track.machine.params + ("stretch" to 1f)) else track.machine,
                     )
                 }
             }

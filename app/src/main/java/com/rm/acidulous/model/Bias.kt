@@ -113,12 +113,19 @@ fun Song.bpmOf(sceneId: String): Float =
  *
  * [frames] is the file's own length and is asked of the engine by the caller,
  * because reading it means opening the file and this is a pure function.
+ * [bpm] is the file's own tempo when the caller could work one out - a loop's,
+ * from `NativeEngine.loopShape` - and otherwise the scene's, which is what a
+ * recording made here would have been stamped with.
  */
-fun Song.takeForWholeFile(sceneId: String, clip: Clip, relative: String, frames: Int): TakeRef =
+fun Song.takeForWholeFile(sceneId: String, clip: Clip, relative: String, frames: Int, bpm: Float? = null): TakeRef =
     TakeRef(
         file = relative, offset = 0, frames = frames,
-        bpm = bpmOf(sceneId), ticks = cycleTicks(sceneId, clip),
+        bpm = bpm ?: bpmOf(sceneId), ticks = cycleTicks(sceneId, clip),
     )
+
+/** A loop's tempo from what `NativeEngine.loopShape` said of it, or null when it could not say. */
+fun loopTempo(shape: Pair<Float, Float>?): Float? =
+    shape?.takeIf { it.first > 0f && it.second > 0f }?.let { (bars, seconds) -> bars * 4f * 60f / seconds }
 
 /** How many of this cell's four lanes hold something. */
 fun Clip.audioLaneCount(): Int = audio?.lanes?.count { it != null } ?: 0

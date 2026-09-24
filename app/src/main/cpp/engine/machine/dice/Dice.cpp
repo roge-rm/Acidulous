@@ -24,6 +24,15 @@ constexpr float kDecayOff = 4.0f;
 // kick still arrives as a kick, long enough that the boundary is not a step.
 constexpr int32_t kFadeIn = 24;   // half a millisecond
 constexpr int32_t kFadeOut = 96;  // two milliseconds
+// A following voice's buffer of stretched audio, and how much is asked of the
+// stretcher at a time. The margin keeps enough in hand that when the loop runs
+// out under a slice, what is left is long enough to fade rather than stop -
+// at the pitch knob's top, four times the fade.
+constexpr int32_t kHeld = 4096;
+constexpr int32_t kPull = 256;
+constexpr int32_t kHeldMargin = 512;
+// A half, then 1 to 16: the bars knob past auto.
+constexpr float kBarsOf[] = {0.5f, 1.0f, 2.0f, 4.0f, 8.0f, 16.0f};
 
 Dice::Dice() { initParams(); }
 
@@ -69,6 +78,8 @@ const ParamDef *Dice::paramDefs(int32_t &count) const {
         defs[Volume] = {"volume", 0.0f, 1.5f, 0.9f, Curve::Linear, 0, ""};
         defs[MasterPan] = {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""};
         defs[Accent] = {"accent", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""};
+        defs[Follow] = {"follow", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""};
+        defs[Bars] = {"bars", 0.0f, 6.0f, 0.0f, Curve::Stepped, 7, ""}; // auto, 1/2, 1, 2, 4, 8, 16
         built = true;
     }
     count = Count;
@@ -80,6 +91,8 @@ void Dice::prepare(int32_t sr) {
     for (auto &v : voices) {
         v.filter.setSampleRate(sampleRate);
         v.filterR.setSampleRate(sampleRate);
+        v.stretch.prepare();
+        for (auto &h : v.held) h.assign(static_cast<size_t>(kHeld), 0.0f);
     }
     reset();
 }
@@ -135,6 +148,61 @@ void Dice::recut() {
     builtMode = mode;
     builtCount = want;
     builtFrames = take->frames;
+}
+
+float Dice::loopBpm() const {
+    if (take == nullptr || take->frames <= 1) return 0.0f;
+    const int32_t at = std::clamp(steppedTargetOf(Bars), 0, 6);
+    const float bars = at == 0 ? take->bars : kBarsOf[at - 1];
+    if (bars <= 0.0f) return 0.0f;
+    return bars * 4.0f * 60.0f * sampleRate / static_cast<float>(take->frames);
+}
+
+/**
+ * Point a following voice's stretcher at the top of its slice.
+ *
+ * A stretcher's first hop has nothing to overlap, so it comes out as the
+ * source times the rising half of the window - fifteen milliseconds of fade on
+ * what is, on a break, the kick. The other half of the window times the same
+ * source is exactly what is missing, so it is added here and the first hop is
+ * the source untouched, attack and all.
+ */
+void Dice::startStretch(Voice &v) const {
+    // Round the loop's end into its start, which is what follows it anyway,
+    // so the last slice is not a window short.
+    v.stretch.setLoop(true);
+    v.stretch.seek(v.start);
+    v.heldHave = 0;
+    v.heldPos = 0.0;
+    const float *left = take->left.data();
+    const float *right = take->right.empty() ? left : take->right.data();
+    constexpr int32_t hop = dsp::StereoStretch::kHop;
+    float *dst[2] = {v.held[0].data(), v.held[1].data()};
+    const float *src[2] = {left, right};
+    const int32_t made = v.stretch.fill(dst, src, 0, take->frames, hop, v.stretchRate);
+    const float *w = dsp::StereoStretch::hann();
+    for (int32_t j = 0; j < made && v.start + j < take->frames; ++j) {
+        v.held[0][static_cast<size_t>(j)] += left[v.start + j] * (1.0f - w[j]);
+        v.held[1][static_cast<size_t>(j)] += right[v.start + j] * (1.0f - w[j]);
+    }
+    v.heldHave = made;
+}
+
+/** More stretched audio into a following voice's buffer; false when the loop has run out. */
+bool Dice::pullStretch(Voice &v, const float *left, const float *right) const {
+    if (v.heldPos >= kHeld / 2) {
+        const int32_t k = static_cast<int32_t>(v.heldPos);
+        for (auto &h : v.held) std::copy(h.begin() + k, h.begin() + v.heldHave, h.begin());
+        v.heldHave -= k;
+        v.heldPos -= k;
+    }
+    const int32_t n = std::min(kPull, kHeld - v.heldHave);
+    if (n <= 0) return true;
+    float *dst[2] = {v.held[0].data() + v.heldHave, v.held[1].data() + v.heldHave};
+    const float *src[2] = {left, right};
+    const int32_t made = v.stretch.fill(dst, src, 0, take->frames, n, v.stretchRate);
+    v.heldHave += made;
+    return made > 0;
 }
 
 Dice::Voice *Dice::allocate() {
@@ -210,12 +278,29 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->start = bounds[slice];
     v->end = bounds[slice + 1];
     if (v->end <= v->start) v->end = std::min(take->frames, v->start + 64);
-    v->inc = std::pow(2.0f, semis / 12.0f) * targetOf(Rate) * (reversed ? -1.0 : 1.0);
-    v->pos = reversed ? v->end - 1 : v->start;
+    // Following, the tempo ratio sets how fast the loop goes by and the pitch
+    // knob only its pitch. A reversed slice cannot go through a stretcher that
+    // reads forwards, so it goes by at the ratio as tape would: in tune at the
+    // loop's own tempo, and a little off it elsewhere.
+    const float lb = loopBpm();
+    const bool follow = steppedTargetOf(Follow) != 0 && lb > 0.0f && take->frames > dsp::StereoStretch::kWindow * 2;
+    const float tempo = follow ? songBpm / lb : 1.0f;
+    const float pitch = std::pow(2.0f, semis / 12.0f);
     const int32_t span = v->end - v->start;
     v->repeatLen = repeats > 0 ? std::max(64, span / repeats) : span;
     v->repeats = repeats;
-    v->left = static_cast<int32_t>(v->repeatLen / std::max(0.05, std::fabs(v->inc)));
+    v->follows = follow && !reversed;
+    if (v->follows) {
+        v->timeRate = std::max(0.05f, tempo * targetOf(Rate));
+        v->pitch = pitch;
+        v->stretchRate = v->timeRate / pitch;
+        v->left = static_cast<int32_t>(v->repeatLen / v->timeRate);
+        startStretch(*v);
+    } else {
+        v->inc = pitch * targetOf(Rate) * tempo * (reversed ? -1.0 : 1.0);
+        v->pos = reversed ? v->end - 1 : v->start;
+        v->left = static_cast<int32_t>(v->repeatLen / std::max(0.05, std::fabs(v->inc)));
+    }
 
     const float accent = targetOf(Accent);
     const float vel = 1.0f - accent + accent * static_cast<float>(velocity) / 127.0f;
@@ -269,11 +354,29 @@ bool Dice::render(float *L, float *R, int32_t frames) {
         v.filterR.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
         for (int32_t i = 0; i < frames; ++i) {
             if (!v.used) break;
-            const int32_t idx = std::clamp(static_cast<int32_t>(v.pos), 0, last);
-            const int32_t next = std::min(idx + 1, last);
-            const float f = static_cast<float>(v.pos - idx);
-            const float sl = left[idx] + (left[next] - left[idx]) * f;
-            const float sr = right[idx] + (right[next] - right[idx]) * f;
+            float sl, sr;
+            if (v.follows) {
+                if (static_cast<int32_t>(v.heldPos) + kHeldMargin >= v.heldHave && !pullStretch(v, left, right)) {
+                    // The loop ends under this slice: fade out on what is left.
+                    const int32_t remain = static_cast<int32_t>((v.heldHave - 2 - v.heldPos) / v.pitch);
+                    if (remain < v.left) {
+                        v.left = remain;
+                        v.repeats = 0;
+                    }
+                    if (v.left <= 0) { v.used = false; break; }
+                }
+                const int32_t idx = static_cast<int32_t>(v.heldPos);
+                const float f = static_cast<float>(v.heldPos - idx);
+                const float *h0 = v.held[0].data(), *h1 = v.held[1].data();
+                sl = h0[idx] + (h0[idx + 1] - h0[idx]) * f;
+                sr = h1[idx] + (h1[idx + 1] - h1[idx]) * f;
+            } else {
+                const int32_t idx = std::clamp(static_cast<int32_t>(v.pos), 0, last);
+                const int32_t next = std::min(idx + 1, last);
+                const float f = static_cast<float>(v.pos - idx);
+                sl = left[idx] + (left[next] - left[idx]) * f;
+                sr = right[idx] + (right[next] - right[idx]) * f;
+            }
             // Ramped at both ends.
             //
             // A slice cut at onsets ends exactly where the next transient
@@ -295,13 +398,19 @@ bool Dice::render(float *L, float *R, int32_t frames) {
             v.env -= v.env * v.envCoeff;
             L[i] += v.filter.process(sl * e) * v.gainL;
             R[i] += v.filterR.process(sr * e) * v.gainR;
-            v.pos += v.inc;
+            if (v.follows) v.heldPos += v.pitch;
+            else v.pos += v.inc;
             if (--v.left <= 0) {
                 if (v.repeats > 1) {
                     // A stutter is the same piece again, not the next one.
                     --v.repeats;
-                    v.pos = v.inc < 0 ? v.end - 1 : v.start;
-                    v.left = static_cast<int32_t>(v.repeatLen / std::max(0.05, std::fabs(v.inc)));
+                    if (v.follows) {
+                        startStretch(v);
+                        v.left = static_cast<int32_t>(v.repeatLen / v.timeRate);
+                    } else {
+                        v.pos = v.inc < 0 ? v.end - 1 : v.start;
+                        v.left = static_cast<int32_t>(v.repeatLen / std::max(0.05, std::fabs(v.inc)));
+                    }
                     v.age = 0; // a repeat is a new start, and needs the same ramp
                 } else {
                     v.used = false;

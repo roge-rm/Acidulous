@@ -96,6 +96,8 @@ class EngineHost {
      * own. Empty on any failure, with [error] saying why.
      */
     std::string slicePoints(const std::string &path, int mode, int count, std::string &error) const;
+    /** "bars|seconds" for a loop file: the guess a machine following the song makes of it. */
+    std::string loopShape(const std::string &path, std::string &error) const;
 
     /**
      * Make an imported file into one the rest of the app can read.

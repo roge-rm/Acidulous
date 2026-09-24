@@ -121,6 +121,17 @@ template <class Sample, int32_t Channels> class Stretcher {
     int64_t sourcePosition() const { return static_cast<int64_t>(readPos); }
 
     /**
+     * Read [first, last) as a loop: past `last` is `first` again.
+     *
+     * Without it a stretcher stops a window short of the end - its last hop
+     * needs thirty milliseconds of source it does not have - so a loop lost
+     * its tail every pass and came round early. Looping, the windows at the
+     * seam straddle it and join the end onto the start the way any other two
+     * hops are joined. The source has to be longer than two windows.
+     */
+    void setLoop(bool on) { looping = on; }
+
+    /**
      * Fill [n] output frames from [src], which holds [first, last) of a take.
      *
      * [rate] is how fast the source is consumed: 1.0 is real time, 2.0 plays
@@ -129,7 +140,7 @@ template <class Sample, int32_t Channels> class Stretcher {
      */
     int32_t fill(float *const dst[Channels], const Sample *const src[Channels], int64_t first, int64_t last,
                  int32_t n, float rate) {
-        if (window == nullptr || last - first < kWindow) return 0;
+        if (window == nullptr || last - first < (looping ? kWindow * 2 : kWindow)) return 0;
         for (int32_t ch = 0; ch < Channels; ++ch) {
             if (src[ch] == nullptr) return 0;
         }
@@ -196,17 +207,27 @@ template <class Sample, int32_t Channels> class Stretcher {
             finishSearch(src, first, last);
             want = searchBest;
         }
-        if (want < first) want = first;
-        if (want + kWindow > last) return false;
-
-        for (int32_t ch = 0; ch < Channels; ++ch) {
-            for (int32_t i = 0; i < kWindow; ++i) {
-                out[ch][static_cast<size_t>(i)] += SampleScale<Sample>::of(src[ch][want + i]) * window[i];
+        if (looping) {
+            want = wrapped(want, first, last);
+            for (int32_t ch = 0; ch < Channels; ++ch) {
+                for (int32_t i = 0; i < kWindow; ++i) {
+                    out[ch][static_cast<size_t>(i)] +=
+                        SampleScale<Sample>::of(src[ch][wrapped(want + i, first, last)]) * window[i];
+                }
+            }
+        } else {
+            if (want < first) want = first;
+            if (want + kWindow > last) return false;
+            for (int32_t ch = 0; ch < Channels; ++ch) {
+                for (int32_t i = 0; i < kWindow; ++i) {
+                    out[ch][static_cast<size_t>(i)] += SampleScale<Sample>::of(src[ch][want + i]) * window[i];
+                }
             }
         }
         // The *output* advances by a hop; the *source* advances by a hop times
         // the rate. That difference is the whole of the stretch.
         readPos += static_cast<double>(kHop) * static_cast<double>(rate);
+        if (looping && readPos >= static_cast<double>(last)) readPos -= static_cast<double>(last - first);
         primed = true;
         // And the next hop's search opens here, because everything it needs is
         // known now: its nominal source position is the read position just
@@ -292,8 +313,8 @@ template <class Sample, int32_t Channels> class Stretcher {
     void scoreLags(const Sample *const src[Channels], int64_t first, int64_t last, int32_t lags) {
         const int32_t overlap = kWindow - kHop;
         for (int32_t n = 0; n < lags && searchLag <= searchReach; ++n, searchLag += 4) {
-            const int64_t at = searchWant + searchLag;
-            if (at < first || at + kWindow > last) continue;
+            const int64_t at = looping ? wrapped(searchWant + searchLag, first, last) : searchWant + searchLag;
+            if (!looping && (at < first || at + kWindow > last)) continue;
             float score = 0.0f;
             // On the sum of the channels, so every channel is laid at the one
             // offset. Scale is irrelevant here - this only ever picks a winner
@@ -302,7 +323,7 @@ template <class Sample, int32_t Channels> class Stretcher {
                 float written = 0.0f, coming = 0.0f;
                 for (int32_t ch = 0; ch < Channels; ++ch) {
                     written += out[ch][static_cast<size_t>(kHop + i)];
-                    coming += static_cast<float>(src[ch][at + i]);
+                    coming += static_cast<float>(src[ch][looping ? wrapped(at + i, first, last) : at + i]);
                 }
                 score += written * coming;
             }
@@ -313,6 +334,14 @@ template <class Sample, int32_t Channels> class Stretcher {
         }
     }
 
+    /** [i] folded into [first, last), which it is never more than one length outside. */
+    static int64_t wrapped(int64_t i, int64_t first, int64_t last) {
+        if (i >= last) return i - (last - first);
+        if (i < first) return i + (last - first);
+        return i;
+    }
+
+    bool looping = false;
     const float *window = nullptr;
     std::vector<float> out[Channels];
     int32_t have = 0, taken = 0;

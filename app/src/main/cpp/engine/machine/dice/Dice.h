@@ -1,7 +1,9 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 #include <engine/core/Take.h>
 #include <engine/dsp/MultiFilter.h>
+#include <engine/dsp/Wsola.h>
 #include <engine/machine/Machine.h>
 
 // Dice - a loop, cut up, and rolled.
@@ -35,6 +37,22 @@ class Dice final : public Machine {
         SliceCount, Gate, Rate, RootPitch, Fine,
         Swap, Reverse, Stutter, StutterDiv, Drop, Jump, JumpRange, Hold, Seed,
         Cutoff, Resonance, FilterType, Drive, Volume, MasterPan, Accent,
+        /**
+         * Whether the loop plays at the song's tempo rather than its own.
+         *
+         * Off, a slice plays at the speed it was cut at, so a 90 bpm break in
+         * a 126 bpm song leaves a gap after every slice. On, each slice goes
+         * through the same stretcher a frozen clip and a Bias take use, by the
+         * song's tempo over the loop's - so it lasts its share of the bar and
+         * keeps its pitch.
+         */
+        Follow,
+        /**
+         * How many bars the loop is, which is what its tempo is worked out
+         * from. Auto takes `Take::bars`, the guess made when it was loaded;
+         * the rest say a half, 1, 2, 4, 8 or 16 outright.
+         */
+        Bars,
         Count
     };
     static_assert(Count <= kMaxParams, "Dice declares more parameters than a unit can hold");
@@ -49,6 +67,11 @@ class Dice final : public Machine {
     void allNotesOff() override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
+    /** The song's tempo, which is half of what a follow ratio is made of. */
+    void onBlock(int64_t, int64_t, float bpm) override { songBpm = bpm; }
+
+    /** The loop's tempo as it stands, or nought with no loop. For the panel. */
+    float loopBpm() const;
 
     /** Where the cuts fall, for the panel to draw. Not audio-thread state. */
     int32_t sliceCount() const { return slices; }
@@ -71,6 +94,15 @@ class Dice final : public Machine {
         // slice boundary is a step.
         int32_t age = 0;
         uint8_t note = 0;
+        // Following the song: the slice comes out of `stretch` at [stretchRate]
+        // into `held`, which is read at [pitch] - so the stretch sets how long
+        // the slice lasts and the pitch knob only its pitch.
+        bool follows = false;
+        float stretchRate = 1.0f, pitch = 1.0f, timeRate = 1.0f;
+        dsp::StereoStretch stretch;
+        std::vector<float> held[2];
+        int32_t heldHave = 0;
+        double heldPos = 0.0;
         // One per channel. A single filter processed into L only, which left
         // the right channel unfiltered: on Dust, with its cutoff at 2.2 kHz,
         // the right side measured seventeen decibels more treble than the
@@ -84,10 +116,13 @@ class Dice final : public Machine {
     float paramOf(int32_t p) const { return params_.get(p); }
     int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
     void recut();
+    void startStretch(Voice &v) const;
+    bool pullStretch(Voice &v, const float *left, const float *right) const;
     Voice *allocate();
     uint32_t rollFor(int32_t slice);
 
     float sampleRate = 48000.0f;
+    float songBpm = 120.0f;
     const audio::Take *take = nullptr;
     int32_t bounds[kSlices + 1] = {};
     int32_t slices = 0;

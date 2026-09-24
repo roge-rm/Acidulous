@@ -77,6 +77,12 @@
     <string name="machine_samples">samples…</string>
     <string name="machine_record">record…</string>
     <string name="dice_slice">slice %d - chosen with the pads</string>
+    <!-- Under a Dice loop's name: how long it is, and so what tempo it was played at. -->
+    <plurals name="dice_loop_tempo">
+        <item quantity="one">%1$s bar at %2$d bpm</item>
+        <item quantity="other">%1$s bars at %2$d bpm</item>
+    </plurals>
+    <string name="dice_loop_no_tempo">tempo unknown - set its bars</string>
     <string name="pollen_live">live input: not saved with the song, silent in exports</string>
 
     <!-- Bias: a lane\'s take, when it was sung at another tempo. -->
