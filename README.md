@@ -24,6 +24,25 @@ Dan (rm)
 
 ---
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/song.png" width="250" alt="The song grid"><br>The song: tracks down, scenes across</td>
+    <td align="center"><img src="screenshots/acid.png" width="250" alt="The piano roll on an acid line"><br>An acid line, with its filter drawn in</td>
+    <td align="center"><img src="screenshots/drums.png" width="250" alt="The drum editor"><br>Drums: steps, pads and the kit's knobs</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/mixer.png" width="250" alt="The mixer"><br>The mixer, with a drum group</td>
+    <td align="center"><img src="screenshots/perform.png" width="250" alt="The perform pad"><br>The perform pad: filter, echo and kills</td>
+    <td align="center"><img src="screenshots/modular.png" width="250" alt="The modular's patch editor"><br>The modular, patched by hand</td>
+  </tr>
+</table>
+
+All six are the demo song, Squelch.
+
+---
+
 ## What's in it
 
 ### Twenty machines
