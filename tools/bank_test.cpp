@@ -592,7 +592,7 @@ int main(int argc, char **argv) {
         // nothing and can be judged on what it does the first time you tap it,
         // which is what this harness measures. Bias plays what you recorded
         // onto it, and its patches are *recording media* - so with nothing
-        // mounted, Init, DAT and MiniDisc render exact silence, which is
+        // mounted, Init, DAT and Disc render exact silence, which is
         // correct and which this would report as seven dead patches.
         //
         // What the bank is worth is still measurable: `tools/audition.sh bank

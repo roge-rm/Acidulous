@@ -57,8 +57,8 @@ patch Cassette family=tape
   flutter        0.3
   width          0.95
 
-patch Portastudio family=tape
-  # The Portastudio: four tracks across a strip of tape meant for two, so the
+patch "Four-Track" family=tape
+  # The cassette four-track: four tracks across a strip of tape meant for two, so the
   # tracks are narrower, the hiss is worse, and **what is on one is faintly on
   # the next**. That last is `bleed`, and it is the reason muting a track on
   # one of these never quite silences it.
@@ -125,7 +125,7 @@ patch Micro family=tape
   drop           0.25
   width          0
 
-patch MiniDisc family=digital
+patch Disc family=digital
   # **No hiss at all**, which is the point of standing it next to the tapes:
   # its character is entirely codec. A band edge just under sixteen, a smear
   # that thickens transients instead of sharpening them, and an image the

@@ -2673,7 +2673,7 @@ internal object FactoryBanks {
         mapOf("hiss" to 0.35f, "hisstone" to 0.55f, "lowcut" to 0.219831035f, "highcut" to 0.86879915f, "bump" to 0.5f, "bumpfreq" to 0.60759443f, "sat" to 0.4f, "comp" to 0.3f, "wow" to 0.25f, "flutter" to 0.3f, "width" to 0.475f),
         family = "tape")
 
-    private fun bias4() = Patch("Bias", "Portastudio",
+    private fun bias4() = Patch("Bias", "Four-Track",
         mapOf("hiss" to 0.5f, "hisstone" to 0.6f, "lowcut" to 0.297817349f, "highcut" to 0.8004371f, "bump" to 0.5555556f, "bumpfreq" to 0.6848713f, "sat" to 0.5f, "comp" to 0.55f, "wow" to 0.3f, "flutter" to 0.4f, "bleed" to 0.45f, "width" to 0.45f),
         family = "tape")
 
@@ -2689,7 +2689,7 @@ internal object FactoryBanks {
         mapOf("hiss" to 0.7f, "hisstone" to 0.75f, "lowcut" to 0.7516073f, "highcut" to 0.479042947f, "sat" to 0.6f, "comp" to 0.8f, "wow" to 0.55f, "flutter" to 0.6f, "speed" to 0.711999238f, "drop" to 0.25f, "width" to 0f),
         family = "tape")
 
-    private fun bias8() = Patch("Bias", "MiniDisc",
+    private fun bias8() = Patch("Bias", "Disc",
         mapOf("highcut" to 0.921313941f, "bits" to 0.6f, "smear" to 0.35f, "width" to 0.4f),
         family = "digital")
 
