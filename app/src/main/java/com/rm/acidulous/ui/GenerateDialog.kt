@@ -64,12 +64,16 @@ fun GenerateDialog(
     if (drums && voices.none { it.note == m.voice }) m.voice = voices.first().note
     // Where this clip already lives, so what is made lands in the part of
     // the roll that is on screen rather than wherever the last clip was.
-    remember {
+    // Once, as the window opens: the Boolean is only there so remember has
+    // something to keep.
+    @Suppress("UNUSED_VARIABLE")
+    val placed = remember {
         if (!drums && base.notes.isNotEmpty()) {
             val lowest = base.notes.minOf { it.pitch }
             m.line = m.line.copy(low = lowest.coerceIn(24, 84))
             m.euclid = m.euclid.copy(pitch = lowest.coerceIn(24, 96))
         }
+        true
     }
 
     DisposableEffect(Unit) {

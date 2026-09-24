@@ -78,7 +78,7 @@ private fun AppTab() {
     val version = remember {
         runCatching {
             val info = context.packageManager.getPackageInfo(context.packageName, 0)
-            "%s (%d)".format(info.versionName, info.longVersionCode)
+            "%s (%d)".format(info.versionName, androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(info))
         }.getOrDefault(resources.getString(R.string.about_version_unknown))
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -126,7 +126,7 @@ object CrashReports {
     private fun header(context: Context, whenMs: Long): String {
         val info = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
         return buildString {
-            append("Acidulous ${info?.versionName ?: "?"} (${info?.longVersionCode ?: "?"})\n")
+            append("Acidulous ${info?.versionName ?: "?"} (${info?.let { androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it) } ?: "?"})\n")
             append("${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}), ")
             append(Build.SUPPORTED_ABIS.firstOrNull() ?: "?").append("\n")
             append("When: ${stamp(whenMs)}\n\n")
@@ -141,6 +141,7 @@ object CrashReports {
      * from Android 12 is a protocol buffer, of which the runs of readable text
      * - the libraries, the functions, the abort message - are the useful part.
      */
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.R)
     private fun trace(x: ApplicationExitInfo): String? = runCatching {
         val bytes = x.traceInputStream?.use { it.readBytes() } ?: return null
         if (x.reason == ApplicationExitInfo.REASON_ANR) {
