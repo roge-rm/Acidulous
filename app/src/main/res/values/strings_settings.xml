@@ -13,6 +13,7 @@
         <item>auto</item>
         <item>light</item>
         <item>dark</item>
+        <item>high contrast</item>
     </string-array>
     <string name="settings_size">size</string>
     <string-array name="settings_size_choices">

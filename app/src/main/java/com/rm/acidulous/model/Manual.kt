@@ -1002,7 +1002,7 @@ object Manual {
         ManualSection("Settings", "Settings for you and this phone, not the song.", listOf(
             ManualBlock(ManualKind.Para, "Nothing here is saved in a song, so opening someone else's song never changes these."),
             ManualBlock(ManualKind.Heading, "display"),
-            ManualBlock(ManualKind.Bullet, "**theme** - dark, light, or follow the phone."),
+            ManualBlock(ManualKind.Bullet, "**theme** - dark, light, high contrast, or follow the phone. High contrast is white on black, with brighter colours and outlines round every control."),
             ManualBlock(ManualKind.Bullet, "**interface size** - makes everything bigger, in four steps."),
             ManualBlock(ManualKind.Bullet, "**screen while playing** - whether the screen can turn off while playing."),
             ManualBlock(ManualKind.Bullet, "**diagnostics** - shows or hides the numbers for tracking down problems: the line under the transport, the readings on the audio page, the MIDI send counts, and the note count in the editor's title."),

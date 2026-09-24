@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 
 /** What the person chose, which is not the same as what is on screen. */
-enum class ThemeMode { Auto, Light, Dark }
+enum class ThemeMode { Auto, Light, Dark, HighContrast }
 
 /**
  * Material's scheme, built from ours.
@@ -36,7 +36,7 @@ private fun scheme(c: AcidColors) = if (c.dark) {
         surfaceContainerHighest = c.cardHi,
         surfaceBright = c.cardHi, surfaceDim = c.bgDeep,
         inverseSurface = c.textHi, inverseOnSurface = c.bg,
-        outline = c.raised, outlineVariant = c.line,
+        outline = c.line, outlineVariant = c.line,
         error = c.red, onError = c.onAccent,
         scrim = c.bgDeep,
     )
@@ -53,7 +53,7 @@ private fun scheme(c: AcidColors) = if (c.dark) {
         surfaceContainerHighest = c.cardHi,
         surfaceBright = c.card, surfaceDim = c.sunken,
         inverseSurface = c.textHi, inverseOnSurface = c.card,
-        outline = c.raised, outlineVariant = c.line,
+        outline = c.line, outlineVariant = c.line,
         error = c.red, onError = c.card,
         scrim = c.textFaint,
     )
@@ -69,9 +69,13 @@ fun AcidulousTheme(mode: ThemeMode = ThemeMode.Dark, content: @Composable () -> 
     val dark = when (mode) {
         ThemeMode.Auto -> isSystemInDarkTheme()
         ThemeMode.Light -> false
-        ThemeMode.Dark -> true
+        ThemeMode.Dark, ThemeMode.HighContrast -> true
     }
-    val colors = if (dark) DarkColors else LightColors
+    val colors = when {
+        mode == ThemeMode.HighContrast -> HighContrastColors
+        dark -> DarkColors
+        else -> LightColors
+    }
     CompositionLocalProvider(LocalAcidColors provides colors) {
         MaterialTheme(colorScheme = scheme(colors), typography = Typography, content = content)
     }

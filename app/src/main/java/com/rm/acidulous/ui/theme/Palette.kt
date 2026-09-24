@@ -288,3 +288,73 @@ object Acid {
     val colors: AcidColors
         @Composable @ReadOnlyComposable get() = LocalAcidColors.current
 }
+
+/**
+ * For low vision: black grounds, white type, and the accents pushed until
+ * every word clears seven to one against anything it sits on. Built on the
+ * dark palette, so what is not named here keeps the dark theme's colour.
+ * Lines and edges are near white, because in the other themes a control is
+ * told from its card by a shade that a weak eye cannot see.
+ */
+val HighContrastColors = DarkColors.copy(
+    bgDeep = Color(0xFF000000),
+    bg = Color(0xFF000000),
+    sunken = Color(0xFF000000),
+    panel = Color(0xFF000000),
+    panelAlt = Color(0xFF050505),
+    bar = Color(0xFF2B2B2B),
+    card = Color(0xFF0D0D0D),
+    cardAlt = Color(0xFF3A3A3A),
+    cardHi = Color(0xFF575757),
+    control = Color(0xFF1A1A1A),
+    controlAlt = Color(0xFF161616),
+    raised = Color(0xFF4A4A4A),
+    line = Color(0xFFBDBDBD),
+    lineStrong = Color(0xFFFFFFFF),
+    gridBar = Color(0xFFFFFFFF),
+    gridBeat = Color(0xFFA0A0A0),
+    gridStep = Color(0xFF5A5A5A),
+    text = Color(0xFFFFFFFF),
+    textHi = Color(0xFFFFFFFF),
+    textMid = Color(0xFFF2F2F2),
+    textDim = Color(0xFFE0E0E0),
+    textFaint = Color(0xFFB0B0B0),
+    onAccent = Color(0xFF000000),
+    accent = Color(0xFFFFD24D),
+    accentSoft = Color(0xFFFFEBA8),
+    accentDim = Color(0xFF4D3F10),
+    greenDim = Color(0xFF14503A),
+    teal = Color(0xFF6CF5D2),
+    // Both white and black words sit on it, so it is the one green where
+    // each clears four and a half to one.
+    green = Color(0xFF2A827C),
+    pink = Color(0xFFFF9CC4),
+    red = Color(0xFFFF7A70),
+    rowWhite = Color(0xFF1A1A1A),
+    rowBlack = Color(0xFF000000),
+    rowOut = Color(0xFF0A0A0A),
+    gutterWhite = Color(0xFF262626),
+    gutterBlack = Color(0xFF000000),
+    gutterOut = Color(0xFF000000),
+    note = Color(0xFF1FC98E),
+    noteEdge = Color(0xFFFFFFFF),
+    noteSel = Color(0xFFFFFFFF),
+    noteSelEdge = Color(0xFFFFD24D),
+    keyWhite = Color(0xFFFFFFFF),
+    keyBlack = Color(0xFF000000),
+    keyEdge = Color(0xFF000000),
+    keyLabel = Color(0xFF000000),
+    keyLabelBlack = Color(0xFFFFFFFF),
+    blackKey = Color(0xFF000000),
+    blackKeyEdge = Color(0xFFFFFFFF),
+    sceneQueued = Color(0xFF9C7300),
+    sceneProgress = Color(0xFF2A827C),
+    padSelected = Color(0xFF1E4F80),
+    knobPointer = Color(0xFFFFFFFF),
+    nodeBg = Color(0xFF0D0D0D),
+    nodeEdge = Color(0xFFBDBDBD),
+    canvasGrid = Color(0xFF1A1A1A),
+    cable = Color(0xFF6CF5D2),
+    scrollbar = Color(0xFFE0E0E0),
+    tip = Color(0xF0000000),
+)

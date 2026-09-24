@@ -1141,7 +1141,7 @@ private fun ClipCell(
         queued -> Acid.colors.sceneQueued.copy(alpha = pulse)
         stopping -> Acid.colors.red.copy(alpha = pulse)
         playing -> colour
-        else -> Acid.colors.raised
+        else -> Acid.colors.line
     }
     Box(
         Modifier

@@ -6,7 +6,8 @@ these.
 
 ## display
 
-- **theme** - dark, light, or follow the phone.
+- **theme** - dark, light, high contrast, or follow the phone. High contrast is
+  white on black, with brighter colours and outlines round every control.
 - **interface size** - makes everything bigger, in four steps.
 - **screen while playing** - whether the screen can turn off while playing.
 - **diagnostics** - shows or hides the numbers for tracking down problems: the

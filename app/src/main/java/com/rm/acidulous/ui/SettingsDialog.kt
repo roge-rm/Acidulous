@@ -87,9 +87,9 @@ private fun DisplayTab() {
         WindowCard(stringResource(R.string.settings_screen)) {
             SwitchGrid(
                 stringResource(R.string.settings_theme), stringArrayResource(R.array.settings_theme_choices).toList(),
-                when (UiPrefs.theme) { ThemeMode.Auto -> 0; ThemeMode.Light -> 1; ThemeMode.Dark -> 2 },
-                columns = 1,
-            ) { UiPrefs.chooseTheme(listOf(ThemeMode.Auto, ThemeMode.Light, ThemeMode.Dark)[it]) }
+                when (UiPrefs.theme) { ThemeMode.Auto -> 0; ThemeMode.Light -> 1; ThemeMode.Dark -> 2; ThemeMode.HighContrast -> 3 },
+                columns = 2,
+            ) { UiPrefs.chooseTheme(listOf(ThemeMode.Auto, ThemeMode.Light, ThemeMode.Dark, ThemeMode.HighContrast)[it]) }
             // The one setting whose effect is the window it is being read in:
             // the cells grow under the finger that taps them.
             SwitchGrid(stringResource(R.string.settings_size), stringArrayResource(R.array.settings_size_choices).toList(), UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
