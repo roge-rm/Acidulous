@@ -1020,7 +1020,7 @@ object Manual {
             ManualBlock(ManualKind.Heading, "TalkBack"),
             ManualBlock(ManualKind.Para, "TalkBack is turned on in the phone's own settings, not here. With it on, every control says what it is and what it's set to. On a knob or a fader, swipe up or down to change it. Anything you'd hold to open, like a clip's settings, is in TalkBack's actions menu."),
             ManualBlock(ManualKind.Para, "The piano roll says how many notes a clip has and the lowest and highest, not each note. To add notes, record them from the keys."),
-            ManualBlock(ManualKind.Para, "In the song grid, TalkBack only reads the clips on screen, so scroll the grid to reach the rest."),
+            ManualBlock(ManualKind.Para, "With TalkBack on, the song grid shows as many scenes as fit and doesn't scroll sideways. **Previous scenes** and **Next scenes** above it move a page at a time. When the last page is full, add a scene from a scene's own menu."),
         )),
     )
 }

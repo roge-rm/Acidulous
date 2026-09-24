@@ -1,6 +1,14 @@
 package com.rm.acidulous.ui
 
+import android.view.accessibility.AccessibilityManager
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -88,3 +96,22 @@ internal fun Modifier.together(): Modifier = semantics { isTraversalGroup = true
 
 /** Nothing TalkBack should stop on: a decoration, or a reading said elsewhere. */
 internal fun Modifier.silent(): Modifier = clearAndSetSemantics { }
+
+/**
+ * Whether TalkBack is on - or any screen reader that explores by touch - and
+ * read again when it is turned on or off, which can happen with the app open.
+ * For the few places a screen is laid out differently for it, not for what
+ * anything says.
+ */
+@Composable
+internal fun rememberTalkBack(): Boolean {
+    val context = LocalContext.current
+    val manager = remember(context) { context.getSystemService(AccessibilityManager::class.java) }
+    var on by remember(manager) { mutableStateOf(manager?.isTouchExplorationEnabled == true) }
+    DisposableEffect(manager) {
+        val listener = AccessibilityManager.TouchExplorationStateChangeListener { on = it }
+        manager?.addTouchExplorationStateChangeListener(listener)
+        onDispose { manager?.removeTouchExplorationStateChangeListener(listener) }
+    }
+    return on
+}

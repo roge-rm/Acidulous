@@ -38,6 +38,8 @@
     <!-- The grid -->
     <string name="main_add_track">+ track</string>
     <string name="main_add_scene">+ scene</string>
+    <!-- The scenes on the page, with TalkBack on: first to last, of how many. -->
+    <string name="main_scene_page">%1$d–%2$d / %3$d</string>
     <!-- A number of bars, where there is room for a number and a letter: "4b". -->
     <string name="main_bars_short">%db</string>
     <!-- Which pass of a repeating scene is playing: "r2". -->

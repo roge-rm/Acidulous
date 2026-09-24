@@ -37,6 +37,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import kotlinx.coroutines.launch
+import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.unit.dp
@@ -165,7 +166,6 @@ fun PianoKeys(
                 }
             },
     ) {
-        KeysForTalkBack(rack, base, scale, noteSpelling)
         Canvas(Modifier.fillMaxSize().padding(horizontal = EdgeGrab).clip(RoundedCornerShape(3.dp))) {
             val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale)
             val down = held.values.toSet()
@@ -243,6 +243,9 @@ fun PianoKeys(
                 }
             }
         }
+        // After the drawing, so the keys TalkBack is told about lie over it
+        // and a touch finds them. They draw nothing themselves.
+        KeysForTalkBack(rack, base, scale, noteSpelling)
         // Octave up and down, stacked so they cost one narrow column rather
         // than two, which is width the keys would rather have.
     }
@@ -638,7 +641,10 @@ private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: M
         val h = with(density) { maxHeight.toPx() }
         val layout = Layout(w, h, base, with(density) { MinKey.toPx() }, scale)
         // Left to right, whites and blacks in pitch order, which is the order
-        // TalkBack walks them.
+        // TalkBack walks them. The blacks are raised over the whites, as they
+        // are drawn: in pitch order each white key would otherwise lie over
+        // the black key before it, and a touch on that black key's right half
+        // would find the white one.
         val keys = ArrayList<Triple<Int, Float, Float>>() // note, x, width
         val blackH: Float
         if (layout.scaleKeys != null) {
@@ -653,6 +659,7 @@ private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: M
             val black = layout.scaleKeys == null && ((note % 12) in intArrayOf(1, 3, 6, 8, 10))
             Box(
                 Modifier
+                    .zIndex(if (black) 1f else 0f)
                     .offset { androidx.compose.ui.unit.IntOffset(x.toInt(), 0) }
                     .size(with(density) { kw.toDp() }, with(density) { (if (black) blackH else h).toDp() })
                     .button(spokenNote(note, spelling, resources), onClick = {

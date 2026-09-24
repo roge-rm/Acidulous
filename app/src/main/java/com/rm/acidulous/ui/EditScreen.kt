@@ -560,6 +560,14 @@ fun EditScreen(
             // the paging is one long back button. It is the widest thing in
             // the header and it did nothing; on a phone held one-handed the
             // arrow alone is a small target at the far corner.
+            //
+            // Said in words rather than read out as written: "4b · 56n" is
+            // four letters and two numbers to TalkBack.
+            val titleSaid = listOfNotNull(
+                track.name, scene.name, pluralStringResource(R.plurals.a11y_cell_bars, clip.bars, clip.bars),
+                if (kind == MachineKind.Audio) clip.audioLaneCount().let { pluralStringResource(R.plurals.clip_lanes, it, it) } else null,
+                if (selection.isEmpty()) null else stringResource(R.string.edit_selected, selection.size),
+            ).joinToString(", ")
             Text(
                 listOfNotNull(
                     track.name, scene.name, stringResource(R.string.main_bars_short, clip.bars),
@@ -583,6 +591,7 @@ fun EditScreen(
                 modifier = Modifier.flexible()
                     .height(LocalHeaderBand.current)
                     .clickable(onClick = onBack)
+                    .button(titleSaid)
                     .wrapContentHeight(Alignment.CenterVertically)
                     .padding(horizontal = 4.dp),
                 maxLines = 1,
@@ -1058,7 +1067,7 @@ fun EditScreen(
                         // No label: the ridges say it is a wheel, its place in
                         // the row says which one, and three letters of it were
                         // the only text in the strip.
-                        springBackTo = 0f, label = null,
+                        springBackTo = 0f, label = null, said = stringResource(R.string.a11y_pressure),
                         modifier = Modifier.widthIn(max = PressureW).fillMaxHeight(),
                     ) { v -> pressure = v; NativeEngine.channelPressure(trackIndex, (v * 127f).toInt()) }
                 }
@@ -1136,6 +1145,7 @@ fun EditScreen(
             ) {
                 TouchWheel(
                     value = mod, accent = Acid.colors.accent, vertical = true, label = null,
+                    said = stringResource(R.string.a11y_mod_wheel),
                     modifier = Modifier.width(26.dp).fillMaxHeight(),
                 ) { v -> mod = v; NativeEngine.controlChange(trackIndex, 1, (v * 127f).toInt()) }
                 PianoKeys(
@@ -1148,6 +1158,14 @@ fun EditScreen(
                 TouchWheel(
                     value = bend, accent = Acid.colors.teal, vertical = true,
                     springBackTo = 0.5f, centreMark = true, label = null,
+                    said = stringResource(R.string.a11y_bend_wheel),
+                    state = kotlin.math.round((bend * 2f - 1f) * 100f).toInt().let { amount ->
+                        when {
+                            kotlin.math.abs(amount) < 2 -> stringResource(R.string.a11y_centre)
+                            amount > 0 -> stringResource(R.string.a11y_bend_up, amount)
+                            else -> stringResource(R.string.a11y_bend_down, -amount)
+                        }
+                    },
                     modifier = Modifier.width(26.dp).fillMaxHeight(),
                 ) { v ->
                     bend = v

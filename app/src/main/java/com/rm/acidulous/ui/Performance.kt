@@ -35,6 +35,7 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
 import androidx.compose.ui.res.stringResource
 import com.rm.acidulous.R
+import kotlinx.coroutines.launch
 
 /**
  * The performance controls, shaped like the things they are.
@@ -60,13 +61,29 @@ fun TouchWheel(
     /** A line across the middle, for a control whose rest position is centre. */
     centreMark: Boolean = false,
     label: String? = null,
+    /** What TalkBack calls it; unnamed, TalkBack does not stop on it. */
+    said: String? = null,
+    /** Its setting in words, where a percentage is not the right reading. */
+    state: String = "",
     onChange: (Float) -> Unit,
 ) {
     val c = Acid.colors
     val change by rememberUpdatedState(onChange)
     val spring by rememberUpdatedState(springBackTo)
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     Box(
         modifier.clip(RoundedCornerShape(5.dp)).background(c.wheelBg)
+            // A swipe from TalkBack sets it and never lets go, so a wheel that
+            // springs back does it on its own a moment later - otherwise a
+            // bend set by TalkBack would hold every note out of tune.
+            .then(
+                if (said == null) Modifier else Modifier.adjustable(
+                    said, state.ifEmpty { "%.0f%%".format(value * 100f) }, value,
+                ) { v ->
+                    change(v)
+                    spring?.let { rest -> scope.launch { kotlinx.coroutines.delay(700); change(rest) } }
+                },
+            )
             .pointerInput(vertical) {
                 awaitEachGesture {
                     val down = awaitFirstDown()

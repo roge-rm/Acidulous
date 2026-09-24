@@ -208,9 +208,10 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
                         }
                     }
                 }
-                Caption(stringResource(R.string.perform_feedback))
+                Caption(stringResource(R.string.perform_feedback), Modifier.silent())
                 MiniSlider(
                     settings.feedback / 0.9f, Modifier.fillMaxWidth().height(20.dp),
+                    name = stringResource(R.string.perform_feedback),
                     onStart = { editor.beginSongGesture() },
                     onChange = { v ->
                         NativeEngine.setParam(track, "perform", "feedback", v, record = false)
@@ -297,7 +298,7 @@ fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modif
         NativeEngine.setParam(i, "channel", "mute", if (want) 1f else 0f, record = true, quantise = quantise)
     }
     Row(modifier.background(c.panelAlt).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Column(Modifier.weight(3f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.weight(3f).fillMaxHeight().together(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Caption(stringResource(R.string.perform_mute))
             // Four across, the way the track picker lays sixteen out, and
             // always four rows tall so a short song's buttons are not huge.
@@ -316,7 +317,7 @@ fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modif
             }
             repeat((4 - rows.size).coerceAtLeast(0)) { Spacer(Modifier.weight(1f)) }
         }
-        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.weight(1f).fillMaxHeight().together(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Caption(stringResource(R.string.perform_fill))
             HoldPad(stringResource(R.string.perform_fill), UiPrefs.fillHeld, latch = false, colour = c.accent, modifier = Modifier.fillMaxWidth().weight(1f)) { on ->
                 UiPrefs.holdFill(on)
@@ -331,8 +332,8 @@ fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modif
 }
 
 @Composable
-private fun Caption(text: String) {
-    Text(text, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+private fun Caption(text: String, modifier: Modifier = Modifier) {
+    Text(text, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = modifier)
 }
 
 /** A setting you tap through: its name, and what it is set to. */
@@ -340,7 +341,8 @@ private fun Caption(text: String) {
 private fun Setting(label: String, value: String, modifier: Modifier, onClick: () -> Unit) {
     val c = Acid.colors
     Box(
-        modifier.height(28.dp).clip(RoundedCornerShape(4.dp)).background(c.raised).clickable(onClick = onClick),
+        modifier.height(28.dp).clip(RoundedCornerShape(4.dp)).background(c.raised)
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(stringResource(R.string.perform_setting, label, value), color = c.textMid, fontSize = 11.sp, maxLines = 1, softWrap = false) }
 }
@@ -358,7 +360,7 @@ private fun TargetChip(song: Song, editor: SongEditor, modifier: Modifier) {
     Box(
         modifier.height(28.dp).clip(RoundedCornerShape(4.dp))
             .background(if (target > 0) c.accent.copy(alpha = 0.25f) else c.raised)
-            .clickable {
+            .clickable(role = androidx.compose.ui.semantics.Role.Button) {
                 editor.editSong { s ->
                     s.copy(master = s.master.copy(perform = s.master.perform.copy(target = (target + 1) % (groups.size + 1))))
                 }
@@ -399,11 +401,11 @@ private fun TrackMute(name: String, colour: Color, muted: Boolean, waiting: Bool
             .then(if (waiting != null) Modifier.border(2.dp, if (waiting) c.red else c.textMid, shape) else Modifier)
             .clickable(onClick = onClick)
             .button(
-                name,
+                stringResource(R.string.a11y_mute, name),
                 listOfNotNull(
-                    if (muted) stringResource(R.string.a11y_muted) else null,
+                    stringResource(if (muted) R.string.a11y_muted else R.string.a11y_off),
                     if (waiting != null) stringResource(R.string.a11y_mute_pending) else null,
-                ).joinToString(stringResource(R.string.list_separator)).ifEmpty { null },
+                ).joinToString(stringResource(R.string.list_separator)),
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {

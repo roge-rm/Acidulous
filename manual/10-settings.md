@@ -75,5 +75,6 @@ TalkBack's actions menu.
 The piano roll says how many notes a clip has and the lowest and highest, not
 each note. To add notes, record them from the keys.
 
-In the song grid, TalkBack only reads the clips on screen, so scroll the grid
-to reach the rest.
+With TalkBack on, the song grid shows as many scenes as fit and doesn't scroll
+sideways. **Previous scenes** and **Next scenes** above it move a page at a
+time. When the last page is full, add a scene from a scene's own menu.

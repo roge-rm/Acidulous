@@ -50,6 +50,13 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.ScrollState
@@ -512,8 +519,53 @@ fun MainScreen(
         // Everything else follows it, so a cell keeps its shape.
         val z = cellW / CELL_W
         val cell = SongCell(TRACK_W * z, cellW, CELL_H * z, SCENE_H * z)
+        // **With TalkBack on, the scenes come a page at a time** rather than
+        // scrolling. TalkBack reads only what is on screen, and scrolls a
+        // container once it has read all of it - so in a grid that scrolls
+        // sideways under every row, it read the first row's hidden scenes and
+        // skipped them in every other. A page is as many scenes as fit, so
+        // nothing is off screen; and with no scroller between them, each
+        // track's header is read just before its own clips.
+        val talkBack = rememberTalkBack()
+        var gridW by remember { mutableIntStateOf(0) }
+        var scenePage by rememberSaveable { mutableIntStateOf(0) }
+        val sceneCount = song.scenes.size.coerceAtLeast(1)
+        val perPage = if (!talkBack || gridW == 0) sceneCount else with(LocalDensity.current) {
+            ((gridW.toDp() - cell.trackW) / cell.cellW).toInt().coerceAtLeast(1)
+        }
+        val pages = (sceneCount + perPage - 1) / perPage
+        val page = scenePage.coerceIn(0, pages - 1)
+        val shownScenes = page * perPage until minOf(song.scenes.size, (page + 1) * perPage)
+        // + scene where there is room for it: always without TalkBack, and on
+        // the last page with it. A full last page leaves it out - each
+        // scene's own menu adds one after it as well.
+        val showAddScene = !talkBack || (page == pages - 1 && shownScenes.count() < perPage)
+        if (pages > 1) {
+            val first = shownScenes.first + 1
+            val last = shownScenes.last + 1
+            val pageSaid = if (first == last) {
+                stringResource(R.string.a11y_scene_page_one, first, song.scenes.size)
+            } else {
+                stringResource(R.string.a11y_scene_page, first, last, song.scenes.size)
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                HeaderButton("◀", description = stringResource(R.string.a11y_prev_scenes)) { scenePage = (page - 1 + pages) % pages }
+                Text(
+                    stringResource(R.string.main_scene_page, first, last, song.scenes.size),
+                    color = Acid.colors.accent, fontSize = 12.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                    // Said when it changes, so a press of either arrow is
+                    // answered with where it went.
+                    modifier = Modifier.semantics {
+                        contentDescription = pageSaid
+                        liveRegion = LiveRegionMode.Polite
+                    },
+                )
+                HeaderButton("▶", description = stringResource(R.string.a11y_next_scenes)) { scenePage = (page + 1) % pages }
+            }
+        }
         Row(
             Modifier.fillMaxWidth().weight(1f)
+                .onSizeChanged { gridW = it.width }
                 // **Two fingers move the grid; one still launches a clip.**
                 //
                 // Watched on the Initial pass, which travels parent to child,
@@ -614,9 +666,10 @@ fun MainScreen(
                 ) { Text(stringResource(R.string.main_add_track), fontSize = 11.sp, maxLines = 1) }
             }
             // Scenes, scrolling horizontally.
-            Column(Modifier.horizontalScrollWithBar(hScroll)) {
+            Column(if (talkBack) Modifier else Modifier.horizontalScrollWithBar(hScroll)) {
                 Row {
-                    song.scenes.forEachIndexed { index, scene ->
+                    for (index in shownScenes) {
+                        val scene = song.scenes[index]
                         // In clip mode the arranger's playhead is stale - it
                         // stopped where the song was when the mode changed -
                         // so reading `position` here lit up whichever scene
@@ -699,7 +752,7 @@ fun MainScreen(
                             onThaw = { onThaw(song.tracks.indices.map { Freeze.Target(it, scene.id) }) },
                         )
                     }
-                    OutlinedButton(
+                    if (showAddScene) OutlinedButton(
                         onClick = { editor.editSong { it.addScene() } },
                         modifier = Modifier.width(cell.cellW).height(cell.sceneH).padding(3.dp),
                         contentPadding = PaddingValues(4.dp),
@@ -707,7 +760,8 @@ fun MainScreen(
                 }
                 song.tracks.forEachIndexed { trackIndex, track ->
                     Row {
-                        song.scenes.forEachIndexed { sceneIndex, scene ->
+                        for (sceneIndex in shownScenes) {
+                            val scene = song.scenes[sceneIndex]
                             val clip = track.clips[scene.id]
                             val launch = launchStates.getOrElse(trackIndex) { LaunchState.idle }
                             val live = if (clipMode) launch.scene == sceneIndex else position.scene == sceneIndex
@@ -790,24 +844,28 @@ fun MainScreen(
             } else {
                 Dp.Unspecified
             }
+            // TalkBack reads the tabs, then the page: without the groups it
+            // read across both, a tab between every row of pads.
             Row(
                 Modifier.fillMaxWidth().background(Acid.colors.panelAlt)
-                    .then(if (mixerCap != Dp.Unspecified) Modifier.heightIn(max = mixerCap) else Modifier),
+                    .then(if (mixerCap != Dp.Unspecified) Modifier.heightIn(max = mixerCap) else Modifier)
+                    .together(),
             ) {
                 Column(
-                    Modifier.width(PANEL_TAB_W).padding(start = 4.dp, top = 6.dp),
+                    Modifier.width(PANEL_TAB_W).padding(start = 4.dp, top = 6.dp)
+                        .together().semantics { traversalIndex = -1f },
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     stringArrayResource(R.array.main_panel_pages).forEachIndexed { i, label -> PanelTab(label, panelPage == i) { panelPage = i } }
                 }
-                val pageModifier = Modifier.weight(1f).height(if (panelH == Dp.Unspecified) PERFORM_H else panelH)
+                val pageModifier = Modifier.weight(1f).height(if (panelH == Dp.Unspecified) PERFORM_H else panelH).together()
                 when (panelPage) {
                     1 -> HoldPage(song, editor, performTrack, performState, pageModifier)
                     2 -> PadPage(song, editor, performTrack, performState, pageModifier)
                     3 -> LivePage(song, editor, playing, position.scene, pageModifier)
                     else -> MixerPanel(
                         song, editor, rackPeaks, masterPeak, clickOn, onClick,
-                        Modifier.weight(1f).onSizeChanged { panelH = with(density) { it.height.toDp() } },
+                        Modifier.weight(1f).onSizeChanged { panelH = with(density) { it.height.toDp() } }.together(),
                     )
                 }
             }

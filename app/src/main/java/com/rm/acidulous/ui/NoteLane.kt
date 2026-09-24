@@ -242,7 +242,7 @@ fun NoteLane(
                 Modifier.fillMaxWidth()
                     .then(if (collapsed) Modifier.fillMaxHeight() else Modifier.height(18.dp))
                     .clickable { onToggleCollapse() }
-                    .button(stringResource(if (collapsed) R.string.a11y_unfold_lane else R.string.a11y_fold_lane)),
+                    .button(stringResource(if (collapsed) R.string.a11y_unfold_note_lane else R.string.a11y_fold_note_lane)),
                 contentAlignment = Alignment.Center,
             ) { Text(if (collapsed) "▴" else "▾", color = c.textMid, fontSize = 11.sp) }
             // A position bar: this grows a row per distinct pitch in the clip, so on a

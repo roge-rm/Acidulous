@@ -180,8 +180,10 @@
     <string name="a11y_note_lane">Per-note lane</string>
     <string name="a11y_choose_lane">Choose a lane</string>
     <string name="a11y_none_chosen">none chosen</string>
-    <string name="a11y_fold_lane">Fold the lane</string>
-    <string name="a11y_unfold_lane">Unfold the lane</string>
+    <string name="a11y_fold_lane">Fold the automation lane</string>
+    <string name="a11y_unfold_lane">Unfold the automation lane</string>
+    <string name="a11y_fold_note_lane">Fold the per-note lane</string>
+    <string name="a11y_unfold_note_lane">Unfold the per-note lane</string>
     <string name="a11y_fold_keys">Fold the keyboard</string>
     <string name="a11y_unfold_keys">Unfold the keyboard</string>
     <string name="a11y_fold_slot">Fold this effect</string>
@@ -216,4 +218,15 @@
     <string name="a11y_select_module">Select %1$d, %2$s</string>
     <!-- The cross at the end of a song in the list. -->
     <string name="a11y_delete">Delete %1$s</string>
+    <!-- The song grid's pages of scenes, with TalkBack on. -->
+    <string name="a11y_prev_scenes">Previous scenes</string>
+    <string name="a11y_next_scenes">Next scenes</string>
+    <string name="a11y_scene_page">Scenes %1$d to %2$d of %3$d</string>
+    <string name="a11y_scene_page_one">Scene %1$d of %2$d</string>
+    <!-- The wheels beside the keyboard, and the pressure strip. -->
+    <string name="a11y_mod_wheel">Mod wheel</string>
+    <string name="a11y_bend_wheel">Pitch bend</string>
+    <string name="a11y_pressure">Pressure</string>
+    <string name="a11y_bend_up">up %1$d%%</string>
+    <string name="a11y_bend_down">down %1$d%%</string>
 </resources>
