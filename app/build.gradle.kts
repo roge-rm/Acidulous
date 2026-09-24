@@ -111,8 +111,14 @@ android {
         // the organ and Nexus take tunings. A point release on the way to
         // 1.0, though a song with pedal lanes plays without them in 0.9.0
         // (Dan's call: it was 0.10.0 for a minute).
-        versionCode = 16
-        versionName = "0.9.1"
+        //
+        // 0.9.2: the first release build that has been played. Songs are
+        // saved so a crash cannot leave half of one; the app stops for a
+        // call, another app's music or headphones pulled out; crashes and
+        // freezes leave a report on the phone that can be shared; backup
+        // keeps the songs and not the samples; and the release is shrunk.
+        versionCode = 17
+        versionName = "0.9.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
