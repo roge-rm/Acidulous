@@ -121,6 +121,16 @@ internal fun share(context: android.content.Context, uris: List<android.net.Uri>
     context.startActivity(android.content.Intent.createChooser(send, title))
 }
 
+/** A crash report through the share sheet, as a text file. */
+internal fun shareCrashReport(context: android.content.Context, report: File) {
+    runCatching {
+        val dir = File(context.cacheDir, "shared").apply { mkdirs() }
+        val copy = File(dir, report.name).also { report.copyTo(it, overwrite = true) }
+        val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", copy)
+        share(context, listOf(uri), "text/plain", "Acidulous crash report")
+    }.onFailure { Log.w("Acidulous.Crash", "could not share the report", it) }
+}
+
 class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
@@ -128,7 +138,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Before anything else can throw.
+        CrashReports.install(this)
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) CrashReports.collect(this)
         // Only on a fresh start: a recreated activity has already taken it.
         if (savedInstanceState == null) Incoming.from(intent)
         com.rm.acidulous.ui.UiPrefs.init(this)
@@ -963,6 +976,27 @@ private fun App(modifier: Modifier = Modifier) {
     notice?.let { (title, message) ->
         com.rm.acidulous.ui.PlainDialog(title = title, onDismiss = { notice = null }, dismissLabel = "Close") {
             Text(message, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
+        }
+    }
+    // The last run ended in a crash or a freeze: say so once, and offer the
+    // report to whoever can fix it. See CrashReports.
+    var crashed by remember { mutableStateOf(CrashReports.unread(context)) }
+    crashed?.let { report ->
+        com.rm.acidulous.ui.PlainDialog(
+            title = "Acidulous stopped",
+            onDismiss = { CrashReports.markRead(context); crashed = null },
+            dismissLabel = "Close",
+            confirmLabel = "Share report",
+            onConfirm = {
+                CrashReports.markRead(context)
+                crashed = null
+                shareCrashReport(context, report)
+            },
+        ) {
+            Text(
+                "It closed unexpectedly last time. A report was saved on this phone; sharing it helps get it fixed.",
+                fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi,
+            )
         }
     }
     /** A MIDI file read and waiting for its import window: its name and its parts. */

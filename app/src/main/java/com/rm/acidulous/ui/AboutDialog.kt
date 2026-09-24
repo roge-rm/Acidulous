@@ -95,6 +95,13 @@ private fun AppTab() {
             onClick = { panicEverything() },
             border = androidx.compose.foundation.BorderStroke(1.dp, c.red),
         ) { Text("Panic · stop all sound", color = c.red) }
+        // The last crash report, while there is one, for whoever asks for it.
+        val report = remember { com.rm.acidulous.CrashReports.latest(context) }
+        if (report != null) {
+            androidx.compose.material3.TextButton(
+                onClick = { com.rm.acidulous.shareCrashReport(context, report) },
+            ) { Text("Share the last crash report") }
+        }
     }
 }
 
