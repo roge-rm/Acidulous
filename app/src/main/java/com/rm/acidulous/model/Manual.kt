@@ -53,6 +53,7 @@ object Manual {
             ManualBlock(ManualKind.Bullet, "The loop button at the left of the bottom bar: **tap** it to choose what loops, the whole song or the current scene. **Hold** it to choose whether it loops at all: **⟳** loops forever, **⇥ end** plays through once and stops."),
             ManualBlock(ManualKind.Bullet, "Stop means stop. The next play starts from the top of the song."),
             ManualBlock(ManualKind.Bullet, "If something keeps sounding, **hold play** to silence everything: every note, echo and tail. **Panic** under About… in the file menu does the same."),
+            ManualBlock(ManualKind.Bullet, "Playing stops by itself when a call comes in, another app starts playing, or headphones are unplugged, so it never carries on out of the speaker."),
             ManualBlock(ManualKind.Bullet, "If Acidulous ever closes unexpectedly, it says so the next time it opens and offers to share a report. Reports stay on the phone unless you share one; the last one is also in About."),
             ManualBlock(ManualKind.Para, "### A scene's tempo"),
             ManualBlock(ManualKind.Para, "In a scene's settings, **tempo** can follow the song or be the scene's own. An own tempo either jumps in when the scene starts or glides in over its first bar."),

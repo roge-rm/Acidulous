@@ -19,6 +19,8 @@ the next scene starts.
 - Stop means stop. The next play starts from the top of the song.
 - If something keeps sounding, **hold play** to silence everything: every
   note, echo and tail. **Panic** under About… in the file menu does the same.
+- Playing stops by itself when a call comes in, another app starts playing,
+  or headphones are unplugged, so it never carries on out of the speaker.
 - If Acidulous ever closes unexpectedly, it says so the next time it opens and
   offers to share a report. Reports stay on the phone unless you share one;
   the last one is also in About.

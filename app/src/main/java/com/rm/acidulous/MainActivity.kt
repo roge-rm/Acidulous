@@ -1366,7 +1366,12 @@ private fun App(modifier: Modifier = Modifier) {
             // is made only on the change, because `startForegroundService`
             // every eighty milliseconds is a binder call every eighty
             // milliseconds.
-            if (playing != wasPlaying) PlaybackService.follow(context, playing)
+            if (playing != wasPlaying) {
+                PlaybackService.follow(context, playing)
+                // Stop for a call, another app's music, or headphones pulled
+                // out - see media/AudioFocus.
+                com.rm.acidulous.media.AudioFocus.follow(context, playing) { NativeEngine.transportStop() }
+            }
             position = Position.unpack(NativeEngine.positionPacked)
             countInBeats = countInBeatsOf(NativeEngine.countInRemaining)
             bpm = NativeEngine.tempo
