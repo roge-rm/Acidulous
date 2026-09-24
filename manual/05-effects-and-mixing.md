@@ -256,8 +256,7 @@ of the keyboard keeps its usual pitch, so an A tuning leaves A at 440 and the
 rest move around it. Change the root and the tuning follows.
 
 A track can have its own: hold the track's name for its settings, where
-**song** means it uses the song's. Drum machines, the organ and Nexus always play in equal
-temperament.
+**song** means it uses the song's. Drum machines always play in equal temperament.
 
 Your own tunings come in as Scala files (.scl): use **Import…** in the file
 menu and it joins the list. The tuning is saved inside the song, so it plays

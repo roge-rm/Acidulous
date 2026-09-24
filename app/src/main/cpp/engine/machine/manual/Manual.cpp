@@ -294,9 +294,15 @@ void Manual::rebuildTuning() {
     const float age = paramOf(Age);
     const float spray = paramOf(Spray);
     const int32_t pattern = steppedOf(SprayPattern);
-    if (std::fabs(age - modelAge) < 0.0005f && std::fabs(spray - modelSpray) < 0.0005f) return;
+    // And the track's tuning. A tonewheel organ is tuned a wheel at a time -
+    // each is its own gear - so a tuning maps straight onto the generator:
+    // the wheel for a note turns at that note's pitch in the tuning, and
+    // every drawbar that taps it hears the same.
+    const float *table = tuningTable();
+    if (std::fabs(age - modelAge) < 0.0005f && std::fabs(spray - modelSpray) < 0.0005f && table == modelTuning) return;
     modelAge = age;
     modelSpray = spray;
+    modelTuning = table;
     uint32_t s = 0x9e3779b9u;
     for (int w = 0; w < WheelBank::kWheels; ++w) {
         s = s * 1664525u + 1013904223u;
@@ -317,7 +323,9 @@ void Manual::rebuildTuning() {
                           : pattern == 1 ? 0.45f + 0.55f * t
                                          : 0.7f + 0.3f * std::sin(t * 12.566f);
         const float cents = r1 * age * 7.0f;
-        wheelStep[w] = bank->freq(w) * std::pow(2.0f, cents / 1200.0f) / sampleRate;
+        const int note = std::min(127, WheelBank::kLowestNote + w);
+        const float tuned = table != nullptr ? table[note] : 1.0f;
+        wheelStep[w] = bank->freq(w) * tuned * std::pow(2.0f, cents / 1200.0f) / sampleRate;
         wheelTrim[w] = 1.0f + r2 * age * 0.12f;
         sprayDetune[w] = shape;
         // Where in the field the second rank sits: low at one side, high at

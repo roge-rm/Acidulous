@@ -163,6 +163,8 @@ class Manual final : public Machine {
     float sprayDrift = 0.0f;
     float modelAge = -1.0f;
     float modelSpray = -1.0f;
+    // The tuning table the wheels were last turned to; see rebuildTuning.
+    const float *modelTuning = nullptr;
 
     Rotary rotary;
     dsp::LfoGen lfo[2];

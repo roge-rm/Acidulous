@@ -157,6 +157,9 @@ class Machine {
         return equal * r;
     }
 
+    /** The table itself, for a machine that tunes something other than a voice - the organ's wheels. */
+    const float *tuningTable() const { return tuning_; }
+
   private:
     const float *tuning_ = nullptr;
 };

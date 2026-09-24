@@ -167,7 +167,13 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
     int32_t activeCount = 0;
     for (int32_t i = 0; i < kVoices; ++i) {
         if (!voices[i].used) continue;
-        pitchOf[i] = static_cast<float>(voices[i].note) + shift + voices[i].bend;
+        // In the track's tuning. The blocks work in semitones and turn them
+        // into hertz themselves, so the tuning goes in here, as the fraction
+        // of a semitone the tuned note is away from the equal one - and
+        // everything a cable adds to the pitch then moves from there.
+        const float played = static_cast<float>(voices[i].note) + shift;
+        const float tuned = tuningTable() != nullptr ? 69.0f + 12.0f * std::log2(noteHz(played) / 440.0f) : played;
+        pitchOf[i] = tuned + voices[i].bend;
         active[activeCount++] = i;
     }
     ctx.tickInc = frames > 0 ? tickStep / static_cast<double>(frames) : 0.0;

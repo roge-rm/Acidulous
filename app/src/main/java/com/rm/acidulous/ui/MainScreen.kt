@@ -866,7 +866,10 @@ fun MainScreen(
             val ctx = androidx.compose.ui.platform.LocalContext.current
             val tunings = remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot(ctx)) }
             TrackSettingsDialog(song, d.index, tunings, onDismiss = { dialog = null }) { edited ->
-                editor.edit(d.index) { edited }
+                // A song edit, not the track's own: it is made from the grid,
+                // and the grid's undo is the song's. As a track edit it went
+                // into a history only that track's editor could reach.
+                editor.editSong { s -> s.copy(tracks = s.tracks.mapIndexed { i, t -> if (i == d.index) edited else t }) }
                 dialog = null
             }
         }

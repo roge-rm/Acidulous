@@ -663,7 +663,7 @@ object Manual {
             ManualBlock(ManualKind.Bullet, "**werckmeister** - a well temperament: every key usable, each one a little different."),
             ManualBlock(ManualKind.Bullet, "**19 equal** and **24 equal** - more than twelve notes an octave. The octave is 19 or 24 keys up, so the keyboard plays small steps. 24 is quarter tones."),
             ManualBlock(ManualKind.Para, "A tuning is counted from the song's **root**. The root's own note in the middle of the keyboard keeps its usual pitch, so an A tuning leaves A at 440 and the rest move around it. Change the root and the tuning follows."),
-            ManualBlock(ManualKind.Para, "A track can have its own: hold the track's name for its settings, where **song** means it uses the song's. Drum machines, the organ and Nexus always play in equal temperament."),
+            ManualBlock(ManualKind.Para, "A track can have its own: hold the track's name for its settings, where **song** means it uses the song's. Drum machines always play in equal temperament."),
             ManualBlock(ManualKind.Para, "Your own tunings come in as Scala files (.scl): use **Import…** in the file menu and it joins the list. The tuning is saved inside the song, so it plays the same on a phone that has never seen the file."),
             ManualBlock(ManualKind.Heading, "How swing works"),
             ManualBlock(ManualKind.Para, "Swing moves the offbeats later without changing the order of notes, so a loosely played part swings along with everything else."),

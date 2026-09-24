@@ -117,7 +117,14 @@ fun PatchScreen(
     val palette = remember { NexusPalette.placeable }
     var selection by remember { mutableStateOf<Selection>(Selection.None) }
     var pan by remember { mutableStateOf(Offset(-40f, -40f)) }
-    var zoom by remember { mutableStateOf(1.1f) }
+    // In dp per unit of the patch's own space, not pixels. It was pixels,
+    // which drew the modules a third the size on a dense screen as on a
+    // plain one while their labels, in sp, stayed the same - so on the
+    // densest the labels overran the modules they name. [scale] is what the
+    // drawing and the gestures use; the labels are sized from zoom alone.
+    var zoom by remember { mutableStateOf(0.9f) }
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    val scale = zoom * density
     var pulling by remember { mutableStateOf<Pair<Jack, Offset>?>(null) }
     var adding by remember { mutableStateOf(false) }
     var scope by remember { mutableStateOf(FloatArray(0)) }
@@ -165,7 +172,7 @@ fun PatchScreen(
             HeaderTextButton("fit") {
                 if (patch.modules.isNotEmpty()) {
                     pan = Offset(patch.modules.minOf { it.x } - 30f, patch.modules.minOf { it.y } - 30f)
-                    zoom = 1.0f
+                    zoom = 0.9f
                 }
             }
             LoadMeter()
@@ -189,7 +196,7 @@ fun PatchScreen(
                 Modifier.fillMaxSize().pointerInput(Unit) {
                     awaitEachGesture {
                         val down = awaitFirstDown()
-                        val world = { p: Offset -> Offset(p.x / zoom + pan.x, p.y / zoom + pan.y) }
+                        val world = { p: Offset -> Offset(p.x / (zoom * density) + pan.x, p.y / (zoom * density) + pan.y) }
                         val start = world(down.position)
                         val current = patchState
 
@@ -283,16 +290,16 @@ fun PatchScreen(
                                     val centre = (pressed[0].position + pressed[1].position) * 0.5f
                                     if (lastSpan > 1f) {
                                         val factor = (span / lastSpan).coerceIn(0.8f, 1.25f)
-                                        val before = Offset(centre.x / zoom + pan.x, centre.y / zoom + pan.y)
+                                        val before = Offset(centre.x / (zoom * density) + pan.x, centre.y / (zoom * density) + pan.y)
                                         zoom = (zoom * factor).coerceIn(0.35f, 2.6f)
-                                        val after = Offset(centre.x / zoom + pan.x, centre.y / zoom + pan.y)
+                                        val after = Offset(centre.x / (zoom * density) + pan.x, centre.y / (zoom * density) + pan.y)
                                         pan += before - after
                                     }
                                     lastSpan = span
                                     last = centre
                                 } else {
                                     val p = pressed[0].position
-                                    pan -= (p - last) / zoom
+                                    pan -= (p - last) / (zoom * density)
                                     last = p
                                     lastSpan = 0f
                                 }
@@ -302,7 +309,7 @@ fun PatchScreen(
                     }
                 },
             ) {
-                drawPatch(patch, pan, zoom, selection, pulling, scope, activity, measurer, c)
+                drawPatch(patch, pan, scale, zoom, selection, pulling, scope, activity, measurer, c)
             }
         }
 
@@ -384,7 +391,10 @@ private fun nearestCable(patch: NexusPatch, at: Offset): Int? {
 private fun DrawScope.drawPatch(
     patch: NexusPatch,
     pan: Offset,
+    /** Pixels per unit of patch space: the drawing's scale. */
     zoom: Float,
+    /** The zoom a person set, which is what the words are sized from. */
+    textZoom: Float,
     selection: Selection,
     pulling: Pair<Jack, Offset>?,
     scope: FloatArray,
@@ -497,24 +507,24 @@ private fun DrawScope.drawPatch(
             if (selected) col.accent else col.nodeEdge, at, Size(w, h),
             androidx.compose.ui.geometry.CornerRadius(6f, 6f), style = Stroke(if (selected) 2.5f else 1.2f),
         )
-        if (zoom > 0.55f) {
+        if (textZoom > 0.55f) {
             val title = measurer.measure(
                 AnnotatedString("${m.slot} ${m.type}${if (m.poly) "" else " \u00b7mono"}"),
-                TextStyle(color = tint, fontSize = (9f * zoom).sp, fontFamily = FontFamily.Monospace),
+                TextStyle(color = tint, fontSize = (9f * textZoom).sp, fontFamily = FontFamily.Monospace),
             )
             drawText(title, topLeft = at + Offset(6f * zoom, 2f * zoom))
         }
         // Jacks, and what they are called. A cable is drawn between two dots
         // and until now there was no way to know which dot was "pitch" and
         // which was "fm" without selecting the module and reading the panel.
-        val labels = zoom > 0.85f
+        val labels = textZoom > 0.85f
         meta?.inputs?.forEachIndexed { i, name ->
             val pos = screen(jackPosition(m, i, false, meta.inputs.size))
             drawCircle(col.teal, JACK_R * zoom, pos)
             if (labels && name.isNotEmpty()) {
                 val t = measurer.measure(
                     AnnotatedString(name),
-                    TextStyle(color = col.textDim, fontSize = (7f * zoom).sp, fontFamily = FontFamily.Monospace),
+                    TextStyle(color = col.textDim, fontSize = (7f * textZoom).sp, fontFamily = FontFamily.Monospace),
                 )
                 drawText(t, topLeft = pos + Offset(JACK_R * zoom + 2f * zoom, -t.size.height / 2f))
             }
@@ -525,13 +535,13 @@ private fun DrawScope.drawPatch(
             if (labels && name.isNotEmpty()) {
                 val t = measurer.measure(
                     AnnotatedString(name),
-                    TextStyle(color = col.textDim, fontSize = (7f * zoom).sp, fontFamily = FontFamily.Monospace),
+                    TextStyle(color = col.textDim, fontSize = (7f * textZoom).sp, fontFamily = FontFamily.Monospace),
                 )
                 drawText(t, topLeft = pos - Offset(t.size.width + JACK_R * zoom + 2f * zoom, t.size.height / 2f))
             }
         }
         // A scope draws its own trace: it is the one module that is a picture.
-        if (m.type == "scope" && scope.isNotEmpty() && zoom > 0.5f) {
+        if (m.type == "scope" && scope.isNotEmpty() && textZoom > 0.5f) {
             val path = Path()
             scope.forEachIndexed { i, v ->
                 val x = at.x + 8f * zoom + (w - 16f * zoom) * i / (scope.size - 1).coerceAtLeast(1)

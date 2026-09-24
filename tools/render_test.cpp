@@ -1089,6 +1089,30 @@ void thePedalsHoldWhatTheyShould() {
     }
 }
 
+/** The organ's wheels, in a tuning: [ratio] on every note, or none. */
+std::vector<float> organ(float ratio, bool tuned) {
+    PedalRig r("Manual");
+    float table[128];
+    for (float &x : table) x = ratio;
+    if (tuned) r.rack.setTuning(table);
+    r.rack.playSequenced(0x90, 60, 100);
+    std::vector<float> out;
+    for (int32_t b = 0; b < 200; ++b) {
+        r.f.engine.renderBlock(nullptr, r.scratch);
+        out.insert(out.end(), r.scratch, r.scratch + kBlockFrames * 2);
+    }
+    return out;
+}
+
+void theOrganCanBeTuned() {
+    printf("- a tuned organ\n");
+    const auto plain = organ(1.0f, false);
+    const auto unity = organ(1.0f, true);
+    const auto up = organ(std::exp2(1.0f / 12.0f), true);
+    ok("a tuning of all ones changes nothing", largestDifference(plain, unity) < 1e-6f, std::to_string(largestDifference(plain, unity)));
+    ok("a tuning moves the wheels", largestDifference(plain, up) > 0.05f, std::to_string(largestDifference(plain, up)));
+}
+
 void aTrackCanBeTuned() {
     printf("- a tuned track\n");
     constexpr int32_t kBlocks = 750;
@@ -1117,6 +1141,7 @@ int main() {
     aTrackCanBeTransposed();
     aTransposeLetsGoOfWhatItStarted();
     thePedalsHoldWhatTheyShould();
+    theOrganCanBeTuned();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
