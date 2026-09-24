@@ -123,8 +123,13 @@ android {
         // rather than "1 notes". One demo song, an acid track that opens on
         // the first run, in place of the five and their menu. The first
         // release on GitHub and in the F-Droid repo.
-        versionCode = 18
-        versionName = "0.9.3"
+        //
+        // 0.9.4: TalkBack can play it - every control says what it is and
+        // what it is set to, knobs are sliders, holds are named actions, and
+        // the song grid comes a page of scenes at a time so no clip is out
+        // of reach. A high contrast theme. The version reads on Android 8.1.
+        versionCode = 19
+        versionName = "0.9.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

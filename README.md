@@ -141,6 +141,10 @@ Import MIDI files as a new song, with a machine chosen for each part and General
 
 Anything exported can go straight to the share sheet, and a song can be shared as a bundle. Files shared to the app or opened with it are imported.
 
+### Accessibility
+
+Works with TalkBack. Every control says what it is and what it's set to, knobs and faders change with a swipe, and anything you'd hold is in TalkBack's actions menu. There's also a high contrast theme in Settings.
+
 ---
 
 ## Installing
