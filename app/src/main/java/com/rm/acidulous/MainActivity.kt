@@ -899,6 +899,91 @@ private fun App(modifier: Modifier = Modifier) {
         queuedScene = -1
     }
 
+    // --- Import: a MIDI file, a song bundle, or a sound ------------------------------
+
+    /** What an import has to say: a title and a line. Not [problem], whose words are about audio. */
+    var notice by remember { mutableStateOf<Pair<String, String>?>(null) }
+    notice?.let { (title, message) ->
+        com.rm.acidulous.ui.PlainDialog(title = title, onDismiss = { notice = null }, dismissLabel = "Close") {
+            Text(message, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
+        }
+    }
+    /** A MIDI file read and waiting for its import window: its name and its parts. */
+    var midiImport by remember { mutableStateOf<Pair<String, com.rm.acidulous.model.MidiFile.Parsed>?>(null) }
+
+    /** A song name nothing saved already has: "Riddim", then "Riddim (2)". */
+    fun freeSongName(wanted: String): String {
+        val taken = SongStore.list(context).toSet()
+        if (wanted !in taken) return wanted
+        var n = 2
+        while ("$wanted ($n)" in taken) n++
+        return "$wanted ($n)"
+    }
+
+    /**
+     * One door for everything that comes from outside, told apart by its
+     * name: the system picker offers every file, and a MIDI file, a bundle
+     * and a WAV go to three different places.
+     */
+    fun importFile(uri: android.net.Uri) {
+        val name = displayNameOf(context, uri, "file")
+        val ext = name.substringAfterLast('.', "").lowercase()
+        val stem = name.substringBeforeLast('.').ifBlank { "Imported" }
+        when (ext) {
+            "mid", "midi", "smf", "kar" -> scope.launch {
+                val parsed = withContext(Dispatchers.IO) {
+                    runCatching { com.rm.acidulous.model.MidiFile.read(context.contentResolver.openInputStream(uri)!!.use { it.readBytes() }) }
+                }
+                parsed.onSuccess { p ->
+                    if (p.parts.isEmpty()) notice = "Nothing to import" to "$name has no notes in it."
+                    else midiImport = stem to p
+                }.onFailure { notice = "That would not open" to "$name - ${it.message}." }
+            }
+            "zip" -> scope.launch {
+                val song = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val tmp = File(context.cacheDir, "import.zip")
+                        context.contentResolver.openInputStream(uri)!!.use { input -> tmp.outputStream().use { input.copyTo(it) } }
+                        com.rm.acidulous.model.SongBundle.read(tmp, EngineAssets.userRoot(context)).also { tmp.delete() }
+                    }.getOrNull()
+                }
+                if (song == null) {
+                    notice = "That would not open" to "$name is not a song bundle from Acidulous."
+                } else {
+                    val named = song.copy(name = freeSongName(song.name))
+                    swapSong(named)
+                    SongStore.save(context, named)
+                }
+            }
+            // As long as any machine takes - the ten minutes a slicer can
+            // hold - since nobody has said yet what this sound is for.
+            "wav", "wave", "aif", "aiff", "aifc", "flac", "mp3" ->
+                bringIn(uri, "sample.wav", NativeEngine.SLICE_SECONDS) { rel ->
+                    notice = "Added to the sound library" to "${rel.substringAfterLast('/')} is in the library, ready for any machine that plays a sound."
+                }
+            else -> notice = "That would not open" to
+                "Acidulous imports MIDI files, its own song bundles (.zip), and WAV, AIFF, FLAC and MP3 sounds."
+        }
+    }
+    val importPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) importFile(uri)
+    }
+
+    midiImport?.let { (name, parsed) ->
+        com.rm.acidulous.ui.MidiImportDialog(
+            fileName = name,
+            parsed = parsed,
+            onDismiss = { midiImport = null },
+            onImport = { song ->
+                midiImport = null
+                val named = song.copy(name = freeSongName(song.name))
+                swapSong(named)
+                SongStore.save(context, named)
+            },
+        )
+    }
+
+
     // --- Freeze ---------------------------------------------------------
     // The render takes the audio stream down for as long as it runs, so it
     // happens on a worker with the transport stopped, one clip at a time,
@@ -1420,6 +1505,7 @@ private fun App(modifier: Modifier = Modifier) {
             onDelete = { name -> SongStore.delete(context, name); Log.i(TAG, "deleted $name") },
             songNames = { SongStore.list(context) },
             onExport = { if (!playing) exportAsk = true },
+            onImport = { importPicker.launch(arrayOf("*/*")) },
             exportState = exportState,
             onExportCancel = { NativeEngine.cancelRender() },
             onExportDismiss = { exportState = null },

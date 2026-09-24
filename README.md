@@ -111,9 +111,11 @@ Each has the usual controls plus one extra, and a page in the manual.
 Five, in the file menu: dub, acid house, synthwave, chiptune and a chamber piece
 in 3/4. Between them they use every machine that doesn't need a sample.
 
-### Export
+### Import and export
 
-WAV, AIFF, FLAC, MP3 or AAC, as the whole song or one scene, or as stems. Also MIDI files and a song bundle you can share.
+Export WAV, AIFF, FLAC, MP3 or AAC, as the whole song or one scene, or as stems. Also MIDI files and a song bundle you can share.
+
+Import MIDI files as a new song, with a machine chosen for each part and General MIDI drums moved onto the drum machine's sounds. Song bundles open with their samples, and sounds go into the library.
 
 ---
 

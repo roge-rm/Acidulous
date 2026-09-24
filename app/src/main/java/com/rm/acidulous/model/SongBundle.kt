@@ -48,6 +48,13 @@ object SongBundle {
      * Unpacks a bundle: the media go back under [userRoot] at the same
      * relative paths the song already refers to, so it simply works.
      *
+     * **Unless one of your own files is already there.** A bundle from
+     * somebody else is quite likely to hold a `samples/take 1.wav`, and so is
+     * your phone - and writing theirs over yours would change every song of
+     * yours that used it, silently. A file that is already there with the
+     * same bytes is simply used; one that differs comes in under a new name,
+     * and the song is pointed at that name instead.
+     *
      * A zip entry naming its way out of the folder is refused. Nothing here
      * makes hostile bundles likely, but an archive is somebody else's file
      * and ".." is the oldest trick there is.
@@ -55,6 +62,7 @@ object SongBundle {
     fun read(bundle: File, userRoot: File): Song? {
         var song: Song? = null
         val rootPath = userRoot.canonicalFile
+        val renamed = LinkedHashMap<String, String>()
         ZipInputStream(bundle.inputStream().buffered()).use { zip ->
             while (true) {
                 val entry: ZipEntry = zip.nextEntry ?: break
@@ -65,13 +73,45 @@ object SongBundle {
                     val target = File(userRoot, entry.name).canonicalFile
                     if (!target.path.startsWith(rootPath.path + File.separator)) { zip.closeEntry(); continue }
                     target.parentFile?.mkdirs()
-                    target.outputStream().buffered().use { zip.copyTo(it) }
+                    val incoming = zip.readBytes()
+                    if (!target.exists()) {
+                        target.writeBytes(incoming)
+                    } else if (!target.readBytes().contentEquals(incoming)) {
+                        val fresh = freeName(target)
+                        fresh.writeBytes(incoming)
+                        renamed[entry.name] = fresh.relativeTo(rootPath).invariantSeparatorsPath
+                    }
                 }
                 zip.closeEntry()
             }
         }
-        return song
+        return song?.let { if (renamed.isEmpty()) it else repoint(it, renamed) }
     }
+
+    /** "take 1.wav" is taken: "take 1 (2).wav", then (3), and so on. */
+    private fun freeName(taken: File): File {
+        var n = 2
+        while (true) {
+            val next = File(taken.parentFile, "${taken.nameWithoutExtension} ($n).${taken.extension}")
+            if (!next.exists()) return next
+            n++
+        }
+    }
+
+    /** The song, with every setting that named a renamed file naming its new name. */
+    fun repoint(song: Song, renamed: Map<String, String>): Song = song.copy(
+        tracks = song.tracks.map { t ->
+            t.copy(machine = t.machine.copy(settings = t.machine.settings.mapValues { (_, value) ->
+                // Token by token, on the same separators `referenced` reads,
+                // so "samples/a.wav" is never found inside "samples/a.wav2".
+                Regex("[^\n|,]+").replace(value) { m ->
+                    val token = m.value
+                    val trimmed = token.trim()
+                    renamed[trimmed]?.let { token.replace(trimmed, it) } ?: token
+                }
+            }))
+        },
+    )
 
     /** Every file under [userRoot] that some setting in [song] names. */
     fun referenced(song: Song, userRoot: File): List<String> {

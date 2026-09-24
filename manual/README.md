@@ -45,7 +45,7 @@
 6. [Modifiers](06-modifiers.md) - scale, chord and arp, applied to notes as you play them in.
 7. [MIDI and playing with others](07-midi-and-sync.md) - keyboards, controller mapping, clock, MPE and Link.
 8. [Recording and samples](08-recording-and-samples.md) - getting audio in, and what to do with it.
-9. [Exporting](09-exporting.md) - getting the song out.
+9. [Importing and exporting](09-exporting.md) - getting songs and sounds in, and the song out.
 10. [Settings](10-settings.md) - settings for you and this phone, not the song.
 
 <!-- /contents -->

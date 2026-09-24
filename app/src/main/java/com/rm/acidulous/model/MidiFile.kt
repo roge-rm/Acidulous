@@ -35,8 +35,17 @@ object MidiFile {
     fun write(song: Song, file: File) {
         val tracks = mutableListOf<ByteArray>()
         tracks += tempoTrack(song)
-        song.tracks.forEachIndexed { index, track ->
-            noteTrack(song, track, index)?.let { tracks += it }
+        // Drums on channel 10, where every other program looks for them, and
+        // the rest in order around it.
+        var next = 0
+        song.tracks.forEach { track ->
+            val channel = if (MachineUi.kindOf(track.machine.type) == MachineKind.Drums) {
+                DRUM_CHANNEL
+            } else {
+                if (next == DRUM_CHANNEL) next++
+                (next++ % MAX_CHANNELS)
+            }
+            noteTrack(song, track, channel)?.let { tracks += it }
         }
 
         file.outputStream().buffered().use { out ->
@@ -60,6 +69,178 @@ object MidiFile {
             total += song.barsOf(scene) * song.signatureOf(scene).ticksPerBar * scene.repeat
         }
         return total
+    }
+
+    // --- reading -------------------------------------------------------------------
+
+    /**
+     * A standard MIDI file's notes, ready to become a song: every track's
+     * notes on every channel, in this engine's ticks, with the first tempo and
+     * time signature the file states.
+     *
+     * Format 0 keeps everything on one track and tells instruments apart by
+     * channel, and a format 1 file may do the same inside a track - so the
+     * parts come out split by track *and* channel, which is what a person
+     * means by "the bass". Tempo and signature changes after the first are
+     * left out: a song here has one of each per scene, and the file has not
+     * said where its scenes are.
+     *
+     * Throws [IllegalArgumentException] for anything that is not a MIDI file,
+     * or is one timed in SMPTE frames rather than beats, which no song is.
+     */
+    fun read(bytes: ByteArray): Parsed {
+        val r = Reader(bytes)
+        require(r.ascii(4) == "MThd") { "not a MIDI file" }
+        val headerLength = r.int32()
+        val format = r.int16()
+        val trackCount = r.int16()
+        val division = r.int16()
+        r.skip(headerLength - 6)
+        require(format in 0..2) { "MIDI format $format" }
+        require(division and 0x8000 == 0 && division > 0) { "timed in frames, not beats" }
+
+        var tempo: Float? = null
+        var signature: Signature? = null
+        // By (track, channel), in the order they were first heard.
+        val parts = LinkedHashMap<Pair<Int, Int>, MutableList<Note>>()
+        val names = HashMap<Int, String>()
+        // The first General MIDI program each part asks for, which is how a
+        // file that never names its tracks still says what they are.
+        val programs = HashMap<Pair<Int, Int>, Int>()
+        fun ticks(fileTicks: Long) = ((fileTicks * PPQN + division / 2) / division).toInt()
+
+        for (t in 0 until trackCount) {
+            if (r.remaining < 8) break
+            val id = r.ascii(4)
+            val length = r.int32()
+            if (id != "MTrk") { r.skip(length); continue }
+            val end = r.pos + length
+            var at = 0L
+            var status = 0
+            // A note is open from its note-on until the matching note-off -
+            // or a note-on at velocity nought, which is the same thing.
+            val open = HashMap<Int, ArrayDeque<Pair<Long, Int>>>()
+            while (r.pos < end) {
+                at += r.varLen()
+                var b = r.byte()
+                if (b < 0x80) {
+                    // Running status: the data byte is the first of the last
+                    // message's kind, which is how most files save space.
+                    require(status != 0) { "running status with nothing to run" }
+                    r.pos--
+                    b = status
+                } else if (b < 0xf0) {
+                    status = b
+                }
+                when {
+                    b == 0xff -> {
+                        val type = r.byte()
+                        val data = r.bytes(r.varLen().toInt())
+                        when (type) {
+                            0x03 -> names.putIfAbsent(t, data.decodeToString().trim())
+                            0x51 -> if (tempo == null && data.size >= 3) {
+                                val us = ((data[0].toInt() and 0xff) shl 16) or ((data[1].toInt() and 0xff) shl 8) or (data[2].toInt() and 0xff)
+                                if (us > 0) tempo = 60_000_000f / us
+                            }
+                            0x58 -> if (signature == null && data.size >= 2) {
+                                signature = Signature(data[0].toInt().coerceIn(1, 32), 1 shl data[1].toInt().coerceIn(0, 5))
+                            }
+                            0x2f -> r.pos = end
+                        }
+                    }
+                    b == 0xf0 || b == 0xf7 -> r.skip(r.varLen().toInt())
+                    else -> {
+                        val kind = b and 0xf0
+                        val channel = b and 0x0f
+                        val d1 = r.byte()
+                        val d2 = if (kind == 0xc0 || kind == 0xd0) 0 else r.byte()
+                        val key = (channel shl 8) or d1
+                        if (kind == 0xc0) programs.putIfAbsent(t to channel, d1)
+                        if (kind == 0x90 && d2 > 0) {
+                            open.getOrPut(key) { ArrayDeque() }.addLast(at to d2)
+                        } else if (kind == 0x80 || (kind == 0x90 && d2 == 0)) {
+                            val started = open[key]?.removeFirstOrNull() ?: continue
+                            val on = ticks(started.first)
+                            val off = ticks(at).coerceAtLeast(on + 1)
+                            parts.getOrPut(t to channel) { mutableListOf() } += Note(on, off - on, d1, started.second.coerceIn(1, 127))
+                        }
+                    }
+                }
+            }
+            r.pos = end
+        }
+
+        val out = parts.map { (where, notes) ->
+            val (track, channel) = where
+            val name = names[track]?.takeIf { it.isNotEmpty() }
+            // Two parts from one named track are told apart by channel.
+            val split = parts.keys.count { it.first == track } > 1
+            val program = programs[where]
+            // Unnamed parts are called what their instrument is, and told
+            // apart by channel only when two would share a name.
+            val family = program?.let { GM_FAMILIES[(it / 8).coerceIn(0, 15)] }
+            Part(
+                name = when {
+                    name == null && channel == DRUM_CHANNEL -> "Drums"
+                    name == null && family != null -> "$family ${channel + 1}"
+                    name == null -> "Channel ${channel + 1}"
+                    split -> "$name ${channel + 1}"
+                    else -> name
+                },
+                channel = channel,
+                notes = notes.sortedWith(compareBy({ it.tick }, { it.pitch })),
+                program = program,
+            )
+        }
+        return Parsed(tempo, signature, out)
+    }
+
+    /** Channel 10, counted from nought: where General MIDI keeps the drums. */
+    const val DRUM_CHANNEL = 9
+
+    /** Our drum machines' sounds, by name, as General MIDI's notes for them. */
+    val GM_DRUM_NOTE: Map<String, Int> = mapOf(
+        "Kick" to 36, "Rim" to 37, "Snare" to 38, "Clap" to 39,
+        "Low Tom" to 45, "Mid Tom" to 47, "Hi Tom" to 50,
+        "Closed Hat" to 42, "Open Hat" to 46, "Crash" to 49, "Ride" to 51,
+        "Cowbell" to 56, "Clave" to 75,
+    )
+
+    /** [program] is the General MIDI instrument the file asked for, if it asked. */
+    data class Part(val name: String, val channel: Int, val notes: List<Note>, val program: Int? = null)
+
+    /** General MIDI's sixteen families, eight programs each. */
+    val GM_FAMILIES = listOf(
+        "Piano", "Bells", "Organ", "Guitar", "Bass", "Strings", "Ensemble", "Brass",
+        "Reed", "Pipe", "Lead", "Pad", "Synth FX", "Ethnic", "Percussion", "Effects",
+    )
+
+    data class Parsed(val tempo: Float?, val signature: Signature?, val parts: List<Part>)
+
+    private class Reader(val b: ByteArray) {
+        var pos = 0
+        val remaining get() = b.size - pos
+        fun byte(): Int {
+            require(pos < b.size) { "the file ends early" }
+            return b[pos++].toInt() and 0xff
+        }
+        fun bytes(n: Int): ByteArray {
+            require(n >= 0 && pos + n <= b.size) { "the file ends early" }
+            return b.copyOfRange(pos, pos + n).also { pos += n }
+        }
+        fun skip(n: Int) { pos = (pos + n.coerceAtLeast(0)).coerceAtMost(b.size) }
+        fun ascii(n: Int) = bytes(n).toString(Charsets.US_ASCII)
+        fun int16() = (byte() shl 8) or byte()
+        fun int32() = (byte() shl 24) or (byte() shl 16) or (byte() shl 8) or byte()
+        fun varLen(): Long {
+            var v = 0L
+            repeat(4) {
+                val x = byte()
+                v = (v shl 7) or (x and 0x7f).toLong()
+                if (x and 0x80 == 0) return v
+            }
+            return v
+        }
     }
 
     // --- the tracks ---------------------------------------------------------------
@@ -103,8 +284,16 @@ object MidiFile {
         return trackBytes(events)
     }
 
-    private fun noteTrack(song: Song, track: Track, index: Int): ByteArray? {
-        val channel = index % MAX_CHANNELS
+    private fun noteTrack(song: Song, track: Track, channel: Int): ByteArray? {
+        // A drum machine's sounds sit on notes of its own; another program
+        // expects General MIDI's, so each is written as the one of those
+        // with its name. A machine with numbered pads keeps its notes.
+        val drumNames = if (channel == DRUM_CHANNEL) {
+            MachineUi.voicesOf(track.machine.type).associate { it.note to it.name }
+        } else {
+            emptyMap()
+        }
+        fun out(pitch: Int) = drumNames[pitch]?.let { GM_DRUM_NOTE[it] } ?: pitch
         val events = mutableListOf<Event>()
         events += Event(0, 0, meta(0x03, track.name.toByteArray(Charsets.UTF_8)))
 
@@ -153,10 +342,10 @@ object MidiFile {
                                     minOf(start + span, at + sceneTicks),
                                 ).coerceAtLeast(on + 1)
                                 events += Event(on, 1, byteArrayOf(
-                                    (0x90 or channel).toByte(), note.pitch.coerceIn(0, 127).toByte(), velocity.toByte(),
+                                    (0x90 or channel).toByte(), out(note.pitch).coerceIn(0, 127).toByte(), velocity.toByte(),
                                 ))
                                 events += Event(end, 0, byteArrayOf(
-                                    (0x80 or channel).toByte(), note.pitch.coerceIn(0, 127).toByte(), 64,
+                                    (0x80 or channel).toByte(), out(note.pitch).coerceIn(0, 127).toByte(), 64,
                                 ))
                             }
                             any = true

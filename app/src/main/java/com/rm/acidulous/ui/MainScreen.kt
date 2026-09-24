@@ -147,6 +147,8 @@ fun MainScreen(
     onDelete: (String) -> Unit,
     songNames: () -> List<String>,
     onExport: () -> Unit,
+    /** A file from outside: a MIDI file, a song bundle, or a sound. */
+    onImport: () -> Unit = {},
     exportState: ExportState?,
     onExportCancel: () -> Unit,
     onExportDismiss: () -> Unit,
@@ -422,6 +424,7 @@ fun MainScreen(
                         DropdownMenuItem(text = { Text("Demo songs…") }, onClick = { fileMenu = false; dialog = Dialog.Demos })
                         DropdownMenuItem(text = { Text("Save as…") }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
                         DropdownMenuItem(text = { Text("Songs…") }, onClick = { fileMenu = false; dialog = Dialog.Songs })
+                        DropdownMenuItem(text = { Text("Import…") }, onClick = { fileMenu = false; onImport() })
                         DropdownMenuItem(text = { Text("Export…") }, onClick = { fileMenu = false; onExport() })
                         DropdownMenuItem(text = { Text("MIDI…") }, onClick = { fileMenu = false; dialog = Dialog.Midi })
                         DropdownMenuItem(text = { Text("Sound…") }, onClick = { fileMenu = false; dialog = Dialog.Sound })
