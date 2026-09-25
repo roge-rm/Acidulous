@@ -63,7 +63,7 @@ All six are the demo song, Squelch.
 | **Genesis** | The big drum box: a kick you feel, some circuit drift, and a bus compressor the kick ducks. |
 | **Mosaic** | A multisample player. Load a SoundFont or your own samples into key and velocity zones. It can also turn them into grain clouds. |
 | **Pollen** | Granular clouds from a file or from the live input. |
-| **Dice** | A loop slicer that can shuffle, stutter, reverse and drop its slices on chance. |
+| **Dice** | A loop slicer that plays a loop at the song's tempo without changing its pitch, and can shuffle, stutter, reverse and drop its slices on chance. |
 | **Forage** | A sample drum machine: thirteen pads for your own sounds. |
 | **Cipher** | A vocoder. You can rearrange which bands drive which. |
 | **Molt** | Record yourself singing and play it back tuned to the notes you draw, with pitch and formant separate. |
@@ -117,7 +117,7 @@ Each has the usual controls plus one extra, and a page in the manual.
 - Pattern generators: even rhythms, lines in key, and mutation of what is there.
 - Step locks: any knob can have its own value on chosen steps.
 - Freeze a clip to audio to save CPU.
-- Audio tracks (Bias) for recording over the song.
+- Audio tracks (Bias) for recording over the song. A loop added to one follows the song's tempo.
 - Two effect slots on the input, so you can record through an amp.
 
 ### Playing and syncing

@@ -128,8 +128,13 @@ android {
         // what it is set to, knobs are sliders, holds are named actions, and
         // the song grid comes a page of scenes at a time so no clip is out
         // of reach. A high contrast theme. The version reads on Android 8.1.
-        versionCode = 19
-        versionName = "0.9.4"
+        //
+        // 0.9.5: loops fit the song - Dice and a loop on an audio track play
+        // at the song's tempo, stretched without changing pitch - and tablets
+        // use the room. The crash opening Trinity's envelopes, there since
+        // 0.9.3, is fixed, and so is the error on deleting an audio track.
+        versionCode = 20
+        versionName = "0.9.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
