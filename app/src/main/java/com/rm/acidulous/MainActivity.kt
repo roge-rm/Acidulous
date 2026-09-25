@@ -78,6 +78,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import com.rm.acidulous.model.duplicateScene
 import com.rm.acidulous.model.cleared
+import com.rm.acidulous.model.clipLengthTicks
+import com.rm.acidulous.model.emptyClipFor
 import androidx.compose.ui.graphics.toArgb
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -1451,6 +1453,26 @@ private fun App(modifier: Modifier = Modifier) {
                 editor.edit(a.track) { t -> t.copy(mixer = t.mixer.copy(solo = !t.mixer.solo)) }
             com.rm.acidulous.midi.launchpad.LpAction.StopClips ->
                 if (com.rm.acidulous.ui.UiPrefs.clipMode && playing) NativeEngine.stopAllClips() else NativeEngine.transportStop()
+            // A step: the note starting in it at that pitch goes, or one a
+            // step long arrives. One undo each, as a tap in the roll.
+            is com.rm.acidulous.midi.launchpad.LpAction.ToggleStep -> song.scenes.getOrNull(a.scene)?.let { scene ->
+                editor.editClip(a.track, scene.id) { clip ->
+                    val i = clip.notes.indexOfFirst { it.pitch == a.pitch && it.tick >= a.tick && it.tick < a.tick + clip.grid }
+                    if (i >= 0) clip.copy(notes = clip.notes.filterIndexed { j, _ -> j != i })
+                    else clip.copy(notes = (clip.notes + com.rm.acidulous.model.Note(a.tick, a.length, a.pitch, 100)).sortedBy { it.tick })
+                }
+            }
+            // Every note's start onto the clip's grid; where it was played is kept.
+            is com.rm.acidulous.midi.launchpad.LpAction.QuantiseClip -> song.scenes.getOrNull(a.scene)?.let { scene ->
+                editor.editClip(a.track, scene.id) { clip ->
+                    val g = clip.grid.coerceAtLeast(1)
+                    val len = song.clipLengthTicks(scene.id, clip)
+                    clip.copy(notes = clip.notes.map { n ->
+                        val q = (Math.round(n.tick.toDouble() / g) * g).toInt().coerceIn(0, maxOf(0, len - g))
+                        if (q == n.tick) n else n.copy(tick = q, rawTick = n.rawTick ?: n.tick)
+                    }.sortedBy { it.tick })
+                }
+            }
         }
     }
     val lpSample by rememberUpdatedState {
@@ -1478,6 +1500,24 @@ private fun App(modifier: Modifier = Modifier) {
             clipMode = com.rm.acidulous.ui.UiPrefs.clipMode,
             scene = position.scene,
             queuedScene = NativeEngine.queuedScene,
+            seq = run {
+                // The played track's clip where it is: in clip mode the scene
+                // it is playing, otherwise the song's.
+                val t = song.tracks.getOrNull(midiTrack) ?: return@run null
+                val clipMode = com.rm.acidulous.ui.UiPrefs.clipMode
+                val ls = launchStates.getOrNull(midiTrack)
+                val sceneIdx = if (clipMode && ls?.playing == true) ls.scene else position.scene
+                val scene = song.scenes.getOrNull(sceneIdx) ?: return@run null
+                val clip = t.clips[scene.id] ?: song.emptyClipFor(scene.id)
+                val len = song.clipLengthTicks(scene.id, clip).coerceAtLeast(1)
+                val head = when {
+                    !playing -> -1
+                    clipMode -> if (ls?.playing == true && ls.scene == sceneIdx) (ls.tickInCycle % len).toInt() else -1
+                    position.scene == sceneIdx -> (position.tickInIteration % len).toInt()
+                    else -> -1
+                }
+                com.rm.acidulous.midi.launchpad.LpSeq(sceneIdx, clip.grid.coerceAtLeast(1), len, clip.notes.map { it.tick to it.pitch }, head)
+            },
         )
     }
     val launchpad = remember { com.rm.acidulous.ui.launchpad.LaunchpadController { lpAct(it) } }

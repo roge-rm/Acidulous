@@ -47,6 +47,19 @@ data class LpTrack(
     val queuedScene: Int = -1,
 )
 
+/** The clip the sequencer page edits: the played track's, in the scene it is in. */
+data class LpSeq(
+    val scene: Int,
+    /** A step, in ticks. */
+    val grid: Int,
+    /** The clip's length, in ticks. */
+    val length: Int,
+    /** Its notes as (tick, pitch). */
+    val notes: List<Pair<Int, Int>> = emptyList(),
+    /** Where the song is in it, or -1 when it is not playing. */
+    val playhead: Int = -1,
+)
+
 /** The app, sampled. */
 data class LpView(
     val tracks: List<LpTrack> = emptyList(),
@@ -65,6 +78,8 @@ data class LpView(
     /** The scene the song is in, and the one it will go to next (song mode), or -1. */
     val scene: Int = 0,
     val queuedScene: Int = -1,
+    /** The clip the sequencer edits, or null when there is no scene to edit in. */
+    val seq: LpSeq? = null,
 )
 
 /** The surface's own state. */
@@ -81,6 +96,9 @@ data class LpState(
     val sounding: Map<Int, Int> = emptyMap(),
     /** Buttons held down that change what a pad or a track button does. */
     val held: Set<Button> = emptySet(),
+    /** The sequencer's view: which eight steps, and which row is at the bottom. */
+    val stepPage: Int = 0,
+    val seqRow: Int = 0,
 )
 
 sealed class LpAction {
@@ -103,11 +121,14 @@ sealed class LpAction {
     data class ToggleSolo(val track: Int) : LpAction()
     /** Every launched clip in clip mode, the song otherwise. */
     object StopClips : LpAction()
+    /** A note one step long at [tick] and [pitch] in the played track's clip in [scene], or taken away if there is one. */
+    data class ToggleStep(val track: Int, val scene: Int, val tick: Int, val pitch: Int, val length: Int) : LpAction()
+    data class QuantiseClip(val track: Int, val scene: Int) : LpAction()
 }
 
 object Surface {
     /** Pages there are yet; their buttons light and choose them. */
-    val built = setOf(LpPage.Note, LpPage.Session)
+    val built = setOf(LpPage.Note, LpPage.Session, LpPage.Sequencer)
 
     /** Buttons that change what the next press means while held. */
     private val modifiers = setOf(Button.Clear, Button.Duplicate, Button.Mute, Button.Solo)
@@ -172,6 +193,7 @@ object Surface {
         when (state.page) {
             LpPage.Note -> notePage(view, state, colour, leds)
             LpPage.Session -> sessionPage(view, state, leds)
+            LpPage.Sequencer -> sequencerPage(view, state, colour, leds)
             else -> {}
         }
         // The pages, by their printed names.
@@ -214,6 +236,7 @@ object Surface {
         leds[Button.Mute.cc] = if (muting || view.tracks.any { it.mute }) MUTE else Rgb.scale(MUTE, 0.15f)
         leds[Button.Solo.cc] = if (soloing || view.tracks.any { it.solo }) SOLO else Rgb.scale(SOLO, 0.15f)
         leds[Button.StopClip.cc] = if (view.playing) Rgb.scale(Rgb.RED, 0.6f) else Rgb.scale(Rgb.RED, 0.15f)
+        leds[Button.Quantise.cc] = if (view.seq != null) Rgb.DIM else Rgb.OFF
         // Clear and Duplicate are live on the session page, and undo and redo under Shift.
         if (state.page == LpPage.Session || state.shift) {
             leds[Button.Clear.cc] = if (Button.Clear in state.held) Rgb.WHITE else Rgb.DIM
@@ -279,12 +302,58 @@ object Surface {
         }
     }
 
+    /** The pitch a sequencer row edits: a scale note up from the note page's octave, or a drum voice. */
+    fun seqPitch(view: LpView, state: LpState, row: Int): Int? {
+        val idx = state.seqRow + row
+        drumsOf(view)?.let { return it.getOrNull(idx) }
+        val s = steps(view)
+        val note = 12 * (state.octave + 1) + root(view) + 12 * Math.floorDiv(idx, s.size) + s[Math.floorMod(idx, s.size)]
+        return note.takeIf { it in 0..127 }
+    }
+
+    /** The first tick of a sequencer column, or null past the clip's end. */
+    fun seqTick(view: LpView, state: LpState, col: Int): Int? {
+        val seq = view.seq ?: return null
+        val tick = (state.stepPage * 8 + col) * seq.grid
+        return tick.takeIf { it < seq.length }
+    }
+
+    private fun sequencerPage(view: LpView, state: LpState, colour: Int, leds: IntArray) {
+        val seq = view.seq ?: return
+        val r = root(view)
+        val drums = drumsOf(view) != null
+        for (col in 0..7) {
+            val tick = seqTick(view, state, col)
+            val here = tick != null && seq.playhead >= tick && seq.playhead < tick + seq.grid
+            for (row in 0..7) {
+                val led = LaunchpadPro.ledOf(Control.Pad(row, col))
+                val pitch = seqPitch(view, state, row)
+                val on = tick != null && pitch != null && seq.notes.any { (t, p) -> p == pitch && t >= tick && t < tick + seq.grid }
+                leds[led] = when {
+                    tick == null || pitch == null -> Rgb.OFF
+                    on && here -> Rgb.WHITE
+                    on -> colour
+                    here -> Rgb.scale(Rgb.WHITE, 0.15f)
+                    // The root's rows, faintly, so the scale can be read.
+                    !drums && Math.floorMod(pitch - r, 12) == 0 -> Rgb.scale(colour, 0.12f)
+                    else -> Rgb.scale(Rgb.WHITE, 0.03f)
+                }
+            }
+        }
+    }
+
     // --- Pressing ----------------------------------------------------------------
 
     fun press(view: LpView, state: LpState, control: Control, velocity: Int): Pair<LpState, List<LpAction>> {
         when (control) {
             is Control.Pad -> {
                 if (state.page == LpPage.Session) return state to sessionPress(view, state, control)
+                if (state.page == LpPage.Sequencer) {
+                    val seq = view.seq ?: return state to emptyList()
+                    val tick = seqTick(view, state, control.col) ?: return state to emptyList()
+                    val pitch = seqPitch(view, state, control.row) ?: return state to emptyList()
+                    return state to listOf(LpAction.ToggleStep(view.played, seq.scene, tick, pitch, seq.grid))
+                }
                 if (state.page != LpPage.Note) return state to emptyList()
                 val note = noteAt(view, state, control.row, control.col) ?: return state to emptyList()
                 val led = LaunchpadPro.ledOf(control)
@@ -321,10 +390,12 @@ object Surface {
             return state.copy(held = state.held + b) to emptyList()
         }
         val session = state.page == LpPage.Session
+        if (state.page == LpPage.Sequencer) seqKey(view, state, b)?.let { return it to emptyList() }
         return when (b) {
             Button.Shift -> state.copy(shift = true) to emptyList()
             Button.RecordArm -> state to listOf(LpAction.Record)
             Button.StopClip -> state to listOf(LpAction.StopClips)
+            Button.Quantise -> state to (view.seq?.let { listOf(LpAction.QuantiseClip(view.played, it.scene)) } ?: emptyList())
             // On the session page the arrows move the view of the grid.
             Button.Up -> (if (session) state.copy(sceneBank = (state.sceneBank - 1).coerceAtLeast(0))
             else state.copy(octave = (state.octave + 1).coerceAtMost(8))) to emptyList()
@@ -362,4 +433,18 @@ object Surface {
         state.sounding[LaunchpadPro.ledOf(pad)]?.let { listOf(LpAction.Pressure(it, value)) } ?: emptyList()
 
     private fun maxBank(tracks: Int): Int = maxOf(0, (tracks - 1) / 8)
+
+    /** The arrows on the sequencer page: steps across, rows up and down. Null for anything else. */
+    private fun seqKey(view: LpView, state: LpState, b: Button): LpState? {
+        val seq = view.seq
+        val lastPage = if (seq == null) 0 else maxOf(0, (seq.length / maxOf(1, seq.grid) - 1) / 8)
+        val lastRow = drumsOf(view)?.let { maxOf(0, it.size - 8) }
+        return when (b) {
+            Button.Left -> state.copy(stepPage = (state.stepPage - 1).coerceAtLeast(0))
+            Button.Right -> state.copy(stepPage = (state.stepPage + 1).coerceAtMost(lastPage))
+            Button.Up -> state.copy(seqRow = if (lastRow != null) (state.seqRow + 1).coerceAtMost(lastRow) else state.seqRow + 1)
+            Button.Down -> state.copy(seqRow = if (lastRow != null) (state.seqRow - 1).coerceAtLeast(0) else state.seqRow - 1)
+            else -> null
+        }
+    }
 }

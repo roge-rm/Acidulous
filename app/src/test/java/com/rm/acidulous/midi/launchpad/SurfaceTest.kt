@@ -200,4 +200,51 @@ class SurfaceTest {
         assertEquals(Rgb.OFF, onBeat[LaunchpadPro.ledOf(Control.Pad(6, 1))])
         assertEquals(Rgb.WHITE, onBeat[Button.Session.cc])
     }
+
+    // --- The sequencer page ---------------------------------------------------
+
+    /** One bar of sixteenths in scene 2, with a C3 on the first step and the song on the third. */
+    private val seqView = cMajor.copy(seq = LpSeq(scene = 2, grid = 60, length = 960, notes = listOf(0 to 48), playhead = 130))
+    private val onSeq = LpState(page = LpPage.Sequencer)
+
+    @Test
+    fun `sequencer rows are the scale up from the octave, or the drum voices`() {
+        assertEquals(48, Surface.seqPitch(seqView, onSeq, 0))
+        assertEquals(50, Surface.seqPitch(seqView, onSeq, 1))
+        assertEquals(60, Surface.seqPitch(seqView, onSeq, 7))
+        val drums = seqView.copy(tracks = listOf(LpTrack(red, drums = (36..47).toList())))
+        assertEquals(36, Surface.seqPitch(drums, onSeq, 0))
+        assertEquals(41, Surface.seqPitch(drums, onSeq.copy(seqRow = 3), 2))
+    }
+
+    @Test
+    fun `sequencer columns are steps, paged, and stop at the clip's end`() {
+        assertEquals(0, Surface.seqTick(seqView, onSeq, 0))
+        assertEquals(420, Surface.seqTick(seqView, onSeq, 7))
+        assertEquals(480, Surface.seqTick(seqView, onSeq.copy(stepPage = 1), 0))
+        assertNull(Surface.seqTick(seqView, onSeq.copy(stepPage = 2), 0))
+        var st = Surface.press(seqView, onSeq, Control.Key(Button.Right), 127).first
+        assertEquals(1, st.stepPage)
+        st = Surface.press(seqView, st, Control.Key(Button.Right), 127).first
+        assertEquals(1, st.stepPage) // sixteen steps: two pages
+    }
+
+    @Test
+    fun `a sequencer pad toggles a step in the played track's clip`() {
+        assertEquals(
+            listOf(LpAction.ToggleStep(track = 0, scene = 2, tick = 120, pitch = 52, length = 60)),
+            Surface.press(seqView, onSeq, Control.Pad(2, 2), 127).second,
+        )
+        assertEquals(listOf(LpAction.QuantiseClip(0, 2)), Surface.press(seqView, onSeq, Control.Key(Button.Quantise), 127).second)
+    }
+
+    @Test
+    fun `steps with notes are lit, and the playhead's column`() {
+        val leds = Surface.render(seqView, onSeq)
+        assertEquals(red, leds[LaunchpadPro.ledOf(Control.Pad(0, 0))])
+        val head = leds[LaunchpadPro.ledOf(Control.Pad(1, 2))]
+        val elsewhere = leds[LaunchpadPro.ledOf(Control.Pad(1, 3))]
+        assertTrue(head != elsewhere)
+        assertEquals(Rgb.WHITE, leds[Button.Sequencer.cc])
+    }
 }
