@@ -10,6 +10,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.midi.MidiDevice
+import com.rm.acidulous.midi.launchpad.LaunchpadPro
 import android.media.midi.MidiDeviceInfo
 import android.media.midi.MidiManager
 import android.media.midi.MidiInputPort
@@ -78,7 +79,8 @@ object MidiHub {
     private var worker: HandlerThread? = null
     private var handler: Handler? = null
     private val opened = HashMap<Int, MidiDevice>()
-    private val parsers = HashMap<Int, MidiParser>()
+    /** A parser for each output port of each open device: see [attach]. */
+    private val parsers = HashMap<Int, List<MidiParser>>()
 
     val ports = mutableStateListOf<Port>()
     val destinations = mutableStateListOf<Destination>()
@@ -195,15 +197,23 @@ object MidiHub {
                 if (device.outputPortCount > 0 && device.id !in declined) {
                     open(device.id)
                 }
+                syncPads()
+                syncLaunchpad()
                 refresh()
             }
             override fun onDeviceRemoved(device: MidiDeviceInfo) {
                 // Unplugged mid-note: nothing else will ever send the off.
                 releasePort(device.id)
                 opened.remove(device.id)?.close()
+                parsers.remove(device.id)
+                if (opened.isEmpty()) forgetController()
+                syncPads()
+                syncLaunchpad()
                 refresh()
             }
         }, handler)
+        // Already plugged in when the app started: light its pads, take the Launchpad.
+        handler?.post { syncPads(); syncLaunchpad() }
         // Preferences are restored one line before this runs, so a clock-out
         // setting that survived a restart asked for a sender that had no
         // thread to run on yet. Ask again now there is one.
@@ -238,6 +248,173 @@ object MidiHub {
         }
     }
 
+    // --- An Exquis's pads -----------------------------------------------------
+    //
+    // The song's scale, lit on the pads: see PadLights. Its own port, opened
+    // for this and nothing else - unless the Exquis is also a destination
+    // for MIDI out, in which case that port is shared, since an input port
+    // opens once. Everything here runs on the MIDI thread.
+
+    /** Whether an attached Exquis shows the song's scale. */
+    var padLights by mutableStateOf(true)
+        private set
+    /** An Exquis is plugged in, so its switch is worth showing. */
+    var exquisHere by mutableStateOf(false)
+        private set
+    private var padInfo: MidiDeviceInfo? = null
+    private var padDevice: MidiDevice? = null
+    private var padPort: MidiInputPort? = null
+    private val lit = HashSet<Int>()
+    private var wantedLit: Set<Int> = emptySet()
+    private var wantedRoot: Int? = null
+    private val padBytes = ByteArray(3)
+
+    fun choosePadLights(on: Boolean) {
+        padLights = on
+        handler?.post { syncPads() }
+    }
+
+    /** The song's key, or none: what the pads should show. */
+    fun showScale(root: Int?, intervals: List<Int>?) {
+        wantedLit = PadLights.notes(root, intervals)
+        wantedRoot = root
+        handler?.post { syncPads() }
+    }
+
+    /** Dark pads, before the app goes. On the caller's thread, so it happens. */
+    fun clearPads() {
+        val port = padPortNow() ?: return
+        for ((status, note, vel) in PadLights.changes(lit, emptySet(), null)) sendPad(port, status, note, vel)
+        lit.clear()
+    }
+
+    private fun padPortNow(): MidiInputPort? = padInfo?.let { outPorts[it.id] } ?: padPort
+
+    private fun sendPad(port: MidiInputPort, status: Int, note: Int, vel: Int) {
+        padBytes[0] = status.toByte(); padBytes[1] = note.toByte(); padBytes[2] = vel.toByte()
+        runCatching { port.send(padBytes, 0, 3) }
+    }
+
+    private fun syncPads() {
+        val mgr = manager ?: return
+        @Suppress("DEPRECATION")
+        val info = mgr.devices.firstOrNull {
+            // Over USB: its manual says that is where it listens for this.
+            it.inputPortCount > 0 && it.type == MidiDeviceInfo.TYPE_USB && PadLights.isExquis(
+                it.properties.getString(MidiDeviceInfo.PROPERTY_NAME),
+                it.properties.getString(MidiDeviceInfo.PROPERTY_PRODUCT),
+                it.properties.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER),
+            )
+        }
+        exquisHere = info != null
+        if (info == null || info.id != padInfo?.id) {
+            // Gone, or a different one: what we held is nobody's any more.
+            runCatching { padPort?.close() }
+            runCatching { padDevice?.close() }
+            padPort = null; padDevice = null; padInfo = null
+            lit.clear()
+        }
+        if (info == null) return
+        padInfo = info
+        val port = padPortNow()
+        if (port == null) {
+            if (!padLights || padDevice != null) return
+            mgr.openDevice(info, { device ->
+                padDevice = device
+                padPort = device?.openInputPort(0)
+                if (padPort == null) Log.w(TAG, "could not open the Exquis for its pads")
+                syncPads()
+            }, handler)
+            return
+        }
+        val target = if (padLights) wantedLit else emptySet()
+        for ((status, note, vel) in PadLights.changes(lit, target, wantedRoot)) sendPad(port, status, note, vel)
+        lit.clear(); lit += target
+    }
+
+    // --- A Launchpad Pro [MK3] -------------------------------------------------
+    //
+    // Played by the app in Programmer mode: see midi/launchpad and
+    // ui/launchpad. Here is only the device end - finding it, putting it in
+    // the mode and out again, and carrying bytes each way. Its own port's
+    // messages go to [launchpadInput] instead of being played.
+
+    /** Whether an attached Launchpad is Acidulous's, or its own. */
+    var launchpadOn by mutableStateOf(true)
+        private set
+    /** One is plugged in, so its switch is worth showing. */
+    var launchpadHere by mutableStateOf(false)
+        private set
+    /** Its presses, on the MIDI thread; set by the controller. */
+    var launchpadInput: ((Int, Int, Int) -> Unit)? = null
+    /** Told when the surface is freshly the app's and has to be drawn whole. */
+    var onLaunchpadReady: (() -> Unit)? = null
+    private var lpInfo: MidiDeviceInfo? = null
+    private var lpDevice: MidiDevice? = null
+    private var lpPort: MidiInputPort? = null
+    private var lpProgrammer = false
+
+    fun chooseLaunchpad(on: Boolean) {
+        launchpadOn = on
+        handler?.post { syncLaunchpad() }
+    }
+
+    /** Bytes for the Launchpad, from any thread; dropped unless it is the app's. */
+    fun launchpadSend(bytes: ByteArray) {
+        handler?.post {
+            val port = lpPort ?: return@post
+            if (lpProgrammer) runCatching { port.send(bytes, 0, bytes.size) }
+        }
+    }
+
+    /** Back to its own Live mode, before the app goes. On the caller's thread, so it happens. */
+    fun releaseLaunchpad() {
+        val port = lpPort ?: return
+        val bytes = LaunchpadPro.programmer(false)
+        if (lpProgrammer) runCatching { port.send(bytes, 0, bytes.size) }
+        lpProgrammer = false
+    }
+
+    private fun syncLaunchpad() {
+        val mgr = manager ?: return
+        @Suppress("DEPRECATION")
+        val info = mgr.devices.firstOrNull {
+            it.inputPortCount > 0 && it.type == MidiDeviceInfo.TYPE_USB && LaunchpadPro.isOne(
+                it.properties.getString(MidiDeviceInfo.PROPERTY_NAME),
+                it.properties.getString(MidiDeviceInfo.PROPERTY_PRODUCT),
+            )
+        }
+        launchpadHere = info != null
+        if (info == null || info.id != lpInfo?.id) {
+            runCatching { lpPort?.close() }
+            runCatching { lpDevice?.close() }
+            lpPort = null; lpDevice = null; lpInfo = null; lpProgrammer = false
+        }
+        if (info == null) return
+        lpInfo = info
+        val port = lpPort
+        if (port == null) {
+            if (!launchpadOn || lpDevice != null) return
+            mgr.openDevice(info, { device ->
+                lpDevice = device
+                lpPort = device?.openInputPort(0)
+                if (lpPort == null) Log.w(TAG, "could not open the Launchpad")
+                syncLaunchpad()
+            }, handler)
+            return
+        }
+        if (launchpadOn && !lpProgrammer) {
+            val bytes = LaunchpadPro.programmer(true)
+            runCatching { port.send(bytes, 0, bytes.size) }
+            lpProgrammer = true
+            onLaunchpadReady?.invoke()
+        } else if (!launchpadOn && lpProgrammer) {
+            val bytes = LaunchpadPro.programmer(false)
+            runCatching { port.send(bytes, 0, bytes.size) }
+            lpProgrammer = false
+        }
+    }
+
     // --- Sending ---------------------------------------------------------------
     //
     // The engine stamps every event with the frame it belongs on; the audio
@@ -252,7 +429,16 @@ object MidiHub {
         val mgr = manager ?: return
         val existing = outPorts.remove(id)
         if (existing != null) {
-            runCatching { existing.close() }
+            // The Exquis's pads were sharing it: they keep it.
+            if (id == padInfo?.id && padPort == null) padPort = existing else runCatching { existing.close() }
+            refresh()
+            return
+        }
+        // An input port opens once: if the pads have it, share it.
+        if (id == padInfo?.id && padPort != null) {
+            outPorts[id] = padPort!!
+            padPort = null
+            startSender()
             refresh()
             return
         }
@@ -526,22 +712,43 @@ object MidiHub {
             return
         }
         opened[portId] = device
-        val parser = MidiParser(
-            onMessage = { status, d1, d2 -> currentPort = portId; dispatch(status, d1, d2); currentPort = -1 },
-            onRealtime = { status, d1, d2, stamp -> clockIn(status, d1, d2, stamp) },
+        // **A parser for each port**, not one for the device. A device with
+        // several ports - a Launchpad has its own, a DIN socket and a DAW
+        // port - interleaves them, and one parser could stitch a message
+        // from one port onto the running status of another. And it is how
+        // the Launchpad's own port can go to its controller while its DIN
+        // socket still plays like any other input.
+        val launchpad = LaunchpadPro.isOne(
+            device.info.properties.getString(MidiDeviceInfo.PROPERTY_NAME),
+            device.info.properties.getString(MidiDeviceInfo.PROPERTY_PRODUCT),
         )
-        parsers[portId] = parser
-        val receiver = object : MidiReceiver() {
-            // The timestamp is the whole point of following a clock: a
-            // handler thread's wake-up is jittery by milliseconds, and this
-            // is not.
-            override fun onSend(msg: ByteArray, offset: Int, count: Int, timestamp: Long) {
-                parser.parse(msg, offset, count, timestamp)
-            }
-        }
+        val list = ArrayList<MidiParser>()
         for (p in 0 until device.info.outputPortCount) {
+            val surface = launchpad && p == 0
+            val parser = MidiParser(
+                onMessage = { status, d1, d2 ->
+                    val to = launchpadInput
+                    if (surface && launchpadOn && to != null) {
+                        lastMessage = "launchpad · %02x %d %d".format(status, d1, d2)
+                        to(status, d1, d2)
+                    } else {
+                        currentPort = portId; dispatch(status, d1, d2); currentPort = -1
+                    }
+                },
+                onRealtime = { status, d1, d2, stamp -> clockIn(status, d1, d2, stamp) },
+            )
+            list += parser
+            val receiver = object : MidiReceiver() {
+                // The timestamp is the whole point of following a clock: a
+                // handler thread's wake-up is jittery by milliseconds, and
+                // this is not.
+                override fun onSend(msg: ByteArray, offset: Int, count: Int, timestamp: Long) {
+                    parser.parse(msg, offset, count, timestamp)
+                }
+            }
             device.openOutputPort(p)?.connect(receiver)
         }
+        parsers[portId] = list
         refresh()
     }
 
@@ -880,6 +1087,20 @@ object MidiHub {
     fun testNote() {
         dispatch(0x90, 60, 100)
         handler?.postDelayed({ dispatch(0x80, 60, 0) }, 1500)
+    }
+
+    /**
+     * A Launchpad's pads without one: four pads along the bottom row,
+     * pressed and let go, down the path its own port takes. The emulator has
+     * no USB MIDI, and this is the proof the surface plays - and records -
+     * the track it has selected.
+     */
+    fun testLaunchpad() {
+        val to = launchpadInput ?: return
+        for (i in 0..3) {
+            handler?.postDelayed({ lastMessage = "launchpad · pad ${11 + i}"; received += 1; to(0x90, 11 + i, 100) }, (i * 300).toLong())
+            handler?.postDelayed({ to(0x90, 11 + i, 0) }, (i * 300 + 200).toLong())
+        }
     }
 
     /**

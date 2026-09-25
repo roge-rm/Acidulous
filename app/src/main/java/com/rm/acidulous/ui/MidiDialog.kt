@@ -115,6 +115,18 @@ private fun DevicesTab(context: android.content.Context) {
                 ) { MidiHub.toggle(port.id) }
             }
             if (ports.isEmpty()) Line { Readout(stringResource(R.string.midi_no_inputs)) }
+            // Only with one plugged in: the app plays it, or it is itself.
+            if (MidiHub.launchpadHere) {
+                SwitchGrid(stringResource(R.string.midi_launchpad), stringArrayResource(R.array.midi_launchpad_choices).toList(), if (MidiHub.launchpadOn) 0 else 1) {
+                    UiPrefs.chooseLaunchpad(it == 0)
+                }
+            }
+            // Only with one plugged in: the song's key, lit on its pads.
+            if (MidiHub.exquisHere) {
+                SwitchGrid(stringResource(R.string.midi_exquis_pads), stringArrayResource(R.array.midi_exquis_pads_choices).toList(), if (MidiHub.padLights) 0 else 1) {
+                    UiPrefs.choosePadLights(it == 0)
+                }
+            }
             // A cable appears by itself; a Bluetooth instrument has to be
             // looked for, which is the one thing on this tab you *do*.
             SwitchGrid(
@@ -185,7 +197,12 @@ private fun InTab(trackNames: List<String>, mpeHeld: Int) {
     WindowCards {
         // Where they go, with the proof that they do in the same card.
         MidiRoutingSection(trackNames) {
-            SwitchGrid(stringResource(R.string.midi_test), stringArrayResource(R.array.midi_test_notes).toList(), -1, columns = 1) { if (it == 0) MidiHub.testNote() else MidiHub.testWheel() }
+            // A Launchpad's pads, played without one: a diagnostic, for the emulator.
+            val tests = stringArrayResource(R.array.midi_test_notes).toList() +
+                (if (UiPrefs.showDiagnostics) listOf(stringResource(R.string.midi_test_launchpad)) else emptyList())
+            SwitchGrid(stringResource(R.string.midi_test), tests, -1, columns = 1) {
+                when (it) { 0 -> MidiHub.testNote(); 1 -> MidiHub.testWheel(); else -> MidiHub.testLaunchpad() }
+            }
             Line {
                 Readout(
                     if (MidiHub.received == 0) stringResource(R.string.midi_nothing_received)

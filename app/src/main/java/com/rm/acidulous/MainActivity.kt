@@ -76,6 +76,7 @@ import com.rm.acidulous.ui.theme.AcidulousTheme
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import androidx.compose.ui.graphics.toArgb
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.res.stringResource
@@ -136,6 +137,17 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         Incoming.from(intent)
+    }
+
+    override fun onDestroy() {
+        // Leaving for good: the Exquis's pads go dark rather than going on
+        // showing a scale for an app that is not there.
+        if (isFinishing) {
+            com.rm.acidulous.midi.MidiHub.clearPads()
+            // And a Launchpad goes back to being itself.
+            com.rm.acidulous.midi.MidiHub.releaseLaunchpad()
+        }
+        super.onDestroy()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -403,6 +415,11 @@ private fun App(modifier: Modifier = Modifier) {
         (screen as? Screen.Edit)?.let { midiTrack = it.track }
         com.rm.acidulous.midi.MidiHub.target = { midiTrack }
         com.rm.acidulous.ui.KeyHub.target = { midiTrack }
+    }
+    // The song's key, lit on an Exquis's pads when one is plugged in.
+    LaunchedEffect(song.key) {
+        val key = song.key
+        com.rm.acidulous.midi.MidiHub.showScale(key?.root, key?.let { com.rm.acidulous.model.Scales.intervals.getOrNull(it.scale) })
     }
     // Typed notes go where hardware notes do; on a drum machine they are its
     // pads in order rather than a scale.
@@ -1362,6 +1379,92 @@ private fun App(modifier: Modifier = Modifier) {
     val onLoopScene: (Boolean) -> Unit = { on ->
         loopScene = on
         NativeEngine.setLoopScene(on)
+    }
+
+    // **A Launchpad Pro [MK3], played by the app.** The surface decides what
+    // it shows and what a press means (midi/launchpad/Surface.kt); here it is
+    // shown the app thirty times a second and its presses are carried out.
+    // Its notes go to the track it has selected whatever the MIDI routing
+    // says - it is part of the app, not a keyboard on a channel - and each
+    // note-off goes where its note-on went.
+    val lpNoteRack = remember { IntArray(128) { -1 } }
+    val lpAct by rememberUpdatedState<(com.rm.acidulous.midi.launchpad.LpAction) -> Unit> { a ->
+        val none = NativeEngine.NO_CHANNEL
+        when (a) {
+            is com.rm.acidulous.midi.launchpad.LpAction.NoteOn -> {
+                lpNoteRack[a.note] = midiTrack
+                NativeEngine.midiEvent(midiTrack, 0x90, a.note, a.velocity, none)
+            }
+            is com.rm.acidulous.midi.launchpad.LpAction.NoteOff -> {
+                val rack = lpNoteRack[a.note].takeIf { it >= 0 } ?: midiTrack
+                lpNoteRack[a.note] = -1
+                NativeEngine.midiEvent(rack, 0x80, a.note, 0, none)
+            }
+            is com.rm.acidulous.midi.launchpad.LpAction.Pressure -> {
+                val rack = lpNoteRack[a.note]
+                if (rack >= 0) NativeEngine.midiEvent(rack, 0xa0, a.note, a.value, none)
+            }
+            // The keyboard's own actions, so the surface agrees with the
+            // screen about what play, record and undo mean where it is.
+            com.rm.acidulous.midi.launchpad.LpAction.Play ->
+                if (!com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.PlayStop)) {
+                    if (playing) NativeEngine.transportStop() else EngineSync.play(position.scene, com.rm.acidulous.ui.UiPrefs.clipMode)
+                }
+            com.rm.acidulous.midi.launchpad.LpAction.Record ->
+                if (!com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.Record)) onArm(!armed)
+            com.rm.acidulous.midi.launchpad.LpAction.Panic -> com.rm.acidulous.ui.panicEverything()
+            com.rm.acidulous.midi.launchpad.LpAction.Undo -> com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.Undo)
+            com.rm.acidulous.midi.launchpad.LpAction.Redo -> com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.Redo)
+            is com.rm.acidulous.midi.launchpad.LpAction.SelectTrack -> midiTrack = a.index
+            // As a tap on the scene in the grid does.
+            is com.rm.acidulous.midi.launchpad.LpAction.PlayScene -> song.scenes.getOrNull(a.index)?.let { scene ->
+                when {
+                    com.rm.acidulous.ui.UiPrefs.clipMode -> {
+                        song.tracks.forEachIndexed { t, tr -> if (tr.clips[scene.id] != null) NativeEngine.launchClip(t, scene.engineId) }
+                        if (!playing) EngineSync.play(0, true)
+                    }
+                    playing && position.scene == a.index -> NativeEngine.stopAtEnd = !NativeEngine.stopAtEnd
+                    playing -> NativeEngine.queuedScene = if (NativeEngine.queuedScene == a.index) -1 else a.index
+                    else -> { onLoopScene(true); EngineSync.play(a.index, false) }
+                }
+            }
+        }
+    }
+    val lpSample by rememberUpdatedState {
+        com.rm.acidulous.midi.launchpad.LpView(
+            tracks = song.tracks.mapIndexed { i, t ->
+                com.rm.acidulous.midi.launchpad.LpTrack(
+                    colour = com.rm.acidulous.midi.launchpad.Rgb.fromArgb(com.rm.acidulous.ui.trackColour(i, t.colour).toArgb()),
+                    drums = if (com.rm.acidulous.model.MachineUi.kindOf(t.machine.type) == com.rm.acidulous.model.MachineKind.Drums) {
+                        com.rm.acidulous.model.MachineUi.voicesOf(t.machine.type, t.machine.settings).map { it.note }
+                    } else null,
+                )
+            },
+            played = midiTrack,
+            root = song.key?.root,
+            intervals = song.key?.let { com.rm.acidulous.model.Scales.intervals.getOrNull(it.scale) },
+            playing = playing,
+            armed = armed,
+            beat = (position.tickInIteration % com.rm.acidulous.model.PPQN).toFloat() / com.rm.acidulous.model.PPQN,
+            scenes = song.scenes.size,
+        )
+    }
+    val launchpad = remember { com.rm.acidulous.ui.launchpad.LaunchpadController { lpAct(it) } }
+    LaunchedEffect(launchpad) {
+        launchpad.attach()
+        try {
+            while (true) {
+                if (com.rm.acidulous.midi.MidiHub.launchpadHere && com.rm.acidulous.midi.MidiHub.launchpadOn) {
+                    launchpad.view = lpSample()
+                    launchpad.frame()
+                    delay(33)
+                } else {
+                    delay(300)
+                }
+            }
+        } finally {
+            launchpad.detach()
+        }
     }
     // Hoisted, so the chip on screen and a mapped pad press the same thing.
     /**

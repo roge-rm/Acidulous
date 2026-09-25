@@ -29,6 +29,7 @@
         <item>wheel</item>
     </string-array>
     <string name="midi_nothing_received">nothing received yet</string>
+    <string name="midi_test_launchpad">launchpad</string>
     <!-- How many messages, and the last one. -->
     <plurals name="midi_received">
         <item quantity="one">%1$d message · %2$s</item>
@@ -62,6 +63,18 @@
     <string name="midi_mapping_track">%1$s  (track %2$d)</string>
     <!-- A list of notes that a mapping has taken over. -->
     <string name="midi_claimed_notes">notes %s trigger their mapping instead of playing</string>
+    <!-- A Launchpad Pro: played by this app, or left to work as itself. -->
+    <string name="midi_launchpad">launchpad</string>
+    <string-array name="midi_launchpad_choices">
+        <item>acidulous</item>
+        <item>its own</item>
+    </string-array>
+    <!-- An Exquis controller's pads: lit with the song's scale, or left alone. -->
+    <string name="midi_exquis_pads">exquis pads</string>
+    <string-array name="midi_exquis_pads_choices">
+        <item>scale</item>
+        <item>off</item>
+    </string-array>
     <string name="midi_mpe">mpe</string>
     <string name="midi_mpe_zone">zone</string>
     <!-- In the order shown: auto, off, lower, upper. -->
