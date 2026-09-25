@@ -31,6 +31,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -1240,6 +1241,11 @@ private fun PanelActions(vararg actions: Triple<String, Color, () -> Unit>) {
 
 @Composable
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+// **Cards made in a loop are each wrapped in `key`.** Unkeyed, a section of
+// six cards or more - Trinity's envelopes, any machine's mod slots - crashed
+// on its first recomposition: "Boolean cannot be cast to MutableState" inside
+// a knob, Compose reading one card's slots as another's. A section of three
+// never showed it. Keyed by the loop variable, each card owns its slots.
 internal fun Group(
     title: String,
     /**
@@ -1653,7 +1659,7 @@ private fun TrinityPanel(b: ParamBinding) {
         SectionChips(listOf("osc", "mix", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
         GroupRow {
             when (section) {
-                0 -> for (o in 1..3) Group("osc $o") {
+                0 -> for (o in 1..3) key(o) { Group("osc $o") {
                     val p = "o${o}_"
                     PanelStepKnob(b, p + "wave", TRINITY_WAVES, "wave", PanelAmber)
                     PanelKnob(b, p + "pos", "pos", PanelAmber)
@@ -1667,7 +1673,7 @@ private fun TrinityPanel(b: ParamBinding) {
                     PanelKnob(b, p + "pw", "pw")
                     PanelKnob(b, p + "drift", "drift")
                     PanelKnob(b, p + "level", "level")
-                }
+                } }
                 1 -> {
                     Group("ring") { PanelKnob(b, "ring12", "1·2", PanelAmber); PanelKnob(b, "ring23", "2·3", PanelAmber) }
                     Group("fm") { PanelKnob(b, "fm21", "2→1", PanelAmber); PanelKnob(b, "fm32", "3→2", PanelAmber) }
@@ -1675,7 +1681,7 @@ private fun TrinityPanel(b: ParamBinding) {
                 }
                 2 -> {
                     Group("routing") { PanelSwitch(b, "route", listOf("serial", "para", "split")); PanelKnob(b, "balance", "balance") }
-                    for (f in 1..2) Group("filter $f") {
+                    for (f in 1..2) key(f) { Group("filter $f") {
                         val p = "f${f}_"
                         PanelStepKnob(b, p + "type", TRINITY_FILTERS, "type", PanelAmber)
                         PanelKnob(b, p + "freq", "freq", PanelAmber)
@@ -1684,17 +1690,17 @@ private fun TrinityPanel(b: ParamBinding) {
                         PanelKnob(b, p + "drive", "amount", PanelPink)
                         PanelKnob(b, p + "env", "envmod")
                         PanelKnob(b, p + "key", "key")
-                    }
+                    } }
                 }
-                3 -> for ((title, prefix) in TRINITY_ENVS) Group(title) {
+                3 -> for ((title, prefix) in TRINITY_ENVS) key(prefix) { Group(title) {
                     PanelKnob(b, prefix + "_delay", "delay")
                     PanelKnob(b, prefix + "_attack", "attack", PanelAmber)
                     PanelKnob(b, prefix + "_decay", "decay", PanelAmber)
                     PanelKnob(b, prefix + "_sustain", "sustain", PanelAmber)
                     PanelKnob(b, prefix + "_release", "release", PanelAmber)
                     PanelSwitch(b, prefix + "_repeat", listOf("once", "loop"), "repeat")
-                }
-                4 -> for (l in 1..3) Group("lfo $l") {
+                } }
+                4 -> for (l in 1..3) key(l) { Group("lfo $l") {
                     val p = "l${l}_"
                     PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                     PanelKnob(b, p + "rate", "rate", PanelAmber)
@@ -1704,14 +1710,14 @@ private fun TrinityPanel(b: ParamBinding) {
                     PanelKnob(b, p + "slew", "slew")
                     PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
                     PanelSwitch(b, p + "oneshot", listOf("cycle", "once"), "run")
-                }
-                5 -> for (m in 1..12) Group("mod $m") {
+                } }
+                5 -> for (m in 1..12) key(m) { Group("mod $m") {
                     val p = "m%02d_".format(m)
                     PanelStepKnob(b, p + "src", TRINITY_SOURCES, "from", PanelAmber)
                     PanelStepKnob(b, p + "src2", TRINITY_SOURCES, "× from")
                     PanelStepKnob(b, p + "dest", TRINITY_DESTS, "to", PanelAmber)
                     PanelKnob(b, p + "depth", "depth", PanelAmber)
-                }
+                } }
                 else -> {
                     Group("voice") {
                         PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg", "uni"), "mode")
@@ -1782,7 +1788,7 @@ private fun RatioPanel(b: ParamBinding) {
         SectionChips(listOf("op", "algo", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
         GroupRow {
             when (section) {
-                0 -> for (o in 1..6) Group("op $o") {
+                0 -> for (o in 1..6) key(o) { Group("op $o") {
                     val p = "o${o}_"
                     PanelStepKnob(b, p + "wave", RATIO_WAVES, "wave", PanelAmber)
                     PanelStepKnob(b, p + "mode", RATIO_MODES, "mode", PanelAmber)
@@ -1798,7 +1804,7 @@ private fun RatioPanel(b: ParamBinding) {
                     PanelKnob(b, p + "vel", "vel")
                     PanelKnob(b, p + "key", "key")
                     PanelKnob(b, p + "pan", "pan")
-                }
+                } }
                 1 -> {
                     Group("algorithm") {
                         PanelStepKnob(b, "algoa", RATIO_ALGOS, "A", PanelAmber)
@@ -1825,14 +1831,14 @@ private fun RatioPanel(b: ParamBinding) {
                         PanelKnob(b, "f_release", "release")
                     }
                 }
-                3 -> for (e in 1..3) Group("env $e") {
+                3 -> for (e in 1..3) key(e) { Group("env $e") {
                     val p = "e${e}_"
                     PanelKnob(b, p + "attack", "attack", PanelAmber)
                     PanelKnob(b, p + "decay", "decay", PanelAmber)
                     PanelKnob(b, p + "sustain", "sustain", PanelAmber)
                     PanelKnob(b, p + "release", "release", PanelAmber)
-                }
-                4 -> for (l in 1..3) Group("lfo $l") {
+                } }
+                4 -> for (l in 1..3) key(l) { Group("lfo $l") {
                     val p = "l${l}_"
                     PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                     PanelKnob(b, p + "rate", "rate", PanelAmber)
@@ -1840,14 +1846,14 @@ private fun RatioPanel(b: ParamBinding) {
                     PanelKnob(b, p + "delay", "delay")
                     PanelKnob(b, p + "phase", "phase")
                     PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
-                }
-                5 -> for (m in 1..10) Group("mod $m") {
+                } }
+                5 -> for (m in 1..10) key(m) { Group("mod $m") {
                     val p = "m%02d_".format(m)
                     PanelStepKnob(b, p + "src", RATIO_SOURCES, "from", PanelAmber)
                     PanelStepKnob(b, p + "src2", RATIO_SOURCES, "× from")
                     PanelStepKnob(b, p + "dest", RATIO_DESTS, "to", PanelAmber)
                     PanelKnob(b, p + "depth", "depth", PanelAmber)
-                }
+                } }
                 else -> {
                     Group("voice") {
                         PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
@@ -2080,11 +2086,11 @@ private fun ManualPanel(b: ParamBinding) {
                         PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
                     }
                 }
-                6 -> for (m in 1..8) Group("mod $m") {
+                6 -> for (m in 1..8) key(m) { Group("mod $m") {
                     PanelStepKnob(b, "m${m}_src", MANUAL_SOURCES, "from", PanelAmber)
                     PanelStepKnob(b, "m${m}_dst", MANUAL_DESTS, "to", PanelAmber)
                     PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
-                }
+                } }
                 else -> {
                     Group("amp") {
                         PanelKnob(b, "drive", "drive", PanelPink)
@@ -2283,11 +2289,11 @@ private fun CipherPanel(b: ParamBinding) {
                         PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
                         PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
                     }
-                    for (m in 1..8) Group("mod $m") {
+                    for (m in 1..8) key(m) { Group("mod $m") {
                         PanelStepKnob(b, "m${m}_src", CIPHER_SOURCES, "from", PanelAmber)
                         PanelStepKnob(b, "m${m}_dst", CIPHER_DESTS, "to", PanelAmber)
                         PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
-                    }
+                    } }
                 }
                 else -> {
                     Group("out") {
@@ -3508,11 +3514,11 @@ private fun FilamentPanel(b: ParamBinding) {
                         PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
                         PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
                     }
-                    for (m in 1..8) Group("mod $m") {
+                    for (m in 1..8) key(m) { Group("mod $m") {
                         PanelStepKnob(b, "m${m}_src", FILAMENT_SOURCES, "from", PanelAmber)
                         PanelStepKnob(b, "m${m}_dst", FILAMENT_DESTS, "to", PanelAmber)
                         PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
-                    }
+                    } }
                 }
                 else -> {
                     Group("out") {
@@ -3944,14 +3950,14 @@ private fun MosaicPanel(
                         PanelKnob(b, "a_sustain", "sustain", PanelAmber)
                         PanelKnob(b, "a_release", "release", PanelAmber)
                     }
-                    for (e in 1..2) Group("env $e") {
+                    for (e in 1..2) key(e) { Group("env $e") {
                         PanelKnob(b, "e${e}_attack", "attack")
                         PanelKnob(b, "e${e}_decay", "decay")
                         PanelKnob(b, "e${e}_sustain", "sustain")
                         PanelKnob(b, "e${e}_release", "release")
-                    }
+                    } }
                 }
-                5 -> for (l in 1..2) Group("lfo $l") {
+                5 -> for (l in 1..2) key(l) { Group("lfo $l") {
                     val p = "l${l}_"
                     PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                     PanelKnob(b, p + "rate", "rate", PanelAmber)
@@ -3959,14 +3965,14 @@ private fun MosaicPanel(
                     PanelKnob(b, p + "delay", "delay")
                     PanelKnob(b, p + "phase", "phase")
                     PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
-                }
-                6 -> for (m in 1..8) Group("mod $m") {
+                } }
+                6 -> for (m in 1..8) key(m) { Group("mod $m") {
                     val p = "m%02d_".format(m)
                     PanelStepKnob(b, p + "src", MOSAIC_SOURCES, "from", PanelAmber)
                     PanelStepKnob(b, p + "src2", MOSAIC_SOURCES, "× from")
                     PanelStepKnob(b, p + "dest", MOSAIC_DESTS, "to", PanelAmber)
                     PanelKnob(b, p + "depth", "depth", PanelAmber)
-                }
+                } }
                 else -> {
                     Group("voice") {
                         PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
