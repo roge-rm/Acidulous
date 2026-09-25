@@ -154,7 +154,6 @@ patch "Bell Keys" family=keys
   f_freq         600 Hz
   keyfade        8 st
   velfade        30
-  velamt         0.7
   volume         0.89
 
 patch Undertow family=keys
@@ -613,7 +612,6 @@ patch "Glide Lead" family=lead
   f_decay        0.8 s
   f_sustain      0.5
   loop           #2
-  velamt         0.7
   volume         0.86
 
 patch "Bright Lead" family=lead
@@ -691,7 +689,6 @@ patch Backwards family=texture
   a_sustain      1
   a_release      0.5 s
   f_freq         11000 Hz
-  velamt         0.7
   volume         1.38
 
 patch "Scan Layers" family=texture

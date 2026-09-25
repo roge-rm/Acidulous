@@ -2112,7 +2112,7 @@ internal object FactoryBanks {
         family = "perc")
 
     private fun genesis26() = Patch("Genesis", "Ghosts",
-        mapOf("kicktune" to 0.46497348f, "kickdecay" to 0.48214823f, "kickpunch" to 0.65f, "snaredecay" to 0.24809441f, "snaresnap" to 0.65f, "snarelevel" to 0.466666669f, "rimtune" to 0.5219319f, "rimdecay" to 0f, "rimlevel" to 0.566666663f, "hatclosed" to 0.279114425f, "hatopen" to 0.485719174f, "drift" to 0.25f, "accent" to 1f, "comp" to 0.5f, "compattack" to 0.338175178f, "duck" to 0.25f, "volume" to 0.6066667f),
+        mapOf("kicktune" to 0.46497348f, "kickdecay" to 0.48214823f, "kickpunch" to 0.65f, "snaredecay" to 0.24809441f, "snaresnap" to 0.65f, "snarelevel" to 0.466666669f, "rimtune" to 0.5219319f, "rimdecay" to 0f, "rimlevel" to 0.566666663f, "hatclosed" to 0.279114425f, "hatopen" to 0.485719174f, "drift" to 0.25f, "comp" to 0.5f, "compattack" to 0.338175178f, "duck" to 0.25f, "volume" to 0.6066667f),
         family = "perc")
 
     private fun genesis27() = Patch("Genesis", "Toms",
@@ -2424,7 +2424,7 @@ internal object FactoryBanks {
         family = "keys")
 
     private fun mosaic4() = Patch("Mosaic", "Clav",
-        mapOf("start" to 0.008f, "loop" to 0.5f, "a_decay" to 0.639247f, "a_sustain" to 0f, "a_release" to 0.4588705f, "f_type" to 1f, "f_freq" to 0.5265945f, "f_res" to 0.45f, "f_env" to 0.75f, "f_attack" to 0f, "f_decay" to 0.5411295f, "f_sustain" to 0.3f, "volume" to 0.66f, "velamt" to 1f, "veltofilter" to 0.45f),
+        mapOf("start" to 0.008f, "loop" to 0.5f, "a_decay" to 0.639247f, "a_sustain" to 0f, "a_release" to 0.4588705f, "f_type" to 1f, "f_freq" to 0.5265945f, "f_res" to 0.45f, "f_env" to 0.75f, "f_attack" to 0f, "f_decay" to 0.5411295f, "f_sustain" to 0.3f, "volume" to 0.66f, "veltofilter" to 0.45f),
         family = "keys")
 
     private fun mosaic5() = Patch("Mosaic", "Bell Keys",
@@ -2528,7 +2528,7 @@ internal object FactoryBanks {
         family = "lead")
 
     private fun mosaic30() = Patch("Mosaic", "Grind",
-        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.119280316f, "a_sustain" to 0.6f, "a_release" to 0.5043127f, "f_freq" to 0.793403745f, "f_res" to 0.7f, "f_env" to 0.15f, "f_attack" to 0.15051499f, "f_decay" to 0.656523347f, "f_sustain" to 0.2f, "coarse" to 0.25f, "voicemode" to 0.5f, "volume" to 0.880000055f, "velamt" to 1f, "veltofilter" to 0.7f),
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.119280316f, "a_sustain" to 0.6f, "a_release" to 0.5043127f, "f_freq" to 0.793403745f, "f_res" to 0.7f, "f_env" to 0.15f, "f_attack" to 0.15051499f, "f_decay" to 0.656523347f, "f_sustain" to 0.2f, "coarse" to 0.25f, "voicemode" to 0.5f, "volume" to 0.880000055f, "veltofilter" to 0.7f),
         family = "lead")
 
     private fun mosaic31() = Patch("Mosaic", "Backwards",
