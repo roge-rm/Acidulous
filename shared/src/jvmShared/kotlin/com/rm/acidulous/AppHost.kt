@@ -24,6 +24,38 @@ interface AppHost {
     /** The audio inputs plugged in now, for the recorder's choice of ear; empty when the platform will not say. */
     fun audioInputs(): List<AudioInput>
 
+    // --- Files the platform's pickers handed over: see [Doc] ------------------
+
+    /** What the platform calls a file, or [fallback] when it will not say. */
+    fun docName(doc: Doc, fallback: String): String
+    /** Where something was written, for a "done" line: a folder's own name, or a file's. */
+    fun placeName(doc: Doc): String
+    fun openInput(doc: Doc): java.io.InputStream
+    /** Open for writing, replacing what was there. */
+    fun openOutput(doc: Doc): java.io.OutputStream
+    /** A new file in a folder the picker gave, or null when it could not be made. */
+    fun createIn(folder: Doc, mime: String, name: String): Doc?
+    /** The share sheet, with what was written. */
+    fun share(docs: List<Doc>, mime: String, title: String)
+    /** The share sheet, with a file of the app's own. */
+    fun shareFile(file: File, mime: String, title: String)
+
+    // --- The rest of the platform ---------------------------------------------
+
+    /** A small named store of the app's own flags. */
+    fun prefs(name: String): com.rm.acidulous.util.PrefStore
+    /** The crash report the last run left and nobody has seen, or null. */
+    fun unreadCrashReport(): File?
+    fun markCrashReportRead()
+    /**
+     * The transport started or stopped: what the platform does about it (on
+     * Android, the playback service and audio focus). [stop] is how the
+     * platform stops it in turn - for a call, or headphones pulled out.
+     */
+    fun transportChanged(playing: Boolean, stop: () -> Unit)
+    /** Encode a 16-bit WAV to AAC at [bitrate]; "" when it worked, else why not. */
+    fun encodeAac(pcm: File, out: File, bitrate: Int): String
+
     companion object {
         lateinit var current: AppHost
     }

@@ -33,6 +33,9 @@ object EngineAssets {
     fun reelCache(): File =
         File(cacheDir, "reel").apply { mkdirs() }
 
+    /** The platform's cache folder: scratch space for renders and imports on their way through. */
+    fun cacheRoot(): File = cacheDir
+
     fun install(files: File, cache: File) {
         filesDir = files
         cacheDir = cache

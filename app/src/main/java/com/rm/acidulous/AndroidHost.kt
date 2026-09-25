@@ -3,7 +3,13 @@ package com.rm.acidulous
 import android.content.Context
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.net.Uri
+import com.rm.acidulous.res.*
+import com.rm.acidulous.util.PrefStore
+import com.rm.acidulous.util.androidPrefs
 import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 
 /** The Android app's [AppHost]: the package manager, the assets, and the crash reports. */
 class AndroidHost(private val context: Context) : AppHost {
@@ -35,4 +41,64 @@ class AndroidHost(private val context: Context) : AppHost {
             AudioInput(d.id, kind, d.productName?.toString())
         }
     }
+
+    override fun docName(doc: Doc, fallback: String): String {
+        var display = fallback
+        context.contentResolver.query(doc.uri, null, null, null, null)?.use { c ->
+            val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+        }
+        return display
+    }
+
+    /**
+     * A tree has no display name to query - asking gives back the whole
+     * document id - so the folder's own name is taken off the end of it.
+     */
+    override fun placeName(doc: Doc): String = runCatching {
+        val uri = doc.uri
+        if (android.provider.DocumentsContract.isTreeUri(uri)) {
+            val id = android.provider.DocumentsContract.getTreeDocumentId(uri)
+            return id.substringAfterLast(':').substringAfterLast('/').ifEmpty { AppStrings.getString(Res.string.app_the_folder) }
+        }
+        var display = uri.lastPathSegment ?: AppStrings.getString(Res.string.app_the_file)
+        context.contentResolver.query(uri, null, null, null, null)?.use { c ->
+            val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+        }
+        display
+    }.getOrDefault(AppStrings.getString(Res.string.app_the_file))
+
+    override fun openInput(doc: Doc): InputStream = context.contentResolver.openInputStream(doc.uri)!!
+    override fun openOutput(doc: Doc): OutputStream = context.contentResolver.openOutputStream(doc.uri, "wt")!!
+
+    override fun createIn(folder: Doc, mime: String, name: String): Doc? {
+        val tree = folder.uri
+        val parentId = android.provider.DocumentsContract.getTreeDocumentId(tree)
+        val parent = android.provider.DocumentsContract.buildDocumentUriUsingTree(tree, parentId)
+        return android.provider.DocumentsContract.createDocument(context.contentResolver, parent, mime, name)?.let { Doc(it) }
+    }
+
+    override fun share(docs: List<Doc>, mime: String, title: String) = share(context, docs.map { it.uri }, mime, title)
+
+    override fun shareFile(file: File, mime: String, title: String) {
+        val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", file)
+        share(context, listOf(uri), mime, title)
+    }
+
+    override fun prefs(name: String): PrefStore = androidPrefs(context.getSharedPreferences(name, Context.MODE_PRIVATE))
+    override fun unreadCrashReport(): File? = CrashReports.unread(context)
+    override fun markCrashReportRead() = CrashReports.markRead(context)
+
+    override fun transportChanged(playing: Boolean, stop: () -> Unit) {
+        PlaybackService.follow(context, playing)
+        // Stop for a call, another app's music, or headphones pulled out -
+        // see media/AudioFocus.
+        com.rm.acidulous.media.AudioFocus.follow(context, playing, stop)
+    }
+
+    override fun encodeAac(pcm: File, out: File, bitrate: Int): String =
+        com.rm.acidulous.media.AacEncoder.encode(pcm, out, bitrate)
+
+    private val Doc.uri: Uri get() = handle as Uri
 }
