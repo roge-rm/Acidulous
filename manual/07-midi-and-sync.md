@@ -75,21 +75,25 @@ pad and button is the app's, lit in your tracks' colours. **launchpad** in the
 MIDI window's devices tab gives it back to itself, and so does closing the
 app. The buttons along the top choose what the grid is:
 
-- **Note** - the played track's scale (its own, or the song's key) laid out as
-  the Launchpad's own scale mode does,
-  each row a fourth up. The root pads are in the track's colour. On a drum
-  machine it's the machine's pads. Up and down change the octave; left and
-  right move along the scale.
-- **Session** - the song grid, tracks across and scenes down. A clip pulses
-  while it plays and flashes while it waits. Tap a clip to launch it in clip
-  mode, or to play from that scene in song mode. The arrows move around the
-  grid.
+- **Note** - a piano keyboard, as on screen: white keys on one row and black
+  keys on the row above, four octaves up the grid. The notes in the scale
+  (the track's own, or the song's key) are lit in the track's colour, the root
+  brightest; the rest are faint but still play. When the track has its own
+  **Scale** modifier on, only the scale's notes are there instead, an octave
+  a row from the root, which fits eight octaves. On a drum machine it's the
+  machine's pads, laid out as they are on screen. Up and down change the
+  octave.
+- **Session** - the song grid, laid out as on screen: tracks down, scenes
+  across. A clip pulses while it plays and flashes while it waits. Tap a clip
+  to launch it in clip mode, or to play from that scene in song mode.
 - **Sequencer** - the open track's clip in the current scene, eight steps at a
-  time. Tap a pad to add or remove a note. The arrows move along the steps and
-  up and down the notes.
-- **Custom** - the mixer: each column is a track's fader. **Volume**, **Pan**
-  and **Sends** on the bottom row choose what the faders are, and **Device**
-  makes them the played machine's first eight knobs.
+  time. Tap a pad to add or remove a note. Left and right move a step at a
+  time; up and down move through the notes. A drum machine's rows run down
+  from the kick, as its grid on screen does.
+- **Custom** - the mixer, laid out like the song grid: a row for each track,
+  top track at the top, and its fader running left to right. **Volume**,
+  **Pan** and **Sends** on the bottom row choose what the faders are, and
+  **Device** makes the rows the played machine's first eight knobs.
 - **Chord** - chords in the key, one column for each note of the scale and one
   row for each kind of chord.
 - **Projects** - the perform effects: repeat and gate along the top, reverse,
@@ -101,11 +105,16 @@ The buttons round the edge work on every page:
   everything.
 - **Shift** and **Clear** undoes; **Shift** and **Duplicate** redoes.
 - Hold **Clear** and tap a clip to clear it. Hold **Duplicate** and tap a clip
-  to copy it into the empty scene below, or tap a scene button to duplicate the
-  scene.
-- The row under the grid chooses the track the Launchpad plays. Hold **Mute**
-  or **Solo** and tap a track to mute or solo it.
-- The buttons down the right play scenes, as tapping a scene does.
+  to copy it into the next scene if that's empty, or tap a scene button to
+  duplicate the scene.
+- The buttons down the right are the tracks, top to bottom, as the grid's rows
+  are: tap one to choose the track the Launchpad plays, or hold **Mute** or
+  **Solo** and tap it to mute or solo it.
+- The row under the grid is the scenes, left to right: tap one to play it, as
+  tapping a scene does.
+- On **Session** and **Custom**, up and down move through the tracks and left
+  and right through the scenes, one at a time; on the other pages, hold
+  **Shift** to do the same. An arrow is lit when there's more that way.
 - **Quantise** quantises the open clip as the quantise window was last set.
 - **Stop Clip** stops the clips, or the song.
 

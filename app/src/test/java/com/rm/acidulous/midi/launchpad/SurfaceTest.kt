@@ -49,43 +49,75 @@ class SurfaceTest {
     }
 
     @Test
-    fun `the note grid is in the key, each row a fourth up`() {
+    fun `the note grid is a piano, two rows to an octave, from the octave's C`() {
         val s = LpState()
         assertEquals(48, Surface.noteAt(cMajor, s, 0, 0)) // C3
         assertEquals(50, Surface.noteAt(cMajor, s, 0, 1)) // D
-        assertEquals(53, Surface.noteAt(cMajor, s, 1, 0)) // F: three degrees up
         assertEquals(59, Surface.noteAt(cMajor, s, 0, 6)) // B
-        assertEquals(60, Surface.noteAt(cMajor, s, 0, 7)) // C again
-        // In A minor the bottom left is A.
+        assertEquals(60, Surface.noteAt(cMajor, s, 0, 7)) // the C above
+        assertEquals(49, Surface.noteAt(cMajor, s, 1, 1)) // C sharp, over D
+        assertEquals(54, Surface.noteAt(cMajor, s, 1, 4)) // F sharp, over G
+        assertNull(Surface.noteAt(cMajor, s, 1, 0)) // the gaps where a piano has no black key
+        assertNull(Surface.noteAt(cMajor, s, 1, 3))
+        assertNull(Surface.noteAt(cMajor, s, 1, 7))
+        assertEquals(60, Surface.noteAt(cMajor, s, 2, 0)) // the next octave up
+        assertEquals(94, Surface.noteAt(cMajor, s, 7, 6)) // A sharp, four octaves in
+    }
+
+    @Test
+    fun `every note is there, and the scale is what is lit`() {
+        val leds = Surface.render(cMajor, LpState())
+        assertEquals(red, leds[LaunchpadPro.ledOf(Control.Pad(0, 0))]) // C, the root
+        assertEquals(Rgb.scale(red, 0.3f), leds[LaunchpadPro.ledOf(Control.Pad(0, 1))]) // D, in the scale
+        assertEquals(Rgb.scale(Rgb.WHITE, 0.03f), leds[LaunchpadPro.ledOf(Control.Pad(1, 1))]) // C sharp, not
+        assertEquals(Rgb.OFF, leds[LaunchpadPro.ledOf(Control.Pad(1, 0))])
+        // In A minor, A is the root and C sharp is still out.
         val aMinor = cMajor.copy(root = 9, intervals = listOf(0, 2, 3, 5, 7, 8, 10))
-        assertEquals(57, Surface.noteAt(aMinor, s, 0, 0))
+        val am = Surface.render(aMinor, LpState())
+        assertEquals(red, am[LaunchpadPro.ledOf(Control.Pad(0, 5))])
+        assertEquals(Rgb.scale(red, 0.3f), am[LaunchpadPro.ledOf(Control.Pad(0, 0))])
     }
 
     @Test
-    fun `without a key it is chromatic, rows a fourth apart`() {
-        val none = cMajor.copy(root = null, intervals = null)
-        assertEquals(48, Surface.noteAt(none, LpState(), 0, 0))
-        assertEquals(49, Surface.noteAt(none, LpState(), 0, 1))
-        assertEquals(53, Surface.noteAt(none, LpState(), 1, 0))
+    fun `with the track's own scale, only its notes, an octave a row`() {
+        val locked = cMajor.copy(scaleLocked = true)
+        val s = LpState()
+        assertEquals(36, Surface.noteAt(locked, s, 0, 0)) // C, an octave under the piano's
+        assertEquals(38, Surface.noteAt(locked, s, 0, 1)) // D: no C sharp between
+        assertEquals(47, Surface.noteAt(locked, s, 0, 6)) // B
+        assertEquals(48, Surface.noteAt(locked, s, 0, 7)) // the C above ends the row
+        assertEquals(48, Surface.noteAt(locked, s, 1, 0)) // and starts the next
+        assertEquals(120, Surface.noteAt(locked, s, 7, 0)) // eight octaves up the grid
+        // A pentatonic row: five notes and the root above, then nothing.
+        val pent = locked.copy(root = 9, intervals = listOf(0, 3, 5, 7, 10))
+        assertEquals(45, Surface.noteAt(pent, s, 0, 0))
+        assertEquals(57, Surface.noteAt(pent, s, 0, 5))
+        assertNull(Surface.noteAt(pent, s, 0, 6))
+        val leds = Surface.render(locked, s)
+        assertEquals(red, leds[LaunchpadPro.ledOf(Control.Pad(0, 0))])
+        assertEquals(Rgb.scale(red, 0.3f), leds[LaunchpadPro.ledOf(Control.Pad(0, 1))])
     }
 
     @Test
-    fun `up and down move the octave, the arrows walk the scale`() {
-        var s = LpState()
-        s = Surface.press(cMajor, s, Control.Key(Button.Up), 127).first
+    fun `up and down move the octave`() {
+        val s = Surface.press(cMajor, LpState(), Control.Key(Button.Up), 127).first
         assertEquals(60, Surface.noteAt(cMajor, s, 0, 0))
-        s = Surface.press(cMajor, s, Control.Key(Button.Right), 127).first
-        assertEquals(62, Surface.noteAt(cMajor, s, 0, 0))
     }
 
     @Test
-    fun `a drum machine's voices are a drum rack`() {
-        val drums = cMajor.copy(tracks = listOf(LpTrack(red, drums = (36..51).toList())))
+    fun `a drum machine's pads are laid out as the app lays them`() {
+        // Thirteen: the smaller half, six, along the bottom from pad one, and seven above.
+        val drums = cMajor.copy(tracks = listOf(LpTrack(red, drums = (36..48).toList())))
         assertEquals(36, Surface.noteAt(drums, LpState(), 0, 0))
-        assertEquals(39, Surface.noteAt(drums, LpState(), 0, 3))
-        assertEquals(40, Surface.noteAt(drums, LpState(), 1, 0))
-        assertNull(Surface.noteAt(drums, LpState(), 0, 4)) // only sixteen voices
-        assertNull(Surface.noteAt(drums, LpState(), 4, 0))
+        assertEquals(41, Surface.noteAt(drums, LpState(), 0, 5))
+        assertNull(Surface.noteAt(drums, LpState(), 0, 6))
+        assertEquals(42, Surface.noteAt(drums, LpState(), 1, 0))
+        assertEquals(48, Surface.noteAt(drums, LpState(), 1, 6))
+        assertNull(Surface.noteAt(drums, LpState(), 2, 0))
+        // In the app's pad order where it has one.
+        val ordered = cMajor.copy(tracks = listOf(LpTrack(red, drums = (36..39).toList(), pads = listOf(36, 38, 37, 39))))
+        assertEquals(38, Surface.noteAt(ordered, LpState(), 0, 1))
+        assertEquals(37, Surface.noteAt(ordered, LpState(), 1, 0))
     }
 
     @Test
@@ -113,10 +145,10 @@ class SurfaceTest {
 
     @Test
     fun `track and scene buttons reach only what exists`() {
-        assertEquals(listOf(LpAction.SelectTrack(0)), Surface.press(cMajor, LpState(), Control.Track(0), 127).second)
-        assertTrue(Surface.press(cMajor, LpState(), Control.Track(1), 127).second.isEmpty())
-        assertEquals(listOf(LpAction.PlayScene(2)), Surface.press(cMajor, LpState(), Control.Scene(2), 127).second)
-        assertTrue(Surface.press(cMajor, LpState(), Control.Scene(3), 127).second.isEmpty())
+        assertEquals(listOf(LpAction.SelectTrack(0)), Surface.press(cMajor, LpState(), Control.Scene(0), 127).second)
+        assertTrue(Surface.press(cMajor, LpState(), Control.Scene(1), 127).second.isEmpty())
+        assertEquals(listOf(LpAction.PlayScene(2)), Surface.press(cMajor, LpState(), Control.Track(2), 127).second)
+        assertTrue(Surface.press(cMajor, LpState(), Control.Track(3), 127).second.isEmpty())
     }
 
     @Test
@@ -144,59 +176,75 @@ class SurfaceTest {
     private fun hold(b: Button, s: LpState = onSession) = Surface.press(session, s, Control.Key(b), 127).first
 
     @Test
-    fun `the session grid is tracks across and scenes down, top row first`() {
+    fun `the session grid is the app's grid - tracks down, scenes across`() {
         assertEquals(0 to 0, Surface.sessionCell(onSession, 7, 0))
-        assertEquals(1 to 7, Surface.sessionCell(onSession, 0, 1))
-        assertEquals(8 to 8, Surface.sessionCell(onSession.copy(trackBank = 1, sceneBank = 1), 7, 0))
+        assertEquals(1 to 7, Surface.sessionCell(onSession, 6, 7))
+        assertEquals(1 to 3, Surface.sessionCell(onSession.copy(trackOffset = 1, sceneOffset = 3), 7, 0))
     }
 
     @Test
     fun `in clip mode a pad launches its clip, in song mode plays its scene`() {
         assertEquals(
             listOf(LpAction.SelectTrack(0), LpAction.LaunchClip(0, 1)),
-            Surface.press(session, onSession, Control.Pad(6, 0), 100).second,
+            Surface.press(session, onSession, Control.Pad(7, 1), 100).second,
         )
         // An empty cell only chooses the track.
         assertEquals(listOf(LpAction.SelectTrack(1)), Surface.press(session, onSession, Control.Pad(6, 1), 100).second)
         val song = session.copy(clipMode = false)
         assertEquals(
             listOf(LpAction.SelectTrack(1), LpAction.PlayScene(0)),
-            Surface.press(song, onSession, Control.Pad(7, 1), 100).second,
+            Surface.press(song, onSession, Control.Pad(6, 0), 100).second,
         )
     }
 
     @Test
     fun `clear, duplicate, mute and solo are held for the next press`() {
         assertEquals(listOf(LpAction.ClearClip(0, 0)), Surface.press(session, hold(Button.Clear), Control.Pad(7, 0), 100).second)
-        // Down into an empty scene, and not over a clip that is there.
-        assertEquals(listOf(LpAction.CopyClipDown(1, 0)), Surface.press(session, hold(Button.Duplicate), Control.Pad(7, 1), 100).second)
+        // On into an empty scene, and not over a clip that is there.
+        assertEquals(listOf(LpAction.CopyClipDown(1, 0)), Surface.press(session, hold(Button.Duplicate), Control.Pad(6, 0), 100).second)
         assertTrue(Surface.press(session, hold(Button.Duplicate), Control.Pad(7, 0), 100).second.isEmpty())
-        assertEquals(listOf(LpAction.DuplicateScene(3)), Surface.press(session, hold(Button.Duplicate), Control.Scene(3), 127).second)
-        assertEquals(listOf(LpAction.ToggleMute(1)), Surface.press(session, hold(Button.Mute), Control.Track(1), 127).second)
-        assertEquals(listOf(LpAction.ToggleSolo(0)), Surface.press(session, hold(Button.Solo), Control.Track(0), 127).second)
-        // Let go, and a track button chooses again.
-        val released = Surface.release(hold(Button.Mute), Control.Key(Button.Mute)).first
-        assertEquals(listOf(LpAction.SelectTrack(1)), Surface.press(session, released, Control.Track(1), 127).second)
         assertEquals(listOf(LpAction.StopClips), Surface.press(session, onSession, Control.Key(Button.StopClip), 127).second)
     }
 
     @Test
-    fun `on the session page the arrows move the view`() {
-        var st = Surface.press(session, onSession, Control.Key(Button.Down), 127).first
-        assertEquals(1, st.sceneBank)
-        st = Surface.press(session, st, Control.Key(Button.Down), 127).first
-        assertEquals(1, st.sceneBank) // twelve scenes: two banks
-        assertEquals(0, Surface.press(session, onSession, Control.Key(Button.Right), 127).first.trackBank) // two tracks: one bank
+    fun `the row under the grid is the scenes and the column beside it the tracks`() {
+        assertEquals(listOf(LpAction.PlayScene(3)), Surface.press(session, onSession, Control.Track(3), 127).second)
+        assertEquals(listOf(LpAction.DuplicateScene(3)), Surface.press(session, hold(Button.Duplicate), Control.Track(3), 127).second)
+        assertEquals(listOf(LpAction.SelectTrack(1)), Surface.press(session, onSession, Control.Scene(1), 127).second)
+        assertEquals(listOf(LpAction.ToggleMute(1)), Surface.press(session, hold(Button.Mute), Control.Scene(1), 127).second)
+        assertEquals(listOf(LpAction.ToggleSolo(0)), Surface.press(session, hold(Button.Solo), Control.Scene(0), 127).second)
+        val released = Surface.release(hold(Button.Mute), Control.Key(Button.Mute)).first
+        assertEquals(listOf(LpAction.SelectTrack(1)), Surface.press(session, released, Control.Scene(1), 127).second)
+        // On every page, not only this one.
+        val onNote = LpState()
+        assertEquals(listOf(LpAction.SelectTrack(1)), Surface.press(session, onNote, Control.Scene(1), 127).second)
+        assertEquals(listOf(LpAction.PlayScene(3)), Surface.press(session, onNote, Control.Track(3), 127).second)
+    }
+
+    @Test
+    fun `on the session page the arrows move the view a row or a column at a time`() {
+        var st = Surface.press(session, onSession, Control.Key(Button.Right), 127).first
+        assertEquals(1, st.sceneOffset)
+        repeat(10) { st = Surface.press(session, st, Control.Key(Button.Right), 127).first }
+        assertEquals(4, st.sceneOffset) // twelve scenes: the last eight in view, and no further
+        assertEquals(0, Surface.press(session, onSession, Control.Key(Button.Down), 127).first.trackOffset) // two tracks: nowhere to go
         assertEquals(3, st.octave) // and the note page's octave is untouched
+        val many = session.copy(tracks = List(10) { LpTrack(red) })
+        assertEquals(1, Surface.press(many, onSession, Control.Key(Button.Down), 127).first.trackOffset)
+        // An arrow is lit when there is more that way.
+        val leds = Surface.render(session, onSession)
+        assertEquals(Rgb.OFF, leds[Button.Left.cc])
+        assertEquals(Rgb.WHITE, leds[Button.Right.cc])
+        assertEquals(Rgb.OFF, leds[Button.Down.cc])
     }
 
     @Test
     fun `playing clips pulse, queued ones flash, empty cells are dark`() {
         val onBeat = Surface.render(session.copy(beat = 0f), onSession)
-        assertEquals(red, onBeat[LaunchpadPro.ledOf(Control.Pad(6, 0))])
-        assertEquals(blue, onBeat[LaunchpadPro.ledOf(Control.Pad(7, 1))])
+        assertEquals(red, onBeat[LaunchpadPro.ledOf(Control.Pad(7, 1))])
+        assertEquals(blue, onBeat[LaunchpadPro.ledOf(Control.Pad(6, 0))])
         val offBeat = Surface.render(session.copy(beat = 0.75f), onSession)
-        assertTrue(offBeat[LaunchpadPro.ledOf(Control.Pad(7, 1))] != blue)
+        assertTrue(offBeat[LaunchpadPro.ledOf(Control.Pad(6, 0))] != blue)
         assertEquals(Rgb.OFF, onBeat[LaunchpadPro.ledOf(Control.Pad(6, 1))])
         assertEquals(Rgb.WHITE, onBeat[Button.Session.cc])
     }
@@ -212,21 +260,25 @@ class SurfaceTest {
         assertEquals(48, Surface.seqPitch(seqView, onSeq, 0))
         assertEquals(50, Surface.seqPitch(seqView, onSeq, 1))
         assertEquals(60, Surface.seqPitch(seqView, onSeq, 7))
+        // A drum machine reads down from the kick, as its grid on screen does.
         val drums = seqView.copy(tracks = listOf(LpTrack(red, drums = (36..47).toList())))
-        assertEquals(36, Surface.seqPitch(drums, onSeq, 0))
-        assertEquals(41, Surface.seqPitch(drums, onSeq.copy(seqRow = 3), 2))
+        assertEquals(36, Surface.seqPitch(drums, onSeq, 7))
+        assertEquals(43, Surface.seqPitch(drums, onSeq, 0))
+        assertEquals(44, Surface.seqPitch(drums, onSeq.copy(seqRow = 3), 2))
+        assertEquals(0, Surface.press(drums, onSeq, Control.Key(Button.Up), 127).first.seqRow) // at the kick already
+        assertEquals(1, Surface.press(drums, onSeq, Control.Key(Button.Down), 127).first.seqRow)
     }
 
     @Test
-    fun `sequencer columns are steps, paged, and stop at the clip's end`() {
+    fun `sequencer columns are steps, a step at a time, and stop at the clip's end`() {
         assertEquals(0, Surface.seqTick(seqView, onSeq, 0))
         assertEquals(420, Surface.seqTick(seqView, onSeq, 7))
-        assertEquals(480, Surface.seqTick(seqView, onSeq.copy(stepPage = 1), 0))
-        assertNull(Surface.seqTick(seqView, onSeq.copy(stepPage = 2), 0))
+        assertEquals(60, Surface.seqTick(seqView, onSeq.copy(stepOffset = 1), 0))
+        assertNull(Surface.seqTick(seqView, onSeq.copy(stepOffset = 9), 7))
         var st = Surface.press(seqView, onSeq, Control.Key(Button.Right), 127).first
-        assertEquals(1, st.stepPage)
-        st = Surface.press(seqView, st, Control.Key(Button.Right), 127).first
-        assertEquals(1, st.stepPage) // sixteen steps: two pages
+        assertEquals(1, st.stepOffset)
+        repeat(20) { st = Surface.press(seqView, st, Control.Key(Button.Right), 127).first }
+        assertEquals(8, st.stepOffset) // sixteen steps: the last eight in view, and no further
     }
 
     @Test
@@ -263,16 +315,24 @@ class SurfaceTest {
     }
 
     @Test
-    fun `a fader pad sets its row's value, on a track or a knob`() {
+    fun `the mixer is a row for each track, top first, its value across`() {
         val mixer = LpState(page = LpPage.Mixer, fader = LpFader.Level)
-        assertEquals(listOf(LpAction.SetMix(1, LpFader.Level, 1f)), Surface.press(session, mixer, Control.Pad(7, 1), 100).second)
-        assertEquals(listOf(LpAction.SetMix(0, LpFader.Level, 0f)), Surface.press(session, mixer, Control.Pad(0, 0), 100).second)
-        assertTrue(Surface.press(session, mixer, Control.Pad(3, 5), 100).second.isEmpty()) // no sixth track
+        assertEquals(listOf(LpAction.SetMix(0, LpFader.Level, 1f)), Surface.press(session, mixer, Control.Pad(7, 7), 100).second)
+        assertEquals(listOf(LpAction.SetMix(1, LpFader.Level, 0f)), Surface.press(session, mixer, Control.Pad(6, 0), 100).second)
+        assertTrue(Surface.press(session, mixer, Control.Pad(3, 5), 100).second.isEmpty()) // no fifth track
         val device = session.copy(device = listOf(0.2f, 0.9f))
         assertEquals(
             listOf(LpAction.SetDevice(1, Surface.faderValue(3))),
-            Surface.press(device, mixer.copy(fader = LpFader.Device), Control.Pad(3, 1), 100).second,
+            Surface.press(device, mixer.copy(fader = LpFader.Device), Control.Pad(6, 3), 100).second,
         )
+        // Full on the top track fills its row from the left.
+        val loud = session.copy(tracks = listOf(LpTrack(red, level = 1f), LpTrack(blue)))
+        val leds = Surface.render(loud, mixer)
+        assertEquals(red, leds[LaunchpadPro.ledOf(Control.Pad(7, 7))])
+        assertEquals(Rgb.scale(red, 0.3f), leds[LaunchpadPro.ledOf(Control.Pad(7, 0))])
+        // Up and down move through the tracks here too.
+        val many = session.copy(tracks = List(10) { LpTrack(red) })
+        assertEquals(1, Surface.press(many, mixer, Control.Key(Button.Down), 127).first.trackOffset)
     }
 
     @Test

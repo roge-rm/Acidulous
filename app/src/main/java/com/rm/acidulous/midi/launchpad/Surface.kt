@@ -36,8 +36,10 @@ enum class LpPage { Note, Session, Chord, Mixer, Sequencer, Perform }
 data class LpTrack(
     /** In [Rgb]. */
     val colour: Int,
-    /** A drum machine's voice notes in pad order, or null for a melodic one. */
+    /** A drum machine's voice notes lowest first - the drum grid's order - or null for a melodic one. */
     val drums: List<Int>? = null,
+    /** The same voices in the order the app lays its pads out, where that differs. */
+    val pads: List<Int>? = null,
     /** The scenes, by index, this track has a clip in. */
     val clips: Set<Int> = emptySet(),
     val mute: Boolean = false,
@@ -73,9 +75,15 @@ data class LpView(
     val tracks: List<LpTrack> = emptyList(),
     /** The track the surface plays. */
     val played: Int = 0,
-    /** The song's key, or none. */
+    /** The played track's scale - its own, or the song's key - or none. */
     val root: Int? = null,
     val intervals: List<Int>? = null,
+    /**
+     * The scale is the track's own Scale modifier, so notes outside it are
+     * snapped away anyway: the note page leaves them out and fits more
+     * octaves instead.
+     */
+    val scaleLocked: Boolean = false,
     val playing: Boolean = false,
     val armed: Boolean = false,
     /** Where in the beat the song is, 0..1. */
@@ -99,15 +107,16 @@ data class LpState(
     val octave: Int = 3,
     /** Scale degrees the note grid is shifted by. */
     val degree: Int = 0,
-    val trackBank: Int = 0,
-    val sceneBank: Int = 0,
+    /** The first track and the first scene in view: the arrows move them one at a time. */
+    val trackOffset: Int = 0,
+    val sceneOffset: Int = 0,
     val shift: Boolean = false,
     /** Pads held down, by LED, and the notes each is sounding - several for a chord. */
     val sounding: Map<Int, List<Int>> = emptyMap(),
     /** Buttons held down that change what a pad or a track button does. */
     val held: Set<Button> = emptySet(),
     /** The sequencer's view: which eight steps, and which row is at the bottom. */
-    val stepPage: Int = 0,
+    val stepOffset: Int = 0,
     val seqRow: Int = 0,
     val fader: LpFader = LpFader.Level,
     /** Perform pads held, by LED, oldest first: the newest of a row is the one in force. */
@@ -176,32 +185,57 @@ object Surface {
 
     private fun root(view: LpView): Int = if (view.intervals.isNullOrEmpty()) 0 else view.root ?: 0
 
-    /**
-     * How many scale degrees each row climbs: about a fourth, which is what
-     * the Launchpad's own scale layout does - three in a seven-note scale, two
-     * in a pentatonic, five when every note is there.
-     */
-    fun rowStep(notes: Int): Int = maxOf(1, Math.round(notes * 5f / 12f))
+    // The note page is the app's keyboard: a piano, two rows to an octave -
+    // the white keys, and the black keys above them, each over the white key
+    // to its right - four octaves up the grid from the octave's C at the
+    // bottom left. Every note is there, and the scale is what is lit, as the
+    // keys on screen show it: a layout of only the scale's notes played the
+    // scale and showed nothing of it.
+    private val WHITE_KEYS = listOf(0, 2, 4, 5, 7, 9, 11, 12)
+    private val BLACK_KEYS = listOf(null, 1, 3, null, 6, 8, 10, null)
 
-    /** The note a pad plays on the note page, or null past MIDI's range. */
+    /**
+     * With the track's own scale in force, only its notes: an octave a row,
+     * from the root at the left to the root above it, eight octaves up the
+     * grid from the one below the octave's - where the piano fits four.
+     */
+    private fun compact(view: LpView): Boolean = view.scaleLocked && !view.intervals.isNullOrEmpty() && view.root != null
+
+    /** The note a pad plays on the note page, or null for a gap or past MIDI's range. */
     fun noteAt(view: LpView, state: LpState, row: Int, col: Int): Int? {
-        drumsOf(view)?.let { voices -> return drumVoice(row, col)?.let { voices.getOrNull(it) } }
-        val s = steps(view)
-        val d = state.degree + col + row * rowStep(s.size)
-        val octave = Math.floorDiv(d, s.size)
-        val note = 12 * (state.octave + 1) + root(view) + 12 * octave + s[Math.floorMod(d, s.size)]
+        padsOf(view)?.let { voices -> return drumVoice(row, col, voices.size)?.let { voices.getOrNull(it) } }
+        if (compact(view)) {
+            val s = steps(view)
+            // Up to the root above, which a seven-note scale fills the row with.
+            if (col > s.size) return null
+            val semis = if (col == s.size) 12 else s[col]
+            val note = 12 * state.octave + 12 * row + root(view) + semis
+            return note.takeIf { it in 0..127 }
+        }
+        val semis = (if (row % 2 == 0) WHITE_KEYS[col] else BLACK_KEYS[col]) ?: return null
+        val note = 12 * (state.octave + 1) + 12 * (row / 2) + semis
         return note.takeIf { it in 0..127 }
     }
 
     private fun drumsOf(view: LpView): List<Int>? = view.tracks.getOrNull(view.played)?.drums
+    private fun padsOf(view: LpView): List<Int>? = view.tracks.getOrNull(view.played)?.let { it.pads ?: it.drums }
 
     /**
-     * A drum machine's voices as the pads of a drum rack: sixteen in a square
-     * at the bottom left, counted along each row from the bottom, and the next
-     * sixteen in the square beside it.
+     * A drum machine's pads as the app lays them out on screen: pad one at the
+     * bottom left, the smaller half along the bottom row and the rest in the
+     * row above - thirteen are six and seven. A machine with more than
+     * sixteen goes on up in rows of eight. The index into its pads, or null.
      */
-    fun drumVoice(row: Int, col: Int): Int? =
-        if (row in 0..3 && col in 0..7) (col / 4) * 16 + row * 4 + col % 4 else null
+    fun drumVoice(row: Int, col: Int, count: Int): Int? {
+        val rows: List<IntRange> = if (count <= 16) {
+            val bottom = count / 2
+            if (bottom == 0) listOf(0 until count) else listOf(0 until bottom, bottom until count)
+        } else {
+            (0 until count step 8).map { it until minOf(it + 8, count) }
+        }
+        val r = rows.getOrNull(row) ?: return null
+        return if (col < r.count()) r.first + col else null
+    }
 
     // --- Drawing ----------------------------------------------------------------
 
@@ -231,26 +265,40 @@ object Surface {
         for (b in listOf(Button.Up, Button.Down, Button.Left, Button.Right)) leds[b.cc] = Rgb.DIM
         val muting = Button.Mute in state.held
         val soloing = Button.Solo in state.held
-        for (i in 0..7) {
-            val t = state.trackBank * 8 + i
-            val track = view.tracks.getOrNull(t)
-            leds[LaunchpadPro.ledOf(Control.Track(i))] = when {
-                track == null -> Rgb.OFF
-                // While Mute or Solo is held, the row is what they would change.
+        fun trackLed(t: Int): Int {
+            val track = view.tracks.getOrNull(t) ?: return Rgb.OFF
+            return when {
+                // While Mute or Solo is held, the buttons are what they would change.
                 muting -> if (track.mute) MUTE else Rgb.scale(track.colour, 0.2f)
                 soloing -> if (track.solo) SOLO else Rgb.scale(track.colour, 0.2f)
                 t == view.played -> track.colour
                 else -> Rgb.scale(track.colour, 0.2f)
             }
-            val s = state.sceneBank * 8 + i
+        }
+        fun sceneLed(s: Int): Int {
             val playingHere = if (view.clipMode) view.tracks.any { it.playingScene == s } else view.playing && view.scene == s
             val queuedHere = if (view.clipMode) view.tracks.any { it.queuedScene == s } else view.queuedScene == s
-            leds[LaunchpadPro.ledOf(Control.Scene(i))] = when {
+            return when {
                 s >= view.scenes -> Rgb.OFF
                 playingHere -> pulse(Rgb.GREEN, view.beat)
                 queuedHere -> flash(Rgb.GREEN, view.beat)
                 else -> Rgb.scale(Rgb.GREEN, 0.25f)
             }
+        }
+        // The app's way round, on every page: tracks are rows, so the column
+        // beside the grid is the tracks, top to bottom, and the row under it
+        // the scenes, left to right - as the song grid on screen is.
+        for (i in 0..7) {
+            leds[LaunchpadPro.ledOf(Control.Scene(i))] = trackLed(state.trackOffset + i)
+            leds[LaunchpadPro.ledOf(Control.Track(i))] = sceneLed(state.sceneOffset + i)
+        }
+        // Where the arrows move the tracks and scenes, one is lit when there is more that way.
+        if (navigates(state)) {
+            val lit = { can: Boolean -> if (can) Rgb.WHITE else Rgb.OFF }
+            leds[Button.Up.cc] = lit(state.trackOffset > 0)
+            leds[Button.Down.cc] = lit(state.trackOffset < maxOffset(view.tracks.size))
+            leds[Button.Left.cc] = lit(state.sceneOffset > 0)
+            leds[Button.Right.cc] = lit(state.sceneOffset < maxOffset(view.scenes))
         }
         // The track controls this far: record, mute and solo, and stop.
         leds[Button.RecordArm.cc] = leds[Button.Record.cc]
@@ -276,7 +324,8 @@ object Surface {
     private fun notePage(view: LpView, state: LpState, colour: Int, leds: IntArray) {
         val held = state.sounding.values.flatten().toSet()
         val drums = drumsOf(view)
-        val s = steps(view)
+        val inKey = steps(view).map { (it + root(view)) % 12 }.toSet()
+        val keyed = !view.intervals.isNullOrEmpty() && view.root != null
         val r = root(view)
         for (row in 0..7) for (col in 0..7) {
             val led = LaunchpadPro.ledOf(Control.Pad(row, col))
@@ -285,18 +334,30 @@ object Surface {
                 note == null -> Rgb.OFF
                 led in state.sounding || note in held -> Rgb.WHITE
                 drums != null -> Rgb.scale(colour, 0.35f)
-                // The root is the track's colour; the rest of the scale a
-                // shade of it, so the octaves read at a glance.
+                // The root in the track's colour, the rest of the scale a
+                // shade of it, and what is not in the scale barely lit - there
+                // to play, and plainly not in key. With no key at all, the Cs
+                // are the landmarks, as on a piano.
                 Math.floorMod(note - r, 12) == 0 -> colour
-                s.size >= 12 && Math.floorMod(note, 12) in setOf(1, 3, 6, 8, 10) -> Rgb.DIM
-                else -> Rgb.scale(colour, 0.18f)
+                compact(view) -> Rgb.scale(colour, 0.3f)
+                Math.floorMod(note, 12) in inKey && keyed -> Rgb.scale(colour, 0.3f)
+                !keyed -> Rgb.scale(Rgb.WHITE, if (row % 2 == 0) 0.1f else 0.04f)
+                else -> Rgb.scale(Rgb.WHITE, 0.03f)
             }
         }
     }
 
-    /** Where a session pad points: its track and its scene, top row first. */
+    /** The pages whose arrows move the tracks and scenes in view - or any page, with Shift. */
+    private fun navigates(state: LpState): Boolean =
+        state.page == LpPage.Session || state.page == LpPage.Mixer || state.shift
+
+    /**
+     * Where a session pad points: its track and its scene. The app's grid,
+     * the right way round - the tracks down from the top row, the scenes
+     * across from the left.
+     */
     fun sessionCell(state: LpState, row: Int, col: Int): Pair<Int, Int> =
-        (state.trackBank * 8 + col) to (state.sceneBank * 8 + (7 - row))
+        (state.trackOffset + (7 - row)) to (state.sceneOffset + col)
 
     private fun sessionPage(view: LpView, state: LpState, leds: IntArray) {
         for (row in 0..7) for (col in 0..7) {
@@ -330,8 +391,9 @@ object Surface {
 
     /** The pitch a sequencer row edits: a scale note up from the note page's octave, or a drum voice. */
     fun seqPitch(view: LpView, state: LpState, row: Int): Int? {
+        // A drum machine reads down from the kick, as its grid on screen does.
+        drumsOf(view)?.let { return it.getOrNull(state.seqRow + (7 - row)) }
         val idx = state.seqRow + row
-        drumsOf(view)?.let { return it.getOrNull(idx) }
         val s = steps(view)
         val note = 12 * (state.octave + 1) + root(view) + 12 * Math.floorDiv(idx, s.size) + s[Math.floorMod(idx, s.size)]
         return note.takeIf { it in 0..127 }
@@ -340,7 +402,7 @@ object Surface {
     /** The first tick of a sequencer column, or null past the clip's end. */
     fun seqTick(view: LpView, state: LpState, col: Int): Int? {
         val seq = view.seq ?: return null
-        val tick = (state.stepPage * 8 + col) * seq.grid
+        val tick = (state.stepOffset + col) * seq.grid
         return tick.takeIf { it < seq.length }
     }
 
@@ -377,26 +439,32 @@ object Surface {
         LpFader.Device -> 0f
     }
 
-    /** The value a fader pad sets: the bottom row nought, the top one full. */
-    fun faderValue(row: Int): Float = row / 7f
+    /** The value a fader pad sets: the left column nought, the right one full. */
+    fun faderValue(col: Int): Float = col / 7f
 
+    /**
+     * The mixer as the app's grid lies: a row for each track, the top track
+     * at the top, and its fader running left to right across the row. With
+     * Device the rows are the played machine's eight knobs, first at the top.
+     */
     private fun mixerPage(view: LpView, state: LpState, leds: IntArray) {
         val colour = view.tracks.getOrNull(view.played)?.colour ?: Rgb.WHITE
-        for (col in 0..7) {
+        for (row in 0..7) {
+            val line = 7 - row
             val (c, v) = if (state.fader == LpFader.Device) {
-                colour to (view.device.getOrNull(col) ?: continue)
+                colour to (view.device.getOrNull(line) ?: continue)
             } else {
-                val track = view.tracks.getOrNull(state.trackBank * 8 + col) ?: continue
+                val track = view.tracks.getOrNull(state.trackOffset + line) ?: continue
                 track.colour to mixValue(track, state.fader)
             }
             val level = Math.round(v * 7f)
-            for (row in 0..7) {
+            for (col in 0..7) {
                 val lit = if (state.fader == LpFader.Pan) {
                     // Pan fills from the middle towards its side.
-                    (row in minOf(level, 4)..maxOf(level, 3))
-                } else row <= level && v > 0f
+                    (col in minOf(level, 4)..maxOf(level, 3))
+                } else col <= level && v > 0f
                 leds[LaunchpadPro.ledOf(Control.Pad(row, col))] = when {
-                    row == level -> c
+                    col == level -> c
                     lit -> Rgb.scale(c, 0.3f)
                     else -> Rgb.scale(Rgb.WHITE, 0.03f)
                 }
@@ -503,11 +571,12 @@ object Surface {
                 val led = LaunchpadPro.ledOf(control)
                 when (state.page) {
                     LpPage.Mixer -> {
-                        val v = faderValue(control.row)
+                        val v = faderValue(control.col)
+                        val line = 7 - control.row
                         return state to if (state.fader == LpFader.Device) {
-                            if (control.col < view.device.size) listOf(LpAction.SetDevice(control.col, v)) else emptyList()
+                            if (line < view.device.size) listOf(LpAction.SetDevice(line, v)) else emptyList()
                         } else {
-                            val t = state.trackBank * 8 + control.col
+                            val t = state.trackOffset + line
                             if (t < view.tracks.size) listOf(LpAction.SetMix(t, state.fader, v)) else emptyList()
                         }
                     }
@@ -533,24 +602,28 @@ object Surface {
                 return state.copy(sounding = state.sounding + (led to listOf(note))) to
                     listOf(LpAction.NoteOn(note, velocity.coerceIn(1, 127)))
             }
-            is Control.Track -> {
-                val t = state.trackBank * 8 + control.index
-                if (t >= view.tracks.size) return state to emptyList()
-                return state to listOf(
-                    when {
-                        Button.Mute in state.held -> LpAction.ToggleMute(t)
-                        Button.Solo in state.held -> LpAction.ToggleSolo(t)
-                        else -> LpAction.SelectTrack(t)
-                    },
-                )
-            }
-            is Control.Scene -> {
-                val s = state.sceneBank * 8 + control.index
-                if (s >= view.scenes) return state to emptyList()
-                return state to listOf(if (Button.Duplicate in state.held) LpAction.DuplicateScene(s) else LpAction.PlayScene(s))
-            }
+            // The column beside the grid is the tracks and the row under it the
+            // scenes, on every page: the app's grid, the right way round.
+            is Control.Track -> return state to scenePress(view, state, state.sceneOffset + control.index)
+            is Control.Scene -> return state to trackPress(view, state, state.trackOffset + control.index)
             is Control.Key -> return key(view, state, control.button)
         }
+    }
+
+    private fun trackPress(view: LpView, state: LpState, t: Int): List<LpAction> {
+        if (t >= view.tracks.size) return emptyList()
+        return listOf(
+            when {
+                Button.Mute in state.held -> LpAction.ToggleMute(t)
+                Button.Solo in state.held -> LpAction.ToggleSolo(t)
+                else -> LpAction.SelectTrack(t)
+            },
+        )
+    }
+
+    private fun scenePress(view: LpView, state: LpState, s: Int): List<LpAction> {
+        if (s >= view.scenes) return emptyList()
+        return listOf(if (Button.Duplicate in state.held) LpAction.DuplicateScene(s) else LpAction.PlayScene(s))
     }
 
     private fun key(view: LpView, state: LpState, b: Button): Pair<LpState, List<LpAction>> {
@@ -562,8 +635,8 @@ object Surface {
         if (b in modifiers && !(state.shift && (b == Button.Clear || b == Button.Duplicate))) {
             return state.copy(held = state.held + b) to emptyList()
         }
-        val session = state.page == LpPage.Session
-        if (state.page == LpPage.Sequencer) seqKey(view, state, b)?.let { return it to emptyList() }
+        val nav = navigates(state)
+        if (state.page == LpPage.Sequencer && !state.shift) seqKey(view, state, b)?.let { return it to emptyList() }
         return when (b) {
             Button.Shift -> state.copy(shift = true) to emptyList()
             Button.RecordArm -> state to listOf(LpAction.Record)
@@ -578,14 +651,16 @@ object Surface {
             ) to emptyList()
             Button.StopClip -> state to listOf(LpAction.StopClips)
             Button.Quantise -> state to (view.seq?.let { listOf(LpAction.QuantiseClip(view.played, it.scene)) } ?: emptyList())
-            // On the session page the arrows move the view of the grid.
-            Button.Up -> (if (session) state.copy(sceneBank = (state.sceneBank - 1).coerceAtLeast(0))
+            // On the session and mixer pages - and on any with Shift - the
+            // arrows move the view a row or a column at a time, as the app's
+            // grid lies: the tracks up and down, the scenes left and right.
+            Button.Up -> (if (nav) state.copy(trackOffset = (state.trackOffset - 1).coerceAtLeast(0))
             else state.copy(octave = (state.octave + 1).coerceAtMost(8))) to emptyList()
-            Button.Down -> (if (session) state.copy(sceneBank = (state.sceneBank + 1).coerceAtMost(maxBank(view.scenes)))
+            Button.Down -> (if (nav) state.copy(trackOffset = (state.trackOffset + 1).coerceAtMost(maxOffset(view.tracks.size)))
             else state.copy(octave = (state.octave - 1).coerceAtLeast(-1))) to emptyList()
-            Button.Left -> (if (state.shift || session) state.copy(trackBank = (state.trackBank - 1).coerceAtLeast(0))
+            Button.Left -> (if (nav) state.copy(sceneOffset = (state.sceneOffset - 1).coerceAtLeast(0))
             else state.copy(degree = state.degree - 1)) to emptyList()
-            Button.Right -> (if (state.shift || session) state.copy(trackBank = (state.trackBank + 1).coerceAtMost(maxBank(view.tracks.size)))
+            Button.Right -> (if (nav) state.copy(sceneOffset = (state.sceneOffset + 1).coerceAtMost(maxOffset(view.scenes)))
             else state.copy(degree = state.degree + 1)) to emptyList()
             Button.Play -> state to listOf(if (state.shift) LpAction.Panic else LpAction.Play)
             Button.Record -> state to listOf(LpAction.Record)
@@ -619,18 +694,24 @@ object Surface {
     fun pressure(state: LpState, pad: Control.Pad, value: Int): List<LpAction> =
         state.sounding[LaunchpadPro.ledOf(pad)].orEmpty().map { LpAction.Pressure(it, value) }
 
-    private fun maxBank(tracks: Int): Int = maxOf(0, (tracks - 1) / 8)
+    /** How far the view can move: to where the last of [count] is on the last row or column. */
+    private fun maxOffset(count: Int): Int = maxOf(0, count - 8)
 
     /** The arrows on the sequencer page: steps across, rows up and down. Null for anything else. */
+    /**
+     * The arrows on the sequencer page: a step at a time across, a row at a
+     * time up and down. A drum machine reads down from the kick, so there up
+     * goes back towards it. Null for anything else.
+     */
     private fun seqKey(view: LpView, state: LpState, b: Button): LpState? {
         val seq = view.seq
-        val lastPage = if (seq == null) 0 else maxOf(0, (seq.length / maxOf(1, seq.grid) - 1) / 8)
+        val steps = if (seq == null) 0 else (seq.length + seq.grid - 1) / maxOf(1, seq.grid)
         val lastRow = drumsOf(view)?.let { maxOf(0, it.size - 8) }
         return when (b) {
-            Button.Left -> state.copy(stepPage = (state.stepPage - 1).coerceAtLeast(0))
-            Button.Right -> state.copy(stepPage = (state.stepPage + 1).coerceAtMost(lastPage))
-            Button.Up -> state.copy(seqRow = if (lastRow != null) (state.seqRow + 1).coerceAtMost(lastRow) else state.seqRow + 1)
-            Button.Down -> state.copy(seqRow = if (lastRow != null) (state.seqRow - 1).coerceAtLeast(0) else state.seqRow - 1)
+            Button.Left -> state.copy(stepOffset = (state.stepOffset - 1).coerceAtLeast(0))
+            Button.Right -> state.copy(stepOffset = (state.stepOffset + 1).coerceAtMost(maxOffset(steps)))
+            Button.Up -> state.copy(seqRow = if (lastRow != null) (state.seqRow - 1).coerceAtLeast(0) else state.seqRow + 1)
+            Button.Down -> state.copy(seqRow = if (lastRow != null) (state.seqRow + 1).coerceAtMost(lastRow) else state.seqRow - 1)
             else -> null
         }
     }

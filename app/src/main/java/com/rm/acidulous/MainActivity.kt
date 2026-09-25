@@ -1520,8 +1520,14 @@ private fun App(modifier: Modifier = Modifier) {
             tracks = song.tracks.mapIndexed { i, t ->
                 com.rm.acidulous.midi.launchpad.LpTrack(
                     colour = com.rm.acidulous.midi.launchpad.Rgb.fromArgb(com.rm.acidulous.ui.trackColour(i, t.colour).toArgb()),
+                    // Lowest first for the sequencer, as the drum grid reads;
+                    // and as the pads are laid out on screen, for the note page.
                     drums = if (com.rm.acidulous.model.MachineUi.kindOf(t.machine.type) == com.rm.acidulous.model.MachineKind.Drums) {
-                        com.rm.acidulous.model.MachineUi.voicesOf(t.machine.type, t.machine.settings).map { it.note }
+                        com.rm.acidulous.model.MachineUi.voicesOf(t.machine.type, t.machine.settings).map { it.note }.sorted()
+                    } else null,
+                    pads = if (com.rm.acidulous.model.MachineUi.kindOf(t.machine.type) == com.rm.acidulous.model.MachineKind.Drums) {
+                        val voices = com.rm.acidulous.model.MachineUi.voicesOf(t.machine.type, t.machine.settings)
+                        com.rm.acidulous.model.MachineUi.padOrder(t.machine.type, voices).map { it.note }
                     } else null,
                     clips = song.scenes.indices.filter { song.scenes[it].id in t.clips }.toSet(),
                     mute = t.mixer.mute,
@@ -1538,6 +1544,7 @@ private fun App(modifier: Modifier = Modifier) {
             // The played track's scale, as its roll shows it: its own, or the song's.
             root = playedScale.first,
             intervals = playedScale.second,
+            scaleLocked = song.tracks.getOrNull(midiTrack)?.let { com.rm.acidulous.model.Scales.activeFor(it) != null } == true,
             playing = playing,
             armed = armed,
             beat = (position.tickInIteration % com.rm.acidulous.model.PPQN).toFloat() / com.rm.acidulous.model.PPQN,
