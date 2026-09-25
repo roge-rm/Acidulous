@@ -412,6 +412,11 @@ private fun App(modifier: Modifier = Modifier) {
         }
     }
     val recorder = remember { Recorder() }
+    // Record quantise, as the tempo window's record card sets it.
+    androidx.compose.runtime.SideEffect {
+        recorder.quantise = com.rm.acidulous.ui.UiPrefs.recordQuantise
+        recorder.strength = com.rm.acidulous.ui.UiPrefs.recordStrength / 100f
+    }
     var screen by rememberSaveable(saver = Screen.Saver) { mutableStateOf<Screen>(Screen.Main) }
     // Hardware notes go where the last opened clip was, which is the track
     // the player is working on whether or not its editor is still in front.

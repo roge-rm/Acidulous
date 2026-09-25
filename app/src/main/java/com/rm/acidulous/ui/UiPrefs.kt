@@ -401,6 +401,8 @@ object UiPrefs {
         clickDivision = p.getInt(KEY_CLICK_DIV, 1)
         clickVolume = p.getFloat(KEY_CLICK_VOL, 0.5f)
         countInBars = p.getInt(KEY_COUNT_IN, 0)
+        recordQuantise = p.getBoolean(KEY_RECORD_Q, true)
+        recordStrength = p.getInt(KEY_RECORD_Q_AMOUNT, 100)
         clickWhen = p.getInt(KEY_CLICK_WHEN, 0)
         // Not pushed here: init() runs in onCreate, hundreds of lines
         // before NativeEngine.start(), so anything sent now goes nowhere.
@@ -684,6 +686,18 @@ object UiPrefs {
         pushClick()
     }
 
+    /** Whether recording moves notes onto the clip's grid, and how far: 0..100. */
+    var recordQuantise by mutableStateOf(true)
+        private set
+    var recordStrength by mutableStateOf(100)
+        private set
+
+    fun chooseRecordQuantise(on: Boolean = recordQuantise, strength: Int = recordStrength) {
+        recordQuantise = on
+        recordStrength = strength.coerceIn(0, 100)
+        store?.edit()?.putBoolean(KEY_RECORD_Q, on)?.putInt(KEY_RECORD_Q_AMOUNT, recordStrength)?.apply()
+    }
+
     fun chooseCountInBars(bars: Int) {
         countInBars = bars.coerceIn(0, 4)
         store?.edit()?.putInt(KEY_COUNT_IN, countInBars)?.apply()
@@ -804,6 +818,8 @@ object UiPrefs {
     private const val KEY_CLICK_VOICE = "click_voice"
     private const val KEY_CLICK_DIV = "click_div"
     private const val KEY_CLICK_VOL = "click_vol"
+    private const val KEY_RECORD_Q = "record_quantise"
+    private const val KEY_RECORD_Q_AMOUNT = "record_quantise_amount"
     private const val KEY_COUNT_IN = "count_in"
     private const val KEY_CLICK_WHEN = "click_when"
     private const val KEY_TEMPO = "new_tempo"

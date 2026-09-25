@@ -921,9 +921,18 @@ private fun ClickPage() {
                 UiPrefs.chooseClickVolume(it / 100f)
             }
         }
-        // Counted only when armed, which the title says so no line has to.
-        WindowCard(stringResource(R.string.click_count_in)) {
-            SwitchGrid(stringResource(R.string.click_bars), listOf(stringResource(R.string.none), "1", "2", "3", "4"), UiPrefs.countInBars, columns = 5) { UiPrefs.chooseCountInBars(it) }
+        // What recording does: counts in, and moves what is played onto
+        // the clip's grid, all the way or part of it.
+        WindowCard(stringResource(R.string.click_record)) {
+            SwitchGrid(stringResource(R.string.click_count_in), listOf(stringResource(R.string.none), "1", "2", "3", "4"), UiPrefs.countInBars, columns = 5) { UiPrefs.chooseCountInBars(it) }
+            SwitchGrid(stringResource(R.string.click_quantise), stringArrayResource(R.array.off_on).toList(), if (UiPrefs.recordQuantise) 1 else 0) {
+                UiPrefs.chooseRecordQuantise(on = it == 1)
+            }
+            if (UiPrefs.recordQuantise) {
+                CountKnob(stringResource(R.string.click_amount), UiPrefs.recordStrength, 0..100, "${UiPrefs.recordStrength}%") {
+                    UiPrefs.chooseRecordQuantise(strength = it)
+                }
+            }
         }
     }
 }

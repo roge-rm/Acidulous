@@ -32,6 +32,8 @@ import com.rm.acidulous.model.emptyClipFor
 class Recorder {
 
     var quantise: Boolean = true
+    /** How far a note moves towards its grid line when [quantise] is on: 1 all the way. */
+    var strength: Float = 1f
 
     private val buffer = LongArray(128 * 5)
     private val paramNames = HashMap<String, List<String>>()
@@ -167,7 +169,10 @@ class Recorder {
         val raw = Swing.from(heard, song.swingOf(track), song.swingPair)
         val tick = if (quantise) {
             val g = clip.grid.coerceAtLeast(1)
-            (((raw + g / 2) / g) * g) % len // rounding past the end lands at the top of the loop
+            val snapped = ((raw + g / 2) / g) * g
+            // Part of the way, at less than full strength; rounding past the
+            // end lands at the top of the loop.
+            (raw + Math.round((snapped - raw) * strength.coerceIn(0f, 1f))) % len
         } else raw
         val length = (offAbsTick - on.absTick).toInt().coerceAtLeast(1)
 

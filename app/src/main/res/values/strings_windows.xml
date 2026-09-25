@@ -133,8 +133,11 @@
         <item>count-in</item>
     </string-array>
     <string name="click_level">level</string>
-    <string name="click_count_in">count-in · when armed</string>
-    <string name="click_bars">bars</string>
+    <!-- The tempo window's record card: count-in and record quantise, both for when armed. -->
+    <string name="click_record">record · when armed</string>
+    <string name="click_count_in">count-in</string>
+    <string name="click_quantise">quantise</string>
+    <string name="click_amount">amount</string>
 
     <!-- The link tab -->
     <string name="link_card">link</string>
