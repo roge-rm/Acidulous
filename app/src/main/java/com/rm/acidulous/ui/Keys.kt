@@ -234,9 +234,19 @@ object KeyHub {
         private set
     /** The shortcuts overlay. */
     var showingKeys by mutableStateOf(false)
+    /** A focused control's hold actions, open as a menu (Alt+Enter), or null. */
+    var actionMenu by mutableStateOf<List<androidx.compose.ui.semantics.CustomAccessibilityAction>?>(null)
 
     /** A text field has focus: every key is its. */
     internal var typing = false
+
+    /**
+     * The last thing the player did was press a key rather than touch the
+     * screen. A window opened then puts the focus on its first control, so
+     * the keys go on working; opened by a touch it does not, or every window
+     * would open wearing a ring nobody asked for.
+     */
+    var usingKeys = false
 
     /** Where typed notes go: set by the app to the track hardware MIDI plays. */
     var target: () -> Int = { 0 }
@@ -286,6 +296,7 @@ object KeyHub {
      * chord with a modifier or on Space. True when it was taken.
      */
     fun preview(e: KeyEvent): Boolean {
+        usingKeys = true
         if (typing) return false
         val code = e.keyCode
         if (e.action == KeyEvent.ACTION_UP) {

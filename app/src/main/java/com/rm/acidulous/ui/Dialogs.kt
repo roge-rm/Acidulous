@@ -32,6 +32,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -954,6 +958,25 @@ private fun DialogShell(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
+        // **A window is a window of its own**, so its keys never pass through
+        // MainActivity: the hub is asked here instead, before and after the
+        // window's controls, as it is there for the screen. Esc is left to
+        // the window, which closes on it. And the screen's letter shortcuts
+        // stop at the window - see KeyScope's `window`.
+        KeyScope(window = true)
+        // Opened from the keyboard, the window takes the focus onto its first
+        // control, so the next key lands in it rather than hunting for it.
+        val bodyFocus = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            // Until it takes: the window's controls are not there to focus
+            // until it has been laid out, which is a frame or two.
+            if (KeyHub.usingKeys) {
+                for (attempt in 0 until 10) {
+                    kotlinx.coroutines.delay(32)
+                    if (runCatching { bodyFocus.requestFocus() }.getOrDefault(false)) break
+                }
+            }
+        }
         ScaledWindow {
             // **Turned, the header is one row**: the title, the tabs and the
             // buttons across the top, and the body the rest of the height.
@@ -974,7 +997,13 @@ private fun DialogShell(
             } >= WideCardsMinW
             androidx.compose.material3.Surface(
                 Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = if (wide) 1100.dp else 720.dp)
-                    .heightIn(max = cardMax),
+                    .heightIn(max = cardMax)
+                    .onPreviewKeyEvent { ev ->
+                        ev.nativeKeyEvent.keyCode != android.view.KeyEvent.KEYCODE_ESCAPE && KeyHub.preview(ev.nativeKeyEvent)
+                    }
+                    .onKeyEvent { ev ->
+                        ev.nativeKeyEvent.keyCode != android.view.KeyEvent.KEYCODE_ESCAPE && KeyHub.fallback(ev.nativeKeyEvent)
+                    },
                 shape = RoundedCornerShape(16.dp),
                 color = c.card,
             ) {
@@ -1027,7 +1056,11 @@ private fun DialogShell(
                         Modifier.weight(1f, fill = false)
                             .heightIn(max = maxBodyHeight)
                             .verticalScrollWithBar(rememberScrollState())
-                            .padding(end = 10.dp),
+                            .padding(end = 10.dp)
+                            // Where the keyboard's first focus goes: the
+                            // body's first control, not the footer's button.
+                            .focusRequester(bodyFocus)
+                            .focusGroup(),
                     ) {
                         androidx.compose.runtime.CompositionLocalProvider(LocalDialogWide provides (wide && roomy)) { body() }
                     }
@@ -1198,7 +1231,7 @@ internal fun DialogRow(
                 "✕", color = c.red, fontSize = 14.sp,
                 modifier = Modifier.clip(RoundedCornerShape(4.dp))
                     .clickable(onClick = onRemove)
-                    .button(said, onClick = onRemove)
+                    .button(said, onClick = onRemove, keyFocus = false)
                     .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
             )
         }

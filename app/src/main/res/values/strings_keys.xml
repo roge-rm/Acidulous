@@ -31,8 +31,7 @@
     <!-- The list of keys a question mark opens. -->
     <string name="keys_title">Keys</string>
     <string name="keys_notes_line">In play mode: A S D F G H J K L are white keys, W E T Y U O P black. Z X move the octave, C V the velocity. Shift plays an octave up.</string>
-    <string name="keys_nav_line">Arrows and Tab move between controls. Enter presses; arrows turn a knob, Shift for fine. Alt+Enter opens what a hold does.</string>
-    <!-- The chip beside the octave in the editor: letters are notes. Its state, and the octave the A key starts. -->
-    <string name="keys_chip">keys</string>
-    <string name="keys_chip_on">keys C%1$d</string>
+    <string name="keys_nav_line">Arrows and Tab move between controls, and Enter presses. On a knob or fader Enter grabs it: the arrows turn it (Shift for fine) until Enter or Esc lets go, and + and - turn it without grabbing. Alt+Enter opens what a hold does.</string>
+    <!-- The menu Alt+Enter opens on a control: what holding it would have done. -->
+    <string name="keys_actions_title">Actions</string>
 </resources>

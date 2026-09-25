@@ -376,6 +376,7 @@ fun EditScreen(
         KeyAction.Generate to { if (kind != MachineKind.Audio) generateDialog = true },
         KeyAction.FoldPanel to { UiPrefs.foldPanel(!UiPrefs.panelFolded) },
         KeyAction.FoldKeys to { UiPrefs.foldKeys(!UiPrefs.keysFolded) },
+        KeyAction.Back to { onBack() },
     )
     Column(modifier.fillMaxSize().background(Acid.colors.bg)) {
         val footerSlot: @Composable () -> Unit = {

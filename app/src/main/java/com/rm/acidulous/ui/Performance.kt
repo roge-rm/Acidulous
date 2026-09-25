@@ -213,6 +213,7 @@ fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Mod
                 stringResource(R.string.a11y_keys_from, spokenNote(12 * (octave + 1), emptyMap(), androidx.compose.ui.platform.LocalResources.current)),
                 stringResource(R.string.keys_play_mode) + ": " + stringResource(if (playMode) R.string.a11y_on else R.string.a11y_off),
                 onClick = { KeyHub.togglePlayMode() },
+                keyFocus = false,
             ),
         )
         StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(R.string.a11y_octave_up)) {

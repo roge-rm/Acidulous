@@ -77,6 +77,14 @@ fun AcidulousTheme(mode: ThemeMode = ThemeMode.Dark, content: @Composable () -> 
         else -> LightColors
     }
     CompositionLocalProvider(LocalAcidColors provides colors) {
-        MaterialTheme(colorScheme = scheme(colors), typography = Typography, content = content)
+        MaterialTheme(colorScheme = scheme(colors), typography = Typography) {
+            // Every `clickable` wears a ring while the keyboard is on it; see
+            // ui/KeyControls.kt. The press still ripples as it always did.
+            CompositionLocalProvider(
+                androidx.compose.foundation.LocalIndication provides
+                    com.rm.acidulous.ui.FocusRingIndication(androidx.compose.material3.ripple(), colors.accent),
+                content = content,
+            )
+        }
     }
 }

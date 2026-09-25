@@ -1356,7 +1356,7 @@ private fun ClipCell(
             )
             // A tap launches in the launcher, which the gesture detector does
             // not tell TalkBack, so the click is stated here.
-            .button(said, doing, a11yActions, onClick = if (clipMode) ({ launchNow() }) else null),
+            .button(said, doing, a11yActions, onClick = if (clipMode) ({ launchNow() }) else null, keyFocus = false),
     ) {
         if (clip == null) {
             Text("+", color = Acid.colors.textFaint, fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))

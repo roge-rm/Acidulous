@@ -57,7 +57,7 @@ internal fun Modifier.adjustable(
     progressBarRangeInfo = ProgressBarRangeInfo(value.coerceIn(0f, 1f), 0f..1f, steps)
     setProgress { target -> onSet(target.coerceIn(0f, 1f)); true }
     if (actions.isNotEmpty()) customActions = actions
-}
+}.keyAdjust(value, steps, actions, onSet)
 
 /**
  * A drawn button, or anything tapped: [name] instead of its glyph, and what a
@@ -68,13 +68,19 @@ internal fun Modifier.button(
     state: String? = null,
     actions: List<CustomAccessibilityAction> = emptyList(),
     onClick: (() -> Unit)? = null,
+    /**
+     * Whether the keyboard reaches it through this: yes when [onClick] is the
+     * only way it is pressed, no when a `clickable` beside it already is and a
+     * second would make two focus stops for one control.
+     */
+    keyFocus: Boolean = onClick != null,
 ): Modifier = clearAndSetSemantics {
     contentDescription = name
     role = Role.Button
     if (state != null) stateDescription = state
     if (onClick != null) onClick { onClick(); true }
     if (actions.isNotEmpty()) customActions = actions
-}
+}.keyPress(if (keyFocus) onClick else null, actions)
 
 /** One of a set, where one is chosen: a switch's cell, a tab. */
 internal fun Modifier.choice(name: String, chosen: Boolean, tab: Boolean = false, onClick: (() -> Unit)? = null): Modifier =
@@ -83,7 +89,7 @@ internal fun Modifier.choice(name: String, chosen: Boolean, tab: Boolean = false
         role = if (tab) Role.Tab else Role.RadioButton
         selected = chosen
         if (onClick != null) onClick { onClick(); true }
-    }
+    }.keyPress(onClick, emptyList())
 
 /**
  * Controls TalkBack reads as one run before it moves on: a switch's cells, a

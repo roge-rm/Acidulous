@@ -264,6 +264,11 @@ class MainActivity : ComponentActivity() {
         return com.rm.acidulous.ui.KeyHub.fallback(event)
     }
 
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        com.rm.acidulous.ui.KeyHub.usingKeys = false
+        return super.dispatchTouchEvent(ev)
+    }
+
     /** What Meta+/ lists on a USB keyboard: the shortcuts this screen answers to. */
     override fun onProvideKeyboardShortcuts(
         data: MutableList<android.view.KeyboardShortcutGroup>,
@@ -415,10 +420,12 @@ private fun App(modifier: Modifier = Modifier) {
         com.rm.acidulous.ui.KeyAction.PlayMode to { com.rm.acidulous.ui.KeyHub.togglePlayMode() },
         com.rm.acidulous.ui.KeyAction.Panic to { com.rm.acidulous.ui.panicEverything() },
         com.rm.acidulous.ui.KeyAction.KeysHelp to { com.rm.acidulous.ui.KeyHub.showingKeys = true },
-        com.rm.acidulous.ui.KeyAction.Back to {
-            (context as? androidx.activity.ComponentActivity)?.onBackPressedDispatcher?.onBackPressed()
-        },
+        // No Back here: at the song screen back leaves the app, and Esc is
+        // pressed too casually for that. The editor says what back means.
     )
+    com.rm.acidulous.ui.KeyHub.actionMenu?.let { actions ->
+        com.rm.acidulous.ui.KeyActionMenu(actions, onDismiss = { com.rm.acidulous.ui.KeyHub.actionMenu = null })
+    }
     if (com.rm.acidulous.ui.KeyHub.showingKeys) {
         com.rm.acidulous.ui.KeysOverlay(onDismiss = { com.rm.acidulous.ui.KeyHub.showingKeys = false })
     }
