@@ -320,6 +320,7 @@ androidComponents {
 }
 
 dependencies {
+    implementation(project(":shared"))
     implementation(libs.oboe)
     implementation(libs.kotlinx.serialization.json)
     implementation(platform(libs.androidx.compose.bom))

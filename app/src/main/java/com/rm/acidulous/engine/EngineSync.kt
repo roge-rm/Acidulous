@@ -37,8 +37,8 @@ import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.laneParam
 import com.rm.acidulous.model.isPedalLane
 import com.rm.acidulous.model.laneUnit
-import com.rm.acidulous.R
-import androidx.annotation.StringRes
+import com.rm.acidulous.res.*
+import org.jetbrains.compose.resources.StringResource
 
 /**
  * The one place the document meets the engine.
@@ -134,10 +134,10 @@ object EngineSync {
      * kind of error message on an error." The host sets this; nothing else
      * reads it.
      */
-    var onProblem: ((Int, Array<out Any>) -> Unit)? = null
+    var onProblem: ((StringResource, Array<out Any>) -> Unit)? = null
 
     /** A string resource and what goes in it, so the host says it in the phone's language. */
-    private fun problem(@StringRes message: Int, vararg args: Any) {
+    private fun problem(message: StringResource, vararg args: Any) {
         Log.w(TAG, "problem $message: ${args.joinToString(" | ")}")
         onProblem?.invoke(message, args)
     }
@@ -160,7 +160,7 @@ object EngineSync {
                 // reported once rather than on every sync for the rest of the
                 // session. Changing the setting is what asks again.
                 loadedSamples[key] = rel
-                if (err.isNotEmpty()) problem(R.string.sync_pad_failed, pad + 1, shortName(rel), err)
+                if (err.isNotEmpty()) problem(Res.string.sync_pad_failed, pad + 1, shortName(rel), err)
             }
             // And the shared file the pads slice, in the slot above them. One
             // copy for all thirteen: mounting it per pad would decode an
@@ -177,7 +177,7 @@ object EngineSync {
                     maxSeconds = NativeEngine.SLICE_SECONDS,
                 )
                 loadedSamples[sliceKey] = sliceRel
-                if (err.isNotEmpty()) problem(R.string.sync_file_failed, shortName(sliceRel), err)
+                if (err.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(sliceRel), err)
             }
         }
     }
@@ -400,7 +400,7 @@ object EngineSync {
                 val error = NativeEngine.loadReel(rack, wanted)
                 mapStatus = ""
                 if (error.isNotEmpty()) {
-                    problem(R.string.sync_tape_failed, error)
+                    problem(Res.string.sync_tape_failed, error)
                     loadedReels[rack] = null // let a retry happen
                 } else if (wanted.isNotEmpty()) {
                     Log.i(TAG, "rack $rack holds ${wanted.count { it == '\n' }} audio region(s)")
@@ -494,7 +494,7 @@ object EngineSync {
                 // Reported and not retried: a file that will not decode will
                 // not decode the second time either, and `loadedTakes` is
                 // already set, so asking again means changing the setting.
-                if (error.isNotEmpty()) problem(R.string.sync_file_failed, shortName(wanted), error)
+                if (error.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(wanted), error)
             }
         }
     }

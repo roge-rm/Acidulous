@@ -1,8 +1,7 @@
 package com.rm.acidulous.ui
 
-import android.content.res.Resources
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalResources
+import com.rm.acidulous.res.AppStrings
 
 /**
  * A panel's word in the phone's language.
@@ -14,7 +13,7 @@ import androidx.compose.ui.platform.LocalResources
  * ("op %d") and the number put back. Anything not in the table - a patch's
  * name, a word already translated - comes back as it went in.
  */
-internal fun Resources.panelWord(english: String): String {
+internal fun AppStrings.panelWord(english: String): String {
     PANEL_WORDS[english]?.let { return getString(it) }
     val numbers = NUMBER.findAll(english).map { it.value.toInt() }.toList()
     if (numbers.isNotEmpty()) {
@@ -24,12 +23,11 @@ internal fun Resources.panelWord(english: String): String {
 }
 
 @Composable
-internal fun panelWord(english: String): String = LocalResources.current.panelWord(english)
+internal fun panelWord(english: String): String = AppStrings.panelWord(english)
 
 @Composable
 internal fun panelWords(english: List<String>): List<String> {
-    val resources = LocalResources.current
-    return english.map { resources.panelWord(it) }
+    return english.map { AppStrings.panelWord(it) }
 }
 
 private val NUMBER = Regex("\\d+")

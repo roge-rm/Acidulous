@@ -45,9 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.stringArrayResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * The keyboard, in two shapes.
@@ -285,8 +283,8 @@ fun ScaleChip(
      */
     icon: String? = null,
 ) = SlotChip(
-    icon ?: label ?: stringResource(R.string.scale_chip), label != null, onToggle, onOpen, modifier, vertical, icon != null,
-    said = label ?: stringResource(R.string.scale_chip),
+    icon ?: label ?: stringResource(Res.string.scale_chip), label != null, onToggle, onOpen, modifier, vertical, icon != null,
+    said = label ?: stringResource(Res.string.scale_chip),
 )
 
 /**
@@ -332,8 +330,8 @@ fun SlotChip(
         modifier.clip(RoundedCornerShape(4.dp)).background(if (on) c.accentDim else c.card)
             .pointerInput(Unit) { detectTapGestures(onLongPress = { cb.second() }, onTap = { cb.first() }) }
             .button(
-                said, stringResource(if (on) R.string.a11y_on else R.string.a11y_off),
-                listOf(action(stringResource(R.string.a11y_open_it)) { cb.second() }),
+                said, stringResource(if (on) Res.string.a11y_on else Res.string.a11y_off),
+                listOf(action(stringResource(Res.string.a11y_open_it)) { cb.second() }),
                 onClick = { cb.first() },
             ),
         contentAlignment = Alignment.Center,
@@ -457,12 +455,12 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
 data class ScaleSetting(val on: Boolean, val key: Int, val scale: Int, val degree: Boolean, val snap: Int)
 
 private val ScaleGroups = listOf(
-    R.string.scale_group_modes to 0..6,
-    R.string.scale_group_minor to 7..8,
-    R.string.scale_group_pentatonic to 9..13,
-    R.string.scale_group_world to 14..23,
-    R.string.scale_group_jazz to 24..29,
-    R.string.scale_group_symmetric to 30..32,
+    Res.string.scale_group_modes to 0..6,
+    Res.string.scale_group_minor to 7..8,
+    Res.string.scale_group_pentatonic to 9..13,
+    Res.string.scale_group_world to 14..23,
+    Res.string.scale_group_jazz to 24..29,
+    Res.string.scale_group_symmetric to 30..32,
 )
 
 @Composable
@@ -519,16 +517,16 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
             ) {
-                Pill(stringResource(R.string.scale_off), !s.on) { s = s.copy(on = false) }
-                Pill(stringResource(R.string.scale_snap), s.on && !s.degree) { s = s.copy(on = true, degree = false) }
-                Pill(stringResource(R.string.scale_degrees), s.on && s.degree) { s = s.copy(on = true, degree = true) }
+                Pill(stringResource(Res.string.scale_off), !s.on) { s = s.copy(on = false) }
+                Pill(stringResource(Res.string.scale_snap), s.on && !s.degree) { s = s.copy(on = true, degree = false) }
+                Pill(stringResource(Res.string.scale_degrees), s.on && s.degree) { s = s.copy(on = true, degree = true) }
             }
             if (s.on && !s.degree) {
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
                 ) {
-                    stringArrayResource(R.array.scale_snap_choices).forEachIndexed { i, n ->
+                    stringArrayResource(Res.array.scale_snap_choices).forEachIndexed { i, n ->
                         Pill(n, s.snap == i) { s = s.copy(snap = i) }
                     }
                 }
@@ -561,11 +559,11 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
     }
 
     TabbedDialog(
-        title = stringResource(R.string.scale_title),
+        title = stringResource(Res.string.scale_title),
         selected = tab,
         onDismiss = onDismiss,
-        dismissLabel = stringResource(R.string.cancel),
-        confirmLabel = stringResource(R.string.ok),
+        dismissLabel = stringResource(Res.string.cancel),
+        confirmLabel = stringResource(Res.string.ok),
         onConfirm = { onApply(s) },
         // **Wrapped, not shared out by weight.** The shared chip row gives every
         // tab the same slice of the width and cuts the words to fit, which is
@@ -634,7 +632,7 @@ private fun Pill(label: String, on: Boolean, onClick: () -> Unit) {
 @Composable
 private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: Map<Int, String>) {
     val density = androidx.compose.ui.platform.LocalDensity.current
-    val resources = androidx.compose.ui.platform.LocalResources.current
+    val resources = AppStrings
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = EdgeGrab)) {
         val w = with(density) { maxWidth.toPx() }
@@ -672,14 +670,14 @@ private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: M
 }
 
 /** A note as it is said rather than written: "C sharp 4", not "C#4". */
-internal fun spokenNote(pitch: Int, spelling: Map<Int, String>, resources: android.content.res.Resources): String {
+internal fun spokenNote(pitch: Int, spelling: Map<Int, String>, resources: AppStrings): String {
     val written = noteName(pitch, spelling)
     val octave = pitch / 12 - 1
     val name = written.dropLast(octave.toString().length)
     val letter = name.take(1)
     return when {
-        name.contains('#') || name.contains('♯') -> resources.getString(R.string.a11y_note_sharp, letter, octave)
-        name.length > 1 && (name[1] == 'b' || name[1] == '♭') -> resources.getString(R.string.a11y_note_flat, letter, octave)
-        else -> resources.getString(R.string.a11y_note, letter, octave)
+        name.contains('#') || name.contains('♯') -> resources.getString(Res.string.a11y_note_sharp, letter, octave)
+        name.length > 1 && (name[1] == 'b' || name[1] == '♭') -> resources.getString(Res.string.a11y_note_flat, letter, octave)
+        else -> resources.getString(Res.string.a11y_note, letter, octave)
     }
 }

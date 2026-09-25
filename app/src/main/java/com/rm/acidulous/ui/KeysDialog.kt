@@ -18,13 +18,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rm.acidulous.R
 import com.rm.acidulous.ui.theme.Acid
+import com.rm.acidulous.res.*
 
 /**
  * Every shortcut and its keys, changeable the way a controller mapping is
@@ -63,19 +61,19 @@ fun KeysDialog(onDismiss: () -> Unit) {
     androidx.compose.runtime.DisposableEffect(Unit) { onDispose { KeyHub.learning = null } }
 
     PlainDialog(
-        title = stringResource(R.string.keys_title),
+        title = stringResource(Res.string.keys_title),
         onDismiss = onDismiss,
-        dismissLabel = stringResource(R.string.done),
+        dismissLabel = stringResource(Res.string.done),
         spacing = 8.dp,
     ) {
         WindowCards {
-            WindowCard(stringResource(R.string.keys_notes_card)) {
+            WindowCard(stringResource(Res.string.keys_notes_card)) {
                 SwitchGrid(
-                    stringResource(R.string.keys_layout),
-                    stringArrayResource(R.array.keys_layouts).toList(),
+                    stringResource(Res.string.keys_layout),
+                    stringArrayResource(Res.array.keys_layouts).toList(),
                     UiPrefs.noteLayout.ordinal,
                 ) { UiPrefs.chooseNoteLayout(NoteLayout.entries[it]) }
-                SwitchGrid(stringResource(R.string.keys_defaults), listOf(stringResource(R.string.keys_reset)), -1) {
+                SwitchGrid(stringResource(Res.string.keys_defaults), listOf(stringResource(Res.string.keys_reset)), -1) {
                     UiPrefs.resetKeys()
                     moved = null
                 }
@@ -96,20 +94,20 @@ fun KeysDialog(onDismiss: () -> Unit) {
                                     if (chord == null && slot > chords.size) continue
                                     KeyChip(
                                         text = when {
-                                            learning == action to slot -> stringResource(R.string.keys_press)
+                                            learning == action to slot -> stringResource(Res.string.keys_press)
                                             chord != null -> chord.words()
                                             else -> "+"
                                         },
                                         waiting = learning == action to slot,
-                                        said = stringResource(R.string.keys_chip_said, stringResource(action.label), chord?.words() ?: stringResource(R.string.keys_none)),
+                                        said = stringResource(Res.string.keys_chip_said, stringResource(action.label), chord?.words() ?: stringResource(Res.string.keys_none)),
                                         onRemove = chord?.let { ch -> { UiPrefs.chooseKeys(action, chords - ch) } },
-                                        removeLabel = stringResource(R.string.keys_remove),
+                                        removeLabel = stringResource(Res.string.keys_remove),
                                     ) { learn(action, slot) }
                                 }
                             }
                             // Under the row just pressed, where the eye is.
                             moved?.takeIf { it.first == action }?.let { (_, from) ->
-                                Text(stringResource(R.string.keys_moved, stringResource(from.label)), color = c.accent, fontSize = 11.sp)
+                                Text(stringResource(Res.string.keys_moved, stringResource(from.label)), color = c.accent, fontSize = 11.sp)
                             }
                         }
                     }

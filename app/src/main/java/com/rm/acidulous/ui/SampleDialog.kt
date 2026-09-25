@@ -35,8 +35,7 @@ import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * One pad's sample, with its start and end set against the picture.
@@ -113,12 +112,12 @@ fun SampleDialog(
     val end = endDef?.map(b.value(n("end"))) ?: 1f
 
     val seconds = meta.split('|').getOrNull(1)?.toFloatOrNull()?.let { it / 48000f } ?: 0f
-    val name = meta.substringBefore('|').ifEmpty { stringResource(R.string.pad_no_sample) }
+    val name = meta.substringBefore('|').ifEmpty { stringResource(Res.string.pad_no_sample) }
 
     PlainDialog(
-        title = stringResource(R.string.pad_title, pad + 1),
+        title = stringResource(Res.string.pad_title, pad + 1),
         onDismiss = onBack,
-        dismissLabel = stringResource(R.string.done),
+        dismissLabel = stringResource(Res.string.done),
         spacing = 6.dp,
     ) {
         Row(
@@ -133,17 +132,17 @@ fun SampleDialog(
             )
             androidx.compose.material3.TextButton(
                 onClick = { NativeEngine.noteOn(trackIndex, 36 + pad, 110) },
-            ) { Text(stringResource(R.string.pad_play), color = c.accent, fontSize = 12.sp) }
+            ) { Text(stringResource(Res.string.pad_play), color = c.accent, fontSize = 12.sp) }
             androidx.compose.material3.TextButton(onClick = {
                 if (startDef != null) b.set(startDef.name, startDef.unmap(0f))
                 if (endDef != null) b.set(endDef.name, endDef.unmap(1f))
-            }) { Text(stringResource(R.string.pad_all), color = c.accent, fontSize = 12.sp) }
+            }) { Text(stringResource(Res.string.pad_all), color = c.accent, fontSize = 12.sp) }
             // Only where there is something to come back from. A zoom with no
             // way out but pinching back is a trap, and a permanent button for
             // it would be a word on the row saying nothing most of the time.
             if (zoomed) {
                 androidx.compose.material3.TextButton(onClick = { viewFrom = 0.0; viewSpan = 1.0 }) {
-                    Text(stringResource(R.string.pad_fit), color = c.teal, fontSize = 12.sp)
+                    Text(stringResource(Res.string.pad_fit), color = c.teal, fontSize = 12.sp)
                 }
             }
         }
@@ -164,7 +163,7 @@ fun SampleDialog(
             onStart = { at -> startDef?.let { b.set(it.name, it.unmap(at)) } },
             onEnd = { at -> endDef?.let { b.set(it.name, it.unmap(at)) } },
             modifier = Modifier.fillMaxWidth().height(200.dp),
-            empty = stringResource(R.string.pad_empty),
+            empty = stringResource(Res.string.pad_empty),
         )
 
         // Where the trim actually falls, in seconds - the number a player
@@ -175,11 +174,11 @@ fun SampleDialog(
         ) {
             val from = min(start, end)
             val to = max(start, end)
-            Text(stringResource(R.string.pad_start, from * seconds), color = c.textDim, fontSize = 11.sp,
+            Text(stringResource(Res.string.pad_start, from * seconds), color = c.textDim, fontSize = 11.sp,
                  fontFamily = FontFamily.Monospace)
-            Text(stringResource(R.string.pad_end, to * seconds), color = c.textDim, fontSize = 11.sp,
+            Text(stringResource(Res.string.pad_end, to * seconds), color = c.textDim, fontSize = 11.sp,
                  fontFamily = FontFamily.Monospace)
-            Text(stringResource(R.string.pad_plays, (to - from) * seconds), color = c.textHi, fontSize = 11.sp,
+            Text(stringResource(Res.string.pad_plays, (to - from) * seconds), color = c.textHi, fontSize = 11.sp,
                  fontFamily = FontFamily.Monospace)
             if (zoomed) {
                 // How far in, and how much of the sound is on screen. The

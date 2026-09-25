@@ -49,8 +49,7 @@ import com.rm.acidulous.model.laneParam
 import kotlin.math.roundToInt
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * The parameter strip under the piano roll: one lane at a time, drawn as
@@ -122,9 +121,9 @@ fun AutomationStrip(
                         },
                         onLongClick = { menu = true },
                     ).button(
-                        stringResource(R.string.a11y_auto_lane),
-                        current?.let { nameOf(it) } ?: stringResource(R.string.a11y_none_chosen),
-                        listOf(action(stringResource(R.string.a11y_choose_lane)) { menu = true }),
+                        stringResource(Res.string.a11y_auto_lane),
+                        current?.let { nameOf(it) } ?: stringResource(Res.string.a11y_none_chosen),
+                        listOf(action(stringResource(Res.string.a11y_choose_lane)) { menu = true }),
                     ),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -133,7 +132,7 @@ fun AutomationStrip(
                     // because this gutter is always eighty-eight dp tall, so
                     // a hundred and twenty is simply more than enough.
                     SideText(
-                        current?.let { shortOf(it) } ?: stringResource(R.string.auto_none),
+                        current?.let { shortOf(it) } ?: stringResource(Res.string.auto_none),
                         Acid.colors.accent, 9.sp, length = 120.dp, family = FontFamily.Monospace,
                     )
                 }
@@ -142,7 +141,7 @@ fun AutomationStrip(
                 Modifier.fillMaxWidth()
                     .then(if (collapsed) Modifier.fillMaxHeight() else Modifier.height(18.dp))
                     .clickable { onToggleCollapse() }
-                    .button(stringResource(if (collapsed) R.string.a11y_unfold_lane else R.string.a11y_fold_lane)),
+                    .button(stringResource(if (collapsed) Res.string.a11y_unfold_lane else Res.string.a11y_fold_lane)),
                 contentAlignment = Alignment.Center,
             ) { Text(if (collapsed) "▴" else "▾", color = Acid.colors.textMid, fontSize = 11.sp) }
             val menuScroll = rememberScrollState()
@@ -163,7 +162,7 @@ fun AutomationStrip(
                         )
                     }
                     if (current != null) {
-                        DropdownMenuItem(text = { Text(stringResource(R.string.auto_clear, shortOf(current))) }, onClick = { menu = false; onClear(current) })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.auto_clear, shortOf(current))) }, onClick = { menu = false; onClear(current) })
                     }
                 }
             }
@@ -305,7 +304,7 @@ fun AutomationStrip(
             // The graph keeps drawing while folded, so the name needs a ground
             // of its own or it reads as part of the curve.
             Text(
-                current?.let { shortOf(it) } ?: stringResource(R.string.auto_none),
+                current?.let { shortOf(it) } ?: stringResource(Res.string.auto_none),
                 color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                 maxLines = 1, softWrap = false,
                 modifier = Modifier.align(Alignment.CenterStart)

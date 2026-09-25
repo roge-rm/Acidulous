@@ -34,9 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
 import kotlinx.coroutines.launch
+import com.rm.acidulous.res.*
 
 /**
  * The performance controls, shaped like the things they are.
@@ -203,20 +202,20 @@ fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Mod
         // costs: a stepper missing an arrow is a control that does not work.
         // Sharing, the two are always the same size as each other and always
         // both there, whatever the row can spare.
-        StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(R.string.a11y_octave_down)) {
+        StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_down)) {
             onOctave(octave - 1)
         }
         Text(
             "C${octave + 1}", color = Acid.colors.accent, fontSize = 10.sp,
             fontFamily = FontFamily.Monospace, maxLines = 1,
             modifier = Modifier.clickable { KeyHub.togglePlayMode() }.button(
-                stringResource(R.string.a11y_keys_from, spokenNote(12 * (octave + 1), emptyMap(), androidx.compose.ui.platform.LocalResources.current)),
-                stringResource(R.string.keys_play_mode) + ": " + stringResource(if (playMode) R.string.a11y_on else R.string.a11y_off),
+                stringResource(Res.string.a11y_keys_from, spokenNote(12 * (octave + 1), emptyMap(), AppStrings)),
+                stringResource(Res.string.keys_play_mode) + ": " + stringResource(if (playMode) Res.string.a11y_on else Res.string.a11y_off),
                 onClick = { KeyHub.togglePlayMode() },
                 keyFocus = false,
             ),
         )
-        StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(R.string.a11y_octave_up)) {
+        StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_up)) {
             onOctave(octave + 1)
         }
     }

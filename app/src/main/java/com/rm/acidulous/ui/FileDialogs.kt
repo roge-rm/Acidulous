@@ -24,9 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.ui.theme.Acid
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
-import androidx.compose.ui.res.pluralStringResource
+import com.rm.acidulous.res.*
 
 /**
  * The song browser: every saved song, load on tap, delete behind a confirm.
@@ -38,13 +36,13 @@ fun SongBrowserDialog(
     onLoad: (String) -> Unit, onDelete: (String) -> Unit, onDismiss: () -> Unit,
 ) {
     var confirm by remember { mutableStateOf<String?>(null) }
-    PlainDialog(title = stringResource(R.string.songs_title), onDismiss = onDismiss, dismissLabel = stringResource(R.string.close), spacing = 6.dp) {
-        if (names.isEmpty()) Text(stringResource(R.string.songs_none), color = Acid.colors.textDim, fontSize = 12.sp)
+    PlainDialog(title = stringResource(Res.string.songs_title), onDismiss = onDismiss, dismissLabel = stringResource(Res.string.close), spacing = 6.dp) {
+        if (names.isEmpty()) Text(stringResource(Res.string.songs_none), color = Acid.colors.textDim, fontSize = 12.sp)
         for (n in names) {
             DialogRow(
                 mark = if (n == current) "●" else "♪",
                 name = n,
-                trailing = if (n == current) stringResource(R.string.songs_open) else "",
+                trailing = if (n == current) stringResource(Res.string.songs_open) else "",
                 on = n == current,
                 onRemove = { confirm = n },
             ) { onLoad(n) }
@@ -52,13 +50,13 @@ fun SongBrowserDialog(
     }
     confirm?.let { name ->
         PlainDialog(
-            title = stringResource(R.string.songs_delete_title, name),
+            title = stringResource(Res.string.songs_delete_title, name),
             onDismiss = { confirm = null },
-            confirmLabel = stringResource(R.string.songs_delete),
+            confirmLabel = stringResource(Res.string.songs_delete),
             onConfirm = { onDelete(name); confirm = null },
         ) {
             Text(
-                stringResource(R.string.songs_delete_note),
+                stringResource(Res.string.songs_delete_note),
                 color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }
@@ -98,9 +96,9 @@ fun PatchBrowserDialog(
         else named + (if (factory.any { it.family.isEmpty() }) listOf(OTHER) else emptyList())
     }
     // The families are the bank's own words; the three shelves the app adds are ours.
-    val labels = (if (families.isEmpty()) listOf(stringResource(R.string.patches_factory)) else families.map {
-        if (it == OTHER) stringResource(R.string.patches_other) else it
-    }) + stringResource(R.string.patches_user)
+    val labels = (if (families.isEmpty()) listOf(stringResource(Res.string.patches_factory)) else families.map {
+        if (it == OTHER) stringResource(Res.string.patches_other) else it
+    }) + stringResource(Res.string.patches_user)
     var tab by rememberSaveable(machine) { mutableStateOf(0) }
     if (tab >= labels.size) tab = 0
 
@@ -109,7 +107,7 @@ fun PatchBrowserDialog(
             if (i == labels.lastIndex) {
                 if (user.isEmpty()) {
                     Text(
-                        stringResource(R.string.patches_user_none),
+                        stringResource(Res.string.patches_user_none),
                         color = Acid.colors.textDim, fontSize = 12.sp,
                     )
                 }
@@ -127,10 +125,10 @@ fun PatchBrowserDialog(
     }
 
     TabbedDialog(
-        title = stringResource(R.string.patches_title, machine),
+        title = stringResource(Res.string.patches_title, machine),
         selected = tab,
         onDismiss = onDismiss,
-        dismissLabel = stringResource(R.string.close),
+        dismissLabel = stringResource(Res.string.close),
         chips = { SectionChipsScrolling(labels, tab) { tab = it } },
         pages = pages,
     )
@@ -161,12 +159,12 @@ fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit
     // the file or files just written.
     val done = (state as? ExportState.Done)?.takeIf { it.uris.isNotEmpty() }
     PlainDialog(
-        title = stringResource(R.string.export_title),
+        title = stringResource(Res.string.export_title),
         // While it renders the only thing to do is stop it, so the one
         // button says so; afterwards the only thing to do is read it.
         onDismiss = { if (running) onCancel() else onDismiss() },
-        dismissLabel = stringResource(if (running) R.string.cancel else R.string.ok),
-        confirmLabel = if (done != null) stringResource(R.string.export_share) else "",
+        dismissLabel = stringResource(if (running) Res.string.cancel else Res.string.ok),
+        confirmLabel = if (done != null) stringResource(Res.string.export_share) else "",
         onConfirm = done?.let { d -> { onShare(d) } },
         spacing = 8.dp,
     ) {
@@ -177,25 +175,25 @@ fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit
                 } else {
                     0f
                 }
-                Readout(stringResource(R.string.export_rendering, state.seconds, state.expectedSeconds))
+                Readout(stringResource(Res.string.export_rendering, state.seconds, state.expectedSeconds))
                 LinearProgressIndicator(progress = { frac }, modifier = Modifier.fillMaxWidth())
             }
             is ExportState.Done -> {
                 Readout(
-                    if (state.files > 1) pluralStringResource(R.plurals.export_files_in, state.files, state.files, state.fileName) else state.fileName,
+                    if (state.files > 1) pluralStringResource(Res.plurals.export_files_in, state.files, state.files, state.fileName) else state.fileName,
                     good = true,
                 )
                 if (state.bits > 0 || state.rate > 0) {
                     Readout(
                         stringResource(
-                            R.string.export_done,
+                            Res.string.export_done,
                             state.seconds, state.format,
                             when {
                                 // A lossy format has no depth to report, and
                                 // saying "24-bit" of an MP3 is just wrong.
-                                state.rate > 0 -> stringResource(R.string.export_kbit, state.rate)
-                                state.bits == 32 -> stringResource(R.string.export_bit_float)
-                                else -> stringResource(R.string.export_bit, state.bits)
+                                state.rate > 0 -> stringResource(Res.string.export_kbit, state.rate)
+                                state.bits == 32 -> stringResource(Res.string.export_bit_float)
+                                else -> stringResource(Res.string.export_bit, state.bits)
                             },
                             state.peak,
                         ),
@@ -205,7 +203,7 @@ fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit
                 }
             }
             is ExportState.Failed -> Text(
-                stringResource(R.string.export_failed, state.error),
+                stringResource(Res.string.export_failed, state.error),
                 color = Acid.colors.red, fontSize = 12.sp, lineHeight = 15.sp,
             )
         }

@@ -73,10 +73,8 @@ import kotlin.math.log10
 import kotlin.math.min
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.res.pluralStringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 // The patch editor.
 //
@@ -144,8 +142,8 @@ fun PatchScreen(
 
     val info = remember(track.machine.settings["nexus"]) { NativeEngine.nexusPalette() }
     val measurer = rememberTextMeasurer()
-    val monoTag = stringResource(R.string.patch_mono_tag)
-    val resources = androidx.compose.ui.platform.LocalResources.current
+    val monoTag = stringResource(Res.string.patch_mono_tag)
+    val resources = AppStrings
     val word: (String) -> String = remember(resources) { { resources.panelWord(it) } }
     val binding = rememberParamBinding(trackIndex, "Nexus", remember { NativeEngine.machineParamInfo("Nexus") }, editor)
 
@@ -184,22 +182,22 @@ fun PatchScreen(
             ),
             spacing = 2.dp,
         ) {
-            HeaderButton("◀", description = stringResource(R.string.a11y_back)) { onBack() }
+            HeaderButton("◀", description = stringResource(Res.string.a11y_back)) { onBack() }
             Text(
                 listOf(
                     track.name,
-                    pluralStringResource(R.plurals.patch_modules, patch.modules.size, patch.modules.size),
-                    pluralStringResource(R.plurals.patch_cables, patch.cables.size, patch.cables.size),
+                    pluralStringResource(Res.plurals.patch_modules, patch.modules.size, patch.modules.size),
+                    pluralStringResource(Res.plurals.patch_cables, patch.cables.size, patch.cables.size),
                 ).joinToString(" · "),
                 color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                 modifier = Modifier.flexible().padding(horizontal = 4.dp), maxLines = 1,
             )
-            HeaderTextButton(stringResource(R.string.patch_add)) { adding = true }
+            HeaderTextButton(stringResource(Res.string.patch_add)) { adding = true }
             // **Fit rearranges**, to the canvas's own shape, and then shows
             // all of it: panning to the first module left a patch laid out in
             // one long row just as far off the edge of an upright phone. The
             // new places are one step of undo. See NexusPatch.arranged.
-            HeaderTextButton(stringResource(R.string.patch_fit)) {
+            HeaderTextButton(stringResource(Res.string.patch_fit)) {
                 if (patch.modules.isNotEmpty() && canvasPx.width > 0 && canvasPx.height > 0) {
                     val next = patch.arranged(canvasPx.width / canvasPx.height.toFloat(), NODE_W, NODE_H)
                     if (next != patch) write(next)
@@ -240,11 +238,11 @@ fun PatchScreen(
                     // selecting one puts its knobs in the inspector below.
                     .button(
                         pluralStringResource(
-                            R.plurals.a11y_patch, patch.modules.size, patch.modules.size,
-                            pluralStringResource(R.plurals.a11y_patch_cables, patch.cables.size, patch.cables.size),
+                            Res.plurals.a11y_patch, patch.modules.size, patch.modules.size,
+                            pluralStringResource(Res.plurals.a11y_patch_cables, patch.cables.size, patch.cables.size),
                         ),
                         actions = patch.modules.map { m ->
-                            action(stringResource(R.string.a11y_select_module, m.slot, m.type)) { selection = Selection.Module(m.slot) }
+                            action(stringResource(Res.string.a11y_select_module, m.slot, m.type)) { selection = Selection.Module(m.slot) }
                         },
                     )
                     .pointerInput(Unit) {
@@ -673,7 +671,7 @@ private fun Inspector(
                 val m = patch.moduleAt(selection.slot)
                 val meta = m?.let { NexusPalette.of(it.type) }
                 if (m == null || meta == null) {
-                    Text(stringResource(R.string.patch_gone), color = Acid.colors.textDim, fontSize = 11.sp)
+                    Text(stringResource(Res.string.patch_gone), color = Acid.colors.textDim, fontSize = 11.sp)
                 } else {
                     GroupRow {
                         Group("${m.slot} ${m.type}") {
@@ -687,10 +685,10 @@ private fun Inspector(
                         Group("slot") {
                             Column {
                                 TextButton(onClick = onTogglePoly, enabled = meta.canPoly && meta.canMono) {
-                                    Text(stringResource(if (m.poly) R.string.patch_poly else R.string.patch_mono), color = PanelAmber, fontSize = 11.sp)
+                                    Text(stringResource(if (m.poly) Res.string.patch_poly else Res.string.patch_mono), color = PanelAmber, fontSize = 11.sp)
                                 }
                                 TextButton(onClick = onDelete) {
-                                    Text(stringResource(R.string.patch_remove), color = Acid.colors.red, fontSize = 11.sp)
+                                    Text(stringResource(Res.string.patch_remove), color = Acid.colors.red, fontSize = 11.sp)
                                 }
                             }
                         }
@@ -705,7 +703,7 @@ private fun Inspector(
                             PanelKnob(binding, nexusCableA(selection.index), "depth A", PanelAmber)
                             PanelKnob(binding, nexusCableB(selection.index), "depth B", PanelAmber)
                         } else {
-                            Text(stringResource(R.string.patch_beyond), color = Acid.colors.textDim, fontSize = 10.sp)
+                            Text(stringResource(Res.string.patch_beyond), color = Acid.colors.textDim, fontSize = 10.sp)
                         }
                     }
                     Group("wire") {
@@ -715,7 +713,7 @@ private fun Inspector(
                                 color = Acid.colors.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                             )
                             TextButton(onClick = onDelete) {
-                                Text(stringResource(R.string.patch_cut), color = Acid.colors.red, fontSize = 11.sp)
+                                Text(stringResource(Res.string.patch_cut), color = Acid.colors.red, fontSize = 11.sp)
                             }
                         }
                     }
@@ -745,9 +743,9 @@ private fun AddModuleDialog(
 ) {
     val c = Acid.colors
     PlainDialog(
-        title = stringResource(R.string.patch_add_title),
+        title = stringResource(Res.string.patch_add_title),
         onDismiss = onDismiss,
-        dismissLabel = stringResource(R.string.cancel),
+        dismissLabel = stringResource(Res.string.cancel),
         maxBodyHeight = 420.dp,
         spacing = 3.dp,
     ) {

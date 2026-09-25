@@ -53,9 +53,7 @@ import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.THROW_TIMES
 import com.rm.acidulous.ui.theme.Acid
 import kotlinx.coroutines.delay
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.stringArrayResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * What the perform pages are holding.
@@ -123,29 +121,29 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
     val settings = song.master.perform
     Column(modifier.background(c.panelAlt).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            Caption(stringResource(R.string.perform_repeat))
+            Caption(stringResource(Res.string.perform_repeat))
             Spacer(Modifier.weight(1f))
             TargetChip(song, editor, Modifier)
         }
-        LengthStrip(REPEAT_LENGTHS, state.repeat, state.holdLatch, Modifier.fillMaxWidth().weight(1f), name = stringResource(R.string.perform_repeat)) { k ->
+        LengthStrip(REPEAT_LENGTHS, state.repeat, state.holdLatch, Modifier.fillMaxWidth().weight(1f), name = stringResource(Res.string.perform_repeat)) { k ->
             state.repeat = k
             out.repeat(k)
         }
-        Caption(stringResource(R.string.perform_gate))
-        LengthStrip(GATE_LENGTHS, state.gate, state.holdLatch, Modifier.fillMaxWidth().weight(1f), name = stringResource(R.string.perform_gate)) { k ->
+        Caption(stringResource(Res.string.perform_gate))
+        LengthStrip(GATE_LENGTHS, state.gate, state.holdLatch, Modifier.fillMaxWidth().weight(1f), name = stringResource(Res.string.perform_gate)) { k ->
             state.gate = k
             out.gate(k)
         }
         Row(Modifier.fillMaxWidth().weight(1.2f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            HoldPad(stringResource(R.string.perform_reverse), state.reverse, state.holdLatch, c.accent, Modifier.weight(1f).fillMaxHeight()) { on ->
+            HoldPad(stringResource(Res.string.perform_reverse), state.reverse, state.holdLatch, c.accent, Modifier.weight(1f).fillMaxHeight()) { on ->
                 state.reverse = on
                 out.reverse(on)
             }
-            HoldPad(stringResource(R.string.perform_stop), state.stop, state.holdLatch, c.red, Modifier.weight(1f).fillMaxHeight()) { on ->
+            HoldPad(stringResource(Res.string.perform_stop), state.stop, state.holdLatch, c.red, Modifier.weight(1f).fillMaxHeight()) { on ->
                 state.stop = on
                 out.stop(on)
             }
-            HoldPad(stringResource(R.string.perform_riser), state.riser, state.holdLatch, c.accent, Modifier.weight(1f).fillMaxHeight()) { on ->
+            HoldPad(stringResource(Res.string.perform_riser), state.riser, state.holdLatch, c.accent, Modifier.weight(1f).fillMaxHeight()) { on ->
                 state.riser = on
                 out.riser(on)
             }
@@ -161,12 +159,12 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
                 }
                 state.holdLatch = !state.holdLatch
             }
-            Setting(stringResource(R.string.perform_stop), stringArrayResource(R.array.perform_stop_lengths)[settings.stopLen], Modifier.weight(1f)) {
+            Setting(stringResource(Res.string.perform_stop), stringArrayResource(Res.array.perform_stop_lengths)[settings.stopLen], Modifier.weight(1f)) {
                 editor.editSong { s ->
                     s.copy(master = s.master.copy(perform = s.master.perform.copy(stopLen = (s.master.perform.stopLen + 1) % STOP_LENGTHS)))
                 }
             }
-            Setting(stringResource(R.string.perform_riser), stringArrayResource(R.array.perform_riser_lengths)[settings.riserLen], Modifier.weight(1f)) {
+            Setting(stringResource(Res.string.perform_riser), stringArrayResource(Res.array.perform_riser_lengths)[settings.riserLen], Modifier.weight(1f)) {
                 editor.editSong { s ->
                     s.copy(master = s.master.copy(perform = s.master.perform.copy(riserLen = (s.master.perform.riserLen + 1) % RISER_LENGTHS)))
                 }
@@ -189,12 +187,12 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
         Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Setting(stringResource(R.string.perform_x), stringArrayResource(R.array.perform_pad_x_modes)[settings.xMode], Modifier.weight(1f)) {
+                    Setting(stringResource(Res.string.perform_x), stringArrayResource(Res.array.perform_pad_x_modes)[settings.xMode], Modifier.weight(1f)) {
                         editor.editSong { s ->
                             s.copy(master = s.master.copy(perform = s.master.perform.copy(xMode = (s.master.perform.xMode + 1) % PAD_X_MODES)))
                         }
                     }
-                    Setting(stringResource(R.string.perform_y), stringArrayResource(R.array.perform_pad_y_modes)[settings.yMode], Modifier.weight(1f)) {
+                    Setting(stringResource(Res.string.perform_y), stringArrayResource(Res.array.perform_pad_y_modes)[settings.yMode], Modifier.weight(1f)) {
                         editor.editSong { s ->
                             s.copy(master = s.master.copy(perform = s.master.perform.copy(yMode = (s.master.perform.yMode + 1) % PAD_Y_MODES)))
                         }
@@ -202,16 +200,16 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
                 }
                 // A wash has a time of its own; only the echo's is a setting.
                 if (settings.yMode == 0) {
-                    Setting(stringResource(R.string.perform_echo), THROW_TIMES[settings.throwTime], Modifier.fillMaxWidth()) {
+                    Setting(stringResource(Res.string.perform_echo), THROW_TIMES[settings.throwTime], Modifier.fillMaxWidth()) {
                         editor.editSong { s ->
                             s.copy(master = s.master.copy(perform = s.master.perform.copy(throwTime = (s.master.perform.throwTime + 1) % THROW_TIMES.size)))
                         }
                     }
                 }
-                Caption(stringResource(R.string.perform_feedback), Modifier.silent())
+                Caption(stringResource(Res.string.perform_feedback), Modifier.silent())
                 MiniSlider(
                     settings.feedback / 0.9f, Modifier.fillMaxWidth().height(20.dp),
-                    name = stringResource(R.string.perform_feedback),
+                    name = stringResource(Res.string.perform_feedback),
                     onStart = { editor.beginSongGesture() },
                     onChange = { v ->
                         NativeEngine.setParam(track, "perform", "feedback", v, record = false)
@@ -234,9 +232,9 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
             }
             XyPad(
                 state.pad, state.padLatch, Modifier.weight(1.4f).fillMaxHeight(),
-                left = stringResource(if (settings.xMode == 0) R.string.perform_pad_low else R.string.perform_pad_rate),
-                right = stringResource(if (settings.xMode == 0) R.string.perform_pad_high else R.string.perform_pad_bits),
-                up = stringResource(if (settings.yMode == 0) R.string.perform_pad_throw else R.string.perform_pad_wash),
+                left = stringResource(if (settings.xMode == 0) Res.string.perform_pad_low else Res.string.perform_pad_rate),
+                right = stringResource(if (settings.xMode == 0) Res.string.perform_pad_high else Res.string.perform_pad_bits),
+                up = stringResource(if (settings.yMode == 0) Res.string.perform_pad_throw else Res.string.perform_pad_wash),
             ) { at ->
                 state.pad = at
                 out.pad(at)
@@ -244,7 +242,7 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
         }
         // The kills under the pad, so a hand on the pad has them in reach.
         Row(Modifier.fillMaxWidth().height(KILL_H), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            val kills = stringArrayResource(R.array.perform_kills)
+            val kills = stringArrayResource(Res.array.perform_kills)
             for (b in 0 until 3) {
                 HoldPad(kills[b], state.kills[b], state.padLatch, c.red, Modifier.weight(1f).fillMaxHeight()) { on ->
                     state.kills = state.kills.toMutableList().also { it[b] = on }
@@ -299,7 +297,7 @@ fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modif
     }
     Row(modifier.background(c.panelAlt).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Column(Modifier.weight(3f).fillMaxHeight().together(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Caption(stringResource(R.string.perform_mute))
+            Caption(stringResource(Res.string.perform_mute))
             // Four across, the way the track picker lays sixteen out, and
             // always four rows tall so a short song's buttons are not huge.
             val rows = song.tracks.indices.chunked(4)
@@ -318,11 +316,11 @@ fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modif
             repeat((4 - rows.size).coerceAtLeast(0)) { Spacer(Modifier.weight(1f)) }
         }
         Column(Modifier.weight(1f).fillMaxHeight().together(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Caption(stringResource(R.string.perform_fill))
-            HoldPad(stringResource(R.string.perform_fill), UiPrefs.fillHeld, latch = false, colour = c.accent, modifier = Modifier.fillMaxWidth().weight(1f)) { on ->
+            Caption(stringResource(Res.string.perform_fill))
+            HoldPad(stringResource(Res.string.perform_fill), UiPrefs.fillHeld, latch = false, colour = c.accent, modifier = Modifier.fillMaxWidth().weight(1f)) { on ->
                 UiPrefs.holdFill(on)
             }
-            Setting(stringResource(R.string.perform_mute_on), stringArrayResource(R.array.perform_mute_on_choices)[settings.muteOn], Modifier.fillMaxWidth()) {
+            Setting(stringResource(Res.string.perform_mute_on), stringArrayResource(Res.array.perform_mute_on_choices)[settings.muteOn], Modifier.fillMaxWidth()) {
                 editor.editSong { s ->
                     s.copy(master = s.master.copy(perform = s.master.perform.copy(muteOn = (s.master.perform.muteOn + 1) % MUTE_ON)))
                 }
@@ -344,7 +342,7 @@ private fun Setting(label: String, value: String, modifier: Modifier, onClick: (
         modifier.height(28.dp).clip(RoundedCornerShape(4.dp)).background(c.raised)
             .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(stringResource(R.string.perform_setting, label, value), color = c.textMid, fontSize = 11.sp, maxLines = 1, softWrap = false) }
+    ) { Text(stringResource(Res.string.perform_setting, label, value), color = c.textMid, fontSize = 11.sp, maxLines = 1, softWrap = false) }
 }
 
 /**
@@ -368,7 +366,7 @@ private fun TargetChip(song: Song, editor: SongEditor, modifier: Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            stringResource(R.string.perform_on, if (target == 0) stringResource(R.string.perform_on_all) else groups[target - 1].name), color = if (target > 0) c.accent else c.textMid,
+            stringResource(Res.string.perform_on, if (target == 0) stringResource(Res.string.perform_on_all) else groups[target - 1].name), color = if (target > 0) c.accent else c.textMid,
             fontSize = 11.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 6.dp),
         )
@@ -381,9 +379,9 @@ private fun LatchChip(on: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Box(
         modifier.height(28.dp).clip(RoundedCornerShape(4.dp))
             .background(if (on) c.accent.copy(alpha = 0.25f) else c.raised).clickable(onClick = onClick)
-            .button(stringResource(R.string.perform_latch), stringResource(if (on) R.string.a11y_on else R.string.a11y_off)),
+            .button(stringResource(Res.string.perform_latch), stringResource(if (on) Res.string.a11y_on else Res.string.a11y_off)),
         contentAlignment = Alignment.Center,
-    ) { Text(stringResource(R.string.perform_latch), color = if (on) c.accent else c.textMid, fontSize = 11.sp) }
+    ) { Text(stringResource(Res.string.perform_latch), color = if (on) c.accent else c.textMid, fontSize = 11.sp) }
 }
 
 /**
@@ -401,11 +399,11 @@ private fun TrackMute(name: String, colour: Color, muted: Boolean, waiting: Bool
             .then(if (waiting != null) Modifier.border(2.dp, if (waiting) c.red else c.textMid, shape) else Modifier)
             .clickable(onClick = onClick)
             .button(
-                stringResource(R.string.a11y_mute, name),
+                stringResource(Res.string.a11y_mute, name),
                 listOfNotNull(
-                    stringResource(if (muted) R.string.a11y_muted else R.string.a11y_off),
-                    if (waiting != null) stringResource(R.string.a11y_mute_pending) else null,
-                ).joinToString(stringResource(R.string.list_separator)),
+                    stringResource(if (muted) Res.string.a11y_muted else Res.string.a11y_off),
+                    if (waiting != null) stringResource(Res.string.a11y_mute_pending) else null,
+                ).joinToString(stringResource(Res.string.list_separator)),
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -456,7 +454,7 @@ private fun LengthStrip(labels: List<String>, held: Int, latch: Boolean, modifie
             Box(
                 Modifier.weight(1f).fillMaxHeight().background(if (on) c.accent.copy(alpha = 0.35f) else c.raised)
                     // A double tap holds it, and another lets go.
-                    .choice(stringResource(R.string.a11y_named, name, label), on) { cb(if (on) 0 else i + 1) },
+                    .choice(stringResource(Res.string.a11y_named, name, label), on) { cb(if (on) 0 else i + 1) },
                 contentAlignment = Alignment.Center,
             ) { Text(label, color = if (on) c.accent else c.textMid, fontSize = 12.sp, maxLines = 1, softWrap = false) }
         }
@@ -472,7 +470,7 @@ private fun HoldPad(label: String, on: Boolean, latch: Boolean, colour: Color, m
     val latched by rememberUpdatedState(latch)
     Box(
         modifier.clip(RoundedCornerShape(6.dp)).background(if (on) colour.copy(alpha = 0.3f) else c.raised)
-            .button(label, stringResource(if (on) R.string.a11y_on else R.string.a11y_off), onClick = { cb(!current) })
+            .button(label, stringResource(if (on) Res.string.a11y_on else Res.string.a11y_off), onClick = { cb(!current) })
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
@@ -511,10 +509,10 @@ private fun XyPad(
     Box(
         modifier.clip(RoundedCornerShape(6.dp)).background(c.raised)
             .button(
-                stringResource(R.string.a11y_xy, left, right, up),
+                stringResource(Res.string.a11y_xy, left, right, up),
                 actions = listOf(
-                    action(stringResource(R.string.a11y_xy_press)) { cb(Offset(0.5f, 0.6f)) },
-                    action(stringResource(R.string.a11y_xy_release)) { cb(null) },
+                    action(stringResource(Res.string.a11y_xy_press)) { cb(Offset(0.5f, 0.6f)) },
+                    action(stringResource(Res.string.a11y_xy_release)) { cb(null) },
                 ),
             ),
     ) {

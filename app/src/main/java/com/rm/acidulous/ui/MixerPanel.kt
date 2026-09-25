@@ -79,9 +79,7 @@ import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.Track
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.pluralStringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * The mixer section as a slide-up panel: a strip per track, then the
@@ -160,7 +158,7 @@ fun MixerPanel(
         val density = androidx.compose.ui.platform.LocalDensity.current
         var stripH by remember { mutableStateOf(Dp.Unspecified) }
         val sendNames = List(SEND_SLOTS) { slot ->
-            song.master.sendAt(slot).type.lowercase().ifEmpty { stringResource(R.string.mixer_send, slot + 1) }
+            song.master.sendAt(slot).type.lowercase().ifEmpty { stringResource(Res.string.mixer_send, slot + 1) }
         }
         song.tracks.forEachIndexed { index, track ->
             // Which of this channel's controls a clip is driving. A lane wins
@@ -210,24 +208,24 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
     var deleting by remember { mutableStateOf(false) }
     var editingInsert by remember { mutableStateOf<Int?>(null) }
     if (renaming) {
-        TextInputDialog(stringResource(R.string.mixer_group_name_title), group.name, onDismiss = { renaming = false }) { name ->
+        TextInputDialog(stringResource(Res.string.mixer_group_name_title), group.name, onDismiss = { renaming = false }) { name ->
             renaming = false
             if (name.isNotBlank()) editor.editSong { s -> s.renameGroup(g, name.trim()) }
         }
     }
     if (deleting) {
         PlainDialog(
-            title = stringResource(R.string.mixer_group_delete_title, group.name),
+            title = stringResource(Res.string.mixer_group_delete_title, group.name),
             onDismiss = { deleting = false },
-            confirmLabel = stringResource(R.string.mixer_delete),
+            confirmLabel = stringResource(Res.string.mixer_delete),
             onConfirm = { deleting = false; editor.editSong { s -> s.deleteGroup(g) } },
         ) {
-            Text(stringResource(R.string.mixer_group_delete_note), color = c.textDim, fontSize = 11.sp)
+            Text(stringResource(Res.string.mixer_group_delete_note), color = c.textDim, fontSize = 11.sp)
         }
     }
     editingInsert?.let { slot ->
         SongSlotDialog(
-            stringResource(R.string.mixer_group_insert, group.name, slot + 1), slot, { s -> groupInsertUnit(g, s) },
+            stringResource(Res.string.mixer_group_insert, group.name, slot + 1), slot, { s -> groupInsertUnit(g, s) },
             { song, s -> song.master.groups.getOrNull(g)?.insertAt(s) ?: UnitSlot() },
             { song, s, t -> song.withGroupInsert(g, s, t) },
             { song, s, name, v -> song.withGroupInsertParam(g, s, name, v) },
@@ -265,13 +263,13 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
                     editor.updateSongGesture { s -> s.withGroupVolume(g, EngineParams.volumeFrom01(v)) }
                 },
                 onEnd = { editor.endSongGesture() },
-                name = stringResource(R.string.a11y_volume, group.name),
+                name = stringResource(Res.string.a11y_volume, group.name),
             )
         }
-        Labeled(stringResource(R.string.mixer_pan)) {
+        Labeled(stringResource(Res.string.mixer_pan)) {
             MiniSlider(
                 value = EngineParams.pan01(group.pan), centered = true,
-                name = stringResource(R.string.a11y_pan, group.name),
+                name = stringResource(Res.string.a11y_pan, group.name),
                 state = panSaid(group.pan),
                 modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(MapTargets.param(0, "master", "g${n}pan")),
                 onStart = { editor.beginSongGesture() },
@@ -285,23 +283,23 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
         // What is routed here, in the room a channel spends on its sends.
         val members = song.tracks.filter { it.mixer.output == g + 1 }.map { it.name }
         Text(
-            if (members.isEmpty()) stringResource(R.string.mixer_nothing_routed) else members.joinToString("\n"),
+            if (members.isEmpty()) stringResource(Res.string.mixer_nothing_routed) else members.joinToString("\n"),
             color = c.textDim, fontSize = 10.sp, lineHeight = 13.sp,
             maxLines = 4, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
         )
         if (fullH != Dp.Unspecified) Spacer(Modifier.weight(1f))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            GridChip(stringResource(R.string.mixer_mute_short), group.mute, c.red, Modifier.weight(1f), said = stringResource(R.string.a11y_mute, group.name)) { editor.editSong { s -> s.withGroupMute(g, !group.mute) } }
-            GridChip(stringResource(R.string.mixer_solo_short), group.solo, c.accent, Modifier.weight(1f), said = stringResource(R.string.a11y_solo, group.name)) { editor.editSong { s -> s.withGroupSolo(g, !group.solo) } }
+            GridChip(stringResource(Res.string.mixer_mute_short), group.mute, c.red, Modifier.weight(1f), said = stringResource(Res.string.a11y_mute, group.name)) { editor.editSong { s -> s.withGroupMute(g, !group.mute) } }
+            GridChip(stringResource(Res.string.mixer_solo_short), group.solo, c.accent, Modifier.weight(1f), said = stringResource(Res.string.a11y_solo, group.name)) { editor.editSong { s -> s.withGroupSolo(g, !group.solo) } }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             for (slot in 0 until GROUP_INSERT_SLOTS) {
                 val fx = group.insertAt(slot)
-                GridChip(if (fx.isEmpty) stringResource(R.string.mixer_fx_slot, slot + 1) else shortFx(fx.type), !fx.isEmpty && !fx.bypass, c.accent,
+                GridChip(if (fx.isEmpty) stringResource(Res.string.mixer_fx_slot, slot + 1) else shortFx(fx.type), !fx.isEmpty && !fx.bypass, c.accent,
                          Modifier.weight(1f).onLongPress { editingInsert = slot },
-                         said = stringResource(R.string.a11y_insert, group.name, slot + 1, fx.type.ifEmpty { stringResource(R.string.a11y_slot_empty) }),
-                         actions = listOf(action(stringResource(R.string.a11y_edit)) { editingInsert = slot })) {
+                         said = stringResource(Res.string.a11y_insert, group.name, slot + 1, fx.type.ifEmpty { stringResource(Res.string.a11y_slot_empty) }),
+                         actions = listOf(action(stringResource(Res.string.a11y_edit)) { editingInsert = slot })) {
                     if (fx.isEmpty) editingInsert = slot
                     else {
                         val bypass = !fx.bypass
@@ -318,16 +316,16 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
 @Composable
 private fun AddGroupStrip(editor: SongEditor, room: Dp, fullH: Dp) {
     val c = Acid.colors
-    val resources = androidx.compose.ui.platform.LocalResources.current
+    val resources = AppStrings
     Box(
         Modifier.width(26.dp).then(
             if (fullH != Dp.Unspecified) Modifier.height(fullH)
             else if (room == Dp.Infinity) Modifier.height(120.dp) else Modifier.heightIn(max = room),
         )
             .clip(RoundedCornerShape(6.dp)).background(c.cardAlt)
-            .clickable { editor.editSong { s -> s.addGroup(resources.getString(R.string.mixer_group_default, s.master.groups.size + 1)) } },
+            .clickable { editor.editSong { s -> s.addGroup(resources.getString(Res.string.mixer_group_default, s.master.groups.size + 1)) } },
         contentAlignment = Alignment.Center,
-    ) { SideText(stringResource(R.string.mixer_add_group), c.textMid, 11.sp) }
+    ) { SideText(stringResource(Res.string.mixer_add_group), c.textMid, 11.sp) }
 }
 
 
@@ -343,7 +341,7 @@ private fun ChannelStrip(
     /** Even the shortest usable strip will not fit, so this one scrolls. */
     tight: Boolean = false,
     /** What the two send sliders are called - the effects that are on them. */
-    sendNames: List<String> = List(2) { stringResource(R.string.mixer_send, it + 1) },
+    sendNames: List<String> = List(2) { stringResource(Res.string.mixer_send, it + 1) },
     /** The names of the mixer's groups, which this track can be routed into. */
     groups: List<String> = emptyList(),
 ) {
@@ -378,9 +376,9 @@ private fun ChannelStrip(
 
     if (askClear) {
         PlainDialog(
-            title = stringResource(R.string.mixer_clear_title, track.name),
+            title = stringResource(Res.string.mixer_clear_title, track.name),
             onDismiss = { askClear = false },
-            confirmLabel = stringResource(R.string.mixer_clear),
+            confirmLabel = stringResource(Res.string.mixer_clear),
             onConfirm = {
                 askClear = false
                 // Every clip on this track, because a lane in a scene you are
@@ -395,8 +393,8 @@ private fun ChannelStrip(
         ) {
             Text(
                 pluralStringResource(
-                    R.plurals.mixer_clear_note, automated.size,
-                    automated.joinToString(stringResource(R.string.list_separator)),
+                    Res.plurals.mixer_clear_note, automated.size,
+                    automated.joinToString(stringResource(Res.string.list_separator)),
                 ),
                 color = c.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
@@ -447,10 +445,10 @@ private fun ChannelStrip(
                 onChange = { v -> gesture("gain", v) { it.copy(volume = EngineParams.volumeFrom01(v)) } },
                 onEnd = { editor.endGesture() },
                 onReset = { back("gain", EngineParams.volume01(opened.volume)) { it.copy(volume = opened.volume) } },
-                name = stringResource(R.string.a11y_volume, track.name),
+                name = stringResource(Res.string.a11y_volume, track.name),
             )
         }
-        Labeled(stringResource(R.string.mixer_pan)) {
+        Labeled(stringResource(Res.string.mixer_pan)) {
             MiniSlider(
                 value = EngineParams.pan01(m.pan), centered = true,
                 modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("pan")),
@@ -458,11 +456,11 @@ private fun ChannelStrip(
                 onChange = { v -> gesture("pan", v) { it.copy(pan = EngineParams.panFrom01(v)) } },
                 onEnd = { editor.endGesture() },
                 onReset = { back("pan", EngineParams.pan01(opened.pan)) { it.copy(pan = opened.pan) } },
-                name = stringResource(R.string.a11y_pan, track.name),
+                name = stringResource(Res.string.a11y_pan, track.name),
                 state = panSaid(m.pan),
             )
         }
-        Labeled(sendNames.getOrElse(0) { stringResource(R.string.mixer_send, 1) }) {
+        Labeled(sendNames.getOrElse(0) { stringResource(Res.string.mixer_send, 1) }) {
             MiniSlider(
                 value = m.sendReverb,
                 modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("sendreverb")),
@@ -470,10 +468,10 @@ private fun ChannelStrip(
                 onChange = { v -> gesture("sendreverb", v) { it.copy(sendReverb = v) } },
                 onEnd = { editor.endGesture() },
                 onReset = { back("sendreverb", opened.sendReverb) { it.copy(sendReverb = opened.sendReverb) } },
-                name = stringResource(R.string.a11y_send, track.name, sendNames.getOrElse(0) { stringResource(R.string.mixer_send, 1) }),
+                name = stringResource(Res.string.a11y_send, track.name, sendNames.getOrElse(0) { stringResource(Res.string.mixer_send, 1) }),
             )
         }
-        Labeled(sendNames.getOrElse(1) { stringResource(R.string.mixer_send, 2) }) {
+        Labeled(sendNames.getOrElse(1) { stringResource(Res.string.mixer_send, 2) }) {
             MiniSlider(
                 value = m.sendDelay,
                 modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("senddelay")),
@@ -481,24 +479,24 @@ private fun ChannelStrip(
                 onChange = { v -> gesture("senddelay", v) { it.copy(sendDelay = v) } },
                 onEnd = { editor.endGesture() },
                 onReset = { back("senddelay", opened.sendDelay) { it.copy(sendDelay = opened.sendDelay) } },
-                name = stringResource(R.string.a11y_send, track.name, sendNames.getOrElse(1) { stringResource(R.string.mixer_send, 2) }),
+                name = stringResource(Res.string.a11y_send, track.name, sendNames.getOrElse(1) { stringResource(Res.string.mixer_send, 2) }),
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            ToggleChip(stringResource(R.string.mixer_mute_short), m.mute, c.red, Modifier.mappable(map("mute")), said = stringResource(R.string.a11y_mute, track.name)) { tap { it.copy(mute = !it.mute) } }
-            ToggleChip(stringResource(R.string.mixer_solo_short), m.solo, c.accent, Modifier.mappable(map("solo")), said = stringResource(R.string.a11y_solo, track.name)) { tap { it.copy(solo = !it.solo) } }
+            ToggleChip(stringResource(Res.string.mixer_mute_short), m.mute, c.red, Modifier.mappable(map("mute")), said = stringResource(Res.string.a11y_mute, track.name)) { tap { it.copy(mute = !it.mute) } }
+            ToggleChip(stringResource(Res.string.mixer_solo_short), m.solo, c.accent, Modifier.mappable(map("solo")), said = stringResource(Res.string.a11y_solo, track.name)) { tap { it.copy(solo = !it.solo) } }
         }
         // Where this track's notes go. Off, both, or out only - and at "out"
         // the machine is not asked at all, which is how driving something
         // else gives the CPU back. The channel sits beside it because one
         // without the other is no use.
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            val label = stringResource(when (m.midiMode) { 1 -> R.string.mixer_midi_both; 2 -> R.string.mixer_midi_out; else -> R.string.mixer_midi_off })
-            ToggleChip(label, m.midiMode != 0, c.teal, said = stringResource(R.string.a11y_midi_out, track.name), state = label) {
+            val label = stringResource(when (m.midiMode) { 1 -> Res.string.mixer_midi_both; 2 -> Res.string.mixer_midi_out; else -> Res.string.mixer_midi_off })
+            ToggleChip(label, m.midiMode != 0, c.teal, said = stringResource(Res.string.a11y_midi_out, track.name), state = label) {
                 tap { it.copy(midiMode = (it.midiMode + 1) % 3) }
             }
             if (m.midiMode != 0) {
-                ToggleChip("${m.midiChannel + 1}", true, c.accentDim, said = stringResource(R.string.a11y_midi_channel, track.name), state = "${m.midiChannel + 1}") {
+                ToggleChip("${m.midiChannel + 1}", true, c.accentDim, said = stringResource(Res.string.a11y_midi_channel, track.name), state = "${m.midiChannel + 1}") {
                     tap { it.copy(midiChannel = (it.midiChannel + 1) % 16) }
                 }
             }
@@ -507,8 +505,8 @@ private fun ChannelStrip(
         // tap steps through them.
         if (groups.isNotEmpty()) {
             val to = groups.getOrNull(m.output - 1)
-            ToggleChip(stringResource(R.string.mixer_to, to ?: stringResource(R.string.mixer_master)), to != null, c.teal, Modifier.width(STRIP_W - 8.dp).mappable(map("output")), padding = 3.dp,
-                said = stringResource(R.string.a11y_output, track.name), state = to ?: stringResource(R.string.mixer_master)) {
+            ToggleChip(stringResource(Res.string.mixer_to, to ?: stringResource(Res.string.mixer_master)), to != null, c.teal, Modifier.width(STRIP_W - 8.dp).mappable(map("output")), padding = 3.dp,
+                said = stringResource(Res.string.a11y_output, track.name), state = to ?: stringResource(Res.string.mixer_master)) {
                 tap { it.copy(output = if (it.output in 0 until groups.size) it.output + 1 else 0) }
             }
         }
@@ -548,7 +546,7 @@ private fun MasterStrip(
     editing?.let { slot -> SendDialog(slot, editor) { editing = null } }
     var editingInsert by remember { mutableStateOf<Int?>(null) }
     editingInsert?.let { slot ->
-        SongSlotDialog(stringResource(R.string.mixer_master_insert, slot + 1), slot, ::masterInsertUnit, { s, i -> s.master.insertAt(i) },
+        SongSlotDialog(stringResource(Res.string.mixer_master_insert, slot + 1), slot, ::masterInsertUnit, { s, i -> s.master.insertAt(i) },
                        Song::withMasterInsert, Song::withMasterInsertParam,
                        // In series with the mix, like a track's insert, so a
                        // dry blend is a real thing to want.
@@ -565,7 +563,7 @@ private fun MasterStrip(
             .padding(4.dp).together(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(stringResource(R.string.mixer_master), color = c.text, fontSize = 11.sp)
+        Text(stringResource(Res.string.mixer_master), color = c.text, fontSize = 11.sp)
         // Loudness: integrated since play started, and the short-term and true
         // peak under it. Polled while the mixer is open, which is also what
         // keeps the engine measuring; a tap starts the integrated figure again.
@@ -589,15 +587,15 @@ private fun MasterStrip(
                 onStart = { editor.beginSongGesture() },
                 onChange = { v -> gesture("volume", v) { s -> s.copy(master = s.master.copy(volume = EngineParams.volumeFrom01(v))) } },
                 onEnd = { editor.endSongGesture() },
-                name = stringResource(R.string.a11y_volume, stringResource(R.string.a11y_master)),
+                name = stringResource(Res.string.a11y_volume, stringResource(Res.string.a11y_master)),
             )
         }
-        Labeled(stringResource(R.string.mixer_limit_drive)) {
+        Labeled(stringResource(Res.string.mixer_limit_drive)) {
             MiniSlider(master.limiter.drive, Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("limiterdrive")),
                 onStart = { editor.beginSongGesture() },
                 onChange = { v -> gesture("limiterdrive", v) { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(drive = v))) } },
                 onEnd = { editor.endSongGesture() },
-                name = stringResource(R.string.a11y_limit_drive))
+                name = stringResource(Res.string.a11y_limit_drive))
         }
         // Under the limiter rather than over the fader, so the master's fader
         // lines up with every channel's.
@@ -622,8 +620,8 @@ private fun MasterStrip(
                     modifier = Modifier.padding(start = 2.dp).alignByBaseline())
             }
             Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                LoudnessFigure(stringResource(R.string.mixer_lufs_short), fmt(lufs[1]), c.textMid)
-                LoudnessFigure(stringResource(R.string.mixer_true_peak), fmt(lufs[3]), if (lufs[3] > -1f) c.red else c.textMid)
+                LoudnessFigure(stringResource(Res.string.mixer_lufs_short), fmt(lufs[1]), c.textMid)
+                LoudnessFigure(stringResource(Res.string.mixer_true_peak), fmt(lufs[3]), if (lufs[3] > -1f) c.red else c.textMid)
             }
         }
         // **Six buttons in a grid of three rows, so the strip is no taller
@@ -648,26 +646,26 @@ private fun MasterStrip(
         Row(grid, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             for (slot in 0 until SEND_SLOTS) {
                 val send = master.sendAt(slot)
-                GridChip(if (send.isEmpty) stringResource(R.string.mixer_send_short, slot + 1) else shortFx(send.type), !send.isEmpty && !send.bypass, c.teal,
+                GridChip(if (send.isEmpty) stringResource(Res.string.mixer_send_short, slot + 1) else shortFx(send.type), !send.isEmpty && !send.bypass, c.teal,
                          Modifier.weight(1f).onLongPress { editing = slot }, height = 26.dp,
-                         said = stringResource(R.string.a11y_send_slot, slot + 1, send.type.ifEmpty { stringResource(R.string.a11y_slot_empty) }),
-                         actions = listOf(action(stringResource(R.string.a11y_edit)) { editing = slot })) { sendTap(slot) }
+                         said = stringResource(Res.string.a11y_send_slot, slot + 1, send.type.ifEmpty { stringResource(Res.string.a11y_slot_empty) }),
+                         actions = listOf(action(stringResource(Res.string.a11y_edit)) { editing = slot })) { sendTap(slot) }
             }
         }
         Row(grid, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             for (slot in 0 until MASTER_INSERT_SLOTS) {
                 val fx = master.insertAt(slot)
-                GridChip(if (fx.isEmpty) stringResource(R.string.mixer_fx_slot, slot + 1) else shortFx(fx.type), !fx.isEmpty && !fx.bypass, c.accent,
+                GridChip(if (fx.isEmpty) stringResource(Res.string.mixer_fx_slot, slot + 1) else shortFx(fx.type), !fx.isEmpty && !fx.bypass, c.accent,
                          Modifier.weight(1f).onLongPress { editingInsert = slot }, height = 26.dp,
-                         said = stringResource(R.string.a11y_insert, stringResource(R.string.a11y_master), slot + 1, fx.type.ifEmpty { stringResource(R.string.a11y_slot_empty) }),
-                         actions = listOf(action(stringResource(R.string.a11y_edit)) { editingInsert = slot })) { insertTap(slot) }
+                         said = stringResource(Res.string.a11y_insert, stringResource(Res.string.a11y_master), slot + 1, fx.type.ifEmpty { stringResource(Res.string.a11y_slot_empty) }),
+                         actions = listOf(action(stringResource(Res.string.a11y_edit)) { editingInsert = slot })) { insertTap(slot) }
             }
         }
         Row(grid, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            GridChip(stringResource(R.string.mixer_limiter), master.limiter.on, c.teal, Modifier.weight(1f).mappable(map("limiteron")), height = 26.dp, said = stringResource(R.string.a11y_limiter)) {
+            GridChip(stringResource(Res.string.mixer_limiter), master.limiter.on, c.teal, Modifier.weight(1f).mappable(map("limiteron")), height = 26.dp, said = stringResource(Res.string.a11y_limiter)) {
                 editor.editSong { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(on = !s.master.limiter.on))) }
             }
-            GridChip("♩", clickOn, c.accent, Modifier.weight(1f), height = 26.dp, said = stringResource(R.string.a11y_click)) { onClick(!clickOn) }
+            GridChip("♩", clickOn, c.accent, Modifier.weight(1f), height = 26.dp, said = stringResource(Res.string.a11y_click)) { onClick(!clickOn) }
         }
     }
 }
@@ -706,7 +704,7 @@ private fun GridChip(
             .clip(RoundedCornerShape(4.dp))
             .background(if (on) colour.copy(alpha = 0.25f) else c.raised)
             .clickable(onClick = onClick)
-            .then(if (said != null) Modifier.button(said, stringResource(if (on) R.string.a11y_on else R.string.a11y_off), actions) else Modifier),
+            .then(if (said != null) Modifier.button(said, stringResource(if (on) Res.string.a11y_on else Res.string.a11y_off), actions) else Modifier),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = if (on) colour else c.textMid, fontSize = 12.sp, maxLines = 1, softWrap = false) }
 }
@@ -741,7 +739,7 @@ private fun ToggleChip(
             .clip(RoundedCornerShape(4.dp))
             .background(if (on) colour.copy(alpha = 0.25f) else c.raised)
             .clickable(onClick = onClick)
-            .then(if (said != null) Modifier.button(said, state ?: stringResource(if (on) R.string.a11y_on else R.string.a11y_off)) else Modifier)
+            .then(if (said != null) Modifier.button(said, state ?: stringResource(if (on) Res.string.a11y_on else Res.string.a11y_off)) else Modifier)
             .padding(horizontal = padding),
         contentAlignment = Alignment.Center,
     ) {
@@ -810,7 +808,7 @@ private val OUTPUT_ROW = 26.dp
  */
 @Composable
 private fun SendDialog(slot: Int, editor: SongEditor, onDismiss: () -> Unit) =
-    SongSlotDialog(stringResource(R.string.mixer_send, slot + 1), slot, ::sendUnit, { s, i -> s.master.sendAt(i) },
+    SongSlotDialog(stringResource(Res.string.mixer_send, slot + 1), slot, ::sendUnit, { s, i -> s.master.sendAt(i) },
                    Song::withSend, Song::withSendParam,
                    // A send's dry path is the track arriving twice, so the mix
                    // is pinned open and not offered.
@@ -829,7 +827,7 @@ fun InputChainChips(editor: SongEditor) {
     val c = Acid.colors
     var editing by remember { mutableStateOf<Int?>(null) }
     editing?.let { slot ->
-        SongSlotDialog(stringResource(R.string.mixer_input, slot + 1), slot, ::inputUnit, { s, i -> s.inputAt(i) },
+        SongSlotDialog(stringResource(Res.string.mixer_input, slot + 1), slot, ::inputUnit, { s, i -> s.inputAt(i) },
                        Song::withInputFx, Song::withInputFxParam,
                        // An input effect is in series with the signal rather
                        // than beside it, so a dry blend is a real thing to want.
@@ -838,7 +836,7 @@ fun InputChainChips(editor: SongEditor) {
     for (slot in 0 until INPUT_SLOTS) {
         val fx = editor.song.inputAt(slot)
         ToggleChip(
-            if (fx.isEmpty) stringResource(R.string.mixer_input_short, slot + 1) else fx.type.lowercase(),
+            if (fx.isEmpty) stringResource(Res.string.mixer_input_short, slot + 1) else fx.type.lowercase(),
             !fx.isEmpty && !fx.bypass,
             c.pink,
             Modifier.onLongPress { editing = slot },
@@ -904,19 +902,19 @@ fun SongSlotDialog(
     PlainDialog(
         title,
         onDismiss = { revert(); onDismiss() },
-        dismissLabel = stringResource(R.string.cancel),
-        confirmLabel = stringResource(R.string.ok),
+        dismissLabel = stringResource(Res.string.cancel),
+        confirmLabel = stringResource(Res.string.ok),
         onConfirm = onDismiss,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { menu = true }) {
-                    Text(stringResource(R.string.mixer_menu, if (send.isEmpty) stringResource(R.string.mixer_none) else send.type), color = c.accent, fontSize = 13.sp)
+                    Text(stringResource(Res.string.mixer_menu, if (send.isEmpty) stringResource(Res.string.mixer_none) else send.type), color = c.accent, fontSize = 13.sp)
                 }
                 val menuScroll = rememberScrollState()
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     ScaledMenu(menuScroll) {
-                        DropdownMenuItem(text = { Text(stringResource(R.string.mixer_none), fontSize = 12.sp) }, onClick = {
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.mixer_none), fontSize = 12.sp) }, onClick = {
                             menu = false
                             editor.editSong { s -> withType(s, slot, "") }
                             edits++
@@ -960,8 +958,8 @@ fun SongSlotDialog(
 private fun panSaid(pan: Float): String {
     val amount = kotlin.math.round(kotlin.math.abs(pan) * 100f).toInt()
     return when {
-        amount < 2 -> stringResource(R.string.a11y_centre)
-        pan < 0f -> stringResource(R.string.a11y_left, amount)
-        else -> stringResource(R.string.a11y_right, amount)
+        amount < 2 -> stringResource(Res.string.a11y_centre)
+        pan < 0f -> stringResource(Res.string.a11y_left, amount)
+        else -> stringResource(Res.string.a11y_right, amount)
     }
 }

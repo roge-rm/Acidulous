@@ -38,7 +38,7 @@ import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.DrumVoice
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.ui.theme.Acid
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * A drum machine's step grid: a row per voice, a column per grid step. Tap
@@ -101,7 +101,7 @@ fun DrumGrid(
         ((dp - RowGap * (voices.size - 1)) / voices.size).coerceIn(MinRow, MaxRow)
     }
     val rowHeight = if (pinched > 0f) pinched else fitted
-    val resources = androidx.compose.ui.platform.LocalResources.current
+    val resources = AppStrings
 
     Column(
         // **Vertical only.** A horizontal inset here put the cells on a
@@ -200,18 +200,18 @@ fun DrumGrid(
                         val active = playheadTick != null && playheadTick >= tick && playheadTick < tick + grid
                         val beat = ((tick / grid) % 4) == 0
                         // What TalkBack says: the voice and step, and what is on it.
-                        val said = resources.getString(R.string.a11y_step, resources.panelWord(voice.name), tick / grid + 1)
+                        val said = resources.getString(Res.string.a11y_step, resources.panelWord(voice.name), tick / grid + 1)
                         val state = resources.getString(
                             when {
-                                accent -> R.string.a11y_hit_accent
-                                hit != null -> R.string.a11y_step_hit
-                                else -> R.string.a11y_step_empty
+                                accent -> Res.string.a11y_hit_accent
+                                hit != null -> Res.string.a11y_step_hit
+                                else -> Res.string.a11y_step_empty
                             },
-                        ).let { if (hit?.hasTrig == true) resources.getString(R.string.a11y_step_condition, it) else it }
-                            .let { if (hit != null && tick in lockedTicks) resources.getString(R.string.a11y_step_locked, it) else it }
-                            .let { if (lockMode && tick in selectedTicks && hit != null) resources.getString(R.string.a11y_step_chosen, it) else it }
+                        ).let { if (hit?.hasTrig == true) resources.getString(Res.string.a11y_step_condition, it) else it }
+                            .let { if (hit != null && tick in lockedTicks) resources.getString(Res.string.a11y_step_locked, it) else it }
+                            .let { if (lockMode && tick in selectedTicks && hit != null) resources.getString(Res.string.a11y_step_chosen, it) else it }
                         val accentAction = if (!lockMode && hit != null) listOf(
-                            action(resources.getString(if (accent) R.string.a11y_accent_remove else R.string.a11y_accent_add)) {
+                            action(resources.getString(if (accent) Res.string.a11y_accent_remove else Res.string.a11y_accent_add)) {
                                 onSetHit(tick, voice.note, hit.copy(velocity = if (accent) 90 else 110))
                             },
                         ) else emptyList()

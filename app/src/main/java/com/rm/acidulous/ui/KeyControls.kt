@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.unit.dp
 import com.rm.acidulous.ui.theme.Acid
 import kotlinx.coroutines.launch
+import com.rm.acidulous.res.*
 
 /**
  * The keyboard's side of the controls the TalkBack helpers describe.
@@ -175,7 +176,7 @@ private class RingNode(
 @androidx.compose.runtime.Composable
 fun KeyActionMenu(actions: List<CustomAccessibilityAction>, onDismiss: () -> Unit) {
     PlainDialog(
-        title = androidx.compose.ui.res.stringResource(com.rm.acidulous.R.string.keys_actions_title),
+        title = stringResource(Res.string.keys_actions_title),
         onDismiss = onDismiss,
         spacing = 6.dp,
     ) {

@@ -47,8 +47,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 enum class EditMode { Draw, Select }
 
@@ -123,8 +122,8 @@ fun PianoRoll(
 ) {
     val textMeasurer = rememberTextMeasurer()
     val scaleWords = listOf(
-        stringResource(R.string.roll_scale_none), stringResource(R.string.roll_scale_chromatic),
-        stringResource(R.string.roll_scale_dim), stringResource(R.string.roll_scale_fit),
+        stringResource(Res.string.roll_scale_none), stringResource(Res.string.roll_scale_chromatic),
+        stringResource(Res.string.roll_scale_dim), stringResource(Res.string.roll_scale_fit),
     )
     // The pointer handler must survive the clip changing under it mid-drag
     // (every updateGesture commits a new clip), so it reads through these.
@@ -165,12 +164,12 @@ fun PianoRoll(
 
     // TalkBack hears the roll as a summary: one picture cannot be walked
     // note by note. Notes go in by playing the keys while recording.
-    val resources = androidx.compose.ui.platform.LocalResources.current
-    val summary = if (clip.notes.isEmpty()) resources.getString(R.string.a11y_roll_empty) else {
+    val resources = AppStrings
+    val summary = if (clip.notes.isEmpty()) resources.getString(Res.string.a11y_roll_empty) else {
         val low = clip.notes.minOf { it.pitch }
         val high = clip.notes.maxOf { it.pitch }
         resources.getQuantityString(
-            R.plurals.a11y_roll, clip.notes.size, clip.notes.size,
+            Res.plurals.a11y_roll, clip.notes.size, clip.notes.size,
             spokenNote(low, noteSpelling, resources), spokenNote(high, noteSpelling, resources),
         )
     }

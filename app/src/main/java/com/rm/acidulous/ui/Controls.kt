@@ -27,8 +27,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.log10
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * Touch-native mixer controls. All values are 0..1; the caller maps to units.
@@ -52,7 +51,7 @@ fun VerticalFader(
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val reset by rememberUpdatedState(onReset)
-    val resetName = stringResource(R.string.a11y_reset)
+    val resetName = stringResource(Res.string.a11y_reset)
     val c = Acid.colors
     Canvas(
         modifier.then(
@@ -118,7 +117,7 @@ fun MiniSlider(
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val reset by rememberUpdatedState(onReset)
-    val resetName = stringResource(R.string.a11y_reset)
+    val resetName = stringResource(Res.string.a11y_reset)
     val c = Acid.colors
     Canvas(
         modifier.then(

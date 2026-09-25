@@ -58,8 +58,8 @@ import com.rm.acidulous.model.lengthTicks
 import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.abs
 import kotlin.math.roundToInt
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
+import org.jetbrains.compose.resources.StringResource
 
 /**
  * The four-track's editor: four lanes under one ruler, along this cell's cycle.
@@ -195,11 +195,11 @@ fun AudioLanes(
                             .clip(RoundedCornerShape(3.dp))
                             .background(if (isMuted) c.card else c.control)
                             .clickable { b.set("mute${lane + 1}", if (isMuted) 0f else 1f) }
-                            .button(stringResource(R.string.a11y_lane_mute, lane + 1), stringResource(if (isMuted) R.string.a11y_on else R.string.a11y_off)),
+                            .button(stringResource(Res.string.a11y_lane_mute, lane + 1), stringResource(if (isMuted) Res.string.a11y_on else Res.string.a11y_off)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            if (isMuted) stringResource(R.string.tape_muted_short) else "${lane + 1}",
+                            if (isMuted) stringResource(Res.string.tape_muted_short) else "${lane + 1}",
                             color = if (isMuted) c.red else c.textHi,
                             fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                         )
@@ -209,7 +209,7 @@ fun AudioLanes(
                             .clip(RoundedCornerShape(3.dp))
                             .background(if (isArmed) c.red.copy(alpha = 0.35f) else c.card)
                             .clickable { BiasArm.arm(trackIndex, lane) }
-                            .button(stringResource(R.string.a11y_lane_arm, lane + 1), stringResource(if (isArmed) R.string.a11y_armed else R.string.a11y_not_armed)),
+                            .button(stringResource(Res.string.a11y_lane_arm, lane + 1), stringResource(if (isArmed) Res.string.a11y_armed else Res.string.a11y_not_armed)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -340,7 +340,7 @@ fun CompButton(
     trackIndex: Int, sceneId: String, editor: SongEditor,
     scope: kotlinx.coroutines.CoroutineScope,
     /** A string resource and what goes in it, as `EngineSync.onProblem` takes them. */
-    onProblem: (Int, Array<out Any>) -> Unit,
+    onProblem: (StringResource, Array<out Any>) -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val c = Acid.colors
@@ -366,7 +366,7 @@ fun CompButton(
                                           file.absolutePath, peak)
                 }
                 if (error.isNotEmpty()) {
-                    onProblem(R.string.tape_comp_failed, arrayOf(error))
+                    onProblem(Res.string.tape_comp_failed, arrayOf(error))
                     file.delete()
                     return@launch
                 }
@@ -389,7 +389,7 @@ fun CompButton(
             }
         },
     ) {
-        Text(stringResource(R.string.tape_comp), color = if (lanes > 0) c.textMid else c.textFaint, fontSize = 11.sp)
+        Text(stringResource(Res.string.tape_comp), color = if (lanes > 0) c.textMid else c.textFaint, fontSize = 11.sp)
     }
 }
 

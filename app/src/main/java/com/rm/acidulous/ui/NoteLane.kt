@@ -46,9 +46,8 @@ import com.rm.acidulous.model.Trig
 import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.abs
 import kotlin.math.roundToInt
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
-import androidx.annotation.StringRes
+import com.rm.acidulous.res.*
+import org.jetbrains.compose.resources.StringResource
 
 /**
  * What a note carries besides its pitch.
@@ -68,12 +67,12 @@ import androidx.annotation.StringRes
  * an automation lane is a curve sampled anywhere, and this is one value per
  * note and nothing in between.
  */
-enum class NoteProp(@StringRes val short: Int, @StringRes val label: Int) {
-    Velocity(R.string.note_prop_velocity_short, R.string.note_prop_velocity),
-    Chance(R.string.note_prop_chance_short, R.string.note_prop_chance),
-    Cond(R.string.note_prop_cond_short, R.string.note_prop_cond),
-    Ratchet(R.string.note_prop_ratchet_short, R.string.note_prop_ratchet),
-    Nudge(R.string.note_prop_nudge_short, R.string.note_prop_nudge),
+enum class NoteProp(val short: StringResource, val label: StringResource) {
+    Velocity(Res.string.note_prop_velocity_short, Res.string.note_prop_velocity),
+    Chance(Res.string.note_prop_chance_short, Res.string.note_prop_chance),
+    Cond(Res.string.note_prop_cond_short, Res.string.note_prop_cond),
+    Ratchet(Res.string.note_prop_ratchet_short, Res.string.note_prop_ratchet),
+    Nudge(Res.string.note_prop_nudge_short, Res.string.note_prop_nudge),
 }
 
 /** How far a note may be pushed off the grid: half a sixteenth either way. */
@@ -249,7 +248,7 @@ fun NoteLane(
                     // chooser, and the strip's own menu is what it looks
                     // like.
                     Modifier.weight(1f).fillMaxWidth().clickable { menu = true }
-                        .button(stringResource(R.string.a11y_note_lane), stringResource(prop.label)),
+                        .button(stringResource(Res.string.a11y_note_lane), stringResource(prop.label)),
                     contentAlignment = Alignment.Center,
                 ) {
                     // **The value goes in the gutter, not next to the bar.**
@@ -291,7 +290,7 @@ fun NoteLane(
                 Modifier.fillMaxWidth()
                     .then(if (collapsed) Modifier.fillMaxHeight() else Modifier.height(18.dp))
                     .clickable { onToggleCollapse() }
-                    .button(stringResource(if (collapsed) R.string.a11y_unfold_note_lane else R.string.a11y_fold_note_lane)),
+                    .button(stringResource(if (collapsed) Res.string.a11y_unfold_note_lane else Res.string.a11y_fold_note_lane)),
                 contentAlignment = Alignment.Center,
             ) { Text(if (collapsed) "▴" else "▾", color = c.textMid, fontSize = 11.sp) }
             // A position bar: this grows a row per distinct pitch in the clip, so on a
@@ -323,7 +322,7 @@ fun NoteLane(
                                 text = {
                                     Text(
                                         (if (pitch == pitchFilter) "● " else "  ") +
-                                            (pitch?.let { pitchName(it) } ?: stringResource(R.string.note_lane_all_notes)),
+                                            (pitch?.let { pitchName(it) } ?: stringResource(Res.string.note_lane_all_notes)),
                                         fontSize = 12.sp, fontFamily = FontFamily.Monospace,
                                     )
                                 },

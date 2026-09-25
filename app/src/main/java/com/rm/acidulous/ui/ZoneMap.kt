@@ -34,10 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Zone
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.stringArrayResource
-import com.rm.acidulous.R
-import androidx.compose.ui.res.pluralStringResource
+import com.rm.acidulous.res.*
 
 /**
  * The map itself: key across, velocity up, one rectangle per zone. Tapping a
@@ -55,10 +52,10 @@ fun ZoneMapView(
     val c = Acid.colors
     val pick by rememberUpdatedState(onSelect)
     val list by rememberUpdatedState(zones)
-    val edit = zones.mapIndexed { i, z -> action(stringResource(R.string.a11y_edit_zone, i + 1, z.name)) { pick(i) } }
+    val edit = zones.mapIndexed { i, z -> action(stringResource(Res.string.a11y_edit_zone, i + 1, z.name)) { pick(i) } }
     Canvas(
         modifier
-            .button(pluralStringResource(R.plurals.a11y_zones, zones.size, zones.size), actions = edit)
+            .button(pluralStringResource(Res.plurals.a11y_zones, zones.size, zones.size), actions = edit)
             .clip(RoundedCornerShape(6.dp))
             .background(c.bg)
             .pointerInput(Unit) {
@@ -104,42 +101,42 @@ fun ZoneMapView(
 fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onDelete: () -> Unit) {
     var z by remember(zone) { mutableStateOf(zone) }
     PlainDialog(
-        title = z.name.ifEmpty { stringResource(R.string.zone_title) },
+        title = z.name.ifEmpty { stringResource(Res.string.zone_title) },
         onDismiss = onDismiss,
-        confirmLabel = stringResource(R.string.ok),
+        confirmLabel = stringResource(Res.string.ok),
         onConfirm = { onConfirm(z) },
         spacing = 6.dp,
     ) {
         WindowCards {
             // Which notes reach it, by key and by how hard.
-            ZoneCard(stringResource(R.string.zone_range)) {
-                CountKnob(stringResource(R.string.zone_low_key), z.lowKey, 0..127, noteName(z.lowKey), PanelAmber, choices = ZONE_KEYS) {
+            ZoneCard(stringResource(Res.string.zone_range)) {
+                CountKnob(stringResource(Res.string.zone_low_key), z.lowKey, 0..127, noteName(z.lowKey), PanelAmber, choices = ZONE_KEYS) {
                     z = z.copy(lowKey = it, highKey = maxOf(it, z.highKey))
                 }
-                CountKnob(stringResource(R.string.zone_high_key), z.highKey, 0..127, noteName(z.highKey), PanelAmber, choices = ZONE_KEYS) {
+                CountKnob(stringResource(Res.string.zone_high_key), z.highKey, 0..127, noteName(z.highKey), PanelAmber, choices = ZONE_KEYS) {
                     z = z.copy(highKey = it, lowKey = minOf(it, z.lowKey))
                 }
-                CountKnob(stringResource(R.string.zone_low_vel), z.lowVel, 1..127) { z = z.copy(lowVel = it, highVel = maxOf(it, z.highVel)) }
-                CountKnob(stringResource(R.string.zone_high_vel), z.highVel, 1..127) { z = z.copy(highVel = it, lowVel = minOf(it, z.lowVel)) }
+                CountKnob(stringResource(Res.string.zone_low_vel), z.lowVel, 1..127) { z = z.copy(lowVel = it, highVel = maxOf(it, z.highVel)) }
+                CountKnob(stringResource(Res.string.zone_high_vel), z.highVel, 1..127) { z = z.copy(highVel = it, lowVel = minOf(it, z.lowVel)) }
             }
             // What it sounds like once it does.
-            ZoneCard(stringResource(R.string.zone_sound)) {
-                CountKnob(stringResource(R.string.zone_root), z.rootKey, 0..127, noteName(z.rootKey), choices = ZONE_KEYS) { z = z.copy(rootKey = it) }
+            ZoneCard(stringResource(Res.string.zone_sound)) {
+                CountKnob(stringResource(Res.string.zone_root), z.rootKey, 0..127, noteName(z.rootKey), choices = ZONE_KEYS) { z = z.copy(rootKey = it) }
                 // Cents in steps of five: a zone is tuned to a sample, not
                 // swept, and 2400 stops on one knob is a dial nobody can land.
-                CountKnob(stringResource(R.string.zone_tune), (z.tuneCents / 5f).roundToInt(), -240..240, "%.0f¢".format(z.tuneCents)) {
+                CountKnob(stringResource(Res.string.zone_tune), (z.tuneCents / 5f).roundToInt(), -240..240, "%.0f¢".format(z.tuneCents)) {
                     z = z.copy(tuneCents = it * 5f)
                 }
-                CountKnob(stringResource(R.string.zone_gain), (z.gain * 100f).roundToInt(), 0..200, "%.2f".format(z.gain)) { z = z.copy(gain = it / 100f) }
-                CountKnob(stringResource(R.string.zone_pan), (z.pan * 100f).roundToInt(), -100..100, "%+.2f".format(z.pan)) { z = z.copy(pan = it / 100f) }
+                CountKnob(stringResource(Res.string.zone_gain), (z.gain * 100f).roundToInt(), 0..200, "%.2f".format(z.gain)) { z = z.copy(gain = it / 100f) }
+                CountKnob(stringResource(Res.string.zone_pan), (z.pan * 100f).roundToInt(), -100..100, "%+.2f".format(z.pan)) { z = z.copy(pan = it / 100f) }
             }
             // Deleting is not the window's action, so it is not the
             // window's button - a third thing beside OK and Cancel is the
             // one you hit by accident. It is a cell of its own, in a card
             // of its own.
-            ZoneCard(stringResource(R.string.zone_zone)) {
-                SwitchGrid(stringResource(R.string.zone_loop), stringArrayResource(R.array.off_on).toList(), if (z.loop) 1 else 0) { z = z.copy(loop = it == 1) }
-                SwitchGrid(stringResource(R.string.zone_remove), listOf(stringResource(R.string.zone_delete)), -1) { onDelete() }
+            ZoneCard(stringResource(Res.string.zone_zone)) {
+                SwitchGrid(stringResource(Res.string.zone_loop), stringArrayResource(Res.array.off_on).toList(), if (z.loop) 1 else 0) { z = z.copy(loop = it == 1) }
+                SwitchGrid(stringResource(Res.string.zone_remove), listOf(stringResource(Res.string.zone_delete)), -1) { onDelete() }
             }
         }
     }

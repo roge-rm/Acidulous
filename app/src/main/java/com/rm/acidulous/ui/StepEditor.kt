@@ -35,8 +35,7 @@ import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Note
 import kotlin.math.roundToInt
 import com.rm.acidulous.ui.theme.Acid
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * Reflux's step sequencer: the old way of entering a line, as a second editor
@@ -106,13 +105,13 @@ private fun StepColumn(
     val cb by rememberUpdatedState(Triple(onPitchBegin, onPitch, onPitchEnd))
     val pitchState by rememberUpdatedState(pitch)
     val onSelectState by rememberUpdatedState(onSelect)
-    val resources = androidx.compose.ui.platform.LocalResources.current
-    val stepSaid = stringResource(R.string.a11y_step_n, index + 1)
+    val resources = AppStrings
+    val stepSaid = stringResource(Res.string.a11y_step_n, index + 1)
     val stepState = listOfNotNull(
-        if (gate) spokenNote(pitch, emptyMap(), resources) else stringResource(R.string.a11y_step_empty),
-        if (locked && gate) stringResource(R.string.a11y_word_locked) else null,
-        if (lockMode && selected && gate) stringResource(R.string.a11y_word_chosen) else null,
-    ).joinToString(stringResource(R.string.list_separator))
+        if (gate) spokenNote(pitch, emptyMap(), resources) else stringResource(Res.string.a11y_step_empty),
+        if (locked && gate) stringResource(Res.string.a11y_word_locked) else null,
+        if (lockMode && selected && gate) stringResource(Res.string.a11y_word_chosen) else null,
+    ).joinToString(stringResource(Res.string.list_separator))
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         // A locked step carries the knob's ◆ beside its number.
@@ -155,9 +154,9 @@ private fun StepColumn(
         ) {
             Text(if (gate) noteName(pitch) else "·", color = if (gate) Color.White else Acid.colors.textFaint, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         }
-        Toggle(stringResource(R.string.step_on), gate, Acid.colors.teal, onGate, said = stringResource(R.string.a11y_step_gate))
-        Toggle(stringResource(R.string.step_accent), accent, Acid.colors.accent, onAccent, enabled = gate, said = stringResource(R.string.a11y_step_accent))
-        Toggle(stringResource(R.string.step_slide), slide, Acid.colors.pink, onSlide, enabled = gate, said = stringResource(R.string.a11y_step_slide))
+        Toggle(stringResource(Res.string.step_on), gate, Acid.colors.teal, onGate, said = stringResource(Res.string.a11y_step_gate))
+        Toggle(stringResource(Res.string.step_accent), accent, Acid.colors.accent, onAccent, enabled = gate, said = stringResource(Res.string.a11y_step_accent))
+        Toggle(stringResource(Res.string.step_slide), slide, Acid.colors.pink, onSlide, enabled = gate, said = stringResource(Res.string.a11y_step_slide))
     }
 }
 
@@ -167,7 +166,7 @@ private fun Toggle(label: String, on: Boolean, colour: Color, onClick: () -> Uni
         Modifier.fillMaxWidth().height(22.dp).clip(RoundedCornerShape(3.dp))
             .background(if (on) colour.copy(alpha = 0.35f) else Acid.colors.card)
             .clickable(enabled = enabled, onClick = onClick)
-            .button(said, stringResource(if (on) R.string.a11y_on else R.string.a11y_off)),
+            .button(said, stringResource(if (on) Res.string.a11y_on else Res.string.a11y_off)),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = if (on) colour else Acid.colors.textFaint, fontSize = 8.sp, fontFamily = FontFamily.Monospace) }
 }

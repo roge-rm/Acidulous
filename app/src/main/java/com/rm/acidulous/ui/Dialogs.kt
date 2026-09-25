@@ -61,10 +61,7 @@ import com.rm.acidulous.model.SWING_TRIPLET
 import com.rm.acidulous.model.Scales
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongKey
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * The scene's "4/4 × 1" chip, expanded: name, signature, repeat, tempo, fades.
@@ -95,9 +92,9 @@ fun SceneSettingsDialog(
     var ramp by remember { mutableStateOf(scene.ramp) }
 
     PlainDialog(
-        title = stringResource(R.string.scene_title),
+        title = stringResource(Res.string.scene_title),
         onDismiss = onDismiss,
-        confirmLabel = stringResource(R.string.ok),
+        confirmLabel = stringResource(Res.string.ok),
         onConfirm = {
             onConfirm(
                 scene.copy(
@@ -112,7 +109,7 @@ fun SceneSettingsDialog(
             )
         },
     ) {
-        ListSection(stringResource(R.string.scene_name)) {
+        ListSection(stringResource(Res.string.scene_name)) {
             OutlinedTextField(
                 value = name, onValueChange = { name = it }, singleLine = true,
                 modifier = Modifier.typing() then Modifier.fillMaxWidth(),
@@ -124,41 +121,41 @@ fun SceneSettingsDialog(
         // signatures are a stepped knob that names its step - as chips they
         // wrapped, and as a slider they were a dotted line.
         WindowCards {
-            WindowCard(stringResource(R.string.scene_time)) {
+            WindowCard(stringResource(Res.string.scene_time)) {
                 val sigIndex = signature?.let { SIGNATURES.indexOf(it) + 1 } ?: 0
-                val songSig = stringResource(R.string.scene_signature_song, songSignature.beats, songSignature.unit)
+                val songSig = stringResource(Res.string.scene_signature_song, songSignature.beats, songSignature.unit)
                 CountKnob(
-                    stringResource(R.string.scene_signature), sigIndex, 0..SIGNATURES.size,
+                    stringResource(Res.string.scene_signature), sigIndex, 0..SIGNATURES.size,
                     if (sigIndex == 0) songSig
                     else SIGNATURES[sigIndex - 1].let { "${it.beats}/${it.unit}" },
                     choices = listOf(songSig) + SIGNATURES.map { "${it.beats}/${it.unit}" },
                 ) { i -> signature = if (i == 0) null else SIGNATURES[i - 1] }
-                CountKnob(stringResource(R.string.scene_repeat), repeat, 1..32, "×$repeat", choices = (1..32).map { "×$it" }) { repeat = it }
-                val offOn = stringArrayResource(R.array.off_on).toList()
-                SwitchGrid(stringResource(R.string.scene_fade_in), offOn, if (fadeIn) 1 else 0) { fadeIn = it == 1 }
-                SwitchGrid(stringResource(R.string.scene_fade_out), offOn, if (fadeOut) 1 else 0) { fadeOut = it == 1 }
+                CountKnob(stringResource(Res.string.scene_repeat), repeat, 1..32, "×$repeat", choices = (1..32).map { "×$it" }) { repeat = it }
+                val offOn = stringArrayResource(Res.array.off_on).toList()
+                SwitchGrid(stringResource(Res.string.scene_fade_in), offOn, if (fadeIn) 1 else 0) { fadeIn = it == 1 }
+                SwitchGrid(stringResource(Res.string.scene_fade_out), offOn, if (fadeOut) 1 else 0) { fadeOut = it == 1 }
             }
-            WindowCard(stringResource(R.string.scene_tempo)) {
-                SwitchGrid(stringResource(R.string.scene_tempo_from), stringArrayResource(R.array.scene_tempo_from_choices).toList(), if (ownTempo) 1 else 0) { ownTempo = it == 1 }
+            WindowCard(stringResource(Res.string.scene_tempo)) {
+                SwitchGrid(stringResource(Res.string.scene_tempo_from), stringArrayResource(Res.array.scene_tempo_from_choices).toList(), if (ownTempo) 1 else 0) { ownTempo = it == 1 }
                 if (ownTempo) {
                     // Whole beats a minute, set only when the knob moves, so
                     // a scene written at 72.5 keeps it until it is turned.
-                    CountKnob(stringResource(R.string.scene_bpm), bpm.roundToInt(), 40..240, "%.0f".format(bpm), PanelAmber) { bpm = it.toFloat() }
-                    SwitchGrid(stringResource(R.string.scene_change), stringArrayResource(R.array.scene_change_choices).toList(), if (smooth) 1 else 0) { smooth = it == 1 }
+                    CountKnob(stringResource(Res.string.scene_bpm), bpm.roundToInt(), 40..240, "%.0f".format(bpm), PanelAmber) { bpm = it.toFloat() }
+                    SwitchGrid(stringResource(Res.string.scene_change), stringArrayResource(Res.array.scene_change_choices).toList(), if (smooth) 1 else 0) { smooth = it == 1 }
                 }
                 // A tempo change inside the scene, on its last pass:
                 // slowing into what comes next, or speeding up across it.
                 val start = if (ownTempo) bpm else songTempo
-                SwitchGrid(stringResource(R.string.scene_ramp), stringArrayResource(R.array.off_on).toList(), if (ramp != null) 1 else 0) {
+                SwitchGrid(stringResource(Res.string.scene_ramp), stringArrayResource(Res.array.off_on).toList(), if (ramp != null) 1 else 0) {
                     ramp = if (it == 1) (ramp ?: com.rm.acidulous.model.TempoRamp((start * 0.75f).roundToInt().toFloat(), minOf(2, bars))) else null
                 }
                 ramp?.let { r ->
-                    CountKnob(stringResource(R.string.scene_ramp_to), r.toBpm.roundToInt(), 40..240, "%.0f".format(r.toBpm), PanelAmber) { ramp = r.copy(toBpm = it.toFloat()) }
+                    CountKnob(stringResource(Res.string.scene_ramp_to), r.toBpm.roundToInt(), 40..240, "%.0f".format(r.toBpm), PanelAmber) { ramp = r.copy(toBpm = it.toFloat()) }
                     val most = bars.coerceAtLeast(1)
                     CountKnob(
-                        stringResource(R.string.scene_ramp_over), r.bars.coerceIn(1, most), 1..most,
-                        r.bars.coerceAtMost(most).let { pluralStringResource(R.plurals.bars, it, it) },
-                        choices = (1..most).map { pluralStringResource(R.plurals.bars, it, it) },
+                        stringResource(Res.string.scene_ramp_over), r.bars.coerceIn(1, most), 1..most,
+                        r.bars.coerceAtMost(most).let { pluralStringResource(Res.plurals.bars, it, it) },
+                        choices = (1..most).map { pluralStringResource(Res.plurals.bars, it, it) },
                     ) { ramp = r.copy(bars = it) }
                 }
             }
@@ -198,9 +195,9 @@ fun ClipSettingsDialog(
     val rolls = clip.notes.any { it.chance < 100 }
 
     PlainDialog(
-        title = stringResource(R.string.clip_title),
+        title = stringResource(Res.string.clip_title),
         onDismiss = onDismiss,
-        confirmLabel = stringResource(R.string.ok),
+        confirmLabel = stringResource(Res.string.ok),
         onConfirm = {
             onConfirm(clip.copy(bars = bars, playMode = mode, mute = mute, grid = grid, seed = seed, freeRoll = free))
         },
@@ -217,19 +214,19 @@ fun ClipSettingsDialog(
         // editor window to look like that one, all of it in view at once.
         val held = ClipClipboard.clip
         val what = listOfNotNull(
-            if (clip.notes.isNotEmpty()) pluralStringResource(R.plurals.clip_notes, clip.notes.size, clip.notes.size) else null,
-            if (clip.automation.isNotEmpty()) pluralStringResource(R.plurals.clip_lanes, clip.automation.size, clip.automation.size) else null,
-            if (clip.frozen != null) stringResource(R.string.clip_frozen) else null,
-        ).joinToString(stringResource(R.string.list_separator)).ifEmpty { stringResource(R.string.clip_empty) }
+            if (clip.notes.isNotEmpty()) pluralStringResource(Res.plurals.clip_notes, clip.notes.size, clip.notes.size) else null,
+            if (clip.automation.isNotEmpty()) pluralStringResource(Res.plurals.clip_lanes, clip.automation.size, clip.automation.size) else null,
+            if (clip.frozen != null) stringResource(Res.string.clip_frozen) else null,
+        ).joinToString(stringResource(Res.string.list_separator)).ifEmpty { stringResource(Res.string.clip_empty) }
         val frozen = clip.frozen
         val stale = frozen != null && tempo > 0f && kotlin.math.abs(frozen.bpm - tempo) >= 0.01f
         WindowCards {
             // The card's title says what is in it, which is what the
             // actions in it act on.
-            WindowCard(stringResource(R.string.clip_card, what)) {
+            WindowCard(stringResource(Res.string.clip_card, what)) {
                 SwitchGrid(
-                    if (held != null) stringResource(R.string.clip_clipboard_has, ClipClipboard.from) else stringResource(R.string.clip_clipboard),
-                    stringArrayResource(R.array.clip_actions).toList(), -1, columns = 2,
+                    if (held != null) stringResource(Res.string.clip_clipboard_has, ClipClipboard.from) else stringResource(Res.string.clip_clipboard),
+                    stringArrayResource(Res.array.clip_actions).toList(), -1, columns = 2,
                     enabled = listOf(clip.hasContent() || clip.notes.isNotEmpty(), clip.hasContent(), held != null, clip.hasContent()),
                 ) { i ->
                     when (i) {
@@ -242,26 +239,26 @@ fun ClipSettingsDialog(
                 // Freeze is an action rather than a setting, so it does
                 // its own thing and closes; everything else waits for OK.
                 if (frozen != null) {
-                    SwitchGrid(stringResource(if (stale) R.string.clip_stale else R.string.clip_audio), listOf(stringResource(R.string.clip_thaw)), -1) { onThaw() }
+                    SwitchGrid(stringResource(if (stale) Res.string.clip_stale else Res.string.clip_audio), listOf(stringResource(Res.string.clip_thaw)), -1) { onThaw() }
                 } else if (clip.notes.isNotEmpty()) {
-                    SwitchGrid(stringResource(R.string.clip_audio), listOf(stringResource(R.string.clip_freeze)), -1) { onFreeze() }
+                    SwitchGrid(stringResource(Res.string.clip_audio), listOf(stringResource(Res.string.clip_freeze)), -1) { onFreeze() }
                 }
             }
-            WindowCard(stringResource(R.string.clip_length)) {
-                CountKnob(stringResource(R.string.clip_bars), bars, 1..16, choices = (1..16).map { pluralStringResource(R.plurals.bars, it, it) }) { bars = it }
-                SwitchGrid(stringResource(R.string.clip_grid), GRIDS.map { it.first }, GRIDS.indexOfFirst { it.second == grid }, columns = 3) { grid = GRIDS[it].second }
+            WindowCard(stringResource(Res.string.clip_length)) {
+                CountKnob(stringResource(Res.string.clip_bars), bars, 1..16, choices = (1..16).map { pluralStringResource(Res.plurals.bars, it, it) }) { bars = it }
+                SwitchGrid(stringResource(Res.string.clip_grid), GRIDS.map { it.first }, GRIDS.indexOfFirst { it.second == grid }, columns = 3) { grid = GRIDS[it].second }
             }
-            WindowCard(stringResource(R.string.clip_plays)) {
-                SwitchGrid(stringResource(R.string.clip_mode), stringArrayResource(R.array.clip_mode_choices).toList(), if (mode == PlayMode.OneShot) 1 else 0) {
+            WindowCard(stringResource(Res.string.clip_plays)) {
+                SwitchGrid(stringResource(Res.string.clip_mode), stringArrayResource(Res.array.clip_mode_choices).toList(), if (mode == PlayMode.OneShot) 1 else 0) {
                     mode = if (it == 1) PlayMode.OneShot else PlayMode.Loop
                 }
-                SwitchGrid(stringResource(R.string.clip_mute), stringArrayResource(R.array.off_on).toList(), if (mute) 1 else 0) { mute = it == 1 }
+                SwitchGrid(stringResource(Res.string.clip_mute), stringArrayResource(Res.array.off_on).toList(), if (mute) 1 else 0) { mute = it == 1 }
                 // Only where the clip actually gambles. A control for a
                 // feature this clip is not using is clutter, and most
                 // clips never will be.
                 if (rolls) {
-                    SwitchGrid(stringResource(R.string.clip_dice), stringArrayResource(R.array.clip_dice_choices).toList(), if (free) 1 else 0) { free = it == 1 }
-                    if (!free) CountKnob(stringResource(R.string.clip_seed), seed, 0..63) { seed = it }
+                    SwitchGrid(stringResource(Res.string.clip_dice), stringArrayResource(Res.array.clip_dice_choices).toList(), if (free) 1 else 0) { free = it == 1 }
+                    if (!free) CountKnob(stringResource(Res.string.clip_seed), seed, 0..63) { seed = it }
                 }
             }
         }
@@ -269,7 +266,7 @@ fun ClipSettingsDialog(
         // what is playing.
         if (frozen != null && stale) {
             Text(
-                stringResource(R.string.clip_stale_note, frozen.bpm, tempo),
+                stringResource(Res.string.clip_stale_note, frozen.bpm, tempo),
                 color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }
@@ -277,13 +274,13 @@ fun ClipSettingsDialog(
 
     if (confirmPaste) {
         PlainDialog(
-            title = stringResource(R.string.clip_paste_title),
+            title = stringResource(Res.string.clip_paste_title),
             onDismiss = { confirmPaste = false },
-            confirmLabel = stringResource(R.string.clip_paste),
+            confirmLabel = stringResource(Res.string.clip_paste),
             onConfirm = { confirmPaste = false; onPaste() },
         ) {
             Text(
-                stringResource(R.string.clip_paste_note, ClipClipboard.from),
+                stringResource(Res.string.clip_paste_note, ClipClipboard.from),
                 color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }
@@ -291,13 +288,13 @@ fun ClipSettingsDialog(
 
     if (confirmClear) {
         PlainDialog(
-            title = stringResource(R.string.clip_clear_title),
+            title = stringResource(Res.string.clip_clear_title),
             onDismiss = { confirmClear = false },
-            confirmLabel = stringResource(R.string.clip_clear),
+            confirmLabel = stringResource(Res.string.clip_clear),
             onConfirm = { confirmClear = false; onClear() },
         ) {
             Text(
-                stringResource(R.string.clip_clear_note),
+                stringResource(Res.string.clip_clear_note),
                 color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }
@@ -347,9 +344,9 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
             (if (i == groups.lastIndex) known.filter { it !in listed } else emptyList())
     }
     TabbedDialog(
-        title = stringResource(R.string.picker_machine),
+        title = stringResource(Res.string.picker_machine),
         selected = tab,
-        dismissLabel = stringResource(R.string.cancel),
+        dismissLabel = stringResource(Res.string.cancel),
         onDismiss = onDismiss,
         chips = { SectionChipsStyled(groups.map { chipLabel(stringResource(it.label)) }, tab) { tab = it } },
         pages = contents.map { types ->
@@ -383,7 +380,7 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
 fun PickerDialog(title: String, options: List<String>, onDismiss: () -> Unit, onPick: (String) -> Unit) {
     PlainDialog(title = title, onDismiss = onDismiss, spacing = 6.dp) {
         if (options.isEmpty()) {
-            Text(stringResource(R.string.picker_empty), color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 12.sp)
+            Text(stringResource(Res.string.picker_empty), color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 12.sp)
         }
         for (o in options) DialogRow(mark = "·", name = o) { onPick(o) }
     }
@@ -395,7 +392,7 @@ fun TextInputDialog(title: String, initial: String, onDismiss: () -> Unit, onCon
     PlainDialog(
         title = title,
         onDismiss = onDismiss,
-        confirmLabel = stringResource(R.string.ok),
+        confirmLabel = stringResource(Res.string.ok),
         confirmEnabled = value.isNotBlank(),
         onConfirm = { if (value.isNotBlank()) onConfirm(value.trim()) },
     ) {
@@ -490,18 +487,18 @@ fun TempoDialog(
     // On a square phone the key is a page of its own: tempo, bar and key are
     // half a card more than its window. See [compactWindow].
     val keyPage = compactWindow()
-    val tabNames = stringArrayResource(R.array.tempo_tabs).toList().let {
-        if (keyPage) listOf(it[0], stringResource(R.string.tempo_tab_key)) + it.drop(1) else it
+    val tabNames = stringArrayResource(Res.array.tempo_tabs).toList().let {
+        if (keyPage) listOf(it[0], stringResource(Res.string.tempo_tab_key)) + it.drop(1) else it
     }
     val keyCard: @Composable () -> Unit = {
         WindowCards { KeySection(key, { key = it }, tuning, tunings, { tuning = it }) }
     }
     TabbedDialog(
-        title = stringResource(R.string.tempo_title),
+        title = stringResource(Res.string.tempo_title),
         selected = tab,
         onDismiss = onDismiss,
-        dismissLabel = stringResource(R.string.cancel),
-        confirmLabel = stringResource(R.string.ok),
+        dismissLabel = stringResource(Res.string.cancel),
+        confirmLabel = stringResource(Res.string.ok),
         onConfirm = {
             onConfirm(
                 song.copy(
@@ -544,8 +541,8 @@ private fun LinkPage() {
     val context = androidx.compose.ui.platform.LocalContext.current
     val hub = com.rm.acidulous.engine.LinkHub
     WindowCards {
-        WindowCard(stringResource(R.string.link_card)) {
-            SwitchGrid(stringResource(R.string.link_tempo_sync), stringArrayResource(R.array.off_on).toList(), if (hub.enabled) 1 else 0) { i ->
+        WindowCard(stringResource(Res.string.link_card)) {
+            SwitchGrid(stringResource(Res.string.link_tempo_sync), stringArrayResource(Res.array.off_on).toList(), if (hub.enabled) 1 else 0) { i ->
                 val on = i == 1
                 UiPrefs.chooseLink(on)
                 hub.setEnabled(context, on)
@@ -555,23 +552,23 @@ private fun LinkPage() {
                     UiPrefs.chooseFollow(com.rm.acidulous.midi.MidiHub.Follow.Off)
                 }
             }
-            SwitchGrid(stringResource(R.string.link_start_stop), stringArrayResource(R.array.link_start_stop_choices).toList(), if (hub.startStop) 0 else 1) { UiPrefs.chooseLinkStartStop(it == 0) }
+            SwitchGrid(stringResource(Res.string.link_start_stop), stringArrayResource(Res.array.link_start_stop_choices).toList(), if (hub.startStop) 0 else 1) { UiPrefs.chooseLinkStartStop(it == 0) }
         }
     }
     // What neither switch can say: what following a session costs, and
     // whether one is there.
     if (hub.enabled) {
         ListSection(
-            stringResource(R.string.link_session),
-            stringResource(if (hub.multicast) R.string.link_session_note else R.string.link_session_note_no_multicast),
+            stringResource(Res.string.link_session),
+            stringResource(if (hub.multicast) Res.string.link_session_note else Res.string.link_session_note_no_multicast),
         ) {
             Readout(
                 stringResource(
-                    R.string.link_readout,
-                    pluralStringResource(R.plurals.link_peers, hub.peers, hub.peers),
-                    if (hub.sessionTempo > 0f) stringResource(R.string.link_session_tempo, hub.sessionTempo) else stringResource(R.string.link_no_tempo),
+                    Res.string.link_readout,
+                    pluralStringResource(Res.plurals.link_peers, hub.peers, hub.peers),
+                    if (hub.sessionTempo > 0f) stringResource(Res.string.link_session_tempo, hub.sessionTempo) else stringResource(Res.string.link_no_tempo),
                     hub.phaseMs,
-                    stringResource(if (hub.multicast) R.string.link_multicast_held else R.string.link_multicast_not_held),
+                    stringResource(if (hub.multicast) Res.string.link_multicast_held else Res.string.link_multicast_not_held),
                 ),
                 good = hub.multicast && hub.peers > 0,
             )
@@ -595,25 +592,25 @@ private fun TempoPage(
     // either side - see BpmRow - because a knob over two hundred values
     // cannot land on one of them.
     WindowCards {
-        WindowCard(stringResource(R.string.tempo_tempo)) {
+        WindowCard(stringResource(Res.string.tempo_tempo)) {
             BpmRow(bpm, onBpm)
             TapTempo(onBpm)
         }
-        WindowCard(stringResource(R.string.tempo_bar)) {
+        WindowCard(stringResource(Res.string.tempo_bar)) {
             val sigIndex = SIGNATURES.indexOf(signature).coerceAtLeast(0)
             CountKnob(
-                stringResource(R.string.tempo_signature), sigIndex, 0 until SIGNATURES.size, "${signature.beats}/${signature.unit}",
+                stringResource(Res.string.tempo_signature), sigIndex, 0 until SIGNATURES.size, "${signature.beats}/${signature.unit}",
                 choices = SIGNATURES.map { "${it.beats}/${it.unit}" },
             ) { onSignature(SIGNATURES[it]) }
             CountKnob(
-                stringResource(R.string.tempo_swing), swing.roundToInt(), SWING_STRAIGHT.toInt()..SWING_MAX.toInt(),
-                if (swing <= SWING_STRAIGHT + 0.05f) stringResource(R.string.tempo_straight) else "%.0f%%".format(swing), PanelAmber,
+                stringResource(Res.string.tempo_swing), swing.roundToInt(), SWING_STRAIGHT.toInt()..SWING_MAX.toInt(),
+                if (swing <= SWING_STRAIGHT + 0.05f) stringResource(Res.string.tempo_straight) else "%.0f%%".format(swing), PanelAmber,
             ) { onSwing(it.toFloat()) }
-            SwitchGrid(stringResource(R.string.tempo_swing_on), listOf("1/16", "1/8"), unit(swingUnit)) { onSwingUnit(it) }
+            SwitchGrid(stringResource(Res.string.tempo_swing_on), listOf("1/16", "1/8"), unit(swingUnit)) { onSwingUnit(it) }
             // The two feels worth a name. Neither is lit between them, which
             // is what a knob set to 58% is.
             SwitchGrid(
-                stringResource(R.string.tempo_feel), stringArrayResource(R.array.tempo_feel_choices).toList(),
+                stringResource(Res.string.tempo_feel), stringArrayResource(Res.array.tempo_feel_choices).toList(),
                 when {
                     swing <= SWING_STRAIGHT + 0.05f -> 0
                     kotlin.math.abs(swing - SWING_TRIPLET) < 0.5f -> 1
@@ -766,11 +763,11 @@ private fun BpmRow(bpm: Float, onBpm: (Float) -> Unit) {
     // half-finished number - "1", or an empty field mid-delete - does not
     // become the tempo and snap the field back under the finger.
     var typed by remember(bpm) { mutableStateOf(formatBpm(bpm)) }
-    val fieldSaid = stringResource(R.string.a11y_tempo_field)
+    val fieldSaid = stringResource(Res.string.a11y_tempo_field)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(stringResource(R.string.tempo_bpm), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text(stringResource(Res.string.tempo_bpm), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            StepButton("\u2212", stringResource(R.string.a11y_tempo_down)) { onBpm((bpm - 1f).coerceIn(BPM_MIN, BPM_MAX)) }
+            StepButton("\u2212", stringResource(Res.string.a11y_tempo_down)) { onBpm((bpm - 1f).coerceIn(BPM_MIN, BPM_MAX)) }
             OutlinedTextField(
                 value = typed,
                 onValueChange = { text ->
@@ -784,7 +781,7 @@ private fun BpmRow(bpm: Float, onBpm: (Float) -> Unit) {
                 ),
                 modifier = Modifier.typing() then Modifier.width(120.dp).semantics { contentDescription = fieldSaid },
             )
-            StepButton("+", stringResource(R.string.a11y_tempo_up)) { onBpm((bpm + 1f).coerceIn(BPM_MIN, BPM_MAX)) }
+            StepButton("+", stringResource(Res.string.a11y_tempo_up)) { onBpm((bpm + 1f).coerceIn(BPM_MIN, BPM_MAX)) }
         }
     }
 }
@@ -813,7 +810,7 @@ private fun TapTempo(onBpm: (Float) -> Unit) {
     val taps = remember { mutableStateListOf<Long>() }
     var shown by remember { mutableStateOf(0f) }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(stringResource(R.string.tempo_tap), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text(stringResource(Res.string.tempo_tap), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Box(
             Modifier.width(96.dp).height(52.dp).clip(RoundedCornerShape(6.dp))
                 .background(c.control)
@@ -834,7 +831,7 @@ private fun TapTempo(onBpm: (Float) -> Unit) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                if (taps.size < 2) stringResource(R.string.tempo_tap_button) else formatBpm(shown),
+                if (taps.size < 2) stringResource(Res.string.tempo_tap_button) else formatBpm(shown),
                 color = c.accent, fontSize = 15.sp, fontFamily = FontFamily.Monospace,
             )
         }
@@ -856,20 +853,20 @@ private fun KeySection(
     tunings: List<com.rm.acidulous.model.Tuning> = emptyList(),
     onTuning: (com.rm.acidulous.model.Tuning?) -> Unit = {},
 ) {
-    WindowCard(stringResource(R.string.tempo_key)) {
+    WindowCard(stringResource(Res.string.tempo_key)) {
         // Nought is no key; then the twelve roots, spelled against the chosen
         // scale, so E flat major is E♭ and not D♯: `Scales.rootName` is the
         // same walk the roll's own labels use, and a chooser that disagreed
         // with the notes it sets would be its own bug.
         val scale = key?.scale ?: 0
         CountKnob(
-            stringResource(R.string.tempo_root), key?.let { it.root + 1 } ?: 0, 0..12, key?.let { Scales.rootName(it.root, scale) } ?: stringResource(R.string.none), PanelAmber,
-            choices = listOf(stringResource(R.string.none)) + (0 until 12).map { Scales.rootName(it, scale) },
+            stringResource(Res.string.tempo_root), key?.let { it.root + 1 } ?: 0, 0..12, key?.let { Scales.rootName(it.root, scale) } ?: stringResource(Res.string.none), PanelAmber,
+            choices = listOf(stringResource(Res.string.none)) + (0 until 12).map { Scales.rootName(it, scale) },
         ) { i ->
             onKey(if (i == 0) null else SongKey(i - 1, scale))
         }
         if (key != null) {
-            CountKnob(stringResource(R.string.tempo_scale), key.scale, 0 until Scales.names.size, Scales.names[key.scale], width = 108.dp, choices = Scales.names) {
+            CountKnob(stringResource(Res.string.tempo_scale), key.scale, 0 until Scales.names.size, Scales.names[key.scale], width = 108.dp, choices = Scales.names) {
                 onKey(key.copy(scale = it))
             }
         }
@@ -897,7 +894,7 @@ internal fun TuningKnob(
     val entries: List<com.rm.acidulous.model.Tuning?> = (if (followLabel != null) listOf(null) else emptyList()) + list
     val index = entries.indexOfFirst { it == current }.coerceAtLeast(0)
     CountKnob(
-        stringResource(R.string.tempo_tuning), index, 0 until entries.size, entries[index]?.name ?: followLabel!!, width = 108.dp,
+        stringResource(Res.string.tempo_tuning), index, 0 until entries.size, entries[index]?.name ?: followLabel!!, width = 108.dp,
         choices = entries.map { it?.name ?: followLabel!! },
     ) { onTuning(entries[it]) }
 }
@@ -913,23 +910,23 @@ private fun ClickPage() {
     // Every one of these applies as it is touched - they are the device's,
     // not the song's - so Cancel leaves them as they are.
     WindowCards {
-        WindowCard(stringResource(R.string.click_card)) {
-            SwitchGrid(stringResource(R.string.click_sound), stringArrayResource(R.array.click_voices).toList(), UiPrefs.clickVoice, columns = 3) { UiPrefs.chooseClickVoice(it) }
-            SwitchGrid(stringResource(R.string.click_ticks_on), stringArrayResource(R.array.click_divisions).toList(), UiPrefs.clickDivision, columns = 3) { UiPrefs.chooseClickDivision(it) }
-            SwitchGrid(stringResource(R.string.click_plays), stringArrayResource(R.array.click_when).toList(), UiPrefs.clickWhen, columns = 1) { UiPrefs.chooseClickWhen(it) }
-            CountKnob(stringResource(R.string.click_level), (UiPrefs.clickVolume * 100f).roundToInt(), 0..100, "%.0f%%".format(UiPrefs.clickVolume * 100f)) {
+        WindowCard(stringResource(Res.string.click_card)) {
+            SwitchGrid(stringResource(Res.string.click_sound), stringArrayResource(Res.array.click_voices).toList(), UiPrefs.clickVoice, columns = 3) { UiPrefs.chooseClickVoice(it) }
+            SwitchGrid(stringResource(Res.string.click_ticks_on), stringArrayResource(Res.array.click_divisions).toList(), UiPrefs.clickDivision, columns = 3) { UiPrefs.chooseClickDivision(it) }
+            SwitchGrid(stringResource(Res.string.click_plays), stringArrayResource(Res.array.click_when).toList(), UiPrefs.clickWhen, columns = 1) { UiPrefs.chooseClickWhen(it) }
+            CountKnob(stringResource(Res.string.click_level), (UiPrefs.clickVolume * 100f).roundToInt(), 0..100, "%.0f%%".format(UiPrefs.clickVolume * 100f)) {
                 UiPrefs.chooseClickVolume(it / 100f)
             }
         }
         // What recording does: counts in, and moves what is played onto
         // the clip's grid, all the way or part of it.
-        WindowCard(stringResource(R.string.click_record)) {
-            SwitchGrid(stringResource(R.string.click_count_in), listOf(stringResource(R.string.none), "1", "2", "3", "4"), UiPrefs.countInBars, columns = 5) { UiPrefs.chooseCountInBars(it) }
-            SwitchGrid(stringResource(R.string.click_quantise), stringArrayResource(R.array.off_on).toList(), if (UiPrefs.recordQuantise) 1 else 0) {
+        WindowCard(stringResource(Res.string.click_record)) {
+            SwitchGrid(stringResource(Res.string.click_count_in), listOf(stringResource(Res.string.none), "1", "2", "3", "4"), UiPrefs.countInBars, columns = 5) { UiPrefs.chooseCountInBars(it) }
+            SwitchGrid(stringResource(Res.string.click_quantise), stringArrayResource(Res.array.off_on).toList(), if (UiPrefs.recordQuantise) 1 else 0) {
                 UiPrefs.chooseRecordQuantise(on = it == 1)
             }
             if (UiPrefs.recordQuantise) {
-                CountKnob(stringResource(R.string.click_amount), UiPrefs.recordStrength, 0..100, "${UiPrefs.recordStrength}%") {
+                CountKnob(stringResource(Res.string.click_amount), UiPrefs.recordStrength, 0..100, "${UiPrefs.recordStrength}%") {
                     UiPrefs.chooseRecordQuantise(strength = it)
                 }
             }
@@ -962,7 +959,7 @@ fun TabbedDialog(
     selected: Int,
     pages: List<@Composable () -> Unit>,
     onDismiss: () -> Unit,
-    dismissLabel: String = stringResource(R.string.done),
+    dismissLabel: String = stringResource(Res.string.done),
     maxBodyHeight: Dp = 560.dp,
     /** Between whatever a page puts in itself. */
     spacing: Dp = 6.dp,
@@ -993,7 +990,7 @@ fun TabbedDialog(
 fun PlainDialog(
     title: String,
     onDismiss: () -> Unit,
-    dismissLabel: String = stringResource(R.string.cancel),
+    dismissLabel: String = stringResource(Res.string.cancel),
     confirmLabel: String = "",
     confirmEnabled: Boolean = true,
     onConfirm: (() -> Unit)? = null,
@@ -1364,7 +1361,7 @@ internal fun DialogRow(
             Text(trailing, color = if (on) c.teal else c.textDim, fontSize = 10.sp)
         }
         if (onRemove != null) {
-            val said = stringResource(R.string.a11y_delete, name)
+            val said = stringResource(Res.string.a11y_delete, name)
             Text(
                 "✕", color = c.red, fontSize = 14.sp,
                 modifier = Modifier.clip(RoundedCornerShape(4.dp))

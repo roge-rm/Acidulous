@@ -57,14 +57,13 @@ import com.rm.acidulous.model.withEffectBypass
 import com.rm.acidulous.model.withEffectParam
 import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.roundToInt
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
-import androidx.annotation.StringRes
+import com.rm.acidulous.res.*
+import org.jetbrains.compose.resources.StringResource
 
 /** What a slot panel edits: the track's insert effects or its modifiers. */
 enum class SlotKind(
     /** A key, for what the panel remembers about each slot; [title] is what it is called. */
-    val label: String, @StringRes val title: Int, val slots: Int,
+    val label: String, val title: StringResource, val slots: Int,
     val types: () -> List<String>, val paramInfo: (String) -> List<com.rm.acidulous.engine.ParamInfo>,
     val unit: (Int) -> String, val at: (Track, Int) -> UnitSlot,
     val withType: (Track, Int, String) -> Track, val withParam: (Track, Int, String, Float) -> Track, val withBypass: (Track, Int, Boolean) -> Track,
@@ -77,10 +76,10 @@ enum class SlotKind(
     val patchKey: ((String) -> String)? = null,
     val loadPatch: ((Track, Int, Map<String, Float>) -> Track)? = null,
 ) {
-    Effects("FX", R.string.slot_fx, EFFECT_SLOTS, { NativeEngine.effectTypes }, { NativeEngine.effectParamInfo(it) }, ::effectUnit, { t, s -> t.effectAt(s) },
+    Effects("FX", Res.string.slot_fx, EFFECT_SLOTS, { NativeEngine.effectTypes }, { NativeEngine.effectParamInfo(it) }, ::effectUnit, { t, s -> t.effectAt(s) },
         { t, s, ty -> t.withEffect(s, ty) }, { t, s, n, v -> t.withEffectParam(s, n, v) }, { t, s, b -> t.withEffectBypass(s, b) },
         patchKey = PatchStore::effectKey, loadPatch = { t, s, p -> t.withEffectPatch(s, p) }),
-    Modifiers("MOD", R.string.slot_mod, MODIFIER_SLOTS, { NativeEngine.inputModTypes }, { NativeEngine.inputModParamInfo(it) }, ::modifierUnit, { t, s -> t.modifierAt(s) },
+    Modifiers("MOD", Res.string.slot_mod, MODIFIER_SLOTS, { NativeEngine.inputModTypes }, { NativeEngine.inputModParamInfo(it) }, ::modifierUnit, { t, s -> t.modifierAt(s) },
         { t, s, ty -> t.withModifier(s, ty) }, { t, s, n, v -> t.withModifierParam(s, n, v) }, { t, s, b -> t.withModifierBypass(s, b) }),
 }
 
@@ -155,8 +154,8 @@ fun SlotDialog(
             title = title,
             selected = page,
             onDismiss = dismiss,
-            dismissLabel = stringResource(R.string.cancel),
-            confirmLabel = stringResource(R.string.ok),
+            dismissLabel = stringResource(Res.string.cancel),
+            confirmLabel = stringResource(Res.string.ok),
             onConfirm = onDismiss,
             wideHeader = header,
             chips = { SectionChips(pageTitles, page) { page = it } },
@@ -169,8 +168,8 @@ fun SlotDialog(
     PlainDialog(
         title = title,
         onDismiss = dismiss,
-        dismissLabel = stringResource(R.string.cancel),
-        confirmLabel = stringResource(R.string.ok),
+        dismissLabel = stringResource(Res.string.cancel),
+        confirmLabel = stringResource(Res.string.ok),
         onConfirm = onDismiss,
         wideHeader = header,
     ) {
@@ -194,7 +193,7 @@ private val PAGES: Map<String, List<Set<String>>> = mapOf(
 /** A page's tab: its cards' titles, in the phone's language. */
 @Composable
 private fun pageNames(pages: List<Set<String>>): List<String> {
-    val resources = androidx.compose.ui.platform.LocalResources.current
+    val resources = AppStrings
     return pages.map { cards -> cards.joinToString(" · ") { resources.panelWord(it) } }
 }
 
@@ -306,8 +305,8 @@ private fun SlotFace(
                 // A sidechain names a track, so its steps are the song's own
                 // track names rather than numbers nobody can match to a row.
                 val labels = if (p.name == SIDECHAIN_PARAM) {
-                    listOf(stringResource(R.string.slot_sidechain_own)) + (0 until SIDECHAIN_STEPS - 1).map { i ->
-                        editor.song.tracks.getOrNull(i)?.name ?: stringResource(R.string.slot_sidechain_empty, i + 1)
+                    listOf(stringResource(Res.string.slot_sidechain_own)) + (0 until SIDECHAIN_STEPS - 1).map { i ->
+                        editor.song.tracks.getOrNull(i)?.name ?: stringResource(Res.string.slot_sidechain_empty, i + 1)
                     }
                 } else {
                     switchLabels(type, p.name, p.steps)
@@ -455,7 +454,7 @@ private fun groupsFor(type: String, info: List<ParamInfo>): List<Pair<String, Li
 private fun ArpSteps(b: ParamBinding) {
     val length = b.infoOf("length")?.map(b.value("length"))?.toInt() ?: 16
     Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.slot_steps), color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text(stringResource(Res.string.slot_steps), color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         for (i in 1..16) {
             val name = "s%02d".format(i)
             val on = b.value(name) >= 0.5f
@@ -646,12 +645,12 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
     var menu by remember { mutableStateOf(false) }
             if (fixedType == null) Text(stringResource(kind.title, slot + 1), color = Acid.colors.teal, fontSize = 10.sp)
             if (fixedType == null) TextButton(onClick = { menu = true }) {
-                Text(stringResource(R.string.slot_menu, if (fx.isEmpty) stringResource(R.string.slot_none) else fx.type), color = Acid.colors.accent, fontSize = 12.sp)
+                Text(stringResource(Res.string.slot_menu, if (fx.isEmpty) stringResource(Res.string.slot_none) else fx.type), color = Acid.colors.accent, fontSize = 12.sp)
             }
             val menuScroll = rememberScrollState()
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 ScaledMenu(menuScroll) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.slot_none), fontSize = 12.sp) }, onClick = {
+                    DropdownMenuItem(text = { Text(stringResource(Res.string.slot_none), fontSize = 12.sp) }, onClick = {
                         menu = false
                         editor.edit(trackIndex) { t -> kind.withType(t, slot, "") }
                     })
@@ -671,7 +670,7 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
                         NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (bypass) 1f else 0f, record = true)
                     },
                     modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
-                ) { Text(stringResource(if (on) R.string.slot_on else R.string.slot_bypass), color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
+                ) { Text(stringResource(if (on) Res.string.slot_on else Res.string.slot_bypass), color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
                 // Folding the face away is a *panel* control: two effects and a
                 // modifier can fill a phone, so a slot you are not editing is
                 // worth reducing to the line that says what it is. A window is
@@ -683,7 +682,7 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
                     TextButton(
                         onClick = { onMinimize() },
                         contentPadding = PaddingValues(horizontal = 8.dp),
-                        modifier = Modifier.button(stringResource(if (minimized) R.string.a11y_unfold_slot else R.string.a11y_fold_slot)),
+                        modifier = Modifier.button(stringResource(if (minimized) Res.string.a11y_unfold_slot else Res.string.a11y_fold_slot)),
                     ) { Text(if (minimized) "\u25B4" else "\u25BE", color = Acid.colors.textMid, fontSize = 13.sp) }
                 }
             }

@@ -1,7 +1,6 @@
 package com.rm.acidulous.ui
 
 import android.view.KeyEvent
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -16,9 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rm.acidulous.R
 import com.rm.acidulous.engine.NativeEngine
-import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.res.*
+import org.jetbrains.compose.resources.StringResource
 
 /**
  * The keyboard: a hardware one, played and driven.
@@ -40,36 +39,36 @@ import androidx.compose.ui.res.stringResource
  * undo is the song's on the grid and the clip's in the editor, exactly as the
  * undo pill on each is.
  */
-enum class KeyAction(@StringRes val label: Int, val group: KeyGroup) {
-    PlayStop(R.string.keys_play_stop, KeyGroup.Transport),
-    Record(R.string.keys_record, KeyGroup.Transport),
-    Loop(R.string.keys_loop, KeyGroup.Transport),
-    Undo(R.string.keys_undo, KeyGroup.Transport),
-    Redo(R.string.keys_redo, KeyGroup.Transport),
-    Panic(R.string.keys_panic, KeyGroup.Transport),
-    PlayMode(R.string.keys_play_mode, KeyGroup.Play),
-    Save(R.string.keys_save, KeyGroup.App),
-    FileMenu(R.string.keys_file_menu, KeyGroup.App),
-    Panel(R.string.keys_panel, KeyGroup.App),
-    Help(R.string.keys_help, KeyGroup.App),
-    KeysHelp(R.string.keys_keys_help, KeyGroup.App),
-    Back(R.string.keys_back, KeyGroup.App),
-    PagePrev(R.string.keys_page_prev, KeyGroup.Editor),
-    PageNext(R.string.keys_page_next, KeyGroup.Editor),
-    EditMode(R.string.keys_edit_mode, KeyGroup.Editor),
-    StepView(R.string.keys_step_view, KeyGroup.Editor),
-    LockSteps(R.string.keys_lock_steps, KeyGroup.Editor),
-    Generate(R.string.keys_generate, KeyGroup.Editor),
-    Quantise(R.string.keys_quantise, KeyGroup.Editor),
-    FoldPanel(R.string.keys_fold_panel, KeyGroup.Editor),
-    FoldKeys(R.string.keys_fold_keys, KeyGroup.Editor),
+enum class KeyAction(val label: StringResource, val group: KeyGroup) {
+    PlayStop(Res.string.keys_play_stop, KeyGroup.Transport),
+    Record(Res.string.keys_record, KeyGroup.Transport),
+    Loop(Res.string.keys_loop, KeyGroup.Transport),
+    Undo(Res.string.keys_undo, KeyGroup.Transport),
+    Redo(Res.string.keys_redo, KeyGroup.Transport),
+    Panic(Res.string.keys_panic, KeyGroup.Transport),
+    PlayMode(Res.string.keys_play_mode, KeyGroup.Play),
+    Save(Res.string.keys_save, KeyGroup.App),
+    FileMenu(Res.string.keys_file_menu, KeyGroup.App),
+    Panel(Res.string.keys_panel, KeyGroup.App),
+    Help(Res.string.keys_help, KeyGroup.App),
+    KeysHelp(Res.string.keys_keys_help, KeyGroup.App),
+    Back(Res.string.keys_back, KeyGroup.App),
+    PagePrev(Res.string.keys_page_prev, KeyGroup.Editor),
+    PageNext(Res.string.keys_page_next, KeyGroup.Editor),
+    EditMode(Res.string.keys_edit_mode, KeyGroup.Editor),
+    StepView(Res.string.keys_step_view, KeyGroup.Editor),
+    LockSteps(Res.string.keys_lock_steps, KeyGroup.Editor),
+    Generate(Res.string.keys_generate, KeyGroup.Editor),
+    Quantise(Res.string.keys_quantise, KeyGroup.Editor),
+    FoldPanel(Res.string.keys_fold_panel, KeyGroup.Editor),
+    FoldKeys(Res.string.keys_fold_keys, KeyGroup.Editor),
 }
 
-enum class KeyGroup(@StringRes val label: Int) {
-    Transport(R.string.keys_group_transport),
-    Play(R.string.keys_group_play),
-    App(R.string.keys_group_app),
-    Editor(R.string.keys_group_editor),
+enum class KeyGroup(val label: StringResource) {
+    Transport(Res.string.keys_group_transport),
+    Play(Res.string.keys_group_play),
+    App(Res.string.keys_group_app),
+    Editor(Res.string.keys_group_editor),
 }
 
 /**
@@ -445,33 +444,33 @@ fun KeysOverlay(onDismiss: () -> Unit) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
     val live = KeyHub.live()
     PlainDialog(
-        title = androidx.compose.ui.res.stringResource(R.string.keys_title),
+        title = stringResource(Res.string.keys_title),
         onDismiss = onDismiss,
-        dismissLabel = androidx.compose.ui.res.stringResource(R.string.done),
+        dismissLabel = stringResource(Res.string.done),
         spacing = 8.dp,
     ) {
         androidx.compose.material3.Text(
-            androidx.compose.ui.res.stringResource(
-                if (UiPrefs.noteLayout == NoteLayout.Tracker) R.string.keys_notes_line_tracker else R.string.keys_notes_line,
+            stringResource(
+                if (UiPrefs.noteLayout == NoteLayout.Tracker) Res.string.keys_notes_line_tracker else Res.string.keys_notes_line,
             ),
             color = c.textMid, fontSize = 12.sp,
         )
         androidx.compose.material3.Text(
-            androidx.compose.ui.res.stringResource(R.string.keys_nav_line),
+            stringResource(Res.string.keys_nav_line),
             color = c.textMid, fontSize = 12.sp,
         )
         for (group in KeyGroup.entries) {
             val actions = live.filter { it.group == group }
             if (actions.isEmpty()) continue
             androidx.compose.material3.Text(
-                androidx.compose.ui.res.stringResource(group.label), color = c.teal, fontSize = 11.sp,
+                stringResource(group.label), color = c.teal, fontSize = 11.sp,
                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                 modifier = Modifier.padding(top = 6.dp),
             )
             for (action in actions) {
                 androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth()) {
                     androidx.compose.material3.Text(
-                        androidx.compose.ui.res.stringResource(action.label), color = c.text, fontSize = 13.sp,
+                        stringResource(action.label), color = c.text, fontSize = 13.sp,
                         modifier = Modifier.weight(1f),
                     )
                     androidx.compose.material3.Text(

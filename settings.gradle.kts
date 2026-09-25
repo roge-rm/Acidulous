@@ -24,4 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Acidulous"
 include(":app")
+include(":shared")
  

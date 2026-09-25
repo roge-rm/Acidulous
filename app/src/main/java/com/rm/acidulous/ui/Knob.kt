@@ -40,8 +40,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * A knob: 270° arc, vertical drag (200 px for the full range), label above,
@@ -167,10 +166,10 @@ fun Knob(
                 Offset(c.x + outer * cos(a).toFloat(), c.y + outer * sin(a).toFloat()), 3f)
         }
     }
-    val resetName = stringResource(if (holdOpensList) R.string.a11y_choose else R.string.a11y_reset)
+    val resetName = stringResource(if (holdOpensList) Res.string.a11y_choose else Res.string.a11y_reset)
     val state = when {
-        locked -> stringResource(R.string.a11y_locked, display)
-        automated -> stringResource(R.string.a11y_automated, display)
+        locked -> stringResource(Res.string.a11y_locked, display)
+        automated -> stringResource(Res.string.a11y_automated, display)
         else -> display
     }
     Column(

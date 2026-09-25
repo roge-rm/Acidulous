@@ -75,9 +75,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.pluralStringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * The edit screen, phone-sized: header, piano roll, footer, and the
@@ -444,11 +442,11 @@ fun EditScreen(
             // and this says which. Lit while the instrument is up; fx and the
             // mixer bring the panel up by being pressed.
             if (hasKeysPill) BarButton(
-                stringResource(if (kind == MachineKind.Drums) R.string.edit_pads else R.string.edit_keys), view,
+                stringResource(if (kind == MachineKind.Drums) Res.string.edit_pads else Res.string.edit_keys), view,
                 colour = if (squareKeys) Acid.colors.accent else Color.Unspecified,
             ) { squareKeys = !squareKeys }
             BarButton(
-                stringResource(R.string.edit_fx), view,
+                stringResource(Res.string.edit_fx), view,
                 colour = if (panel == 1 && !(square && squareKeys)) Acid.colors.accent else Color.Unspecified,
             ) {
                 if (square && squareKeys) { squareKeys = false; panel = 1 }
@@ -459,8 +457,8 @@ fun EditScreen(
             // wherever it lands.
             if (hasStrength) BarButton(
                 if (fullStrength) "\u25A0" else "\u25E2", view,
-                description = stringResource(R.string.a11y_velocity),
-                state = stringResource(if (fullStrength) R.string.a11y_velocity_full else R.string.a11y_velocity_touch),
+                description = stringResource(Res.string.a11y_velocity),
+                state = stringResource(if (fullStrength) Res.string.a11y_velocity_full else Res.string.a11y_velocity_touch),
                 colour = if (fullStrength) Acid.colors.accent else Color.Unspecified,
             ) {
                 if (padToggle) UiPrefs.choosePadsFullStrength(!fullStrength)
@@ -468,7 +466,7 @@ fun EditScreen(
             }
             if (hasFill) {
                 BarHoldButton(
-                    stringResource(R.string.edit_fill),
+                    stringResource(Res.string.edit_fill),
                     view.mappable(MapTargets.action(com.rm.acidulous.model.Action.Fill.name)),
                     held = UiPrefs.fillHeld,
                 ) { UiPrefs.holdFill(it) }
@@ -476,15 +474,15 @@ fun EditScreen(
             if (hasSteps) {
                 BarButton(
                     if (steps) "\u25A6" else "\u25A4", view,
-                    description = stringResource(R.string.a11y_step_view),
-                    state = stringResource(if (steps) R.string.a11y_on else R.string.a11y_off),
+                    description = stringResource(Res.string.a11y_step_view),
+                    state = stringResource(if (steps) Res.string.a11y_on else Res.string.a11y_off),
                 ) { steps = !steps }
             }
             if (!steps) {
                 BarButton(
                     if (mode == EditMode.Draw) "\u270E" else "\u2B1A", view,
-                    description = stringResource(R.string.a11y_edit_mode),
-                    state = stringResource(if (mode == EditMode.Draw) R.string.a11y_draw else R.string.a11y_select),
+                    description = stringResource(Res.string.a11y_edit_mode),
+                    state = stringResource(if (mode == EditMode.Draw) Res.string.a11y_draw else Res.string.a11y_select),
                 ) {
                     mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw
                 }
@@ -495,7 +493,7 @@ fun EditScreen(
             if (!landscape && views < 3) Spacer(Modifier.barSpace())
             BarButton(
                 "\u21B6", anchor, enabled = editor.canUndo(trackIndex),
-                description = stringResource(R.string.a11y_undo),
+                description = stringResource(Res.string.a11y_undo),
             ) { selection = emptySet(); editor.undo(trackIndex) }
             // Mapping mode, on a long press of redo - the same gesture on the
             // same control in the same place as the arranger's.
@@ -504,9 +502,9 @@ fun EditScreen(
                 anchor.onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
                 colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
                 enabled = editor.canRedo(trackIndex),
-                description = stringResource(R.string.a11y_redo),
+                description = stringResource(Res.string.a11y_redo),
                 actions = listOf(
-                    action(stringResource(if (UiPrefs.mapMode) R.string.a11y_mapping_off else R.string.a11y_mapping_on)) {
+                    action(stringResource(if (UiPrefs.mapMode) Res.string.a11y_mapping_off else Res.string.a11y_mapping_on)) {
                         UiPrefs.chooseMapMode(!UiPrefs.mapMode)
                     },
                 ),
@@ -516,8 +514,8 @@ fun EditScreen(
             // the two labels that had to be shortened for landscape.
             BarButton(
                 "\u21C5", anchor,
-                description = stringResource(R.string.a11y_panel),
-                state = stringResource(if (panel == 2) R.string.a11y_open else R.string.a11y_closed),
+                description = stringResource(Res.string.a11y_panel),
+                state = stringResource(if (panel == 2) Res.string.a11y_open else Res.string.a11y_closed),
                 colour = if (panel == 2 && !(square && squareKeys)) Acid.colors.accent else Color.Unspecified,
             ) {
                 if (square && squareKeys) { squareKeys = false; panel = 2 }
@@ -538,10 +536,10 @@ fun EditScreen(
                 anchor.mappable(MapTargets.action(Action.RecordArm.name)),
                 border = if (armed) Acid.colors.red else null,
                 onLongPress = { if (!UiPrefs.mapMode) onClick(!clickOn) },
-                description = stringResource(R.string.a11y_record),
-                state = stringResource(if (armed) R.string.a11y_armed else R.string.a11y_not_armed)
-                    .let { if (clickOn) stringResource(R.string.a11y_with_click, it) else it },
-                holdName = stringResource(if (clickOn) R.string.a11y_click_off else R.string.a11y_click_on),
+                description = stringResource(Res.string.a11y_record),
+                state = stringResource(if (armed) Res.string.a11y_armed else Res.string.a11y_not_armed)
+                    .let { if (clickOn) stringResource(Res.string.a11y_with_click, it) else it },
+                holdName = stringResource(if (clickOn) Res.string.a11y_click_off else Res.string.a11y_click_on),
             ) { onArm(!armed) }
             BarButton(
                 if (playing) "\u25A0" else "\u25B6",
@@ -551,8 +549,8 @@ fun EditScreen(
                 // arranger's, guarded the same way: `mappable` claims a long
                 // press in mapping mode to forget what drives a control.
                 onLongPress = { if (!UiPrefs.mapMode) panicEverything() },
-                description = stringResource(if (playing) R.string.a11y_stop else R.string.a11y_play),
-                holdName = stringResource(R.string.a11y_stop_all),
+                description = stringResource(if (playing) Res.string.a11y_stop else Res.string.a11y_play),
+                holdName = stringResource(Res.string.a11y_stop_all),
             ) {
                 if (playing) NativeEngine.transportStop() else com.rm.acidulous.engine.EngineSync.play(song.scenes.indexOf(scene), UiPrefs.clipMode)
             }
@@ -573,7 +571,7 @@ fun EditScreen(
             // the way out - the title beside it goes back too - so what has
             // to be hit is the arrow *plus* two hundred dp of title, and the
             // arrow only has to say so. What it gives up goes to the title.
-            HeaderButton("◀", width = 30.dp, description = stringResource(R.string.a11y_back)) { onBack() }
+            HeaderButton("◀", width = 30.dp, description = stringResource(Res.string.a11y_back)) { onBack() }
             // A frozen clip is playing audio, so nothing edited here is
             // heard until it is thawed - which this does, since the alarm
             // and the way out belong in the same place.
@@ -596,16 +594,16 @@ fun EditScreen(
             // Said in words rather than read out as written: "4b · 56n" is
             // four letters and two numbers to TalkBack.
             val titleSaid = listOfNotNull(
-                track.name, scene.name, pluralStringResource(R.plurals.a11y_cell_bars, clip.bars, clip.bars),
-                if (kind == MachineKind.Audio) clip.audioLaneCount().let { pluralStringResource(R.plurals.clip_lanes, it, it) } else null,
-                if (selection.isEmpty()) null else stringResource(R.string.edit_selected, selection.size),
+                track.name, scene.name, pluralStringResource(Res.plurals.a11y_cell_bars, clip.bars, clip.bars),
+                if (kind == MachineKind.Audio) clip.audioLaneCount().let { pluralStringResource(Res.plurals.clip_lanes, it, it) } else null,
+                if (selection.isEmpty()) null else stringResource(Res.string.edit_selected, selection.size),
             ).joinToString(", ")
             Text(
                 listOfNotNull(
-                    track.name, scene.name, stringResource(R.string.main_bars_short, clip.bars),
+                    track.name, scene.name, stringResource(Res.string.main_bars_short, clip.bars),
                     // A tape holds takes, not notes, and "0n" beside four lanes
                     // of audio is a reading of the wrong thing.
-                    if (kind == MachineKind.Audio) clip.audioLaneCount().let { pluralStringResource(R.plurals.clip_lanes, it, it) } else null,
+                    if (kind == MachineKind.Audio) clip.audioLaneCount().let { pluralStringResource(Res.plurals.clip_lanes, it, it) } else null,
                     // Counts of notes and lane points: diagnostics.
                     if (!UiPrefs.showDiagnostics || kind == MachineKind.Audio) null else "${clip.notes.size}n",
                     if (!UiPrefs.showDiagnostics || clip.automation.isEmpty()) null else "${clip.automation.values.sumOf { it.points.size }}a",
@@ -614,7 +612,7 @@ fun EditScreen(
                     // readings are; in the bar it was forty dp reserved
                     // against a number that is usually not there, and that
                     // forty dp is what the buttons beside it needed.
-                    if (selection.isEmpty()) null else stringResource(R.string.edit_selected, selection.size),
+                    if (selection.isEmpty()) null else stringResource(Res.string.edit_selected, selection.size),
                 ).joinToString(" · "),
                 color = Acid.colors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                 // The band's own height rather than fillMaxHeight: the row is
@@ -631,13 +629,13 @@ fun EditScreen(
             )
             // The generators. In the header because the bar below is full,
             // and because it is about the clip, as the title beside it is.
-            if (kind != MachineKind.Audio) HeaderButton("\u2684", description = stringResource(R.string.a11y_generate)) { generateDialog = true }
-            if (kind != MachineKind.Audio) HeaderButton("\u229E", description = stringResource(R.string.a11y_quantise)) { quantiseDialog = true }
+            if (kind != MachineKind.Audio) HeaderButton("\u2684", description = stringResource(Res.string.a11y_generate)) { generateDialog = true }
+            if (kind != MachineKind.Audio) HeaderButton("\u229E", description = stringResource(Res.string.a11y_quantise)) { quantiseDialog = true }
             // Lock mode: lit while on. Leaving it lets go of what was chosen.
             if (kind != MachineKind.Audio) HeaderButton(
                 "\u25C6", color = if (lockMode) Acid.colors.pink else null,
-                description = stringResource(R.string.a11y_lock),
-                state = stringResource(if (lockMode) R.string.a11y_on else R.string.a11y_off),
+                description = stringResource(Res.string.a11y_lock),
+                state = stringResource(if (lockMode) Res.string.a11y_on else Res.string.a11y_off),
             ) {
                 lockMode = !lockMode
                 lockTicks = emptySet()
@@ -647,14 +645,14 @@ fun EditScreen(
             // chrome to show one number costs more height than a phone has to
             // spare, and the header already has the two buttons it belongs with.
             if (pages > 1) {
-                val pageSaid = stringResource(R.string.a11y_page, page + 1, pages)
-                HeaderButton("◀", description = stringResource(R.string.a11y_prev_page)) { scrollTick = ((page - 1 + pages) % pages) * pageTicks }
+                val pageSaid = stringResource(Res.string.a11y_page, page + 1, pages)
+                HeaderButton("◀", description = stringResource(Res.string.a11y_prev_page)) { scrollTick = ((page - 1 + pages) % pages) * pageTicks }
                 Text(
                     "${page + 1}/$pages", color = Acid.colors.accent, fontSize = 12.sp,
                     fontFamily = FontFamily.Monospace, maxLines = 1, softWrap = false,
                     modifier = Modifier.semantics { contentDescription = pageSaid },
                 )
-                HeaderButton("▶", description = stringResource(R.string.a11y_next_page)) { scrollTick = ((page + 1) % pages) * pageTicks }
+                HeaderButton("▶", description = stringResource(Res.string.a11y_next_page)) { scrollTick = ((page + 1) % pages) * pageTicks }
             }
             // **The transport, sideways.** Dan drew an arrow from the column
             // against the right edge up to this corner: turned, the header is
@@ -902,7 +900,7 @@ fun EditScreen(
         }
 
         val automationSlot: @Composable (Dp) -> Unit = { open ->
-        val resources = androidx.compose.ui.platform.LocalResources.current
+        val resources = AppStrings
         val laneWord: (String) -> String = { resources.panelWord(it) }
         // Automation: the parameter strip under the notes.
         AutomationStrip(
@@ -1108,7 +1106,7 @@ fun EditScreen(
                         // No label: the ridges say it is a wheel, its place in
                         // the row says which one, and three letters of it were
                         // the only text in the strip.
-                        springBackTo = 0f, label = null, said = stringResource(R.string.a11y_pressure),
+                        springBackTo = 0f, label = null, said = stringResource(Res.string.a11y_pressure),
                         modifier = Modifier.widthIn(max = PressureW).fillMaxHeight(),
                     ) { v -> pressure = v; NativeEngine.channelPressure(trackIndex, (v * 127f).toInt()) }
                 }
@@ -1186,7 +1184,7 @@ fun EditScreen(
             ) {
                 TouchWheel(
                     value = mod, accent = Acid.colors.accent, vertical = true, label = null,
-                    said = stringResource(R.string.a11y_mod_wheel),
+                    said = stringResource(Res.string.a11y_mod_wheel),
                     modifier = Modifier.width(26.dp).fillMaxHeight(),
                 ) { v -> mod = v; NativeEngine.controlChange(trackIndex, 1, (v * 127f).toInt()) }
                 PianoKeys(
@@ -1199,12 +1197,12 @@ fun EditScreen(
                 TouchWheel(
                     value = bend, accent = Acid.colors.teal, vertical = true,
                     springBackTo = 0.5f, centreMark = true, label = null,
-                    said = stringResource(R.string.a11y_bend_wheel),
+                    said = stringResource(Res.string.a11y_bend_wheel),
                     state = kotlin.math.round((bend * 2f - 1f) * 100f).toInt().let { amount ->
                         when {
-                            kotlin.math.abs(amount) < 2 -> stringResource(R.string.a11y_centre)
-                            amount > 0 -> stringResource(R.string.a11y_bend_up, amount)
-                            else -> stringResource(R.string.a11y_bend_down, -amount)
+                            kotlin.math.abs(amount) < 2 -> stringResource(Res.string.a11y_centre)
+                            amount > 0 -> stringResource(Res.string.a11y_bend_up, amount)
+                            else -> stringResource(Res.string.a11y_bend_down, -amount)
                         }
                     },
                     modifier = Modifier.width(26.dp).fillMaxHeight(),
@@ -1505,7 +1503,7 @@ private val PerfWideMin = 52.dp + 112.dp + 52.dp + FoldMarkW + 20.dp + OctaveW +
 private fun FoldMark(folded: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier.width(FoldMarkW).clickable(onClick = onClick)
-            .button(stringResource(if (folded) R.string.a11y_unfold_keys else R.string.a11y_fold_keys)),
+            .button(stringResource(if (folded) Res.string.a11y_unfold_keys else Res.string.a11y_fold_keys)),
         contentAlignment = Alignment.Center,
     ) {
         Text(if (folded) "\u25B4" else "\u25BE", color = Acid.colors.textMid, fontSize = 11.sp)

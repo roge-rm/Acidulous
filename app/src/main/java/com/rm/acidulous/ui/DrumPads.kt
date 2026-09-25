@@ -31,8 +31,7 @@ import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.model.DrumVoice
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.ui.theme.Acid
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 // How hard the top and the bottom of a pad hit. Not 1 at the bottom: below
 // about forty most of these machines barely speak, and a pad that can be
@@ -113,9 +112,9 @@ private fun Pad(rack: Int, voice: DrumVoice, selected: Boolean, onSelect: () -> 
     // when every empty pad was labelled with its own number.
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val state = listOfNotNull(
-        if (selected) stringResource(R.string.a11y_pad_selected) else null,
-        if (!voice.loaded) stringResource(R.string.a11y_pad_empty) else null,
-    ).joinToString(stringResource(R.string.list_separator)).ifEmpty { null }
+        if (selected) stringResource(Res.string.a11y_pad_selected) else null,
+        if (!voice.loaded) stringResource(Res.string.a11y_pad_empty) else null,
+    ).joinToString(stringResource(Res.string.list_separator)).ifEmpty { null }
     Box(
         modifier
             // A double tap plays it, as a touch would, for a moment.

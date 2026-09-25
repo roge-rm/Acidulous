@@ -97,10 +97,7 @@ import com.rm.acidulous.model.moveScene
 import com.rm.acidulous.model.renameTrack
 import com.rm.acidulous.model.updateScene
 import com.rm.acidulous.ui.theme.Acid
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringArrayResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * The main screen, phone-sized: the song section (scene columns x track
@@ -176,7 +173,7 @@ fun MainScreen(
     if (freezeStatus != null) {
         // Modal on purpose: the audio stream is down while a render runs, so
         // there is nothing useful to do until it comes back.
-        PlainDialog(title = stringResource(R.string.main_freezing), onDismiss = {}, dismissLabel = "") {
+        PlainDialog(title = stringResource(Res.string.main_freezing), onDismiss = {}, dismissLabel = "") {
             Readout(freezeStatus)
         }
     }
@@ -234,17 +231,17 @@ fun MainScreen(
                                 st.tickInCycle / tpb + 1, (st.tickInCycle % tpb) / PPQN + 1, cyc)
                         }
                     }
-                    if (live.isEmpty()) stringResource(R.string.main_where_clips_idle, quantiseShort(UiPrefs.launchQuantise))
-                    else stringResource(R.string.main_where_clips, live.joinToString("  "), quantiseShort(UiPrefs.launchQuantise))
+                    if (live.isEmpty()) stringResource(Res.string.main_where_clips_idle, quantiseShort(UiPrefs.launchQuantise))
+                    else stringResource(Res.string.main_where_clips, live.joinToString("  "), quantiseShort(UiPrefs.launchQuantise))
                 } else if (countInBeats > 0) {
                     // The count replaces the position rather than sitting
                     // beside it: while it runs there is no position to read,
                     // and a number counting down is the only thing worth
                     // looking at.
-                    stringResource(R.string.main_counting_in, countInBeats)
+                    stringResource(Res.string.main_counting_in, countInBeats)
                 } else {
                     stringResource(
-                        R.string.main_where_song,
+                        Res.string.main_where_song,
                         position.scene + 1, song.scenes.size, scene?.name ?: "-",
                         position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
                     )
@@ -278,7 +275,7 @@ fun MainScreen(
             // The "q:" goes before the word does: what the number means is
             // guessable from a launcher's own corner, and the number is not.
             BarButton(
-                if (words) stringResource(R.string.main_quantise_pill, quantiseShort(UiPrefs.launchQuantise)) else quantiseShort(UiPrefs.launchQuantise),
+                if (words) stringResource(Res.string.main_quantise_pill, quantiseShort(UiPrefs.launchQuantise)) else quantiseShort(UiPrefs.launchQuantise),
                 word,
             ) { dialog = Dialog.Quantise }
         } else {
@@ -296,22 +293,22 @@ fun MainScreen(
             val repeating = song.loopSong
             BarButton(
                 label = when {
-                    !repeating -> if (words) stringResource(R.string.main_loop_end) else "\u21E5"
+                    !repeating -> if (words) stringResource(Res.string.main_loop_end) else "\u21E5"
                     !words -> "\u27F3"
-                    loopScene -> stringResource(R.string.main_loop_scene)
-                    else -> stringResource(R.string.main_loop_song)
+                    loopScene -> stringResource(Res.string.main_loop_scene)
+                    else -> stringResource(Res.string.main_loop_song)
                 },
                 modifier = word.mappable(MapTargets.action(Action.LoopScene.name)),
                 colour = if (repeating) Acid.colors.teal else Acid.colors.textDim,
-                description = stringResource(R.string.a11y_loop),
+                description = stringResource(Res.string.a11y_loop),
                 state = stringResource(
                     when {
-                        !repeating -> R.string.a11y_loop_none
-                        loopScene -> R.string.a11y_loop_scene
-                        else -> R.string.a11y_loop_song
+                        !repeating -> Res.string.a11y_loop_none
+                        loopScene -> Res.string.a11y_loop_scene
+                        else -> Res.string.a11y_loop_song
                     },
                 ),
-                holdName = stringResource(if (repeating) R.string.a11y_loop_stop else R.string.a11y_loop_again),
+                holdName = stringResource(if (repeating) Res.string.a11y_loop_stop else Res.string.a11y_loop_again),
                 onLongPress = {
                     val on = !repeating
                     editor.replace(song.copy(loopSong = on))
@@ -369,7 +366,7 @@ fun MainScreen(
                 // either way: the undo for whatever this screen edits.
                 BarButton(
                     "\u21B6", Modifier.width(BarAnchor), enabled = editor.canUndoSong(),
-                    description = stringResource(R.string.a11y_undo),
+                    description = stringResource(Res.string.a11y_undo),
                 ) { editor.undoSong() }
                 // Mapping mode hangs off a long press of redo rather than a
                 // button of its own. It is a mode you step into for a minute and
@@ -379,9 +376,9 @@ fun MainScreen(
                     Modifier.width(BarAnchor).onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
                     colour = if (UiPrefs.mapMode) Acid.colors.accent else Color.Unspecified,
                     enabled = editor.canRedoSong(),
-                    description = stringResource(R.string.a11y_redo),
+                    description = stringResource(Res.string.a11y_redo),
                     actions = listOf(
-                        action(stringResource(if (UiPrefs.mapMode) R.string.a11y_mapping_off else R.string.a11y_mapping_on)) {
+                        action(stringResource(if (UiPrefs.mapMode) Res.string.a11y_mapping_off else Res.string.a11y_mapping_on)) {
                             UiPrefs.chooseMapMode(!UiPrefs.mapMode)
                         },
                     ),
@@ -389,8 +386,8 @@ fun MainScreen(
                 BarButton(
                     "\u21C5", Modifier.width(BarAnchor),
                     colour = if (showMixer) Acid.colors.accent else Color.Unspecified,
-                    description = stringResource(R.string.a11y_panel),
-                    state = stringResource(if (showMixer) R.string.a11y_open else R.string.a11y_closed),
+                    description = stringResource(Res.string.a11y_panel),
+                    state = stringResource(if (showMixer) Res.string.a11y_open else Res.string.a11y_closed),
                 ) { showMixer = !showMixer }
                 BarButton(
                     // The glyph carries two states, because the pill carries two
@@ -403,10 +400,10 @@ fun MainScreen(
                     Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name)),
                     border = if (armed) Acid.colors.red else null,
                     onLongPress = { if (!UiPrefs.mapMode) onClick(!clickOn) },
-                    description = stringResource(R.string.a11y_record),
-                    state = stringResource(if (armed) R.string.a11y_armed else R.string.a11y_not_armed)
-                        .let { if (clickOn) stringResource(R.string.a11y_with_click, it) else it },
-                    holdName = stringResource(if (clickOn) R.string.a11y_click_off else R.string.a11y_click_on),
+                    description = stringResource(Res.string.a11y_record),
+                    state = stringResource(if (armed) Res.string.a11y_armed else Res.string.a11y_not_armed)
+                        .let { if (clickOn) stringResource(Res.string.a11y_with_click, it) else it },
+                    holdName = stringResource(if (clickOn) Res.string.a11y_click_off else Res.string.a11y_click_on),
                 ) { onArm(!armed) }
                 BarButton(
                     if (playing) "\u25A0" else "\u25B6",
@@ -418,8 +415,8 @@ fun MainScreen(
                     // a long press there to forget what drives a control, and
                     // one gesture must not do both.
                     onLongPress = { if (!UiPrefs.mapMode) panicEverything() },
-                    description = stringResource(if (playing) R.string.a11y_stop else R.string.a11y_play),
-                    holdName = stringResource(R.string.a11y_stop_all),
+                    description = stringResource(if (playing) Res.string.a11y_stop else Res.string.a11y_play),
+                    holdName = stringResource(Res.string.a11y_stop_all),
                 ) {
                     when {
                         !playing -> com.rm.acidulous.engine.EngineSync.play(if (clipMode) 0 else position.scene, clipMode)
@@ -472,17 +469,17 @@ fun MainScreen(
             // this is where it says so. Nothing else on the screen would.
             HeaderTextButton(
                 "%.1f".format(bpm),
-                description = stringResource(R.string.a11y_tempo, "%.1f".format(bpm)),
+                description = stringResource(Res.string.a11y_tempo, "%.1f".format(bpm)),
                 color = if (clickOn) Acid.colors.accent else Acid.colors.text,
             ) { dialog = Dialog.Tempo }
-            HeaderTextButton(stringResource(R.string.main_save), onClick = onSave)
+            HeaderTextButton(stringResource(Res.string.main_save), onClick = onSave)
             // Button and menu in one box on purpose: a Popup anchors to its
             // parent layout node, and left loose in the row that parent is
             // the whole header - which opened the menu at the far left,
             // nowhere near the button that was pressed. Boxed, the anchor is
             // the button, and the menu drops under it against the right edge.
             Box {
-                HeaderTextButton(stringResource(R.string.main_file), description = stringResource(R.string.a11y_file_menu), color = Acid.colors.accent) { fileMenu = true }
+                HeaderTextButton(stringResource(Res.string.main_file), description = stringResource(Res.string.a11y_file_menu), color = Acid.colors.accent) { fileMenu = true }
                 // A position bar, because this menu scrolls - nine items is
                 // taller than a phone held sideways, and until it had one the
                 // last of them looked like the last there was. See
@@ -490,7 +487,7 @@ fun MainScreen(
                 val fileScroll = rememberScrollState()
                 DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
                     ScaledMenu(fileScroll) {
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_new_song)) }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_new_song)) }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
                         // **The only way back to it.** The demo was built on a
                         // first run and never again - edit it, or simply open
                         // something else, and the one song that demonstrates
@@ -498,19 +495,19 @@ fun MainScreen(
                         // No dialog and no confirmation, because this replaces
                         // the open song exactly as loading one from Songs does,
                         // and that has never asked either.
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_save_as)) }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_songs)) }, onClick = { fileMenu = false; dialog = Dialog.Songs })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_import)) }, onClick = { fileMenu = false; onImport() })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_export)) }, onClick = { fileMenu = false; onExport() })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_share_song)) }, onClick = { fileMenu = false; onShareSong() })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_midi)) }, onClick = { fileMenu = false; dialog = Dialog.Midi })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_sound)) }, onClick = { fileMenu = false; dialog = Dialog.Sound })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_settings)) }, onClick = { fileMenu = false; dialog = Dialog.Settings })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_save_as)) }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_songs)) }, onClick = { fileMenu = false; dialog = Dialog.Songs })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_import)) }, onClick = { fileMenu = false; onImport() })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_export)) }, onClick = { fileMenu = false; onExport() })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_share_song)) }, onClick = { fileMenu = false; onShareSong() })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_midi)) }, onClick = { fileMenu = false; dialog = Dialog.Midi })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_sound)) }, onClick = { fileMenu = false; dialog = Dialog.Sound })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_settings)) }, onClick = { fileMenu = false; dialog = Dialog.Settings })
                         // Above About, because one of these is a thing you
                         // need while using the app and the other is a thing you
                         // read once.
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_help)) }, onClick = { fileMenu = false; dialog = Dialog.Help })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.main_about)) }, onClick = { fileMenu = false; dialog = Dialog.About })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_help)) }, onClick = { fileMenu = false; dialog = Dialog.Help })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_about)) }, onClick = { fileMenu = false; dialog = Dialog.About })
                     }
                 }
             }
@@ -590,14 +587,14 @@ fun MainScreen(
             val first = shownScenes.first + 1
             val last = shownScenes.last + 1
             val pageSaid = if (first == last) {
-                stringResource(R.string.a11y_scene_page_one, first, song.scenes.size)
+                stringResource(Res.string.a11y_scene_page_one, first, song.scenes.size)
             } else {
-                stringResource(R.string.a11y_scene_page, first, last, song.scenes.size)
+                stringResource(Res.string.a11y_scene_page, first, last, song.scenes.size)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                HeaderButton("◀", description = stringResource(R.string.a11y_prev_scenes)) { scenePage = (page - 1 + pages) % pages }
+                HeaderButton("◀", description = stringResource(Res.string.a11y_prev_scenes)) { scenePage = (page - 1 + pages) % pages }
                 Text(
-                    stringResource(R.string.main_scene_page, first, last, song.scenes.size),
+                    stringResource(Res.string.main_scene_page, first, last, song.scenes.size),
                     color = Acid.colors.accent, fontSize = 12.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                     // Said when it changes, so a press of either arrow is
                     // answered with where it went.
@@ -606,7 +603,7 @@ fun MainScreen(
                         liveRegion = LiveRegionMode.Polite
                     },
                 )
-                HeaderButton("▶", description = stringResource(R.string.a11y_next_scenes)) { scenePage = (page + 1) % pages }
+                HeaderButton("▶", description = stringResource(Res.string.a11y_next_scenes)) { scenePage = (page + 1) % pages }
             }
         }
         Row(
@@ -709,7 +706,7 @@ fun MainScreen(
                     onClick = { dialog = Dialog.PickMachine(null) },
                     modifier = Modifier.width(cell.trackW).height(cell.cellH.coerceAtMost(CELL_H * AddButtonMax)).padding(3.dp),
                     contentPadding = PaddingValues(4.dp),
-                ) { Text(stringResource(R.string.main_add_track), fontSize = 11.sp, maxLines = 1) }
+                ) { Text(stringResource(Res.string.main_add_track), fontSize = 11.sp, maxLines = 1) }
             }
             // Scenes, scrolling horizontally.
             Column(if (talkBack) Modifier else Modifier.horizontalScrollWithBar(hScroll)) {
@@ -802,7 +799,7 @@ fun MainScreen(
                         onClick = { editor.editSong { it.addScene() } },
                         modifier = Modifier.width(cell.cellW).height(cell.sceneH.coerceAtMost(SCENE_H * AddButtonMax)).padding(3.dp),
                         contentPadding = PaddingValues(4.dp),
-                    ) { Text(stringResource(R.string.main_add_scene), fontSize = 11.sp, maxLines = 1) }
+                    ) { Text(stringResource(Res.string.main_add_scene), fontSize = 11.sp, maxLines = 1) }
                 }
                 song.tracks.forEachIndexed { trackIndex, track ->
                     Row {
@@ -813,7 +810,7 @@ fun MainScreen(
                             val live = if (clipMode) launch.scene == sceneIndex else position.scene == sceneIndex
                             ClipCell(
                                 clip = clip,
-                                name = stringResource(R.string.a11y_cell, track.name, scene.name),
+                                name = stringResource(Res.string.a11y_cell, track.name, scene.name),
                                 ticksPerBar = song.signatureOf(scene).ticksPerBar,
                                 colour = trackColour(trackIndex, track.colour),
                                 playing = playing && live,
@@ -902,7 +899,7 @@ fun MainScreen(
                         .together().semantics { traversalIndex = -1f },
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    stringArrayResource(R.array.main_panel_pages).forEachIndexed { i, label -> PanelTab(label, panelPage == i) { panelPage = i } }
+                    stringArrayResource(Res.array.main_panel_pages).forEachIndexed { i, label -> PanelTab(label, panelPage == i) { panelPage = i } }
                 }
                 val pageModifier = Modifier.weight(1f).height(if (panelH == Dp.Unspecified) PERFORM_H else panelH).together()
                 when (panelPage) {
@@ -1005,7 +1002,7 @@ fun MainScreen(
                 dialog = null
             }
         }
-        is Dialog.RenameTrack -> TextInputDialog(stringResource(R.string.main_track_name), song.tracks.getOrNull(d.index)?.name ?: "", onDismiss = { dialog = null }) { name ->
+        is Dialog.RenameTrack -> TextInputDialog(stringResource(Res.string.main_track_name), song.tracks.getOrNull(d.index)?.name ?: "", onDismiss = { dialog = null }) { name ->
             editor.editSong { it.renameTrack(d.index, name) }
             dialog = null
         }
@@ -1048,11 +1045,11 @@ fun MainScreen(
             },
             onDismiss = { dialog = null },
         )
-        Dialog.SaveAs -> TextInputDialog(stringResource(R.string.main_save_as_title), song.name, onDismiss = { dialog = null }) { name ->
+        Dialog.SaveAs -> TextInputDialog(stringResource(Res.string.main_save_as_title), song.name, onDismiss = { dialog = null }) { name ->
             onSaveAs(name)
             dialog = null
         }
-        Dialog.NewSong -> TextInputDialog(stringResource(R.string.main_new_song_title), stringResource(R.string.main_untitled), onDismiss = { dialog = null }) { name ->
+        Dialog.NewSong -> TextInputDialog(stringResource(Res.string.main_new_song_title), stringResource(Res.string.main_untitled), onDismiss = { dialog = null }) { name ->
             onNew(name)
             dialog = null
         }
@@ -1113,20 +1110,20 @@ private fun SceneHeader(
             .combinedClickable(onClick = onAudition, onLongClick = { menu = true })
             .button(
                 listOfNotNull(
-                    stringResource(R.string.a11y_scene, index + 1, name),
-                    pluralStringResource(R.plurals.a11y_cell_bars, bars, bars),
-                    pluralStringResource(R.plurals.a11y_scene_repeats, repeat, repeat),
-                    if (hasTempo) stringResource(R.string.a11y_scene_tempo) else null,
-                    if (rampMark != null) stringResource(R.string.a11y_scene_ramp) else null,
-                ).joinToString(stringResource(R.string.list_separator)),
+                    stringResource(Res.string.a11y_scene, index + 1, name),
+                    pluralStringResource(Res.plurals.a11y_cell_bars, bars, bars),
+                    pluralStringResource(Res.plurals.a11y_scene_repeats, repeat, repeat),
+                    if (hasTempo) stringResource(Res.string.a11y_scene_tempo) else null,
+                    if (rampMark != null) stringResource(Res.string.a11y_scene_ramp) else null,
+                ).joinToString(stringResource(Res.string.list_separator)),
                 when {
-                    finishing -> stringResource(R.string.a11y_scene_finishing)
-                    queued -> stringResource(R.string.a11y_queued)
-                    holding -> stringResource(R.string.a11y_scene_looping)
-                    progress != null -> stringResource(R.string.a11y_playing)
+                    finishing -> stringResource(Res.string.a11y_scene_finishing)
+                    queued -> stringResource(Res.string.a11y_queued)
+                    holding -> stringResource(Res.string.a11y_scene_looping)
+                    progress != null -> stringResource(Res.string.a11y_playing)
                     else -> null
                 },
-                listOf(action(stringResource(R.string.a11y_scene_menu)) { menu = true }),
+                listOf(action(stringResource(Res.string.a11y_scene_menu)) { menu = true }),
             ),
     ) {
         if (progress != null) {
@@ -1146,10 +1143,10 @@ private fun SceneHeader(
             )
             Text(
                 buildString {
-                    append("×$repeat ").append(stringResource(R.string.main_bars_short, bars))
+                    append("×$repeat ").append(stringResource(Res.string.main_bars_short, bars))
                     if (hasTempo) append(" ♩")
                     if (rampMark != null) append(" $rampMark")
-                    if (repeatIdx != null) append(" ").append(stringResource(R.string.main_repeat_short, repeatIdx + 1))
+                    if (repeatIdx != null) append(" ").append(stringResource(Res.string.main_repeat_short, repeatIdx + 1))
                 },
                 color = Acid.colors.textMid, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -1160,20 +1157,20 @@ private fun SceneHeader(
         val menuScroll = rememberScrollState()
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             ScaledMenu(menuScroll) {
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_loop_this_scene)) }, onClick = { menu = false; onLoopThis() })
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_play_on)) }, onClick = { menu = false; onPlayThrough() })
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_settings)) }, onClick = { menu = false; onSettings() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_loop_this_scene)) }, onClick = { menu = false; onLoopThis() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_play_on)) }, onClick = { menu = false; onPlayThrough() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_settings)) }, onClick = { menu = false; onSettings() })
                 if (freezable > 0) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.main_freeze_scene, freezable)) }, onClick = { menu = false; onFreeze() })
+                    DropdownMenuItem(text = { Text(stringResource(Res.string.main_freeze_scene, freezable)) }, onClick = { menu = false; onFreeze() })
                 }
                 if (frozen > 0) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.main_thaw_scene, frozen)) }, onClick = { menu = false; onThaw() })
+                    DropdownMenuItem(text = { Text(stringResource(Res.string.main_thaw_scene, frozen)) }, onClick = { menu = false; onThaw() })
                 }
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_insert_after)) }, onClick = { menu = false; onInsertAfter() })
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_duplicate)) }, onClick = { menu = false; onDuplicate() })
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_move_left)) }, onClick = { menu = false; onMoveLeft() })
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_move_right)) }, onClick = { menu = false; onMoveRight() })
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_delete)) }, onClick = { menu = false; onDelete() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_insert_after)) }, onClick = { menu = false; onInsertAfter() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_duplicate)) }, onClick = { menu = false; onDuplicate() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_move_left)) }, onClick = { menu = false; onMoveLeft() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_move_right)) }, onClick = { menu = false; onMoveRight() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_delete)) }, onClick = { menu = false; onDelete() })
             }
         }
     }
@@ -1208,9 +1205,9 @@ private fun TrackHeader(
             .background(if (hot) Acid.colors.red.copy(alpha = glow) else Acid.colors.control)
             .combinedClickable(onClick = { menu = true }, onLongClick = onSettings)
             .button(
-                stringResource(R.string.a11y_track, name, machine),
-                if (hot) stringResource(R.string.a11y_track_hot) else null,
-                listOf(action(stringResource(R.string.a11y_track_settings)) { onSettings() }),
+                stringResource(Res.string.a11y_track, name, machine),
+                if (hot) stringResource(Res.string.a11y_track_hot) else null,
+                listOf(action(stringResource(Res.string.a11y_track_settings)) { onSettings() }),
             ),
     ) {
         Box(Modifier.width(4.dp).fillMaxHeight().background(if (hot) Acid.colors.red else colour))
@@ -1224,17 +1221,17 @@ private fun TrackHeader(
         val menuScroll = rememberScrollState()
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             ScaledMenu(menuScroll) {
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_change_machine)) }, onClick = { menu = false; onChangeMachine() })
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_settings)) }, onClick = { menu = false; onSettings() })
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_rename)) }, onClick = { menu = false; onRename() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_change_machine)) }, onClick = { menu = false; onChangeMachine() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_settings)) }, onClick = { menu = false; onSettings() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_rename)) }, onClick = { menu = false; onRename() })
                 if (freezable > 0) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.main_freeze_track, freezable)) }, onClick = { menu = false; onFreeze() })
+                    DropdownMenuItem(text = { Text(stringResource(Res.string.main_freeze_track, freezable)) }, onClick = { menu = false; onFreeze() })
                 }
                 if (frozen > 0) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.main_thaw_track, frozen)) }, onClick = { menu = false; onThaw() })
+                    DropdownMenuItem(text = { Text(stringResource(Res.string.main_thaw_track, frozen)) }, onClick = { menu = false; onThaw() })
                 }
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_duplicate)) }, onClick = { menu = false; onDuplicate() })
-                DropdownMenuItem(text = { Text(stringResource(R.string.main_delete)) }, onClick = { menu = false; onDelete() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_duplicate)) }, onClick = { menu = false; onDuplicate() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_delete)) }, onClick = { menu = false; onDelete() })
             }
         }
     }
@@ -1292,23 +1289,23 @@ private fun ClipCell(
     // What TalkBack says: which cell, what is in it, and what it is doing.
     val said = listOfNotNull(
         name,
-        if (clip == null) stringResource(R.string.a11y_cell_empty)
-        else pluralStringResource(R.plurals.a11y_cell_bars, clip.bars, clip.bars),
-        if (clip?.playMode == com.rm.acidulous.model.PlayMode.OneShot) stringResource(R.string.a11y_cell_once) else null,
-        if (clip?.mute == true) stringResource(R.string.a11y_cell_muted) else null,
-        if (frozen) stringResource(if (stale) R.string.a11y_cell_stale else R.string.a11y_cell_frozen) else null,
-        if (audioLanes > 0) pluralStringResource(R.plurals.a11y_cell_takes, audioLanes, audioLanes) else null,
-    ).joinToString(stringResource(R.string.list_separator))
+        if (clip == null) stringResource(Res.string.a11y_cell_empty)
+        else pluralStringResource(Res.plurals.a11y_cell_bars, clip.bars, clip.bars),
+        if (clip?.playMode == com.rm.acidulous.model.PlayMode.OneShot) stringResource(Res.string.a11y_cell_once) else null,
+        if (clip?.mute == true) stringResource(Res.string.a11y_cell_muted) else null,
+        if (frozen) stringResource(if (stale) Res.string.a11y_cell_stale else Res.string.a11y_cell_frozen) else null,
+        if (audioLanes > 0) pluralStringResource(Res.plurals.a11y_cell_takes, audioLanes, audioLanes) else null,
+    ).joinToString(stringResource(Res.string.list_separator))
     val doing = when {
-        recording -> stringResource(R.string.a11y_looping)
-        queued -> stringResource(R.string.a11y_queued)
-        stopping -> stringResource(R.string.a11y_stopping)
-        playing -> stringResource(R.string.a11y_playing)
+        recording -> stringResource(Res.string.a11y_looping)
+        queued -> stringResource(Res.string.a11y_queued)
+        stopping -> stringResource(Res.string.a11y_stopping)
+        playing -> stringResource(Res.string.a11y_playing)
         else -> null
     }
     val a11yActions = listOfNotNull(
-        action(stringResource(R.string.a11y_clip_settings)) { settingsNow() },
-        if (clipMode && clip != null) action(stringResource(R.string.a11y_open_editor)) { openNow() } else null,
+        action(stringResource(Res.string.a11y_clip_settings)) { settingsNow() },
+        if (clipMode && clip != null) action(stringResource(Res.string.a11y_open_editor)) { openNow() } else null,
     )
     val edge = when {
         loopPhase == Looper.Phase.Open -> Acid.colors.red.copy(alpha = pulse)
@@ -1381,9 +1378,9 @@ private fun ClipCell(
             }
             Text(
                 androidx.compose.ui.text.buildAnnotatedString {
-                    append(stringResource(R.string.main_bars_short, clip.bars))
-                    if (clip.playMode == com.rm.acidulous.model.PlayMode.OneShot) append(" " + stringResource(R.string.main_clip_once_short))
-                    if (clip.mute) append(" " + stringResource(R.string.main_clip_mute_short))
+                    append(stringResource(Res.string.main_bars_short, clip.bars))
+                    if (clip.playMode == com.rm.acidulous.model.PlayMode.OneShot) append(" " + stringResource(Res.string.main_clip_once_short))
+                    if (clip.mute) append(" " + stringResource(Res.string.main_clip_mute_short))
                     // How many takes are layered here, and - in amber, the
                     // colour this app uses for "this will sound, but not the
                     // way you expect" - whether one of them was recorded at
@@ -1440,7 +1437,7 @@ private fun ClipCell(
 /** "clip end", or a number of bars, as the dialog lists them. */
 @Composable
 internal fun quantiseLabel(bars: Int): String =
-    if (bars <= 0) stringResource(R.string.quantise_clip_end) else stringResource(R.string.quantise_bars, bars)
+    if (bars <= 0) stringResource(Res.string.quantise_clip_end) else stringResource(Res.string.quantise_bars, bars)
 
 /**
  * The same, for the places with no room to say it in full: a pill in the
@@ -1449,7 +1446,7 @@ internal fun quantiseLabel(bars: Int): String =
  */
 @Composable
 internal fun quantiseShort(bars: Int): String =
-    if (bars <= 0) stringResource(R.string.quantise_end_short) else stringResource(R.string.main_bars_short, bars)
+    if (bars <= 0) stringResource(Res.string.quantise_end_short) else stringResource(Res.string.main_bars_short, bars)
 
 /**
  * How long a tapped clip waits. Zero is the musical answer - the clip being
@@ -1458,16 +1455,16 @@ internal fun quantiseShort(bars: Int): String =
  */
 @Composable
 private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
-    PlainDialog(title = stringResource(R.string.quantise_title), onDismiss = onDismiss, dismissLabel = stringResource(R.string.close)) {
-        Section(stringResource(R.string.quantise_clips_start), stringResource(R.string.quantise_clips_start_note)) {
+    PlainDialog(title = stringResource(Res.string.quantise_title), onDismiss = onDismiss, dismissLabel = stringResource(Res.string.close)) {
+        Section(stringResource(Res.string.quantise_clips_start), stringResource(Res.string.quantise_clips_start_note)) {
             for (bars in listOf(0, 1, 2, 4, 8)) {
                 Choice(quantiseLabel(bars), bars == current) { onPick(bars); onDismiss() }
             }
         }
         // An empty cell tapped here records into itself: this is how long.
-        Section(stringResource(R.string.quantise_loops_record)) {
+        Section(stringResource(Res.string.quantise_loops_record)) {
             for (bars in listOf(0, 1, 2, 4, 8)) {
-                Choice(if (bars == 0) stringResource(R.string.quantise_until_tapped) else pluralStringResource(R.plurals.bars, bars, bars), bars == UiPrefs.loopBars) {
+                Choice(if (bars == 0) stringResource(Res.string.quantise_until_tapped) else pluralStringResource(Res.plurals.bars, bars, bars), bars == UiPrefs.loopBars) {
                     UiPrefs.chooseLoopBars(bars)
                     onDismiss()
                 }
@@ -1493,8 +1490,8 @@ private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
             .background(if (clipMode) Acid.colors.accentDim else Acid.colors.control)
             .clickable { onClipMode(!clipMode) }
             .button(
-                stringResource(R.string.a11y_grid_mode),
-                stringResource(if (clipMode) R.string.a11y_grid_clips else R.string.a11y_grid_song),
+                stringResource(Res.string.a11y_grid_mode),
+                stringResource(if (clipMode) Res.string.a11y_grid_clips else Res.string.a11y_grid_song),
             ),
         contentAlignment = Alignment.Center,
     ) {
@@ -1504,7 +1501,7 @@ private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
         // read as dark text on a dark ground and was the one thing on the
         // button nobody could make out.
         Text(
-            stringResource(if (clipMode) R.string.main_mode_clip else R.string.main_mode_song),
+            stringResource(if (clipMode) Res.string.main_mode_clip else Res.string.main_mode_song),
             color = Acid.colors.textMid,
             fontSize = 11.sp, maxLines = 1,
         )

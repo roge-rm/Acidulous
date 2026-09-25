@@ -84,7 +84,7 @@ import com.rm.acidulous.model.emptyClipFor
 import androidx.compose.ui.graphics.toArgb
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.compose.ui.res.stringResource
+import com.rm.acidulous.res.*
 
 /**
  * A file another app opened with this one, or shared to it, waiting for the
@@ -134,7 +134,7 @@ internal fun shareCrashReport(context: android.content.Context, report: File) {
         val dir = File(context.cacheDir, "shared").apply { mkdirs() }
         val copy = File(dir, report.name).also { report.copyTo(it, overwrite = true) }
         val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", copy)
-        share(context, listOf(uri), "text/plain", context.getString(R.string.app_crash_report_subject))
+        share(context, listOf(uri), "text/plain", AppStrings.getString(Res.string.app_crash_report_subject))
     }.onFailure { Log.w("Acidulous.Crash", "could not share the report", it) }
 }
 
@@ -163,8 +163,8 @@ class MainActivity : ComponentActivity() {
         // Only on a fresh start: a recreated activity has already taken it.
         if (savedInstanceState == null) Incoming.from(intent)
         com.rm.acidulous.ui.UiPrefs.init(this)
-        com.rm.acidulous.model.Names.scene = { getString(R.string.name_scene, it) }
-        com.rm.acidulous.model.Names.copyOf = { getString(R.string.name_copy, it) }
+        com.rm.acidulous.model.Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
+        com.rm.acidulous.model.Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
         com.rm.acidulous.midi.MidiHub.start(this)
         EngineAssets.install(this)
         enableEdgeToEdge(
@@ -300,9 +300,9 @@ class MainActivity : ComponentActivity() {
             if (chord.alt) mods = mods or android.view.KeyEvent.META_ALT_ON
             if (chord.shift) mods = mods or android.view.KeyEvent.META_SHIFT_ON
             if (chord.meta) mods = mods or android.view.KeyEvent.META_META_ON
-            android.view.KeyboardShortcutInfo(getString(action.label), chord.key, mods)
+            android.view.KeyboardShortcutInfo(AppStrings.getString(action.label), chord.key, mods)
         }
-        if (items.isNotEmpty()) data += android.view.KeyboardShortcutGroup(getString(R.string.keys_title), items)
+        if (items.isNotEmpty()) data += android.view.KeyboardShortcutGroup(AppStrings.getString(Res.string.keys_title), items)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -393,7 +393,7 @@ private sealed class Screen {
 private fun App(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     // Read through this rather than the context, so words follow a change of language.
-    val resources = androidx.compose.ui.platform.LocalResources.current
+    val resources = AppStrings
 
     // Referential, not structural: Song equality is by value (rev is outside
     // equals on purpose), so a value-equal load or edit would otherwise be a
@@ -490,19 +490,19 @@ private fun App(modifier: Modifier = Modifier) {
     var biasTakeFile by remember { mutableStateOf<java.io.File?>(null) }
     DisposableEffect(Unit) {
         EngineSync.onProblem = { message, args ->
-            android.os.Handler(android.os.Looper.getMainLooper()).post { problem = resources.getString(message, *args) }
+            android.os.Handler(android.os.Looper.getMainLooper()).post { problem = AppStrings.getString(message, *args) }
         }
         onDispose { EngineSync.onProblem = null }
     }
     problem?.let { message ->
         com.rm.acidulous.ui.PlainDialog(
-            title = stringResource(R.string.app_load_failed_title),
+            title = stringResource(Res.string.app_load_failed_title),
             onDismiss = { problem = null },
-            dismissLabel = stringResource(R.string.close),
+            dismissLabel = stringResource(Res.string.close),
         ) {
             Text(message, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
             Text(
-                stringResource(R.string.app_load_formats),
+                stringResource(Res.string.app_load_formats),
                 fontSize = 12.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textDim,
             )
         }
@@ -520,7 +520,7 @@ private fun App(modifier: Modifier = Modifier) {
     var converting by remember { mutableStateOf<Triple<String, Int, Int>?>(null) }
     converting?.let { (what, done, total) ->
         com.rm.acidulous.ui.PlainDialog(
-            title = if (total > 1) stringResource(R.string.app_converting_of, done, total) else stringResource(R.string.app_converting),
+            title = if (total > 1) stringResource(Res.string.app_converting_of, done, total) else stringResource(Res.string.app_converting),
             onDismiss = {},           // it finishes or it fails; there is nothing to cancel
             dismissLabel = "",
             spacing = 10.dp,
@@ -568,9 +568,9 @@ private fun App(modifier: Modifier = Modifier) {
     /** Say so when only the front of a long file arrived. */
     fun noteTruncated(names: List<String>, seconds: Int = NativeEngine.PAD_SECONDS) {
         if (names.isEmpty()) return
-        val long = if (seconds >= 120) resources.getQuantityString(R.plurals.app_minutes, seconds / 60, seconds / 60)
-            else resources.getQuantityString(R.plurals.app_seconds, seconds, seconds)
-        problem = resources.getString(R.string.app_truncated, long, names.joinToString(resources.getString(R.string.list_separator)))
+        val long = if (seconds >= 120) AppStrings.getQuantityString(Res.plurals.app_minutes, seconds / 60, seconds / 60)
+            else AppStrings.getQuantityString(Res.plurals.app_seconds, seconds, seconds)
+        problem = AppStrings.getString(Res.string.app_truncated, long, names.joinToString(AppStrings.getString(Res.string.list_separator)))
     }
 
     /**
@@ -604,7 +604,7 @@ private fun App(modifier: Modifier = Modifier) {
                     then("samples/" + File(imported.path).name)
                     if (imported.truncated) noteTruncated(listOf(File(imported.path).name), maxSeconds)
                 }
-                .onFailure { problem = resources.getString(R.string.app_file_failed, it.message) }
+                .onFailure { problem = AppStrings.getString(Res.string.app_file_failed, it.message) }
         }
     }
 
@@ -678,7 +678,7 @@ private fun App(modifier: Modifier = Modifier) {
             // A kit is loaded in one go, so one file being unreadable must not
             // lose the other twelve - the rest land and this says which did not.
             if (refused.isNotEmpty()) {
-                problem = resources.getString(R.string.app_files_refused, refused.joinToString(resources.getString(R.string.list_separator)))
+                problem = AppStrings.getString(Res.string.app_files_refused, refused.joinToString(AppStrings.getString(Res.string.list_separator)))
             } else {
                 noteTruncated(shortened)
             }
@@ -783,7 +783,7 @@ private fun App(modifier: Modifier = Modifier) {
                 // thread, the only one that may send parameters.
                 withContext(Dispatchers.Main) { EngineSync.pushForRender(song) }
                 val m = NativeEngine.measureLoudness(options.tailSeconds, scene, limit)
-                    ?: return@withContext emptyList<File>() to resources.getString(R.string.app_export_unmeasured)
+                    ?: return@withContext emptyList<File>() to AppStrings.getString(Res.string.app_export_unmeasured)
                 if (m[0] > -70f) gainDb = minOf(com.rm.acidulous.ui.NORMALISE_LUFS - m[0], -1f - m[1])
                 Log.i(TAG, "normalise: measured %.1f LUFS, %.1f dBTP; gain %.1f dB".format(m[0], m[1], gainDb))
             }
@@ -794,14 +794,14 @@ private fun App(modifier: Modifier = Modifier) {
                 com.rm.acidulous.ui.ExportFormat.Midi -> {
                     val file = File(cache, "$base.mid")
                     runCatching { com.rm.acidulous.model.MidiFile.write(song, file); listOf(file) to "" }
-                        .getOrElse { emptyList<File>() to (it.message ?: resources.getString(R.string.app_export_midi_failed)) }
+                        .getOrElse { emptyList<File>() to (it.message ?: AppStrings.getString(Res.string.app_export_midi_failed)) }
                 }
                 com.rm.acidulous.ui.ExportFormat.Bundle -> {
                     val file = File(cache, "$base.zip")
                     runCatching {
                         com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(context), file)
                         listOf(file) to ""
-                    }.getOrElse { emptyList<File>() to (it.message ?: resources.getString(R.string.app_export_bundle_failed)) }
+                    }.getOrElse { emptyList<File>() to (it.message ?: AppStrings.getString(Res.string.app_export_bundle_failed)) }
                 }
                 com.rm.acidulous.ui.ExportFormat.Aac -> {
                     // The platform encoder reads a file, so the render goes
@@ -836,7 +836,7 @@ private fun App(modifier: Modifier = Modifier) {
                             t.machine.type.isNotEmpty() && t.mixer.output !in 1..groups.size
                         }
                         if (racks.isEmpty()) {
-                            emptyList<File>() to resources.getString(R.string.app_export_no_tracks)
+                            emptyList<File>() to AppStrings.getString(Res.string.app_export_no_tracks)
                         } else {
                             // The mix comes too, as file 00. It costs one
                             // more sink in a pass that is happening anyway,
@@ -916,7 +916,7 @@ private fun App(modifier: Modifier = Modifier) {
                         files.first().inputStream().use { it.copyTo(out) }
                     }
                     ""
-                }.getOrElse { it.message ?: resources.getString(R.string.app_export_copy_failed) }
+                }.getOrElse { it.message ?: AppStrings.getString(Res.string.app_export_copy_failed) }
             }
             ticker.cancel()
             finish(options, files, copyError, displayName(context, uri), listOf(uri))
@@ -945,14 +945,14 @@ private fun App(modifier: Modifier = Modifier) {
                     for (file in files) {
                         val target = android.provider.DocumentsContract.createDocument(
                             context.contentResolver, parent, options.format.mime, file.name,
-                        ) ?: error(resources.getString(R.string.app_export_create_failed, file.name))
+                        ) ?: error(AppStrings.getString(Res.string.app_export_create_failed, file.name))
                         created += target
                         context.contentResolver.openOutputStream(target, "wt")!!.use { out ->
                             file.inputStream().use { it.copyTo(out) }
                         }
                     }
                     ""
-                }.getOrElse { it.message ?: resources.getString(R.string.app_export_copy_failed) }
+                }.getOrElse { it.message ?: AppStrings.getString(Res.string.app_export_copy_failed) }
             }
             ticker.cancel()
             finish(options, files, copyError, displayName(context, tree), created)
@@ -989,7 +989,7 @@ private fun App(modifier: Modifier = Modifier) {
                 !firstRun.getBoolean(DEMO_OPENED, false) -> DemoSong.build().also {
                     if (!SongStore.exists(context, it.name)) SongStore.save(context, it)
                 }
-                else -> com.rm.acidulous.ui.UiPrefs.newSong(resources.getString(R.string.main_untitled))
+                else -> com.rm.acidulous.ui.UiPrefs.newSong(AppStrings.getString(Res.string.main_untitled))
             }
             firstRun.edit().putBoolean(DEMO_OPENED, true).apply()
             editor.replace(loaded)
@@ -1089,7 +1089,7 @@ private fun App(modifier: Modifier = Modifier) {
     /** What an import has to say: a title and a line. Not [problem], whose words are about audio. */
     var notice by remember { mutableStateOf<Pair<String, String>?>(null) }
     notice?.let { (title, message) ->
-        com.rm.acidulous.ui.PlainDialog(title = title, onDismiss = { notice = null }, dismissLabel = stringResource(R.string.close)) {
+        com.rm.acidulous.ui.PlainDialog(title = title, onDismiss = { notice = null }, dismissLabel = stringResource(Res.string.close)) {
             Text(message, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
         }
     }
@@ -1098,10 +1098,10 @@ private fun App(modifier: Modifier = Modifier) {
     var crashed by remember { mutableStateOf(CrashReports.unread(context)) }
     crashed?.let { report ->
         com.rm.acidulous.ui.PlainDialog(
-            title = stringResource(R.string.app_crashed_title),
+            title = stringResource(Res.string.app_crashed_title),
             onDismiss = { CrashReports.markRead(context); crashed = null },
-            dismissLabel = stringResource(R.string.close),
-            confirmLabel = stringResource(R.string.app_crashed_share),
+            dismissLabel = stringResource(Res.string.close),
+            confirmLabel = stringResource(Res.string.app_crashed_share),
             onConfirm = {
                 CrashReports.markRead(context)
                 crashed = null
@@ -1109,7 +1109,7 @@ private fun App(modifier: Modifier = Modifier) {
             },
         ) {
             Text(
-                stringResource(R.string.app_crashed_note),
+                stringResource(Res.string.app_crashed_note),
                 fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi,
             )
         }
@@ -1135,16 +1135,16 @@ private fun App(modifier: Modifier = Modifier) {
     fun importFile(uri: android.net.Uri) {
         val name = displayNameOf(context, uri, "file")
         val ext = name.substringAfterLast('.', "").lowercase()
-        val stem = name.substringBeforeLast('.').ifBlank { resources.getString(R.string.app_imported) }
+        val stem = name.substringBeforeLast('.').ifBlank { AppStrings.getString(Res.string.app_imported) }
         when (ext) {
             "mid", "midi", "smf", "kar" -> scope.launch {
                 val parsed = withContext(Dispatchers.IO) {
                     runCatching { com.rm.acidulous.model.MidiFile.read(context.contentResolver.openInputStream(uri)!!.use { it.readBytes() }) }
                 }
                 parsed.onSuccess { p ->
-                    if (p.parts.isEmpty()) notice = resources.getString(R.string.app_import_empty_title) to resources.getString(R.string.app_import_empty, name)
+                    if (p.parts.isEmpty()) notice = AppStrings.getString(Res.string.app_import_empty_title) to AppStrings.getString(Res.string.app_import_empty, name)
                     else midiImport = stem to p
-                }.onFailure { notice = resources.getString(R.string.app_open_failed_title) to resources.getString(R.string.app_open_failed, name, it.message) }
+                }.onFailure { notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.app_open_failed, name, it.message) }
             }
             "zip" -> scope.launch {
                 val song = withContext(Dispatchers.IO) {
@@ -1155,7 +1155,7 @@ private fun App(modifier: Modifier = Modifier) {
                     }.getOrNull()
                 }
                 if (song == null) {
-                    notice = resources.getString(R.string.app_open_failed_title) to resources.getString(R.string.app_not_a_bundle, name)
+                    notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.app_not_a_bundle, name)
                 } else {
                     val named = song.copy(name = freeSongName(song.name))
                     swapSong(named)
@@ -1166,7 +1166,7 @@ private fun App(modifier: Modifier = Modifier) {
             // hold - since nobody has said yet what this sound is for.
             "wav", "wave", "aif", "aiff", "aifc", "flac", "mp3" ->
                 bringIn(uri, "sample.wav", NativeEngine.SLICE_SECONDS) { rel ->
-                    notice = resources.getString(R.string.app_sound_added_title) to resources.getString(R.string.app_sound_added, rel.substringAfterLast('/'))
+                    notice = AppStrings.getString(Res.string.app_sound_added_title) to AppStrings.getString(Res.string.app_sound_added, rel.substringAfterLast('/'))
                 }
             // A tuning: checked by reading it, then kept as the file it is.
             "scl" -> scope.launch {
@@ -1180,11 +1180,11 @@ private fun App(modifier: Modifier = Modifier) {
                     }
                 }
                 result.onSuccess {
-                    notice = resources.getString(R.string.app_tuning_added_title) to
-                        resources.getQuantityString(R.plurals.app_tuning_added, it.cents.size, it.name, it.cents.size)
-                }.onFailure { notice = resources.getString(R.string.app_open_failed_title) to resources.getString(R.string.app_open_failed, name, it.message) }
+                    notice = AppStrings.getString(Res.string.app_tuning_added_title) to
+                        AppStrings.getQuantityString(Res.plurals.app_tuning_added, it.cents.size, it.name, it.cents.size)
+                }.onFailure { notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.app_open_failed, name, it.message) }
             }
-            else -> notice = resources.getString(R.string.app_open_failed_title) to resources.getString(R.string.app_import_what)
+            else -> notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.app_import_what)
         }
     }
     val importPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -1210,7 +1210,7 @@ private fun App(modifier: Modifier = Modifier) {
                 }
             }
             uri.onSuccess { share(context, listOf(it), "application/zip", song.name) }
-                .onFailure { notice = resources.getString(R.string.app_share_failed_title) to (it.message ?: resources.getString(R.string.app_share_failed)) }
+                .onFailure { notice = AppStrings.getString(Res.string.app_share_failed_title) to (it.message ?: AppStrings.getString(Res.string.app_share_failed)) }
         }
     }
     midiImport?.let { (name, parsed) ->
@@ -1242,7 +1242,7 @@ private fun App(modifier: Modifier = Modifier) {
                 }
                 var done = 0
                 targets.forEachIndexed { i, t ->
-                    freezeStatus = resources.getString(R.string.app_freezing, i + 1, targets.size)
+                    freezeStatus = AppStrings.getString(Res.string.app_freezing, i + 1, targets.size)
                     // A freeze is a render: it starts from the document too.
                     EngineSync.pushForRender(editor.song)
                     val frozen = withContext(Dispatchers.IO) {
@@ -1289,7 +1289,7 @@ private fun App(modifier: Modifier = Modifier) {
         val target = java.io.File(root, uniqueIn(root, "take.wav"))
         val error = NativeEngine.startCapture(target.absolutePath, 0)
         if (error.isNotEmpty()) {
-            problem = resources.getString(R.string.app_record_failed, error)
+            problem = AppStrings.getString(Res.string.app_record_failed, error)
             BiasArm.clear()
             return
         }
@@ -1317,11 +1317,11 @@ private fun App(modifier: Modifier = Modifier) {
             // The ring dropped frames, so every index after the drop names the
             // wrong moment. The recording is kept - it is in the library and
             // can be placed by hand - but it must not be cut up.
-            problem = resources.getString(R.string.app_record_gap)
+            problem = AppStrings.getString(Res.string.app_record_gap)
             return
         }
         if (count == 0 || track < 0 || lane < 0) {
-            problem = resources.getString(R.string.app_record_unplaced)
+            problem = AppStrings.getString(Res.string.app_record_unplaced)
             return
         }
         val rel = "samples/" + file.name
@@ -1332,7 +1332,7 @@ private fun App(modifier: Modifier = Modifier) {
                 .joinToString(" ") { "${it.frame}@${it.sceneId}+${it.tick}/${it.cycleTicks}" })
         val takes = splitTake(marksFrom(raw, count), frames, rel, sceneIdOf)
         if (takes.isEmpty()) {
-            problem = resources.getString(R.string.app_record_too_short)
+            problem = AppStrings.getString(Res.string.app_record_too_short)
             return
         }
         scope.launch {
@@ -1364,7 +1364,7 @@ private fun App(modifier: Modifier = Modifier) {
         ActivityResultContracts.RequestPermission(),
     ) { ok ->
         if (ok) startBiasCapture()
-        else problem = resources.getString(R.string.app_record_permission)
+        else problem = AppStrings.getString(Res.string.app_record_permission)
     }
     fun mayRecord(): Boolean = context.checkSelfPermission(
         android.Manifest.permission.RECORD_AUDIO,
@@ -2064,7 +2064,7 @@ private fun App(modifier: Modifier = Modifier) {
             return if (f.size >= 3) "%03d:%03d  %s".format(f[0].toIntOrNull() ?: 0, f[1].toIntOrNull() ?: 0, f[2]) else line
         }
         com.rm.acidulous.ui.PickerDialog(
-            title = stringResource(R.string.app_soundfont_preset),
+            title = stringResource(Res.string.app_soundfont_preset),
             options = presets.map { label(it) },
             onDismiss = { presetChoice = null },
         ) { chosen ->
@@ -2172,12 +2172,12 @@ private class CreateAnyDocument : ActivityResultContracts.CreateDocument("*/*") 
 private fun displayName(context: android.content.Context, uri: android.net.Uri): String = runCatching {
     if (android.provider.DocumentsContract.isTreeUri(uri)) {
         val id = android.provider.DocumentsContract.getTreeDocumentId(uri)
-        return id.substringAfterLast(':').substringAfterLast('/').ifEmpty { context.getString(R.string.app_the_folder) }
+        return id.substringAfterLast(':').substringAfterLast('/').ifEmpty { AppStrings.getString(Res.string.app_the_folder) }
     }
-    var display = uri.lastPathSegment ?: context.getString(R.string.app_the_file)
+    var display = uri.lastPathSegment ?: AppStrings.getString(Res.string.app_the_file)
     context.contentResolver.query(uri, null, null, null, null)?.use { c ->
         val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
         if (i >= 0 && c.moveToFirst()) display = c.getString(i)
     }
     display
-}.getOrDefault(context.getString(R.string.app_the_file))
+}.getOrDefault(AppStrings.getString(Res.string.app_the_file))

@@ -51,8 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Action
 import com.rm.acidulous.ui.theme.Acid
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
+import com.rm.acidulous.res.*
 
 /**
  * The bar along the bottom of a screen, and the pills in it.
@@ -406,11 +405,11 @@ fun BarHoldButton(
 ) {
     val hold by rememberUpdatedState(onHold)
     // TalkBack cannot hold a button down, so holding becomes a pair of actions.
-    val press = stringResource(R.string.a11y_fill_start)
-    val release = stringResource(R.string.a11y_fill_stop)
+    val press = stringResource(Res.string.a11y_fill_start)
+    val release = stringResource(Res.string.a11y_fill_stop)
     OutlinedButton(
         modifier = modifier.button(
-            label, stringResource(if (held) R.string.a11y_held else R.string.a11y_off),
+            label, stringResource(if (held) Res.string.a11y_held else Res.string.a11y_off),
             listOf(if (held) action(release) { hold(false) } else action(press) { hold(true) }),
         ).pointerInput(Unit) {
             awaitEachGesture {

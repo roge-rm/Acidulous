@@ -1,7 +1,8 @@
 package com.rm.acidulous.model
 
-import com.rm.acidulous.R
-import androidx.annotation.StringRes
+import com.rm.acidulous.res.*
+import org.jetbrains.compose.resources.StringResource
+
 
 /**
  * What the editor needs to know about a machine type beyond its parameters:
@@ -63,38 +64,38 @@ object MachineUi {
      * order inside a group is the order they were built, which is also
      * roughly simplest first.
      */
-    data class MachineGroup(@StringRes val label: Int, val machines: List<String>)
+    data class MachineGroup(val label: StringResource, val machines: List<String>)
 
     val machineGroups: List<MachineGroup> = listOf(
-        MachineGroup(R.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
-        MachineGroup(R.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
-        MachineGroup(R.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
-        MachineGroup(R.string.machines_beyond, listOf("Cipher", "Nexus", "Bias")),
+        MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
+        MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
+        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
+        MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Bias")),
     )
 
     /** One line per machine: what it is, not what it has. */
-    @StringRes
-    fun describe(type: String): Int? = when (type) {
-        "Reflux" -> R.string.machine_about_reflux
-        "Trinity" -> R.string.machine_about_trinity
-        "Ratio" -> R.string.machine_about_ratio
-        "Cumulus" -> R.string.machine_about_cumulus
-        "Formulate" -> R.string.machine_about_formulate
-        "Hexbeat" -> R.string.machine_about_hexbeat
-        "Genesis" -> R.string.machine_about_genesis
-        "Resonance" -> R.string.machine_about_resonance
-        "Dice" -> R.string.machine_about_dice
-        "Forage" -> R.string.machine_about_forage
-        "Manual" -> R.string.machine_about_manual
-        "Filament" -> R.string.machine_about_filament
-        "Brazen" -> R.string.machine_about_brazen
-        "Timber" -> R.string.machine_about_timber
-        "Mosaic" -> R.string.machine_about_mosaic
-        "Pollen" -> R.string.machine_about_pollen
-        "Molt" -> R.string.machine_about_molt
-        "Cipher" -> R.string.machine_about_cipher
-        "Nexus" -> R.string.machine_about_nexus
-        "Bias" -> R.string.machine_about_bias
+    
+    fun describe(type: String): StringResource? = when (type) {
+        "Reflux" -> Res.string.machine_about_reflux
+        "Trinity" -> Res.string.machine_about_trinity
+        "Ratio" -> Res.string.machine_about_ratio
+        "Cumulus" -> Res.string.machine_about_cumulus
+        "Formulate" -> Res.string.machine_about_formulate
+        "Hexbeat" -> Res.string.machine_about_hexbeat
+        "Genesis" -> Res.string.machine_about_genesis
+        "Resonance" -> Res.string.machine_about_resonance
+        "Dice" -> Res.string.machine_about_dice
+        "Forage" -> Res.string.machine_about_forage
+        "Manual" -> Res.string.machine_about_manual
+        "Filament" -> Res.string.machine_about_filament
+        "Brazen" -> Res.string.machine_about_brazen
+        "Timber" -> Res.string.machine_about_timber
+        "Mosaic" -> Res.string.machine_about_mosaic
+        "Pollen" -> Res.string.machine_about_pollen
+        "Molt" -> Res.string.machine_about_molt
+        "Cipher" -> Res.string.machine_about_cipher
+        "Nexus" -> Res.string.machine_about_nexus
+        "Bias" -> Res.string.machine_about_bias
         else -> null
     }
 

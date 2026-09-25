@@ -7,15 +7,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
-import com.rm.acidulous.R
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Quantise
 import com.rm.acidulous.model.QuantiseSpec
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongEditor
 import androidx.compose.ui.unit.dp
+import com.rm.acidulous.res.*
 
 /**
  * What the Quantise window was last set to, for this run of the app: the
@@ -110,10 +108,10 @@ fun QuantiseDialog(
     LaunchedEffect(Unit) { apply() }
 
     PlainDialog(
-        title = stringResource(R.string.quantise_window_title),
+        title = stringResource(Res.string.quantise_window_title),
         onDismiss = onDismiss,
-        dismissLabel = stringResource(R.string.cancel),
-        confirmLabel = stringResource(R.string.ok),
+        dismissLabel = stringResource(Res.string.cancel),
+        confirmLabel = stringResource(Res.string.ok),
         onConfirm = {
             editor.endGesture()
             onDismiss()
@@ -121,30 +119,30 @@ fun QuantiseDialog(
         spacing = 6.dp,
     ) {
         WindowCards {
-            WindowCard(stringResource(R.string.quantise_card)) {
+            WindowCard(stringResource(Res.string.quantise_card)) {
                 SwitchGrid(
-                    stringResource(R.string.quantise_grid),
-                    listOf(stringResource(R.string.quantise_clip_grid)) + GRIDS.map { it.first },
+                    stringResource(Res.string.quantise_grid),
+                    listOf(stringResource(Res.string.quantise_clip_grid)) + GRIDS.map { it.first },
                     gridAt, columns = 4, enabled = List(GRIDS.size + 1) { !asPlayed },
                 ) { gridAt = it; apply() }
-                CountKnob(stringResource(R.string.quantise_amount), strength, 0..100, "$strength%") { strength = it; apply() }
-                SwitchGrid(stringResource(R.string.quantise_move), stringArrayResource(R.array.quantise_move_choices).toList(), if (ends) 1 else 0, enabled = listOf(!asPlayed, !asPlayed)) {
+                CountKnob(stringResource(Res.string.quantise_amount), strength, 0..100, "$strength%") { strength = it; apply() }
+                SwitchGrid(stringResource(Res.string.quantise_move), stringArrayResource(Res.array.quantise_move_choices).toList(), if (ends) 1 else 0, enabled = listOf(!asPlayed, !asPlayed)) {
                     ends = it == 1; apply()
                 }
-                SwitchGrid(stringResource(R.string.quantise_as_played), stringArrayResource(R.array.off_on).toList(), if (asPlayed) 1 else 0) {
+                SwitchGrid(stringResource(Res.string.quantise_as_played), stringArrayResource(Res.array.off_on).toList(), if (asPlayed) 1 else 0) {
                     asPlayed = it == 1; apply()
                 }
             }
             // How it feels: another clip's timing, and a player's unevenness.
-            WindowCard(stringResource(R.string.quantise_feel)) {
-                val names = listOf(stringResource(R.string.quantise_straight)) + grooves.map { it.third }
+            WindowCard(stringResource(Res.string.quantise_feel)) {
+                val names = listOf(stringResource(Res.string.quantise_straight)) + grooves.map { it.third }
                 CountKnob(
-                    stringResource(R.string.quantise_groove), grooveAt, 0..grooves.size, names[grooveAt],
+                    stringResource(Res.string.quantise_groove), grooveAt, 0..grooves.size, names[grooveAt],
                     width = 140.dp, choices = names,
                 ) { grooveAt = it; apply() }
-                CountKnob(stringResource(R.string.quantise_humanise), human, 0..100, "$human%") { human = it; if (seed != null) apply() }
+                CountKnob(stringResource(Res.string.quantise_humanise), human, 0..100, "$human%") { human = it; if (seed != null) apply() }
                 // A press rolls the dice again; none takes it away.
-                SwitchGrid("", stringArrayResource(R.array.quantise_humanise_choices).toList(), if (seed == null) 1 else -1) {
+                SwitchGrid("", stringArrayResource(Res.array.quantise_humanise_choices).toList(), if (seed == null) 1 else -1) {
                     seed = if (it == 0) System.nanoTime() else null
                     apply()
                 }
