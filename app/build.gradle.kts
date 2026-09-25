@@ -6,6 +6,9 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+/** The 32-bit build, for tablets like the Fire HD 8: see `release` below. */
+val arm32 = project.hasProperty("arm32")
+
 android {
     namespace = "com.rm.acidulous"
     compileSdk {
@@ -138,7 +141,15 @@ android {
         // and worked from keys, shortcuts on every screen, and they can be
         // changed in Settings. Nexus's fit button lays the patch out to fit
         // the screen.
-        versionCode = 21
+        //
+        // **Two APKs a release**: the 64-bit one, and with -Parm32 a 32-bit
+        // one for tablets that run 32-bit Android on any processor - the Fire
+        // HD 8. A store offers each device the highest versionCode it can
+        // run, and nearly every 64-bit phone can run 32-bit code too, so the
+        // 64-bit APK must be the higher: the release number times ten, plus
+        // two for 64-bit and one for 32-bit. Bump [release], not the code.
+        val release = 21
+        versionCode = release * 10 + if (arm32) 1 else 2
         versionName = "0.9.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -155,9 +166,10 @@ android {
         }
 
         ndk {
-            // 64-bit only. armeabi-v7a would need auditing for the engine's
-            // alignas(32) buffers and is not worth it for a synth app.
-            abiFilters += listOf("arm64-v8a", "x86_64")
+            // See [release] for why there are two builds. The 32-bit one
+            // carries x86 as well as ARM, which costs little and lets it be
+            // run on the Android 8.1 x86 emulator.
+            abiFilters += if (arm32) listOf("armeabi-v7a", "x86") else listOf("arm64-v8a", "x86_64")
         }
     }
 

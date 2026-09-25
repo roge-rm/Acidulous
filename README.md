@@ -162,13 +162,14 @@ You need the Android SDK and NDK. The NDK version is pinned in
 ```sh
 ./gradlew assembleDebug        # debug APK
 ./gradlew testDebugUnitTest    # JVM unit tests
+./gradlew -Parm32 assembleRelease   # the 32-bit APK, for tablets like the Fire HD 8
 ```
 
 | | |
 |---|---|
 | Minimum Android | 8.1 (API 27) |
 | Built against | API 37 |
-| ABIs | `arm64-v8a`, `x86_64` (64-bit only) |
+| ABIs | `arm64-v8a`, `x86_64`; with `-Parm32`, `armeabi-v7a` and `x86` |
 | UI | Kotlin, Jetpack Compose |
 | Engine | C++17 in `app/src/main/cpp`, audio through Oboe |
 
