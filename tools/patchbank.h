@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <istream>
 #include <sstream>
 #include <algorithm>
 #include <string>
@@ -139,12 +140,13 @@ inline bool token(const std::string &s, size_t &at, std::string &out) {
 } // namespace detail
 
 /** Reads one bank file. Returns false and fills [error] on a malformed line. */
-inline bool readBank(const std::string &path, Bank &bank, std::string &error) {
-    std::ifstream in(path);
-    if (!in) {
-        error = "cannot open " + path;
-        return false;
-    }
+/**
+ * A bank from any stream: [path] is only what errors and `bank.path` call it.
+ *
+ * The browser build has no files to open, so it carries the bank texts in the
+ * binary and reads them from memory; everything else goes through readBank.
+ */
+inline bool readBankFrom(std::istream &in, const std::string &path, Bank &bank, std::string &error) {
     bank = Bank();
     bank.path = path;
     std::string raw;
@@ -261,6 +263,15 @@ inline bool readBank(const std::string &path, Bank &bank, std::string &error) {
         return false;
     }
     return true;
+}
+
+inline bool readBank(const std::string &path, Bank &bank, std::string &error) {
+    std::ifstream in(path);
+    if (!in) {
+        error = "cannot open " + path;
+        return false;
+    }
+    return readBankFrom(in, path, bank, error);
 }
 
 /**
