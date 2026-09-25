@@ -127,6 +127,7 @@ Each has the usual controls plus one extra, and a page in the manual.
 - MPE.
 - Ableton Link, and MIDI clock in and out. Clock in can follow on its own when a clock arrives.
 - Map any MIDI CC or note to any control.
+- Keyboards, the phone's own or USB or Bluetooth: letters play notes, every control can be reached and worked from keys, and there are shortcuts on every screen that you can change in Settings.
 
 ### Import and export
 
@@ -138,7 +139,7 @@ Anything exported can go straight to the share sheet, and a song can be shared a
 
 ### Accessibility
 
-Works with TalkBack. Every control says what it is and what it's set to, knobs and faders change with a swipe, and anything you'd hold is in TalkBack's actions menu. There's also a high contrast theme in Settings.
+Works with TalkBack. Every control says what it is and what it's set to, knobs and faders change with a swipe, and anything you'd hold is in TalkBack's actions menu. Everything can also be done from a keyboard. There's also a high contrast theme in Settings.
 
 ---
 
