@@ -46,6 +46,14 @@ miniaudio 0.11.22 — public domain (the Unlicense), or MIT No Attribution
   into the phone's. Either licence is the licensee's choice; neither asks for
   a notice. See app/src/main/cpp/third_party/miniaudio/PROVENANCE.md.
 
+alsa-lib 1.2.14 — GNU Lesser General Public License, version 2.1 or later
+  https://www.alsa-project.org/
+  MIDI on Linux, through ALSA's sequencer: the desktop build only. Its headers
+  are vendored under app/src/main/cpp/third_party/alsa; the library itself is
+  the system's libasound, opened at run time and never compiled in. See that
+  directory's PROVENANCE.md.
+  Licence text: licences/LGPL-2.1.txt
+
 Everything else in this repository is original work. The C++ engine, every
 machine and effect, the sequencer, the WAV, AIFF and FLAC writers and the
 MIDI file writer were all written for this project; no DSP, presets or

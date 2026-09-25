@@ -7,9 +7,6 @@ import com.rm.acidulous.midi.MidiSendPort
 import com.rm.acidulous.midi.MidiSystem
 import com.rm.acidulous.midi.MidiWorker
 import com.rm.acidulous.util.Log
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
 import javax.sound.midi.MidiDevice
 import javax.sound.midi.MidiMessage
 import javax.sound.midi.Receiver
@@ -30,34 +27,17 @@ private const val TAG = "Acidulous.MIDI"
  * a controller as one thing with ports both ways, as Android does. It says
  * nothing when a device comes or goes, so the list is read again every two
  * seconds. And it sends at once rather than at a time, so a timestamped send
- * waits on the MIDI thread until its moment - the job Android's port does
- * itself.
+ * waits on the MIDI thread until its moment - see MidiThread.
  *
- * Not here yet: ports that exist only on ALSA's sequencer - another
- * program's, or a Bluetooth instrument's.
+ * The fallback: where ALSA's sequencer opens, AlsaSeqMidi is used instead,
+ * which sees these devices and every other program's ports too.
  */
 class JavaSoundMidi(private val pollMs: Long = 2000) : MidiSystem {
-    private val executor = Executors.newSingleThreadScheduledExecutor { r -> Thread(r, "midi").apply { isDaemon = true } }
+    private val thread = MidiThread()
 
     override val supported: Boolean = true
     override val bluetooth: MidiBluetooth? = null
-
-    override val worker: MidiWorker = object : MidiWorker {
-        private val pending = HashMap<Runnable, MutableList<ScheduledFuture<*>>>()
-        override fun post(task: Runnable) = postDelayed(task, 0)
-        override fun postDelayed(task: Runnable, delayMs: Long) {
-            lateinit var future: ScheduledFuture<*>
-            future = executor.schedule({
-                synchronized(pending) { pending[task]?.remove(future) }
-                task.run()
-            }, delayMs.coerceAtLeast(0), TimeUnit.MILLISECONDS)
-            synchronized(pending) { pending.getOrPut(task) { mutableListOf() } += future }
-        }
-        override fun removeCallbacks(task: Runnable) {
-            val futures = synchronized(pending) { pending.remove(task) } ?: return
-            futures.forEach { it.cancel(false) }
-        }
-    }
+    override val worker: MidiWorker = thread
 
     /** A device's Java Sound entries: the one that sends to us, the one we send to, or both. */
     private class Entry(val desc: MidiDeviceDesc, val from: MidiDevice.Info?, val to: MidiDevice.Info?)
@@ -112,12 +92,12 @@ class JavaSoundMidi(private val pollMs: Long = 2000) : MidiSystem {
 
     override fun watch(added: (MidiDeviceDesc) -> Unit, removed: (MidiDeviceDesc) -> Unit) {
         var known = entries.map { it.desc }.associateBy { it.id }
-        executor.scheduleWithFixedDelay({
+        thread.every(pollMs) {
             val now = scan().also { entries = it }.map { it.desc }.associateBy { it.id }
             for ((id, d) in now) if (id !in known) added(d)
             for ((id, d) in known) if (id !in now) removed(d)
             known = now
-        }, pollMs, pollMs, TimeUnit.MILLISECONDS)
+        }
     }
 
     private inner class Opened(entry: Entry) : MidiOpenDevice {
@@ -131,11 +111,8 @@ class JavaSoundMidi(private val pollMs: Long = 2000) : MidiSystem {
                 override fun send(bytes: ByteArray, offset: Int, count: Int) {
                     messageOf(bytes, offset, count)?.let { runCatching { receiver.send(it, -1) } }
                 }
-                override fun send(bytes: ByteArray, offset: Int, count: Int, timestamp: Long) {
-                    val copy = bytes.copyOfRange(offset, offset + count)
-                    val waitMs = (timestamp - System.nanoTime()) / 1_000_000
-                    if (waitMs <= 0) send(copy, 0, copy.size) else worker.postDelayed({ send(copy, 0, copy.size) }, waitMs)
-                }
+                override fun send(bytes: ByteArray, offset: Int, count: Int, timestamp: Long) =
+                    thread.sendAt(bytes, offset, count, timestamp, ::send)
                 override fun close() = receiver.close()
             }
         }

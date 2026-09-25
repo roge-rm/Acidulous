@@ -127,6 +127,7 @@ val stageLicences = tasks.register<Sync>("stageLicences") {
     from(rootProject.file("LICENSE")) { rename { "gpl-3.0.txt" } }
     from(rootProject.file("licences/Apache-2.0.txt")) { rename { "apache-2.0.txt" } }
     from(rootProject.file("licences/GPL-2.0.txt")) { rename { "gpl-2.0.txt" } }
+    from(rootProject.file("licences/LGPL-2.1.txt")) { rename { "lgpl-2.1.txt" } }
     from(miniaudioLicence)
     into(layout.buildDirectory.dir("generated/licences/licences"))
 }

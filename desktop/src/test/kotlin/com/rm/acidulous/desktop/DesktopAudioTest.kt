@@ -7,7 +7,7 @@ import org.junit.Test
 class DesktopAudioTest {
     @Test
     fun kindsFromPulseAudioNames() {
-        assertEquals(AudioInput.Kind.Usb, kindOf("Scarlett 2i2 USB Analog Stereo", "alsa_input.usb-Focusrite_Scarlett_2i2_USB-00.analog-stereo"))
+        assertEquals(AudioInput.Kind.Usb, kindOf("Interface USB Analog Stereo", "alsa_input.usb-Maker_Interface_USB-00.analog-stereo"))
         assertEquals(AudioInput.Kind.BuiltIn, kindOf("Built-in Audio Analog Stereo", "alsa_input.pci-0000_00_1f.3.analog-stereo"))
         assertEquals(AudioInput.Kind.Bluetooth, kindOf("Headphones", "bluez_input.00_11_22_33_44_55.0"))
         assertEquals(AudioInput.Kind.NotAnEar, kindOf("Monitor of Built-in Audio Analog Stereo", "alsa_output.pci-0000_00_1f.3.analog-stereo.monitor"))

@@ -11,7 +11,8 @@ than copied in, so a licence on screen cannot drift from the one in the tree.
 | Apache 2.0 | `Apache-2.0.txt` here | Oboe, which comes from Maven and ships no licence text in its AAR |
 | GNU GPL v2 | `GPL-2.0.txt` here | Ableton Link, taken under its GPLv2-or-later option. Its own copy (`third_party/link/GNU-GPL-v2.0.md`) is the same licence written in markdown, which reads badly as plain text |
 | Boost 1.0 | `/app/src/main/cpp/third_party/asio/LICENSE_1_0.txt` | asio, which Link uses to reach the network |
+| GNU LGPL v2.1 | `LGPL-2.1.txt` here | alsa-lib, whose sequencer the desktop build's MIDI uses on Linux. Staged by `:desktop`'s `stageLicences` only |
 
-`Apache-2.0.txt` and `GPL-2.0.txt` are the verbatim texts as published by the
+`Apache-2.0.txt`, `GPL-2.0.txt` and `LGPL-2.1.txt` are the verbatim texts as published by the
 Apache Software Foundation and the Free Software Foundation. Nothing here is
 ours to edit.

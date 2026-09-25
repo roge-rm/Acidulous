@@ -60,6 +60,7 @@ private enum class Licence(val title: String, val asset: String) {
     Gpl3("GNU General Public License v3", "licences/gpl-3.0.txt"),
     Gpl2("GNU General Public License v2", "licences/gpl-2.0.txt"),
     Lgpl2("GNU Library General Public License v2", "licences/lgpl-2.0.txt"),
+    Lgpl21("GNU Lesser General Public License v2.1", "licences/lgpl-2.1.txt"),
     Apache2("Apache License 2.0", "licences/apache-2.0.txt"),
     Bsl1("Boost Software License 1.0", "licences/bsl-1.0.txt"),
     PublicDomain("Unlicense or MIT-0", "licences/miniaudio.txt"),
@@ -116,11 +117,13 @@ private fun ComponentsTab(onRead: (Licence) -> Unit) {
         stringResource(Res.string.about_not_ours),
         stringResource(Res.string.about_not_ours_note),
     ) {
-        // The audio stream is Oboe on the phone and miniaudio on the desktop.
+        // The audio stream is Oboe on the phone and miniaudio on the desktop,
+        // whose MIDI is ALSA's.
         if (com.rm.acidulous.AppHost.current.usesOboe) {
             LicenceRow(Licence.Apache2, stringResource(Res.string.about_oboe), onRead)
         } else {
             LicenceRow(Licence.PublicDomain, stringResource(Res.string.about_miniaudio), onRead)
+            LicenceRow(Licence.Lgpl21, stringResource(Res.string.about_alsa), onRead)
         }
         LicenceRow(Licence.Lgpl2, stringResource(Res.string.about_lame), onRead)
         LicenceRow(Licence.Gpl2, stringResource(Res.string.about_link), onRead)

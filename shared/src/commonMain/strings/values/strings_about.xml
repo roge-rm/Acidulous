@@ -29,6 +29,8 @@
     <string name="about_oboe">Oboe 1.10.0 · the audio stream</string>
     <!-- The desktop's, in Oboe's place. -->
     <string name="about_miniaudio">miniaudio 0.11.22 · the audio stream</string>
+    <!-- The desktop's too: Linux's MIDI. -->
+    <string name="about_alsa">alsa-lib 1.2.14 · MIDI, through ALSA\'s sequencer</string>
     <string name="about_lame">LAME 3.100 · MP3 encoding, as its own library</string>
     <string name="about_link">Ableton Link 4.0 · a tempo shared over Wi-Fi</string>
     <string name="about_asio">asio 1.36.0 · the network, underneath Link</string>

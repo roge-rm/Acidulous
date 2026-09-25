@@ -36,8 +36,9 @@ fun main() {
     UiPrefs.init(FilePrefs(File(config, "ui.properties")))
     Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
     Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
-    // USB MIDI, through Java Sound: see JavaSoundMidi.
-    MidiHub.start(JavaSoundMidi())
+    // ALSA's sequencer, which sees every device and program; Java Sound's raw
+    // MIDI where there is none. See AlsaSeqMidi.
+    MidiHub.start(AlsaSeqMidi.open() ?: JavaSoundMidi())
     // Nothing on a desktop filters multicast, so Link needs no lock.
     LinkHub.multicastLock = null
     EngineAssets.install(data, cache)

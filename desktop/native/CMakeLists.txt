@@ -6,7 +6,8 @@ project(acidulous_desktop LANGUAGES C CXX)
 # Oboe's and Android's. platform/desktop comes first on the include path, so
 # EngineHost's <drivers/AudioDriver.h> and <android/log.h> are the desktop's.
 # The JNI bridge is the phone's, unchanged: JNI is JNI on any JVM. What only
-# the desktop asks - the list of inputs - is in desktop_jni.cpp.
+# the desktop asks - the list of inputs - is in desktop_jni.cpp, and MIDI
+# through ALSA's sequencer in alsa_seq.cpp.
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -40,6 +41,7 @@ add_library(acidulous SHARED
     ${CPP}/platform/link/LinkTimebase.cpp
     ${CPP}/platform/desktop/drivers/AudioDriver.cpp
     ${CPP}/platform/desktop/desktop_jni.cpp
+    ${CPP}/platform/desktop/alsa_seq.cpp
 )
 
 target_include_directories(acidulous PRIVATE
@@ -49,6 +51,9 @@ target_include_directories(acidulous PRIVATE
     ${CPP}/third_party/miniaudio
     ${JNI_INCLUDE_DIRS}
 )
+# ALSA's headers only: libasound itself is opened at run time (alsa_seq.cpp),
+# as miniaudio opens it, so nothing here links against it; dl is linked below.
+target_include_directories(acidulous SYSTEM PRIVATE ${CPP}/third_party/alsa/include)
 target_compile_options(acidulous PRIVATE -Wall -Wextra -Wno-unused-parameter)
 set_source_files_properties(${CPP}/platform/link/LinkTimebase.cpp
     PROPERTIES COMPILE_OPTIONS "-Wno-multichar;-Wno-unused-parameter")
