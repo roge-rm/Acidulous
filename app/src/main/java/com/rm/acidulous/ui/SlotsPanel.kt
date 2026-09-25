@@ -286,17 +286,17 @@ private fun SlotFace(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 PatchPicker(
                     title = type,
-                    patchNames = { PatchStore.list(context, key) },
-                    onSave = { name -> PatchStore.save(context, Patch(key, name, kind.at(editor.song.tracks[trackIndex], slot).params)) },
+                    patchNames = { PatchStore.list(key) },
+                    onSave = { name -> PatchStore.save(Patch(key, name, kind.at(editor.song.tracks[trackIndex], slot).params)) },
                     onLoad = { name ->
-                        PatchStore.load(context, key, name)?.let { patch ->
+                        PatchStore.load(key, name)?.let { patch ->
                             editor.edit(trackIndex) { t -> load(t, slot, patch.params) }
                             b.applyAll(patch.params)
                         }
                     },
                     factoryPatches = { PatchStore.factory(key) },
-                    userNames = { PatchStore.userList(context, key) },
-                    onDelete = { name -> PatchStore.delete(context, key, name) },
+                    userNames = { PatchStore.userList(key) },
+                    onDelete = { name -> PatchStore.delete(key, name) },
                 )
             }
         }

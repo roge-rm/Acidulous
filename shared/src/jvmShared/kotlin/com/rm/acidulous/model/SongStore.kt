@@ -1,6 +1,5 @@
 package com.rm.acidulous.model
 
-import android.content.Context
 import com.rm.acidulous.engine.EngineAssets
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -78,33 +77,33 @@ object SongStore {
         )
     }
 
-    fun directory(context: Context): File = File(EngineAssets.userRoot(context), "songs").apply { mkdirs() }
+    fun directory(): File = File(EngineAssets.userRoot(), "songs").apply { mkdirs() }
 
-    fun fileFor(context: Context, name: String): File = File(directory(context), "${safeName(name)}.json")
+    fun fileFor(name: String): File = File(directory(), "${safeName(name)}.json")
 
-    fun save(context: Context, song: Song): File =
-        fileFor(context, song.name).also { it.writeTextSafely(encode(song)) }
+    fun save(song: Song): File =
+        fileFor(song.name).also { it.writeTextSafely(encode(song)) }
 
-    fun load(context: Context, name: String): Song = decode(fileFor(context, name).readText())
+    fun load(name: String): Song = decode(fileFor(name).readText())
 
     /**
      * The working song, saved continuously and reloaded on the next start.
      * Separate from the named songs in [directory]: this is "what was open",
      * not "what was saved", so minimising the app never loses an edit.
      */
-    fun sessionFile(context: Context): File = File(EngineAssets.userRoot(context), "session.json")
+    fun sessionFile(): File = File(EngineAssets.userRoot(), "session.json")
 
-    fun saveSession(context: Context, song: Song) {
+    fun saveSession(song: Song) {
         // A kill mid-write leaves the previous session intact.
-        sessionFile(context).writeTextSafely(encode(song))
+        sessionFile().writeTextSafely(encode(song))
     }
 
-    fun loadSession(context: Context): Song? =
-        sessionFile(context).takeIf { it.isFile }?.let { runCatching { decode(it.readText()) }.getOrNull() }
+    fun loadSession(): Song? =
+        sessionFile().takeIf { it.isFile }?.let { runCatching { decode(it.readText()) }.getOrNull() }
 
-    fun delete(context: Context, name: String): Boolean = fileFor(context, name).delete()
+    fun delete(name: String): Boolean = fileFor(name).delete()
 
-    fun exists(context: Context, name: String): Boolean = fileFor(context, name).isFile
+    fun exists(name: String): Boolean = fileFor(name).isFile
 
     /**
      * A new song: one scene, one track, nothing in it.
@@ -131,8 +130,8 @@ object SongStore {
         scenes = listOf(Scene(id = newId("s"), name = Names.scene(1))),
     )
 
-    fun list(context: Context): List<String> =
-        directory(context).listFiles { f -> f.extension == "json" }
+    fun list(): List<String> =
+        directory().listFiles { f -> f.extension == "json" }
             ?.map { it.nameWithoutExtension }
             ?.sorted()
             ?: emptyList()

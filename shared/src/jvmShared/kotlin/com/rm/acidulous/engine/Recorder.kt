@@ -1,6 +1,6 @@
 package com.rm.acidulous.engine
 
-import android.util.Log
+import com.rm.acidulous.util.Log
 import com.rm.acidulous.model.CurveBuilder
 import com.rm.acidulous.model.Lane
 import com.rm.acidulous.model.LanePoint

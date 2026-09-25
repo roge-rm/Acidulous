@@ -993,7 +993,7 @@ fun MainScreen(
         }
         is Dialog.TrackSettings -> if (d.index in song.tracks.indices) {
             val ctx = androidx.compose.ui.platform.LocalContext.current
-            val tunings = remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot(ctx)) }
+            val tunings = remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot()) }
             TrackSettingsDialog(song, d.index, tunings, onDismiss = { dialog = null }) { edited ->
                 // A song edit, not the track's own: it is made from the grid,
                 // and the grid's undo is the song's. As a track edit it went
@@ -1009,7 +1009,7 @@ fun MainScreen(
         Dialog.Tempo -> TempoDialog(
             song, onDismiss = { dialog = null },
             tunings = androidx.compose.ui.platform.LocalContext.current.let { ctx ->
-                remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot(ctx)) }
+                remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot()) }
             },
         ) { edited ->
             // The whole of the window's page comes back as one edit, so the

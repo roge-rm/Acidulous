@@ -1465,7 +1465,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             sliceBusy = true
             scope.launch {
                 val abs = java.io.File(
-                    com.rm.acidulous.engine.EngineAssets.userRoot(context), rel,
+                    com.rm.acidulous.engine.EngineAssets.userRoot(), rel,
                 ).absolutePath
                 val points = withContext(Dispatchers.IO) { NativeEngine.slicePoints(abs, mode, count) }
                 sliceBusy = false
@@ -2994,7 +2994,7 @@ private fun DicePanel(
     val context = LocalContext.current
     val shape by produceState<Pair<Float, Float>?>(null, sample) {
         value = if (sample.isEmpty()) null else withContext(Dispatchers.IO) {
-            NativeEngine.loopShape(java.io.File(com.rm.acidulous.engine.EngineAssets.userRoot(context), sample).absolutePath)
+            NativeEngine.loopShape(java.io.File(com.rm.acidulous.engine.EngineAssets.userRoot(), sample).absolutePath)
         }
     }
     val barsAt = b.infoOf("bars")?.map(b.value("bars"))?.toInt() ?: 0

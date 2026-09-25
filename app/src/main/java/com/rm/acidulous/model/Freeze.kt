@@ -35,7 +35,7 @@ object Freeze {
     private const val TAIL_CAP_SECONDS = 8f
 
     fun fileFor(context: Context, trackId: String, sceneId: String): File =
-        File(EngineAssets.freezeRoot(context), "${trackId}__$sceneId.wav")
+        File(EngineAssets.freezeRoot(), "${trackId}__$sceneId.wav")
 
     /** Every clip in a scene that is worth freezing. */
     fun scene(song: Song, sceneId: String): List<Target> =
@@ -130,6 +130,6 @@ object Freeze {
     fun discard(context: Context, song: Song, target: Target) {
         val track = song.tracks.getOrNull(target.track) ?: return
         val frozen = track.clips[target.sceneId]?.frozen ?: return
-        File(EngineAssets.freezeRoot(context), frozen.file).delete()
+        File(EngineAssets.freezeRoot(), frozen.file).delete()
     }
 }

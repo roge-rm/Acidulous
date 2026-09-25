@@ -1,19 +1,26 @@
 package com.rm.acidulous.engine
 
-import android.content.Context
 import java.io.File
 
 /** Where the app's own files live. Bundled content (kits, patches) returns with M8. */
 object EngineAssets {
 
+    /**
+     * The platform's two folders, set once by [install] before anything asks
+     * for a path: Android's filesDir and cacheDir, or their desktop
+     * equivalents.
+     */
+    private lateinit var filesDir: File
+    private lateinit var cacheDir: File
+
     /** Writable songs, patches and imported samples. */
-    fun userRoot(context: Context): File = File(context.filesDir, "user").apply { mkdirs() }
+    fun userRoot(): File = File(filesDir, "user").apply { mkdirs() }
 
     /**
      * Frozen clips. Their own directory because they are derived, not
      * authored: deleting the lot costs nothing but the time to freeze again.
      */
-    fun freezeRoot(context: Context): File = File(context.filesDir, "freeze").apply { mkdirs() }
+    fun freezeRoot(): File = File(filesDir, "freeze").apply { mkdirs() }
 
     /**
      * Where a take too long to hold in memory is converted to, once.
@@ -23,12 +30,14 @@ object EngineAssets {
      * from, so the system may throw it away when it needs the space and
      * nothing is lost but the second or two it takes to rebuild.
      */
-    fun reelCache(context: Context): File =
-        File(context.cacheDir, "reel").apply { mkdirs() }
+    fun reelCache(): File =
+        File(cacheDir, "reel").apply { mkdirs() }
 
-    fun install(context: Context) {
-        userRoot(context)
-        renamePatchFolders(context)
+    fun install(files: File, cache: File) {
+        filesDir = files
+        cacheDir = cache
+        userRoot()
+        renamePatchFolders()
     }
 
     /**
@@ -43,8 +52,8 @@ object EngineAssets {
      */
     private val RENAMED = mapOf("Subvert" to "Reflux")
 
-    private fun renamePatchFolders(context: Context) {
-        val patches = File(userRoot(context), "patches")
+    private fun renamePatchFolders() {
+        val patches = File(userRoot(), "patches")
         for ((was, now) in RENAMED) {
             val from = File(patches, was)
             if (!from.isDirectory) continue

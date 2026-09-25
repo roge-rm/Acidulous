@@ -356,7 +356,7 @@ fun CompButton(
             val ticks = song.cycleTicks(sceneId, theClip)
             val frames = (ticks.toDouble() / PPQN * 60.0 / bpm * ENGINE_RATE).toInt()
             val root = java.io.File(
-                com.rm.acidulous.engine.EngineAssets.userRoot(context), "samples",
+                com.rm.acidulous.engine.EngineAssets.userRoot(), "samples",
             ).apply { mkdirs() }
             val file = java.io.File(root, com.rm.acidulous.engine.uniqueIn(root, "comp.wav"))
             scope.launch {

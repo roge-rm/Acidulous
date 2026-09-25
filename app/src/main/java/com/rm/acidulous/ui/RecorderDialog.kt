@@ -102,7 +102,7 @@ fun RecorderDialog(
 ) {
     val context = LocalContext.current
     val c = Acid.colors
-    val samples = remember { File(EngineAssets.userRoot(context), "samples").apply { mkdirs() } }
+    val samples = remember { File(EngineAssets.userRoot(), "samples").apply { mkdirs() } }
     // **On a square phone the input is a page of its own**, after record: the
     // record page is its name, button and meter, the take card and the input
     // card, and that is half a window more than a square phone has.

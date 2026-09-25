@@ -1,6 +1,6 @@
 package com.rm.acidulous.engine
 
-import android.util.Log
+import com.rm.acidulous.util.Log
 import com.rm.acidulous.model.Locks
 import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.Clip

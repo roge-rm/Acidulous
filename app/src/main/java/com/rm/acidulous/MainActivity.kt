@@ -166,7 +166,7 @@ class MainActivity : ComponentActivity() {
         com.rm.acidulous.model.Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
         com.rm.acidulous.model.Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
         com.rm.acidulous.midi.MidiHub.start(this)
-        EngineAssets.install(this)
+        EngineAssets.install(filesDir, cacheDir)
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
@@ -476,7 +476,7 @@ private fun App(modifier: Modifier = Modifier) {
     fun copyIn(uri: android.net.Uri, folder: String, fallback: String): java.io.File {
         val display = displayNameOf(context, uri, fallback)
         val safe = display.replace(Regex("[^A-Za-z0-9 _.-]"), "_").ifEmpty { fallback }
-        val dir = File(EngineAssets.userRoot(context), folder).apply { mkdirs() }
+        val dir = File(EngineAssets.userRoot(), folder).apply { mkdirs() }
         val dest = File(dir, safe)
         context.contentResolver.openInputStream(uri)!!.use { input -> dest.outputStream().use { input.copyTo(it) } }
         return dest
@@ -799,7 +799,7 @@ private fun App(modifier: Modifier = Modifier) {
                 com.rm.acidulous.ui.ExportFormat.Bundle -> {
                     val file = File(cache, "$base.zip")
                     runCatching {
-                        com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(context), file)
+                        com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(), file)
                         listOf(file) to ""
                     }.getOrElse { emptyList<File>() to (it.message ?: AppStrings.getString(Res.string.app_export_bundle_failed)) }
                 }
@@ -960,9 +960,9 @@ private fun App(modifier: Modifier = Modifier) {
     }
 
     DisposableEffect(Unit) {
-        EngineSync.sampleRoot = EngineAssets.userRoot(context)
-        EngineSync.freezeRoot = EngineAssets.freezeRoot(context)
-        NativeEngine.setCacheRoot(EngineAssets.reelCache(context).absolutePath)
+        EngineSync.sampleRoot = EngineAssets.userRoot()
+        EngineSync.freezeRoot = EngineAssets.freezeRoot()
+        NativeEngine.setCacheRoot(EngineAssets.reelCache().absolutePath)
         // Trinity's wavetables take a moment to build; do it off the main
         // thread now rather than stalling the first mount.
         Thread { NativeEngine.prewarm() }.start()
@@ -982,12 +982,12 @@ private fun App(modifier: Modifier = Modifier) {
             // first run after installing, and is saved with the songs so it can
             // be opened again from there; a session that will not load after
             // that is a new song rather than the demo every time.
-            val restored = runCatching { SongStore.loadSession(context) }.getOrNull()
+            val restored = runCatching { SongStore.loadSession() }.getOrNull()
             val firstRun = context.getSharedPreferences(FIRST_RUN, android.content.Context.MODE_PRIVATE)
             val loaded = when {
                 restored != null -> restored
                 !firstRun.getBoolean(DEMO_OPENED, false) -> DemoSong.build().also {
-                    if (!SongStore.exists(context, it.name)) SongStore.save(context, it)
+                    if (!SongStore.exists(it.name)) SongStore.save(it)
                 }
                 else -> com.rm.acidulous.ui.UiPrefs.newSong(AppStrings.getString(Res.string.main_untitled))
             }
@@ -1119,7 +1119,7 @@ private fun App(modifier: Modifier = Modifier) {
 
     /** A song name nothing saved already has: "Squelch", then "Squelch (2)". */
     fun freeSongName(wanted: String): String {
-        val taken = SongStore.list(context).toSet()
+        val taken = SongStore.list().toSet()
         if (wanted !in taken) return wanted
         var n = 2
         while ("$wanted ($n)" in taken) n++
@@ -1151,7 +1151,7 @@ private fun App(modifier: Modifier = Modifier) {
                     runCatching {
                         val tmp = File(context.cacheDir, "import.zip")
                         context.contentResolver.openInputStream(uri)!!.use { input -> tmp.outputStream().use { input.copyTo(it) } }
-                        com.rm.acidulous.model.SongBundle.read(tmp, EngineAssets.userRoot(context)).also { tmp.delete() }
+                        com.rm.acidulous.model.SongBundle.read(tmp, EngineAssets.userRoot()).also { tmp.delete() }
                     }.getOrNull()
                 }
                 if (song == null) {
@@ -1159,7 +1159,7 @@ private fun App(modifier: Modifier = Modifier) {
                 } else {
                     val named = song.copy(name = freeSongName(song.name))
                     swapSong(named)
-                    SongStore.save(context, named)
+                    SongStore.save(named)
                 }
             }
             // As long as any machine takes - the ten minutes a slicer can
@@ -1174,7 +1174,7 @@ private fun App(modifier: Modifier = Modifier) {
                     runCatching {
                         val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() }
                         val tuning = com.rm.acidulous.model.Tunings.parseScl(text, stem)
-                        val dir = com.rm.acidulous.model.TuningStore.directory(EngineAssets.userRoot(context))
+                        val dir = com.rm.acidulous.model.TuningStore.directory(EngineAssets.userRoot())
                         File(dir, stem.replace(Regex("[^A-Za-z0-9 _.-]"), "_") + ".scl").writeTextSafely(text)
                         tuning
                     }
@@ -1205,7 +1205,7 @@ private fun App(modifier: Modifier = Modifier) {
                 runCatching {
                     val dir = File(context.cacheDir, "shared").apply { deleteRecursively(); mkdirs() }
                     val file = File(dir, safeName(song.name) + ".zip")
-                    com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(context), file)
+                    com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(), file)
                     androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", file)
                 }
             }
@@ -1222,7 +1222,7 @@ private fun App(modifier: Modifier = Modifier) {
                 midiImport = null
                 val named = song.copy(name = freeSongName(song.name))
                 swapSong(named)
-                SongStore.save(context, named)
+                SongStore.save(named)
             },
         )
     }
@@ -1285,7 +1285,7 @@ private fun App(modifier: Modifier = Modifier) {
         // nobody asked. Opened here and left open; stopping the capture is
         // what ends the recording, not closing the stream.
         NativeEngine.startInput(com.rm.acidulous.ui.UiPrefs.inputDevice)
-        val root = java.io.File(EngineAssets.userRoot(context), "samples").apply { mkdirs() }
+        val root = java.io.File(EngineAssets.userRoot(), "samples").apply { mkdirs() }
         val target = java.io.File(root, uniqueIn(root, "take.wav"))
         val error = NativeEngine.startCapture(target.absolutePath, 0)
         if (error.isNotEmpty()) {
@@ -1864,14 +1864,14 @@ private fun App(modifier: Modifier = Modifier) {
     // to the background, because Android may kill the process from there.
     LaunchedEffect(song) {
         delay(1200)
-        runCatching { SongStore.saveSession(context, song) }.onFailure { Log.w(TAG, "session autosave failed", it) }
+        runCatching { SongStore.saveSession(song) }.onFailure { Log.w(TAG, "session autosave failed", it) }
     }
     val currentSong by rememberUpdatedState(song)
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) {
-                runCatching { SongStore.saveSession(context, currentSong) }
+                runCatching { SongStore.saveSession(currentSong) }
                     .onFailure { Log.w(TAG, "session save on stop failed", it) }
             }
         }
@@ -1957,12 +1957,12 @@ private fun App(modifier: Modifier = Modifier) {
             onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onArm = onArm, onLoopScene = onLoopScene,
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },
-            onSave = { SongStore.save(context, song); Log.i(TAG, "saved ${song.name}") },
-            onSaveAs = { name -> val renamed = song.copy(name = name); editor.replace(renamed); SongStore.save(context, renamed); Log.i(TAG, "saved as $name") },
+            onSave = { SongStore.save(song); Log.i(TAG, "saved ${song.name}") },
+            onSaveAs = { name -> val renamed = song.copy(name = name); editor.replace(renamed); SongStore.save(renamed); Log.i(TAG, "saved as $name") },
             onNew = { name ->
                 val fresh = com.rm.acidulous.ui.UiPrefs.newSong(name)
                 swapSong(fresh)
-                SongStore.save(context, fresh)
+                SongStore.save(fresh)
             },
             // **The same swap, and for the same reason.** Loading had the
             // identical fault a new song had: the transport carried straight
@@ -1972,12 +1972,12 @@ private fun App(modifier: Modifier = Modifier) {
             // because only new songs had been asked about; it is the same two
             // lines and there was never a reason for them to differ.
             onLoad = { name ->
-                runCatching { SongStore.load(context, name) }
+                runCatching { SongStore.load(name) }
                     .onSuccess { swapSong(it) }
                     .onFailure { Log.w(TAG, "load failed", it) }
             },
-            onDelete = { name -> SongStore.delete(context, name); Log.i(TAG, "deleted $name") },
-            songNames = { SongStore.list(context) },
+            onDelete = { name -> SongStore.delete(name); Log.i(TAG, "deleted $name") },
+            songNames = { SongStore.list() },
             onExport = { if (!playing) exportAsk = true },
             onImport = { importPicker.launch(arrayOf("*/*")) },
             onShareSong = { shareSong() },
@@ -1997,7 +1997,7 @@ private fun App(modifier: Modifier = Modifier) {
             onBack = { screen = Screen.Main },
             onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
             onOpenSample = { pad -> sampleEdit = s.track to pad },
-            patchNames = { PatchStore.list(context, song.tracks[s.track].machine.type) },
+            patchNames = { PatchStore.list(song.tracks[s.track].machine.type) },
             // The settings and not only the knobs: a Nexus patch without its
             // graph, a Mosaic without its zones or a Formulate without its
             // formula is a bag of numbers wired to whatever happened to be
@@ -2005,12 +2005,12 @@ private fun App(modifier: Modifier = Modifier) {
             // never could, and nothing said so - it just came back wrong.
             onSavePatch = { name, low, high ->
                 val m = song.tracks[s.track].machine
-                PatchStore.save(context, Patch(m.type, name, m.params, m.settings, low, high))
+                PatchStore.save(Patch(m.type, name, m.params, m.settings, low, high))
             },
-            onLoadPatch = { name -> PatchStore.load(context, song.tracks[s.track].machine.type, name) },
+            onLoadPatch = { name -> PatchStore.load(song.tracks[s.track].machine.type, name) },
             factoryPatchNames = { PatchStore.factory(song.tracks[s.track].machine.type) },
-            userPatchNames = { PatchStore.userList(context, song.tracks[s.track].machine.type) },
-            onDeletePatch = { name -> PatchStore.delete(context, song.tracks[s.track].machine.type, name) },
+            userPatchNames = { PatchStore.userList(song.tracks[s.track].machine.type) },
+            onDeletePatch = { name -> PatchStore.delete(song.tracks[s.track].machine.type, name) },
             onImportSample = { track, pad ->
                 importTarget = track to "p%02d_sample".format(pad)
                 samplePicker.launch(AUDIO_TYPES)
@@ -2035,7 +2035,7 @@ private fun App(modifier: Modifier = Modifier) {
                 if (rel != null) {
                     mapBusy = true
                     scope.launch {
-                        val path = File(EngineAssets.userRoot(context), rel).absolutePath
+                        val path = File(EngineAssets.userRoot(), rel).absolutePath
                         val presets = withContext(Dispatchers.IO) { NativeEngine.soundFontPresets(path) }
                         mapBusy = false
                         if (presets.isNotEmpty()) presetChoice = track to presets

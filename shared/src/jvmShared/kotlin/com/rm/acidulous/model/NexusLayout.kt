@@ -84,7 +84,7 @@ private fun snap(v: Float) = (v / 10f).roundToInt() * 10f
  * nothing is the end of a chain and goes in the last column, so the output
  * is always on the right; a module with no cables at all starts in the first.
  */
-internal fun NexusPatch.flowColumns(): List<List<Int>> {
+fun NexusPatch.flowColumns(): List<List<Int>> {
     val slots = modules.map { it.slot }.toSet()
     val edges = buildSet {
         for (c in cables) {

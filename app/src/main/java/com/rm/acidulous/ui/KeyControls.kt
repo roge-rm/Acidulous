@@ -53,12 +53,6 @@ private fun opensActions(e: KeyEvent, actions: List<CustomAccessibilityAction>):
     return asked
 }
 
-/** The ring a focused control wears: accent, or pink while a knob is grabbed. */
-private fun ContentDrawScope.ring(color: Color) {
-    val w = 2.dp.toPx()
-    drawRoundRect(color, cornerRadius = CornerRadius(4.dp.toPx()), style = Stroke(w))
-}
-
 /** Keyboard focus and turning for a knob, a fader or a slider. See the file's note. */
 internal fun Modifier.keyAdjust(
     value: Float,
@@ -96,7 +90,7 @@ internal fun Modifier.keyAdjust(
         }
         .drawWithContent {
             drawContent()
-            if (focused) ring(if (grabbed) pink else accent)
+            if (focused) focusRing(if (grabbed) pink else accent)
         }
 }
 
@@ -126,47 +120,8 @@ internal fun Modifier.keyPress(
         }
         .drawWithContent {
             drawContent()
-            if (focused) ring(accent)
+            if (focused) focusRing(accent)
         }
-}
-
-/**
- * The app's press indication - Material's ripple - with a focus ring on top,
- * so every `clickable` in the app shows where the keyboard is without each
- * one being told. Provided in AcidulousTheme.
- */
-class FocusRingIndication(private val base: IndicationNodeFactory, private val color: Color) : IndicationNodeFactory {
-    override fun create(interactionSource: InteractionSource): DelegatableNode =
-        RingNode(interactionSource, base.create(interactionSource), color)
-
-    override fun equals(other: Any?) = other is FocusRingIndication && other.base == base && other.color == color
-    override fun hashCode() = base.hashCode() * 31 + color.hashCode()
-}
-
-private class RingNode(
-    private val source: InteractionSource,
-    inner: DelegatableNode,
-    private val color: Color,
-) : DelegatingNode(), DrawModifierNode {
-    private var focused = false
-
-    init { delegate(inner) }
-
-    override fun onAttach() {
-        coroutineScope.launch {
-            source.interactions.collect { i ->
-                when (i) {
-                    is FocusInteraction.Focus -> { focused = true; invalidateDraw() }
-                    is FocusInteraction.Unfocus -> { focused = false; invalidateDraw() }
-                }
-            }
-        }
-    }
-
-    override fun ContentDrawScope.draw() {
-        drawContent()
-        if (focused) ring(color)
-    }
 }
 
 /**

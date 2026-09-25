@@ -1,6 +1,5 @@
 package com.rm.acidulous.model
 
-import android.content.Context
 import com.rm.acidulous.engine.EngineAssets
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -61,29 +60,29 @@ object PatchStore {
      */
     const val FX = "fx."
 
-    fun directory(context: Context, machine: String): File =
-        File(EngineAssets.userRoot(context), path(machine)).apply { mkdirs() }
+    fun directory(machine: String): File =
+        File(EngineAssets.userRoot(), path(machine)).apply { mkdirs() }
 
     private fun path(machine: String): String =
         if (machine.startsWith(FX)) "patches/fx/${machine.removePrefix(FX)}" else "patches/$machine"
 
-    fun save(context: Context, patch: Patch): File =
-        File(directory(context, patch.machine), "${safe(patch.name)}.json").also { it.writeTextSafely(json.encodeToString(Patch.serializer(), patch)) }
+    fun save(patch: Patch): File =
+        File(directory(patch.machine), "${safe(patch.name)}.json").also { it.writeTextSafely(json.encodeToString(Patch.serializer(), patch)) }
 
-    fun load(context: Context, machine: String, name: String): Patch? =
+    fun load(machine: String, name: String): Patch? =
         factory(machine).firstOrNull { it.name == name }
-            ?: File(directory(context, machine), "${safe(name)}.json").takeIf { it.isFile }?.let { json.decodeFromString(Patch.serializer(), it.readText()) }
+            ?: File(directory(machine), "${safe(name)}.json").takeIf { it.isFile }?.let { json.decodeFromString(Patch.serializer(), it.readText()) }
 
-    fun list(context: Context, machine: String): List<String> = factoryNames(machine) + userList(context, machine)
+    fun list(machine: String): List<String> = factoryNames(machine) + userList(machine)
 
     fun factoryNames(machine: String): List<String> = factory(machine).map { it.name }
 
-    fun userList(context: Context, machine: String): List<String> =
-        directory(context, machine).listFiles { f -> f.extension == "json" }?.map { it.nameWithoutExtension }?.sorted() ?: emptyList()
+    fun userList(machine: String): List<String> =
+        directory(machine).listFiles { f -> f.extension == "json" }?.map { it.nameWithoutExtension }?.sorted() ?: emptyList()
 
     /** User patches only; factory ones are code. */
-    fun delete(context: Context, machine: String, name: String): Boolean =
-        File(directory(context, machine), "${safe(name)}.json").delete()
+    fun delete(machine: String, name: String): Boolean =
+        File(directory(machine), "${safe(name)}.json").delete()
 
     /**
      * A unit's factory patches.

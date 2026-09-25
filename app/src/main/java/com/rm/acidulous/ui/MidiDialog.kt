@@ -325,7 +325,7 @@ private fun MappingCard(song: Song) {
                     color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                 )
                 Text(
-                    m.targetLabel(track, laneWord).let { if (m.rack != null) stringResource(Res.string.midi_mapping_track, it, m.rack + 1) else it },
+                    m.targetLabel(track, laneWord).let { m.rack?.let { r -> stringResource(Res.string.midi_mapping_track, it, r + 1) } ?: it },
                     color = Acid.colors.text, fontSize = 11.sp, modifier = Modifier.weight(1f),
                 )
                 Text(whose, color = Acid.colors.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
