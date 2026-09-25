@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <cstdint>
 #include <engine/core/RtQueue.h>
 
@@ -123,7 +124,27 @@ struct ParamMessage {
 
 /** Sixteen tracks of notes plus a clock pulse every ten ticks; 1024 is
  *  minutes of headroom if the sender is ever late. */
-using MidiOutQueue = RtQueue<MidiOutEvent, 1024>;
+/**
+ * The queue to the hardware, with a hold.
+ *
+ * An offline render - a freeze, an export - plays the song faster than time
+ * into a file, and every note a MIDI-out track played on the way, with the
+ * clock and its start and stop, went into this queue as well: the sender
+ * then played the lot on the synthesizer at the other end of the cable, in
+ * a burst. What a render plays belongs in the file, so while it runs
+ * nothing is queued at all.
+ */
+class MidiOutQueue {
+  public:
+    bool push(const MidiOutEvent &e) { return held.load(std::memory_order_relaxed) || q.push(e); }
+    bool pop(MidiOutEvent &e) { return q.pop(e); }
+    bool empty() const { return q.empty(); }
+    void hold(bool on) { held.store(on, std::memory_order_relaxed); }
+
+  private:
+    RtQueue<MidiOutEvent, 1024> q;
+    std::atomic<bool> held{false};
+};
 using MidiClockQueue = RtQueue<MidiInEvent, 256>;
 
 } // namespace acidulous

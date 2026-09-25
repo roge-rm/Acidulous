@@ -1106,6 +1106,9 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     // machine rather than a line here.
     sEngine.panicFlag.store(true, std::memory_order_release);
     sEngine.renderBlock(nullptr, silent);
+    // Nothing to the hardware from here: what the render plays goes in the
+    // file. After the panic above, so a note held live was let go first.
+    sEngine.midiOut.hold(true);
 
     ParamMessage click;
     click.rack = 0; click.unit = Unit::Master; click.index = sEngine.master.params().indexOf("clickon"); click.value = 0.0f; click.record = false;
@@ -1186,6 +1189,7 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     sEngine.renderBlock(nullptr, silent);
     sEngine.panicFlag.store(true, std::memory_order_release);
     sEngine.renderBlock(nullptr, silent);
+    sEngine.midiOut.hold(false);
     bool closed = true;
     for (auto &sink : sinks) {
         if (!sink->close()) closed = false;
@@ -1973,6 +1977,9 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     left.reserve(static_cast<size_t>(clipFrames + tailFrames));
     right.reserve(static_cast<size_t>(clipFrames + tailFrames));
 
+    // Nothing to the hardware while the scene plays into the file - see
+    // MidiOutQueue. After the clean start, so a note held live was let go.
+    sEngine.midiOut.hold(true);
     r.tapDry = true;
     sEngine.transport.requestPlay(sceneIdx);
     for (int64_t done = 0; done < clipFrames;) {
@@ -2049,6 +2056,7 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     // is the thing that names everything, so it is what runs here.
     sEngine.panicFlag.store(true, std::memory_order_release);
     sEngine.renderBlock(nullptr, scratch);
+    sEngine.midiOut.hold(false);
 
     sEngine.transport.setLoopSong(loopSongBefore);
     sEngine.transport.setLoopScene(loopSceneBefore);
