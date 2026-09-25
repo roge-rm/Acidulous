@@ -62,8 +62,13 @@ A knob that already has a drawn lane can't be locked: it shows ∿ and stays put
 
 ## Recording
 
-Press record, then play. What you play goes into the clip, quantised to the
-clip's grid. You can set a count-in in the settings.
+Press record, then play. What you play goes into the clip, moved onto the
+clip's grid. The **record** card in the tempo window's **click** tab sets a
+count-in, and whether recording quantises: **off** leaves notes exactly where
+you played them, and **amount** moves them only part of the way.
+
+Each take is one step of undo. It lasts from when recording and playback
+are both running until either stops.
 
 The keyboard is velocity sensitive by where you hit a key: low on the key is
 soft, high is hard. The button in the bottom bar turns this off so every note is
@@ -71,6 +76,27 @@ full velocity. The drum pads have their own setting for the same thing.
 
 Drag the row of controls just above the keys up or down to make the keyboard
 taller or shorter.
+
+## Quantising
+
+**⊞** in the header (or **Q**) opens the quantise window. It works on the
+selected notes, or the whole clip if none are selected. You hear the changes as
+you make them. **OK** keeps them as one step of undo; **Cancel** puts
+everything back.
+
+- **grid** - the clip's own grid, or another.
+- **amount** - how far each note moves towards the grid. Less than all the way
+  tightens a part without losing its feel.
+- **move** - just the starts, or the ends too.
+- **as played** - puts notes back exactly where they were played. Every
+  recorded note remembers this, however often it's quantised, and dragging a
+  note keeps its feel wherever you move it.
+- **groove** - quantises to another clip's timing rather than a straight grid,
+  e.g. a drummer's lazy backbeat. The song's swing is added when it plays, so
+  quantise to a straight grid for swing.
+- **humanise** - each press adds small random differences in timing,
+  loudness and length. Press again for a different result, or **none** to take
+  them away. The knob sets how much.
 
 ## Per-note settings
 

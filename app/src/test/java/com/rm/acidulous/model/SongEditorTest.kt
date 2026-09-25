@@ -80,4 +80,46 @@ class SongEditorTest {
         assertFalse(editor.song.tracks[0].clips[verse]!!.mute)
         assertTrue(editor.song.tracks[1].clips[verse]!!.mute)
     }
+
+    @Test
+    fun aWholeTakeIsOneUndoStep() {
+        val s = Spy()
+        val e = s.editor
+        val before = e.song.tracks[0]
+        fun play(tick: Int) = e.recorded(0, e.song.tracks[0].let { t ->
+            val c = t.clips[verse]!!
+            t.copy(clips = t.clips + (verse to c.copy(notes = c.notes + Note(tick, 10, 60, 100))))
+        })
+        repeat(4) { play(it * 60) }
+        assertEquals(20, e.song.tracks[0].clips[verse]!!.notes.size)
+        e.undo(0)
+        assertSame(before, e.song.tracks[0])
+        assertFalse(e.canUndo(0))
+
+        // A second take is a second step.
+        e.redo(0)
+        val firstTake = e.song.tracks[0]
+        e.endTake()
+        play(900); play(960)
+        e.undo(0)
+        assertSame(firstTake, e.song.tracks[0])
+    }
+
+    @Test
+    fun anEditDuringATakeIsNotFoldedIntoIt() {
+        val s = Spy()
+        val e = s.editor
+        fun play(tick: Int) = e.recorded(0, e.song.tracks[0].let { t ->
+            val c = t.clips[verse]!!
+            t.copy(clips = t.clips + (verse to c.copy(notes = c.notes + Note(tick, 10, 60, 100))))
+        })
+        play(0)
+        e.editClip(0, verse) { it.copy(mute = true) }
+        val muted = e.song.tracks[0]
+        play(60)
+        e.undo(0)
+        assertSame(muted, e.song.tracks[0])
+        e.undo(0)
+        assertFalse(e.song.tracks[0].clips[verse]!!.mute)
+    }
 }

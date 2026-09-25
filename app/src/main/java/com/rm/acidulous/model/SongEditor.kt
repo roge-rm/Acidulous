@@ -31,6 +31,8 @@ class SongEditor(
     private val songUndo = ArrayDeque<Song>()
     private val songRedo = ArrayDeque<Song>()
     private var gesture: Gesture? = null
+    /** Each track as the take in progress last left it, by track id; see [recorded]. */
+    private val takes = HashMap<String, Track>()
 
     private class Gesture(val trackIndex: Int, val base: Track)
 
@@ -41,6 +43,7 @@ class SongEditor(
         songUndo.clear()
         songRedo.clear()
         gesture = null
+        takes.clear()
         onChange(song, push)
     }
 
@@ -93,6 +96,24 @@ class SongEditor(
         h.redo.clear()
         commit(trackIndex, after, pushNow = push)
     }
+
+    /**
+     * A recording put notes on a track. A whole take is one undo step: the
+     * first notes of a take write the step, and the rest join it - but only
+     * while the track is still as the take left it. Anything else that
+     * touched the track in between (an edit, an undo) starts a fresh step,
+     * so joining can never fold someone else's change into the take.
+     */
+    fun recorded(trackIndex: Int, track: Track, push: Boolean = false) {
+        val before = song.tracks.getOrNull(trackIndex) ?: return
+        if (track === before) return
+        if (takes[before.id] === before) commit(trackIndex, track, pushNow = push)
+        else edit(trackIndex, push) { track }
+        takes[track.id] = track
+    }
+
+    /** The take is over: the next recorded notes start a new undo step. */
+    fun endTake() = takes.clear()
 
     fun editClip(trackIndex: Int, sceneId: String, push: Boolean = true, f: (Clip) -> Clip) = edit(trackIndex, push) { track ->
         val current = track.clips[sceneId] ?: song.emptyClipFor(sceneId)

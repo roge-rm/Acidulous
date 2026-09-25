@@ -1036,7 +1036,7 @@ private fun App(modifier: Modifier = Modifier) {
     val sceneIdOf: (Long) -> String? = { id -> song.scenes.firstOrNull { it.engineId == id }?.id }
     fun applyRecorded(result: Recorder.Result) {
         if (result.song !== song) {
-            result.song.tracks.forEachIndexed { i, t -> if (t !== song.tracks.getOrNull(i)) editor.edit(i, push = false) { t } }
+            result.song.tracks.forEachIndexed { i, t -> if (t !== song.tracks.getOrNull(i)) editor.recorded(i, t) }
         }
         if (result.push) EngineSync.sync(editor.song)
     }
@@ -1373,6 +1373,7 @@ private fun App(modifier: Modifier = Modifier) {
             }
         } else {
             applyRecorded(recorder.flush(song, sceneIdOf))
+            editor.endTake()
             finishBiasCapture()
         }
     }
@@ -1799,6 +1800,8 @@ private fun App(modifier: Modifier = Modifier) {
                 }
             }
             if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf, cycleWrapped))
+            // A take is one pass of armed and playing; stopping either ends it.
+            if (!(armed && playing)) editor.endTake()
             delay(80)
         }
     }
