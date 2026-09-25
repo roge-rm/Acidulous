@@ -11,6 +11,16 @@
     <uses-feature android:name="android.software.midi" android:required="false" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+    <!--
+      The permissions below would otherwise make Bluetooth, location and
+      Wi-Fi required hardware - a store infers it from them - and a device
+      without one would be told the app is not for it. Each is only for
+      MIDI or Link, and the app works without both.
+    -->
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />
 
     <!--
       Ableton Link: a tempo shared over the local network. Peers are found by
@@ -56,7 +66,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density|uiMode|navigation|fontScale"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|density|uiMode|navigation|fontScale"
             android:label="@string/app_name"
             android:theme="@style/Theme.Acidulous"
             android:windowSoftInputMode="adjustResize"
