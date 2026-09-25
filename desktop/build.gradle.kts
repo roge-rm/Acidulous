@@ -45,6 +45,9 @@ val debArm64Runtime: Configuration = configurations.create("debArm64Runtime")
 dependencies {
     implementation(project(":shared"))
     implementation(compose.desktop.common)
+    // Dispatchers.Main on the desktop is Swing's event thread; the app hops to
+    // it (an export pushes the song from there), and without this it has none.
+    implementation(libs.kotlinx.coroutines.swing)
     runtimeOnly(compose.desktop.currentOs)
     debAmd64Runtime(compose.desktop.linux_x64)
     debArm64Runtime(compose.desktop.linux_arm64)
@@ -98,6 +101,21 @@ val buildEngineArm64 = tasks.register<Exec>("buildEngineArm64") {
     )
 }
 
+/** miniaudio's licence, which is the foot of its header: public domain or MIT-0. */
+val miniaudioLicence = tasks.register("miniaudioLicence") {
+    val header = rootProject.file("app/src/main/cpp/third_party/miniaudio/miniaudio.h")
+    val out = layout.buildDirectory.file("generated/miniaudio/miniaudio.txt")
+    inputs.file(header)
+    outputs.file(out)
+    doLast {
+        val text = header.readText()
+        val start = text.indexOf("This software is available as a choice of the following licenses.")
+        val end = text.lastIndexOf("*/")
+        check(start >= 0 && end > start) { "no licence at the foot of miniaudio.h" }
+        out.get().asFile.writeText(text.substring(start, end).trimEnd() + "\n")
+    }
+}
+
 /**
  * The licence texts the About window shows, from where they live and under
  * the names the app gives them: the same as :app's stageLicences.
@@ -109,6 +127,7 @@ val stageLicences = tasks.register<Sync>("stageLicences") {
     from(rootProject.file("LICENSE")) { rename { "gpl-3.0.txt" } }
     from(rootProject.file("licences/Apache-2.0.txt")) { rename { "apache-2.0.txt" } }
     from(rootProject.file("licences/GPL-2.0.txt")) { rename { "gpl-2.0.txt" } }
+    from(miniaudioLicence)
     into(layout.buildDirectory.dir("generated/licences/licences"))
 }
 sourceSets.main { resources.srcDir(stageLicences.map { it.destinationDir.parentFile }) }

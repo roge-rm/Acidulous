@@ -55,6 +55,10 @@ interface AppHost {
     fun transportChanged(playing: Boolean, stop: () -> Unit)
     /** Encode a 16-bit WAV to AAC at [bitrate]; "" when it worked, else why not. */
     fun encodeAac(pcm: File, out: File, bitrate: Int): String
+    /** Whether [encodeAac] can: the export window leaves AAC out where it cannot. */
+    val canEncodeAac: Boolean get() = true
+    /** Whether the audio stream is Oboe's (the phone) rather than miniaudio's (the desktop), for the About window's credits. */
+    val usesOboe: Boolean get() = true
 
     companion object {
         lateinit var current: AppHost

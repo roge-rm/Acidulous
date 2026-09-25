@@ -55,6 +55,9 @@ class DesktopHost(private val configDir: File) : AppHost {
     /** Nothing to hold: a desktop does not stop a playing app behind its back. */
     override fun transportChanged(playing: Boolean, stop: () -> Unit) {}
 
+    override val canEncodeAac: Boolean = false
+    override val usesOboe: Boolean = false
+
     override fun encodeAac(pcm: File, out: File, bitrate: Int): String =
         "AAC export is the phone's own encoder, which the desktop does not have. Choose MP3 or FLAC."
 

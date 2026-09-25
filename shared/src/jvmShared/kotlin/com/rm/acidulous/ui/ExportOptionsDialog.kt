@@ -115,10 +115,12 @@ fun ExportOptionsDialog(
         // settings in it (Dan, 2026-09-23).
         WindowCards {
             WindowCard(stringResource(Res.string.export_file)) {
+                // AAC is the phone's own encoder; where there is none, it is not offered.
+                val formats = ExportFormat.entries.filter { it != ExportFormat.Aac || com.rm.acidulous.AppHost.current.canEncodeAac }
                 SwitchGrid(
                     stringResource(Res.string.export_format),
-                    ExportFormat.entries.map { if (it == ExportFormat.Bundle) stringResource(Res.string.export_format_bundle) else it.label }, ExportFormat.entries.indexOf(format), columns = 4) { i ->
-                    val f = ExportFormat.entries[i]
+                    formats.map { if (it == ExportFormat.Bundle) stringResource(Res.string.export_format_bundle) else it.label }, formats.indexOf(format), columns = 4) { i ->
+                    val f = formats[i]
                     format = f
                     // FLAC has nowhere to put a float, so a 32-bit choice
                     // made under another format quietly becomes 24 rather

@@ -24,6 +24,8 @@
     <string name="about_not_ours_note">Everything else was written for this app, including the engine, the machines and effects, the sequencer and the file writers. No DSP code, presets or samples come from anywhere else.</string>
     <!-- A component: its name and version, then what it does here. -->
     <string name="about_oboe">Oboe 1.10.0 · the audio stream</string>
+    <!-- The desktop's, in Oboe's place. -->
+    <string name="about_miniaudio">miniaudio 0.11.22 · the audio stream</string>
     <string name="about_lame">LAME 3.100 · MP3 encoding, as its own library</string>
     <string name="about_link">Ableton Link 4.0 · a tempo shared over Wi-Fi</string>
     <string name="about_asio">asio 1.36.0 · the network, underneath Link</string>
