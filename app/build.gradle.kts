@@ -141,6 +141,11 @@ android {
         // and worked from keys, shortcuts on every screen, and they can be
         // changed in Settings. Nexus's fit button lays the patch out to fit
         // the screen.
+        // 0.9.7: a 32-bit build beside the 64-bit one; square phones' windows
+        // fit without scrolling; MPE follows the controller and expresses by
+        // default; an Exquis shows the key and a Launchpad Pro is driven
+        // whole; quantise, groove and humanise; a take is one undo; velocity
+        // runs from a whisper to full on every machine, with a MIDI curve.
         //
         // **Two APKs a release**: the 64-bit one, and with -Parm32 a 32-bit
         // one for tablets that run 32-bit Android on any processor - the Fire
@@ -148,9 +153,9 @@ android {
         // run, and nearly every 64-bit phone can run 32-bit code too, so the
         // 64-bit APK must be the higher: the release number times ten, plus
         // two for 64-bit and one for 32-bit. Bump [release], not the code.
-        val release = 21
+        val release = 22
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.9.6"
+        versionName = "0.9.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
