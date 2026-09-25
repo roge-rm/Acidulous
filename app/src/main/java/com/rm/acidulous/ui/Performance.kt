@@ -2,6 +2,7 @@ package com.rm.acidulous.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -176,12 +177,21 @@ fun TouchWheel(
  */
 val OctaveW = 80.dp
 
-/** Octave up and down, side by side, with the octave between them. */
+/**
+ * Octave up and down, side by side, with the octave between them.
+ *
+ * The octave in the middle is also the hardware keyboard's play mode: a tap
+ * makes the letters notes, starting at this octave, and it is lit while they
+ * are. It is where a player looking for "the keys play the keys" looks, and
+ * the row had no room for a chip of its own.
+ */
 @Composable
 fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Modifier) {
     val c = Acid.colors
+    val playMode = KeyHub.playMode
     Row(
-        modifier.clip(RoundedCornerShape(4.dp)).background(c.card),
+        modifier.clip(RoundedCornerShape(4.dp)).background(if (playMode) c.accentDim else c.card)
+            .then(if (playMode) Modifier.border(1.dp, c.accent, RoundedCornerShape(4.dp)) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -199,7 +209,11 @@ fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Mod
         Text(
             "C${octave + 1}", color = Acid.colors.accent, fontSize = 10.sp,
             fontFamily = FontFamily.Monospace, maxLines = 1,
-            modifier = Modifier.button(stringResource(R.string.a11y_keys_from, spokenNote(12 * (octave + 1), emptyMap(), androidx.compose.ui.platform.LocalResources.current))),
+            modifier = Modifier.clickable { KeyHub.togglePlayMode() }.button(
+                stringResource(R.string.a11y_keys_from, spokenNote(12 * (octave + 1), emptyMap(), androidx.compose.ui.platform.LocalResources.current)),
+                stringResource(R.string.keys_play_mode) + ": " + stringResource(if (playMode) R.string.a11y_on else R.string.a11y_off),
+                onClick = { KeyHub.togglePlayMode() },
+            ),
         )
         StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(R.string.a11y_octave_up)) {
             onOctave(octave + 1)

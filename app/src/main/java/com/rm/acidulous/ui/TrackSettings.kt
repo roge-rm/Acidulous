@@ -72,7 +72,7 @@ fun TrackSettingsDialog(
                 Column(Modifier.widthIn(max = 300.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     OutlinedTextField(
                         value = name, onValueChange = { name = it }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.typing() then Modifier.fillMaxWidth(),
                     )
                     ColourRow(trackColour(index, track.colour)) { track = track.copy(colour = it) }
                 }

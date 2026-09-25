@@ -2620,7 +2620,7 @@ private fun FormulaDialog(
                         value = formula, onValueChange = { formula = it },
                         label = { Text(stringResource(R.string.formula_expression)) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.typing() then Modifier.fillMaxWidth(),
                     )
                     if (error.isNotEmpty()) Text(error, color = c.red, fontSize = 12.sp)
                     Text(stringResource(R.string.formula_examples), color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
@@ -2644,18 +2644,18 @@ private fun FormulaDialog(
                     androidx.compose.material3.OutlinedTextField(
                         value = arp, onValueChange = { arp = it }, label = { Text(stringResource(R.string.formula_arp)) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
-                        singleLine = true, modifier = Modifier.fillMaxWidth(),
+                        singleLine = true, modifier = Modifier.typing() then Modifier.fillMaxWidth(),
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         androidx.compose.material3.OutlinedTextField(
                             value = duty, onValueChange = { duty = it }, label = { Text(stringResource(R.string.formula_duty)) },
                             textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
-                            singleLine = true, modifier = Modifier.weight(1f),
+                            singleLine = true, modifier = Modifier.typing() then Modifier.weight(1f),
                         )
                         androidx.compose.material3.OutlinedTextField(
                             value = vol, onValueChange = { vol = it }, label = { Text(stringResource(R.string.formula_volume)) },
                             textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
-                            singleLine = true, modifier = Modifier.weight(1f),
+                            singleLine = true, modifier = Modifier.typing() then Modifier.weight(1f),
                         )
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {

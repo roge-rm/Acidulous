@@ -287,6 +287,14 @@ object UiPrefs {
         private set
 
     /**
+     * The keyboard's shortcuts: [DEFAULT_KEYS] with the person's changes on
+     * top. Only the changes are stored, so a default that moves in a later
+     * version moves for everybody who never touched it.
+     */
+    var keyBindings by mutableStateOf(DEFAULT_KEYS)
+        private set
+
+    /**
      * Mapping mode: every mappable control says so, and a tap arms it.
      *
      * Not persisted. It is a mode you are in for a minute, and coming back
@@ -362,6 +370,7 @@ object UiPrefs {
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
         loopBars = p.getInt(KEY_LOOP_BARS, 0)
+        keyBindings = DEFAULT_KEYS + decodeKeys(p.getString(KEY_KEYS, null).orEmpty())
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
             .getOrDefault(ThemeMode.Dark)
         uiScale = p.getFloat(KEY_UI_SCALE, 1f)
@@ -527,6 +536,17 @@ object UiPrefs {
     fun chooseQuantise(bars: Int) {
         launchQuantise = bars
         store?.edit()?.putInt(KEY_LAUNCH_Q, bars)?.apply()
+    }
+
+    /** New keys for one action; an empty list leaves it with none. */
+    fun chooseKeys(action: KeyAction, chords: List<KeyChord>) {
+        keyBindings = keyBindings + (action to chords)
+        store?.edit()?.putString(KEY_KEYS, encodeKeys(keyBindings.filter { (a, c) -> DEFAULT_KEYS[a] != c }))?.apply()
+    }
+
+    fun resetKeys() {
+        keyBindings = DEFAULT_KEYS
+        store?.edit()?.remove(KEY_KEYS)?.apply()
     }
 
     fun chooseTheme(mode: ThemeMode) {
@@ -744,6 +764,7 @@ object UiPrefs {
     private const val KEY_LAUNCH_Q = "launch_quantise"
     private const val KEY_LOOP_BARS = "loop_bars"
     private const val KEY_THEME = "theme"
+    private const val KEY_KEYS = "key_bindings"
     private const val KEY_UI_SCALE = "ui_scale"
     private const val KEY_BUFFER = "buffer"
     private const val KEY_VOICES = "voice_limit"

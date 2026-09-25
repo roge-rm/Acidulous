@@ -430,6 +430,30 @@ fun MainScreen(
             }
     }
 
+    // The keyboard's shortcuts here: each does what its button on this screen
+    // does, so a key and a tap can never disagree. See ui/Keys.kt.
+    KeyScope(
+        KeyAction.PlayStop to {
+            val anyLaunched = clipMode && launchStates.any { it.playing }
+            val anyStopping = clipMode && launchStates.any { it.stopping }
+            when {
+                !playing -> com.rm.acidulous.engine.EngineSync.play(if (clipMode) 0 else position.scene, clipMode)
+                clipMode && anyLaunched && !anyStopping -> NativeEngine.stopAllClips()
+                else -> NativeEngine.transportStop()
+            }
+        },
+        KeyAction.Record to { onArm(!armed) },
+        KeyAction.Loop to {
+            if (!song.loopSong) editor.replace(song.copy(loopSong = true))
+            onLoopScene(!loopScene)
+        },
+        KeyAction.Undo to { if (editor.canUndoSong()) editor.undoSong() },
+        KeyAction.Redo to { if (editor.canRedoSong()) editor.redoSong() },
+        KeyAction.Panel to { showMixer = !showMixer },
+        KeyAction.Save to { onSave() },
+        KeyAction.FileMenu to { fileMenu = true },
+        KeyAction.Help to { dialog = Dialog.Help },
+    )
     Column(modifier.fillMaxSize().background(Acid.colors.bg)) {
         // --- Header: song, structure undo, file ----------------------------------------
         CutoutRow(

@@ -113,7 +113,7 @@ fun SceneSettingsDialog(
         ListSection(stringResource(R.string.scene_name)) {
             OutlinedTextField(
                 value = name, onValueChange = { name = it }, singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.typing() then Modifier.fillMaxWidth(),
             )
         }
 
@@ -399,7 +399,7 @@ fun TextInputDialog(title: String, initial: String, onDismiss: () -> Unit, onCon
     ) {
         OutlinedTextField(
             value = value, onValueChange = { value = it }, singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.typing() then Modifier.fillMaxWidth(),
         )
     }
 }
@@ -683,7 +683,7 @@ private fun BpmRow(bpm: Float, onBpm: (Float) -> Unit) {
                 textStyle = LocalTextStyle.current.copy(
                     fontSize = 20.sp, fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center,
                 ),
-                modifier = Modifier.width(120.dp).semantics { contentDescription = fieldSaid },
+                modifier = Modifier.typing() then Modifier.width(120.dp).semantics { contentDescription = fieldSaid },
             )
             StepButton("+", stringResource(R.string.a11y_tempo_up)) { onBpm((bpm + 1f).coerceIn(BPM_MIN, BPM_MAX)) }
         }

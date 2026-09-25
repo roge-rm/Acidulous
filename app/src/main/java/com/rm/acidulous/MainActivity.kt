@@ -251,8 +251,43 @@ class MainActivity : ComponentActivity() {
         controller.hide(WindowInsetsCompat.Type.systemBars())
     }
 
+    /**
+     * **Every key comes through here first**, whether or not anything on
+     * screen has focus - which a Compose modifier would need before it saw a
+     * key at all. Play mode's notes and the chords with a modifier are taken
+     * before the screen; whatever the focused control does not use comes
+     * back for the plain-letter shortcuts. See ui/Keys.kt.
+     */
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        if (com.rm.acidulous.ui.KeyHub.preview(event)) return true
+        if (super.dispatchKeyEvent(event)) return true
+        return com.rm.acidulous.ui.KeyHub.fallback(event)
+    }
+
+    /** What Meta+/ lists on a USB keyboard: the shortcuts this screen answers to. */
+    override fun onProvideKeyboardShortcuts(
+        data: MutableList<android.view.KeyboardShortcutGroup>,
+        menu: android.view.Menu?,
+        deviceId: Int,
+    ) {
+        super.onProvideKeyboardShortcuts(data, menu, deviceId)
+        val items = com.rm.acidulous.ui.KeyHub.live().mapNotNull { action ->
+            val chord = com.rm.acidulous.ui.UiPrefs.keyBindings[action]?.firstOrNull() ?: return@mapNotNull null
+            var mods = 0
+            if (chord.ctrl) mods = mods or android.view.KeyEvent.META_CTRL_ON
+            if (chord.alt) mods = mods or android.view.KeyEvent.META_ALT_ON
+            if (chord.shift) mods = mods or android.view.KeyEvent.META_SHIFT_ON
+            if (chord.meta) mods = mods or android.view.KeyEvent.META_META_ON
+            android.view.KeyboardShortcutInfo(getString(action.label), chord.key, mods)
+        }
+        if (items.isNotEmpty()) data += android.view.KeyboardShortcutGroup(getString(R.string.keys_title), items)
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
+        // A note held on a key whose key up now goes to another window would
+        // never end.
+        if (!hasFocus) com.rm.acidulous.ui.KeyHub.releaseAll()
         // A dialog, a permission prompt or the recents screen brings them
         // back; take the height again as soon as we have focus.
         if (hasFocus) goFullScreen()
@@ -362,6 +397,30 @@ private fun App(modifier: Modifier = Modifier) {
     LaunchedEffect(screen) {
         (screen as? Screen.Edit)?.let { midiTrack = it.track }
         com.rm.acidulous.midi.MidiHub.target = { midiTrack }
+        com.rm.acidulous.ui.KeyHub.target = { midiTrack }
+    }
+    // Typed notes go where hardware notes do; on a drum machine they are its
+    // pads in order rather than a scale.
+    androidx.compose.runtime.SideEffect {
+        com.rm.acidulous.ui.KeyHub.drumVoices = { rack ->
+            song.tracks.getOrNull(rack)?.machine?.let { m ->
+                if (com.rm.acidulous.model.MachineUi.kindOf(m.type) == com.rm.acidulous.model.MachineKind.Drums) {
+                    com.rm.acidulous.model.MachineUi.voicesOf(m.type, m.settings).map { it.note }
+                } else null
+            }
+        }
+    }
+    // The keys every screen answers to the same way.
+    com.rm.acidulous.ui.KeyScope(
+        com.rm.acidulous.ui.KeyAction.PlayMode to { com.rm.acidulous.ui.KeyHub.togglePlayMode() },
+        com.rm.acidulous.ui.KeyAction.Panic to { com.rm.acidulous.ui.panicEverything() },
+        com.rm.acidulous.ui.KeyAction.KeysHelp to { com.rm.acidulous.ui.KeyHub.showingKeys = true },
+        com.rm.acidulous.ui.KeyAction.Back to {
+            (context as? androidx.activity.ComponentActivity)?.onBackPressedDispatcher?.onBackPressed()
+        },
+    )
+    if (com.rm.acidulous.ui.KeyHub.showingKeys) {
+        com.rm.acidulous.ui.KeysOverlay(onDismiss = { com.rm.acidulous.ui.KeyHub.showingKeys = false })
     }
 
     // Importing a sample: the system picker, a copy into user/samples/, and the

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The hardware keyboard: its shortcuts, play mode and the list of keys. -->
+<resources>
+    <string name="keys_group_transport">transport</string>
+    <string name="keys_group_play">play</string>
+    <string name="keys_group_app">app</string>
+    <string name="keys_group_editor">editor</string>
+
+    <string name="keys_play_stop">play / stop</string>
+    <string name="keys_record">record</string>
+    <string name="keys_loop">loop</string>
+    <string name="keys_undo">undo</string>
+    <string name="keys_redo">redo</string>
+    <string name="keys_panic">stop everything</string>
+    <string name="keys_play_mode">keys play notes</string>
+    <string name="keys_save">save</string>
+    <string name="keys_file_menu">file menu</string>
+    <string name="keys_panel">mixer and perform pages</string>
+    <string name="keys_help">manual</string>
+    <string name="keys_keys_help">this list</string>
+    <string name="keys_back">back</string>
+    <string name="keys_page_prev">previous page</string>
+    <string name="keys_page_next">next page</string>
+    <string name="keys_edit_mode">draw or select</string>
+    <string name="keys_step_view">step view</string>
+    <string name="keys_lock_steps">lock steps</string>
+    <string name="keys_generate">generate notes</string>
+    <string name="keys_fold_panel">fold the panel</string>
+    <string name="keys_fold_keys">fold the keyboard</string>
+
+    <!-- The list of keys a question mark opens. -->
+    <string name="keys_title">Keys</string>
+    <string name="keys_notes_line">In play mode: A S D F G H J K L are white keys, W E T Y U O P black. Z X move the octave, C V the velocity. Shift plays an octave up.</string>
+    <string name="keys_nav_line">Arrows and Tab move between controls. Enter presses; arrows turn a knob, Shift for fine. Alt+Enter opens what a hold does.</string>
+    <!-- The chip beside the octave in the editor: letters are notes. Its state, and the octave the A key starts. -->
+    <string name="keys_chip">keys</string>
+    <string name="keys_chip_on">keys C%1$d</string>
+</resources>

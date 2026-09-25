@@ -262,7 +262,7 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
         OutlinedTextField(
             value = name, onValueChange = { name = it }, singleLine = true,
             label = { Text(stringResource(R.string.sound_name), fontSize = 11.sp) },
-            modifier = Modifier.weight(1f), enabled = !recording,
+            modifier = Modifier.typing() then Modifier.weight(1f), enabled = !recording,
         )
         Button(
             onClick = {
@@ -496,7 +496,7 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         OutlinedTextField(
             value = saveAs, onValueChange = { saveAs = it }, singleLine = true,
             label = { Text(stringResource(R.string.sound_save_as), fontSize = 11.sp) },
-            modifier = Modifier.weight(1f), enabled = !busy,
+            modifier = Modifier.typing() then Modifier.weight(1f), enabled = !busy,
         )
         Button(
             enabled = !busy && frames > 0,

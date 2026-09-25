@@ -353,6 +353,30 @@ fun EditScreen(
 
     // `modifier` carries the Scaffold's system-bar padding; without it the
     // footer sits under the navigation bar and its taps become Back.
+    // The keyboard's shortcuts in the editor, each the same as its button
+    // here. Undo is the clip's, as the pill's is. See ui/Keys.kt.
+    KeyScope(
+        KeyAction.PlayStop to {
+            if (playing) NativeEngine.transportStop()
+            else com.rm.acidulous.engine.EngineSync.play(song.scenes.indexOf(scene), UiPrefs.clipMode)
+        },
+        KeyAction.Record to { onArm(!armed) },
+        KeyAction.Undo to { if (editor.canUndo(trackIndex)) { selection = emptySet(); editor.undo(trackIndex) } },
+        KeyAction.Redo to { if (editor.canRedo(trackIndex)) { selection = emptySet(); editor.redo(trackIndex) } },
+        KeyAction.Panel to {
+            if (square && squareKeys) { squareKeys = false; panel = 2 } else panel = if (panel == 2) 0 else 2
+        },
+        KeyAction.PagePrev to { if (pages > 1) scrollTick = ((page - 1 + pages) % pages) * pageTicks },
+        KeyAction.PageNext to { if (pages > 1) scrollTick = ((page + 1) % pages) * pageTicks },
+        KeyAction.EditMode to { if (!steps) mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw },
+        KeyAction.StepView to { if (hasSteps) steps = !steps },
+        KeyAction.LockSteps to {
+            if (kind != MachineKind.Audio) { lockMode = !lockMode; lockTicks = emptySet(); selection = emptySet() }
+        },
+        KeyAction.Generate to { if (kind != MachineKind.Audio) generateDialog = true },
+        KeyAction.FoldPanel to { UiPrefs.foldPanel(!UiPrefs.panelFolded) },
+        KeyAction.FoldKeys to { UiPrefs.foldKeys(!UiPrefs.keysFolded) },
+    )
     Column(modifier.fillMaxSize().background(Acid.colors.bg)) {
         val footerSlot: @Composable () -> Unit = {
         // The bottom bar: what this screen is showing, then the three that
@@ -643,6 +667,11 @@ fun EditScreen(
         // pieces are the same either way; only the arrangement differs, so
         // each is written once here and placed below.
         var octave by rememberSaveable(trackIndex) { mutableStateOf(3) }
+        // Typed notes start where the on-screen keys do - the first key is
+        // note 12 x (octave + 1), which is KeyHub's octave too - and Z and X
+        // move both.
+        androidx.compose.runtime.SideEffect { KeyHub.follow(octave) { octave = it } }
+        androidx.compose.runtime.DisposableEffect(Unit) { onDispose { KeyHub.follow(0, null) } }
         // The grid says it is choosing rather than drawing.
         val lockEdge = if (lockMode) Modifier.border(1.dp, Acid.colors.pink) else Modifier
         val gridSlot: @Composable ColumnScope.() -> Unit = {
