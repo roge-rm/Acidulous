@@ -34,6 +34,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Note
@@ -178,6 +182,51 @@ fun NoteLane(
     // holding the null it started life with.
     fun shown(n: Note): Boolean = filterState == null || n.pitch == filterState
 
+    // **The keyboard's cursor**, as the roll's: focused the lane wears a ring,
+    // Enter starts editing, the arrows left and right walk the notes it shows
+    // - one pitch's, when a pitch is chosen - and up and down change the
+    // value, each one an undo step. Esc stops editing.
+    var keyFocused by remember { mutableStateOf(false) }
+    var keyEditing by remember { mutableStateOf(false) }
+    var keyNote by remember { mutableStateOf(-1) } // an index into clip.notes
+    val laneKeys = Modifier
+        .onFocusChanged { keyFocused = it.isFocused; if (!it.isFocused) keyEditing = false }
+        .focusable()
+        .onKeyEvent { ev ->
+            if (ev.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onKeyEvent false
+            val e = ev.nativeKeyEvent
+            val code = e.keyCode
+            val enter = code == android.view.KeyEvent.KEYCODE_ENTER || code == android.view.KeyEvent.KEYCODE_NUMPAD_ENTER ||
+                code == android.view.KeyEvent.KEYCODE_DPAD_CENTER
+            val c = clipState
+            // The notes the lane shows, in time order.
+            val order = c.notes.indices.filter { shown(c.notes[it]) }.sortedBy { c.notes[it].tick }
+            if (!keyEditing) {
+                if (!enter || order.isEmpty()) return@onKeyEvent false
+                keyEditing = true
+                if (keyNote !in order) keyNote = order.first()
+                return@onKeyEvent true
+            }
+            when (code) {
+                android.view.KeyEvent.KEYCODE_ESCAPE -> { keyEditing = false; true }
+                android.view.KeyEvent.KEYCODE_DPAD_LEFT, android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    val at = order.indexOf(keyNote).coerceAtLeast(0)
+                    val next = at + if (code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT) 1 else -1
+                    if (next in order.indices) keyNote = order[next]
+                    true
+                }
+                android.view.KeyEvent.KEYCODE_DPAD_UP, android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    val n = c.notes.getOrNull(keyNote) ?: return@onKeyEvent true
+                    val dir = if (code == android.view.KeyEvent.KEYCODE_DPAD_UP) 1 else -1
+                    val prop = propState
+                    val to = (fractionOf(n, prop) + dir * stepOf(prop, e.isShiftPressed)).coerceIn(0f, 1f)
+                    beginState(); setState(mapOf(keyNote to to)); endState()
+                    true
+                }
+                else -> false
+            }
+        }
+
     fun centreTick(n: Note): Int {
         val g = clipState.grid.coerceAtLeast(1)
         return n.tick + (if (cellState) g else minOf(maxOf(1, n.length), g)) / 2
@@ -288,7 +337,7 @@ fun NoteLane(
 
         Box(Modifier.fillMaxWidth().fillMaxHeight()) {
             Canvas(
-                Modifier.fillMaxWidth().fillMaxHeight().pointerInput(Unit) {
+                Modifier.fillMaxWidth().fillMaxHeight().then(laneKeys).pointerInput(Unit) {
                     awaitEachGesture {
                         // Always consume a down before bailing, or
                         // awaitEachGesture spins the main thread.
@@ -430,6 +479,16 @@ fun NoteLane(
                     if (mid < from - clip.grid || mid > from + span) continue
                     drawMark(n, prop, xOf(mid), wide, c)
                 }
+                if (keyFocused) {
+                    drawRect(c.accent, Offset.Zero, size, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
+                    clip.notes.getOrNull(keyNote)?.takeIf { keyEditing }?.let { n ->
+                        val x = xOf(centreTick(n))
+                        drawRect(
+                            c.pink, Offset(x - wide, 1f), Size(wide * 2f, size.height - 2f),
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(2.5f),
+                        )
+                    }
+                }
 
                 playheadTick?.let { pt ->
                     if (total > 0) {
@@ -511,4 +570,28 @@ private fun DrawScope.drawMark(
             }
         }
     }
+}
+
+/**
+ * A note's value for [prop] as the lane's height, nought to one: the inverse
+ * of what the editor makes of a height (see EditScreen's `onSet`).
+ */
+internal fun fractionOf(n: Note, prop: NoteProp): Float = when (prop) {
+    NoteProp.Velocity -> n.velocity / 127f
+    NoteProp.Chance -> n.chance / 100f
+    NoteProp.Ratchet -> n.ratchet / 8f
+    NoteProp.Nudge -> n.nudge / (2f * NUDGE_RANGE) + 0.5f
+    NoteProp.Cond -> {
+        val all = com.rm.acidulous.model.Trig.inOrder
+        all.indexOf(n.trig).coerceAtLeast(0).toFloat() / (all.size - 1).coerceAtLeast(1)
+    }
+}
+
+/** One key's worth of change: a step of the value, or a finer one with Shift. */
+internal fun stepOf(prop: NoteProp, fine: Boolean): Float = when (prop) {
+    NoteProp.Velocity -> (if (fine) 1f else 8f) / 127f
+    NoteProp.Chance -> (if (fine) 1f else 5f) / 100f
+    NoteProp.Ratchet -> 1f / 8f
+    NoteProp.Nudge -> (if (fine) 1f else 4f) / (2f * NUDGE_RANGE)
+    NoteProp.Cond -> 1f / (com.rm.acidulous.model.Trig.inOrder.size - 1).coerceAtLeast(1)
 }

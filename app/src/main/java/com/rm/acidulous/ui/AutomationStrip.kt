@@ -36,6 +36,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Lane
@@ -164,9 +168,52 @@ fun AutomationStrip(
                 }
             }
         }
+        // **The keyboard's cursor**, as the roll's: focused the strip wears a
+        // ring, Enter starts editing, left and right walk the grid, and up
+        // and down set the lane's value there - a point, through the same
+        // stroke a finger draws, one undo step each. Esc stops editing.
+        var keyFocused by remember { mutableStateOf(false) }
+        var keyEditing by remember { mutableStateOf(false) }
+        var keyTick by remember { mutableStateOf(firstTick) }
+        val firstState by rememberUpdatedState(firstTick)
+        val currentState by rememberUpdatedState(current)
+        val laneState by rememberUpdatedState(lane)
+        val stripKeys = Modifier
+            .onFocusChanged { keyFocused = it.isFocused; if (!it.isFocused) keyEditing = false }
+            .focusable()
+            .onKeyEvent { ev ->
+                if (ev.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onKeyEvent false
+                val e = ev.nativeKeyEvent
+                val code = e.keyCode
+                val c0 = clipState
+                val grid = c0.grid.coerceAtLeast(1)
+                val total = (c0.bars * ticksPerBar).coerceAtLeast(grid)
+                if (!keyEditing) {
+                    val enter = code == android.view.KeyEvent.KEYCODE_ENTER || code == android.view.KeyEvent.KEYCODE_NUMPAD_ENTER ||
+                        code == android.view.KeyEvent.KEYCODE_DPAD_CENTER
+                    if (!enter) return@onKeyEvent false
+                    keyEditing = true
+                    keyTick = (firstState / grid * grid).coerceIn(0, total - grid)
+                    return@onKeyEvent true
+                }
+                when (code) {
+                    android.view.KeyEvent.KEYCODE_ESCAPE -> { keyEditing = false; true }
+                    android.view.KeyEvent.KEYCODE_DPAD_LEFT -> { keyTick = (keyTick - grid).coerceAtLeast(0); true }
+                    android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> { keyTick = (keyTick + grid).coerceAtMost(total - grid); true }
+                    android.view.KeyEvent.KEYCODE_DPAD_UP, android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        val key = currentState ?: return@onKeyEvent true
+                        val dir = if (code == android.view.KeyEvent.KEYCODE_DPAD_UP) 1 else -1
+                        val now = laneState?.valueAt(keyTick) ?: 0.5f
+                        val to = (now + dir * (if (e.isShiftPressed) 0.01f else 0.05f)).coerceIn(0f, 1f)
+                        cb.first(); cb.second(key, mapOf(keyTick to to)); cb.third()
+                        true
+                    }
+                    else -> false
+                }
+            }
         Box(Modifier.fillMaxWidth().fillMaxHeight()) {
         Canvas(
-            Modifier.fillMaxWidth().fillMaxHeight().pointerInput(Unit) {
+            Modifier.fillMaxWidth().fillMaxHeight().then(stripKeys).pointerInput(Unit) {
                 awaitEachGesture {
                     // Always consume a touch before bailing: a block that returns
                     // without suspending makes awaitEachGesture spin the main thread.
@@ -239,6 +286,18 @@ fun AutomationStrip(
                 val t = (pt % total).toInt()
                 if (t in from until last) {
                     drawLine(c.accent, Offset(xOf(t), 0f), Offset(xOf(t), size.height), 2f)
+                }
+            }
+            if (keyFocused) {
+                drawRect(c.accent, Offset.Zero, size, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
+                if (keyEditing && keyTick in from until last) {
+                    val x = xOf(keyTick)
+                    drawLine(c.pink, Offset(x, 0f), Offset(x, size.height), 2.5f)
+                    lane?.let { l ->
+                        val y = (1f - l.valueAt(keyTick)) * (size.height - 4f) + 2f
+                        val dot = 6.dp.toPx()
+                        drawRect(c.pink, Offset(x - dot / 2, y - dot / 2), Size(dot, dot))
+                    }
                 }
             }
         }
