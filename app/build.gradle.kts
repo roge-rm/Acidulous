@@ -133,8 +133,13 @@ android {
         // at the song's tempo, stretched without changing pitch - and tablets
         // use the room. The crash opening Trinity's envelopes, there since
         // 0.9.3, is fixed, and so is the error on deleting an audio track.
-        versionCode = 20
-        versionName = "0.9.5"
+        //
+        // 0.9.6: keyboards - letters play notes, every control can be reached
+        // and worked from keys, shortcuts on every screen, and they can be
+        // changed in Settings. Nexus's fit button lays the patch out to fit
+        // the screen.
+        versionCode = 21
+        versionName = "0.9.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
