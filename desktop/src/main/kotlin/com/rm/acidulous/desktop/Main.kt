@@ -43,6 +43,8 @@ fun main() {
     LinkHub.multicastLock = null
     EngineAssets.install(data, cache)
     watchPointer()
+    // The right button is the phone's long press: see RightClickHold.
+    RightClickHold.install()
 
     application {
         Window(
