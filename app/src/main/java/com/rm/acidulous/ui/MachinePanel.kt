@@ -946,6 +946,12 @@ internal fun SwitchGrid(
  */
 internal val LocalPanelStacked = androidx.compose.runtime.compositionLocalOf { false }
 
+/**
+ * Stacked cards sized to their controls rather than to the line, so that
+ * small ones can share it: a square phone's window. See [WindowCards].
+ */
+internal val LocalCardsPacked = androidx.compose.runtime.compositionLocalOf { false }
+
 @Composable
 internal fun GroupRow(content: @Composable () -> Unit) {
     if (LocalPanelStacked.current) {
@@ -1274,9 +1280,12 @@ internal fun Group(
     content: @Composable () -> Unit,
 ) {
     val stacked = LocalPanelStacked.current
+    val packed = stacked && LocalCardsPacked.current
     Column(
-        Modifier.then(if (stacked) Modifier.fillMaxWidth() else Modifier)
-            .clip(RoundedCornerShape(6.dp)).background(background).padding(6.dp).together(),
+        Modifier.then(if (stacked && !packed) Modifier.fillMaxWidth() else Modifier)
+            .clip(RoundedCornerShape(6.dp)).background(background)
+            // Packed - a square phone - the card gives two dp top and bottom.
+            .padding(horizontal = 6.dp, vertical = if (packed) 4.dp else 6.dp).together(),
     ) {
         // A panel's own English title is translated here; a window's card
         // arrives translated already and passes through untouched.
@@ -1308,7 +1317,9 @@ internal fun Group(
             // the single row, and `PanelSwitch` still carries its own ceiling
             // of `PanelControlH` - the scar from the 490 dp three-way switch.
             FlowRow(
-                Modifier.fillMaxWidth(),
+                // Packed, the card may be stretched past its controls to fill
+                // a line; they stay in its middle.
+                if (packed) Modifier.align(Alignment.CenterHorizontally) else Modifier.fillMaxWidth(),
                 horizontalArrangement = if (centred) {
                     Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
                 } else {

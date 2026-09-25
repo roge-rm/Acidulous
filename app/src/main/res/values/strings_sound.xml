@@ -33,6 +33,8 @@
     <string name="sound_input">input</string>
     <string name="sound_bits">bits</string>
     <string name="sound_input_card">input · monitor on headphones only</string>
+    <!-- The input's own tab, on a square phone where the record page cannot hold it. -->
+    <string name="sound_tab_input">input</string>
     <string name="sound_gain">gain</string>
     <string name="sound_monitor">monitor</string>
     <string name="sound_printed">printed into the take</string>

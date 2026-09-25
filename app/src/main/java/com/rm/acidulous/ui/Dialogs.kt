@@ -487,6 +487,15 @@ fun TempoDialog(
     var key by remember { mutableStateOf(song.key) }
     var tuning by remember { mutableStateOf(song.tuning) }
     var tab by rememberSaveable { mutableStateOf(0) }
+    // On a square phone the key is a page of its own: tempo, bar and key are
+    // half a card more than its window. See [compactWindow].
+    val keyPage = compactWindow()
+    val tabNames = stringArrayResource(R.array.tempo_tabs).toList().let {
+        if (keyPage) listOf(it[0], stringResource(R.string.tempo_tab_key)) + it.drop(1) else it
+    }
+    val keyCard: @Composable () -> Unit = {
+        WindowCards { KeySection(key, { key = it }, tuning, tunings, { tuning = it }) }
+    }
     TabbedDialog(
         title = stringResource(R.string.tempo_title),
         selected = tab,
@@ -503,16 +512,18 @@ fun TempoDialog(
             )
         },
         spacing = 6.dp,
-        chips = { SectionChips(stringArrayResource(R.array.tempo_tabs).toList(), tab) { tab = it } },
-        pages = listOf(
+        chips = { SectionChips(tabNames, tab.coerceAtMost(tabNames.lastIndex)) { tab = it } },
+        pages = listOfNotNull(
             {
                 TempoPage(
                     bpm, signature, swing, swingUnit, key,
                     onBpm = { bpm = it }, onSignature = { signature = it },
                     onSwing = { swing = it }, onSwingUnit = { swingUnit = it }, onKey = { key = it },
                     tuning = tuning, tunings = tunings, onTuning = { tuning = it },
+                    withKey = !keyPage,
                 )
             },
+            keyCard.takeIf { keyPage },
             { ClickPage() },
             { LinkPage() },
         ),
@@ -576,6 +587,8 @@ private fun TempoPage(
     tuning: com.rm.acidulous.model.Tuning? = null,
     tunings: List<com.rm.acidulous.model.Tuning> = emptyList(),
     onTuning: (com.rm.acidulous.model.Tuning?) -> Unit = {},
+    /** Whether the key is on this page, or a page of its own. */
+    withKey: Boolean = true,
 ) {
     // Cards, the arp window's shape, so this reads like every other window a
     // player reaches for mid-song. The tempo itself stays a field with a step
@@ -608,7 +621,7 @@ private fun TempoPage(
                 },
             ) { onSwing(if (it == 0) SWING_STRAIGHT else SWING_TRIPLET) }
         }
-        KeySection(key, onKey, tuning, tunings, onTuning)
+        if (withKey) KeySection(key, onKey, tuning, tunings, onTuning)
     }
 }
 
@@ -623,6 +636,17 @@ private fun unit(u: Int) = if (u == 1) 1 else 0
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 internal fun WindowCards(content: @Composable () -> Unit) {
+    // **A square phone packs them.** Stacked, a card of three knobs took a
+    // whole line with room for three more beside it, and the arp's five did
+    // not fit the window. Here a card is as wide as its controls, cards that
+    // fit side by side share a line, and a busy one still takes a line and
+    // wraps its controls as it does upright.
+    if (LocalDialogCompact.current && !LocalDialogWide.current) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true, LocalCardsPacked provides true) {
+            PackedCards(4.dp, content)
+        }
+        return
+    }
     if (LocalDialogWide.current) {
         androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides false) {
             FlowRow(
@@ -635,6 +659,73 @@ internal fun WindowCards(content: @Composable () -> Unit) {
     }
     androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) { content() }
+    }
+}
+
+/**
+ * Cards in lines, as many to a line as fit at their own widths, each line's
+ * then stretched to fill it and made as tall as its tallest - so two small
+ * cards read as a pair of equal halves and a lone one as the full line,
+ * rather than a ragged row of whatever widths their knobs came to.
+ *
+ * **Measured, not asked.** The first version took each card's intrinsic
+ * width and height, and a card is a flow row and sometimes a
+ * BoxWithConstraints: the heights came back short and the Settings and MIDI
+ * windows lost their bottom rows, clipped off. So the content is composed
+ * three times - once measured loose for the widths, once at those widths for
+ * the heights, once to show - as [TallestOf] does for pages. Only the last
+ * is placed, so only its state is the one a finger changes.
+ */
+@Composable
+private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
+    androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
+        val width = constraints.maxWidth
+        val space = gap.roundToPx()
+        val loose = androidx.compose.ui.unit.Constraints(maxWidth = width)
+        val natural = subcompose("widths", content).map { it.measure(loose).width }
+        // Greedy lines of indices.
+        val lines = mutableListOf<MutableList<Int>>()
+        var used = 0
+        natural.forEachIndexed { i, w ->
+            val line = lines.lastOrNull()
+            if (line == null || used + space + w > width) {
+                lines += mutableListOf(i); used = w
+            } else {
+                line += i; used += space + w
+            }
+        }
+        // Each line's cards share out what is left over, in proportion.
+        val widths = IntArray(natural.size)
+        for (line in lines) {
+            val sum = line.sumOf { natural[it] }.coerceAtLeast(1)
+            val spare = (width - line.sumOf { natural[it] } - space * (line.size - 1)).coerceAtLeast(0)
+            var given = 0
+            line.forEachIndexed { k, i ->
+                val extra = if (k == line.lastIndex) spare - given else spare * natural[i] / sum
+                given += extra
+                widths[i] = natural[i] + extra
+            }
+        }
+        val tall = subcompose("heights", content).mapIndexed { i, m ->
+            m.measure(androidx.compose.ui.unit.Constraints.fixedWidth(widths[i])).height
+        }
+        val lineH = IntArray(natural.size)
+        for (line in lines) {
+            val h = line.maxOf { tall[it] }
+            line.forEach { lineH[it] = h }
+        }
+        val placeables = subcompose("shown", content).mapIndexed { i, m ->
+            m.measure(androidx.compose.ui.unit.Constraints.fixed(widths[i], lineH[i]))
+        }
+        val total = lines.sumOf { lineH[it.first()] } + space * (lines.size - 1).coerceAtLeast(0)
+        layout(width, total) {
+            var y = 0
+            for (line in lines) {
+                var x = 0
+                for (i in line) { placeables[i].place(x, y); x += widths[i] + space }
+                y += lineH[line.first()] + space
+            }
+        }
     }
 }
 
@@ -652,6 +743,9 @@ private val CardLineW = 480.dp
 
 /** Whether this window is laid out turned: see [DialogShell] and [WindowCards]. */
 internal val LocalDialogWide = androidx.compose.runtime.compositionLocalOf { false }
+
+/** Whether the window is on a square phone's screen, short and narrow: see [DialogShell]. */
+internal val LocalDialogCompact = androidx.compose.runtime.compositionLocalOf { false }
 
 /** Whether the window's header carries the body's own row (its `wideHeader`), so the body leaves it out. */
 internal val LocalDialogHeaderRow = androidx.compose.runtime.compositionLocalOf { false }
@@ -865,11 +959,13 @@ fun TabbedDialog(
     spacing: Dp = 6.dp,
     confirmLabel: String = "",
     onConfirm: (() -> Unit)? = null,
+    /** The body's own row, for the header where there is room: see [PlainDialog]. */
+    wideHeader: (@Composable () -> Unit)? = null,
     chips: @Composable () -> Unit,
 ) {
     DialogShell(
         title, onDismiss, dismissLabel, maxBodyHeight,
-        confirmLabel = confirmLabel, onConfirm = onConfirm, chips = chips,
+        confirmLabel = confirmLabel, onConfirm = onConfirm, chips = chips, wideHeader = wideHeader,
     ) {
         TallestOf(selected, pages, spacing)
     }
@@ -959,9 +1055,7 @@ private fun DialogShell(
     // and the chrome - edge, padding, a title row sized to a 48 dp touch
     // target, the tabs, the gaps - came to 150 of them, so the densest windows
     // scrolled a card. See [compact] below for the rest.
-    val compactScreen = screenShape() == ScreenShape.Square && with(androidx.compose.ui.platform.LocalDensity.current) {
-        androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
-    } < WideCardsMinW
+    val compactScreen = compactWindow()
     val cardMax = (windowHeight - if (compactScreen) DialogEdgeCompactH else DialogEdgeH)
         .coerceAtLeast(minOf(200.dp, windowHeight))
     androidx.compose.ui.window.Dialog(
@@ -1011,7 +1105,9 @@ private fun DialogShell(
             // 40 dp rather than 48 - and a unit's own row goes up beside the
             // title when there are no tabs to share the line with.
             val compact = wide && !roomy
-            val headerRow = wideHeader != null && wide && (roomy || chips == null)
+            // Roomy, the tabs have the header's middle; compact, they have a
+            // row of their own and the header's middle is free.
+            val headerRow = wideHeader != null && wide && (chips == null || !roomy)
             androidx.compose.material3.Surface(
                 Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = if (wide) 1100.dp else 720.dp)
                     .heightIn(max = cardMax),
@@ -1080,6 +1176,7 @@ private fun DialogShell(
                         androidx.compose.runtime.CompositionLocalProvider(
                             LocalDialogWide provides (wide && roomy),
                             LocalDialogHeaderRow provides headerRow,
+                            LocalDialogCompact provides compact,
                         ) { body() }
                     }
                     // An empty dismiss label and no action means no footer at
@@ -1109,6 +1206,17 @@ private val DialogEdgeH = 24.dp
 
 /** The same on a square phone, where every dp of height counts: see [DialogShell]. */
 private val DialogEdgeCompactH = 8.dp
+
+/**
+ * Whether a window opened now is on a square phone - short, and too narrow to
+ * lay cards side by side - where the chrome is trimmed and the densest
+ * windows split into pages. See [DialogShell].
+ */
+@Composable
+internal fun compactWindow(): Boolean =
+    screenShape() == ScreenShape.Square && with(androidx.compose.ui.platform.LocalDensity.current) {
+        androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
+    } < WideCardsMinW
 
 /** The narrowest window that lays a window's cards side by side; see [DialogShell]. */
 private val WideCardsMinW = 600.dp

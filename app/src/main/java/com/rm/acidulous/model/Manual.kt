@@ -151,6 +151,7 @@ object Manual {
             ManualBlock(ManualKind.Para, "The lanes, the machine panel and the keyboard each fold away with the small arrow at their edge, which gives the grid more room."),
             ManualBlock(ManualKind.Heading, "On a square screen"),
             ManualBlock(ManualKind.Para, "On a phone about as wide as it is tall, the grid takes the top of the screen and the keyboard or the machine panel takes the bottom, one at a time. **keys** at the start of the bottom bar (**pads** on a drum machine) swaps between them; **fx** and the mixer bring the panel up."),
+            ManualBlock(ManualKind.Para, "Windows fit the screen there too, with no scrolling. The few that would not fit are split into pages. The arp is in three (**time · feel**, **pattern**, **chance · run**), the tempo window's key has a tab of its own, and so does the Sound window's input."),
         )),
         ManualSection("The machines", "Nineteen instruments, a four-track, and what each is for.", listOf(
             ManualBlock(ManualKind.Para, "Every track has one machine. You pick it when you add the track, and you can change it any time from the name at the top of the editor. **Each machine has its own page below.** This page is for finding the right one."),

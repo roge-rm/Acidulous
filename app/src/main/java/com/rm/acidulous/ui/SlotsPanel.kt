@@ -129,29 +129,73 @@ fun SlotDialog(
     // opened - it is what a long press puts one knob back to - so Cancel puts
     // all of them back, in one undo step, and the bypass with them.
     val revert = remember { mutableStateOf<(() -> Unit)?>(null) }
+    val title = fixedType?.lowercase() ?: stringResource(kind.title, slot + 1)
+    val dismiss = { revert.value?.invoke(); onDismiss() }
+    // The default, which is 560, rather than the 420 this used to ask for.
+    // That number was chosen when every control sat in one scrolling row
+    // and the body only ever needed the height of a single knob; wrapped
+    // into rows the arp's seventeen need nearer all of it, and the shell
+    // caps the card to the window anyway, so asking for more cannot push
+    // the Done button off a turned phone.
+    // Turned, the unit's own row - what it is, and whether it is on -
+    // goes up into the header beside the title (Dan, 2026-09-23), and the
+    // cards get the height it took.
+    val header: @Composable () -> Unit = {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true)
+        }
+    }
+    // **On a square phone a unit with too much for one page gets two.** The
+    // arp's five cards and its steps are nearly two windows' worth there, and
+    // its cards are too wide to pair; see [PAGES].
+    val pageTitles = PAGES[fixedType ?: kind.at(track, slot).type]?.let { pageNames(it) }
+    if (pageTitles != null && compactWindow()) {
+        var page by rememberSaveable(kind.label, slot) { mutableStateOf(0) }
+        TabbedDialog(
+            title = title,
+            selected = page,
+            onDismiss = dismiss,
+            dismissLabel = stringResource(R.string.cancel),
+            confirmLabel = stringResource(R.string.ok),
+            onConfirm = onDismiss,
+            wideHeader = header,
+            chips = { SectionChips(pageTitles, page) { page = it } },
+            pages = pageTitles.indices.map { i ->
+                { SlotRow(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true, page = i, onRevert = { revert.value = it }) }
+            },
+        )
+        return
+    }
     PlainDialog(
-        title = fixedType?.lowercase() ?: stringResource(kind.title, slot + 1),
-        onDismiss = { revert.value?.invoke(); onDismiss() },
+        title = title,
+        onDismiss = dismiss,
         dismissLabel = stringResource(R.string.cancel),
         confirmLabel = stringResource(R.string.ok),
         onConfirm = onDismiss,
-        // The default, which is 560, rather than the 420 this used to ask for.
-        // That number was chosen when every control sat in one scrolling row
-        // and the body only ever needed the height of a single knob; wrapped
-        // into rows the arp's seventeen need nearer all of it, and the shell
-        // caps the card to the window anyway, so asking for more cannot push
-        // the Done button off a turned phone.
-        // Turned, the unit's own row - what it is, and whether it is on -
-        // goes up into the header beside the title (Dan, 2026-09-23), and the
-        // cards get the height it took.
-        wideHeader = {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true)
-            }
-        },
+        wideHeader = header,
     ) {
         SlotRow(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true, onRevert = { revert.value = it })
     }
+}
+
+/**
+ * A unit's cards in pages, for a square phone's window: which card titles
+ * each page shows. The arp's steps go with its pattern.
+ *
+ * Three pages of two cards, not two of three: a square phone's window holds
+ * two cards and a strip, and the arp's second page of three ran forty dp
+ * over. Paired by what they are about - when and how hard, which notes, and
+ * what happens by chance and on letting go.
+ */
+private val PAGES: Map<String, List<Set<String>>> = mapOf(
+    "Arp" to listOf(setOf("time", "feel"), setOf("pattern"), setOf("chance", "run")),
+)
+
+/** A page's tab: its cards' titles, in the phone's language. */
+@Composable
+private fun pageNames(pages: List<Set<String>>): List<String> {
+    val resources = androidx.compose.ui.platform.LocalResources.current
+    return pages.map { cards -> cards.joinToString(" · ") { resources.panelWord(it) } }
 }
 
 @Composable
@@ -176,6 +220,8 @@ private fun SlotRow(
     wrap: Boolean = false,
     /** Hands the window a way to put everything back; see [SlotDialog]. */
     onRevert: ((() -> Unit) -> Unit)? = null,
+    /** One page of the unit's cards, or all of them when -1; see [PAGES]. */
+    page: Int = -1,
 ) {
     val fx = kind.at(track, slot)
     // The slot as the window found it. Bypass is not a parameter, so it is not
@@ -202,7 +248,7 @@ private fun SlotRow(
             SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap, minimized) { minimized = !minimized }
         }
         if (!fx.isEmpty && !minimized) {
-            SlotFace(kind, fx.type, trackIndex, slot, editor, wrap) { b ->
+            SlotFace(kind, fx.type, trackIndex, slot, editor, wrap, page) { b ->
                 onRevert?.invoke {
                     b.resetAll()
                     if (fx.bypass != openedBypass) {
@@ -219,6 +265,8 @@ private fun SlotRow(
 private fun SlotFace(
     kind: SlotKind, type: String, trackIndex: Int, slot: Int, editor: SongEditor,
     wrap: Boolean = false,
+    /** Which of [PAGES]' pages to show, or all of it when -1. */
+    page: Int = -1,
     /** Called with the binding once it exists, so a window can undo it wholesale. */
     onBinding: ((ParamBinding) -> Unit)? = null,
 ) {
@@ -303,7 +351,9 @@ private fun SlotFace(
             // rather than to lay one row and let it run off the side.
             val wide = LocalDialogWide.current
             WindowCards {
+                val pages = PAGES[type]
                 for ((title, group) in groupsFor(type, shown)) {
+                    if (page >= 0 && pages != null && title !in pages[page]) continue
                     Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
                         for (p in group) control(p)
                     }
@@ -315,7 +365,7 @@ private fun SlotFace(
                     Group("steps", background = Acid.colors.cardAlt) { ArpStepGrid(b) }
                 }
             }
-            if (type == "Arp" && !wide) ArpSteps(b)
+            if (type == "Arp" && !wide && (page < 0 || "pattern" in PAGES[type].orEmpty().getOrNull(page).orEmpty())) ArpSteps(b)
         } else {
             Row(
                 Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),

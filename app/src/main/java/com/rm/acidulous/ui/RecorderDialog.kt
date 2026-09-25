@@ -70,6 +70,20 @@ import com.rm.acidulous.R
  */
 enum class RecorderPage { Record, Edit, Library }
 
+/**
+ * The input as the record page sets it up: where the take comes from, the
+ * gain and monitor, the tuner's reading. Held by the window rather than the
+ * page, because on a square phone the input card is a page of its own and
+ * both have to be looking at the same one.
+ */
+private class InputSetup(granted: Boolean) {
+    var fromInput by mutableStateOf(true)
+    var havePermission by mutableStateOf(granted)
+    var monitor by mutableStateOf(false)
+    var gain by mutableStateOf(1f)
+    var tunerHz by mutableStateOf(0f)
+}
+
 @Composable
 fun RecorderDialog(
     onDismiss: () -> Unit,
@@ -91,7 +105,36 @@ fun RecorderDialog(
     val context = LocalContext.current
     val c = Acid.colors
     val samples = remember { File(EngineAssets.userRoot(context), "samples").apply { mkdirs() } }
-    var tab by remember { mutableStateOf(startOn.ordinal) }
+    // **On a square phone the input is a page of its own**, after record: the
+    // record page is its name, button and meter, the take card and the input
+    // card, and that is half a window more than a square phone has.
+    val inputPage = compactWindow()
+    fun tabOf(page: RecorderPage) = if (inputPage && page != RecorderPage.Record) page.ordinal + 1 else page.ordinal
+    var tab by remember { mutableStateOf(tabOf(startOn)) }
+    val setup = remember {
+        InputSetup(context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+    }
+    LaunchedEffect(setup.monitor, setup.gain) {
+        NativeEngine.setMonitorLevel(if (setup.monitor) 1f else 0f)
+        NativeEngine.setInputGain(setup.gain)
+    }
+    // The tuner only listens while the window is open and the input is what
+    // is being recorded: while it is on, the audio thread copies every input
+    // block into its ring.
+    DisposableEffect(setup.fromInput, setup.havePermission) {
+        NativeEngine.setTunerOn(setup.fromInput && setup.havePermission)
+        onDispose { NativeEngine.setTunerOn(false) }
+    }
+    LaunchedEffect(setup.fromInput, setup.havePermission) {
+        if (!setup.fromInput || !setup.havePermission) { setup.tunerHz = 0f; return@LaunchedEffect }
+        while (true) {
+            // **Off the drawing thread.** A reading is an autocorrelation over
+            // half a second of audio and costs about a millisecond; done here
+            // it would be a millisecond taken out of every eighth frame.
+            setup.tunerHz = withContext(Dispatchers.Default) { NativeEngine.tunerHz() }
+            delay(120)
+        }
+    }
     // Re-read the folder after anything changes it rather than trusting the
     // list the window opened with.
     var generation by remember { mutableStateOf(0) }
@@ -119,20 +162,28 @@ fun RecorderDialog(
         onDismiss = { if (!recording) onDismiss() },
         dismissLabel = stringResource(if (recording) R.string.sound_recording_button else R.string.close),
         spacing = 6.dp,
-        chips = { SectionChips(stringArrayResource(R.array.sound_tabs).toList(), tab) { tab = it } },
-        pages = listOf(
+        chips = {
+            val names = stringArrayResource(R.array.sound_tabs).toList().let {
+                if (inputPage) listOf(it[0], stringResource(R.string.sound_tab_input)) + it.drop(1) else it
+            }
+            SectionChips(names, tab) { tab = it }
+        },
+        pages = listOfNotNull(
             {
                 RecordPage(
+                    setup = setup,
+                    withInput = !inputPage,
                     samples = samples,
                     editor = editor,
                     onRecording = { recording = it },
                     onRecorded = { file ->
                         chosen = file
                         generation++
-                        tab = RecorderPage.Edit.ordinal
+                        tab = tabOf(RecorderPage.Edit)
                     },
                 )
             },
+            (@Composable { WindowCards { InputCard(setup, editor) } }).takeIf { inputPage },
             {
                 EditPage(
                     file = chosen,
@@ -155,7 +206,7 @@ fun RecorderDialog(
                         chosen = file
                         onPick?.invoke("samples/" + file.name)
                     },
-                    onEdit = { file -> chosen = file; tab = RecorderPage.Edit.ordinal },
+                    onEdit = { file -> chosen = file; tab = tabOf(RecorderPage.Edit) },
                 )
             },
         ),
@@ -165,16 +216,14 @@ fun RecorderDialog(
 // --- page one: making one --------------------------------------------------
 
 @Composable
-private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean) -> Unit,
-                       onRecorded: (File) -> Unit) {
+private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, editor: SongEditor,
+                       onRecording: (Boolean) -> Unit, onRecorded: (File) -> Unit) {
     val context = LocalContext.current
     val resources = androidx.compose.ui.platform.LocalResources.current
     val c = Acid.colors
 
-    var fromInput by remember { mutableStateOf(true) }
+    var fromInput by setup::fromInput
     var name by remember { mutableStateOf(nextTakeName(samples)) }
-    var monitor by remember { mutableStateOf(false) }
-    var gain by remember { mutableStateOf(1f) }
     var level by remember { mutableStateOf(0f) }
     var recording by remember { mutableStateOf(false) }
     var seconds by remember { mutableStateOf(0f) }
@@ -182,11 +231,7 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
     var message by remember { mutableStateOf("") }
     var lastFile by remember { mutableStateOf<File?>(null) }
     var opened by remember { mutableStateOf("") }
-    var tunerHz by remember { mutableStateOf(0f) }
-
-    val granted =
-        context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-    var havePermission by remember { mutableStateOf(granted) }
+    var havePermission by setup::havePermission
     // Which ear. Nought is whatever the platform would have chosen, which is
     // what everything did before there was a screen to choose on.
     var device by remember { mutableStateOf(UiPrefs.inputDevice) }
@@ -201,27 +246,6 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
         if (fromInput && havePermission) {
             UiPrefs.chooseInputDevice(device)
             NativeEngine.startInput(device)
-        }
-    }
-    LaunchedEffect(monitor, gain) {
-        NativeEngine.setMonitorLevel(if (monitor) 1f else 0f)
-        NativeEngine.setInputGain(gain)
-    }
-    // The tuner only listens while this page is showing it, and stops when
-    // the window closes: while it is on, the audio thread copies every input
-    // block into its ring.
-    DisposableEffect(fromInput, havePermission) {
-        NativeEngine.setTunerOn(fromInput && havePermission)
-        onDispose { NativeEngine.setTunerOn(false) }
-    }
-    LaunchedEffect(fromInput, havePermission) {
-        if (!fromInput || !havePermission) { tunerHz = 0f; return@LaunchedEffect }
-        while (true) {
-            // **Off the drawing thread.** A reading is an autocorrelation over
-            // half a second of audio and costs about a millisecond; done here
-            // it would be a millisecond taken out of every eighth frame.
-            tunerHz = withContext(Dispatchers.Default) { NativeEngine.tunerHz() }
-            delay(120)
         }
     }
     LaunchedEffect(Unit) {
@@ -339,21 +363,27 @@ private fun RecordPage(samples: File, editor: SongEditor, onRecording: (Boolean)
             }
             if (fromInput && opened.isNotEmpty()) Box(Modifier.cardLine()) { Readout(opened, good = true) }
         }
-        if (fromInput) {
-            WindowCard(stringResource(R.string.sound_input_card)) {
-                Knob(label = stringResource(R.string.sound_gain), value = gain / 4f, display = "%.2f".format(gain), modifier = panelKnobWidth(), onChange = { gain = it * 4f })
-                SwitchGrid(stringResource(R.string.sound_monitor), stringArrayResource(R.array.off_on).toList(), if (monitor) 1 else 0) { monitor = it == 1 }
-                // **The title is the explanation**: these are printed into
-                // the take, so they are named for what happens to the file.
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(stringResource(R.string.sound_printed), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { InputChainChips(editor) }
-                }
-                // Tuning comes before anything else a person does after
-                // plugging in, so it is in the card they set the input in.
-                if (havePermission) Box(Modifier.cardLine()) { TunerStrip(tunerHz) }
-            }
+        if (withInput) InputCard(setup, editor)
+    }
+}
+
+/** The input: its gain and monitor, the effects printed into a take, and the tuner. */
+@Composable
+private fun InputCard(setup: InputSetup, editor: SongEditor) {
+    if (!setup.fromInput) return
+    val c = Acid.colors
+    WindowCard(stringResource(R.string.sound_input_card)) {
+        Knob(label = stringResource(R.string.sound_gain), value = setup.gain / 4f, display = "%.2f".format(setup.gain), modifier = panelKnobWidth(), onChange = { setup.gain = it * 4f })
+        SwitchGrid(stringResource(R.string.sound_monitor), stringArrayResource(R.array.off_on).toList(), if (setup.monitor) 1 else 0) { setup.monitor = it == 1 }
+        // **The title is the explanation**: these are printed into
+        // the take, so they are named for what happens to the file.
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(stringResource(R.string.sound_printed), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { InputChainChips(editor) }
         }
+        // Tuning comes before anything else a person does after
+        // plugging in, so it is in the card they set the input in.
+        if (setup.havePermission) Box(Modifier.cardLine()) { TunerStrip(setup.tunerHz) }
     }
 }
 

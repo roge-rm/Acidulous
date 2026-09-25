@@ -126,3 +126,8 @@ On a phone about as wide as it is tall, the grid takes the top of the screen
 and the keyboard or the machine panel takes the bottom, one at a time.
 **keys** at the start of the bottom bar (**pads** on a drum machine) swaps
 between them; **fx** and the mixer bring the panel up.
+
+Windows fit the screen there too, with no scrolling. The few that would not
+fit are split into pages. The arp is in three (**time · feel**, **pattern**,
+**chance · run**), the tempo window's key has a tab of its own, and so does
+the Sound window's input.
