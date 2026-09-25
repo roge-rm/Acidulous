@@ -13,6 +13,8 @@ these.
 - **diagnostics** - shows or hides the numbers for tracking down problems: the
   line under the transport, the readings on the audio page, the MIDI send
   counts, and the note count in the editor's title.
+- **keyboard** - **keys…** opens the list of shortcuts, where you can change
+  them and choose how letters play notes. See [A keyboard](11-keyboard.md).
 
 ## audio
 

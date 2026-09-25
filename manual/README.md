@@ -47,5 +47,6 @@
 8. [Recording and samples](08-recording-and-samples.md) - getting audio in, and what to do with it.
 9. [Importing and exporting](09-exporting.md) - getting songs and sounds in, and the song out.
 10. [Settings](10-settings.md) - settings for you and this phone, not the song.
+11. [A keyboard](11-keyboard.md) - playing notes on letters, and working the whole app from keys.
 
 <!-- /contents -->

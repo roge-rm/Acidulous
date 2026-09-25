@@ -183,10 +183,35 @@ internal val NOTE_KEYS: Map<Int, Int> = mapOf(
     KeyEvent.KEYCODE_K to 12, KeyEvent.KEYCODE_O to 13, KeyEvent.KEYCODE_L to 14, KeyEvent.KEYCODE_P to 15,
     KeyEvent.KEYCODE_SEMICOLON to 16, KeyEvent.KEYCODE_APOSTROPHE to 17,
 )
-internal const val KEY_OCTAVE_DOWN = KeyEvent.KEYCODE_Z
-internal const val KEY_OCTAVE_UP = KeyEvent.KEYCODE_X
-internal const val KEY_VELOCITY_DOWN = KeyEvent.KEYCODE_C
-internal const val KEY_VELOCITY_UP = KeyEvent.KEYCODE_V
+
+/**
+ * A tracker's layout, for a full keyboard: two octaves on two rows, Z to /
+ * and Q to P, with the rows above each as the black keys - the number row
+ * for the upper octave. Z, X, C and V are notes here, so the octave is on -
+ * and = and the velocity on [ and ].
+ */
+internal val TRACKER_KEYS: Map<Int, Int> = mapOf(
+    KeyEvent.KEYCODE_Z to 0, KeyEvent.KEYCODE_S to 1, KeyEvent.KEYCODE_X to 2, KeyEvent.KEYCODE_D to 3,
+    KeyEvent.KEYCODE_C to 4, KeyEvent.KEYCODE_V to 5, KeyEvent.KEYCODE_G to 6, KeyEvent.KEYCODE_B to 7,
+    KeyEvent.KEYCODE_H to 8, KeyEvent.KEYCODE_N to 9, KeyEvent.KEYCODE_J to 10, KeyEvent.KEYCODE_M to 11,
+    KeyEvent.KEYCODE_COMMA to 12, KeyEvent.KEYCODE_L to 13, KeyEvent.KEYCODE_PERIOD to 14,
+    KeyEvent.KEYCODE_SEMICOLON to 15, KeyEvent.KEYCODE_SLASH to 16,
+    KeyEvent.KEYCODE_Q to 12, KeyEvent.KEYCODE_2 to 13, KeyEvent.KEYCODE_W to 14, KeyEvent.KEYCODE_3 to 15,
+    KeyEvent.KEYCODE_E to 16, KeyEvent.KEYCODE_R to 17, KeyEvent.KEYCODE_5 to 18, KeyEvent.KEYCODE_T to 19,
+    KeyEvent.KEYCODE_6 to 20, KeyEvent.KEYCODE_Y to 21, KeyEvent.KEYCODE_7 to 22, KeyEvent.KEYCODE_U to 23,
+    KeyEvent.KEYCODE_I to 24, KeyEvent.KEYCODE_9 to 25, KeyEvent.KEYCODE_O to 26, KeyEvent.KEYCODE_0 to 27,
+    KeyEvent.KEYCODE_P to 28,
+)
+
+/** Which letters are which notes, and which keys move the octave and the velocity. */
+enum class NoteLayout(
+    internal val notes: Map<Int, Int>,
+    internal val octaveDown: Int, internal val octaveUp: Int,
+    internal val velocityDown: Int, internal val velocityUp: Int,
+) {
+    Piano(NOTE_KEYS, KeyEvent.KEYCODE_Z, KeyEvent.KEYCODE_X, KeyEvent.KEYCODE_C, KeyEvent.KEYCODE_V),
+    Tracker(TRACKER_KEYS, KeyEvent.KEYCODE_MINUS, KeyEvent.KEYCODE_EQUALS, KeyEvent.KEYCODE_LEFT_BRACKET, KeyEvent.KEYCODE_RIGHT_BRACKET),
+}
 
 /** The chord an event is, if it is one of [bindings]'s; the action it runs. */
 internal fun actionFor(chord: KeyChord, bindings: Map<KeyAction, List<KeyChord>>): KeyAction? =
@@ -236,6 +261,15 @@ object KeyHub {
     var showingKeys by mutableStateOf(false)
     /** A focused control's hold actions, open as a menu (Alt+Enter), or null. */
     var actionMenu by mutableStateOf<List<androidx.compose.ui.semantics.CustomAccessibilityAction>?>(null)
+
+    /** Waiting for a key to assign in the keys window; the next key goes here. */
+    var learning by mutableStateOf<((KeyChord) -> Unit)?>(null)
+
+    private fun isModifier(code: Int) = code in setOf(
+        KeyEvent.KEYCODE_SHIFT_LEFT, KeyEvent.KEYCODE_SHIFT_RIGHT, KeyEvent.KEYCODE_CTRL_LEFT, KeyEvent.KEYCODE_CTRL_RIGHT,
+        KeyEvent.KEYCODE_ALT_LEFT, KeyEvent.KEYCODE_ALT_RIGHT, KeyEvent.KEYCODE_META_LEFT, KeyEvent.KEYCODE_META_RIGHT,
+        KeyEvent.KEYCODE_FUNCTION,
+    )
 
     /** A text field has focus: every key is its. */
     internal var typing = false
@@ -297,6 +331,16 @@ object KeyHub {
      */
     fun preview(e: KeyEvent): Boolean {
         usingKeys = true
+        // Learning a key for the keys window: the next real key is the answer,
+        // whatever it would otherwise have done.
+        learning?.let { learn ->
+            if (e.action == KeyEvent.ACTION_DOWN && !isModifier(e.keyCode)) {
+                learning = null
+                taken += e.keyCode
+                learn(KeyChord.of(e))
+            }
+            return true
+        }
         if (typing) return false
         val code = e.keyCode
         if (e.action == KeyEvent.ACTION_UP) {
@@ -305,8 +349,12 @@ object KeyHub {
         }
         if (e.action != KeyEvent.ACTION_DOWN) return false
         val chord = KeyChord.of(e)
-        if (playMode && chord.plain) {
-            NOTE_KEYS[code]?.let { semitone ->
+        val layout = UiPrefs.noteLayout
+        // Shift plays an octave up, unless the chord is a shortcut: Shift+/
+        // is the list of keys, and the tracker layout has / as a note.
+        val shortcut = chord.shift && actionFor(chord, UiPrefs.keyBindings) != null
+        if (playMode && chord.plain && !shortcut) {
+            layout.notes[code]?.let { semitone ->
                 if (e.repeatCount == 0 && code !in sounding) {
                     val rack = target()
                     val note = noteFor(semitone + (if (chord.shift) 12 else 0), octave, drumVoices(rack))
@@ -316,16 +364,16 @@ object KeyHub {
                 return true
             }
             when (code) {
-                KEY_OCTAVE_DOWN -> { if (e.repeatCount == 0) moveOctave(octave - 1); taken += code; return true }
-                KEY_OCTAVE_UP -> { if (e.repeatCount == 0) moveOctave(octave + 1); taken += code; return true }
-                KEY_VELOCITY_DOWN -> { if (e.repeatCount == 0) velocity = (velocity - 20).coerceAtLeast(7); taken += code; return true }
-                KEY_VELOCITY_UP -> { if (e.repeatCount == 0) velocity = (velocity + 20).coerceAtMost(127); taken += code; return true }
+                layout.octaveDown -> { if (e.repeatCount == 0) moveOctave(octave - 1); taken += code; return true }
+                layout.octaveUp -> { if (e.repeatCount == 0) moveOctave(octave + 1); taken += code; return true }
+                layout.velocityDown -> { if (e.repeatCount == 0) velocity = (velocity - 20).coerceAtLeast(7); taken += code; return true }
+                layout.velocityUp -> { if (e.repeatCount == 0) velocity = (velocity + 20).coerceAtMost(127); taken += code; return true }
             }
         }
         // Chords with a modifier, and the keys that are never a control's own.
         // Not Esc: a grabbed knob or the roll's cursor lets go on it first,
         // and only an Esc nothing wanted comes back as back - see [fallback].
-        val always = !chord.plain || code == KeyEvent.KEYCODE_SPACE || code == KeyEvent.KEYCODE_SYM ||
+        val always = !chord.plain || shortcut || code == KeyEvent.KEYCODE_SPACE || code == KeyEvent.KEYCODE_SYM ||
             code == KeyEvent.KEYCODE_GRAVE || code in KeyEvent.KEYCODE_F1..KeyEvent.KEYCODE_F12
         if (!always) return false
         return dispatch(e, chord)
@@ -401,7 +449,9 @@ fun KeysOverlay(onDismiss: () -> Unit) {
         spacing = 8.dp,
     ) {
         androidx.compose.material3.Text(
-            androidx.compose.ui.res.stringResource(R.string.keys_notes_line),
+            androidx.compose.ui.res.stringResource(
+                if (UiPrefs.noteLayout == NoteLayout.Tracker) R.string.keys_notes_line_tracker else R.string.keys_notes_line,
+            ),
             color = c.textMid, fontSize = 12.sp,
         )
         androidx.compose.material3.Text(

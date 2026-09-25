@@ -34,8 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -964,6 +962,7 @@ private fun DialogShell(
         // the window, which closes on it. And the screen's letter shortcuts
         // stop at the window - see KeyScope's `window`.
         KeyScope(window = true)
+        WindowKeys()
         // Opened from the keyboard, the window takes the focus onto its first
         // control, so the next key lands in it rather than hunting for it.
         val bodyFocus = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
@@ -997,13 +996,7 @@ private fun DialogShell(
             } >= WideCardsMinW
             androidx.compose.material3.Surface(
                 Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = if (wide) 1100.dp else 720.dp)
-                    .heightIn(max = cardMax)
-                    .onPreviewKeyEvent { ev ->
-                        ev.nativeKeyEvent.keyCode != android.view.KeyEvent.KEYCODE_ESCAPE && KeyHub.preview(ev.nativeKeyEvent)
-                    }
-                    .onKeyEvent { ev ->
-                        ev.nativeKeyEvent.keyCode != android.view.KeyEvent.KEYCODE_ESCAPE && KeyHub.fallback(ev.nativeKeyEvent)
-                    },
+                    .heightIn(max = cardMax),
                 shape = RoundedCornerShape(16.dp),
                 color = c.card,
             ) {
@@ -1243,4 +1236,36 @@ internal fun DialogRow(
 internal fun Readout(text: String, good: Boolean = false) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
     Text(text, color = if (good) c.teal else c.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+}
+
+/**
+ * The window's keys, asked of the hub at the window itself rather than from a
+ * control in it: a window opened by a tap has nothing focused, and a key goes
+ * to Compose's focused control or nowhere - so Space, Ctrl+S, or the key the
+ * keys window is waiting to learn, did nothing until something was tabbed to.
+ * A touch here is a touch, as it is on the screen: see KeyHub.usingKeys.
+ */
+@Composable
+internal fun WindowKeys() {
+    val view = androidx.compose.ui.platform.LocalView.current
+    androidx.compose.runtime.DisposableEffect(view) {
+        val window = (view.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
+        val own = window?.callback
+        if (window != null && own != null) {
+            window.callback = object : android.view.Window.Callback by own {
+                override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+                    val esc = event.keyCode == android.view.KeyEvent.KEYCODE_ESCAPE
+                    if (!esc && KeyHub.preview(event)) return true
+                    if (own.dispatchKeyEvent(event)) return true
+                    return !esc && KeyHub.fallback(event)
+                }
+
+                override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
+                    KeyHub.usingKeys = false
+                    return own.dispatchTouchEvent(event)
+                }
+            }
+        }
+        onDispose { if (window != null && own != null) window.callback = own }
+    }
 }

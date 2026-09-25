@@ -2608,6 +2608,9 @@ private fun FormulaDialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
+        // A window: see DialogShell.
+        KeyScope(window = true)
+        WindowKeys()
         ScaledWindow {
             androidx.compose.material3.Surface(
                 Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),

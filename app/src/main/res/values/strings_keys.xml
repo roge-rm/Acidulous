@@ -34,4 +34,24 @@
     <string name="keys_nav_line">Arrows and Tab move between controls, and Enter presses. On a knob or fader Enter grabs it: the arrows turn it (Shift for fine) until Enter or Esc lets go, and + and - turn it without grabbing. Alt+Enter opens what a hold does.</string>
     <!-- The menu Alt+Enter opens on a control: what holding it would have done. -->
     <string name="keys_actions_title">Actions</string>
+    <!-- The keys window, from Settings: every shortcut and its keys. -->
+    <string name="keys_notes_card">notes</string>
+    <string name="keys_layout">layout</string>
+    <string-array name="keys_layouts">
+        <item>piano</item>
+        <item>tracker</item>
+    </string-array>
+    <string name="keys_defaults">keys</string>
+    <string name="keys_reset">reset</string>
+    <string name="keys_press">press a key</string>
+    <string name="keys_none">none</string>
+    <string name="keys_remove">Remove this key</string>
+    <!-- Read by TalkBack on a key chip: the action, then its key. -->
+    <string name="keys_chip_said">%1$s: %2$s</string>
+    <!-- After a key moves from one action to another. -->
+    <string name="keys_moved">taken from %1$s</string>
+    <string name="keys_notes_line_tracker">In play mode, tracker layout: Z to / is one octave, the S D G H J L ; row its black keys; Q to P the next, with the number row. - = move the octave, [ ] the velocity.</string>
+    <!-- The button in Settings that opens the keys window. -->
+    <string name="settings_keyboard">keyboard</string>
+    <string name="settings_keys_button">keys…</string>
 </resources>

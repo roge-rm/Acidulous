@@ -66,4 +66,24 @@ class KeysTest {
         assertEquals(42, noteFor(2, 4, pads))
         assertEquals(36, noteFor(3, 4, pads)) // round again
     }
+
+    @Test
+    fun theTrackerLayoutIsTwoOctavesOnTwoRows() {
+        val t = NoteLayout.Tracker.notes
+        assertEquals(60, noteFor(t.getValue(KeyEvent.KEYCODE_Z), 4, null))
+        assertEquals(61, noteFor(t.getValue(KeyEvent.KEYCODE_S), 4, null))
+        assertEquals(72, noteFor(t.getValue(KeyEvent.KEYCODE_Q), 4, null))
+        // The bottom row's C above is the top row's first key.
+        assertEquals(t.getValue(KeyEvent.KEYCODE_COMMA), t.getValue(KeyEvent.KEYCODE_Q))
+        assertEquals(88, noteFor(t.getValue(KeyEvent.KEYCODE_P), 4, null))
+    }
+
+    @Test
+    fun aLayoutsOwnKeysAreNotItsNotes() {
+        for (l in NoteLayout.entries) {
+            for (k in listOf(l.octaveDown, l.octaveUp, l.velocityDown, l.velocityUp)) {
+                assertTrue("$l plays a note on its own key $k", k !in l.notes)
+            }
+        }
+    }
 }

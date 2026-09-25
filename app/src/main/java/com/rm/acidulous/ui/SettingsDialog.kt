@@ -81,6 +81,7 @@ fun SettingsDialog(trackNames: List<String> = emptyList(), onDismiss: () -> Unit
 
 @Composable
 private fun DisplayTab() {
+    var showKeys by remember { mutableStateOf(false) }
     // Cards of switches, the arp window's shape, like every window with
     // settings in it (Dan, 2026-09-23).
     WindowCards {
@@ -102,8 +103,11 @@ private fun DisplayTab() {
             SwitchGrid(stringResource(R.string.settings_diagnostics), stringArrayResource(R.array.settings_diagnostics_choices).toList(), if (UiPrefs.showDiagnostics) 0 else 1) {
                 UiPrefs.chooseDiagnostics(it == 0)
             }
+            // Its own window: twenty actions would make every page this tall.
+            SwitchGrid(stringResource(R.string.settings_keyboard), listOf(stringResource(R.string.settings_keys_button)), -1) { showKeys = true }
         }
     }
+    if (showKeys) KeysDialog { showKeys = false }
     // A line only when the screen cannot give what was asked for, which is
     // the one thing the switch cannot show - see ui/UiScale.kt for the cap.
     val applied = LocalUiScale.current

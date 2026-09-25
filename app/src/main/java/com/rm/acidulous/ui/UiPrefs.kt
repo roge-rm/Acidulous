@@ -294,6 +294,10 @@ object UiPrefs {
     var keyBindings by mutableStateOf(DEFAULT_KEYS)
         private set
 
+    /** Which letters play which notes in play mode. */
+    var noteLayout by mutableStateOf(NoteLayout.Piano)
+        private set
+
     /**
      * Mapping mode: every mappable control says so, and a tap arms it.
      *
@@ -371,6 +375,7 @@ object UiPrefs {
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
         loopBars = p.getInt(KEY_LOOP_BARS, 0)
         keyBindings = DEFAULT_KEYS + decodeKeys(p.getString(KEY_KEYS, null).orEmpty())
+        noteLayout = runCatching { NoteLayout.valueOf(p.getString(KEY_NOTE_LAYOUT, null) ?: "Piano") }.getOrDefault(NoteLayout.Piano)
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
             .getOrDefault(ThemeMode.Dark)
         uiScale = p.getFloat(KEY_UI_SCALE, 1f)
@@ -542,6 +547,11 @@ object UiPrefs {
     fun chooseKeys(action: KeyAction, chords: List<KeyChord>) {
         keyBindings = keyBindings + (action to chords)
         store?.edit()?.putString(KEY_KEYS, encodeKeys(keyBindings.filter { (a, c) -> DEFAULT_KEYS[a] != c }))?.apply()
+    }
+
+    fun chooseNoteLayout(layout: NoteLayout) {
+        noteLayout = layout
+        store?.edit()?.putString(KEY_NOTE_LAYOUT, layout.name)?.apply()
     }
 
     fun resetKeys() {
@@ -765,6 +775,7 @@ object UiPrefs {
     private const val KEY_LOOP_BARS = "loop_bars"
     private const val KEY_THEME = "theme"
     private const val KEY_KEYS = "key_bindings"
+    private const val KEY_NOTE_LAYOUT = "note_layout"
     private const val KEY_UI_SCALE = "ui_scale"
     private const val KEY_BUFFER = "buffer"
     private const val KEY_VOICES = "voice_limit"
