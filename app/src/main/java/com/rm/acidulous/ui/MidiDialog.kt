@@ -322,11 +322,35 @@ private fun MappingCard(song: Song) {
 @Composable
 private fun MpeSection(mpeHeld: Int) {
     val zone = MidiHub.mpeZone
+    val setting = MidiHub.mpeSetting
+    val auto = setting == com.rm.acidulous.midi.MpeZone.AUTO
+    // Auto first: it is the default and what almost everyone wants.
+    val order = listOf(com.rm.acidulous.midi.MpeZone.AUTO, 0, 1, 2)
     WindowCard(stringResource(R.string.midi_mpe)) {
         // Lower: channel 1 is the zone and the ones above it are fingers;
-        // upper: channel 16, and the ones below.
-        SwitchGrid(stringResource(R.string.midi_mpe_zone), stringArrayResource(R.array.midi_mpe_zone_choices).toList(), zone, columns = 1) { UiPrefs.chooseMpe(zone = it) }
-        if (zone != 0) {
+        // upper: channel 16, and the ones below. Auto: whatever the
+        // controller says, or does.
+        SwitchGrid(stringResource(R.string.midi_mpe_zone), stringArrayResource(R.array.midi_mpe_zone_choices).toList(), order.indexOf(setting), columns = 2) {
+            UiPrefs.chooseMpe(zone = order[it])
+        }
+        if (auto) {
+            // What auto has found, and how - so a controller that is not
+            // being recognised can be seen not to be.
+            Line {
+                Readout(
+                    when {
+                        zone == 0 -> stringResource(R.string.midi_mpe_auto_waiting)
+                        else -> stringResource(
+                            if (MidiHub.mpeHeard == MidiHub.MpeHeard.Config) R.string.midi_mpe_auto_config else R.string.midi_mpe_auto_fingers,
+                            stringArrayResource(R.array.midi_mpe_zone_choices)[order.indexOf(zone)],
+                            MidiHub.mpeMembers, MidiHub.mpeBendSemis.roundToInt(),
+                        )
+                    },
+                    good = zone != 0,
+                )
+            }
+        }
+        if (!auto && zone != 0) {
             // 15 unless the controller says otherwise.
             CountKnob(stringResource(R.string.midi_mpe_fingers), MidiHub.mpeMembers, 1..15, choices = (1..15).map { "$it" }) { UiPrefs.chooseMpe(members = it) }
             // Per finger. The standard says 48; many controllers use 24.
@@ -335,6 +359,8 @@ private fun MpeSection(mpeHeld: Int) {
                 stringResource(R.string.midi_mpe_bend_st, MidiHub.mpeBendSemis.roundToInt()), PanelAmber,
                 choices = (1..96).map { stringResource(R.string.midi_mpe_bend_st, it) },
             ) { UiPrefs.chooseMpe(bendSemis = it.toFloat()) }
+        }
+        if (zone != 0) {
             // Timbre: CC 74 drives each machine's slide knob. Plain: it is
             // a controller like any other, free to map.
             SwitchGrid(stringResource(R.string.midi_mpe_cc74), stringArrayResource(R.array.midi_mpe_cc74_choices).toList(), if (MidiHub.mpeTimbre) 0 else 1, columns = 1) {
@@ -351,6 +377,10 @@ private fun MpeSection(mpeHeld: Int) {
                     good = held.isNotEmpty(),
                 )
             }
+        }
+        // Under auto too, before anything is heard: the test plays as a
+        // controller would, and auto should recognise it.
+        if (zone != 0 || auto) {
             SwitchGrid(stringResource(R.string.midi_test), listOf(stringResource(R.string.midi_test_mpe)), -1) { MidiHub.testMpe() }
         }
     }

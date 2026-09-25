@@ -76,7 +76,8 @@ class Engine : public Rack::ModifiedNoteSink {
         mpeKind = kind < 0 ? 0 : (kind > 2 ? 2 : kind);
         mpeMembers = members < 1 ? 1 : (members > 15 ? 15 : members);
         mpeBendSemis = bendSemis < 1.0f ? 1.0f : (bendSemis > 96.0f ? 96.0f : bendSemis);
-        for (auto &n : mpeChannelNote) n = -1;
+        // The notes held are kept: a zone switched on mid-chord (auto, from
+        // the second finger) must already know where the first one is.
         for (auto &ch : lastExprSent) for (float &v : ch) v = -1.0f;
     }
     bool mpeMember(uint8_t channel) const {

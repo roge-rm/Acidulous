@@ -64,11 +64,19 @@
     <string name="midi_claimed_notes">notes %s trigger their mapping instead of playing</string>
     <string name="midi_mpe">mpe</string>
     <string name="midi_mpe_zone">zone</string>
+    <!-- In the order shown: auto, off, lower, upper. -->
     <string-array name="midi_mpe_zone_choices">
+        <item>auto</item>
         <item>off</item>
         <item>lower</item>
         <item>upper</item>
     </string-array>
+    <!-- Auto, before any MPE controller has been heard. -->
+    <string name="midi_mpe_auto_waiting">waiting for an MPE controller</string>
+    <!-- Auto, set by the controller's own MPE message: zone, fingers, bend range in semitones. -->
+    <string name="midi_mpe_auto_config">%1$s · %2$d fingers · ±%3$d st · announced</string>
+    <!-- Auto, recognised from notes on several channels at once. -->
+    <string name="midi_mpe_auto_fingers">%1$s · %2$d fingers · ±%3$d st · recognised</string>
     <string name="midi_mpe_fingers">fingers</string>
     <string name="midi_mpe_bend">bend</string>
     <!-- A pitch bend range in semitones. -->

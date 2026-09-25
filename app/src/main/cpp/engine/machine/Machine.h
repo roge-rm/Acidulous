@@ -73,7 +73,11 @@ class Machine {
     // [semitones] is signed and already scaled by the zone's bend range, so
     // a machine adds it to the voice's pitch and asks nothing further.
     virtual void noteBend(uint8_t /*note*/, float semitones) {
-        pitchBend(static_cast<int16_t>(semitones / 2.0f * 8192.0f));
+        // As a channel bend over two semitones, clamped: an MPE finger can
+        // slide forty-eight, and unclamped that wrapped the sixteen bits
+        // round to a bend in some other direction entirely.
+        const float v = semitones / 2.0f * 8192.0f;
+        pitchBend(static_cast<int16_t>(v < -8192.0f ? -8192.0f : (v > 8191.0f ? 8191.0f : v)));
     }
     virtual void notePressure(uint8_t /*note*/, uint8_t value) { channelPressure(value); }
     /** Slide, CC 74. Nothing read it before MPE, so there is nothing to fall back to. */
@@ -99,6 +103,7 @@ class Machine {
         case 0x80: noteOff(d1); break;
         case 0xb0: controlChange(d1, d2); break;
         case 0xd0: channelPressure(d1); break;
+        case 0xa0: notePressure(d1, d2); break;
         case 0xe0: pitchBend(static_cast<int16_t>((d2 << 7) | d1) - 8192); break;
         default: break;
         }

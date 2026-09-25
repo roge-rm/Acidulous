@@ -549,6 +549,7 @@ object MidiHub {
         releasePort(portId)
         opened.remove(portId)?.close()
         parsers.remove(portId)
+        if (opened.isEmpty()) forgetController()
         refresh()
     }
 
@@ -567,6 +568,20 @@ object MidiHub {
      */
     // Compose state, like every other setting here: the MIDI window reads
     // these directly and would not redraw for a plain var.
+    //
+    // **Auto is the default, and follows the controller.** A zone that had to
+    // be switched on by hand was a zone that was usually off, and off every
+    // finger's bend and pressure landed on the whole track - a forty-eight
+    // semitone slide squeezed into a two-semitone bend. So, set to auto, the
+    // zone is whatever the controller's MPE configuration message says, its
+    // bend range is whatever its pitch-bend-range message says, and a
+    // controller that says neither is recognised by what it does: two
+    // fingers held at once on two channels is not a keyboard.
+
+    /** What the person chose: off, lower, upper, or auto (MpeZone.AUTO). */
+    var mpeSetting by mutableStateOf(MpeZone.AUTO)
+        private set
+    /** The zone in force: the setting's, or in auto what the controller said. */
     var mpeZone by mutableStateOf(0)
         private set
     var mpeMembers by mutableStateOf(15)
@@ -575,13 +590,53 @@ object MidiHub {
         private set
     var mpeTimbre by mutableStateOf(true)
         private set
+    /** The fingers and bend set by hand, for a lower or upper setting. */
+    var mpeManualMembers by mutableStateOf(15)
+        private set
+    var mpeManualBend by mutableStateOf(48f)
+        private set
 
-    fun chooseMpe(zone: Int, members: Int, bendSemis: Float, timbre: Boolean) {
-        mpeZone = MpeZone.clampZone(zone)
-        mpeMembers = MpeZone.clampMembers(members)
-        mpeBendSemis = MpeZone.clampBend(bendSemis)
+    /** How auto came by the zone it is using. */
+    enum class MpeHeard { Nothing, Config, Fingers }
+    var mpeHeard by mutableStateOf(MpeHeard.Nothing)
+        private set
+    /** What the controller has said and done: see [MpeAuto]. */
+    private val auto = MpeAuto()
+
+    fun chooseMpe(setting: Int, members: Int, bendSemis: Float, timbre: Boolean) {
+        mpeSetting = MpeZone.clampSetting(setting)
+        mpeManualMembers = MpeZone.clampMembers(members)
+        mpeManualBend = MpeZone.clampBend(bendSemis)
         mpeTimbre = timbre
+        applyMpe()
+    }
+
+    /** Puts the zone in force - the setting's, or auto's - into the engine. */
+    private fun applyMpe() {
+        if (mpeSetting == MpeZone.AUTO) {
+            mpeZone = auto.zone
+            mpeMembers = auto.members
+            mpeBendSemis = auto.bendSemis
+        } else {
+            mpeZone = MpeZone.clampZone(mpeSetting)
+            mpeMembers = mpeManualMembers
+            mpeBendSemis = mpeManualBend
+        }
+        mpeHeard = when {
+            auto.zone == MpeZone.OFF -> MpeHeard.Nothing
+            auto.fromConfig -> MpeHeard.Config
+            else -> MpeHeard.Fingers
+        }
         NativeEngine.setMpeZone(mpeZone, mpeMembers, mpeBendSemis)
+    }
+
+    /** Auto heard something that changes the zone in force. */
+    private fun autoChanged() { if (mpeSetting == MpeZone.AUTO) applyMpe() }
+
+    /** Nothing plugged in any more: auto forgets what it heard. */
+    private fun forgetController() {
+        auto.forget()
+        applyMpe()
     }
 
     /** Is this channel one of the zone's fingers? Channels are 0-based here. */
@@ -591,6 +646,23 @@ object MidiHub {
         val kind = status and 0xf0
         if (kind == 0xc0) return // program change: nothing to address it to yet
         val channel = status and 0x0f
+        // The controller describing itself - its zone, its bend range - is
+        // read here and goes no further.
+        if (kind == 0xb0) {
+            val used = auto.controller(channel, d1, d2)
+            if (auto.changed) autoChanged()
+            if (used) {
+                received += 1
+                lastMessage = "ch ${channel + 1} · rpn cc $d1 = $d2"
+                return
+            }
+        }
+        if (kind == 0x90 && d2 > 0) {
+            auto.noteOn(channel, recognise = mpeSetting == MpeZone.AUTO)
+            if (auto.changed) autoChanged()
+        } else if (kind == 0x80 || kind == 0x90) {
+            auto.noteOff(channel)
+        }
         val member = mpeMember(channel)
         val rack = when {
             // Every finger plays the one instrument the zone is pointed at.
@@ -618,13 +690,15 @@ object MidiHub {
             kind == 0x90 -> onMappable(null, d1, d2, rack).also { if (it) swallowed += d1 }
             else -> false
         }
-        // Slide is only slide if the zone says so; otherwise CC 74 is an
-        // ordinary controller and has whatever meaning a mapping gives it.
-        val expressive = member && !(kind == 0xb0 && d1 == 74 && !mpeTimbre)
+        // The channel goes with every message: the engine decides what is a
+        // finger, and keeps which note each channel holds even before a zone
+        // is on - see Engine.cpp. Slide is only slide if the setting says so;
+        // otherwise CC 74 is an ordinary controller, whatever a mapping makes it.
+        val plainSlide = kind == 0xb0 && d1 == 74 && !mpeTimbre
         if (!taken) {
             NativeEngine.midiEvent(
                 rackNow, kind, d1, d2,
-                if (expressive) channel else NativeEngine.NO_CHANNEL,
+                if (plainSlide) NativeEngine.NO_CHANNEL else channel,
             )
         }
         // Remember, and forget, where notes went.
@@ -634,7 +708,7 @@ object MidiHub {
             held.onNoteOff(channel, d1)
         }
         received += 1
-        lastMessage = when (kind) {
+        lastMessage = "ch ${channel + 1} · " + when (kind) {
             0x90 -> if (d2 == 0) "off $d1" else "on $d1 v$d2"
             0x80 -> "off $d1"
             0xb0 -> "cc $d1 = $d2"
@@ -835,9 +909,11 @@ object MidiHub {
      * the same arithmetic a controller would.
      */
     fun testMpe() {
-        if (mpeZone == 0) return
-        val a = if (mpeZone == 1) 1 else 14
-        val b = if (mpeZone == 1) 2 else 13
+        // Under auto with nothing heard yet, it plays as a lower-zone
+        // controller would, and auto recognises it as it would a real one.
+        if (mpeZone == 0 && mpeSetting != MpeZone.AUTO) return
+        val a = if (mpeZone == 2) 14 else 1
+        val b = if (mpeZone == 2) 13 else 2
         dispatch(0x90 or a, 60, 100)
         dispatch(0x90 or b, 64, 100)
         for (i in 0..20) {

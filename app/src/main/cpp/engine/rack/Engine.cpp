@@ -890,18 +890,41 @@ void Engine::drainMidi() {
         if (status == 0x90 && d2 == 0) status = 0x80;
         if (!racks[rack].isActive()) continue;
 
+        // **Poly aftertouch is a finger's pressure without MPE**: the message
+        // names its note, so it needs no zone and no channel to find it. It
+        // was dropped - a machine's MIDI handler had no case for it - so a
+        // controller that presses per key outside MPE mode pressed nothing.
+        if (status == 0xa0) {
+            racks[rack].noteExpression(0xd0, m.data1, d2, 0, mpeBendSemis);
+            recordExpression(rack, 0xff, m.data1, 0xd0, d2, 0);
+            continue;
+        }
         // A member channel is one finger. Its note goes down the ordinary
         // path, through the modifiers like any other; its bend, pressure and
         // slide belong to that note alone and go straight to the machine.
-        if (mpeMember(m.channel)) {
+        // A controller other than slide is not a finger's, even sent on a
+        // finger's channel: an MPE controller sends everything a note does
+        // on that note's channel, the mod wheel and the sustain pedal too,
+        // and they were dropped here. They go to the whole track, as they
+        // would on the master channel.
+        const bool fingerCc = status == 0xb0 && m.data1 == 74;
+        // **Which note each channel is holding is kept whether or not it is a
+        // finger yet.** A zone found from the fingers themselves is switched
+        // on at the second one, and the first went in as an ordinary note:
+        // kept only for members, its bend would have had nowhere to go until
+        // it was played again.
+        if (m.channel < 16) {
             if (status == 0x90 && d2 > 0) {
                 mpeChannelNote[m.channel] = m.data1;
                 // A new finger on the channel starts a new curve: whatever the
                 // last one left behind must not be mistaken for a repeat.
                 for (float &v : lastExprSent[m.channel]) v = -1.0f;
-            } else if (status == 0x80) {
+            } else if (status == 0x80 && mpeChannelNote[m.channel] == m.data1) {
                 mpeChannelNote[m.channel] = -1;
-            } else {
+            }
+        }
+        if (mpeMember(m.channel) && (status != 0xb0 || fingerCc)) {
+            if (status != 0x90 && status != 0x80) {
                 const int32_t held = mpeChannelNote[m.channel];
                 // Expression for a finger that is not down has nowhere to go.
                 if (held < 0) continue;

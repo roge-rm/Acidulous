@@ -424,7 +424,8 @@ object UiPrefs {
         // 48 semitones is what the MPE specification asks a receiver to
         // assume, and is nothing like what a keyboard means by a bend.
         MidiHub.chooseMpe(
-            p.getInt(KEY_MPE_ZONE, 0), p.getInt(KEY_MPE_MEMBERS, 15),
+            // Auto unless chosen otherwise: follow the controller.
+            p.getInt(KEY_MPE_ZONE, com.rm.acidulous.midi.MpeZone.AUTO), p.getInt(KEY_MPE_MEMBERS, 15),
             p.getFloat(KEY_MPE_BEND, 48f), p.getBoolean(KEY_MPE_TIMBRE, true),
         )
     }
@@ -742,15 +743,15 @@ object UiPrefs {
      * zone describes the controller on the desk, not the music.
      */
     fun chooseMpe(
-        zone: Int = MidiHub.mpeZone,
-        members: Int = MidiHub.mpeMembers,
-        bendSemis: Float = MidiHub.mpeBendSemis,
+        zone: Int = MidiHub.mpeSetting,
+        members: Int = MidiHub.mpeManualMembers,
+        bendSemis: Float = MidiHub.mpeManualBend,
         timbre: Boolean = MidiHub.mpeTimbre,
     ) {
         val m = com.rm.acidulous.midi.MpeZone.clampMembers(members)
         val b = com.rm.acidulous.midi.MpeZone.clampBend(bendSemis)
         MidiHub.chooseMpe(zone, m, b, timbre)
-        store?.edit()?.putInt(KEY_MPE_ZONE, MidiHub.mpeZone)?.putInt(KEY_MPE_MEMBERS, m)
+        store?.edit()?.putInt(KEY_MPE_ZONE, MidiHub.mpeSetting)?.putInt(KEY_MPE_MEMBERS, m)
             ?.putFloat(KEY_MPE_BEND, b)?.putBoolean(KEY_MPE_TIMBRE, timbre)?.apply()
     }
 
