@@ -187,7 +187,7 @@ private fun SlotRow(
     // that says what it is and whether it is on.
     var minimized by rememberSaveable(kind.label, slot) { mutableStateOf(false) }
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
-        if (!(wrap && LocalDialogWide.current)) Row(
+        if (!(wrap && LocalDialogHeaderRow.current)) Row(
             if (wrap) Modifier.fillMaxWidth() else Modifier,
             verticalAlignment = Alignment.CenterVertically,
             // Centred in a window, packed left in a panel: a panel's row is a

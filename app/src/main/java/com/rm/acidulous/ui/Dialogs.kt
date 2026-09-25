@@ -653,6 +653,9 @@ private val CardLineW = 480.dp
 /** Whether this window is laid out turned: see [DialogShell] and [WindowCards]. */
 internal val LocalDialogWide = androidx.compose.runtime.compositionLocalOf { false }
 
+/** Whether the window's header carries the body's own row (its `wideHeader`), so the body leaves it out. */
+internal val LocalDialogHeaderRow = androidx.compose.runtime.compositionLocalOf { false }
+
 /**
  * The tempo: a number you can type, with a step either side.
  *
@@ -951,7 +954,16 @@ private fun DialogShell(
     // re-creates the very fault the cap was written for: below about 224 dp -
     // a turned phone at the largest interface scale - the card was allowed to
     // be taller than the screen again, with its Done button off the bottom.
-    val cardMax = (windowHeight - DialogEdgeH).coerceAtLeast(minOf(200.dp, windowHeight))
+    //
+    // **A square phone gets every dp back.** Its window is about 490 dp tall
+    // and the chrome - edge, padding, a title row sized to a 48 dp touch
+    // target, the tabs, the gaps - came to 150 of them, so the densest windows
+    // scrolled a card. See [compact] below for the rest.
+    val compactScreen = screenShape() == ScreenShape.Square && with(androidx.compose.ui.platform.LocalDensity.current) {
+        androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
+    } < WideCardsMinW
+    val cardMax = (windowHeight - if (compactScreen) DialogEdgeCompactH else DialogEdgeH)
+        .coerceAtLeast(minOf(200.dp, windowHeight))
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
@@ -994,6 +1006,12 @@ private fun DialogShell(
             val roomy = with(androidx.compose.ui.platform.LocalDensity.current) {
                 androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
             } >= WideCardsMinW
+            // Short and narrow: a square phone. The chrome gives way here - a
+            // smaller edge, tighter padding and gaps, and header buttons at
+            // 40 dp rather than 48 - and a unit's own row goes up beside the
+            // title when there are no tabs to share the line with.
+            val compact = wide && !roomy
+            val headerRow = wideHeader != null && wide && (roomy || chips == null)
             androidx.compose.material3.Surface(
                 Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = if (wide) 1100.dp else 720.dp)
                     .heightIn(max = cardMax),
@@ -1010,8 +1028,11 @@ private fun DialogShell(
                         Button(onClick = onConfirm, enabled = confirmEnabled) { Text(confirmLabel) }
                     }
                 }
-                Column(Modifier.padding(horizontal = 16.dp, vertical = if (wide) 10.dp else 14.dp)) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = if (compact) 6.dp else if (wide) 10.dp else 14.dp)) {
                     if (wide) {
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            androidx.compose.material3.LocalMinimumInteractiveComponentSize provides if (compact) 40.dp else 48.dp,
+                        ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 title, color = c.text, fontSize = 20.sp, maxLines = 1,
@@ -1021,14 +1042,15 @@ private fun DialogShell(
                             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                                 // The unit's own row comes up here only when its
                                 // body is laid wide and leaves it out - see SlotRow.
-                                if (roomy) { if (chips != null) chips() else wideHeader?.invoke() }
+                                if (roomy && chips != null) chips() else if (headerRow) wideHeader?.invoke()
                             }
                             if (footer) {
                                 Row(Modifier.padding(start = 8.dp), verticalAlignment = Alignment.CenterVertically) { Buttons() }
                             }
                         }
-                        if (chips != null && !roomy) Box(Modifier.padding(top = 6.dp)) { chips() }
-                        Box(Modifier.padding(top = 8.dp))
+                        }
+                        if (chips != null && !roomy) Box(Modifier.padding(top = if (compact) 2.dp else 6.dp)) { chips() }
+                        Box(Modifier.padding(top = if (compact) 4.dp else 8.dp))
                     } else {
                         Text(title, color = c.text, fontSize = 20.sp)
                         if (chips != null) {
@@ -1055,7 +1077,10 @@ private fun DialogShell(
                             .focusRequester(bodyFocus)
                             .focusGroup(),
                     ) {
-                        androidx.compose.runtime.CompositionLocalProvider(LocalDialogWide provides (wide && roomy)) { body() }
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            LocalDialogWide provides (wide && roomy),
+                            LocalDialogHeaderRow provides headerRow,
+                        ) { body() }
                     }
                     // An empty dismiss label and no action means no footer at
                     // all - for a window that is reporting rather than asking,
@@ -1081,6 +1106,9 @@ private fun DialogShell(
  * looking like one.
  */
 private val DialogEdgeH = 24.dp
+
+/** The same on a square phone, where every dp of height counts: see [DialogShell]. */
+private val DialogEdgeCompactH = 8.dp
 
 /** The narrowest window that lays a window's cards side by side; see [DialogShell]. */
 private val WideCardsMinW = 600.dp
