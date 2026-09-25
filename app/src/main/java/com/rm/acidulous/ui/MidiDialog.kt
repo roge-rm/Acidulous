@@ -197,11 +197,13 @@ private fun InTab(trackNames: List<String>, mpeHeld: Int) {
     WindowCards {
         // Where they go, with the proof that they do in the same card.
         MidiRoutingSection(trackNames) {
-            // A Launchpad's pads, played without one: a diagnostic, for the emulator.
-            val tests = stringArrayResource(R.array.midi_test_notes).toList() +
-                (if (UiPrefs.showDiagnostics) listOf(stringResource(R.string.midi_test_launchpad)) else emptyList())
-            SwitchGrid(stringResource(R.string.midi_test), tests, -1, columns = 1) {
-                when (it) { 0 -> MidiHub.testNote(); 1 -> MidiHub.testWheel(); else -> MidiHub.testLaunchpad() }
+            // Played without a controller: diagnostics, for the emulator. A
+            // player has a controller, and the readout is the proof.
+            if (UiPrefs.showDiagnostics) {
+                val tests = stringArrayResource(R.array.midi_test_notes).toList() + stringResource(R.string.midi_test_launchpad)
+                SwitchGrid(stringResource(R.string.midi_test), tests, -1, columns = 1) {
+                    when (it) { 0 -> MidiHub.testNote(); 1 -> MidiHub.testWheel(); else -> MidiHub.testLaunchpad() }
+                }
             }
             Line {
                 Readout(
@@ -397,7 +399,7 @@ private fun MpeSection(mpeHeld: Int) {
         }
         // Under auto too, before anything is heard: the test plays as a
         // controller would, and auto should recognise it.
-        if (zone != 0 || auto) {
+        if (UiPrefs.showDiagnostics && (zone != 0 || auto)) {
             SwitchGrid(stringResource(R.string.midi_test), listOf(stringResource(R.string.midi_test_mpe)), -1) { MidiHub.testMpe() }
         }
     }
