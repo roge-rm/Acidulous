@@ -95,7 +95,7 @@ private const val NODE_H = NEXUS_NODE_H
 private const val JACK_R = 7f
 private const val GRID = 10f
 /** Room left round a fitted patch, in its own units. */
-private const val FIT_MARGIN = 20f
+private const val FIT_MARGIN = 10f
 
 private sealed class Selection {
     object None : Selection()
