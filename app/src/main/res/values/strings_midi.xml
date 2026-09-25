@@ -73,10 +73,11 @@
         <item>acidulous</item>
         <item>its own</item>
     </string-array>
-    <!-- An Exquis controller's pads: lit with the song's scale, or left alone. -->
+    <!-- An Exquis controller's pads: the played track's scale set as the Exquis's own (in its own colours), highlighted in green over the pads, or left alone. -->
     <string name="midi_exquis_pads">exquis pads</string>
     <string-array name="midi_exquis_pads_choices">
-        <item>scale</item>
+        <item>own colours</item>
+        <item>highlight</item>
         <item>off</item>
     </string-array>
     <string name="midi_mpe">mpe</string>

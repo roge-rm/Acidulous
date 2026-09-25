@@ -44,9 +44,21 @@ Per-note bend, pressure and slide are recorded with the notes.
 
 ### Exquis
 
-Plug in an Exquis over USB and its pads light up with the song's key, so you
-can see which notes are in it. It follows the key as you change it. **exquis
-pads** in the MIDI window's devices tab turns it off.
+Plug in an Exquis over USB and its pads show the scale of the track it plays:
+the track's own Scale modifier if it has one, otherwise the song's key. The
+same as the piano roll shows. It changes when you open another track or
+change the scale. With **pinned** it's the pinned track, and with **by
+channel** it's the track for the channel the Exquis plays on. MPE fingers
+aren't routed by channel, so with MPE it's the open track or the pinned one.
+
+**exquis pads** in the MIDI window's devices tab chooses how:
+
+- **own colours** sets the Exquis's own tonic and scale, so the pads show it
+  in the colours you gave them. A scale the Exquis doesn't have shows as the
+  nearest one that has all its notes, or chromatic.
+- **highlight** lights the notes in the Exquis's highlight green instead,
+  one pad per note, over whatever scale the Exquis is set to.
+- **off** leaves the pads alone.
 
 ### Launchpad Pro
 
@@ -55,7 +67,8 @@ pad and button is the app's, lit in your tracks' colours. **launchpad** in the
 MIDI window's devices tab gives it back to itself, and so does closing the
 app. The buttons along the top choose what the grid is:
 
-- **Note** - the song's key laid out as the Launchpad's own scale mode does,
+- **Note** - the played track's scale (its own, or the song's key) laid out as
+  the Launchpad's own scale mode does,
   each row a fourth up. The root pads are in the track's colour. On a drum
   machine it's the machine's pads. Up and down change the octave; left and
   right move along the scale.

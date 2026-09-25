@@ -252,13 +252,18 @@ object MidiHub {
 
     // --- An Exquis's pads -----------------------------------------------------
     //
-    // The song's scale, lit on the pads: see PadLights. Its own port, opened
-    // for this and nothing else - unless the Exquis is also a destination
-    // for MIDI out, in which case that port is shared, since an input port
-    // opens once. Everything here runs on the MIDI thread.
+    // The scale of the track it plays, on its pads: see PadLights. Its own
+    // port, opened for this and nothing else - unless the Exquis is also a
+    // destination for MIDI out, in which case that port is shared, since an
+    // input port opens once. Everything here runs on the MIDI thread.
 
-    /** Whether an attached Exquis shows the song's scale. */
-    var padLights by mutableStateOf(true)
+    /** How an Exquis shows the scale: its own tonic and scale, a highlight, or not at all. */
+    enum class PadMode { Own, Highlight, Off }
+
+    var padMode by mutableStateOf(PadMode.Own)
+        private set
+    /** The channel the Exquis last played on, for routing by channel. */
+    var exquisChannel by mutableStateOf(0)
         private set
     /** An Exquis is plugged in, so its switch is worth showing. */
     var exquisHere by mutableStateOf(false)
@@ -269,17 +274,27 @@ object MidiHub {
     private val lit = HashSet<Int>()
     private var wantedLit: Set<Int> = emptySet()
     private var wantedRoot: Int? = null
+    private var wantedClasses: Set<Int>? = null
+    /** The tonic and scale last set on the Exquis itself, or null to set them again. */
+    private var sentScale: Pair<Int, Int>? = null
+    /** Offs for every note have gone to this Exquis, clearing what a last run left lit. */
+    private var cleaned = false
     private val padBytes = ByteArray(3)
 
-    fun choosePadLights(on: Boolean) {
-        padLights = on
+    fun choosePadMode(mode: PadMode) {
+        padMode = mode
         handler?.post { syncPads() }
     }
 
-    /** The song's key, or none: what the pads should show. */
-    fun showScale(root: Int?, intervals: List<Int>?) {
+    /**
+     * What the pads should show: a tonic and the pitch classes in key, or
+     * none - the scale of the track the Exquis plays, see [trackForChannel].
+     */
+    fun showScale(root: Int?, pitchClasses: Set<Int>?) {
+        val intervals = if (root == null || pitchClasses == null) null else pitchClasses.map { Math.floorMod(it - root, 12) }.sorted()
         wantedLit = PadLights.notes(root, intervals)
         wantedRoot = root
+        wantedClasses = pitchClasses
         handler?.post { syncPads() }
     }
 
@@ -291,6 +306,10 @@ object MidiHub {
     }
 
     private fun padPortNow(): MidiInputPort? = padInfo?.let { outPorts[it.id] } ?: padPort
+
+    private fun sendBytes(port: MidiInputPort, bytes: ByteArray) {
+        runCatching { port.send(bytes, 0, bytes.size) }
+    }
 
     private fun sendPad(port: MidiInputPort, status: Int, note: Int, vel: Int) {
         padBytes[0] = status.toByte(); padBytes[1] = note.toByte(); padBytes[2] = vel.toByte()
@@ -315,12 +334,14 @@ object MidiHub {
             runCatching { padDevice?.close() }
             padPort = null; padDevice = null; padInfo = null
             lit.clear()
+            sentScale = null
+            cleaned = false
         }
         if (info == null) return
         padInfo = info
         val port = padPortNow()
         if (port == null) {
-            if (!padLights || padDevice != null) return
+            if (padMode == PadMode.Off || padDevice != null) return
             mgr.openDevice(info, { device ->
                 padDevice = device
                 padPort = device?.openInputPort(0)
@@ -329,9 +350,27 @@ object MidiHub {
             }, handler)
             return
         }
-        val target = if (padLights) wantedLit else emptySet()
+        // Once a connection: offs for every note on channel 1, so nothing a
+        // run that ended without tidying up left highlighted is still lit
+        // under what this one shows.
+        if (!cleaned) {
+            for (n in 0..127) sendPad(port, 0x80, n, 0)
+            lit.clear()
+            cleaned = true
+        }
+        val target = if (padMode == PadMode.Highlight) wantedLit else emptySet()
         for ((status, note, vel) in PadLights.changes(lit, target, wantedRoot)) sendPad(port, status, note, vel)
         lit.clear(); lit += target
+        // Its own tonic and scale, in the player's own colours.
+        val root = wantedRoot
+        val classes = wantedClasses
+        if (padMode == PadMode.Own && root != null && classes != null) {
+            val scale = PadLights.exquisScale(root, classes)
+            if (scale != sentScale) {
+                for (m in PadLights.exquisScaleMessages(scale.first, scale.second)) sendBytes(port, m)
+                sentScale = scale
+            }
+        }
     }
 
     // --- A Launchpad Pro [MK3] -------------------------------------------------
@@ -848,6 +887,19 @@ object MidiHub {
         applyMpe()
     }
 
+    /**
+     * The track a note on [channel] plays: the one followed, the one pinned,
+     * or the channel's own. An MPE finger is never routed by its channel -
+     * the fingers are one player, so they go wherever the zone is pointed.
+     * The pads show the scale of the same track, so this is the one rule.
+     */
+    fun trackForChannel(channel: Int): Int = when {
+        mpeMember(channel) -> if (routing == Routing.FixedTrack) fixedRack else target()
+        routing == Routing.FixedTrack -> fixedRack
+        routing == Routing.ChannelToRack -> channel
+        else -> target()
+    }
+
     /** Is this channel one of the zone's fingers? Channels are 0-based here. */
     fun mpeMember(channel: Int): Boolean = MpeZone.member(mpeZone, mpeMembers, channel)
 
@@ -876,12 +928,9 @@ object MidiHub {
             auto.noteOff(channel)
         }
         val member = mpeMember(channel)
-        val rack = when {
-            // Every finger plays the one instrument the zone is pointed at.
-            member -> if (routing == Routing.FixedTrack) fixedRack else target()
-            routing == Routing.FixedTrack -> fixedRack
-            routing == Routing.ChannelToRack -> channel
-            else -> target()
+        val rack = trackForChannel(channel)
+        if (kind == 0x90 && d2 > 0 && currentPort >= 0 && currentPort == padInfo?.id && exquisChannel != channel) {
+            exquisChannel = channel
         }
         // A note whose note-on a mapping took must not have its note-off
         // delivered either, or the machine is left holding a note it was

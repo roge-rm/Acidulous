@@ -426,10 +426,16 @@ private fun App(modifier: Modifier = Modifier) {
         com.rm.acidulous.midi.MidiHub.target = { midiTrack }
         com.rm.acidulous.ui.KeyHub.target = { midiTrack }
     }
-    // The song's key, lit on an Exquis's pads when one is plugged in.
-    LaunchedEffect(song.key) {
-        val key = song.key
-        com.rm.acidulous.midi.MidiHub.showScale(key?.root, key?.let { com.rm.acidulous.model.Scales.intervals.getOrNull(it.scale) })
+    // An Exquis shows the scale of the track it plays: the one the roll would
+    // show for that track - its own Scale modifier, or failing that the
+    // song's key. Which track is the routing's call, the same rule its notes
+    // follow, so a pinned track or a channel's own shows that one's.
+    val exquisTrack = song.tracks.getOrNull(com.rm.acidulous.midi.MidiHub.trackForChannel(com.rm.acidulous.midi.MidiHub.exquisChannel))
+    val exquisScale = exquisTrack?.let {
+        com.rm.acidulous.model.Scales.rootFor(song, it) to com.rm.acidulous.model.Scales.activeFor(song, it)
+    }
+    LaunchedEffect(exquisScale) {
+        com.rm.acidulous.midi.MidiHub.showScale(exquisScale?.first, exquisScale?.second)
     }
     // Typed notes go where hardware notes do; on a drum machine they are its
     // pads in order rather than a scale.
@@ -1503,6 +1509,12 @@ private fun App(modifier: Modifier = Modifier) {
             }
         }
     }
+    val playedScale = song.tracks.getOrNull(midiTrack)?.let { t ->
+        val root = com.rm.acidulous.model.Scales.rootFor(song, t)
+        val classes = com.rm.acidulous.model.Scales.activeFor(song, t)
+        if (root == null || classes == null) null to null
+        else root to classes.map { Math.floorMod(it - root, 12) }.sorted()
+    } ?: (null to null)
     val lpSample by rememberUpdatedState {
         com.rm.acidulous.midi.launchpad.LpView(
             tracks = song.tracks.mapIndexed { i, t ->
@@ -1523,8 +1535,9 @@ private fun App(modifier: Modifier = Modifier) {
                 )
             },
             played = midiTrack,
-            root = song.key?.root,
-            intervals = song.key?.let { com.rm.acidulous.model.Scales.intervals.getOrNull(it.scale) },
+            // The played track's scale, as its roll shows it: its own, or the song's.
+            root = playedScale.first,
+            intervals = playedScale.second,
             playing = playing,
             armed = armed,
             beat = (position.tickInIteration % com.rm.acidulous.model.PPQN).toFloat() / com.rm.acidulous.model.PPQN,

@@ -122,10 +122,10 @@ private fun DevicesTab(context: android.content.Context) {
                     UiPrefs.chooseLaunchpad(it == 0)
                 }
             }
-            // Only with one plugged in: the song's key, lit on its pads.
+            // Only with one plugged in: the played track's scale on its pads.
             if (MidiHub.exquisHere) {
-                SwitchGrid(stringResource(R.string.midi_exquis_pads), stringArrayResource(R.array.midi_exquis_pads_choices).toList(), if (MidiHub.padLights) 0 else 1) {
-                    UiPrefs.choosePadLights(it == 0)
+                SwitchGrid(stringResource(R.string.midi_exquis_pads), stringArrayResource(R.array.midi_exquis_pads_choices).toList(), MidiHub.padMode.ordinal, columns = 1) {
+                    UiPrefs.choosePadMode(MidiHub.PadMode.entries[it])
                 }
             }
             // A cable appears by itself; a Bluetooth instrument has to be

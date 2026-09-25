@@ -432,7 +432,9 @@ object UiPrefs {
             p.getInt(KEY_MPE_ZONE, com.rm.acidulous.midi.MpeZone.AUTO), p.getInt(KEY_MPE_MEMBERS, 15),
             p.getFloat(KEY_MPE_BEND, 48f), p.getBoolean(KEY_MPE_TIMBRE, true),
         )
-        MidiHub.choosePadLights(p.getBoolean(KEY_PAD_LIGHTS, true))
+        // The old on/off switch: off stays off, on becomes the new default.
+        val padMode = p.getInt(KEY_PAD_MODE, if (p.getBoolean(KEY_PAD_LIGHTS, true)) 0 else 2)
+        MidiHub.choosePadMode(MidiHub.PadMode.entries.getOrElse(padMode) { MidiHub.PadMode.Own })
         MidiHub.chooseLaunchpad(p.getBoolean(KEY_LAUNCHPAD, true))
     }
 
@@ -442,10 +444,10 @@ object UiPrefs {
         store?.edit()?.putBoolean(KEY_LAUNCHPAD, on)?.apply()
     }
 
-    /** Whether an attached Exquis shows the song's scale on its pads. */
-    fun choosePadLights(on: Boolean) {
-        MidiHub.choosePadLights(on)
-        store?.edit()?.putBoolean(KEY_PAD_LIGHTS, on)?.apply()
+    /** How an attached Exquis shows the played track's scale on its pads. */
+    fun choosePadMode(mode: MidiHub.PadMode) {
+        MidiHub.choosePadMode(mode)
+        store?.edit()?.putInt(KEY_PAD_MODE, mode.ordinal)?.apply()
     }
 
     /**
@@ -844,6 +846,7 @@ object UiPrefs {
     private const val KEY_MPE_BEND = "mpe_bend"
     private const val KEY_MPE_TIMBRE = "mpe_timbre"
     private const val KEY_PAD_LIGHTS = "exquis_pad_lights"
+    private const val KEY_PAD_MODE = "exquis_pad_mode"
     private const val KEY_LAUNCHPAD = "launchpad_app"
     private const val KEY_MIDI_RACK = "midi_rack"
     private const val KEY_MIDI_CLOCK_OUT = "midi_clock_out"

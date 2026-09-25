@@ -52,4 +52,30 @@ class PadLightsTest {
         assertTrue(PadLights.isExquis("MIDI device", null, "Intuitive Instruments"))
         assertFalse(PadLights.isExquis("nanoKEY Studio", null, "KORG INC."))
     }
+
+    @Test
+    fun `the Exquis's own scale, same root first`() {
+        assertEquals(0 to 0, PadLights.exquisScale(0, setOf(0, 2, 4, 5, 7, 9, 11))) // C major
+        assertEquals(9 to 1, PadLights.exquisScale(9, setOf(9, 11, 0, 2, 4, 5, 7))) // A minor, not C major
+        assertEquals(2 to 4, PadLights.exquisScale(2, setOf(2, 4, 5, 7, 9, 11, 0))) // D dorian
+    }
+
+    @Test
+    fun `the same notes from another root, then the smallest that holds them, then chromatic`() {
+        // C Egyptian is C D F G B-flat: G minor pentatonic, the first root that has it.
+        assertEquals(7 to 11, PadLights.exquisScale(0, setOf(0, 2, 5, 7, 10)))
+        // C major blues (C D E-flat E G A) is in none of them but chromatic.
+        assertEquals(0 to PadLights.EXQUIS_CHROMATIC, PadLights.exquisScale(0, setOf(0, 2, 3, 4, 7, 9)))
+        // C In Sen (C D-flat F G B-flat) sits inside C phrygian, the smallest that holds it.
+        assertEquals(0 to 5, PadLights.exquisScale(0, setOf(0, 1, 5, 7, 10)))
+    }
+
+    @Test
+    fun `setting it is developer mode in and out around the tonic and scale`() {
+        val m = PadLights.exquisScaleMessages(9, 1).map { b -> b.map { it.toInt() and 0xff } }
+        assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x00, 0x04, 0xF7), m[0])
+        assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x06, 9, 0xF7), m[1])
+        assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x07, 1, 0xF7), m[2])
+        assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x00, 0x00, 0xF7), m[3])
+    }
 }
