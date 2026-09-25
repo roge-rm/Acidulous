@@ -992,6 +992,9 @@ object MidiHub {
     // it opens comes back through [attachFound] and from there it is the
     // same as anything plugged in.
 
+    /** Whether this platform finds Bluetooth MIDI itself at all; where it does not, there is nothing to offer. */
+    val canFindBluetooth: Boolean get() = system?.bluetooth != null
+
     /** Whether the platform can scan for Bluetooth MIDI and Bluetooth is on. */
     fun bluetoothReady(): Boolean = system?.bluetooth?.ready() == true
 

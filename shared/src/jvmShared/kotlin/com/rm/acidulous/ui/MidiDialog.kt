@@ -97,7 +97,7 @@ private fun DevicesTab() {
         if (!MidiHub.supported) {
             Text(stringResource(Res.string.midi_unsupported), color = Acid.colors.red, fontSize = 12.sp)
         }
-        WindowCard(stringResource(Res.string.midi_inputs)) {
+        WindowCard(stringResource(if (MidiHub.canFindBluetooth) Res.string.midi_inputs else Res.string.midi_inputs_cable)) {
             ports.forEach { port ->
                 DialogRow(
                     mark = if (port.bluetooth) "ᛒ" else "⎓",
@@ -107,7 +107,7 @@ private fun DevicesTab() {
                     on = port.open,
                 ) { MidiHub.toggle(port.id) }
             }
-            if (ports.isEmpty()) Line { Readout(stringResource(Res.string.midi_no_inputs)) }
+            if (ports.isEmpty()) Line { Readout(stringResource(if (MidiHub.canFindBluetooth) Res.string.midi_no_inputs else Res.string.midi_no_inputs_cable)) }
             // Only with one plugged in: the app plays it, or it is itself.
             if (MidiHub.launchpadHere) {
                 SwitchGrid(stringResource(Res.string.midi_launchpad), stringArrayResource(Res.array.midi_launchpad_choices).toList(), if (MidiHub.launchpadOn) 0 else 1) {
@@ -124,33 +124,37 @@ private fun DevicesTab() {
                     UiPrefs.chooseExquisButtons(it == 0)
                 }
             }
-            // A cable appears by itself; a Bluetooth instrument has to be
-            // looked for, which is the one thing on this tab you *do*.
-            SwitchGrid(
-                stringResource(if (MidiHub.bluetoothReady()) Res.string.midi_bluetooth else Res.string.midi_bluetooth_off),
-                listOf(stringResource(if (MidiHub.scanning) Res.string.midi_stop else Res.string.midi_search)), if (MidiHub.scanning) 0 else -1,
-            ) {
-                if (MidiHub.scanning) {
-                    MidiHub.stopScan()
-                } else {
-                    val missing = MidiHub.bluetoothPermissions().filter { !permissions.has(it) }
-                    if (missing.isEmpty()) MidiHub.scanBluetooth() else permissions.ask(*missing.toTypedArray())
+            // Only where the app finds Bluetooth instruments itself - on a
+            // phone. A desktop pairs them in its own settings, not here.
+            if (MidiHub.canFindBluetooth) {
+                // A cable appears by itself; a Bluetooth instrument has to be
+                // looked for, which is the one thing on this tab you *do*.
+                SwitchGrid(
+                    stringResource(if (MidiHub.bluetoothReady()) Res.string.midi_bluetooth else Res.string.midi_bluetooth_off),
+                    listOf(stringResource(if (MidiHub.scanning) Res.string.midi_stop else Res.string.midi_search)), if (MidiHub.scanning) 0 else -1,
+                ) {
+                    if (MidiHub.scanning) {
+                        MidiHub.stopScan()
+                    } else {
+                        val missing = MidiHub.bluetoothPermissions().filter { !permissions.has(it) }
+                        if (missing.isEmpty()) MidiHub.scanBluetooth() else permissions.ask(*missing.toTypedArray())
+                    }
                 }
-            }
-            // Why the list looks the way it does. A scan that finds nothing
-            // and says nothing is indistinguishable from one that is broken,
-            // which is exactly how a wrong service UUID went unnoticed.
-            if (MidiHub.scanStatus.isNotEmpty()) Line { Readout(MidiHub.scanStatus) }
-            found.forEach { device ->
-                // A device that actually advertised the MIDI service is worth
-                // saying so about: in a widened scan everything else is a guess.
-                DialogRow(
-                    mark = if (device.midi) "ᛒ" else "·",
-                    name = device.name,
-                    under = if (device.midi) device.address else stringResource(Res.string.midi_no_service, device.address),
-                    trailing = stringResource(Res.string.midi_connect),
-                    monoUnder = true,
-                ) { MidiHub.connectBluetooth(device.address) }
+                // Why the list looks the way it does. A scan that finds nothing
+                // and says nothing is indistinguishable from one that is broken,
+                // which is exactly how a wrong service UUID went unnoticed.
+                if (MidiHub.scanStatus.isNotEmpty()) Line { Readout(MidiHub.scanStatus) }
+                found.forEach { device ->
+                    // A device that actually advertised the MIDI service is worth
+                    // saying so about: in a widened scan everything else is a guess.
+                    DialogRow(
+                        mark = if (device.midi) "ᛒ" else "·",
+                        name = device.name,
+                        under = if (device.midi) device.address else stringResource(Res.string.midi_no_service, device.address),
+                        trailing = stringResource(Res.string.midi_connect),
+                        monoUnder = true,
+                    ) { MidiHub.connectBluetooth(device.address) }
+                }
             }
         }
         // Each track chooses whether it sends, in the mixer; this is where to,

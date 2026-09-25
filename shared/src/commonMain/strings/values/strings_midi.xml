@@ -9,9 +9,13 @@
     <string name="midi_unsupported">This device has no MIDI support.</string>
     <!-- The marks are the ones the rows use: a cable, and Bluetooth. -->
     <string name="midi_inputs">inputs · ⎓ cable, ᛒ bluetooth</string>
+    <!-- The same, where the app does not find Bluetooth instruments itself (a desktop). -->
+    <string name="midi_inputs_cable">inputs · ⎓ cable</string>
     <string name="midi_listening">listening</string>
     <string name="midi_tap_to_open">tap to open</string>
     <string name="midi_no_inputs">nothing connected - plug in over USB, or search</string>
+    <!-- The same, with no search to point at. -->
+    <string name="midi_no_inputs_cable">nothing connected - plug in over USB</string>
     <string name="midi_bluetooth">bluetooth</string>
     <string name="midi_bluetooth_off">bluetooth is off</string>
     <string name="midi_search">search</string>

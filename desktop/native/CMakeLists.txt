@@ -55,6 +55,9 @@ set_source_files_properties(${CPP}/platform/desktop/drivers/AudioDriver.cpp
     PROPERTIES COMPILE_OPTIONS "-w")
 
 add_subdirectory(${CPP}/third_party/lame lame)
+# Built beside the engine, so $ORIGIN finds it in the build tree as it does
+# once installed.
+set_target_properties(mp3lame PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_subdirectory(${CPP}/third_party/link link)
 
 find_package(Threads REQUIRED)

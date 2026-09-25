@@ -48,6 +48,7 @@ dependencies {
     runtimeOnly(compose.desktop.currentOs)
     debAmd64Runtime(compose.desktop.linux_x64)
     debArm64Runtime(compose.desktop.linux_arm64)
+    testImplementation(libs.junit)
 }
 
 for (runtime in listOf(debAmd64Runtime, debArm64Runtime)) {
@@ -137,7 +138,7 @@ fun registerDeb(arch: String, runtime: Configuration, engine: TaskProvider<Exec>
         filePermissions { unix("rw-r--r--") }
         dirPermissions { unix("rwxr-xr-x") }
         from(tasks.named("jar")) { into("usr/lib/acidulous/lib") }
-        from(listOf(engineDir.file("libacidulous.so"), engineDir.file("lame/libmp3lame.so"))) { into("usr/lib/acidulous/native") }
+        from(listOf(engineDir.file("libacidulous.so"), engineDir.file("libmp3lame.so"))) { into("usr/lib/acidulous/native") }
         from(file("deb/acidulous")) {
             into("usr/bin")
             filePermissions { unix("rwxr-xr-x") }

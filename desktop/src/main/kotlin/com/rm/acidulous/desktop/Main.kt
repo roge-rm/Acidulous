@@ -37,7 +37,8 @@ fun main() {
     UiPrefs.init(FilePrefs(File(config, "ui.properties")))
     Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
     Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
-    // No MIDI yet: MidiHub is never started, so it reports itself unsupported.
+    // USB MIDI, through Java Sound: see JavaSoundMidi.
+    MidiHub.start(JavaSoundMidi())
     // Nothing on a desktop filters multicast, so Link needs no lock.
     LinkHub.multicastLock = null
     EngineAssets.install(data, cache)
