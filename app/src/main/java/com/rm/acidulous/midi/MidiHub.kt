@@ -262,6 +262,27 @@ object MidiHub {
 
     var padMode by mutableStateOf(PadMode.Own)
         private set
+    /** Whether the app has the Exquis's transport and undo buttons. */
+    var exquisButtons by mutableStateOf(true)
+        private set
+    /** A press of one of those buttons, by id (PadLights.BUTTON_*), on the main thread. */
+    var exquisButtonPressed: ((Int) -> Unit)? = null
+    private val mainThread = android.os.Handler(android.os.Looper.getMainLooper())
+    /** The app holds the buttons zone in developer mode on this Exquis now. */
+    @Volatile private var buttonsHeld = false
+    private var wantedLeds: Map<Int, Triple<Int, Int, Int>> = emptyMap()
+    private val shownLeds = HashMap<Int, Triple<Int, Int, Int>>()
+    fun chooseExquisButtons(on: Boolean) {
+        exquisButtons = on
+        handler?.post { syncPads() }
+    }
+
+    /** What the buttons should show, by id, as colours of 0..127 a part. */
+    fun showExquisButtons(leds: Map<Int, Triple<Int, Int, Int>>) {
+        wantedLeds = leds
+        handler?.post { syncPads() }
+    }
+
     /** The channel the Exquis last played on, for routing by channel. */
     var exquisChannel by mutableStateOf(0)
         private set
@@ -298,11 +319,15 @@ object MidiHub {
         handler?.post { syncPads() }
     }
 
-    /** Dark pads, before the app goes. On the caller's thread, so it happens. */
+    /** Dark pads and its buttons given back, before the app goes. On the caller's thread, so it happens. */
     fun clearPads() {
         val port = padPortNow() ?: return
         for ((status, note, vel) in PadLights.changes(lit, emptySet(), null)) sendPad(port, status, note, vel)
         lit.clear()
+        if (buttonsHeld) {
+            sendBytes(port, PadLights.exquisSetup(0))
+            buttonsHeld = false
+        }
     }
 
     private fun padPortNow(): MidiInputPort? = padInfo?.let { outPorts[it.id] } ?: padPort
@@ -336,12 +361,14 @@ object MidiHub {
             lit.clear()
             sentScale = null
             cleaned = false
+            buttonsHeld = false
+            shownLeds.clear()
         }
         if (info == null) return
         padInfo = info
         val port = padPortNow()
         if (port == null) {
-            if (padMode == PadMode.Off || padDevice != null) return
+            if ((padMode == PadMode.Off && !exquisButtons) || padDevice != null) return
             mgr.openDevice(info, { device ->
                 padDevice = device
                 padPort = device?.openInputPort(0)
@@ -358,6 +385,22 @@ object MidiHub {
             lit.clear()
             cleaned = true
         }
+        // Its buttons: taken or given back, and lit as the app is.
+        if (exquisButtons && !buttonsHeld) {
+            sendBytes(port, PadLights.exquisSetup(PadLights.ZONE_BUTTONS))
+            buttonsHeld = true
+            shownLeds.clear()
+        } else if (!exquisButtons && buttonsHeld) {
+            sendBytes(port, PadLights.exquisSetup(0))
+            buttonsHeld = false
+        }
+        if (buttonsHeld) {
+            for ((id, c) in wantedLeds) {
+                if (shownLeds[id] == c) continue
+                sendBytes(port, PadLights.exquisLed(id, c.first, c.second, c.third))
+                shownLeds[id] = c
+            }
+        }
         val target = if (padMode == PadMode.Highlight) wantedLit else emptySet()
         for ((status, note, vel) in PadLights.changes(lit, target, wantedRoot)) sendPad(port, status, note, vel)
         lit.clear(); lit += target
@@ -367,7 +410,7 @@ object MidiHub {
         if (padMode == PadMode.Own && root != null && classes != null) {
             val scale = PadLights.exquisScale(root, classes)
             if (scale != sentScale) {
-                for (m in PadLights.exquisScaleMessages(scale.first, scale.second)) sendBytes(port, m)
+                for (m in PadLights.exquisScaleMessages(scale.first, scale.second, inDeveloperMode = buttonsHeld)) sendBytes(port, m)
                 sentScale = scale
             }
         }
@@ -763,6 +806,11 @@ object MidiHub {
             device.info.properties.getString(MidiDeviceInfo.PROPERTY_NAME),
             device.info.properties.getString(MidiDeviceInfo.PROPERTY_PRODUCT),
         )
+        val exquis = PadLights.isExquis(
+            device.info.properties.getString(MidiDeviceInfo.PROPERTY_NAME),
+            device.info.properties.getString(MidiDeviceInfo.PROPERTY_PRODUCT),
+            device.info.properties.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER),
+        )
         val list = ArrayList<MidiParser>()
         for (p in 0 until device.info.outputPortCount) {
             val surface = launchpad && p == 0
@@ -772,11 +820,26 @@ object MidiHub {
                     if (surface && launchpadOn && to != null) {
                         lastMessage = "launchpad · %02x %d %d".format(status, d1, d2)
                         to(status, d1, d2)
+                    } else if (exquis && buttonsHeld && status == 0xBF && d1 in PadLights.BUTTONS) {
+                        // One of the Exquis's buttons the app holds: an action, not a controller.
+                        lastMessage = "exquis · button $d1 ${if (d2 > 0) "on" else "off"}"
+                        PadLights.exquisButton(status, d1, d2)?.let { id ->
+                            exquisButtonPressed?.let { f -> mainThread.post { f(id) } }
+                        }
                     } else {
                         currentPort = portId; dispatch(status, d1, d2); currentPort = -1
                     }
                 },
                 onRealtime = { status, d1, d2, stamp -> clockIn(status, d1, d2, stamp) },
+                // The Exquis says when it has painted over its LEDs - coming
+                // in and out of its settings menu - so the buttons are drawn
+                // again then, and only then.
+                onSysex = { body ->
+                    if (exquis && PadLights.isExquisRefresh(body)) handler?.post {
+                        shownLeds.clear()
+                        syncPads()
+                    }
+                },
             )
             list += parser
             val receiver = object : MidiReceiver() {

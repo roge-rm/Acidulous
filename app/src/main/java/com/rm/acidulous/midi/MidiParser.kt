@@ -19,12 +19,16 @@ class MidiParser(
      *  sends to be followed. Given the timestamp they arrived with, because
      *  the whole value of them is *when* they were. */
     private val onRealtime: (status: Int, data1: Int, data2: Int, stamp: Long) -> Unit = { _, _, _, _ -> },
+    /** A whole SysEx message, the bytes between F0 and F7. One cut short by
+     *  another status byte, or longer than any device here sends, is dropped. */
+    private val onSysex: (body: ByteArray) -> Unit = {},
 ) {
     private var runningStatus = 0
     private var pending = 0
     private var wanted = 0
     private var data1 = 0
     private var inSysex = false
+    private val sysex = java.io.ByteArrayOutputStream()
 
     fun reset() {
         runningStatus = 0
@@ -51,8 +55,11 @@ class MidiParser(
             b >= 0xf8 -> onRealtime(b, 0, 0, timestamp)
             // Any status byte that is not real time cancels running status,
             // and a half-finished message with it.
-            b == 0xf0 -> { inSysex = true; runningStatus = 0; wanted = 0; data1 = -1 }
-            b == 0xf7 -> inSysex = false
+            b == 0xf0 -> { inSysex = true; sysex.reset(); runningStatus = 0; wanted = 0; data1 = -1 }
+            b == 0xf7 -> {
+                if (inSysex) onSysex(sysex.toByteArray())
+                inSysex = false
+            }
             b == 0xf2 -> { inSysex = false; runningStatus = 0; wanted = 2; data1 = -1; pending = b }
             b >= 0xf1 -> { inSysex = false; runningStatus = 0; wanted = 0; data1 = -1 }
             b >= 0x80 -> {
@@ -62,7 +69,9 @@ class MidiParser(
                 wanted = bytesFor(b)
                 data1 = -1
             }
-            inSysex -> return
+            inSysex -> {
+                if (sysex.size() < MAX_SYSEX) sysex.write(b) else inSysex = false
+            }
             else -> {
                 // A data byte with no status of its own belongs to the last
                 // one: that is running status, and a keyboard sending fast
@@ -89,6 +98,11 @@ class MidiParser(
                 }
             }
         }
+    }
+
+    private companion object {
+        /** An Exquis snapshot is the longest this app is sent: 255 bytes and its header. */
+        const val MAX_SYSEX = 1024
     }
 
     private fun bytesFor(status: Int): Int = when (status and 0xf0) {

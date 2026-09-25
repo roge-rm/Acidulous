@@ -13,7 +13,9 @@ class MidiParserTest {
     private val parser = MidiParser(
         onMessage = { s, a, b -> seen += Triple(s, a, b) },
         onRealtime = { s, a, b, stamp -> realtime += Triple(s, a, b); stamps += stamp },
+        onSysex = { sysexes += it.map { b -> b.toInt() and 0xff } },
     )
+    private val sysexes = mutableListOf<List<Int>>()
 
     private fun feed(vararg bytes: Int, stamp: Long = 0L) =
         parser.parse(bytes.map { it.toByte() }.toByteArray(), 0, bytes.size, stamp)
@@ -80,6 +82,20 @@ class MidiParserTest {
 
     @Test fun `running status does not survive sysex`() {
         feed(0x90, 60, 100, 0xf0, 0x01, 0xf7, 62, 100)
+        assertEquals(listOf(Triple(0x90, 60, 100)), seen)
+    }
+
+    @Test fun `a sysex comes out whole, across reads and around a clock`() {
+        feed(0xF0, 0x00, 0x21, 0x7E)
+        feed(0x7F, 0xF8, 0x03, 0xF7)
+        assertEquals(listOf(listOf(0x00, 0x21, 0x7E, 0x7F, 0x03)), sysexes)
+        assertEquals(listOf(Triple(0xF8, 0, 0)), realtime)
+        assertEquals(PadLights.isExquisRefresh(sysexes[0].map { it.toByte() }.toByteArray()), true)
+    }
+
+    @Test fun `a sysex cut short by a status is dropped, and the note after it plays`() {
+        feed(0xF0, 0x00, 0x21, 0x90, 60, 100)
+        assertEquals(emptyList<List<Int>>(), sysexes)
         assertEquals(listOf(Triple(0x90, 60, 100)), seen)
     }
 }

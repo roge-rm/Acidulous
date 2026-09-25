@@ -80,6 +80,8 @@
         <item>highlight</item>
         <item>off</item>
     </string-array>
+    <!-- An Exquis's play, record, loop, clips, undo and redo buttons: worked by the app, or left as the Exquis's own. Shares the launchpad switch's choices. -->
+    <string name="midi_exquis_buttons">exquis buttons</string>
     <string name="midi_mpe">mpe</string>
     <string name="midi_mpe_zone">zone</string>
     <!-- In the order shown: auto, off, lower, upper. -->

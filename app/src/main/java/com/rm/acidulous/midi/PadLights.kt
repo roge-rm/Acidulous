@@ -85,21 +85,57 @@ object PadLights {
         return r to EXQUIS_CHROMATIC
     }
 
+    private fun sysex(vararg b: Int) =
+        byteArrayOf(0xF0.toByte(), 0x00, 0x21, 0x7E, 0x7F, *b.map { it.toByte() }.toByteArray(), 0xF7.toByte())
+
     /**
-     * The SysEx that sets the Exquis's tonic and scale: in developer mode,
-     * since that is the only time it takes either, and straight out again.
-     * It goes in on the slider alone, for the few milliseconds it takes, so
-     * nothing the player is touching is taken away.
+     * The SysEx that sets the Exquis's tonic and scale. It only takes either
+     * in developer mode: when the app already holds the buttons it is in it,
+     * and otherwise it goes in on the slider alone for the few milliseconds
+     * this takes and straight out again, so nothing the player is touching
+     * is taken away.
      */
-    fun exquisScaleMessages(root: Int, scale: Int): List<ByteArray> {
-        fun sysex(vararg b: Int) = byteArrayOf(0xF0.toByte(), 0x00, 0x21, 0x7E, 0x7F, *b.map { it.toByte() }.toByteArray(), 0xF7.toByte())
-        return listOf(
-            sysex(0x00, 0x04), // developer mode, the slider only
-            sysex(0x06, Math.floorMod(root, 12)),
-            sysex(0x07, scale),
-            sysex(0x00, 0x00), // and out
-        )
+    fun exquisScaleMessages(root: Int, scale: Int, inDeveloperMode: Boolean = false): List<ByteArray> {
+        val set = listOf(sysex(0x06, Math.floorMod(root, 12)), sysex(0x07, scale))
+        return if (inDeveloperMode) set else listOf(exquisSetup(ZONE_SLIDER)) + set + exquisSetup(0)
     }
+
+    // --- The Exquis's buttons -------------------------------------------------
+    //
+    // Record, loop, clips, play/stop, undo and redo are one developer-mode
+    // zone. Taken over, they report presses to the app as CC on channel 16
+    // and light as the app says - and the pads, knobs, slider and octave
+    // buttons stay the Exquis's own, so it plays exactly as before.
+
+    const val ZONE_SLIDER = 0x04
+    const val ZONE_BUTTONS = 0x20
+    const val BUTTON_RECORD = 102
+    const val BUTTON_LOOP = 103
+    const val BUTTON_CLIPS = 104
+    const val BUTTON_PLAY = 105
+    const val BUTTON_UNDO = 108
+    const val BUTTON_REDO = 109
+    val BUTTONS = listOf(BUTTON_RECORD, BUTTON_LOOP, BUTTON_CLIPS, BUTTON_PLAY, BUTTON_UNDO, BUTTON_REDO)
+
+    /** Developer mode for the zones in [mask], or out of it with 0. */
+    fun exquisSetup(mask: Int): ByteArray = sysex(0x00, mask)
+
+    /** One LED set straight to a colour, each part 0..127, with no effect. */
+    fun exquisLed(id: Int, r: Int, g: Int, b: Int): ByteArray =
+        sysex(0x04, id, r.coerceIn(0, 127), g.coerceIn(0, 127), b.coerceIn(0, 127), 0)
+
+    /**
+     * The Exquis asking for its LEDs to be drawn again - it sends this going
+     * into and coming out of its settings menu, having painted over them.
+     * [body] is the SysEx between F0 and F7.
+     */
+    fun isExquisRefresh(body: ByteArray): Boolean =
+        body.size >= 5 && body[0].toInt() == 0x00 && body[1].toInt() == 0x21 && body[2].toInt() == 0x7E &&
+            body[3].toInt() == 0x7F && body[4].toInt() == 0x03
+
+    /** A press of one of the taken buttons, from what the Exquis sends: its id, or null. */
+    fun exquisButton(status: Int, d1: Int, d2: Int): Int? =
+        if (status == 0xBF && d1 in BUTTONS && d2 > 0) d1 else null
 
     /** Whether a MIDI device is an Exquis, by what it calls itself. */
     fun isExquis(name: String?, product: String?, maker: String?): Boolean {

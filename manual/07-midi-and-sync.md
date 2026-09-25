@@ -60,6 +60,14 @@ aren't routed by channel, so with MPE it's the open track or the pinned one.
   one pad per note, over whatever scale the Exquis is set to.
 - **off** leaves the pads alone.
 
+Its buttons work the app too: **play/stop** starts and stops the song,
+**record** arms recording, **loop** loops the scene, **clips** switches to
+clip mode, and **undo** and **redo** do what they say. Their lights follow
+the app: play is green while playing, record red while armed, and loop and
+clips lit while they're on. The pads, knobs, slider and octave buttons stay
+the Exquis's own. **exquis buttons** in the devices tab gives the buttons back
+to the Exquis; they're given back when the app closes as well.
+
 ### Launchpad Pro
 
 Plug in a Launchpad Pro [MK3] over USB and Acidulous takes it over: every

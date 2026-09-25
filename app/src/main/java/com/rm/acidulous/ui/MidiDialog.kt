@@ -127,6 +127,10 @@ private fun DevicesTab(context: android.content.Context) {
                 SwitchGrid(stringResource(R.string.midi_exquis_pads), stringArrayResource(R.array.midi_exquis_pads_choices).toList(), MidiHub.padMode.ordinal, columns = 1) {
                     UiPrefs.choosePadMode(MidiHub.PadMode.entries[it])
                 }
+                // Play, record, loop, clips, undo and redo: the app's, or its own.
+                SwitchGrid(stringResource(R.string.midi_exquis_buttons), stringArrayResource(R.array.midi_launchpad_choices).toList(), if (MidiHub.exquisButtons) 0 else 1) {
+                    UiPrefs.chooseExquisButtons(it == 0)
+                }
             }
             // A cable appears by itself; a Bluetooth instrument has to be
             // looked for, which is the one thing on this tab you *do*.

@@ -78,4 +78,22 @@ class PadLightsTest {
         assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x07, 1, 0xF7), m[2])
         assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x00, 0x00, 0xF7), m[3])
     }
+
+    @Test
+    fun `holding the buttons, the scale is set without leaving developer mode`() {
+        val m = PadLights.exquisScaleMessages(2, 4, inDeveloperMode = true).map { b -> b.map { it.toInt() and 0xff } }
+        assertEquals(2, m.size)
+        assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x06, 2, 0xF7), m[0])
+        assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x07, 4, 0xF7), m[1])
+    }
+
+    @Test
+    fun `the buttons zone, a button's light, and a press`() {
+        assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x00, 0x20, 0xF7), PadLights.exquisSetup(PadLights.ZONE_BUTTONS).map { it.toInt() and 0xff })
+        assertEquals(listOf(0xF0, 0x00, 0x21, 0x7E, 0x7F, 0x04, 105, 0, 127, 0, 0, 0xF7), PadLights.exquisLed(105, 0, 200, -3).map { it.toInt() and 0xff })
+        assertEquals(PadLights.BUTTON_PLAY, PadLights.exquisButton(0xBF, 105, 127))
+        assertEquals(null, PadLights.exquisButton(0xBF, 105, 0)) // the release
+        assertEquals(null, PadLights.exquisButton(0xBF, 110, 65)) // an encoder, not taken
+        assertEquals(null, PadLights.exquisButton(0xB0, 105, 127)) // channel 1: somebody's CC
+    }
 }

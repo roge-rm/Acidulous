@@ -436,12 +436,19 @@ object UiPrefs {
         val padMode = p.getInt(KEY_PAD_MODE, if (p.getBoolean(KEY_PAD_LIGHTS, true)) 0 else 2)
         MidiHub.choosePadMode(MidiHub.PadMode.entries.getOrElse(padMode) { MidiHub.PadMode.Own })
         MidiHub.chooseLaunchpad(p.getBoolean(KEY_LAUNCHPAD, true))
+        MidiHub.chooseExquisButtons(p.getBoolean(KEY_EXQUIS_BUTTONS, true))
     }
 
     /** Whether an attached Launchpad Pro is played by the app, or left as itself. */
     fun chooseLaunchpad(on: Boolean) {
         MidiHub.chooseLaunchpad(on)
         store?.edit()?.putBoolean(KEY_LAUNCHPAD, on)?.apply()
+    }
+
+    /** Whether the app has an attached Exquis's transport and undo buttons. */
+    fun chooseExquisButtons(on: Boolean) {
+        MidiHub.chooseExquisButtons(on)
+        store?.edit()?.putBoolean(KEY_EXQUIS_BUTTONS, on)?.apply()
     }
 
     /** How an attached Exquis shows the played track's scale on its pads. */
@@ -847,6 +854,7 @@ object UiPrefs {
     private const val KEY_MPE_TIMBRE = "mpe_timbre"
     private const val KEY_PAD_LIGHTS = "exquis_pad_lights"
     private const val KEY_PAD_MODE = "exquis_pad_mode"
+    private const val KEY_EXQUIS_BUTTONS = "exquis_buttons"
     private const val KEY_LAUNCHPAD = "launchpad_app"
     private const val KEY_MIDI_RACK = "midi_rack"
     private const val KEY_MIDI_CLOCK_OUT = "midi_clock_out"

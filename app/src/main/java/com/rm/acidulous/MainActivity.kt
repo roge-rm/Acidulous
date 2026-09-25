@@ -1610,6 +1610,40 @@ private fun App(modifier: Modifier = Modifier) {
         NativeEngine.setLaunchQuantise(com.rm.acidulous.ui.UiPrefs.launchQuantise * song.signature.ticksPerBar)
     }
 
+    // An Exquis's play, record, loop, clips, undo and redo, when the app has
+    // them: the same actions the Launchpad's and the screen's buttons are,
+    // and lit as the app is - play green while playing and amber stopped, as
+    // the Exquis itself does, record red while armed, loop and clips lit
+    // while on.
+    val exquisPress by rememberUpdatedState<(Int) -> Unit> { id ->
+        val pl = com.rm.acidulous.midi.PadLights
+        when (id) {
+            pl.BUTTON_PLAY -> lpAct(com.rm.acidulous.midi.launchpad.LpAction.Play)
+            pl.BUTTON_RECORD -> lpAct(com.rm.acidulous.midi.launchpad.LpAction.Record)
+            pl.BUTTON_UNDO -> lpAct(com.rm.acidulous.midi.launchpad.LpAction.Undo)
+            pl.BUTTON_REDO -> lpAct(com.rm.acidulous.midi.launchpad.LpAction.Redo)
+            pl.BUTTON_LOOP -> onLoopScene(!loopScene)
+            pl.BUTTON_CLIPS -> onClipMode(!com.rm.acidulous.ui.UiPrefs.clipMode)
+        }
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        com.rm.acidulous.midi.MidiHub.exquisButtonPressed = { exquisPress(it) }
+        onDispose { com.rm.acidulous.midi.MidiHub.exquisButtonPressed = null }
+    }
+    val clipModeNow = com.rm.acidulous.ui.UiPrefs.clipMode
+    LaunchedEffect(playing, armed, loopScene, clipModeNow) {
+        val pl = com.rm.acidulous.midi.PadLights
+        val off = Triple(16, 16, 16)
+        com.rm.acidulous.midi.MidiHub.showExquisButtons(mapOf(
+            pl.BUTTON_PLAY to if (playing) Triple(0, 127, 0) else Triple(80, 36, 0),
+            pl.BUTTON_RECORD to if (armed) Triple(127, 0, 0) else Triple(24, 0, 0),
+            pl.BUTTON_LOOP to if (loopScene) Triple(110, 80, 0) else off,
+            pl.BUTTON_CLIPS to if (clipModeNow) Triple(0, 90, 120) else off,
+            pl.BUTTON_UNDO to Triple(40, 40, 40),
+            pl.BUTTON_REDO to Triple(40, 40, 40),
+        ))
+    }
+
     // Controller mappings. The hub offers every CC and note-on here before it
     // reaches the engine; this decides whether it is being learned, drives
     // something, or is nobody's business and carries on as MIDI. It sits
