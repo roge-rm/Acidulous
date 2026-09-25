@@ -1,8 +1,7 @@
 package com.rm.acidulous.ui
 
 import com.rm.acidulous.engine.EngineSync
-import android.content.Context
-import android.content.SharedPreferences
+import com.rm.acidulous.util.PrefStore
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -57,7 +56,7 @@ const val KeysStretchMax = 3f
 const val DIAGNOSTICS_BY_DEFAULT = true
 
 object UiPrefs {
-    private var store: SharedPreferences? = null
+    private var store: PrefStore? = null
 
     // --- Editing ---------------------------------------------------------
     var automationFolded by mutableStateOf(false)
@@ -357,8 +356,7 @@ object UiPrefs {
     var newMachine by mutableStateOf("Hexbeat")
         private set
 
-    fun init(context: Context) {
-        val p = context.getSharedPreferences("ui", Context.MODE_PRIVATE)
+    fun init(p: PrefStore) {
         store = p
         automationFolded = p.getBoolean(KEY_AUTO_FOLDED, false)
         noteLaneFolded = p.getBoolean(KEY_NOTE_FOLDED, true)

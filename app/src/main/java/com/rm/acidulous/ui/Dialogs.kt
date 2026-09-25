@@ -1,5 +1,6 @@
 package com.rm.acidulous.ui
 
+import com.rm.acidulous.ui.toPress
 import kotlin.math.roundToInt
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -1397,9 +1398,9 @@ internal fun WindowKeys() {
             window.callback = object : android.view.Window.Callback by own {
                 override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
                     val esc = event.keyCode == android.view.KeyEvent.KEYCODE_ESCAPE
-                    if (!esc && KeyHub.preview(event)) return true
+                    if (!esc && KeyHub.preview(event.toPress())) return true
                     if (own.dispatchKeyEvent(event)) return true
-                    return !esc && KeyHub.fallback(event)
+                    return !esc && KeyHub.fallback(event.toPress())
                 }
 
                 override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {

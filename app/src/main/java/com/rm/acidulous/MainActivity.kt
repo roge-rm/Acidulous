@@ -1,5 +1,6 @@
 package com.rm.acidulous
 
+import com.rm.acidulous.ui.toPress
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
@@ -162,7 +163,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) CrashReports.collect(this)
         // Only on a fresh start: a recreated activity has already taken it.
         if (savedInstanceState == null) Incoming.from(intent)
-        com.rm.acidulous.ui.UiPrefs.init(this)
+        com.rm.acidulous.ui.UiPrefs.init(com.rm.acidulous.util.androidPrefs(getSharedPreferences("ui", MODE_PRIVATE)))
         com.rm.acidulous.model.Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
         com.rm.acidulous.model.Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
         com.rm.acidulous.midi.MidiHub.start(this)
@@ -276,9 +277,9 @@ class MainActivity : ComponentActivity() {
      * back for the plain-letter shortcuts. See ui/Keys.kt.
      */
     override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
-        if (com.rm.acidulous.ui.KeyHub.preview(event)) return true
+        if (com.rm.acidulous.ui.KeyHub.preview(event.toPress())) return true
         if (super.dispatchKeyEvent(event)) return true
-        return com.rm.acidulous.ui.KeyHub.fallback(event)
+        return com.rm.acidulous.ui.KeyHub.fallback(event.toPress())
     }
 
     override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
@@ -1246,7 +1247,7 @@ private fun App(modifier: Modifier = Modifier) {
                     // A freeze is a render: it starts from the document too.
                     EngineSync.pushForRender(editor.song)
                     val frozen = withContext(Dispatchers.IO) {
-                        com.rm.acidulous.model.Freeze.render(context, editor.song, t)
+                        com.rm.acidulous.model.Freeze.render(editor.song, t)
                     }
                     if (frozen != null) {
                         ++done
@@ -1261,7 +1262,7 @@ private fun App(modifier: Modifier = Modifier) {
     val onThaw: (List<com.rm.acidulous.model.Freeze.Target>) -> Unit = { targets ->
         for (t in targets) {
             if (editor.song.tracks.getOrNull(t.track)?.clips?.get(t.sceneId)?.frozen == null) continue
-            com.rm.acidulous.model.Freeze.discard(context, editor.song, t)
+            com.rm.acidulous.model.Freeze.discard(editor.song, t)
             editor.editClip(t.track, t.sceneId) { it.copy(frozen = null) }
         }
     }

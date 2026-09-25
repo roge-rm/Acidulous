@@ -1,7 +1,6 @@
 package com.rm.acidulous.model
 
-import android.content.Context
-import android.util.Log
+import com.rm.acidulous.util.Log
 import com.rm.acidulous.engine.EngineAssets
 import com.rm.acidulous.engine.NativeEngine
 import java.io.File
@@ -34,7 +33,7 @@ object Freeze {
      */
     private const val TAIL_CAP_SECONDS = 8f
 
-    fun fileFor(context: Context, trackId: String, sceneId: String): File =
+    fun fileFor(trackId: String, sceneId: String): File =
         File(EngineAssets.freezeRoot(), "${trackId}__$sceneId.wav")
 
     /** Every clip in a scene that is worth freezing. */
@@ -104,10 +103,10 @@ object Freeze {
      * runs, so it belongs on a worker with the transport stopped. Returns the
      * record to store on the clip, or null with the reason logged.
      */
-    fun render(context: Context, song: Song, target: Target): Frozen? {
+    fun render(song: Song, target: Target): Frozen? {
         val track = song.tracks.getOrNull(target.track) ?: return null
         val scene = song.scenes.firstOrNull { it.id == target.sceneId } ?: return null
-        val file = fileFor(context, track.id, scene.id)
+        val file = fileFor(track.id, scene.id)
         return when (
             val r = NativeEngine.freezeClip(target.track, scene.engineId, file.absolutePath, TAIL_CAP_SECONDS)
         ) {
@@ -127,7 +126,7 @@ object Freeze {
     }
 
     /** Forget a render and delete it. The clip's notes were never touched. */
-    fun discard(context: Context, song: Song, target: Target) {
+    fun discard(song: Song, target: Target) {
         val track = song.tracks.getOrNull(target.track) ?: return
         val frozen = track.clips[target.sceneId]?.frozen ?: return
         File(EngineAssets.freezeRoot(), frozen.file).delete()

@@ -1,6 +1,5 @@
 package com.rm.acidulous.ui
 
-import android.view.KeyEvent
 import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.FocusInteraction
@@ -43,12 +42,12 @@ import com.rm.acidulous.res.*
 
 /** Whether a key down is Enter by any of its names. */
 private fun isEnter(code: Int) =
-    code == KeyEvent.KEYCODE_ENTER || code == KeyEvent.KEYCODE_NUMPAD_ENTER || code == KeyEvent.KEYCODE_DPAD_CENTER
+    code == KeyCodes.KEYCODE_ENTER || code == KeyCodes.KEYCODE_NUMPAD_ENTER || code == KeyCodes.KEYCODE_DPAD_CENTER
 
 /** Alt+Enter or the Menu key: the hold's actions, if there are any. */
-private fun opensActions(e: KeyEvent, actions: List<CustomAccessibilityAction>): Boolean {
+private fun opensActions(e: KeyPress, actions: List<CustomAccessibilityAction>): Boolean {
     if (actions.isEmpty()) return false
-    val asked = e.keyCode == KeyEvent.KEYCODE_MENU || (isEnter(e.keyCode) && e.isAltPressed)
+    val asked = e.keyCode == KeyCodes.KEYCODE_MENU || (isEnter(e.keyCode) && e.isAltPressed)
     if (asked) KeyHub.actionMenu = actions
     return asked
 }
@@ -68,23 +67,23 @@ internal fun Modifier.keyAdjust(
         .onFocusChanged { focused = it.isFocused; if (!it.isFocused) grabbed = false }
         .focusable()
         .onKeyEvent { ev ->
-            val e = ev.nativeKeyEvent
+            val e = ev.press
             if (ev.type != KeyEventType.KeyDown) return@onKeyEvent false
             if (opensActions(e, actions)) return@onKeyEvent true
             // One step: a stepped control's, or a twentieth - a fiftieth with Shift.
             val step = if (steps > 0) 1f / (steps + 1) else if (e.isShiftPressed) 0.01f else 0.05f
             fun nudge(by: Float) { onSet((value + by).coerceIn(0f, 1f)) }
             when (e.keyCode) {
-                KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_DPAD_CENTER -> { grabbed = !grabbed; true }
-                KeyEvent.KEYCODE_ESCAPE -> if (grabbed) { grabbed = false; true } else false
-                KeyEvent.KEYCODE_PLUS, KeyEvent.KEYCODE_EQUALS, KeyEvent.KEYCODE_NUMPAD_ADD -> { nudge(step); true }
-                KeyEvent.KEYCODE_MINUS, KeyEvent.KEYCODE_NUMPAD_SUBTRACT -> { nudge(-step); true }
-                KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_RIGHT -> if (grabbed) { nudge(step); true } else false
-                KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT -> if (grabbed) { nudge(-step); true } else false
-                KeyEvent.KEYCODE_PAGE_UP -> if (grabbed) { nudge(step * 5); true } else false
-                KeyEvent.KEYCODE_PAGE_DOWN -> if (grabbed) { nudge(-step * 5); true } else false
-                KeyEvent.KEYCODE_MOVE_HOME -> if (grabbed) { onSet(0f); true } else false
-                KeyEvent.KEYCODE_MOVE_END -> if (grabbed) { onSet(1f); true } else false
+                KeyCodes.KEYCODE_ENTER, KeyCodes.KEYCODE_NUMPAD_ENTER, KeyCodes.KEYCODE_DPAD_CENTER -> { grabbed = !grabbed; true }
+                KeyCodes.KEYCODE_ESCAPE -> if (grabbed) { grabbed = false; true } else false
+                KeyCodes.KEYCODE_PLUS, KeyCodes.KEYCODE_EQUALS, KeyCodes.KEYCODE_NUMPAD_ADD -> { nudge(step); true }
+                KeyCodes.KEYCODE_MINUS, KeyCodes.KEYCODE_NUMPAD_SUBTRACT -> { nudge(-step); true }
+                KeyCodes.KEYCODE_DPAD_UP, KeyCodes.KEYCODE_DPAD_RIGHT -> if (grabbed) { nudge(step); true } else false
+                KeyCodes.KEYCODE_DPAD_DOWN, KeyCodes.KEYCODE_DPAD_LEFT -> if (grabbed) { nudge(-step); true } else false
+                KeyCodes.KEYCODE_PAGE_UP -> if (grabbed) { nudge(step * 5); true } else false
+                KeyCodes.KEYCODE_PAGE_DOWN -> if (grabbed) { nudge(-step * 5); true } else false
+                KeyCodes.KEYCODE_MOVE_HOME -> if (grabbed) { onSet(0f); true } else false
+                KeyCodes.KEYCODE_MOVE_END -> if (grabbed) { onSet(1f); true } else false
                 else -> false
             }
         }
@@ -105,7 +104,7 @@ internal fun Modifier.keyPress(
     actions: List<CustomAccessibilityAction>,
 ): Modifier = if (onClick == null) {
     if (actions.isEmpty()) this
-    else onKeyEvent { ev -> ev.type == KeyEventType.KeyDown && opensActions(ev.nativeKeyEvent, actions) }
+    else onKeyEvent { ev -> ev.type == KeyEventType.KeyDown && opensActions(ev.press, actions) }
 } else composed {
     var focused by remember { mutableStateOf(false) }
     val accent = Acid.colors.accent
@@ -113,7 +112,7 @@ internal fun Modifier.keyPress(
         .onFocusChanged { focused = it.isFocused }
         .focusable()
         .onKeyEvent { ev ->
-            val e = ev.nativeKeyEvent
+            val e = ev.press
             if (ev.type != KeyEventType.KeyDown) return@onKeyEvent false
             if (opensActions(e, actions)) return@onKeyEvent true
             if (isEnter(e.keyCode) && e.repeatCount == 0) { onClick(); true } else false

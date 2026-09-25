@@ -1,6 +1,5 @@
 package com.rm.acidulous.ui
 
-import android.view.KeyEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -100,7 +99,7 @@ data class KeyChord(
     }
 
     companion object {
-        fun of(e: KeyEvent) = KeyChord(e.keyCode, e.isCtrlPressed, e.isAltPressed, e.isShiftPressed, e.isMetaPressed)
+        fun of(e: KeyPress) = KeyChord(e.keyCode, e.isCtrlPressed, e.isAltPressed, e.isShiftPressed, e.isMetaPressed)
 
         fun decode(s: String): KeyChord? {
             val (mods, code) = s.split(':').takeIf { it.size == 2 } ?: return null
@@ -120,22 +119,22 @@ fun KeyChord.words(): String = buildString {
 }
 
 internal fun keyName(code: Int): String = when (code) {
-    KeyEvent.KEYCODE_SPACE -> "Space"
-    KeyEvent.KEYCODE_GRAVE -> "`"
-    KeyEvent.KEYCODE_SYM -> "Sym"
-    KeyEvent.KEYCODE_ESCAPE -> "Esc"
-    KeyEvent.KEYCODE_LEFT_BRACKET -> "["
-    KeyEvent.KEYCODE_RIGHT_BRACKET -> "]"
-    KeyEvent.KEYCODE_SLASH -> "/"
-    KeyEvent.KEYCODE_PERIOD -> "."
-    KeyEvent.KEYCODE_COMMA -> ","
-    KeyEvent.KEYCODE_MINUS -> "-"
-    KeyEvent.KEYCODE_EQUALS -> "="
-    KeyEvent.KEYCODE_SEMICOLON -> ";"
-    KeyEvent.KEYCODE_APOSTROPHE -> "'"
-    KeyEvent.KEYCODE_ENTER -> "Enter"
-    KeyEvent.KEYCODE_TAB -> "Tab"
-    else -> KeyEvent.keyCodeToString(code).removePrefix("KEYCODE_").lowercase().replaceFirstChar { it.uppercase() }
+    KeyCodes.KEYCODE_SPACE -> "Space"
+    KeyCodes.KEYCODE_GRAVE -> "`"
+    KeyCodes.KEYCODE_SYM -> "Sym"
+    KeyCodes.KEYCODE_ESCAPE -> "Esc"
+    KeyCodes.KEYCODE_LEFT_BRACKET -> "["
+    KeyCodes.KEYCODE_RIGHT_BRACKET -> "]"
+    KeyCodes.KEYCODE_SLASH -> "/"
+    KeyCodes.KEYCODE_PERIOD -> "."
+    KeyCodes.KEYCODE_COMMA -> ","
+    KeyCodes.KEYCODE_MINUS -> "-"
+    KeyCodes.KEYCODE_EQUALS -> "="
+    KeyCodes.KEYCODE_SEMICOLON -> ";"
+    KeyCodes.KEYCODE_APOSTROPHE -> "'"
+    KeyCodes.KEYCODE_ENTER -> "Enter"
+    KeyCodes.KEYCODE_TAB -> "Tab"
+    else -> KeyCodes.keyCodeToString(code).removePrefix("KEYCODE_").lowercase().replaceFirstChar { it.uppercase() }
 }
 
 /**
@@ -147,28 +146,28 @@ val DEFAULT_KEYS: Map<KeyAction, List<KeyChord>> = run {
     fun k(code: Int, ctrl: Boolean = false, alt: Boolean = false, shift: Boolean = false) = KeyChord(code, ctrl, alt, shift)
     val alt = { code: Int -> k(code, alt = true) }
     mapOf(
-        KeyAction.PlayStop to listOf(k(KeyEvent.KEYCODE_SPACE)),
-        KeyAction.Record to listOf(k(KeyEvent.KEYCODE_R), alt(KeyEvent.KEYCODE_R)),
-        KeyAction.Loop to listOf(k(KeyEvent.KEYCODE_L), alt(KeyEvent.KEYCODE_L)),
-        KeyAction.Undo to listOf(k(KeyEvent.KEYCODE_Z, ctrl = true), alt(KeyEvent.KEYCODE_Z)),
-        KeyAction.Redo to listOf(k(KeyEvent.KEYCODE_Z, ctrl = true, shift = true), alt(KeyEvent.KEYCODE_Y)),
-        KeyAction.Panic to listOf(k(KeyEvent.KEYCODE_PERIOD, ctrl = true), alt(KeyEvent.KEYCODE_P)),
-        KeyAction.PlayMode to listOf(k(KeyEvent.KEYCODE_GRAVE), k(KeyEvent.KEYCODE_SYM)),
-        KeyAction.Save to listOf(k(KeyEvent.KEYCODE_S, ctrl = true), alt(KeyEvent.KEYCODE_S)),
-        KeyAction.FileMenu to listOf(k(KeyEvent.KEYCODE_F), alt(KeyEvent.KEYCODE_F)),
-        KeyAction.Panel to listOf(k(KeyEvent.KEYCODE_M), alt(KeyEvent.KEYCODE_M)),
-        KeyAction.Help to listOf(k(KeyEvent.KEYCODE_F1), alt(KeyEvent.KEYCODE_H)),
-        KeyAction.KeysHelp to listOf(k(KeyEvent.KEYCODE_SLASH, shift = true), alt(KeyEvent.KEYCODE_Q)),
-        KeyAction.Back to listOf(k(KeyEvent.KEYCODE_ESCAPE)),
-        KeyAction.PagePrev to listOf(k(KeyEvent.KEYCODE_LEFT_BRACKET), alt(KeyEvent.KEYCODE_B)),
-        KeyAction.PageNext to listOf(k(KeyEvent.KEYCODE_RIGHT_BRACKET), alt(KeyEvent.KEYCODE_N)),
-        KeyAction.EditMode to listOf(k(KeyEvent.KEYCODE_D), alt(KeyEvent.KEYCODE_D)),
-        KeyAction.StepView to listOf(k(KeyEvent.KEYCODE_T), alt(KeyEvent.KEYCODE_T)),
-        KeyAction.LockSteps to listOf(k(KeyEvent.KEYCODE_K), alt(KeyEvent.KEYCODE_K)),
-        KeyAction.Generate to listOf(k(KeyEvent.KEYCODE_G), alt(KeyEvent.KEYCODE_G)),
-        KeyAction.Quantise to listOf(k(KeyEvent.KEYCODE_Q), alt(KeyEvent.KEYCODE_U)),
-        KeyAction.FoldPanel to listOf(k(KeyEvent.KEYCODE_P), alt(KeyEvent.KEYCODE_V)),
-        KeyAction.FoldKeys to listOf(k(KeyEvent.KEYCODE_B), alt(KeyEvent.KEYCODE_J)),
+        KeyAction.PlayStop to listOf(k(KeyCodes.KEYCODE_SPACE)),
+        KeyAction.Record to listOf(k(KeyCodes.KEYCODE_R), alt(KeyCodes.KEYCODE_R)),
+        KeyAction.Loop to listOf(k(KeyCodes.KEYCODE_L), alt(KeyCodes.KEYCODE_L)),
+        KeyAction.Undo to listOf(k(KeyCodes.KEYCODE_Z, ctrl = true), alt(KeyCodes.KEYCODE_Z)),
+        KeyAction.Redo to listOf(k(KeyCodes.KEYCODE_Z, ctrl = true, shift = true), alt(KeyCodes.KEYCODE_Y)),
+        KeyAction.Panic to listOf(k(KeyCodes.KEYCODE_PERIOD, ctrl = true), alt(KeyCodes.KEYCODE_P)),
+        KeyAction.PlayMode to listOf(k(KeyCodes.KEYCODE_GRAVE), k(KeyCodes.KEYCODE_SYM)),
+        KeyAction.Save to listOf(k(KeyCodes.KEYCODE_S, ctrl = true), alt(KeyCodes.KEYCODE_S)),
+        KeyAction.FileMenu to listOf(k(KeyCodes.KEYCODE_F), alt(KeyCodes.KEYCODE_F)),
+        KeyAction.Panel to listOf(k(KeyCodes.KEYCODE_M), alt(KeyCodes.KEYCODE_M)),
+        KeyAction.Help to listOf(k(KeyCodes.KEYCODE_F1), alt(KeyCodes.KEYCODE_H)),
+        KeyAction.KeysHelp to listOf(k(KeyCodes.KEYCODE_SLASH, shift = true), alt(KeyCodes.KEYCODE_Q)),
+        KeyAction.Back to listOf(k(KeyCodes.KEYCODE_ESCAPE)),
+        KeyAction.PagePrev to listOf(k(KeyCodes.KEYCODE_LEFT_BRACKET), alt(KeyCodes.KEYCODE_B)),
+        KeyAction.PageNext to listOf(k(KeyCodes.KEYCODE_RIGHT_BRACKET), alt(KeyCodes.KEYCODE_N)),
+        KeyAction.EditMode to listOf(k(KeyCodes.KEYCODE_D), alt(KeyCodes.KEYCODE_D)),
+        KeyAction.StepView to listOf(k(KeyCodes.KEYCODE_T), alt(KeyCodes.KEYCODE_T)),
+        KeyAction.LockSteps to listOf(k(KeyCodes.KEYCODE_K), alt(KeyCodes.KEYCODE_K)),
+        KeyAction.Generate to listOf(k(KeyCodes.KEYCODE_G), alt(KeyCodes.KEYCODE_G)),
+        KeyAction.Quantise to listOf(k(KeyCodes.KEYCODE_Q), alt(KeyCodes.KEYCODE_U)),
+        KeyAction.FoldPanel to listOf(k(KeyCodes.KEYCODE_P), alt(KeyCodes.KEYCODE_V)),
+        KeyAction.FoldKeys to listOf(k(KeyCodes.KEYCODE_B), alt(KeyCodes.KEYCODE_J)),
     )
 }
 
@@ -178,11 +177,11 @@ val DEFAULT_KEYS: Map<KeyAction, List<KeyChord>> = run {
  * between its white ones. Semitones from the octave's C.
  */
 internal val NOTE_KEYS: Map<Int, Int> = mapOf(
-    KeyEvent.KEYCODE_A to 0, KeyEvent.KEYCODE_W to 1, KeyEvent.KEYCODE_S to 2, KeyEvent.KEYCODE_E to 3,
-    KeyEvent.KEYCODE_D to 4, KeyEvent.KEYCODE_F to 5, KeyEvent.KEYCODE_T to 6, KeyEvent.KEYCODE_G to 7,
-    KeyEvent.KEYCODE_Y to 8, KeyEvent.KEYCODE_H to 9, KeyEvent.KEYCODE_U to 10, KeyEvent.KEYCODE_J to 11,
-    KeyEvent.KEYCODE_K to 12, KeyEvent.KEYCODE_O to 13, KeyEvent.KEYCODE_L to 14, KeyEvent.KEYCODE_P to 15,
-    KeyEvent.KEYCODE_SEMICOLON to 16, KeyEvent.KEYCODE_APOSTROPHE to 17,
+    KeyCodes.KEYCODE_A to 0, KeyCodes.KEYCODE_W to 1, KeyCodes.KEYCODE_S to 2, KeyCodes.KEYCODE_E to 3,
+    KeyCodes.KEYCODE_D to 4, KeyCodes.KEYCODE_F to 5, KeyCodes.KEYCODE_T to 6, KeyCodes.KEYCODE_G to 7,
+    KeyCodes.KEYCODE_Y to 8, KeyCodes.KEYCODE_H to 9, KeyCodes.KEYCODE_U to 10, KeyCodes.KEYCODE_J to 11,
+    KeyCodes.KEYCODE_K to 12, KeyCodes.KEYCODE_O to 13, KeyCodes.KEYCODE_L to 14, KeyCodes.KEYCODE_P to 15,
+    KeyCodes.KEYCODE_SEMICOLON to 16, KeyCodes.KEYCODE_APOSTROPHE to 17,
 )
 
 /**
@@ -192,16 +191,16 @@ internal val NOTE_KEYS: Map<Int, Int> = mapOf(
  * and = and the velocity on [ and ].
  */
 internal val TRACKER_KEYS: Map<Int, Int> = mapOf(
-    KeyEvent.KEYCODE_Z to 0, KeyEvent.KEYCODE_S to 1, KeyEvent.KEYCODE_X to 2, KeyEvent.KEYCODE_D to 3,
-    KeyEvent.KEYCODE_C to 4, KeyEvent.KEYCODE_V to 5, KeyEvent.KEYCODE_G to 6, KeyEvent.KEYCODE_B to 7,
-    KeyEvent.KEYCODE_H to 8, KeyEvent.KEYCODE_N to 9, KeyEvent.KEYCODE_J to 10, KeyEvent.KEYCODE_M to 11,
-    KeyEvent.KEYCODE_COMMA to 12, KeyEvent.KEYCODE_L to 13, KeyEvent.KEYCODE_PERIOD to 14,
-    KeyEvent.KEYCODE_SEMICOLON to 15, KeyEvent.KEYCODE_SLASH to 16,
-    KeyEvent.KEYCODE_Q to 12, KeyEvent.KEYCODE_2 to 13, KeyEvent.KEYCODE_W to 14, KeyEvent.KEYCODE_3 to 15,
-    KeyEvent.KEYCODE_E to 16, KeyEvent.KEYCODE_R to 17, KeyEvent.KEYCODE_5 to 18, KeyEvent.KEYCODE_T to 19,
-    KeyEvent.KEYCODE_6 to 20, KeyEvent.KEYCODE_Y to 21, KeyEvent.KEYCODE_7 to 22, KeyEvent.KEYCODE_U to 23,
-    KeyEvent.KEYCODE_I to 24, KeyEvent.KEYCODE_9 to 25, KeyEvent.KEYCODE_O to 26, KeyEvent.KEYCODE_0 to 27,
-    KeyEvent.KEYCODE_P to 28,
+    KeyCodes.KEYCODE_Z to 0, KeyCodes.KEYCODE_S to 1, KeyCodes.KEYCODE_X to 2, KeyCodes.KEYCODE_D to 3,
+    KeyCodes.KEYCODE_C to 4, KeyCodes.KEYCODE_V to 5, KeyCodes.KEYCODE_G to 6, KeyCodes.KEYCODE_B to 7,
+    KeyCodes.KEYCODE_H to 8, KeyCodes.KEYCODE_N to 9, KeyCodes.KEYCODE_J to 10, KeyCodes.KEYCODE_M to 11,
+    KeyCodes.KEYCODE_COMMA to 12, KeyCodes.KEYCODE_L to 13, KeyCodes.KEYCODE_PERIOD to 14,
+    KeyCodes.KEYCODE_SEMICOLON to 15, KeyCodes.KEYCODE_SLASH to 16,
+    KeyCodes.KEYCODE_Q to 12, KeyCodes.KEYCODE_2 to 13, KeyCodes.KEYCODE_W to 14, KeyCodes.KEYCODE_3 to 15,
+    KeyCodes.KEYCODE_E to 16, KeyCodes.KEYCODE_R to 17, KeyCodes.KEYCODE_5 to 18, KeyCodes.KEYCODE_T to 19,
+    KeyCodes.KEYCODE_6 to 20, KeyCodes.KEYCODE_Y to 21, KeyCodes.KEYCODE_7 to 22, KeyCodes.KEYCODE_U to 23,
+    KeyCodes.KEYCODE_I to 24, KeyCodes.KEYCODE_9 to 25, KeyCodes.KEYCODE_O to 26, KeyCodes.KEYCODE_0 to 27,
+    KeyCodes.KEYCODE_P to 28,
 )
 
 /** Which letters are which notes, and which keys move the octave and the velocity. */
@@ -210,8 +209,8 @@ enum class NoteLayout(
     internal val octaveDown: Int, internal val octaveUp: Int,
     internal val velocityDown: Int, internal val velocityUp: Int,
 ) {
-    Piano(NOTE_KEYS, KeyEvent.KEYCODE_Z, KeyEvent.KEYCODE_X, KeyEvent.KEYCODE_C, KeyEvent.KEYCODE_V),
-    Tracker(TRACKER_KEYS, KeyEvent.KEYCODE_MINUS, KeyEvent.KEYCODE_EQUALS, KeyEvent.KEYCODE_LEFT_BRACKET, KeyEvent.KEYCODE_RIGHT_BRACKET),
+    Piano(NOTE_KEYS, KeyCodes.KEYCODE_Z, KeyCodes.KEYCODE_X, KeyCodes.KEYCODE_C, KeyCodes.KEYCODE_V),
+    Tracker(TRACKER_KEYS, KeyCodes.KEYCODE_MINUS, KeyCodes.KEYCODE_EQUALS, KeyCodes.KEYCODE_LEFT_BRACKET, KeyCodes.KEYCODE_RIGHT_BRACKET),
 }
 
 /** The chord an event is, if it is one of [bindings]'s; the action it runs. */
@@ -267,9 +266,9 @@ object KeyHub {
     var learning by mutableStateOf<((KeyChord) -> Unit)?>(null)
 
     private fun isModifier(code: Int) = code in setOf(
-        KeyEvent.KEYCODE_SHIFT_LEFT, KeyEvent.KEYCODE_SHIFT_RIGHT, KeyEvent.KEYCODE_CTRL_LEFT, KeyEvent.KEYCODE_CTRL_RIGHT,
-        KeyEvent.KEYCODE_ALT_LEFT, KeyEvent.KEYCODE_ALT_RIGHT, KeyEvent.KEYCODE_META_LEFT, KeyEvent.KEYCODE_META_RIGHT,
-        KeyEvent.KEYCODE_FUNCTION,
+        KeyCodes.KEYCODE_SHIFT_LEFT, KeyCodes.KEYCODE_SHIFT_RIGHT, KeyCodes.KEYCODE_CTRL_LEFT, KeyCodes.KEYCODE_CTRL_RIGHT,
+        KeyCodes.KEYCODE_ALT_LEFT, KeyCodes.KEYCODE_ALT_RIGHT, KeyCodes.KEYCODE_META_LEFT, KeyCodes.KEYCODE_META_RIGHT,
+        KeyCodes.KEYCODE_FUNCTION,
     )
 
     /** A text field has focus: every key is its. */
@@ -330,12 +329,12 @@ object KeyHub {
      * Before anything on screen sees the key: play mode's notes, and every
      * chord with a modifier or on Space. True when it was taken.
      */
-    fun preview(e: KeyEvent): Boolean {
+    fun preview(e: KeyPress): Boolean {
         usingKeys = true
         // Learning a key for the keys window: the next real key is the answer,
         // whatever it would otherwise have done.
         learning?.let { learn ->
-            if (e.action == KeyEvent.ACTION_DOWN && !isModifier(e.keyCode)) {
+            if (e.action == KeyCodes.ACTION_DOWN && !isModifier(e.keyCode)) {
                 learning = null
                 taken += e.keyCode
                 learn(KeyChord.of(e))
@@ -344,11 +343,11 @@ object KeyHub {
         }
         if (typing) return false
         val code = e.keyCode
-        if (e.action == KeyEvent.ACTION_UP) {
+        if (e.action == KeyCodes.ACTION_UP) {
             sounding.remove(code)?.let { (rack, note) -> NativeEngine.noteOff(rack, note); return true }
             return taken.remove(code)
         }
-        if (e.action != KeyEvent.ACTION_DOWN) return false
+        if (e.action != KeyCodes.ACTION_DOWN) return false
         val chord = KeyChord.of(e)
         val layout = UiPrefs.noteLayout
         // Shift plays an octave up, unless the chord is a shortcut: Shift+/
@@ -374,21 +373,21 @@ object KeyHub {
         // Chords with a modifier, and the keys that are never a control's own.
         // Not Esc: a grabbed knob or the roll's cursor lets go on it first,
         // and only an Esc nothing wanted comes back as back - see [fallback].
-        val always = !chord.plain || shortcut || code == KeyEvent.KEYCODE_SPACE || code == KeyEvent.KEYCODE_SYM ||
-            code == KeyEvent.KEYCODE_GRAVE || code in KeyEvent.KEYCODE_F1..KeyEvent.KEYCODE_F12
+        val always = !chord.plain || shortcut || code == KeyCodes.KEYCODE_SPACE || code == KeyCodes.KEYCODE_SYM ||
+            code == KeyCodes.KEYCODE_GRAVE || code in KeyCodes.KEYCODE_F1..KeyCodes.KEYCODE_F12
         if (!always) return false
         return dispatch(e, chord)
     }
 
     /** After the focused control has passed on it: the plain letters, out of play mode. */
-    fun fallback(e: KeyEvent): Boolean {
-        if (typing || e.action != KeyEvent.ACTION_DOWN) return false
+    fun fallback(e: KeyPress): Boolean {
+        if (typing || e.action != KeyCodes.ACTION_DOWN) return false
         val chord = KeyChord.of(e)
-        if (playMode && chord.plain && e.keyCode != KeyEvent.KEYCODE_ESCAPE) return false
+        if (playMode && chord.plain && e.keyCode != KeyCodes.KEYCODE_ESCAPE) return false
         return dispatch(e, chord)
     }
 
-    private fun dispatch(e: KeyEvent, chord: KeyChord): Boolean {
+    private fun dispatch(e: KeyPress, chord: KeyChord): Boolean {
         val action = actionFor(chord, UiPrefs.keyBindings) ?: return false
         if (e.repeatCount > 0) return handlerFor(action) != null // held: taken, not repeated
         if (!run(action)) return false

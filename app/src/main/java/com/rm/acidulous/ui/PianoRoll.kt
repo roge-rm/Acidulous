@@ -193,10 +193,10 @@ fun PianoRoll(
         .focusable()
         .onKeyEvent { ev ->
             if (ev.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onKeyEvent false
-            val e = ev.nativeKeyEvent
+            val e = ev.press
             val code = e.keyCode
-            val enter = code == android.view.KeyEvent.KEYCODE_ENTER || code == android.view.KeyEvent.KEYCODE_NUMPAD_ENTER ||
-                code == android.view.KeyEvent.KEYCODE_DPAD_CENTER
+            val enter = code == KeyCodes.KEYCODE_ENTER || code == KeyCodes.KEYCODE_NUMPAD_ENTER ||
+                code == KeyCodes.KEYCODE_DPAD_CENTER
             if (!keyEditing) {
                 if (!enter) return@onKeyEvent false
                 keyEditing = true
@@ -229,28 +229,28 @@ fun PianoRoll(
                 keepInView()
             }
             when (code) {
-                android.view.KeyEvent.KEYCODE_ESCAPE -> { keyEditing = false; true }
-                android.view.KeyEvent.KEYCODE_ENTER, android.view.KeyEvent.KEYCODE_NUMPAD_ENTER,
-                android.view.KeyEvent.KEYCODE_DPAD_CENTER -> {
+                KeyCodes.KEYCODE_ESCAPE -> { keyEditing = false; true }
+                KeyCodes.KEYCODE_ENTER, KeyCodes.KEYCODE_NUMPAD_ENTER,
+                KeyCodes.KEYCODE_DPAD_CENTER -> {
                     if (under >= 0) cb.onTapNote(under) else cb.onTapEmpty(curTick, curPitch)
                     true
                 }
-                android.view.KeyEvent.KEYCODE_DEL, android.view.KeyEvent.KEYCODE_FORWARD_DEL -> {
+                KeyCodes.KEYCODE_DEL, KeyCodes.KEYCODE_FORWARD_DEL -> {
                     if (under >= 0) cb.onTapNote(under)
                     true
                 }
-                android.view.KeyEvent.KEYCODE_DPAD_LEFT, android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    val dir = if (code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT) 1 else -1
+                KeyCodes.KEYCODE_DPAD_LEFT, KeyCodes.KEYCODE_DPAD_RIGHT -> {
+                    val dir = if (code == KeyCodes.KEYCODE_DPAD_RIGHT) 1 else -1
                     if (e.isShiftPressed && under >= 0) {
                         val n = c.notes[under]
                         cb.onGestureBegin(); cb.onResize(under, (n.length + dir * grid).coerceAtLeast(grid)); cb.onGestureEnd()
                     } else step(dir * grid, 0)
                     true
                 }
-                android.view.KeyEvent.KEYCODE_DPAD_UP -> { step(0, 1); true }
-                android.view.KeyEvent.KEYCODE_DPAD_DOWN -> { step(0, -1); true }
-                android.view.KeyEvent.KEYCODE_PAGE_UP -> { step(0, 12); true }
-                android.view.KeyEvent.KEYCODE_PAGE_DOWN -> { step(0, -12); true }
+                KeyCodes.KEYCODE_DPAD_UP -> { step(0, 1); true }
+                KeyCodes.KEYCODE_DPAD_DOWN -> { step(0, -1); true }
+                KeyCodes.KEYCODE_PAGE_UP -> { step(0, 12); true }
+                KeyCodes.KEYCODE_PAGE_DOWN -> { step(0, -12); true }
                 else -> false
             }
         }

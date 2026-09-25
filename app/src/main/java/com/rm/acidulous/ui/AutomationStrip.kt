@@ -182,26 +182,26 @@ fun AutomationStrip(
             .focusable()
             .onKeyEvent { ev ->
                 if (ev.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onKeyEvent false
-                val e = ev.nativeKeyEvent
+                val e = ev.press
                 val code = e.keyCode
                 val c0 = clipState
                 val grid = c0.grid.coerceAtLeast(1)
                 val total = (c0.bars * ticksPerBar).coerceAtLeast(grid)
                 if (!keyEditing) {
-                    val enter = code == android.view.KeyEvent.KEYCODE_ENTER || code == android.view.KeyEvent.KEYCODE_NUMPAD_ENTER ||
-                        code == android.view.KeyEvent.KEYCODE_DPAD_CENTER
+                    val enter = code == KeyCodes.KEYCODE_ENTER || code == KeyCodes.KEYCODE_NUMPAD_ENTER ||
+                        code == KeyCodes.KEYCODE_DPAD_CENTER
                     if (!enter) return@onKeyEvent false
                     keyEditing = true
                     keyTick = (firstState / grid * grid).coerceIn(0, total - grid)
                     return@onKeyEvent true
                 }
                 when (code) {
-                    android.view.KeyEvent.KEYCODE_ESCAPE -> { keyEditing = false; true }
-                    android.view.KeyEvent.KEYCODE_DPAD_LEFT -> { keyTick = (keyTick - grid).coerceAtLeast(0); true }
-                    android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> { keyTick = (keyTick + grid).coerceAtMost(total - grid); true }
-                    android.view.KeyEvent.KEYCODE_DPAD_UP, android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    KeyCodes.KEYCODE_ESCAPE -> { keyEditing = false; true }
+                    KeyCodes.KEYCODE_DPAD_LEFT -> { keyTick = (keyTick - grid).coerceAtLeast(0); true }
+                    KeyCodes.KEYCODE_DPAD_RIGHT -> { keyTick = (keyTick + grid).coerceAtMost(total - grid); true }
+                    KeyCodes.KEYCODE_DPAD_UP, KeyCodes.KEYCODE_DPAD_DOWN -> {
                         val key = currentState ?: return@onKeyEvent true
-                        val dir = if (code == android.view.KeyEvent.KEYCODE_DPAD_UP) 1 else -1
+                        val dir = if (code == KeyCodes.KEYCODE_DPAD_UP) 1 else -1
                         val now = laneState?.valueAt(keyTick) ?: 0.5f
                         val to = (now + dir * (if (e.isShiftPressed) 0.01f else 0.05f)).coerceIn(0f, 1f)
                         cb.first(); cb.second(key, mapOf(keyTick to to)); cb.third()

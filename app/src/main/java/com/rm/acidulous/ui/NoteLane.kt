@@ -193,10 +193,10 @@ fun NoteLane(
         .focusable()
         .onKeyEvent { ev ->
             if (ev.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onKeyEvent false
-            val e = ev.nativeKeyEvent
+            val e = ev.press
             val code = e.keyCode
-            val enter = code == android.view.KeyEvent.KEYCODE_ENTER || code == android.view.KeyEvent.KEYCODE_NUMPAD_ENTER ||
-                code == android.view.KeyEvent.KEYCODE_DPAD_CENTER
+            val enter = code == KeyCodes.KEYCODE_ENTER || code == KeyCodes.KEYCODE_NUMPAD_ENTER ||
+                code == KeyCodes.KEYCODE_DPAD_CENTER
             val c = clipState
             // The notes the lane shows, in time order.
             val order = c.notes.indices.filter { shown(c.notes[it]) }.sortedBy { c.notes[it].tick }
@@ -207,16 +207,16 @@ fun NoteLane(
                 return@onKeyEvent true
             }
             when (code) {
-                android.view.KeyEvent.KEYCODE_ESCAPE -> { keyEditing = false; true }
-                android.view.KeyEvent.KEYCODE_DPAD_LEFT, android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                KeyCodes.KEYCODE_ESCAPE -> { keyEditing = false; true }
+                KeyCodes.KEYCODE_DPAD_LEFT, KeyCodes.KEYCODE_DPAD_RIGHT -> {
                     val at = order.indexOf(keyNote).coerceAtLeast(0)
-                    val next = at + if (code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT) 1 else -1
+                    val next = at + if (code == KeyCodes.KEYCODE_DPAD_RIGHT) 1 else -1
                     if (next in order.indices) keyNote = order[next]
                     true
                 }
-                android.view.KeyEvent.KEYCODE_DPAD_UP, android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
+                KeyCodes.KEYCODE_DPAD_UP, KeyCodes.KEYCODE_DPAD_DOWN -> {
                     val n = c.notes.getOrNull(keyNote) ?: return@onKeyEvent true
-                    val dir = if (code == android.view.KeyEvent.KEYCODE_DPAD_UP) 1 else -1
+                    val dir = if (code == KeyCodes.KEYCODE_DPAD_UP) 1 else -1
                     val prop = propState
                     val to = (fractionOf(n, prop) + dir * stepOf(prop, e.isShiftPressed)).coerceIn(0f, 1f)
                     beginState(); setState(mapOf(keyNote to to)); endState()

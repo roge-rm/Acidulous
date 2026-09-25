@@ -582,7 +582,7 @@ fun EditScreen(
                     "\u2744\uFE0E",
                     color = if (stale) Acid.colors.accent else Acid.colors.teal,
                 ) {
-                    com.rm.acidulous.model.Freeze.discard(context, song, com.rm.acidulous.model.Freeze.Target(trackIndex, sceneId))
+                    com.rm.acidulous.model.Freeze.discard(song, com.rm.acidulous.model.Freeze.Target(trackIndex, sceneId))
                     editor.editClip(trackIndex, sceneId) { it.copy(frozen = null) }
                 }
             }
