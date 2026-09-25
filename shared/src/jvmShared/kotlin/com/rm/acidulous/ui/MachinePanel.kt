@@ -970,37 +970,158 @@ internal fun GroupRow(content: @Composable () -> Unit) {
 }
 
 /**
- * A machine's body: its section tabs, then its cards.
+ * A machine's body: its section tabs, then its cards - the chosen section's,
+ * and its neighbours' too wherever there is room for them.
  *
- * Upright those are a row of chips over a row of cards and this is a plain
- * `Column`, which is what every panel wrote before this existed. Sideways the
- * cards are a column, so the chips stand **down the left edge of them** -
- * Dan's call, against putting them back across the top: full width they would
- * be a faithful port of portrait's row, and they would also be twenty-eight
- * dp of a three-hundred-and-ninety-three dp screen spent on tabs.
+ * Upright the tabs are a row over a row of cards. Sideways the cards are a
+ * column, so the tabs stand **down the left edge of them** - Dan's call,
+ * against putting them back across the top: full width they would be a
+ * faithful port of portrait's row, and they would also be twenty-eight dp of
+ * a three-hundred-and-ninety-three dp screen spent on tabs.
  *
- * It is a container rather than a flag passed to `SectionChips` because the
- * two children have to be laid out *together* - the chips beside the cards,
- * not above them - and only whatever holds them both can say so. Fifteen
- * panels write `PanelSections { SectionChips(...); GroupRow { ... } }` and
- * none of them has to know which way the phone is held.
+ * **One section at a time is what a phone has room for, not a rule.** On a
+ * tablet or a desktop the column beside the roll is several times as tall as
+ * a section, and Genesis's kick - seven knobs - sat in the top quarter of it
+ * with the rest empty (Dan, 2026-09-25: "a poor use of space"). So the chosen
+ * section is laid out first, and then the ones after it, then the ones before
+ * it, while each whole one fits in what is left without scrolling. Every tab
+ * shown is lit; a lit tab asks for nothing, and an unlit one brings its
+ * section into the run.
+ *
+ * **Measured, and only when there is room.** The chosen section is measured
+ * as it always was, in the same scrolling line; only if that leaves [Room] is
+ * anything else composed. A phone, where one section fills the space, lays
+ * out and composes exactly what it did before.
+ *
+ * [above] is a line of a section's own over its cards - Dice's slice number,
+ * Mosaic's zone map. [section] is a section's cards.
  */
 @Composable
-internal fun PanelSections(content: @Composable () -> Unit) {
-    if (LocalPanelStacked.current) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) { content() }
-        return
+internal fun PanelSections(
+    names: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    above: (@Composable (Int) -> Unit)? = null,
+    section: @Composable (Int) -> Unit,
+) {
+    val stacked = LocalPanelStacked.current
+    @Composable
+    fun Lines(i: Int) {
+        if (stacked) {
+            // GroupRow's column, with the section's own line at its head.
+            Column(
+                Modifier.fillMaxWidth().verticalScrollWithBar(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) { above?.invoke(i); section(i) }
+        } else {
+            // GroupRow's row, as wide as its cards rather than the line, so
+            // what is left beside it can be measured.
+            Column {
+                above?.invoke(i)
+                Row(
+                    Modifier.horizontalScrollWithBar(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) { section(i) }
+            }
+        }
     }
-    Column { content() }
+    androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
+        val n = names.size
+        val chosen = selected.coerceIn(0, (n - 1).coerceAtLeast(0))
+        val gap = 6.dp.roundToPx()
+        val room = Room.roundToPx()
+        val w = constraints.maxWidth
+        val bounded = constraints.hasBoundedHeight
+        val sideW = if (stacked) SideChipW.roundToPx() + 4.dp.roundToPx() else 0
+        val areaW = (w - sideW).coerceAtLeast(0)
+        // One section, measured within [limit] along the way the cards run.
+        // Down the column it is measured at the limit itself: shorter than
+        // that, it fitted whole; as tall as that, it is scrolling in it. Across
+        // the row, one pixel over, so a clipped one can be told from one that
+        // fits exactly - and it is only kept whole.
+        fun measureIn(i: Int, limit: Int): androidx.compose.ui.layout.Placeable? {
+            val c = if (stacked) androidx.compose.ui.unit.Constraints(areaW, areaW, 0, limit)
+                    else androidx.compose.ui.unit.Constraints(0, limit + 1, 0, constraints.maxHeight)
+            return subcompose("s$i") { Lines(i) }.map { it.measure(c) }.maxByOrNull { it.height }
+        }
+        val first = subcompose("s$chosen") { Lines(chosen) }.map {
+            it.measure(
+                if (stacked) androidx.compose.ui.unit.Constraints(areaW, areaW, 0, constraints.maxHeight)
+                else androidx.compose.ui.unit.Constraints(0, w, 0, constraints.maxHeight),
+            )
+        }.maxByOrNull { it.height }
+        val shown = sortedMapOf<Int, androidx.compose.ui.layout.Placeable>()
+        if (first != null) shown[chosen] = first
+        val along = if (stacked) (if (bounded) constraints.maxHeight else 0) else w
+        var used = first?.let { if (stacked) it.height else it.width } ?: 0
+        if (first != null && along - used >= room) {
+            var ended = false
+            for (dir in listOf(1, -1)) {
+                var i = chosen + dir
+                while (!ended && i in 0 until n) {
+                    val left = along - used - gap
+                    if (left < room) { ended = true; break }
+                    val p = measureIn(i, left) ?: break
+                    if (stacked) {
+                        // Whole, or the rest of the column scrolling - rather
+                        // than leave it empty for want of a few dp - and then
+                        // the run is done.
+                        shown[i] = p
+                        used += gap + p.height
+                        if (p.height >= left) ended = true
+                    } else {
+                        if (p.width > left) break
+                        shown[i] = p
+                        used += gap + p.width
+                    }
+                    i += dir
+                }
+            }
+        }
+        val run = (shown.keys.firstOrNull() ?: chosen)..(shown.keys.lastOrNull() ?: chosen)
+        val chips = subcompose("tabs") {
+            SectionChips(names, chosen, lit = run) { i -> if (i !in run) onSelect(i) }
+        }
+        if (stacked) {
+            val h = if (bounded) constraints.maxHeight else shown.values.sumOf { it.height } + gap * (shown.size - 1).coerceAtLeast(0)
+            val tabs = chips.map { it.measure(androidx.compose.ui.unit.Constraints.fixed(SideChipW.roundToPx(), h)) }
+            layout(w, h) {
+                tabs.forEach { it.placeRelative(0, 0) }
+                var y = 0
+                shown.values.forEach { it.placeRelative(sideW, y); y += it.height + gap }
+            }
+        } else {
+            val tabs = chips.map { it.measure(androidx.compose.ui.unit.Constraints(0, w, 0, constraints.maxHeight)) }
+            val top = tabs.maxOfOrNull { it.height } ?: 0
+            val body = shown.values.maxOfOrNull { it.height } ?: 0
+            layout(w, (top + body).coerceIn(constraints.minHeight, constraints.maxHeight)) {
+                tabs.forEach { it.placeRelative(0, 0) }
+                var x = 0
+                shown.values.forEach { it.placeRelative(x, top); x += it.width + gap }
+            }
+        }
+    }
 }
+
+/**
+ * The least room left beside or under the chosen section that is worth
+ * measuring the next one for: under a knob's height, no section fits.
+ */
+private val Room = 90.dp
 
 /** Which group of groups is showing. Only machines too big for one row need it. */
 @Composable
-internal fun SectionChips(english: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+internal fun SectionChips(
+    english: List<String>,
+    selected: Int,
+    /** Every tab whose section is showing: see [PanelSections]. */
+    lit: IntRange = selected..selected,
+    onSelect: (Int) -> Unit,
+) {
     // A panel's own sections are English words; a window's arrive translated and pass through.
     val labels = panelWords(english)
     if (LocalPanelStacked.current) {
-        SectionChipsSide(labels, selected, onSelect)
+        SectionChipsSide(labels, selected, onSelect, lit)
         return
     }
     // **Equal shares until there is not room for them.**
@@ -1018,9 +1139,9 @@ internal fun SectionChips(english: List<String>, selected: Int, onSelect: (Int) 
     val styled = labels.map { androidx.compose.ui.text.AnnotatedString(it) }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         if (maxWidth / labels.size.coerceAtLeast(1) < kChipFloor) {
-            SectionChipsScrolling(labels, selected, onSelect)
+            SectionChipsScrolling(labels, selected, lit, onSelect)
         } else {
-            SectionChipsStyled(styled, selected, onSelect)
+            SectionChipsStyled(styled, selected, lit, onSelect)
         }
     }
 }
@@ -1040,7 +1161,7 @@ internal fun SectionChips(english: List<String>, selected: Int, onSelect: (Int) 
  * `SideText` is for.
  */
 @Composable
-private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, lit: IntRange = selected..selected) {
     BoxWithConstraints(Modifier.width(SideChipW).fillMaxHeight()) {
         val share = maxHeight / labels.size.coerceAtLeast(1)
         val scrolls = share < kChipFloor
@@ -1050,7 +1171,7 @@ private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             labels.forEachIndexed { i, l ->
-                val on = i == selected
+                val on = i == selected || i in lit
                 Box(
                     Modifier.fillMaxWidth()
                         .then(if (scrolls) Modifier.height(kChipFloor) else Modifier.weight(1f))
@@ -1092,10 +1213,11 @@ private val kChipFloor = 56.dp
 internal fun SectionChipsStyled(
     labels: List<androidx.compose.ui.text.AnnotatedString>,
     selected: Int,
+    lit: IntRange = selected..selected,
     onSelect: (Int) -> Unit,
 ) {
     if (LocalPanelStacked.current) {
-        SectionChipsSide(labels.map { it.text }, selected, onSelect)
+        SectionChipsSide(labels.map { it.text }, selected, onSelect, lit)
         return
     }
     Row(
@@ -1103,7 +1225,7 @@ internal fun SectionChipsStyled(
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         labels.forEachIndexed { i, l ->
-            val on = i == selected
+            val on = i == selected || i in lit
             Box(
                 // Equal shares of the full width: these are the machine's
                 // tabs, and a row of tabs that stops half way reads as broken.
@@ -1137,6 +1259,7 @@ internal fun SectionChipsStyled(
 internal fun SectionChipsScrolling(
     english: List<String>,
     selected: Int,
+    lit: IntRange = selected..selected,
     onSelect: (Int) -> Unit,
 ) {
     val labels = panelWords(english)
@@ -1145,7 +1268,7 @@ internal fun SectionChipsScrolling(
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         labels.forEachIndexed { i, l ->
-            val on = i == selected
+            val on = i == selected || i in lit
             Box(
                 Modifier.clip(RoundedCornerShape(4.dp))
                     .background(if (on) Acid.colors.green else Acid.colors.control)
@@ -1671,87 +1794,84 @@ private fun TrinityPanel(b: ParamBinding) {
     // Too many groups for one row, so the sections pick which groups show.
     // Inside a section it is the same Group-of-knobs row as every machine.
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections {
-        SectionChips(listOf("osc", "mix", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> for (o in 1..3) key(o) { Group("osc $o") {
-                    val p = "o${o}_"
-                    PanelStepKnob(b, p + "wave", TRINITY_WAVES, "wave", PanelAmber)
-                    PanelKnob(b, p + "pos", "pos", PanelAmber)
-                    PanelKnob(b, p + "warp", "warp", PanelAmber)
-                    PanelKnob(b, p + "coarse", "coarse")
-                    PanelKnob(b, p + "fine", "fine")
-                    PanelKnob(b, p + "density", "density")
-                    PanelKnob(b, p + "detune", "detune")
-                    PanelKnob(b, p + "sync", "sync")
-                    PanelKnob(b, p + "hard", "hard")
-                    PanelKnob(b, p + "pw", "pw")
-                    PanelKnob(b, p + "drift", "drift")
-                    PanelKnob(b, p + "level", "level")
+    PanelSections(listOf("osc", "mix", "filter", "env", "lfo", "mod", "voice"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> for (o in 1..3) key(o) { Group("osc $o") {
+                val p = "o${o}_"
+                PanelStepKnob(b, p + "wave", TRINITY_WAVES, "wave", PanelAmber)
+                PanelKnob(b, p + "pos", "pos", PanelAmber)
+                PanelKnob(b, p + "warp", "warp", PanelAmber)
+                PanelKnob(b, p + "coarse", "coarse")
+                PanelKnob(b, p + "fine", "fine")
+                PanelKnob(b, p + "density", "density")
+                PanelKnob(b, p + "detune", "detune")
+                PanelKnob(b, p + "sync", "sync")
+                PanelKnob(b, p + "hard", "hard")
+                PanelKnob(b, p + "pw", "pw")
+                PanelKnob(b, p + "drift", "drift")
+                PanelKnob(b, p + "level", "level")
+            } }
+            1 -> {
+                Group("ring") { PanelKnob(b, "ring12", "1·2", PanelAmber); PanelKnob(b, "ring23", "2·3", PanelAmber) }
+                Group("fm") { PanelKnob(b, "fm21", "2→1", PanelAmber); PanelKnob(b, "fm32", "3→2", PanelAmber) }
+                Group("noise") { PanelKnob(b, "noise", "level"); PanelKnob(b, "noisecol", "colour") }
+            }
+            2 -> {
+                Group("routing") { PanelSwitch(b, "route", listOf("serial", "para", "split")); PanelKnob(b, "balance", "balance") }
+                for (f in 1..2) key(f) { Group("filter $f") {
+                    val p = "f${f}_"
+                    PanelStepKnob(b, p + "type", TRINITY_FILTERS, "type", PanelAmber)
+                    PanelKnob(b, p + "freq", "freq", PanelAmber)
+                    PanelKnob(b, p + "res", "reso", PanelAmber)
+                    PanelStepKnob(b, p + "drivetype", TRINITY_DRIVES, "drive", PanelPink)
+                    PanelKnob(b, p + "drive", "amount", PanelPink)
+                    PanelKnob(b, p + "env", "envmod")
+                    PanelKnob(b, p + "key", "key")
                 } }
-                1 -> {
-                    Group("ring") { PanelKnob(b, "ring12", "1·2", PanelAmber); PanelKnob(b, "ring23", "2·3", PanelAmber) }
-                    Group("fm") { PanelKnob(b, "fm21", "2→1", PanelAmber); PanelKnob(b, "fm32", "3→2", PanelAmber) }
-                    Group("noise") { PanelKnob(b, "noise", "level"); PanelKnob(b, "noisecol", "colour") }
+            }
+            3 -> for ((title, prefix) in TRINITY_ENVS) key(prefix) { Group(title) {
+                PanelKnob(b, prefix + "_delay", "delay")
+                PanelKnob(b, prefix + "_attack", "attack", PanelAmber)
+                PanelKnob(b, prefix + "_decay", "decay", PanelAmber)
+                PanelKnob(b, prefix + "_sustain", "sustain", PanelAmber)
+                PanelKnob(b, prefix + "_release", "release", PanelAmber)
+                PanelSwitch(b, prefix + "_repeat", listOf("once", "loop"), "repeat")
+            } }
+            4 -> for (l in 1..3) key(l) { Group("lfo $l") {
+                val p = "l${l}_"
+                PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                PanelKnob(b, p + "rate", "rate", PanelAmber)
+                PanelStepKnob(b, p + "sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
+                PanelKnob(b, p + "delay", "delay")
+                PanelKnob(b, p + "phase", "phase")
+                PanelKnob(b, p + "slew", "slew")
+                PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
+                PanelSwitch(b, p + "oneshot", listOf("cycle", "once"), "run")
+            } }
+            5 -> for (m in 1..12) key(m) { Group("mod $m") {
+                val p = "m%02d_".format(m)
+                PanelStepKnob(b, p + "src", TRINITY_SOURCES, "from", PanelAmber)
+                PanelStepKnob(b, p + "src2", TRINITY_SOURCES, "× from")
+                PanelStepKnob(b, p + "dest", TRINITY_DESTS, "to", PanelAmber)
+                PanelKnob(b, p + "depth", "depth", PanelAmber)
+            } }
+            else -> {
+                Group("voice") {
+                    PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg", "uni"), "mode")
+                    PanelKnob(b, "glide", "glide")
+                    PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
+                    PanelKnob(b, "bend", "bend")
+                    PanelKnob(b, "mpetimbre", "slide")
+                    PanelKnob(b, "mpepressure", "press")
+                    PanelKnob(b, "wheel", "wheel")
                 }
-                2 -> {
-                    Group("routing") { PanelSwitch(b, "route", listOf("serial", "para", "split")); PanelKnob(b, "balance", "balance") }
-                    for (f in 1..2) key(f) { Group("filter $f") {
-                        val p = "f${f}_"
-                        PanelStepKnob(b, p + "type", TRINITY_FILTERS, "type", PanelAmber)
-                        PanelKnob(b, p + "freq", "freq", PanelAmber)
-                        PanelKnob(b, p + "res", "reso", PanelAmber)
-                        PanelStepKnob(b, p + "drivetype", TRINITY_DRIVES, "drive", PanelPink)
-                        PanelKnob(b, p + "drive", "amount", PanelPink)
-                        PanelKnob(b, p + "env", "envmod")
-                        PanelKnob(b, p + "key", "key")
-                    } }
+                Group("unison") {
+                    PanelKnob(b, "unison", "voices", PanelAmber)
+                    PanelKnob(b, "unidetune", "detune", PanelAmber)
+                    PanelKnob(b, "unispread", "spread", PanelAmber)
                 }
-                3 -> for ((title, prefix) in TRINITY_ENVS) key(prefix) { Group(title) {
-                    PanelKnob(b, prefix + "_delay", "delay")
-                    PanelKnob(b, prefix + "_attack", "attack", PanelAmber)
-                    PanelKnob(b, prefix + "_decay", "decay", PanelAmber)
-                    PanelKnob(b, prefix + "_sustain", "sustain", PanelAmber)
-                    PanelKnob(b, prefix + "_release", "release", PanelAmber)
-                    PanelSwitch(b, prefix + "_repeat", listOf("once", "loop"), "repeat")
-                } }
-                4 -> for (l in 1..3) key(l) { Group("lfo $l") {
-                    val p = "l${l}_"
-                    PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
-                    PanelKnob(b, p + "rate", "rate", PanelAmber)
-                    PanelStepKnob(b, p + "sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
-                    PanelKnob(b, p + "delay", "delay")
-                    PanelKnob(b, p + "phase", "phase")
-                    PanelKnob(b, p + "slew", "slew")
-                    PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
-                    PanelSwitch(b, p + "oneshot", listOf("cycle", "once"), "run")
-                } }
-                5 -> for (m in 1..12) key(m) { Group("mod $m") {
-                    val p = "m%02d_".format(m)
-                    PanelStepKnob(b, p + "src", TRINITY_SOURCES, "from", PanelAmber)
-                    PanelStepKnob(b, p + "src2", TRINITY_SOURCES, "× from")
-                    PanelStepKnob(b, p + "dest", TRINITY_DESTS, "to", PanelAmber)
-                    PanelKnob(b, p + "depth", "depth", PanelAmber)
-                } }
-                else -> {
-                    Group("voice") {
-                        PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg", "uni"), "mode")
-                        PanelKnob(b, "glide", "glide")
-                        PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
-                        PanelKnob(b, "bend", "bend")
-                        PanelKnob(b, "mpetimbre", "slide")
-                        PanelKnob(b, "mpepressure", "press")
-                        PanelKnob(b, "wheel", "wheel")
-                    }
-                    Group("unison") {
-                        PanelKnob(b, "unison", "voices", PanelAmber)
-                        PanelKnob(b, "unidetune", "detune", PanelAmber)
-                        PanelKnob(b, "unispread", "spread", PanelAmber)
-                    }
-                    Group("tuning") { PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose") }
-                    Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
-                }
+                Group("tuning") { PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose") }
+                Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
             }
         }
     }
@@ -1802,88 +1922,85 @@ val RATIO_DESTS = listOf(
 @Composable
 private fun RatioPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections {
-        SectionChips(listOf("op", "algo", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> for (o in 1..6) key(o) { Group("op $o") {
-                    val p = "o${o}_"
-                    PanelStepKnob(b, p + "wave", RATIO_WAVES, "wave", PanelAmber)
-                    PanelStepKnob(b, p + "mode", RATIO_MODES, "mode", PanelAmber)
-                    PanelKnob(b, p + "ratio", "ratio", PanelAmber)
-                    PanelKnob(b, p + "fine", "fine")
-                    PanelSwitch(b, p + "fixed", listOf("ratio", "Hz"), "pitch")
-                    PanelKnob(b, p + "level", "level", PanelAmber)
-                    PanelKnob(b, p + "fb", "fb", PanelPink)
-                    PanelKnob(b, p + "attack", "attack")
-                    PanelKnob(b, p + "decay", "decay")
-                    PanelKnob(b, p + "sustain", "sustain")
-                    PanelKnob(b, p + "release", "release")
-                    PanelKnob(b, p + "vel", "vel")
-                    PanelKnob(b, p + "key", "key")
-                    PanelKnob(b, p + "pan", "pan")
-                } }
-                1 -> {
-                    Group("algorithm") {
-                        PanelStepKnob(b, "algoa", RATIO_ALGOS, "A", PanelAmber)
-                        PanelStepKnob(b, "algob", RATIO_ALGOS, "B", PanelAmber)
-                        PanelKnob(b, "morph", "morph", PanelAmber)
-                    }
-                    Group("ratios") {
-                        PanelStepKnob(b, "snap", RATIO_SNAP, "snap", PanelAmber)
-                        PanelKnob(b, "skew", "skew", PanelAmber)
-                    }
+    PanelSections(listOf("op", "algo", "filter", "env", "lfo", "mod", "voice"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> for (o in 1..6) key(o) { Group("op $o") {
+                val p = "o${o}_"
+                PanelStepKnob(b, p + "wave", RATIO_WAVES, "wave", PanelAmber)
+                PanelStepKnob(b, p + "mode", RATIO_MODES, "mode", PanelAmber)
+                PanelKnob(b, p + "ratio", "ratio", PanelAmber)
+                PanelKnob(b, p + "fine", "fine")
+                PanelSwitch(b, p + "fixed", listOf("ratio", "Hz"), "pitch")
+                PanelKnob(b, p + "level", "level", PanelAmber)
+                PanelKnob(b, p + "fb", "fb", PanelPink)
+                PanelKnob(b, p + "attack", "attack")
+                PanelKnob(b, p + "decay", "decay")
+                PanelKnob(b, p + "sustain", "sustain")
+                PanelKnob(b, p + "release", "release")
+                PanelKnob(b, p + "vel", "vel")
+                PanelKnob(b, p + "key", "key")
+                PanelKnob(b, p + "pan", "pan")
+            } }
+            1 -> {
+                Group("algorithm") {
+                    PanelStepKnob(b, "algoa", RATIO_ALGOS, "A", PanelAmber)
+                    PanelStepKnob(b, "algob", RATIO_ALGOS, "B", PanelAmber)
+                    PanelKnob(b, "morph", "morph", PanelAmber)
                 }
-                2 -> {
-                    Group("filter") {
-                        PanelStepKnob(b, "f_type", TRINITY_FILTERS, "type", PanelAmber)
-                        PanelKnob(b, "f_freq", "freq", PanelAmber)
-                        PanelKnob(b, "f_res", "reso", PanelAmber)
-                        PanelKnob(b, "f_env", "envmod")
-                        PanelKnob(b, "f_key", "key")
-                    }
-                    Group("filter env") {
-                        PanelKnob(b, "f_attack", "attack")
-                        PanelKnob(b, "f_decay", "decay")
-                        PanelKnob(b, "f_sustain", "sustain")
-                        PanelKnob(b, "f_release", "release")
-                    }
+                Group("ratios") {
+                    PanelStepKnob(b, "snap", RATIO_SNAP, "snap", PanelAmber)
+                    PanelKnob(b, "skew", "skew", PanelAmber)
                 }
-                3 -> for (e in 1..3) key(e) { Group("env $e") {
-                    val p = "e${e}_"
-                    PanelKnob(b, p + "attack", "attack", PanelAmber)
-                    PanelKnob(b, p + "decay", "decay", PanelAmber)
-                    PanelKnob(b, p + "sustain", "sustain", PanelAmber)
-                    PanelKnob(b, p + "release", "release", PanelAmber)
-                } }
-                4 -> for (l in 1..3) key(l) { Group("lfo $l") {
-                    val p = "l${l}_"
-                    PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
-                    PanelKnob(b, p + "rate", "rate", PanelAmber)
-                    PanelStepKnob(b, p + "sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
-                    PanelKnob(b, p + "delay", "delay")
-                    PanelKnob(b, p + "phase", "phase")
-                    PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
-                } }
-                5 -> for (m in 1..10) key(m) { Group("mod $m") {
-                    val p = "m%02d_".format(m)
-                    PanelStepKnob(b, p + "src", RATIO_SOURCES, "from", PanelAmber)
-                    PanelStepKnob(b, p + "src2", RATIO_SOURCES, "× from")
-                    PanelStepKnob(b, p + "dest", RATIO_DESTS, "to", PanelAmber)
-                    PanelKnob(b, p + "depth", "depth", PanelAmber)
-                } }
-                else -> {
-                    Group("voice") {
-                        PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
-                        PanelKnob(b, "glide", "glide")
-                        PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
-                        PanelKnob(b, "bend", "bend")
-                        PanelKnob(b, "mpetimbre", "slide")
-                        PanelKnob(b, "mpepressure", "press")
-                    }
-                    Group("tuning") { PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose") }
-                    Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
+            }
+            2 -> {
+                Group("filter") {
+                    PanelStepKnob(b, "f_type", TRINITY_FILTERS, "type", PanelAmber)
+                    PanelKnob(b, "f_freq", "freq", PanelAmber)
+                    PanelKnob(b, "f_res", "reso", PanelAmber)
+                    PanelKnob(b, "f_env", "envmod")
+                    PanelKnob(b, "f_key", "key")
                 }
+                Group("filter env") {
+                    PanelKnob(b, "f_attack", "attack")
+                    PanelKnob(b, "f_decay", "decay")
+                    PanelKnob(b, "f_sustain", "sustain")
+                    PanelKnob(b, "f_release", "release")
+                }
+            }
+            3 -> for (e in 1..3) key(e) { Group("env $e") {
+                val p = "e${e}_"
+                PanelKnob(b, p + "attack", "attack", PanelAmber)
+                PanelKnob(b, p + "decay", "decay", PanelAmber)
+                PanelKnob(b, p + "sustain", "sustain", PanelAmber)
+                PanelKnob(b, p + "release", "release", PanelAmber)
+            } }
+            4 -> for (l in 1..3) key(l) { Group("lfo $l") {
+                val p = "l${l}_"
+                PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                PanelKnob(b, p + "rate", "rate", PanelAmber)
+                PanelStepKnob(b, p + "sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
+                PanelKnob(b, p + "delay", "delay")
+                PanelKnob(b, p + "phase", "phase")
+                PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
+            } }
+            5 -> for (m in 1..10) key(m) { Group("mod $m") {
+                val p = "m%02d_".format(m)
+                PanelStepKnob(b, p + "src", RATIO_SOURCES, "from", PanelAmber)
+                PanelStepKnob(b, p + "src2", RATIO_SOURCES, "× from")
+                PanelStepKnob(b, p + "dest", RATIO_DESTS, "to", PanelAmber)
+                PanelKnob(b, p + "depth", "depth", PanelAmber)
+            } }
+            else -> {
+                Group("voice") {
+                    PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
+                    PanelKnob(b, "glide", "glide")
+                    PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
+                    PanelKnob(b, "bend", "bend")
+                    PanelKnob(b, "mpetimbre", "slide")
+                    PanelKnob(b, "mpepressure", "press")
+                }
+                Group("tuning") { PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose") }
+                Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
             }
         }
     }
@@ -1943,193 +2060,190 @@ private fun Drawbars(b: ParamBinding, prefix: String, names: List<String>, colou
 @Composable
 private fun ManualPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections {
-        SectionChips(listOf("bars", "perc", "vib", "rotary", "voice", "wind", "mod", "out"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("upper A") { Drawbars(b, "ua_", MANUAL_BARS, BAR_COLOURS) }
-                    Group("upper B") { Drawbars(b, "ub_", MANUAL_BARS, BAR_COLOURS) }
-                    Group("morph") {
-                        PanelKnob(b, "morph", "A→B", PanelAmber)
-                        PanelStepKnob(b, "morphsrc", MANUAL_SOURCES, "from", PanelAmber)
-                        PanelKnob(b, "morphamt", "amount")
-                    }
-                    Group("lower A") { Drawbars(b, "la_", MANUAL_BARS, BAR_COLOURS) }
-                    Group("lower B") { Drawbars(b, "lb_", MANUAL_BARS, BAR_COLOURS) }
-                    Group("pedal") {
-                        Drawbars(b, "pa_", listOf("1", "2"), listOf(DrawbarWhite))
-                        Drawbars(b, "pb_", listOf("1", "2"), listOf(DrawbarBrown))
-                    }
-                    Group("spray") {
-                        PanelKnob(b, "spray", "spray", PanelPink)
-                        PanelKnob(b, "sprayrate", "rate")
-                        PanelKnob(b, "spraywide", "width")
-                        PanelStepKnob(b, "spraypat", listOf("up", "down", "fan"), "shape")
-                    }
+    PanelSections(listOf("bars", "perc", "vib", "rotary", "voice", "wind", "mod", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("upper A") { Drawbars(b, "ua_", MANUAL_BARS, BAR_COLOURS) }
+                Group("upper B") { Drawbars(b, "ub_", MANUAL_BARS, BAR_COLOURS) }
+                Group("morph") {
+                    PanelKnob(b, "morph", "A→B", PanelAmber)
+                    PanelStepKnob(b, "morphsrc", MANUAL_SOURCES, "from", PanelAmber)
+                    PanelKnob(b, "morphamt", "amount")
                 }
-                1 -> {
-                    Group("percussion") {
-                        PanelSwitch(b, "perc", listOf("off", "on"), "perc")
-                        PanelSwitch(b, "percharm", listOf("3rd", "2nd"), "harm")
-                        PanelKnob(b, "perclvl", "level", PanelAmber)
-                        PanelSwitch(b, "percfast", listOf("slow", "fast"), "decay")
-                        PanelKnob(b, "percdec", "time", PanelAmber)
-                    }
-                    Group("beyond") {
-                        PanelSwitch(b, "percpoly", listOf("first", "every"), "trigger")
-                        PanelKnob(b, "perckey", "keytrack")
-                        PanelSwitch(b, "percsteal", listOf("keep", "steal"), "1' bar")
-                    }
-                    Group("click") {
-                        PanelKnob(b, "click", "on", PanelAmber)
-                        PanelKnob(b, "clickoff", "off")
-                        PanelKnob(b, "contacts", "spread")
-                    }
-                    Group("generator") {
-                        PanelStepKnob(b, "model", MANUAL_MODELS, "model", PanelAmber)
-                        PanelKnob(b, "age", "age", PanelPink)
-                        PanelKnob(b, "leakage", "leakage")
-                        PanelKnob(b, "hum", "hum")
-                    }
+                Group("lower A") { Drawbars(b, "la_", MANUAL_BARS, BAR_COLOURS) }
+                Group("lower B") { Drawbars(b, "lb_", MANUAL_BARS, BAR_COLOURS) }
+                Group("pedal") {
+                    Drawbars(b, "pa_", listOf("1", "2"), listOf(DrawbarWhite))
+                    Drawbars(b, "pb_", listOf("1", "2"), listOf(DrawbarBrown))
                 }
-                2 -> {
-                    Group("scanner") {
-                        PanelStepKnob(b, "vibtype", MANUAL_VIB, "type", PanelAmber)
-                        PanelKnob(b, "vibrate", "rate", PanelAmber)
-                        PanelKnob(b, "vibdepth", "depth", PanelAmber)
-                        PanelKnob(b, "vibwide", "width")
-                    }
-                    Group("routing") {
-                        PanelSwitch(b, "vibup", listOf("dry", "vib"), "upper")
-                        PanelSwitch(b, "viblow", listOf("dry", "vib"), "lower")
-                    }
-                    Group("lfo 1") {
-                        PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
-                        PanelKnob(b, "lfo1rate", "rate", PanelAmber)
-                        PanelStepKnob(b, "lfo1sync", MANUAL_SYNC, "sync")
-                        PanelKnob(b, "lfo1depth", "depth")
-                        PanelKnob(b, "lfo1phase", "phase")
-                    }
-                    Group("lfo 2") {
-                        PanelStepKnob(b, "lfo2wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
-                        PanelKnob(b, "lfo2rate", "rate", PanelAmber)
-                        PanelStepKnob(b, "lfo2sync", MANUAL_SYNC, "sync")
-                        PanelKnob(b, "lfo2depth", "depth")
-                        PanelKnob(b, "lfo2phase", "phase")
-                    }
+                Group("spray") {
+                    PanelKnob(b, "spray", "spray", PanelPink)
+                    PanelKnob(b, "sprayrate", "rate")
+                    PanelKnob(b, "spraywide", "width")
+                    PanelStepKnob(b, "spraypat", listOf("up", "down", "fan"), "shape")
                 }
-                3 -> {
-                    Group("cabinet") {
-                        PanelSwitch(b, "rotary", listOf("off", "on"), "rotary")
-                        PanelStepKnob(b, "rotspeed", MANUAL_ROT, "speed", PanelAmber)
-                        PanelStepKnob(b, "rotsync", MANUAL_SYNC, "sync")
-                    }
-                    Group("horn") {
-                        PanelKnob(b, "hornslow", "slow", PanelAmber)
-                        PanelKnob(b, "hornfast", "fast", PanelAmber)
-                    }
-                    Group("drum") {
-                        PanelKnob(b, "drumslow", "slow", PanelAmber)
-                        PanelKnob(b, "drumfast", "fast", PanelAmber)
-                    }
-                    Group("ramp") {
-                        PanelKnob(b, "rampup", "up")
-                        PanelKnob(b, "rampdown", "down")
-                    }
-                    Group("mics") {
-                        PanelKnob(b, "micdist", "distance", PanelAmber)
-                        PanelKnob(b, "micangle", "angle")
-                        PanelKnob(b, "rotwide", "width")
-                    }
+            }
+            1 -> {
+                Group("percussion") {
+                    PanelSwitch(b, "perc", listOf("off", "on"), "perc")
+                    PanelSwitch(b, "percharm", listOf("3rd", "2nd"), "harm")
+                    PanelKnob(b, "perclvl", "level", PanelAmber)
+                    PanelSwitch(b, "percfast", listOf("slow", "fast"), "decay")
+                    PanelKnob(b, "percdec", "time", PanelAmber)
                 }
-                4 -> {
-                    Group("manuals") {
-                        PanelKnob(b, "split", "split", PanelAmber)
-                        PanelKnob(b, "pedsplit", "pedal at", PanelAmber)
-                        PanelSwitch(b, "loweron", listOf("off", "on"), "lower")
-                        PanelSwitch(b, "pedalon", listOf("off", "on"), "pedals")
-                    }
-                    Group("balance") {
-                        PanelKnob(b, "upper", "upper")
-                        PanelKnob(b, "lower", "lower")
-                        PanelKnob(b, "pedal", "pedal")
-                        PanelKnob(b, "pedsus", "ped sus")
-                    }
-                    Group("pipes") {
-                        PanelKnob(b, "principal", "principal", PanelAmber)
-                        PanelKnob(b, "flute", "flute", PanelAmber)
-                        PanelKnob(b, "string", "string", PanelAmber)
-                        PanelKnob(b, "reed", "reed", PanelAmber)
-                        PanelKnob(b, "mixture", "mixture", PanelAmber)
-                        PanelKnob(b, "chiff", "chiff")
-                        PanelKnob(b, "tracker", "tracker")
-                    }
-                    Group("combo") {
-                        PanelStepKnob(b, "combowave", listOf("square", "pulse", "saw"), "wave", PanelAmber)
-                        PanelKnob(b, "tab16", "16'")
-                        PanelKnob(b, "tab8", "8'")
-                        PanelKnob(b, "tab4", "4'")
-                        PanelKnob(b, "tab2", "2'")
-                        PanelKnob(b, "tab2r", "II")
-                        PanelKnob(b, "tab4r", "IV")
-                        PanelKnob(b, "reedy", "reedy", PanelPink)
-                        PanelKnob(b, "comboatk", "attack")
-                    }
-                    Group("reeds") {
-                        PanelKnob(b, "pressure", "pressure", PanelAmber)
-                        PanelKnob(b, "buzz", "buzz", PanelPink)
-                        PanelKnob(b, "reedtrem", "tremolo")
-                    }
+                Group("beyond") {
+                    PanelSwitch(b, "percpoly", listOf("first", "every"), "trigger")
+                    PanelKnob(b, "perckey", "keytrack")
+                    PanelSwitch(b, "percsteal", listOf("keep", "steal"), "1' bar")
                 }
-                5 -> {
-                    Group("wind") {
-                        PanelKnob(b, "windsag", "sag", PanelAmber)
-                        PanelKnob(b, "windresp", "response", PanelAmber)
-                        PanelKnob(b, "windnoise", "noise")
-                    }
-                    Group("tremulant") {
-                        PanelKnob(b, "tremrate", "rate", PanelAmber)
-                        PanelKnob(b, "tremdepth", "depth", PanelAmber)
-                    }
-                    Group("envelope") {
-                        PanelKnob(b, "attack", "attack")
-                        PanelKnob(b, "release", "release")
-                    }
-                    Group("eg 1") {
-                        PanelKnob(b, "eg1atk", "attack"); PanelKnob(b, "eg1dec", "decay")
-                        PanelKnob(b, "eg1sus", "sustain"); PanelKnob(b, "eg1rel", "release")
-                    }
-                    Group("eg 2") {
-                        PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
-                        PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
-                    }
+                Group("click") {
+                    PanelKnob(b, "click", "on", PanelAmber)
+                    PanelKnob(b, "clickoff", "off")
+                    PanelKnob(b, "contacts", "spread")
                 }
-                6 -> for (m in 1..8) key(m) { Group("mod $m") {
-                    PanelStepKnob(b, "m${m}_src", MANUAL_SOURCES, "from", PanelAmber)
-                    PanelStepKnob(b, "m${m}_dst", MANUAL_DESTS, "to", PanelAmber)
-                    PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
-                } }
-                else -> {
-                    Group("amp") {
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "bias", "bias", PanelPink)
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
-                    Group("tone") {
-                        PanelKnob(b, "bass", "bass", PanelAmber)
-                        PanelKnob(b, "mid", "mid", PanelAmber)
-                        PanelKnob(b, "treble", "treble", PanelAmber)
-                    }
-                    Group("tuning") {
-                        PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose")
-                        PanelKnob(b, "fine", "fine"); PanelKnob(b, "bend", "bend")
-                    }
-                    Group("touch") {
-                        PanelKnob(b, "vel", "velocity")
-                        PanelStepKnob(b, "express", listOf("off", "mod", "prs"), "swell", PanelAmber)
-                    }
+                Group("generator") {
+                    PanelStepKnob(b, "model", MANUAL_MODELS, "model", PanelAmber)
+                    PanelKnob(b, "age", "age", PanelPink)
+                    PanelKnob(b, "leakage", "leakage")
+                    PanelKnob(b, "hum", "hum")
+                }
+            }
+            2 -> {
+                Group("scanner") {
+                    PanelStepKnob(b, "vibtype", MANUAL_VIB, "type", PanelAmber)
+                    PanelKnob(b, "vibrate", "rate", PanelAmber)
+                    PanelKnob(b, "vibdepth", "depth", PanelAmber)
+                    PanelKnob(b, "vibwide", "width")
+                }
+                Group("routing") {
+                    PanelSwitch(b, "vibup", listOf("dry", "vib"), "upper")
+                    PanelSwitch(b, "viblow", listOf("dry", "vib"), "lower")
+                }
+                Group("lfo 1") {
+                    PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, "lfo1rate", "rate", PanelAmber)
+                    PanelStepKnob(b, "lfo1sync", MANUAL_SYNC, "sync")
+                    PanelKnob(b, "lfo1depth", "depth")
+                    PanelKnob(b, "lfo1phase", "phase")
+                }
+                Group("lfo 2") {
+                    PanelStepKnob(b, "lfo2wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, "lfo2rate", "rate", PanelAmber)
+                    PanelStepKnob(b, "lfo2sync", MANUAL_SYNC, "sync")
+                    PanelKnob(b, "lfo2depth", "depth")
+                    PanelKnob(b, "lfo2phase", "phase")
+                }
+            }
+            3 -> {
+                Group("cabinet") {
+                    PanelSwitch(b, "rotary", listOf("off", "on"), "rotary")
+                    PanelStepKnob(b, "rotspeed", MANUAL_ROT, "speed", PanelAmber)
+                    PanelStepKnob(b, "rotsync", MANUAL_SYNC, "sync")
+                }
+                Group("horn") {
+                    PanelKnob(b, "hornslow", "slow", PanelAmber)
+                    PanelKnob(b, "hornfast", "fast", PanelAmber)
+                }
+                Group("drum") {
+                    PanelKnob(b, "drumslow", "slow", PanelAmber)
+                    PanelKnob(b, "drumfast", "fast", PanelAmber)
+                }
+                Group("ramp") {
+                    PanelKnob(b, "rampup", "up")
+                    PanelKnob(b, "rampdown", "down")
+                }
+                Group("mics") {
+                    PanelKnob(b, "micdist", "distance", PanelAmber)
+                    PanelKnob(b, "micangle", "angle")
+                    PanelKnob(b, "rotwide", "width")
+                }
+            }
+            4 -> {
+                Group("manuals") {
+                    PanelKnob(b, "split", "split", PanelAmber)
+                    PanelKnob(b, "pedsplit", "pedal at", PanelAmber)
+                    PanelSwitch(b, "loweron", listOf("off", "on"), "lower")
+                    PanelSwitch(b, "pedalon", listOf("off", "on"), "pedals")
+                }
+                Group("balance") {
+                    PanelKnob(b, "upper", "upper")
+                    PanelKnob(b, "lower", "lower")
+                    PanelKnob(b, "pedal", "pedal")
+                    PanelKnob(b, "pedsus", "ped sus")
+                }
+                Group("pipes") {
+                    PanelKnob(b, "principal", "principal", PanelAmber)
+                    PanelKnob(b, "flute", "flute", PanelAmber)
+                    PanelKnob(b, "string", "string", PanelAmber)
+                    PanelKnob(b, "reed", "reed", PanelAmber)
+                    PanelKnob(b, "mixture", "mixture", PanelAmber)
+                    PanelKnob(b, "chiff", "chiff")
+                    PanelKnob(b, "tracker", "tracker")
+                }
+                Group("combo") {
+                    PanelStepKnob(b, "combowave", listOf("square", "pulse", "saw"), "wave", PanelAmber)
+                    PanelKnob(b, "tab16", "16'")
+                    PanelKnob(b, "tab8", "8'")
+                    PanelKnob(b, "tab4", "4'")
+                    PanelKnob(b, "tab2", "2'")
+                    PanelKnob(b, "tab2r", "II")
+                    PanelKnob(b, "tab4r", "IV")
+                    PanelKnob(b, "reedy", "reedy", PanelPink)
+                    PanelKnob(b, "comboatk", "attack")
+                }
+                Group("reeds") {
+                    PanelKnob(b, "pressure", "pressure", PanelAmber)
+                    PanelKnob(b, "buzz", "buzz", PanelPink)
+                    PanelKnob(b, "reedtrem", "tremolo")
+                }
+            }
+            5 -> {
+                Group("wind") {
+                    PanelKnob(b, "windsag", "sag", PanelAmber)
+                    PanelKnob(b, "windresp", "response", PanelAmber)
+                    PanelKnob(b, "windnoise", "noise")
+                }
+                Group("tremulant") {
+                    PanelKnob(b, "tremrate", "rate", PanelAmber)
+                    PanelKnob(b, "tremdepth", "depth", PanelAmber)
+                }
+                Group("envelope") {
+                    PanelKnob(b, "attack", "attack")
+                    PanelKnob(b, "release", "release")
+                }
+                Group("eg 1") {
+                    PanelKnob(b, "eg1atk", "attack"); PanelKnob(b, "eg1dec", "decay")
+                    PanelKnob(b, "eg1sus", "sustain"); PanelKnob(b, "eg1rel", "release")
+                }
+                Group("eg 2") {
+                    PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
+                    PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
+                }
+            }
+            6 -> for (m in 1..8) key(m) { Group("mod $m") {
+                PanelStepKnob(b, "m${m}_src", MANUAL_SOURCES, "from", PanelAmber)
+                PanelStepKnob(b, "m${m}_dst", MANUAL_DESTS, "to", PanelAmber)
+                PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
+            } }
+            else -> {
+                Group("amp") {
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "bias", "bias", PanelPink)
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
+                }
+                Group("tone") {
+                    PanelKnob(b, "bass", "bass", PanelAmber)
+                    PanelKnob(b, "mid", "mid", PanelAmber)
+                    PanelKnob(b, "treble", "treble", PanelAmber)
+                }
+                Group("tuning") {
+                    PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose")
+                    PanelKnob(b, "fine", "fine"); PanelKnob(b, "bend", "bend")
+                }
+                Group("touch") {
+                    PanelKnob(b, "vel", "velocity")
+                    PanelStepKnob(b, "express", listOf("off", "mod", "prs"), "swell", PanelAmber)
                 }
             }
         }
@@ -2192,129 +2306,126 @@ private fun InputListen() {
 @Composable
 private fun CipherPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections {
-        SectionChips(listOf("bank", "map", "carrier", "voice", "mod", "out"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("listen") { InputListen() }
-                    Group("bank") {
-                        PanelKnob(b, "bands", "bands", PanelAmber)
-                        PanelKnob(b, "low", "low", PanelAmber)
-                        PanelKnob(b, "high", "high", PanelAmber)
-                        PanelKnob(b, "q", "width")
-                        PanelSwitch(b, "slope", listOf("2 pole", "4 pole"), "slope")
-                    }
-                    Group("follow") {
-                        PanelKnob(b, "attack", "attack", PanelAmber)
-                        PanelKnob(b, "release", "release", PanelAmber)
-                        PanelKnob(b, "smear", "smear", PanelPink)
-                    }
-                    Group("gate") {
-                        PanelKnob(b, "gate", "threshold")
-                        PanelKnob(b, "gatedepth", "depth")
-                    }
-                    Group("consonants") {
-                        PanelKnob(b, "sibilance", "detect", PanelAmber)
-                        PanelKnob(b, "sibhz", "above")
-                        PanelKnob(b, "siblevel", "level")
-                    }
+    PanelSections(listOf("bank", "map", "carrier", "voice", "mod", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("listen") { InputListen() }
+                Group("bank") {
+                    PanelKnob(b, "bands", "bands", PanelAmber)
+                    PanelKnob(b, "low", "low", PanelAmber)
+                    PanelKnob(b, "high", "high", PanelAmber)
+                    PanelKnob(b, "q", "width")
+                    PanelSwitch(b, "slope", listOf("2 pole", "4 pole"), "slope")
                 }
-                1 -> {
-                    Group("remap") {
-                        PanelStepKnob(b, "remap", CIPHER_REMAP, "order", PanelAmber)
-                        PanelKnob(b, "remapamt", "amount", PanelAmber)
-                        PanelKnob(b, "seed", "seed")
-                    }
-                    Group("formant") {
-                        PanelKnob(b, "shift", "shift", PanelAmber)
-                        PanelKnob(b, "stretch", "stretch", PanelAmber)
-                    }
-                    Group("freeze") {
-                        PanelSwitch(b, "freeze", listOf("live", "hold"), "hold")
-                        PanelKnob(b, "frzmorph", "morph", PanelAmber)
-                        PanelKnob(b, "frzdecay", "decay")
-                    }
-                    Group("feedback") {
-                        PanelKnob(b, "feedback", "amount", PanelPink)
-                        PanelKnob(b, "fbtone", "tone")
-                    }
+                Group("follow") {
+                    PanelKnob(b, "attack", "attack", PanelAmber)
+                    PanelKnob(b, "release", "release", PanelAmber)
+                    PanelKnob(b, "smear", "smear", PanelPink)
                 }
-                2 -> {
-                    Group("carrier") {
-                        PanelStepKnob(b, "wave a", CIPHER_WAVES, "wave a", PanelAmber)
-                        PanelStepKnob(b, "wave b", CIPHER_WAVES, "wave b", PanelAmber)
-                        PanelKnob(b, "mix", "mix", PanelAmber)
-                        PanelKnob(b, "detune", "detune")
-                        PanelKnob(b, "pw", "width")
-                        PanelKnob(b, "sub", "sub")
-                        PanelKnob(b, "noise", "noise")
-                        // How much of the carrier is replaced by noise when the
-                        // modulator is unvoiced, which is what turns a sung
-                        // vowel into a whisper. It had no control at all until
-                        // an audit went looking: the Breath patch set it and no
-                        // player could reach it or put it back.
-                        PanelKnob(b, "unvoiced", "unvoiced", PanelAmber)
-                        PanelKnob(b, "cardrive", "drive", PanelPink)
-                    }
-                    Group("envelope") {
-                        PanelKnob(b, "ampatk", "attack"); PanelKnob(b, "ampdec", "decay")
-                        PanelKnob(b, "ampsus", "sustain"); PanelKnob(b, "amprel", "release")
-                    }
+                Group("gate") {
+                    PanelKnob(b, "gate", "threshold")
+                    PanelKnob(b, "gatedepth", "depth")
                 }
-                3 -> {
-                    Group("roles") {
-                        PanelStepKnob(b, "role", CIPHER_ROLE, "input is", PanelAmber)
-                        PanelKnob(b, "dry", "dry")
-                        PanelKnob(b, "wet", "wet", PanelAmber)
-                    }
-                    Group("tracking") {
-                        PanelSwitch(b, "track", listOf("off", "on"), "follow")
-                        PanelKnob(b, "trackamt", "amount", PanelAmber)
-                        PanelKnob(b, "trackglide", "glide")
-                    }
-                    Group("keys") {
-                        PanelKnob(b, "glide", "glide")
-                        PanelKnob(b, "bend", "bend")
-                        PanelKnob(b, "octave", "octave")
-                        PanelKnob(b, "transpose", "transpose")
-                        PanelKnob(b, "fine", "fine")
-                        PanelKnob(b, "vel", "velocity")
-                    }
+                Group("consonants") {
+                    PanelKnob(b, "sibilance", "detect", PanelAmber)
+                    PanelKnob(b, "sibhz", "above")
+                    PanelKnob(b, "siblevel", "level")
                 }
-                4 -> {
-                    Group("lfo 1") {
-                        PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
-                        PanelKnob(b, "lfo1rate", "rate", PanelAmber)
-                        PanelStepKnob(b, "lfo1sync", CIPHER_SYNC, "sync")
-                        PanelKnob(b, "lfo1depth", "depth")
-                    }
-                    Group("lfo 2") {
-                        PanelStepKnob(b, "lfo2wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
-                        PanelKnob(b, "lfo2rate", "rate", PanelAmber)
-                        PanelStepKnob(b, "lfo2sync", CIPHER_SYNC, "sync")
-                        PanelKnob(b, "lfo2depth", "depth")
-                    }
-                    Group("eg 1") {
-                        PanelKnob(b, "eg1atk", "attack"); PanelKnob(b, "eg1dec", "decay")
-                        PanelKnob(b, "eg1sus", "sustain"); PanelKnob(b, "eg1rel", "release")
-                    }
-                    Group("eg 2") {
-                        PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
-                        PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
-                    }
-                    for (m in 1..8) key(m) { Group("mod $m") {
-                        PanelStepKnob(b, "m${m}_src", CIPHER_SOURCES, "from", PanelAmber)
-                        PanelStepKnob(b, "m${m}_dst", CIPHER_DESTS, "to", PanelAmber)
-                        PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
-                    } }
+            }
+            1 -> {
+                Group("remap") {
+                    PanelStepKnob(b, "remap", CIPHER_REMAP, "order", PanelAmber)
+                    PanelKnob(b, "remapamt", "amount", PanelAmber)
+                    PanelKnob(b, "seed", "seed")
                 }
-                else -> {
-                    Group("out") {
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
+                Group("formant") {
+                    PanelKnob(b, "shift", "shift", PanelAmber)
+                    PanelKnob(b, "stretch", "stretch", PanelAmber)
+                }
+                Group("freeze") {
+                    PanelSwitch(b, "freeze", listOf("live", "hold"), "hold")
+                    PanelKnob(b, "frzmorph", "morph", PanelAmber)
+                    PanelKnob(b, "frzdecay", "decay")
+                }
+                Group("feedback") {
+                    PanelKnob(b, "feedback", "amount", PanelPink)
+                    PanelKnob(b, "fbtone", "tone")
+                }
+            }
+            2 -> {
+                Group("carrier") {
+                    PanelStepKnob(b, "wave a", CIPHER_WAVES, "wave a", PanelAmber)
+                    PanelStepKnob(b, "wave b", CIPHER_WAVES, "wave b", PanelAmber)
+                    PanelKnob(b, "mix", "mix", PanelAmber)
+                    PanelKnob(b, "detune", "detune")
+                    PanelKnob(b, "pw", "width")
+                    PanelKnob(b, "sub", "sub")
+                    PanelKnob(b, "noise", "noise")
+                    // How much of the carrier is replaced by noise when the
+                    // modulator is unvoiced, which is what turns a sung
+                    // vowel into a whisper. It had no control at all until
+                    // an audit went looking: the Breath patch set it and no
+                    // player could reach it or put it back.
+                    PanelKnob(b, "unvoiced", "unvoiced", PanelAmber)
+                    PanelKnob(b, "cardrive", "drive", PanelPink)
+                }
+                Group("envelope") {
+                    PanelKnob(b, "ampatk", "attack"); PanelKnob(b, "ampdec", "decay")
+                    PanelKnob(b, "ampsus", "sustain"); PanelKnob(b, "amprel", "release")
+                }
+            }
+            3 -> {
+                Group("roles") {
+                    PanelStepKnob(b, "role", CIPHER_ROLE, "input is", PanelAmber)
+                    PanelKnob(b, "dry", "dry")
+                    PanelKnob(b, "wet", "wet", PanelAmber)
+                }
+                Group("tracking") {
+                    PanelSwitch(b, "track", listOf("off", "on"), "follow")
+                    PanelKnob(b, "trackamt", "amount", PanelAmber)
+                    PanelKnob(b, "trackglide", "glide")
+                }
+                Group("keys") {
+                    PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "bend", "bend")
+                    PanelKnob(b, "octave", "octave")
+                    PanelKnob(b, "transpose", "transpose")
+                    PanelKnob(b, "fine", "fine")
+                    PanelKnob(b, "vel", "velocity")
+                }
+            }
+            4 -> {
+                Group("lfo 1") {
+                    PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, "lfo1rate", "rate", PanelAmber)
+                    PanelStepKnob(b, "lfo1sync", CIPHER_SYNC, "sync")
+                    PanelKnob(b, "lfo1depth", "depth")
+                }
+                Group("lfo 2") {
+                    PanelStepKnob(b, "lfo2wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, "lfo2rate", "rate", PanelAmber)
+                    PanelStepKnob(b, "lfo2sync", CIPHER_SYNC, "sync")
+                    PanelKnob(b, "lfo2depth", "depth")
+                }
+                Group("eg 1") {
+                    PanelKnob(b, "eg1atk", "attack"); PanelKnob(b, "eg1dec", "decay")
+                    PanelKnob(b, "eg1sus", "sustain"); PanelKnob(b, "eg1rel", "release")
+                }
+                Group("eg 2") {
+                    PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
+                    PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
+                }
+                for (m in 1..8) key(m) { Group("mod $m") {
+                    PanelStepKnob(b, "m${m}_src", CIPHER_SOURCES, "from", PanelAmber)
+                    PanelStepKnob(b, "m${m}_dst", CIPHER_DESTS, "to", PanelAmber)
+                    PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
+                } }
+            }
+            else -> {
+                Group("out") {
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
                 }
             }
         }
@@ -2340,119 +2451,116 @@ private val CUMULUS_LFO = listOf("sine", "tri", "saw↑", "saw↓", "square", "s
 @Composable
 private fun CumulusPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections {
-        SectionChips(listOf("cloud", "morph to", "play", "shape", "env", "mod", "out"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("partials") {
-                        PanelKnob(b, "partials", "count", PanelAmber)
-                        PanelKnob(b, "tilt", "tilt", PanelAmber)
-                        PanelKnob(b, "odd", "odd/even", PanelAmber)
-                        PanelKnob(b, "stretch", "stretch", PanelAmber)
-                    }
-                    Group("band") {
-                        PanelKnob(b, "bandwidth", "width", PanelAmber)
-                        PanelKnob(b, "bwscale", "· up the series", PanelAmber)
-                        PanelKnob(b, "seed", "seed", PanelAmber)
-                    }
-                    Group("scallop") {
-                        PanelKnob(b, "comb", "depth", PanelAmber)
-                        PanelKnob(b, "combperiod", "every", PanelAmber)
-                    }
-                    Group("vowel") {
-                        PanelKnob(b, "vowel", "a e i o u", PanelAmber)
-                        PanelKnob(b, "vowelamount", "amount", PanelAmber)
-                    }
+    PanelSections(listOf("cloud", "morph to", "play", "shape", "env", "mod", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("partials") {
+                    PanelKnob(b, "partials", "count", PanelAmber)
+                    PanelKnob(b, "tilt", "tilt", PanelAmber)
+                    PanelKnob(b, "odd", "odd/even", PanelAmber)
+                    PanelKnob(b, "stretch", "stretch", PanelAmber)
                 }
-                1 -> {
-                    Group("the far end") {
-                        PanelKnob(b, "btilt", "tilt", PanelAmber)
-                        PanelKnob(b, "bbandwidth", "width", PanelAmber)
-                        PanelKnob(b, "bstretch", "stretch", PanelAmber)
-                        PanelKnob(b, "bodd", "odd/even", PanelAmber)
-                        PanelKnob(b, "bcomb", "scallop", PanelAmber)
-                        PanelKnob(b, "bvowel", "vowel", PanelAmber)
-                    }
-                    Group("morph") {
-                        PanelKnob(b, "morph", "position", PanelPink)
-                        PanelKnob(b, "morphkey", "· by key")
-                    }
+                Group("band") {
+                    PanelKnob(b, "bandwidth", "width", PanelAmber)
+                    PanelKnob(b, "bwscale", "· up the series", PanelAmber)
+                    PanelKnob(b, "seed", "seed", PanelAmber)
                 }
-                2 -> {
-                    Group("copies") {
-                        PanelStepKnob(b, "spread", listOf("1", "2", "3"), "how many", PanelAmber)
-                        PanelKnob(b, "detune", "detune", PanelAmber)
-                        PanelKnob(b, "spreadwidth", "apart")
-                    }
-                    Group("cloud") {
-                        PanelKnob(b, "scatter", "scatter", PanelAmber)
-                        PanelKnob(b, "drift", "drift", PanelAmber)
-                        PanelKnob(b, "driftrate", "· rate")
-                        PanelKnob(b, "width", "width")
-                    }
-                    Group("shimmer") {
-                        PanelKnob(b, "shimmer", "amount", PanelAmber)
-                        PanelStepKnob(b, "shimmerint", CUMULUS_SHIMMER, "up a")
-                    }
+                Group("scallop") {
+                    PanelKnob(b, "comb", "depth", PanelAmber)
+                    PanelKnob(b, "combperiod", "every", PanelAmber)
                 }
-                3 -> {
-                    Group("filter") {
-                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
-                        PanelKnob(b, "resonance", "reso", PanelAmber)
-                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
-                        PanelKnob(b, "filterenv", "env", PanelAmber)
-                        PanelKnob(b, "filterkey", "key")
-                        PanelKnob(b, "filterdrive", "drive", PanelPink)
-                    }
+                Group("vowel") {
+                    PanelKnob(b, "vowel", "a e i o u", PanelAmber)
+                    PanelKnob(b, "vowelamount", "amount", PanelAmber)
                 }
-                4 -> {
-                    Group("amp") {
-                        PanelKnob(b, "ampattack", "A")
-                        PanelKnob(b, "ampdecay", "D")
-                        PanelKnob(b, "ampsustain", "S")
-                        PanelKnob(b, "amprelease", "R")
-                    }
-                    Group("filter env") {
-                        PanelKnob(b, "filtattack", "A")
-                        PanelKnob(b, "filtdecay", "D")
-                        PanelKnob(b, "filtsustain", "S")
-                        PanelKnob(b, "filtrelease", "R")
-                    }
+            }
+            1 -> {
+                Group("the far end") {
+                    PanelKnob(b, "btilt", "tilt", PanelAmber)
+                    PanelKnob(b, "bbandwidth", "width", PanelAmber)
+                    PanelKnob(b, "bstretch", "stretch", PanelAmber)
+                    PanelKnob(b, "bodd", "odd/even", PanelAmber)
+                    PanelKnob(b, "bcomb", "scallop", PanelAmber)
+                    PanelKnob(b, "bvowel", "vowel", PanelAmber)
                 }
-                5 -> {
-                    Group("lfo 1") {
-                        PanelStepKnob(b, "lfo1wave", CUMULUS_LFO, "wave")
-                        PanelKnob(b, "lfo1rate", "rate", PanelAmber)
-                        PanelSwitch(b, "lfo1sync", listOf("free", "sync"), "clock")
-                        PanelKnob(b, "lfo1morph", "→ morph", PanelAmber)
-                        PanelKnob(b, "lfo1pitch", "→ pitch")
-                    }
-                    Group("lfo 2") {
-                        PanelStepKnob(b, "lfo2wave", CUMULUS_LFO, "wave")
-                        PanelKnob(b, "lfo2rate", "rate", PanelAmber)
-                        PanelSwitch(b, "lfo2sync", listOf("free", "sync"), "clock")
-                        PanelKnob(b, "lfo2cutoff", "→ cutoff")
-                        PanelKnob(b, "lfo2pan", "→ pan")
-                    }
+                Group("morph") {
+                    PanelKnob(b, "morph", "position", PanelPink)
+                    PanelKnob(b, "morphkey", "· by key")
                 }
-                else -> {
-                    Group("out") {
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
-                    Group("voice") {
-                        PanelKnob(b, "glide", "glide")
-                        PanelKnob(b, "velocity", "velocity")
-                        PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
-                        PanelKnob(b, "mpetimbre", "slide"); PanelKnob(b, "mpepressure", "press")
-                    }
-                    Group("tune") {
-                        PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
-                        PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
-                        PanelKnob(b, "fine", "fine")
-                    }
+            }
+            2 -> {
+                Group("copies") {
+                    PanelStepKnob(b, "spread", listOf("1", "2", "3"), "how many", PanelAmber)
+                    PanelKnob(b, "detune", "detune", PanelAmber)
+                    PanelKnob(b, "spreadwidth", "apart")
+                }
+                Group("cloud") {
+                    PanelKnob(b, "scatter", "scatter", PanelAmber)
+                    PanelKnob(b, "drift", "drift", PanelAmber)
+                    PanelKnob(b, "driftrate", "· rate")
+                    PanelKnob(b, "width", "width")
+                }
+                Group("shimmer") {
+                    PanelKnob(b, "shimmer", "amount", PanelAmber)
+                    PanelStepKnob(b, "shimmerint", CUMULUS_SHIMMER, "up a")
+                }
+            }
+            3 -> {
+                Group("filter") {
+                    PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                    PanelKnob(b, "resonance", "reso", PanelAmber)
+                    PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                    PanelKnob(b, "filterenv", "env", PanelAmber)
+                    PanelKnob(b, "filterkey", "key")
+                    PanelKnob(b, "filterdrive", "drive", PanelPink)
+                }
+            }
+            4 -> {
+                Group("amp") {
+                    PanelKnob(b, "ampattack", "A")
+                    PanelKnob(b, "ampdecay", "D")
+                    PanelKnob(b, "ampsustain", "S")
+                    PanelKnob(b, "amprelease", "R")
+                }
+                Group("filter env") {
+                    PanelKnob(b, "filtattack", "A")
+                    PanelKnob(b, "filtdecay", "D")
+                    PanelKnob(b, "filtsustain", "S")
+                    PanelKnob(b, "filtrelease", "R")
+                }
+            }
+            5 -> {
+                Group("lfo 1") {
+                    PanelStepKnob(b, "lfo1wave", CUMULUS_LFO, "wave")
+                    PanelKnob(b, "lfo1rate", "rate", PanelAmber)
+                    PanelSwitch(b, "lfo1sync", listOf("free", "sync"), "clock")
+                    PanelKnob(b, "lfo1morph", "→ morph", PanelAmber)
+                    PanelKnob(b, "lfo1pitch", "→ pitch")
+                }
+                Group("lfo 2") {
+                    PanelStepKnob(b, "lfo2wave", CUMULUS_LFO, "wave")
+                    PanelKnob(b, "lfo2rate", "rate", PanelAmber)
+                    PanelSwitch(b, "lfo2sync", listOf("free", "sync"), "clock")
+                    PanelKnob(b, "lfo2cutoff", "→ cutoff")
+                    PanelKnob(b, "lfo2pan", "→ pan")
+                }
+            }
+            else -> {
+                Group("out") {
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
+                }
+                Group("voice") {
+                    PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                    PanelKnob(b, "mpetimbre", "slide"); PanelKnob(b, "mpepressure", "press")
+                }
+                Group("tune") {
+                    PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
+                    PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
+                    PanelKnob(b, "fine", "fine")
                 }
             }
         }
@@ -2482,85 +2590,82 @@ private fun FormulatePanel(b: ParamBinding, track: Track, trackIndex: Int, edito
     var section by rememberSaveable { mutableStateOf(0) }
     var editing by remember { mutableStateOf(false) }
     val error = com.rm.acidulous.engine.EngineSync.formulaErrors[trackIndex].orEmpty()
-    PanelSections {
-        SectionChips(listOf("chip", "formula", "tables", "shape", "env", "out"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("oscillator") {
-                        PanelStepKnob(b, "wave", FORMULATE_WAVES, "wave", PanelAmber)
-                        PanelKnob(b, "duty", "duty", PanelAmber)
-                        PanelKnob(b, "pwmdepth", "pwm")
-                        PanelKnob(b, "pwmrate", "· rate")
-                        PanelKnob(b, "sub", "sub 8ve")
-                        PanelSwitch(b, "noiseshort", listOf("long", "short"), "noise")
-                    }
-                    Group("hardware") {
-                        PanelStepKnob(b, "bits", (1..8).map { "$it" }, "bits", PanelPink)
-                        PanelKnob(b, "crush", "sample rate", PanelPink)
-                        PanelKnob(b, "smooth", "smooth")
-                    }
+    PanelSections(listOf("chip", "formula", "tables", "shape", "env", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("oscillator") {
+                    PanelStepKnob(b, "wave", FORMULATE_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, "duty", "duty", PanelAmber)
+                    PanelKnob(b, "pwmdepth", "pwm")
+                    PanelKnob(b, "pwmrate", "· rate")
+                    PanelKnob(b, "sub", "sub 8ve")
+                    PanelSwitch(b, "noiseshort", listOf("long", "short"), "noise")
                 }
-                1 -> {
-                    Group("expression") {
-                        FormulaButton(track, error) { editing = true }
-                    }
-                    Group("how much") {
-                        PanelKnob(b, "formula", "amount", PanelAmber)
-                        PanelStepKnob(b, "formulamode", FORMULATE_MODES, "against x")
-                    }
-                    Group("its clock") {
-                        PanelSwitch(b, "timekeyed", listOf("free", "keyed"), "t follows")
-                        PanelKnob(b, "timescale", "rate", PanelAmber)
-                    }
-                    Group("macros") {
-                        PanelKnob(b, "a", "a", PanelAmber)
-                        PanelKnob(b, "b", "b", PanelAmber)
-                        PanelKnob(b, "c", "c", PanelAmber)
-                    }
+                Group("hardware") {
+                    PanelStepKnob(b, "bits", (1..8).map { "$it" }, "bits", PanelPink)
+                    PanelKnob(b, "crush", "sample rate", PanelPink)
+                    PanelKnob(b, "smooth", "smooth")
                 }
-                2 -> {
-                    Group("steps") {
-                        FormulaButton(track, error) { editing = true }
-                    }
-                    Group("clock") {
-                        PanelKnob(b, "framerate", "rate", PanelAmber)
-                        PanelSwitch(b, "framesync", listOf("free", "16ths"), "sync")
-                        PanelSwitch(b, "tableretrig", listOf("keep", "restart"), "per note")
-                    }
+            }
+            1 -> {
+                Group("expression") {
+                    FormulaButton(track, error) { editing = true }
                 }
-                3 -> {
-                    Group("filter") {
-                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
-                        PanelKnob(b, "resonance", "reso", PanelAmber)
-                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
-                    }
+                Group("how much") {
+                    PanelKnob(b, "formula", "amount", PanelAmber)
+                    PanelStepKnob(b, "formulamode", FORMULATE_MODES, "against x")
                 }
-                4 -> {
-                    Group("amp") {
-                        PanelKnob(b, "ampattack", "A")
-                        PanelKnob(b, "ampdecay", "D")
-                        PanelKnob(b, "ampsustain", "S")
-                        PanelKnob(b, "amprelease", "R")
-                    }
+                Group("its clock") {
+                    PanelSwitch(b, "timekeyed", listOf("free", "keyed"), "t follows")
+                    PanelKnob(b, "timescale", "rate", PanelAmber)
                 }
-                else -> {
-                    Group("out") {
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
-                    Group("voice") {
-                        PanelSwitch(b, "mono", listOf("poly", "mono"), "voices")
-                        PanelKnob(b, "glide", "glide")
-                        PanelKnob(b, "velocity", "velocity")
-                        PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
-                    }
-                    Group("tune") {
-                        PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
-                        PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
-                        PanelKnob(b, "fine", "fine")
-                    }
+                Group("macros") {
+                    PanelKnob(b, "a", "a", PanelAmber)
+                    PanelKnob(b, "b", "b", PanelAmber)
+                    PanelKnob(b, "c", "c", PanelAmber)
+                }
+            }
+            2 -> {
+                Group("steps") {
+                    FormulaButton(track, error) { editing = true }
+                }
+                Group("clock") {
+                    PanelKnob(b, "framerate", "rate", PanelAmber)
+                    PanelSwitch(b, "framesync", listOf("free", "16ths"), "sync")
+                    PanelSwitch(b, "tableretrig", listOf("keep", "restart"), "per note")
+                }
+            }
+            3 -> {
+                Group("filter") {
+                    PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                    PanelKnob(b, "resonance", "reso", PanelAmber)
+                    PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                }
+            }
+            4 -> {
+                Group("amp") {
+                    PanelKnob(b, "ampattack", "A")
+                    PanelKnob(b, "ampdecay", "D")
+                    PanelKnob(b, "ampsustain", "S")
+                    PanelKnob(b, "amprelease", "R")
+                }
+            }
+            else -> {
+                Group("out") {
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
+                }
+                Group("voice") {
+                    PanelSwitch(b, "mono", listOf("poly", "mono"), "voices")
+                    PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                }
+                Group("tune") {
+                    PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
+                    PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
+                    PanelKnob(b, "fine", "fine")
                 }
             }
         }
@@ -2692,92 +2797,89 @@ private fun FormulaDialog(
 @Composable
 private fun GenesisPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections {
-        SectionChips(listOf("kick", "snare", "toms", "metal", "bus"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("kick") {
-                        PanelKnob(b, "kicktune", "tune", PanelAmber)
-                        PanelKnob(b, "kickdecay", "decay", PanelAmber)
-                        PanelKnob(b, "kickpunch", "punch", PanelAmber)
-                        PanelKnob(b, "kicksweep", "sweep")
-                        PanelKnob(b, "kickclick", "click")
-                        PanelKnob(b, "kickdrive", "drive", PanelPink)
-                        PanelKnob(b, "kicklevel", "level")
-                    }
+    PanelSections(listOf("kick", "snare", "toms", "metal", "bus"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("kick") {
+                    PanelKnob(b, "kicktune", "tune", PanelAmber)
+                    PanelKnob(b, "kickdecay", "decay", PanelAmber)
+                    PanelKnob(b, "kickpunch", "punch", PanelAmber)
+                    PanelKnob(b, "kicksweep", "sweep")
+                    PanelKnob(b, "kickclick", "click")
+                    PanelKnob(b, "kickdrive", "drive", PanelPink)
+                    PanelKnob(b, "kicklevel", "level")
                 }
-                1 -> {
-                    Group("snare") {
-                        PanelKnob(b, "snaretune", "tune", PanelAmber)
-                        PanelKnob(b, "snaredecay", "decay", PanelAmber)
-                        PanelKnob(b, "snaresnap", "snap", PanelAmber)
-                        PanelKnob(b, "snaretone", "tone")
-                        PanelKnob(b, "snarelevel", "level")
-                    }
-                    Group("clap") {
-                        PanelKnob(b, "clapspread", "hands", PanelAmber)
-                        PanelKnob(b, "clapdecay", "room")
-                        PanelKnob(b, "claptone", "tone")
-                        PanelKnob(b, "claplevel", "level")
-                    }
-                    Group("rim") {
-                        PanelKnob(b, "rimtune", "tune")
-                        PanelKnob(b, "rimdecay", "decay")
-                        PanelKnob(b, "rimlevel", "level")
-                    }
+            }
+            1 -> {
+                Group("snare") {
+                    PanelKnob(b, "snaretune", "tune", PanelAmber)
+                    PanelKnob(b, "snaredecay", "decay", PanelAmber)
+                    PanelKnob(b, "snaresnap", "snap", PanelAmber)
+                    PanelKnob(b, "snaretone", "tone")
+                    PanelKnob(b, "snarelevel", "level")
                 }
-                2 -> {
-                    Group("toms") {
-                        PanelKnob(b, "tomlotune", "low", PanelAmber)
-                        PanelKnob(b, "tommidtune", "mid", PanelAmber)
-                        PanelKnob(b, "tomhitune", "high", PanelAmber)
-                        PanelKnob(b, "tomdecay", "decay")
-                        PanelKnob(b, "tombend", "bend")
-                        PanelKnob(b, "tomlevel", "level")
-                    }
-                    Group("cowbell") {
-                        PanelKnob(b, "belltune", "tune")
-                        PanelKnob(b, "belldecay", "decay")
-                        PanelKnob(b, "belllevel", "level")
-                    }
+                Group("clap") {
+                    PanelKnob(b, "clapspread", "hands", PanelAmber)
+                    PanelKnob(b, "clapdecay", "room")
+                    PanelKnob(b, "claptone", "tone")
+                    PanelKnob(b, "claplevel", "level")
                 }
-                3 -> {
-                    Group("hats") {
-                        PanelKnob(b, "hattune", "tune", PanelAmber)
-                        PanelKnob(b, "hatclosed", "closed", PanelAmber)
-                        PanelKnob(b, "hatopen", "open", PanelAmber)
-                        PanelKnob(b, "hattone", "tone")
-                        PanelKnob(b, "hatlevel", "level")
-                    }
-                    Group("crash") {
-                        PanelKnob(b, "crashdecay", "decay")
-                        PanelKnob(b, "crashtone", "tone")
-                        PanelKnob(b, "crashlevel", "level")
-                    }
-                    Group("ride") {
-                        PanelKnob(b, "ridedecay", "decay")
-                        PanelKnob(b, "ridetone", "tone")
-                        PanelKnob(b, "ridebell", "bell")
-                        PanelKnob(b, "ridelevel", "level")
-                    }
+                Group("rim") {
+                    PanelKnob(b, "rimtune", "tune")
+                    PanelKnob(b, "rimdecay", "decay")
+                    PanelKnob(b, "rimlevel", "level")
                 }
-                else -> {
-                    Group("the room") {
-                        PanelKnob(b, "comp", "compress", PanelAmber)
-                        PanelKnob(b, "compattack", "attack")
-                        PanelKnob(b, "comprelease", "release")
-                        PanelKnob(b, "duck", "kick ducks", PanelAmber)
-                    }
-                    Group("circuit") {
-                        PanelKnob(b, "drift", "drift", PanelAmber)
-                        PanelKnob(b, "accent", "accent")
-                    }
-                    Group("out") {
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
+            }
+            2 -> {
+                Group("toms") {
+                    PanelKnob(b, "tomlotune", "low", PanelAmber)
+                    PanelKnob(b, "tommidtune", "mid", PanelAmber)
+                    PanelKnob(b, "tomhitune", "high", PanelAmber)
+                    PanelKnob(b, "tomdecay", "decay")
+                    PanelKnob(b, "tombend", "bend")
+                    PanelKnob(b, "tomlevel", "level")
+                }
+                Group("cowbell") {
+                    PanelKnob(b, "belltune", "tune")
+                    PanelKnob(b, "belldecay", "decay")
+                    PanelKnob(b, "belllevel", "level")
+                }
+            }
+            3 -> {
+                Group("hats") {
+                    PanelKnob(b, "hattune", "tune", PanelAmber)
+                    PanelKnob(b, "hatclosed", "closed", PanelAmber)
+                    PanelKnob(b, "hatopen", "open", PanelAmber)
+                    PanelKnob(b, "hattone", "tone")
+                    PanelKnob(b, "hatlevel", "level")
+                }
+                Group("crash") {
+                    PanelKnob(b, "crashdecay", "decay")
+                    PanelKnob(b, "crashtone", "tone")
+                    PanelKnob(b, "crashlevel", "level")
+                }
+                Group("ride") {
+                    PanelKnob(b, "ridedecay", "decay")
+                    PanelKnob(b, "ridetone", "tone")
+                    PanelKnob(b, "ridebell", "bell")
+                    PanelKnob(b, "ridelevel", "level")
+                }
+            }
+            else -> {
+                Group("the room") {
+                    PanelKnob(b, "comp", "compress", PanelAmber)
+                    PanelKnob(b, "compattack", "attack")
+                    PanelKnob(b, "comprelease", "release")
+                    PanelKnob(b, "duck", "kick ducks", PanelAmber)
+                }
+                Group("circuit") {
+                    PanelKnob(b, "drift", "drift", PanelAmber)
+                    PanelKnob(b, "accent", "accent")
+                }
+                Group("out") {
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
                 }
             }
         }
@@ -2880,82 +2982,79 @@ private fun MoltPanel(
         },
         onDismiss = { recording = false },
     )
-    PanelSections {
-        SectionChips(listOf("take", "tune", "voice", "tone"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("take") {
-                        Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
-                            Text(
-                                sample.substringAfterLast('/').ifEmpty { stringResource(Res.string.machine_no_take) },
-                                color = if (sample.isEmpty()) c.textDim else c.textHi,
-                                fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            )
-                            Row {
-                                TextButton(onClick = onImport) { Text(stringResource(Res.string.machine_import), color = c.textMid, fontSize = 11.sp) }
-                                TextButton(onClick = { picking = true }) { Text(stringResource(Res.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
-                            }
+    PanelSections(listOf("take", "tune", "voice", "tone"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("take") {
+                    Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
+                        Text(
+                            sample.substringAfterLast('/').ifEmpty { stringResource(Res.string.machine_no_take) },
+                            color = if (sample.isEmpty()) c.textDim else c.textHi,
+                            fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        )
+                        Row {
+                            TextButton(onClick = onImport) { Text(stringResource(Res.string.machine_import), color = c.textMid, fontSize = 11.sp) }
+                            TextButton(onClick = { picking = true }) { Text(stringResource(Res.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
                         }
                     }
-                    // **Recording is one window, not a switch on a panel.**
-                    //
-                    // This was `rec`, `length` and `in` - a machine with its
-                    // own capture buffer, its own twelve-second ceiling and no
-                    // way to open the microphone from the panel it was on. It
-                    // recorded six seconds of silence and said nothing.
-                    // Molt's take now arrives the way every other machine's
-                    // material does: a file, which can also be trimmed and
-                    // levelled before it is sung, which for a real recording
-                    // is most of the work.
-                    Group("sing") {
-                        PanelActions(
-                            Triple(stringResource(Res.string.machine_record), PanelAmber) { recording = true },
-                        )
-                    }
-                    Group("phrase") {
-                        PanelKnob(b, "start", "start", PanelAmber)
-                        PanelSwitch(b, "loop", listOf("loop"))
-                    }
                 }
-                1 -> {
-                    Group("pull") {
-                        PanelKnob(b, "tune", "amount", PanelAmber)
-                        PanelKnob(b, "rate", "rate", PanelAmber)
-                        PanelSwitch(b, "robot", listOf("robot"))
-                    }
-                    Group("note") {
-                        PanelKnob(b, "glide", "glide")
-                        PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
-                        PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "oct")
-                        PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semi")
-                    }
+                // **Recording is one window, not a switch on a panel.**
+                //
+                // This was `rec`, `length` and `in` - a machine with its
+                // own capture buffer, its own twelve-second ceiling and no
+                // way to open the microphone from the panel it was on. It
+                // recorded six seconds of silence and said nothing.
+                // Molt's take now arrives the way every other machine's
+                // material does: a file, which can also be trimmed and
+                // levelled before it is sung, which for a real recording
+                // is most of the work.
+                Group("sing") {
+                    PanelActions(
+                        Triple(stringResource(Res.string.machine_record), PanelAmber) { recording = true },
+                    )
                 }
-                2 -> {
-                    Group("voice") {
-                        PanelKnob(b, "formant", "formant", PanelAmber)
-                        PanelKnob(b, "mega", "mega", PanelAmber)
-                    }
-                    Group("amp") {
-                        PanelKnob(b, "ampattack", "att")
-                        PanelKnob(b, "ampdecay", "dec")
-                        PanelKnob(b, "ampsustain", "sus")
-                        PanelKnob(b, "amprelease", "rel")
-                        PanelKnob(b, "velocity", "vel")
-                    }
+                Group("phrase") {
+                    PanelKnob(b, "start", "start", PanelAmber)
+                    PanelSwitch(b, "loop", listOf("loop"))
                 }
-                else -> {
-                    Group("filter") {
-                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
-                        PanelKnob(b, "resonance", "reso", PanelAmber)
-                        PanelStepKnob(b, "filtertype", TRINITY_FILTERS, "type")
-                    }
-                    Group("out") {
-                        PanelKnob(b, "drive", "drive")
-                        PanelKnob(b, "volume", "vol")
-                        PanelKnob(b, "pan", "pan")
-                    }
+            }
+            1 -> {
+                Group("pull") {
+                    PanelKnob(b, "tune", "amount", PanelAmber)
+                    PanelKnob(b, "rate", "rate", PanelAmber)
+                    PanelSwitch(b, "robot", listOf("robot"))
+                }
+                Group("note") {
+                    PanelKnob(b, "glide", "glide")
+                    PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                    PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "oct")
+                    PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semi")
+                }
+            }
+            2 -> {
+                Group("voice") {
+                    PanelKnob(b, "formant", "formant", PanelAmber)
+                    PanelKnob(b, "mega", "mega", PanelAmber)
+                }
+                Group("amp") {
+                    PanelKnob(b, "ampattack", "att")
+                    PanelKnob(b, "ampdecay", "dec")
+                    PanelKnob(b, "ampsustain", "sus")
+                    PanelKnob(b, "amprelease", "rel")
+                    PanelKnob(b, "velocity", "vel")
+                }
+            }
+            else -> {
+                Group("filter") {
+                    PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                    PanelKnob(b, "resonance", "reso", PanelAmber)
+                    PanelStepKnob(b, "filtertype", TRINITY_FILTERS, "type")
+                }
+                Group("out") {
+                    PanelKnob(b, "drive", "drive")
+                    PanelKnob(b, "volume", "vol")
+                    PanelKnob(b, "pan", "pan")
                 }
             }
         }
@@ -2992,103 +3091,104 @@ private fun DicePanel(
     val barsAt = b.infoOf("bars")?.map(b.value("bars"))?.toInt() ?: 0
     val loopBars = if (barsAt == 0) shape?.first ?: 0f else DICE_BARS.getOrElse(barsAt - 1) { 0f }
     val loopBpm = shape?.second?.takeIf { it > 0f && loopBars > 0f }?.let { loopBars * 4f * 60f / it }
-    PanelSections {
-        SectionChips(listOf("loop", "dice", "slice", "tone"), section) { section = it }
-        if (section == 2) {
-            Text(
-                stringResource(Res.string.dice_slice, p + 1),
-                color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-                modifier = Modifier.padding(bottom = 2.dp),
-            )
-        }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("loop") {
-                        Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
+    PanelSections(
+        listOf("loop", "dice", "slice", "tone"), section, { section = it },
+        above = { sec ->
+            if (sec == 2) {
+                Text(
+                    stringResource(Res.string.dice_slice, p + 1),
+                    color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.padding(bottom = 2.dp),
+                )
+            }
+        },
+    ) { sec ->
+        when (sec) {
+            0 -> {
+                Group("loop") {
+                    Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
+                        Text(
+                            sample.substringAfterLast('/').ifEmpty { stringResource(Res.string.machine_no_loop) },
+                            color = if (sample.isEmpty()) c.textDim else c.textHi,
+                            fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        )
+                        if (shape != null) {
                             Text(
-                                sample.substringAfterLast('/').ifEmpty { stringResource(Res.string.machine_no_loop) },
-                                color = if (sample.isEmpty()) c.textDim else c.textHi,
+                                if (loopBpm == null) stringResource(Res.string.dice_loop_no_tempo)
+                                else pluralStringResource(
+                                    Res.plurals.dice_loop_tempo, if (loopBars <= 1f) 1 else 2,
+                                    if (loopBars < 1f) "½" else loopBars.toInt().toString(), kotlin.math.round(loopBpm).toInt(),
+                                ),
+                                color = if (loopBpm == null) c.accent else c.textMid,
                                 fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
-                            if (shape != null) {
-                                Text(
-                                    if (loopBpm == null) stringResource(Res.string.dice_loop_no_tempo)
-                                    else pluralStringResource(
-                                        Res.plurals.dice_loop_tempo, if (loopBars <= 1f) 1 else 2,
-                                        if (loopBars < 1f) "½" else loopBars.toInt().toString(), kotlin.math.round(loopBpm).toInt(),
-                                    ),
-                                    color = if (loopBpm == null) c.accent else c.textMid,
-                                    fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
-                                )
-                            }
-                            Row {
-                                TextButton(onClick = onImport) { Text(stringResource(Res.string.machine_import), color = c.textMid, fontSize = 11.sp) }
-                                TextButton(onClick = { picking = true }) { Text(stringResource(Res.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
-                            }
+                        }
+                        Row {
+                            TextButton(onClick = onImport) { Text(stringResource(Res.string.machine_import), color = c.textMid, fontSize = 11.sp) }
+                            TextButton(onClick = { picking = true }) { Text(stringResource(Res.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
                         }
                     }
-                    // Follow plays the loop at the song's tempo, stretched so it
-                    // keeps its pitch; bars is what its own tempo is worked out
-                    // from, and auto is the engine's guess.
-                    Group("tempo") {
-                        PanelSwitch(b, "follow", listOf("own", "song"), "plays at")
-                        PanelStepKnob(b, "bars", listOf("auto", "½", "1", "2", "4", "8", "16"), "bars", PanelAmber)
-                    }
-                    Group("cut") {
-                        PanelSwitch(b, "cut", DICE_CUTS, "at")
-                        PanelStepKnob(b, "slices", (2..16).map { "$it" }, "how many", PanelAmber)
-                    }
-                    Group("play") {
-                        PanelKnob(b, "gate", "gate", PanelAmber)
-                        PanelKnob(b, "rate", "rate", PanelAmber)
-                        PanelKnob(b, "pitch", "pitch")
-                        PanelKnob(b, "fine", "fine")
-                        PanelKnob(b, "accent", "accent")
-                    }
                 }
-                1 -> {
-                    Group("the odds") {
-                        PanelKnob(b, "swap", "swap", PanelAmber)
-                        PanelKnob(b, "reverse", "reverse", PanelAmber)
-                        PanelKnob(b, "drop", "drop", PanelAmber)
-                    }
-                    Group("stutter") {
-                        PanelKnob(b, "stutter", "chance", PanelAmber)
-                        PanelStepKnob(b, "stutterdiv", (2..8).map { "$it" }, "times")
-                    }
-                    Group("jump") {
-                        PanelKnob(b, "jump", "chance", PanelAmber)
-                        PanelStepKnob(b, "jumprange", (1..12).map { "$it" }, "up to")
-                    }
-                    Group("the same roll") {
-                        PanelSwitch(b, "hold", listOf("free", "hold"), "dice")
-                        PanelStepKnob(b, "seed", (0..63).map { "$it" }, "seed")
-                    }
+                // Follow plays the loop at the song's tempo, stretched so it
+                // keeps its pitch; bars is what its own tempo is worked out
+                // from, and auto is the engine's guess.
+                Group("tempo") {
+                    PanelSwitch(b, "follow", listOf("own", "song"), "plays at")
+                    PanelStepKnob(b, "bars", listOf("auto", "½", "1", "2", "4", "8", "16"), "bars", PanelAmber)
                 }
-                2 -> {
-                    // The group's title is harvested for the lane list, so it
-                    // stays a constant; which slice is selected is said above.
-                    Group("slice") {
-                        PanelKnob(b, n("level"), "level", PanelAmber)
-                        PanelKnob(b, n("pan"), "pan")
-                        PanelKnob(b, n("pitch"), "pitch", PanelAmber)
-                        PanelKnob(b, n("decay"), "decay", PanelAmber)
-                        PanelSwitch(b, n("dir"), listOf("fwd", "rev"), "play")
-                    }
+                Group("cut") {
+                    PanelSwitch(b, "cut", DICE_CUTS, "at")
+                    PanelStepKnob(b, "slices", (2..16).map { "$it" }, "how many", PanelAmber)
                 }
-                else -> {
-                    Group("filter") {
-                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
-                        PanelKnob(b, "resonance", "reso", PanelAmber)
-                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
-                    }
-                    Group("out") {
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
+                Group("play") {
+                    PanelKnob(b, "gate", "gate", PanelAmber)
+                    PanelKnob(b, "rate", "rate", PanelAmber)
+                    PanelKnob(b, "pitch", "pitch")
+                    PanelKnob(b, "fine", "fine")
+                    PanelKnob(b, "accent", "accent")
+                }
+            }
+            1 -> {
+                Group("the odds") {
+                    PanelKnob(b, "swap", "swap", PanelAmber)
+                    PanelKnob(b, "reverse", "reverse", PanelAmber)
+                    PanelKnob(b, "drop", "drop", PanelAmber)
+                }
+                Group("stutter") {
+                    PanelKnob(b, "stutter", "chance", PanelAmber)
+                    PanelStepKnob(b, "stutterdiv", (2..8).map { "$it" }, "times")
+                }
+                Group("jump") {
+                    PanelKnob(b, "jump", "chance", PanelAmber)
+                    PanelStepKnob(b, "jumprange", (1..12).map { "$it" }, "up to")
+                }
+                Group("the same roll") {
+                    PanelSwitch(b, "hold", listOf("free", "hold"), "dice")
+                    PanelStepKnob(b, "seed", (0..63).map { "$it" }, "seed")
+                }
+            }
+            2 -> {
+                // The group's title is harvested for the lane list, so it
+                // stays a constant; which slice is selected is said above.
+                Group("slice") {
+                    PanelKnob(b, n("level"), "level", PanelAmber)
+                    PanelKnob(b, n("pan"), "pan")
+                    PanelKnob(b, n("pitch"), "pitch", PanelAmber)
+                    PanelKnob(b, n("decay"), "decay", PanelAmber)
+                    PanelSwitch(b, n("dir"), listOf("fwd", "rev"), "play")
+                }
+            }
+            else -> {
+                Group("filter") {
+                    PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                    PanelKnob(b, "resonance", "reso", PanelAmber)
+                    PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                }
+                Group("out") {
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
                 }
             }
         }
@@ -3131,125 +3231,122 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
     val c = Acid.colors
     val sample = track.machine.settings["sample"].orEmpty()
     val live = (b.value("source") ?: 0f) >= 0.5f
-    PanelSections {
-        SectionChips(listOf("source", "cloud", "spray", "pollen", "tone", "voice"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("buffer") {
-                        PanelSwitch(b, "source", POLLEN_SOURCES, "read from")
-                        PanelKnob(b, "buffer", "length", PanelAmber)
-                        PanelSwitch(b, "freeze", listOf("roll", "hold"), "live")
-                        MomentaryButton(b, "capture", "capture")
-                    }
-                    Group("file") {
-                        Column(Modifier.widthIn(min = 140.dp, max = 260.dp)) {
+    PanelSections(listOf("source", "cloud", "spray", "pollen", "tone", "voice"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("buffer") {
+                    PanelSwitch(b, "source", POLLEN_SOURCES, "read from")
+                    PanelKnob(b, "buffer", "length", PanelAmber)
+                    PanelSwitch(b, "freeze", listOf("roll", "hold"), "live")
+                    MomentaryButton(b, "capture", "capture")
+                }
+                Group("file") {
+                    Column(Modifier.widthIn(min = 140.dp, max = 260.dp)) {
+                        Text(
+                            sample.substringAfterLast('/').ifEmpty { stringResource(Res.string.machine_no_file) },
+                            color = if (sample.isEmpty()) c.textDim else c.textHi,
+                            fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        )
+                        if (live) {
                             Text(
-                                sample.substringAfterLast('/').ifEmpty { stringResource(Res.string.machine_no_file) },
-                                color = if (sample.isEmpty()) c.textDim else c.textHi,
-                                fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                stringResource(Res.string.pollen_live),
+                                color = c.accent, fontSize = 9.sp, maxLines = 2,
                             )
-                            if (live) {
-                                Text(
-                                    stringResource(Res.string.pollen_live),
-                                    color = c.accent, fontSize = 9.sp, maxLines = 2,
-                                )
-                            }
-                            Row {
-                                TextButton(onClick = onImport) { Text(stringResource(Res.string.machine_import), color = c.textMid, fontSize = 11.sp) }
-                                TextButton(onClick = { picking = true }) { Text(stringResource(Res.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
-                            }
+                        }
+                        Row {
+                            TextButton(onClick = onImport) { Text(stringResource(Res.string.machine_import), color = c.textMid, fontSize = 11.sp) }
+                            TextButton(onClick = { picking = true }) { Text(stringResource(Res.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
                         }
                     }
-                    Group("listen") { InputListen() }
-                    Group("in") {
-                        PanelKnob(b, "ingain", "gain", PanelAmber)
-                        PanelKnob(b, "feedback", "feedback", PanelPink)
-                        PanelKnob(b, "dry", "thru")
-                    }
                 }
-                1 -> {
-                    Group("grains") {
-                        PanelKnob(b, "size", "size", PanelAmber)
-                        PanelKnob(b, "sizespread", "· spread")
-                        PanelKnob(b, "density", "density", PanelAmber)
-                        PanelKnob(b, "jitter", "· jitter")
-                    }
-                    Group("shape") {
-                        PanelStepKnob(b, "window", POLLEN_WINDOWS, "window")
-                        PanelKnob(b, "skew", "skew")
-                        PanelKnob(b, "reverse", "reverse")
-                    }
-                    Group("stereo") {
-                        PanelKnob(b, "panspread", "spread", PanelAmber)
-                        PanelKnob(b, "width", "width")
-                    }
+                Group("listen") { InputListen() }
+                Group("in") {
+                    PanelKnob(b, "ingain", "gain", PanelAmber)
+                    PanelKnob(b, "feedback", "feedback", PanelPink)
+                    PanelKnob(b, "dry", "thru")
                 }
-                2 -> {
-                    Group("where") {
-                        PanelKnob(b, "position", "position", PanelAmber)
-                        PanelKnob(b, "scan", "scan", PanelAmber)
-                        PanelKnob(b, "spray", "spray", PanelAmber)
-                        PanelKnob(b, "snap", "onset snap", PanelPink)
-                    }
-                    Group("pitch") {
-                        PanelKnob(b, "pitch", "pitch", PanelAmber)
-                        PanelKnob(b, "fine", "fine")
-                        PanelKnob(b, "keytrack", "key track")
-                    }
-                    Group("scatter") {
-                        PanelKnob(b, "spread", "amount", PanelAmber)
-                        PanelStepKnob(b, "scatter", POLLEN_SCATTER, "onto")
-                        PanelStepKnob(b, "scale", POLLEN_SCALES, "scale")
-                        PanelStepKnob(b, "key", POLLEN_KEYS, "key")
-                    }
+            }
+            1 -> {
+                Group("grains") {
+                    PanelKnob(b, "size", "size", PanelAmber)
+                    PanelKnob(b, "sizespread", "· spread")
+                    PanelKnob(b, "density", "density", PanelAmber)
+                    PanelKnob(b, "jitter", "· jitter")
                 }
-                3 -> {
-                    Group("pollination") {
-                        PanelKnob(b, "bloom", "bloom", PanelAmber)
-                        PanelStepKnob(b, "generations", (1..6).map { "$it" }, "depth", PanelAmber)
-                    }
-                    Group("what changes") {
-                        PanelKnob(b, "drift", "drift")
-                        PanelKnob(b, "mutate", "mutate", PanelAmber)
-                    }
+                Group("shape") {
+                    PanelStepKnob(b, "window", POLLEN_WINDOWS, "window")
+                    PanelKnob(b, "skew", "skew")
+                    PanelKnob(b, "reverse", "reverse")
                 }
-                4 -> {
-                    Group("filter") {
-                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
-                        PanelKnob(b, "resonance", "reso", PanelAmber)
-                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
-                    }
-                    Group("lo-fi") {
-                        PanelStepKnob(b, "bits", (1..16).map { "$it" }, "bits", PanelPink)
-                        PanelKnob(b, "crush", "rate", PanelPink)
-                        PanelKnob(b, "wobble", "wobble")
-                        PanelKnob(b, "wobblerate", "· rate")
-                    }
-                    Group("out") {
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
+                Group("stereo") {
+                    PanelKnob(b, "panspread", "spread", PanelAmber)
+                    PanelKnob(b, "width", "width")
                 }
-                else -> {
-                    Group("amp") {
-                        PanelKnob(b, "ampattack", "A")
-                        PanelKnob(b, "ampdecay", "D")
-                        PanelKnob(b, "ampsustain", "S")
-                        PanelKnob(b, "amprelease", "R")
-                    }
-                    Group("voice") {
-                        PanelSwitch(b, "mono", listOf("poly", "mono"), "voices")
-                        PanelKnob(b, "glide", "glide")
-                        PanelKnob(b, "velocity", "velocity")
-                        PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
-                    }
-                    Group("tune") {
-                        PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
-                        PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
-                    }
+            }
+            2 -> {
+                Group("where") {
+                    PanelKnob(b, "position", "position", PanelAmber)
+                    PanelKnob(b, "scan", "scan", PanelAmber)
+                    PanelKnob(b, "spray", "spray", PanelAmber)
+                    PanelKnob(b, "snap", "onset snap", PanelPink)
+                }
+                Group("pitch") {
+                    PanelKnob(b, "pitch", "pitch", PanelAmber)
+                    PanelKnob(b, "fine", "fine")
+                    PanelKnob(b, "keytrack", "key track")
+                }
+                Group("scatter") {
+                    PanelKnob(b, "spread", "amount", PanelAmber)
+                    PanelStepKnob(b, "scatter", POLLEN_SCATTER, "onto")
+                    PanelStepKnob(b, "scale", POLLEN_SCALES, "scale")
+                    PanelStepKnob(b, "key", POLLEN_KEYS, "key")
+                }
+            }
+            3 -> {
+                Group("pollination") {
+                    PanelKnob(b, "bloom", "bloom", PanelAmber)
+                    PanelStepKnob(b, "generations", (1..6).map { "$it" }, "depth", PanelAmber)
+                }
+                Group("what changes") {
+                    PanelKnob(b, "drift", "drift")
+                    PanelKnob(b, "mutate", "mutate", PanelAmber)
+                }
+            }
+            4 -> {
+                Group("filter") {
+                    PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                    PanelKnob(b, "resonance", "reso", PanelAmber)
+                    PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
+                }
+                Group("lo-fi") {
+                    PanelStepKnob(b, "bits", (1..16).map { "$it" }, "bits", PanelPink)
+                    PanelKnob(b, "crush", "rate", PanelPink)
+                    PanelKnob(b, "wobble", "wobble")
+                    PanelKnob(b, "wobblerate", "· rate")
+                }
+                Group("out") {
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
+                }
+            }
+            else -> {
+                Group("amp") {
+                    PanelKnob(b, "ampattack", "A")
+                    PanelKnob(b, "ampdecay", "D")
+                    PanelKnob(b, "ampsustain", "S")
+                    PanelKnob(b, "amprelease", "R")
+                }
+                Group("voice") {
+                    PanelSwitch(b, "mono", listOf("poly", "mono"), "voices")
+                    PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                }
+                Group("tune") {
+                    PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
+                    PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
                 }
             }
         }
@@ -3304,109 +3401,106 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
     val song = editor.song
     val clip = track.clips[sceneId]
     val sceneBpm = if (sceneId.isEmpty()) song.tempo else song.bpmOf(sceneId)
-    PanelSections {
-        // Two sections and no more: what is on the tape, and what the tape is.
-        // The patch bar above chooses the second of those wholesale, and these
-        // are what it moved.
-        SectionChips(listOf("lanes", "medium", "tempo"), section) { section = it }
-        GroupRow {
-            if (section >= 1) {
-              if (section == 1) {
-                Group("band") {
-                    PanelKnob(b, "lowcut", "low cut", PanelAmber)
-                    PanelKnob(b, "highcut", "high cut", PanelAmber)
-                    PanelKnob(b, "bump", "head bump")
-                    PanelKnob(b, "bumpfreq", "· at")
-                }
-                Group("noise") {
-                    PanelKnob(b, "hiss", "hiss", PanelPink)
-                    PanelKnob(b, "hisstone", "· tone")
-                    PanelKnob(b, "drop", "dropouts", PanelPink)
-                    PanelKnob(b, "bleed", "bleed", PanelPink)
-                }
-                Group("transport") {
-                    PanelKnob(b, "wow", "wow", PanelAmber)
-                    PanelKnob(b, "flutter", "flutter", PanelAmber)
-                    PanelKnob(b, "speed", "· rate")
-                }
-                Group("level") {
-                    PanelKnob(b, "sat", "saturate", PanelPink)
-                    PanelKnob(b, "comp", "squash", PanelPink)
-                }
-                Group("digital") {
-                    PanelStepKnob(b, "bits", (4..24).map { "$it" }, "bits", PanelPink)
-                    PanelKnob(b, "rate", "rate", PanelPink)
-                    PanelKnob(b, "smear", "smear")
-                }
-                Group("out") {
-                    PanelKnob(b, "width", "width")
-                    PanelKnob(b, "gain", "gain", PanelAmber)
-                }
-            } else if (section == 2) {
-                Group("tempo") {
-                    PanelSwitch(b, "stretch", listOf("as sung", "follow"), "takes")
-                }
-                Group("input") {
-                    PanelKnob(b, "monitor", "monitor", PanelPink)
-                    InputListen()
-                }
-                // **What the input goes through on its way in - and so what is
-                // printed into the take.** The slots belong to the song rather
-                // than to this track, but this is where the hand is when
-                // somebody decides they want the amp *on* the recording rather
-                // than after it.
-                // Named for what happens to the file, so it needs no note -
-                // the same four words the record window uses, shortened to fit
-                // a card title.
-                Group("printed in") {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        InputChainChips(editor)
-                    }
-                }
-              }
-                return@GroupRow
+    // Two sections and no more: what is on the tape, and what the tape is.
+    // The patch bar above chooses the second of those wholesale, and these
+    // are what it moved.
+    PanelSections(listOf("lanes", "medium", "tempo"), section, { section = it }) { sec ->
+        if (sec >= 1) {
+          if (sec == 1) {
+            Group("band") {
+                PanelKnob(b, "lowcut", "low cut", PanelAmber)
+                PanelKnob(b, "highcut", "high cut", PanelAmber)
+                PanelKnob(b, "bump", "head bump")
+                PanelKnob(b, "bumpfreq", "· at")
             }
-            if (sceneId.isNotEmpty()) Group("flatten") {
-                CompButton(trackIndex, sceneId, editor, scope) { message, args ->
-                    com.rm.acidulous.engine.EngineSync.onProblem?.invoke(message, args)
+            Group("noise") {
+                PanelKnob(b, "hiss", "hiss", PanelPink)
+                PanelKnob(b, "hisstone", "· tone")
+                PanelKnob(b, "drop", "dropouts", PanelPink)
+                PanelKnob(b, "bleed", "bleed", PanelPink)
+            }
+            Group("transport") {
+                PanelKnob(b, "wow", "wow", PanelAmber)
+                PanelKnob(b, "flutter", "flutter", PanelAmber)
+                PanelKnob(b, "speed", "· rate")
+            }
+            Group("level") {
+                PanelKnob(b, "sat", "saturate", PanelPink)
+                PanelKnob(b, "comp", "squash", PanelPink)
+            }
+            Group("digital") {
+                PanelStepKnob(b, "bits", (4..24).map { "$it" }, "bits", PanelPink)
+                PanelKnob(b, "rate", "rate", PanelPink)
+                PanelKnob(b, "smear", "smear")
+            }
+            Group("out") {
+                PanelKnob(b, "width", "width")
+                PanelKnob(b, "gain", "gain", PanelAmber)
+            }
+        } else if (sec == 2) {
+            Group("tempo") {
+                PanelSwitch(b, "stretch", listOf("as sung", "follow"), "takes")
+            }
+            Group("input") {
+                PanelKnob(b, "monitor", "monitor", PanelPink)
+                InputListen()
+            }
+            // **What the input goes through on its way in - and so what is
+            // printed into the take.** The slots belong to the song rather
+            // than to this track, but this is where the hand is when
+            // somebody decides they want the amp *on* the recording rather
+            // than after it.
+            // Named for what happens to the file, so it needs no note -
+            // the same four words the record window uses, shortened to fit
+            // a card title.
+            Group("printed in") {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    InputChainChips(editor)
                 }
             }
-            for (lane in 0 until BIAS_LANES) {
-                val take = clip?.audio?.lane(lane)
-                Group("lane ${lane + 1}") {
-                    Column(Modifier.widthIn(min = 116.dp, max = 200.dp)) {
+          }
+            return@PanelSections
+        }
+        if (sceneId.isNotEmpty()) Group("flatten") {
+            CompButton(trackIndex, sceneId, editor, scope) { message, args ->
+                com.rm.acidulous.engine.EngineSync.onProblem?.invoke(message, args)
+            }
+        }
+        for (lane in 0 until BIAS_LANES) {
+            val take = clip?.audio?.lane(lane)
+            Group("lane ${lane + 1}") {
+                Column(Modifier.widthIn(min = 116.dp, max = 200.dp)) {
+                    Text(
+                        take?.file?.substringAfterLast('/') ?: "empty",
+                        color = if (take == null) c.textDim else c.textHi,
+                        fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    )
+                    // The tempo it was sung at, and only when that is not
+                    // the tempo it is being played at. Audio does not
+                    // stretch yet, so this is the one number that says why
+                    // a take drifts away from the beat.
+                    if (take != null && !track.followsTempo() &&
+                        kotlin.math.abs(take.bpm - sceneBpm) > 0.05f) {
                         Text(
-                            take?.file?.substringAfterLast('/') ?: "empty",
-                            color = if (take == null) c.textDim else c.textHi,
-                            fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            stringResource(Res.string.bias_take_bpm, take.bpm), color = c.accent,
+                            fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                         )
-                        // The tempo it was sung at, and only when that is not
-                        // the tempo it is being played at. Audio does not
-                        // stretch yet, so this is the one number that says why
-                        // a take drifts away from the beat.
-                        if (take != null && !track.followsTempo() &&
-                            kotlin.math.abs(take.bpm - sceneBpm) > 0.05f) {
-                            Text(
-                                stringResource(Res.string.bias_take_bpm, take.bpm), color = c.accent,
-                                fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
-                            )
-                        }
-                        Row {
-                            TextButton(onClick = { picking = lane }) {
-                                Text(stringResource(Res.string.bias_audio), color = c.textMid, fontSize = 11.sp)
-                            }
-                            if (take != null) TextButton(onClick = {
-                                editor.editClip(trackIndex, sceneId) { cl -> cl.withTake(lane, null) }
-                            }) { Text(stringResource(Res.string.bias_clear), color = c.textMid, fontSize = 11.sp) }
-                        }
                     }
-                    PanelKnob(b, "lane${lane + 1}", "level")
-                    // Labelled for the automation list rather than for the
-                    // card: inside a card already titled "lane 2", the lane
-                    // list would otherwise read "lane 2 lane".
-                    PanelSwitch(b, "mute${lane + 1}", listOf("on", "mute"), "mute")
+                    Row {
+                        TextButton(onClick = { picking = lane }) {
+                            Text(stringResource(Res.string.bias_audio), color = c.textMid, fontSize = 11.sp)
+                        }
+                        if (take != null) TextButton(onClick = {
+                            editor.editClip(trackIndex, sceneId) { cl -> cl.withTake(lane, null) }
+                        }) { Text(stringResource(Res.string.bias_clear), color = c.textMid, fontSize = 11.sp) }
+                    }
                 }
+                PanelKnob(b, "lane${lane + 1}", "level")
+                // Labelled for the automation list rather than for the
+                // card: inside a card already titled "lane 2", the lane
+                // list would otherwise read "lane 2 lane".
+                PanelSwitch(b, "mute${lane + 1}", listOf("on", "mute"), "mute")
             }
         }
     }
@@ -3433,118 +3527,115 @@ private val FILAMENT_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
 @Composable
 private fun FilamentPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections {
-        SectionChips(listOf("exciter", "string", "prepare", "around", "mod", "out"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("exciter") {
-                        PanelStepKnob(b, "exciter", FILAMENT_EXCITERS, "kind", PanelAmber)
-                        PanelKnob(b, "position", "where", PanelAmber)
-                        PanelKnob(b, "hardness", "hardness")
-                        PanelKnob(b, "length", "length")
-                        PanelKnob(b, "grit", "grit", PanelPink)
-                    }
-                    Group("sustained") {
-                        PanelKnob(b, "pressure", "pressure", PanelAmber)
-                        PanelKnob(b, "speed", "speed", PanelAmber)
-                        PanelKnob(b, "in gain", "in gain")
-                    }
-                    // The input exciter plays the string with whatever is
-                    // coming in, which needs something to be coming in.
-                    Group("listen") { InputListen() }
-                    Group("touch") {
-                        PanelKnob(b, "velocity", "velocity", PanelAmber)
-                        PanelSwitch(b, "on release", listOf("ring", "damp"), "let go")
-                        PanelKnob(b, "damp time", "damp time")
-                    }
+    PanelSections(listOf("exciter", "string", "prepare", "around", "mod", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("exciter") {
+                    PanelStepKnob(b, "exciter", FILAMENT_EXCITERS, "kind", PanelAmber)
+                    PanelKnob(b, "position", "where", PanelAmber)
+                    PanelKnob(b, "hardness", "hardness")
+                    PanelKnob(b, "length", "length")
+                    PanelKnob(b, "grit", "grit", PanelPink)
                 }
-                1 -> {
-                    Group("string") {
-                        PanelKnob(b, "sustain", "sustain", PanelAmber)
-                        PanelKnob(b, "sustainkey", "· by key")
-                        PanelKnob(b, "tone", "tone", PanelAmber)
-                        PanelKnob(b, "tonekey", "· by key")
-                    }
-                    Group("stiffness") {
-                        PanelKnob(b, "stiffness", "amount", PanelAmber)
-                        PanelKnob(b, "stages", "stages")
-                        PanelKnob(b, "tension", "tension", PanelPink)
-                    }
-                    Group("course") {
-                        PanelKnob(b, "detune", "detune", PanelAmber)
-                        PanelKnob(b, "couple", "couple")
-                        PanelKnob(b, "spread", "spread")
-                    }
+                Group("sustained") {
+                    PanelKnob(b, "pressure", "pressure", PanelAmber)
+                    PanelKnob(b, "speed", "speed", PanelAmber)
+                    PanelKnob(b, "in gain", "in gain")
                 }
-                2 -> {
-                    Group("damper") {
-                        PanelKnob(b, "damper at", "where", PanelAmber)
-                        PanelKnob(b, "damper", "pressure", PanelAmber)
-                    }
-                    Group("rattle") {
-                        PanelKnob(b, "rattle", "amount", PanelPink)
-                        PanelKnob(b, "rattle at", "above")
-                    }
-                    Group("sympathy") {
-                        PanelSwitch(b, "sympathy", listOf("off", "on"), "strings")
-                        PanelStepKnob(b, "symtune", FILAMENT_SYM, "tuned", PanelAmber)
-                        PanelKnob(b, "symlevel", "level", PanelAmber)
-                        PanelKnob(b, "symsustain", "sustain")
-                        PanelKnob(b, "symwide", "spread")
-                    }
+                // The input exciter plays the string with whatever is
+                // coming in, which needs something to be coming in.
+                Group("listen") { InputListen() }
+                Group("touch") {
+                    PanelKnob(b, "velocity", "velocity", PanelAmber)
+                    PanelSwitch(b, "on release", listOf("ring", "damp"), "let go")
+                    PanelKnob(b, "damp time", "damp time")
                 }
-                3 -> {
-                    Group("body") {
-                        PanelSwitch(b, "body", listOf("off", "on"), "body")
-                        PanelKnob(b, "size", "size", PanelAmber)
-                        PanelKnob(b, "bodymix", "mix", PanelAmber)
-                        PanelKnob(b, "bodydamp", "damp")
-                    }
-                    Group("tuning") {
-                        PanelKnob(b, "glide", "glide")
-                        PanelKnob(b, "bend", "bend")
-                        PanelKnob(b, "mpetimbre", "slide")
-                        PanelKnob(b, "mpepressure", "press")
-                        PanelKnob(b, "octave", "octave")
-                        PanelKnob(b, "transpose", "transpose")
-                        PanelKnob(b, "fine", "fine")
-                    }
+            }
+            1 -> {
+                Group("string") {
+                    PanelKnob(b, "sustain", "sustain", PanelAmber)
+                    PanelKnob(b, "sustainkey", "· by key")
+                    PanelKnob(b, "tone", "tone", PanelAmber)
+                    PanelKnob(b, "tonekey", "· by key")
                 }
-                4 -> {
-                    Group("lfo 1") {
-                        PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
-                        PanelKnob(b, "lfo1rate", "rate", PanelAmber)
-                        PanelStepKnob(b, "lfo1sync", FILAMENT_SYNC, "sync")
-                        PanelKnob(b, "lfo1depth", "depth")
-                    }
-                    Group("lfo 2") {
-                        PanelStepKnob(b, "lfo2wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
-                        PanelKnob(b, "lfo2rate", "rate", PanelAmber)
-                        PanelStepKnob(b, "lfo2sync", FILAMENT_SYNC, "sync")
-                        PanelKnob(b, "lfo2depth", "depth")
-                    }
-                    Group("eg 1") {
-                        PanelKnob(b, "eg1atk", "attack"); PanelKnob(b, "eg1dec", "decay")
-                        PanelKnob(b, "eg1sus", "sustain"); PanelKnob(b, "eg1rel", "release")
-                    }
-                    Group("eg 2") {
-                        PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
-                        PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
-                    }
-                    for (m in 1..8) key(m) { Group("mod $m") {
-                        PanelStepKnob(b, "m${m}_src", FILAMENT_SOURCES, "from", PanelAmber)
-                        PanelStepKnob(b, "m${m}_dst", FILAMENT_DESTS, "to", PanelAmber)
-                        PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
-                    } }
+                Group("stiffness") {
+                    PanelKnob(b, "stiffness", "amount", PanelAmber)
+                    PanelKnob(b, "stages", "stages")
+                    PanelKnob(b, "tension", "tension", PanelPink)
                 }
-                else -> {
-                    Group("out") {
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "exciter out", "exciter")
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
+                Group("course") {
+                    PanelKnob(b, "detune", "detune", PanelAmber)
+                    PanelKnob(b, "couple", "couple")
+                    PanelKnob(b, "spread", "spread")
+                }
+            }
+            2 -> {
+                Group("damper") {
+                    PanelKnob(b, "damper at", "where", PanelAmber)
+                    PanelKnob(b, "damper", "pressure", PanelAmber)
+                }
+                Group("rattle") {
+                    PanelKnob(b, "rattle", "amount", PanelPink)
+                    PanelKnob(b, "rattle at", "above")
+                }
+                Group("sympathy") {
+                    PanelSwitch(b, "sympathy", listOf("off", "on"), "strings")
+                    PanelStepKnob(b, "symtune", FILAMENT_SYM, "tuned", PanelAmber)
+                    PanelKnob(b, "symlevel", "level", PanelAmber)
+                    PanelKnob(b, "symsustain", "sustain")
+                    PanelKnob(b, "symwide", "spread")
+                }
+            }
+            3 -> {
+                Group("body") {
+                    PanelSwitch(b, "body", listOf("off", "on"), "body")
+                    PanelKnob(b, "size", "size", PanelAmber)
+                    PanelKnob(b, "bodymix", "mix", PanelAmber)
+                    PanelKnob(b, "bodydamp", "damp")
+                }
+                Group("tuning") {
+                    PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "bend", "bend")
+                    PanelKnob(b, "mpetimbre", "slide")
+                    PanelKnob(b, "mpepressure", "press")
+                    PanelKnob(b, "octave", "octave")
+                    PanelKnob(b, "transpose", "transpose")
+                    PanelKnob(b, "fine", "fine")
+                }
+            }
+            4 -> {
+                Group("lfo 1") {
+                    PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, "lfo1rate", "rate", PanelAmber)
+                    PanelStepKnob(b, "lfo1sync", FILAMENT_SYNC, "sync")
+                    PanelKnob(b, "lfo1depth", "depth")
+                }
+                Group("lfo 2") {
+                    PanelStepKnob(b, "lfo2wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                    PanelKnob(b, "lfo2rate", "rate", PanelAmber)
+                    PanelStepKnob(b, "lfo2sync", FILAMENT_SYNC, "sync")
+                    PanelKnob(b, "lfo2depth", "depth")
+                }
+                Group("eg 1") {
+                    PanelKnob(b, "eg1atk", "attack"); PanelKnob(b, "eg1dec", "decay")
+                    PanelKnob(b, "eg1sus", "sustain"); PanelKnob(b, "eg1rel", "release")
+                }
+                Group("eg 2") {
+                    PanelKnob(b, "eg2atk", "attack"); PanelKnob(b, "eg2dec", "decay")
+                    PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
+                }
+                for (m in 1..8) key(m) { Group("mod $m") {
+                    PanelStepKnob(b, "m${m}_src", FILAMENT_SOURCES, "from", PanelAmber)
+                    PanelStepKnob(b, "m${m}_dst", FILAMENT_DESTS, "to", PanelAmber)
+                    PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
+                } }
+            }
+            else -> {
+                Group("out") {
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "exciter out", "exciter")
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
                 }
             }
         }
@@ -3564,81 +3655,78 @@ private val BRAZEN_MUTES = listOf("open", "straight", "cup", "harmon")
 @Composable
 private fun BrazenPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections {
-        SectionChips(listOf("horn", "player", "section", "shape", "out"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("tube") {
-                        PanelKnob(b, "size", "tuba→trpt", PanelAmber)
-                        PanelKnob(b, "bell", "bell", PanelAmber)
-                        PanelKnob(b, "loss", "loss")
-                    }
-                    Group("mute") {
-                        PanelStepKnob(b, "mute", BRAZEN_MUTES, "kind", PanelAmber)
-                        PanelKnob(b, "mutetone", "tone")
-                    }
-                    Group("filter") {
-                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
-                        PanelKnob(b, "resonance", "reso", PanelAmber)
-                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
-                    }
+    PanelSections(listOf("horn", "player", "section", "shape", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("tube") {
+                    PanelKnob(b, "size", "tuba→trpt", PanelAmber)
+                    PanelKnob(b, "bell", "bell", PanelAmber)
+                    PanelKnob(b, "loss", "loss")
                 }
-                1 -> {
-                    Group("lips") {
-                        PanelKnob(b, "tension", "tension", PanelAmber)
-                        PanelKnob(b, "lipdamp", "damping", PanelAmber)
-                        PanelKnob(b, "bite", "bite", PanelPink)
-                    }
-                    Group("air") {
-                        PanelKnob(b, "pressure", "pressure", PanelAmber)
-                        PanelKnob(b, "breath", "breath")
-                        PanelKnob(b, "mpetimbre", "slide")
-                        PanelKnob(b, "brass", "brassiness", PanelPink)
-                    }
-                    Group("growl") {
-                        PanelKnob(b, "growl", "growl", PanelPink)
-                        PanelKnob(b, "growlrate", "rate")
-                    }
+                Group("mute") {
+                    PanelStepKnob(b, "mute", BRAZEN_MUTES, "kind", PanelAmber)
+                    PanelKnob(b, "mutetone", "tone")
                 }
-                2 -> {
-                    Group("players") {
-                        PanelStepKnob(b, "players", listOf("1", "2", "3", "4"), "how many", PanelAmber)
-                        PanelKnob(b, "spread", "spread", PanelAmber)
-                        PanelKnob(b, "scatter", "scatter")
-                        PanelKnob(b, "width", "width")
-                    }
-                    Group("listening") {
-                        PanelKnob(b, "lock", "lock", PanelPink)
-                        PanelKnob(b, "drift", "drift", PanelPink)
-                    }
+                Group("filter") {
+                    PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                    PanelKnob(b, "resonance", "reso", PanelAmber)
+                    PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
                 }
-                3 -> {
-                    Group("envelope") {
-                        PanelKnob(b, "attack", "attack"); PanelKnob(b, "decay", "decay")
-                        PanelKnob(b, "sustain", "sustain"); PanelKnob(b, "release", "release")
-                    }
-                    Group("vibrato") {
-                        PanelKnob(b, "vibrato", "depth", PanelAmber)
-                        PanelKnob(b, "vibratorate", "rate")
-                        PanelKnob(b, "vibratodelay", "delay")
-                    }
-                    Group("tuning") {
-                        PanelSwitch(b, "mono", listOf("poly", "mono"), "mode")
-                        PanelKnob(b, "glide", "glide")
-                        PanelKnob(b, "bendrange", "bend")
-                        PanelKnob(b, "octave", "octave")
-                        PanelKnob(b, "transpose", "transpose")
-                        PanelKnob(b, "fine", "fine")
-                    }
+            }
+            1 -> {
+                Group("lips") {
+                    PanelKnob(b, "tension", "tension", PanelAmber)
+                    PanelKnob(b, "lipdamp", "damping", PanelAmber)
+                    PanelKnob(b, "bite", "bite", PanelPink)
                 }
-                else -> {
-                    Group("out") {
-                        PanelKnob(b, "velocity", "velocity", PanelAmber)
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
+                Group("air") {
+                    PanelKnob(b, "pressure", "pressure", PanelAmber)
+                    PanelKnob(b, "breath", "breath")
+                    PanelKnob(b, "mpetimbre", "slide")
+                    PanelKnob(b, "brass", "brassiness", PanelPink)
+                }
+                Group("growl") {
+                    PanelKnob(b, "growl", "growl", PanelPink)
+                    PanelKnob(b, "growlrate", "rate")
+                }
+            }
+            2 -> {
+                Group("players") {
+                    PanelStepKnob(b, "players", listOf("1", "2", "3", "4"), "how many", PanelAmber)
+                    PanelKnob(b, "spread", "spread", PanelAmber)
+                    PanelKnob(b, "scatter", "scatter")
+                    PanelKnob(b, "width", "width")
+                }
+                Group("listening") {
+                    PanelKnob(b, "lock", "lock", PanelPink)
+                    PanelKnob(b, "drift", "drift", PanelPink)
+                }
+            }
+            3 -> {
+                Group("envelope") {
+                    PanelKnob(b, "attack", "attack"); PanelKnob(b, "decay", "decay")
+                    PanelKnob(b, "sustain", "sustain"); PanelKnob(b, "release", "release")
+                }
+                Group("vibrato") {
+                    PanelKnob(b, "vibrato", "depth", PanelAmber)
+                    PanelKnob(b, "vibratorate", "rate")
+                    PanelKnob(b, "vibratodelay", "delay")
+                }
+                Group("tuning") {
+                    PanelSwitch(b, "mono", listOf("poly", "mono"), "mode")
+                    PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "bendrange", "bend")
+                    PanelKnob(b, "octave", "octave")
+                    PanelKnob(b, "transpose", "transpose")
+                    PanelKnob(b, "fine", "fine")
+                }
+            }
+            else -> {
+                Group("out") {
+                    PanelKnob(b, "velocity", "velocity", PanelAmber)
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
                 }
             }
         }
@@ -3660,90 +3748,87 @@ private val TIMBER_REGISTER = listOf("natural", "register", "altissimo")
 @Composable
 private fun TimberPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections {
-        SectionChips(listOf("pipe", "mouth", "holes", "tongue", "shape", "out"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("pipe") {
-                        PanelStepKnob(b, "family", TIMBER_FAMILY, "started by", PanelAmber)
-                        PanelStepKnob(b, "bore", TIMBER_BORE, "shape", PanelAmber)
-                        PanelKnob(b, "body", "lowest", PanelAmber)
-                    }
-                    Group("end") {
-                        PanelKnob(b, "bell", "bell")
-                        PanelKnob(b, "loss", "loss")
-                    }
-                    Group("filter") {
-                        PanelKnob(b, "cutoff", "cutoff", PanelAmber)
-                        PanelKnob(b, "resonance", "reso", PanelAmber)
-                        PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
-                    }
+    PanelSections(listOf("pipe", "mouth", "holes", "tongue", "shape", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("pipe") {
+                    PanelStepKnob(b, "family", TIMBER_FAMILY, "started by", PanelAmber)
+                    PanelStepKnob(b, "bore", TIMBER_BORE, "shape", PanelAmber)
+                    PanelKnob(b, "body", "lowest", PanelAmber)
                 }
-                1 -> {
-                    Group("reed") {
-                        PanelKnob(b, "reed", "stiffness", PanelAmber)
-                        PanelKnob(b, "embouchure", "embouchure", PanelAmber)
-                    }
-                    Group("air") {
-                        PanelKnob(b, "pressure", "pressure", PanelAmber)
-                        PanelKnob(b, "breath", "breath")
-                        PanelKnob(b, "mpetimbre", "slide")
-                    }
-                    Group("jet") {
-                        PanelKnob(b, "jet", "crossing", PanelPink)
-                        PanelKnob(b, "aim", "aim", PanelPink)
-                    }
+                Group("end") {
+                    PanelKnob(b, "bell", "bell")
+                    PanelKnob(b, "loss", "loss")
                 }
-                2 -> {
-                    Group("lattice") {
-                        PanelKnob(b, "lattice", "cutoff", PanelAmber)
-                        PanelKnob(b, "holes", "holes")
-                        PanelStepKnob(b, "register", TIMBER_REGISTER, "vent", PanelAmber)
-                    }
-                    Group("below") {
-                        PanelKnob(b, "fingering", "forked", PanelPink)
-                        PanelKnob(b, "below", "length", PanelPink)
-                        PanelKnob(b, "answer", "answers", PanelPink)
-                    }
+                Group("filter") {
+                    PanelKnob(b, "cutoff", "cutoff", PanelAmber)
+                    PanelKnob(b, "resonance", "reso", PanelAmber)
+                    PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
                 }
-                3 -> {
-                    Group("tongue") {
-                        PanelKnob(b, "tongue", "depth", PanelAmber)
-                        PanelKnob(b, "tonguetime", "time")
-                    }
-                    Group("flutter") {
-                        PanelKnob(b, "flutter", "amount", PanelPink)
-                        PanelKnob(b, "flutterrate", "rate")
-                    }
-                    Group("keys") { PanelKnob(b, "keys", "key noise") }
+            }
+            1 -> {
+                Group("reed") {
+                    PanelKnob(b, "reed", "stiffness", PanelAmber)
+                    PanelKnob(b, "embouchure", "embouchure", PanelAmber)
                 }
-                4 -> {
-                    Group("envelope") {
-                        PanelKnob(b, "attack", "attack"); PanelKnob(b, "decay", "decay")
-                        PanelKnob(b, "sustain", "sustain"); PanelKnob(b, "release", "release")
-                    }
-                    Group("vibrato") {
-                        PanelKnob(b, "vibrato", "depth", PanelAmber)
-                        PanelKnob(b, "vibratorate", "rate")
-                        PanelKnob(b, "vibratodelay", "delay")
-                    }
-                    Group("tuning") {
-                        PanelSwitch(b, "mono", listOf("poly", "mono"), "mode")
-                        PanelKnob(b, "glide", "glide")
-                        PanelKnob(b, "bendrange", "bend")
-                        PanelKnob(b, "octave", "octave")
-                        PanelKnob(b, "transpose", "transpose")
-                        PanelKnob(b, "fine", "fine")
-                    }
+                Group("air") {
+                    PanelKnob(b, "pressure", "pressure", PanelAmber)
+                    PanelKnob(b, "breath", "breath")
+                    PanelKnob(b, "mpetimbre", "slide")
                 }
-                else -> {
-                    Group("out") {
-                        PanelKnob(b, "velocity", "velocity", PanelAmber)
-                        PanelKnob(b, "drive", "drive", PanelPink)
-                        PanelKnob(b, "volume", "volume")
-                        PanelKnob(b, "pan", "pan")
-                    }
+                Group("jet") {
+                    PanelKnob(b, "jet", "crossing", PanelPink)
+                    PanelKnob(b, "aim", "aim", PanelPink)
+                }
+            }
+            2 -> {
+                Group("lattice") {
+                    PanelKnob(b, "lattice", "cutoff", PanelAmber)
+                    PanelKnob(b, "holes", "holes")
+                    PanelStepKnob(b, "register", TIMBER_REGISTER, "vent", PanelAmber)
+                }
+                Group("below") {
+                    PanelKnob(b, "fingering", "forked", PanelPink)
+                    PanelKnob(b, "below", "length", PanelPink)
+                    PanelKnob(b, "answer", "answers", PanelPink)
+                }
+            }
+            3 -> {
+                Group("tongue") {
+                    PanelKnob(b, "tongue", "depth", PanelAmber)
+                    PanelKnob(b, "tonguetime", "time")
+                }
+                Group("flutter") {
+                    PanelKnob(b, "flutter", "amount", PanelPink)
+                    PanelKnob(b, "flutterrate", "rate")
+                }
+                Group("keys") { PanelKnob(b, "keys", "key noise") }
+            }
+            4 -> {
+                Group("envelope") {
+                    PanelKnob(b, "attack", "attack"); PanelKnob(b, "decay", "decay")
+                    PanelKnob(b, "sustain", "sustain"); PanelKnob(b, "release", "release")
+                }
+                Group("vibrato") {
+                    PanelKnob(b, "vibrato", "depth", PanelAmber)
+                    PanelKnob(b, "vibratorate", "rate")
+                    PanelKnob(b, "vibratodelay", "delay")
+                }
+                Group("tuning") {
+                    PanelSwitch(b, "mono", listOf("poly", "mono"), "mode")
+                    PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "bendrange", "bend")
+                    PanelKnob(b, "octave", "octave")
+                    PanelKnob(b, "transpose", "transpose")
+                    PanelKnob(b, "fine", "fine")
+                }
+            }
+            else -> {
+                Group("out") {
+                    PanelKnob(b, "velocity", "velocity", PanelAmber)
+                    PanelKnob(b, "drive", "drive", PanelPink)
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
                 }
             }
         }
@@ -3762,44 +3847,41 @@ private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
     val patch = remember(track.machine.settings["nexus"]) {
         com.rm.acidulous.model.NexusPatch.decode(track.machine.settings["nexus"])
     }
-    PanelSections {
-        SectionChips(listOf("patch", "macros", "voice", "out"), section) { section = it }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("patch") {
-                        Column(horizontalAlignment = Alignment.Start) {
-                            Text(
-                                listOf(
-                                    pluralStringResource(Res.plurals.nexus_modules, patch.modules.size, patch.modules.size),
-                                    pluralStringResource(Res.plurals.nexus_cables, patch.cables.size, patch.cables.size),
-                                ).joinToString(" · "),
-                                color = Acid.colors.text, fontSize = 11.sp, maxLines = 1)
-                            Text(patch.modules.take(6).joinToString(" ") { it.type },
-                                color = Acid.colors.textDim, fontSize = 9.sp,
-                                fontFamily = FontFamily.Monospace, maxLines = 1)
-                            TextButton(onClick = onOpenPatch) {
-                                Text(stringResource(Res.string.nexus_patch), color = PanelAmber, fontSize = 11.sp)
-                            }
+    PanelSections(listOf("patch", "macros", "voice", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("patch") {
+                    Column(horizontalAlignment = Alignment.Start) {
+                        Text(
+                            listOf(
+                                pluralStringResource(Res.plurals.nexus_modules, patch.modules.size, patch.modules.size),
+                                pluralStringResource(Res.plurals.nexus_cables, patch.cables.size, patch.cables.size),
+                            ).joinToString(" · "),
+                            color = Acid.colors.text, fontSize = 11.sp, maxLines = 1)
+                        Text(patch.modules.take(6).joinToString(" ") { it.type },
+                            color = Acid.colors.textDim, fontSize = 9.sp,
+                            fontFamily = FontFamily.Monospace, maxLines = 1)
+                        TextButton(onClick = onOpenPatch) {
+                            Text(stringResource(Res.string.nexus_patch), color = PanelAmber, fontSize = 11.sp)
                         }
                     }
-                    Group("morph") { PanelKnob(b, "morph", "A→B", PanelAmber) }
                 }
-                1 -> Group("macros") { for (i in 1..8) PanelKnob(b, "macro$i", "$i", PanelAmber) }
-                2 -> Group("voice") {
-                    PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
-                    PanelKnob(b, "glide", "glide")
-                    PanelKnob(b, "bend", "bend")
-                    PanelKnob(b, "octave", "octave")
-                    PanelKnob(b, "transpose", "transpose")
-                    PanelKnob(b, "fine", "fine")
-                }
-                else -> Group("out") {
-                    PanelKnob(b, "volume", "volume")
-                    PanelKnob(b, "velocity", "vel")
-                    PanelKnob(b, "pan", "pan")
-                    PanelKnob(b, "drive", "drive", PanelPink)
-                }
+                Group("morph") { PanelKnob(b, "morph", "A→B", PanelAmber) }
+            }
+            1 -> Group("macros") { for (i in 1..8) PanelKnob(b, "macro$i", "$i", PanelAmber) }
+            2 -> Group("voice") {
+                PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
+                PanelKnob(b, "glide", "glide")
+                PanelKnob(b, "bend", "bend")
+                PanelKnob(b, "octave", "octave")
+                PanelKnob(b, "transpose", "transpose")
+                PanelKnob(b, "fine", "fine")
+            }
+            else -> Group("out") {
+                PanelKnob(b, "volume", "volume")
+                PanelKnob(b, "velocity", "vel")
+                PanelKnob(b, "pan", "pan")
+                PanelKnob(b, "drive", "drive", PanelPink)
             }
         }
     }
@@ -3853,155 +3935,156 @@ private fun MosaicPanel(
     fun putZones(list: List<Zone>) =
         editor.edit(trackIndex) { t -> t.withSetting("zones", if (list.isEmpty()) null else Zones.encode(list)) }
 
-    PanelSections {
-        SectionChips(listOf("map", "sample", "grain", "filter", "env", "lfo", "mod", "voice"), section) { section = it }
-        if (section == 0) {
-            if (sf2.isEmpty()) {
-                ZoneMapView(zones, selectedZone, { i -> selectedZone = i; editing = true },
-                    Modifier.fillMaxWidth().height(96.dp).padding(bottom = 4.dp))
-            } else {
-                // A SoundFont preset carries its own map; the file owns it, so
-                // it is shown rather than edited.
-                Text(
-                    stringResource(Res.string.mosaic_soundfont, sf2.substringAfterLast('/'), info.ifEmpty { stringResource(Res.string.mosaic_loading) }),
-                    color = Acid.colors.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.padding(bottom = 4.dp), maxLines = 1,
-                )
+    PanelSections(
+        listOf("map", "sample", "grain", "filter", "env", "lfo", "mod", "voice"), section, { section = it },
+        above = { sec ->
+            if (sec == 0) {
+                if (sf2.isEmpty()) {
+                    ZoneMapView(zones, selectedZone, { i -> selectedZone = i; editing = true },
+                        Modifier.fillMaxWidth().height(96.dp).padding(bottom = 4.dp))
+                } else {
+                    // A SoundFont preset carries its own map; the file owns it, so
+                    // it is shown rather than edited.
+                    Text(
+                        stringResource(Res.string.mosaic_soundfont, sf2.substringAfterLast('/'), info.ifEmpty { stringResource(Res.string.mosaic_loading) }),
+                        color = Acid.colors.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(bottom = 4.dp), maxLines = 1,
+                    )
+                }
             }
-        }
-        GroupRow {
-            when (section) {
-                0 -> {
-                    Group("instrument") {
-                        Column(horizontalAlignment = Alignment.Start) {
-                            Text(info.split('|').firstOrNull().orEmpty().ifEmpty { stringResource(Res.string.mosaic_nothing) },
-                                color = Acid.colors.text, fontSize = 11.sp, maxLines = 1)
-                            Text(
-                                info.split('|').let { f ->
-                                    if (f.size >= 4) stringResource(Res.string.mosaic_preset_info, f[1], f[2], f[3].toFloatOrNull() ?: 0f)
-                                    else " "
+        },
+    ) { sec ->
+        when (sec) {
+            0 -> {
+                Group("instrument") {
+                    Column(horizontalAlignment = Alignment.Start) {
+                        Text(info.split('|').firstOrNull().orEmpty().ifEmpty { stringResource(Res.string.mosaic_nothing) },
+                            color = Acid.colors.text, fontSize = 11.sp, maxLines = 1)
+                        Text(
+                            info.split('|').let { f ->
+                                if (f.size >= 4) stringResource(Res.string.mosaic_preset_info, f[1], f[2], f[3].toFloatOrNull() ?: 0f)
+                                else " "
+                            },
+                            color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                        )
+                        Row {
+                            TextButton(onClick = onImportSoundFont) { Text(stringResource(Res.string.mosaic_import_soundfont), color = PanelAmber, fontSize = 10.sp) }
+                            if (sf2.isNotEmpty()) TextButton(onClick = onPickPreset) { Text(stringResource(Res.string.mosaic_preset), color = PanelAmber, fontSize = 10.sp) }
+                            TextButton(onClick = onImportZoneSamples) { Text(stringResource(Res.string.mosaic_samples), color = Acid.colors.textMid, fontSize = 10.sp) }
+                            TextButton(onClick = { pickingZone = true }) { Text(stringResource(Res.string.mosaic_samples), color = Acid.colors.textMid, fontSize = 10.sp) }
+                        }
+                    }
+                }
+                if (sf2.isEmpty()) Group("zones") {
+                    Column {
+                        Text(pluralStringResource(Res.plurals.mosaic_zones, zones.size, zones.size), color = Acid.colors.text, fontSize = 11.sp)
+                        Row {
+                            TextButton(
+                                onClick = {
+                                    // Spread them evenly and set each root to the middle of its span.
+                                    if (zones.isNotEmpty()) {
+                                        val step = 128f / zones.size
+                                        putZones(zones.mapIndexed { i, z ->
+                                            val lo = (i * step).toInt()
+                                            val hi = if (i == zones.lastIndex) 127 else ((i + 1) * step).toInt() - 1
+                                            z.copy(lowKey = lo, highKey = hi, rootKey = (lo + hi) / 2)
+                                        })
+                                    }
                                 },
-                                color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
-                            )
-                            Row {
-                                TextButton(onClick = onImportSoundFont) { Text(stringResource(Res.string.mosaic_import_soundfont), color = PanelAmber, fontSize = 10.sp) }
-                                if (sf2.isNotEmpty()) TextButton(onClick = onPickPreset) { Text(stringResource(Res.string.mosaic_preset), color = PanelAmber, fontSize = 10.sp) }
-                                TextButton(onClick = onImportZoneSamples) { Text(stringResource(Res.string.mosaic_samples), color = Acid.colors.textMid, fontSize = 10.sp) }
-                                TextButton(onClick = { pickingZone = true }) { Text(stringResource(Res.string.mosaic_samples), color = Acid.colors.textMid, fontSize = 10.sp) }
+                                enabled = zones.size > 1,
+                            ) { Text(stringResource(Res.string.mosaic_spread), color = PanelAmber, fontSize = 10.sp) }
+                            TextButton(onClick = { putZones(emptyList()) }, enabled = zones.isNotEmpty()) {
+                                Text(stringResource(Res.string.mosaic_clear), color = Acid.colors.red, fontSize = 10.sp)
                             }
                         }
                     }
-                    if (sf2.isEmpty()) Group("zones") {
-                        Column {
-                            Text(pluralStringResource(Res.plurals.mosaic_zones, zones.size, zones.size), color = Acid.colors.text, fontSize = 11.sp)
-                            Row {
-                                TextButton(
-                                    onClick = {
-                                        // Spread them evenly and set each root to the middle of its span.
-                                        if (zones.isNotEmpty()) {
-                                            val step = 128f / zones.size
-                                            putZones(zones.mapIndexed { i, z ->
-                                                val lo = (i * step).toInt()
-                                                val hi = if (i == zones.lastIndex) 127 else ((i + 1) * step).toInt() - 1
-                                                z.copy(lowKey = lo, highKey = hi, rootKey = (lo + hi) / 2)
-                                            })
-                                        }
-                                    },
-                                    enabled = zones.size > 1,
-                                ) { Text(stringResource(Res.string.mosaic_spread), color = PanelAmber, fontSize = 10.sp) }
-                                TextButton(onClick = { putZones(emptyList()) }, enabled = zones.isNotEmpty()) {
-                                    Text(stringResource(Res.string.mosaic_clear), color = Acid.colors.red, fontSize = 10.sp)
-                                }
-                            }
-                        }
-                    }
-                    Group("blend") {
-                        PanelKnob(b, "keyfade", "key xf", PanelAmber)
-                        PanelKnob(b, "velfade", "vel xf", PanelAmber)
-                        PanelKnob(b, "scan", "scan", PanelAmber)
-                        PanelKnob(b, "scanamt", "amount", PanelAmber)
-                    }
                 }
-                1 -> {
-                    Group("playback") {
-                        PanelKnob(b, "start", "start", PanelAmber)
-                        PanelSwitch(b, "loop", MOSAIC_LOOP, "loop")
-                        PanelSwitch(b, "reverse", listOf("fwd", "rev"), "dir")
-                        PanelSwitch(b, "envfrom", MOSAIC_ENVFROM, "env from")
-                        PanelSwitch(b, "filemod", listOf("ignore", "honour"), "file mod")
-                    }
-                    Group("tuning") {
-                        PanelKnob(b, "coarse", "coarse")
-                        PanelKnob(b, "fine", "fine")
-                        PanelKnob(b, "octave", "octave")
-                        PanelKnob(b, "transpose", "transpose")
-                    }
+                Group("blend") {
+                    PanelKnob(b, "keyfade", "key xf", PanelAmber)
+                    PanelKnob(b, "velfade", "vel xf", PanelAmber)
+                    PanelKnob(b, "scan", "scan", PanelAmber)
+                    PanelKnob(b, "scanamt", "amount", PanelAmber)
                 }
-                2 -> Group("grains") {
-                    PanelSwitch(b, "grain", listOf("off", "on"), "cloud")
-                    PanelKnob(b, "gpos", "position", PanelAmber)
-                    PanelKnob(b, "grate", "rate", PanelAmber)
-                    PanelKnob(b, "gsize", "size", PanelAmber)
-                    PanelKnob(b, "gdensity", "density", PanelAmber)
-                    PanelKnob(b, "gspray", "spray", PanelAmber)
-                    PanelKnob(b, "gpitch", "pitch", PanelAmber)
+            }
+            1 -> {
+                Group("playback") {
+                    PanelKnob(b, "start", "start", PanelAmber)
+                    PanelSwitch(b, "loop", MOSAIC_LOOP, "loop")
+                    PanelSwitch(b, "reverse", listOf("fwd", "rev"), "dir")
+                    PanelSwitch(b, "envfrom", MOSAIC_ENVFROM, "env from")
+                    PanelSwitch(b, "filemod", listOf("ignore", "honour"), "file mod")
                 }
-                3 -> {
-                    Group("filter") {
-                        PanelStepKnob(b, "f_type", TRINITY_FILTERS, "type", PanelAmber)
-                        PanelKnob(b, "f_freq", "freq", PanelAmber)
-                        PanelKnob(b, "f_res", "reso", PanelAmber)
-                        PanelKnob(b, "f_env", "envmod")
-                        PanelKnob(b, "f_key", "key")
-                        PanelKnob(b, "veltofilter", "vel")
-                    }
-                    Group("filter env") {
-                        PanelKnob(b, "f_attack", "attack")
-                        PanelKnob(b, "f_decay", "decay")
-                        PanelKnob(b, "f_sustain", "sustain")
-                        PanelKnob(b, "f_release", "release")
-                    }
+                Group("tuning") {
+                    PanelKnob(b, "coarse", "coarse")
+                    PanelKnob(b, "fine", "fine")
+                    PanelKnob(b, "octave", "octave")
+                    PanelKnob(b, "transpose", "transpose")
                 }
-                4 -> {
-                    Group("amp env") {
-                        PanelKnob(b, "a_attack", "attack", PanelAmber)
-                        PanelKnob(b, "a_decay", "decay", PanelAmber)
-                        PanelKnob(b, "a_sustain", "sustain", PanelAmber)
-                        PanelKnob(b, "a_release", "release", PanelAmber)
-                    }
-                    for (e in 1..2) key(e) { Group("env $e") {
-                        PanelKnob(b, "e${e}_attack", "attack")
-                        PanelKnob(b, "e${e}_decay", "decay")
-                        PanelKnob(b, "e${e}_sustain", "sustain")
-                        PanelKnob(b, "e${e}_release", "release")
-                    } }
+            }
+            2 -> Group("grains") {
+                PanelSwitch(b, "grain", listOf("off", "on"), "cloud")
+                PanelKnob(b, "gpos", "position", PanelAmber)
+                PanelKnob(b, "grate", "rate", PanelAmber)
+                PanelKnob(b, "gsize", "size", PanelAmber)
+                PanelKnob(b, "gdensity", "density", PanelAmber)
+                PanelKnob(b, "gspray", "spray", PanelAmber)
+                PanelKnob(b, "gpitch", "pitch", PanelAmber)
+            }
+            3 -> {
+                Group("filter") {
+                    PanelStepKnob(b, "f_type", TRINITY_FILTERS, "type", PanelAmber)
+                    PanelKnob(b, "f_freq", "freq", PanelAmber)
+                    PanelKnob(b, "f_res", "reso", PanelAmber)
+                    PanelKnob(b, "f_env", "envmod")
+                    PanelKnob(b, "f_key", "key")
+                    PanelKnob(b, "veltofilter", "vel")
                 }
-                5 -> for (l in 1..2) key(l) { Group("lfo $l") {
-                    val p = "l${l}_"
-                    PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
-                    PanelKnob(b, p + "rate", "rate", PanelAmber)
-                    PanelStepKnob(b, p + "sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
-                    PanelKnob(b, p + "delay", "delay")
-                    PanelKnob(b, p + "phase", "phase")
-                    PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
+                Group("filter env") {
+                    PanelKnob(b, "f_attack", "attack")
+                    PanelKnob(b, "f_decay", "decay")
+                    PanelKnob(b, "f_sustain", "sustain")
+                    PanelKnob(b, "f_release", "release")
+                }
+            }
+            4 -> {
+                Group("amp env") {
+                    PanelKnob(b, "a_attack", "attack", PanelAmber)
+                    PanelKnob(b, "a_decay", "decay", PanelAmber)
+                    PanelKnob(b, "a_sustain", "sustain", PanelAmber)
+                    PanelKnob(b, "a_release", "release", PanelAmber)
+                }
+                for (e in 1..2) key(e) { Group("env $e") {
+                    PanelKnob(b, "e${e}_attack", "attack")
+                    PanelKnob(b, "e${e}_decay", "decay")
+                    PanelKnob(b, "e${e}_sustain", "sustain")
+                    PanelKnob(b, "e${e}_release", "release")
                 } }
-                6 -> for (m in 1..8) key(m) { Group("mod $m") {
-                    val p = "m%02d_".format(m)
-                    PanelStepKnob(b, p + "src", MOSAIC_SOURCES, "from", PanelAmber)
-                    PanelStepKnob(b, p + "src2", MOSAIC_SOURCES, "× from")
-                    PanelStepKnob(b, p + "dest", MOSAIC_DESTS, "to", PanelAmber)
-                    PanelKnob(b, p + "depth", "depth", PanelAmber)
-                } }
-                else -> {
-                    Group("voice") {
-                        PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
-                        PanelKnob(b, "glide", "glide")
-                        PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
-                        PanelKnob(b, "bend", "bend")
-                        PanelKnob(b, "mpetimbre", "slide"); PanelKnob(b, "mpepressure", "press")
-                    }
-                    Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
+            }
+            5 -> for (l in 1..2) key(l) { Group("lfo $l") {
+                val p = "l${l}_"
+                PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
+                PanelKnob(b, p + "rate", "rate", PanelAmber)
+                PanelStepKnob(b, p + "sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
+                PanelKnob(b, p + "delay", "delay")
+                PanelKnob(b, p + "phase", "phase")
+                PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
+            } }
+            6 -> for (m in 1..8) key(m) { Group("mod $m") {
+                val p = "m%02d_".format(m)
+                PanelStepKnob(b, p + "src", MOSAIC_SOURCES, "from", PanelAmber)
+                PanelStepKnob(b, p + "src2", MOSAIC_SOURCES, "× from")
+                PanelStepKnob(b, p + "dest", MOSAIC_DESTS, "to", PanelAmber)
+                PanelKnob(b, p + "depth", "depth", PanelAmber)
+            } }
+            else -> {
+                Group("voice") {
+                    PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
+                    PanelKnob(b, "glide", "glide")
+                    PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
+                    PanelKnob(b, "bend", "bend")
+                    PanelKnob(b, "mpetimbre", "slide"); PanelKnob(b, "mpepressure", "press")
                 }
+                Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
             }
         }
     }
