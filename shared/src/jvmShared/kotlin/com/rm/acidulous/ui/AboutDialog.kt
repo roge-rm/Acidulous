@@ -74,7 +74,12 @@ private fun AppTab() {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Acidulous", color = c.text, fontSize = 22.sp)
         Readout(stringResource(Res.string.about_version, version))
-        Body(stringResource(Res.string.about_what))
+        // Android is the app's home, so the line stays as it is; another
+        // platform's build says which it is, straight after "for Android"
+        // (Dan, 2026-09-25).
+        val platform = com.rm.acidulous.AppHost.current.platformName
+        val forPlatform = if (platform == null) "" else " " + stringResource(Res.string.about_for_platform, platform)
+        Body(stringResource(Res.string.about_what, forPlatform))
         Body("Copyright © 2026 Dan Hunke")
         // The one place that *names* it, which a gesture has no way to be:
         // holding play does the same and is the fast path. Here rather than

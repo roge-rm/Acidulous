@@ -13,7 +13,10 @@
     </string-array>
     <string name="about_version">version %s</string>
     <string name="about_version_unknown">unknown</string>
-    <string name="about_what">A music studio for Android: up to sixteen tracks of synths, drum machines and samplers, arranged in scenes.</string>
+    <!-- %1$s is empty on Android; in a build for another platform it is about_for_platform, with a space before it. -->
+    <string name="about_what">A music studio for Android%1$s: up to sixteen tracks of synths, drum machines and samplers, arranged in scenes.</string>
+    <!-- Its name, "Linux": set straight after "for Android" in the line above. -->
+    <string name="about_for_platform">(for %s)</string>
     <string name="about_panic">Panic · stop all sound</string>
     <string name="about_share_crash">Share the last crash report</string>
     <string name="about_gpl_1">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>

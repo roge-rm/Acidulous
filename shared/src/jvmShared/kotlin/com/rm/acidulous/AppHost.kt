@@ -57,6 +57,12 @@ interface AppHost {
     fun encodeAac(pcm: File, out: File, bitrate: Int): String
     /** Whether [encodeAac] can: the export window leaves AAC out where it cannot. */
     val canEncodeAac: Boolean get() = true
+    /**
+     * The platform's name where it is not the phone - "Linux" - for the About
+     * window to say which build this is. Null on Android, the app's home, where
+     * nothing needs adding.
+     */
+    val platformName: String? get() = null
     /** Whether the audio stream is Oboe's (the phone) rather than miniaudio's (the desktop), for the About window's credits. */
     val usesOboe: Boolean get() = true
 

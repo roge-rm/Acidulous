@@ -55,6 +55,7 @@ class DesktopHost(private val configDir: File) : AppHost {
     /** Nothing to hold: a desktop does not stop a playing app behind its back. */
     override fun transportChanged(playing: Boolean, stop: () -> Unit) {}
 
+    override val platformName: String = "Linux"
     override val canEncodeAac: Boolean = false
     override val usesOboe: Boolean = false
 
