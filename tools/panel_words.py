@@ -28,7 +28,7 @@ import hashlib, pathlib, re, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 UI = ROOT / "app/src/main/java/com/rm/acidulous/ui"
-MODEL = ROOT / "app/src/main/java/com/rm/acidulous/model"
+MODEL = ROOT / "shared/src/jvmShared/kotlin/com/rm/acidulous/model"
 XML = ROOT / "shared/src/commonMain/strings/values/strings_panel_words.xml"
 KT = UI / "PanelWords.kt"
 
