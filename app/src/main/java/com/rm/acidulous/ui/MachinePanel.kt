@@ -903,7 +903,10 @@ internal fun SwitchGrid(
                         val i = row * cols + col
                         val on = i == idx
                         val live = enabled?.getOrNull(i) ?: true
-                        val name = stringResource(R.string.a11y_named, label, l)
+                        // A switch with no label of its own - a pair of buttons
+                        // in a card that already says what they are for - is
+                        // spoken as its cells alone, not ": humanise".
+                        val name = if (label.isEmpty()) l else stringResource(R.string.a11y_named, label, l)
                         Box(
                             Modifier.weight(1f).fillMaxHeight()
                                 .background(if (on) Acid.colors.green else Acid.colors.control)

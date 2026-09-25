@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Quantise window, opened from the editor. -->
+<resources>
+    <string name="quantise_window_title">quantise</string>
+    <string name="quantise_card">onto the grid</string>
+    <string name="quantise_grid">grid</string>
+    <!-- The clip's own grid, whatever it is. -->
+    <string name="quantise_clip_grid">clip</string>
+    <string name="quantise_amount">amount</string>
+    <string name="quantise_move">move</string>
+    <string-array name="quantise_move_choices">
+        <item>starts</item>
+        <item>ends too</item>
+    </string-array>
+    <!-- Back to where the notes were actually played. -->
+    <string name="quantise_as_played">as played</string>
+    <string name="quantise_groove">groove</string>
+    <string name="quantise_feel">feel</string>
+    <string name="quantise_straight">straight</string>
+    <string name="quantise_humanise">humanise</string>
+    <!-- A press of the first rolls new variations; the second takes them away. -->
+    <string-array name="quantise_humanise_choices">
+        <item>humanise</item>
+        <item>none</item>
+    </string-array>
+</resources>

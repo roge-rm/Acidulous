@@ -92,4 +92,38 @@ object Quantise {
         }
         return IntArray(steps) { if (count[it] == 0) 0 else (sum[it] / count[it]).toInt() }
     }
+
+    /**
+     * Small random differences in when, how hard and how long - what a
+     * player's hands do that a grid does not. At [amount] 1 a note moves up
+     * to [HUMAN_TICKS] either way, its velocity up to [HUMAN_VELOCITY] and its
+     * length up to [HUMAN_LENGTH] of itself; the spread leans towards the
+     * middle, as hands do. The same [seed] gives the same result, so a
+     * preview can be redrawn without re-rolling. Where a note was played is
+     * left alone: this is not how it was played.
+     */
+    fun humanise(notes: List<Note>, which: Set<Int>?, amount: Float, seed: Long, clipTicks: Int): List<Note> {
+        if (amount <= 0f) return notes
+        val r = java.util.Random(seed)
+        // Two uniforms summed: a triangle from -1 to 1, most often near 0.
+        fun wobble() = r.nextFloat() + r.nextFloat() - 1f
+        return notes.mapIndexed { i, n ->
+            // Rolled for every note, chosen or not, so a note's wobble does
+            // not change when the selection does.
+            val dt = (wobble() * HUMAN_TICKS * amount).roundToInt()
+            val dv = (wobble() * HUMAN_VELOCITY * amount).roundToInt()
+            val dl = wobble() * HUMAN_LENGTH * amount
+            if (which != null && i !in which) return@mapIndexed n
+            n.copy(
+                tick = (n.tick + dt).coerceIn(0, (clipTicks - 1).coerceAtLeast(0)),
+                velocity = (n.velocity + dv).coerceIn(1, 127),
+                length = (n.length * (1f + dl)).roundToInt().coerceAtLeast(1),
+            )
+        }
+    }
+
+    /** At full amount: a fifth of a sixteenth, fifteen velocity, fifteen per cent of the length. */
+    const val HUMAN_TICKS = PPQN / 20
+    const val HUMAN_VELOCITY = 15
+    const val HUMAN_LENGTH = 0.15f
 }

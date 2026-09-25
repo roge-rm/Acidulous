@@ -60,6 +60,7 @@ enum class KeyAction(@StringRes val label: Int, val group: KeyGroup) {
     StepView(R.string.keys_step_view, KeyGroup.Editor),
     LockSteps(R.string.keys_lock_steps, KeyGroup.Editor),
     Generate(R.string.keys_generate, KeyGroup.Editor),
+    Quantise(R.string.keys_quantise, KeyGroup.Editor),
     FoldPanel(R.string.keys_fold_panel, KeyGroup.Editor),
     FoldKeys(R.string.keys_fold_keys, KeyGroup.Editor),
 }
@@ -166,6 +167,7 @@ val DEFAULT_KEYS: Map<KeyAction, List<KeyChord>> = run {
         KeyAction.StepView to listOf(k(KeyEvent.KEYCODE_T), alt(KeyEvent.KEYCODE_T)),
         KeyAction.LockSteps to listOf(k(KeyEvent.KEYCODE_K), alt(KeyEvent.KEYCODE_K)),
         KeyAction.Generate to listOf(k(KeyEvent.KEYCODE_G), alt(KeyEvent.KEYCODE_G)),
+        KeyAction.Quantise to listOf(k(KeyEvent.KEYCODE_Q), alt(KeyEvent.KEYCODE_U)),
         KeyAction.FoldPanel to listOf(k(KeyEvent.KEYCODE_P), alt(KeyEvent.KEYCODE_V)),
         KeyAction.FoldKeys to listOf(k(KeyEvent.KEYCODE_B), alt(KeyEvent.KEYCODE_J)),
     )

@@ -942,7 +942,7 @@ internal val SIGNATURES = listOf(
     Signature(6, 8), Signature(7, 8), Signature(9, 8), Signature(12, 8),
 )
 
-private val GRIDS = listOf("1/4" to PPQN, "1/8" to PPQN / 2, "1/16" to PPQN / 4, "1/32" to PPQN / 8, "1/8T" to PPQN / 3, "1/16T" to PPQN / 6)
+internal val GRIDS = listOf("1/4" to PPQN, "1/8" to PPQN / 2, "1/16" to PPQN / 4, "1/32" to PPQN / 8, "1/8T" to PPQN / 3, "1/16T" to PPQN / 6)
 
 /**
  * The shape every window with tabs takes, so that none of them can drift

@@ -38,6 +38,7 @@
     <!-- The editor's bar and header -->
     <string name="a11y_back">Back</string>
     <string name="a11y_generate">Generate notes</string>
+    <string name="a11y_quantise">Quantise notes</string>
     <string name="a11y_lock">Lock steps</string>
     <string name="a11y_prev_page">Previous page</string>
     <string name="a11y_next_page">Next page</string>

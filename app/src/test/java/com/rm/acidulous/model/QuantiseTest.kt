@@ -3,6 +3,7 @@ package com.rm.acidulous.model
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Quantise, as the editor, the recorder and a Launchpad all mean it. */
@@ -85,5 +86,31 @@ class QuantiseTest {
             Quantise.apply(straight, null, QuantiseSpec(g, groove = groove), bar * 2).map { it.tick })
         // Steps the groove clip is silent on stay on the grid.
         assertArrayEquals(IntArray(4), Quantise.grooveFrom(emptyList(), PPQN, bar))
+    }
+
+    @Test
+    fun `humanise wobbles within its bounds, the same way for the same seed`() {
+        val notes = (0 until 64).map { note(it * g, length = 50) }
+        val a = Quantise.humanise(notes, null, 1f, 7L, bar * 4)
+        assertEquals(a, Quantise.humanise(notes, null, 1f, 7L, bar * 4))
+        assertTrue(a != Quantise.humanise(notes, null, 1f, 8L, bar * 4))
+        a.zip(notes).forEach { (h, n) ->
+            assertTrue(kotlin.math.abs(h.tick - n.tick) <= Quantise.HUMAN_TICKS || h.tick == 0)
+            assertTrue(kotlin.math.abs(h.velocity - n.velocity) <= Quantise.HUMAN_VELOCITY)
+            assertTrue(h.length in 42..58)
+            assertEquals(n.rawTick, h.rawTick)
+        }
+        assertTrue(a.map { it.tick } != notes.map { it.tick })
+        assertEquals(notes, Quantise.humanise(notes, null, 0f, 7L, bar * 4))
+    }
+
+    @Test
+    fun `humanise stays in range and touches only the chosen notes`() {
+        val loud = listOf(note(0).copy(velocity = 127, length = 1), note(g).copy(velocity = 1))
+        val h = Quantise.humanise(loud, null, 1f, 3L, bar)
+        assertTrue(h.all { it.velocity in 1..127 && it.length >= 1 && it.tick >= 0 })
+        val only = Quantise.humanise(loud, setOf(1), 1f, 3L, bar)
+        assertEquals(loud[0], only[0])
+        assertEquals(h[1], only[1]) // the same wobble whether or not the other is chosen
     }
 }

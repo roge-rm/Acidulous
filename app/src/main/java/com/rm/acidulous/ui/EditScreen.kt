@@ -182,6 +182,7 @@ fun EditScreen(
     var selection by remember { mutableStateOf(emptySet<Int>()) }
     var scaleDialog by remember { mutableStateOf(false) }
     var generateDialog by remember { mutableStateOf(false) }
+    var quantiseDialog by remember { mutableStateOf(false) }
     // What the knobs lock onto: a grid step on drums and Reflux, a note's
     // own length in the roll.
     val lockSpans: List<IntRange> = when {
@@ -374,6 +375,7 @@ fun EditScreen(
             if (kind != MachineKind.Audio) { lockMode = !lockMode; lockTicks = emptySet(); selection = emptySet() }
         },
         KeyAction.Generate to { if (kind != MachineKind.Audio) generateDialog = true },
+        KeyAction.Quantise to { if (kind != MachineKind.Audio) quantiseDialog = true },
         KeyAction.FoldPanel to { UiPrefs.foldPanel(!UiPrefs.panelFolded) },
         KeyAction.FoldKeys to { UiPrefs.foldKeys(!UiPrefs.keysFolded) },
         KeyAction.Back to { onBack() },
@@ -630,6 +632,7 @@ fun EditScreen(
             // The generators. In the header because the bar below is full,
             // and because it is about the clip, as the title beside it is.
             if (kind != MachineKind.Audio) HeaderButton("\u2684", description = stringResource(R.string.a11y_generate)) { generateDialog = true }
+            if (kind != MachineKind.Audio) HeaderButton("\u229E", description = stringResource(R.string.a11y_quantise)) { quantiseDialog = true }
             // Lock mode: lit while on. Leaving it lets go of what was chosen.
             if (kind != MachineKind.Audio) HeaderButton(
                 "\u25C6", color = if (lockMode) Acid.colors.pink else null,
@@ -1427,6 +1430,18 @@ fun EditScreen(
             voices = if (kind == MachineKind.Drums) voices else emptyList(),
             spelling = Scales.spellingFor(song, track),
             onDismiss = { generateDialog = false; selection = emptySet() },
+        )
+    }
+    if (quantiseDialog) {
+        QuantiseDialog(
+            song = song,
+            editor = editor,
+            trackIndex = trackIndex,
+            sceneId = sceneId,
+            base = clip,
+            clipTicks = clipLen,
+            which = selection.takeIf { it.isNotEmpty() },
+            onDismiss = { quantiseDialog = false; selection = emptySet() },
         )
     }
     if (scaleDialog) {

@@ -25,6 +25,7 @@
     <string name="keys_step_view">step view</string>
     <string name="keys_lock_steps">lock steps</string>
     <string name="keys_generate">generate notes</string>
+    <string name="keys_quantise">quantise</string>
     <string name="keys_fold_panel">fold the panel</string>
     <string name="keys_fold_keys">fold the keyboard</string>
 
