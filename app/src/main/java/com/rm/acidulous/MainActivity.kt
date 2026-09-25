@@ -933,6 +933,7 @@ private fun App(modifier: Modifier = Modifier) {
         // Trinity's wavetables take a moment to build; do it off the main
         // thread now rather than stalling the first mount.
         Thread { NativeEngine.prewarm() }.start()
+        EngineSync.forgetEngine()
         if (NativeEngine.start()) {
             // The engine keeps no preferences: the buffer depth, voice limit,
             // quality and record format have to be pushed once the stream is

@@ -91,6 +91,37 @@ object EngineSync {
         private set
 
     /**
+     * A new engine has nothing in it: forget everything this remembers
+     * having sent, so the next push sends all of it.
+     *
+     * The engine is stopped and started again whenever the activity is -
+     * a change of language, a keyboard plugged in, Android bringing the app
+     * back - but this object lives as long as the process. It went on
+     * believing every rack had its machine, sent nothing but parameters to
+     * racks that were empty, and the song came back silent. Called before
+     * every start.
+     */
+    fun forgetEngine() {
+        mounted.fill(null)
+        mountedEffects.forEach { it.fill(null) }
+        mountedModifiers.forEach { it.fill(null) }
+        mountedInput.fill(null)
+        loadedSamples.clear()
+        loadedMaps.fill(null)
+        loadedFreezes.fill(null)
+        builtClouds.fill(null)
+        loadedFormulas.fill(null)
+        loadedTakes.fill(null)
+        loadedReels.fill(null)
+        loadedPatches.fill(null)
+        mountedSends.fill(null)
+        mountedMasterInserts.fill(null)
+        mountedGroupInserts.forEach { it.fill(null) }
+        pushedTuning.fill(null)
+        synced = null
+    }
+
+    /**
      * Pads reference samples by a path relative to [sampleRoot] in
      * `Machine.settings` ("p03_sample"). Loads what changed, clears what went.
      */
