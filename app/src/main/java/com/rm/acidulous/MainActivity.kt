@@ -163,6 +163,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) CrashReports.collect(this)
         // Only on a fresh start: a recreated activity has already taken it.
         if (savedInstanceState == null) Incoming.from(intent)
+        AppHost.current = AndroidHost(this)
         com.rm.acidulous.ui.UiPrefs.init(com.rm.acidulous.util.androidPrefs(getSharedPreferences("ui", MODE_PRIVATE)))
         com.rm.acidulous.model.Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
         com.rm.acidulous.model.Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
@@ -1983,7 +1984,7 @@ private fun App(modifier: Modifier = Modifier) {
             onExport = { if (!playing) exportAsk = true },
             onImport = { importPicker.launch(arrayOf("*/*")) },
             onShareSong = { shareSong() },
-            onShareExport = { done -> share(context, done.uris, done.mime, done.fileName) },
+            onShareExport = { done -> share(context, done.uris.filterIsInstance<android.net.Uri>(), done.mime, done.fileName) },
             exportState = exportState,
             onExportCancel = { NativeEngine.cancelRender() },
             onExportDismiss = { exportState = null },

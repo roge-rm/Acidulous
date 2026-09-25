@@ -12,7 +12,7 @@ Re-run after editing a panel:  python3 tools/gen_param_labels.py
 """
 import re, sys, pathlib
 
-SRC = pathlib.Path("app/src/main/java/com/rm/acidulous/ui/MachinePanel.kt")
+SRC = pathlib.Path("shared/src/jvmShared/kotlin/com/rm/acidulous/ui/MachinePanel.kt")
 OUT = pathlib.Path("shared/src/jvmShared/kotlin/com/rm/acidulous/model/ParamLabels.kt")
 
 PANELS = {

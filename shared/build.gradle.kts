@@ -43,6 +43,12 @@ kotlin {
             api(libs.kotlinx.coroutines.core)
             api(libs.kotlinx.serialization.json)
         }
+        androidMain.dependencies {
+            implementation(libs.androidx.activity.compose)
+        }
+        getByName("desktopTest").dependencies {
+            implementation(libs.junit)
+        }
     }
 }
 
@@ -59,6 +65,8 @@ kotlin {
  */
 abstract class NormaliseStrings : DefaultTask() {
     @get:InputDirectory abstract val source: DirectoryProperty
+    /** Android vector drawables to hand over as they are, into drawable/. */
+    @get:InputFiles abstract val drawables: ConfigurableFileCollection
     @get:OutputDirectory abstract val output: DirectoryProperty
 
     @TaskAction
@@ -81,6 +89,7 @@ abstract class NormaliseStrings : DefaultTask() {
                 setOutputProperty(OutputKeys.ENCODING, "UTF-8")
             }.transform(DOMSource(doc), StreamResult(target))
         }
+        drawables.forEach { it.copyTo(File(out, "drawable/${it.name}"), overwrite = true) }
     }
 
     private fun androidText(raw: String): String {
@@ -118,6 +127,9 @@ abstract class NormaliseStrings : DefaultTask() {
 
 val normaliseStrings by tasks.registering(NormaliseStrings::class) {
     source.set(layout.projectDirectory.dir("src/commonMain/strings"))
+    // The logo the splash shows is the launcher icon's foreground, which has
+    // to stay in the app's own resources for the launcher; one copy, not two.
+    drawables.from(rootProject.file("app/src/main/res/drawable/ic_launcher_foreground.xml"))
     output.set(layout.buildDirectory.dir("generated/strings"))
 }
 
@@ -127,3 +139,7 @@ compose.resources {
     generateResClass = always
     customDirectory("commonMain", normaliseStrings.flatMap { it.output })
 }
+
+// The tests of what lives here run on the desktop JVM - none of them needs
+// Android - and still answer to the name everybody types.
+tasks.register("testDebugUnitTest") { dependsOn("desktopTest") }
