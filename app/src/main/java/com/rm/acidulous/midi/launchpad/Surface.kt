@@ -45,7 +45,15 @@ data class LpTrack(
     /** In clip mode: the scene it is playing, and the one it is waiting to, or -1. */
     val playingScene: Int = -1,
     val queuedScene: Int = -1,
+    /** Its mixer, each 0..1: level, pan (0.5 the middle), and the two sends. */
+    val level: Float = 0f,
+    val pan: Float = 0.5f,
+    val sendA: Float = 0f,
+    val sendB: Float = 0f,
 )
+
+/** What the mixer page's faders are. */
+enum class LpFader { Level, Pan, SendA, SendB, Device }
 
 /** The clip the sequencer page edits: the played track's, in the scene it is in. */
 data class LpSeq(
@@ -80,6 +88,8 @@ data class LpView(
     val queuedScene: Int = -1,
     /** The clip the sequencer edits, or null when there is no scene to edit in. */
     val seq: LpSeq? = null,
+    /** The played machine's first eight continuous knobs, 0..1, for the device faders. */
+    val device: List<Float> = emptyList(),
 )
 
 /** The surface's own state. */
@@ -92,13 +102,16 @@ data class LpState(
     val trackBank: Int = 0,
     val sceneBank: Int = 0,
     val shift: Boolean = false,
-    /** Pads held down, by LED, and the note each is sounding. */
-    val sounding: Map<Int, Int> = emptyMap(),
+    /** Pads held down, by LED, and the notes each is sounding - several for a chord. */
+    val sounding: Map<Int, List<Int>> = emptyMap(),
     /** Buttons held down that change what a pad or a track button does. */
     val held: Set<Button> = emptySet(),
     /** The sequencer's view: which eight steps, and which row is at the bottom. */
     val stepPage: Int = 0,
     val seqRow: Int = 0,
+    val fader: LpFader = LpFader.Level,
+    /** Perform pads held, by LED, oldest first: the newest of a row is the one in force. */
+    val performing: List<Int> = emptyList(),
 )
 
 sealed class LpAction {
@@ -124,11 +137,16 @@ sealed class LpAction {
     /** A note one step long at [tick] and [pitch] in the played track's clip in [scene], or taken away if there is one. */
     data class ToggleStep(val track: Int, val scene: Int, val tick: Int, val pitch: Int, val length: Int) : LpAction()
     data class QuantiseClip(val track: Int, val scene: Int) : LpAction()
+    data class SetMix(val track: Int, val fader: LpFader, val value: Float) : LpAction()
+    /** One of the played machine's knobs, by its place among the eight. */
+    data class SetDevice(val index: Int, val value: Float) : LpAction()
+    /** A perform parameter on the played track, as the perform page sends it. */
+    data class PerformParam(val name: String, val value: Float) : LpAction()
 }
 
 object Surface {
     /** Pages there are yet; their buttons light and choose them. */
-    val built = setOf(LpPage.Note, LpPage.Session, LpPage.Sequencer)
+    val built = LpPage.entries.toSet()
 
     /** Buttons that change what the next press means while held. */
     private val modifiers = setOf(Button.Clear, Button.Duplicate, Button.Mute, Button.Solo)
@@ -194,6 +212,9 @@ object Surface {
             LpPage.Note -> notePage(view, state, colour, leds)
             LpPage.Session -> sessionPage(view, state, leds)
             LpPage.Sequencer -> sequencerPage(view, state, colour, leds)
+            LpPage.Mixer -> mixerPage(view, state, leds)
+            LpPage.Perform -> performPage(state, leds)
+            LpPage.Chord -> chordPage(view, state, colour, leds)
             else -> {}
         }
         // The pages, by their printed names.
@@ -237,6 +258,11 @@ object Surface {
         leds[Button.Solo.cc] = if (soloing || view.tracks.any { it.solo }) SOLO else Rgb.scale(SOLO, 0.15f)
         leds[Button.StopClip.cc] = if (view.playing) Rgb.scale(Rgb.RED, 0.6f) else Rgb.scale(Rgb.RED, 0.15f)
         leds[Button.Quantise.cc] = if (view.seq != null) Rgb.DIM else Rgb.OFF
+        val mixing = state.page == LpPage.Mixer
+        for ((b, f) in listOf(Button.Volume to LpFader.Level, Button.Pan to LpFader.Pan, Button.Device to LpFader.Device)) {
+            leds[b.cc] = if (mixing && state.fader == f) Rgb.WHITE else Rgb.DIM
+        }
+        leds[Button.Sends.cc] = if (mixing && (state.fader == LpFader.SendA || state.fader == LpFader.SendB)) Rgb.WHITE else Rgb.DIM
         // Clear and Duplicate are live on the session page, and undo and redo under Shift.
         if (state.page == LpPage.Session || state.shift) {
             leds[Button.Clear.cc] = if (Button.Clear in state.held) Rgb.WHITE else Rgb.DIM
@@ -248,7 +274,7 @@ object Surface {
     }
 
     private fun notePage(view: LpView, state: LpState, colour: Int, leds: IntArray) {
-        val held = state.sounding.values.toSet()
+        val held = state.sounding.values.flatten().toSet()
         val drums = drumsOf(view)
         val s = steps(view)
         val r = root(view)
@@ -342,12 +368,160 @@ object Surface {
         }
     }
 
+    /** A fader's value on a track, 0..1. */
+    private fun mixValue(track: LpTrack, f: LpFader): Float = when (f) {
+        LpFader.Level -> track.level
+        LpFader.Pan -> track.pan
+        LpFader.SendA -> track.sendA
+        LpFader.SendB -> track.sendB
+        LpFader.Device -> 0f
+    }
+
+    /** The value a fader pad sets: the bottom row nought, the top one full. */
+    fun faderValue(row: Int): Float = row / 7f
+
+    private fun mixerPage(view: LpView, state: LpState, leds: IntArray) {
+        val colour = view.tracks.getOrNull(view.played)?.colour ?: Rgb.WHITE
+        for (col in 0..7) {
+            val (c, v) = if (state.fader == LpFader.Device) {
+                colour to (view.device.getOrNull(col) ?: continue)
+            } else {
+                val track = view.tracks.getOrNull(state.trackBank * 8 + col) ?: continue
+                track.colour to mixValue(track, state.fader)
+            }
+            val level = Math.round(v * 7f)
+            for (row in 0..7) {
+                val lit = if (state.fader == LpFader.Pan) {
+                    // Pan fills from the middle towards its side.
+                    (row in minOf(level, 4)..maxOf(level, 3))
+                } else row <= level && v > 0f
+                leds[LaunchpadPro.ledOf(Control.Pad(row, col))] = when {
+                    row == level -> c
+                    lit -> Rgb.scale(c, 0.3f)
+                    else -> Rgb.scale(Rgb.WHITE, 0.03f)
+                }
+            }
+        }
+    }
+
+    // The perform page: repeat and gate lengths along the top two rows,
+    // reverse, tape stop and the riser, the three kills, and under them an
+    // XY pad four rows high. All held: let go and it lets go.
+    private val REPEAT_ROW = 7
+    private val GATE_ROW = 6
+    private val MOMENT_ROW = 5
+    private val KILL_ROW = 4
+    private val MOMENTS = listOf("reverse", "stop", "riser")
+    private val KILL_NAMES = listOf("killlow", "killmid", "killhigh")
+    private const val LENGTHS = 5
+
+    private fun performPage(state: LpState, leds: IntArray) {
+        val held = state.performing.toSet()
+        fun lit(row: Int, col: Int, c: Int) {
+            val led = LaunchpadPro.ledOf(Control.Pad(row, col))
+            leds[led] = if (led in held) Rgb.WHITE else Rgb.scale(c, 0.35f)
+        }
+        for (col in 0 until LENGTHS) {
+            lit(REPEAT_ROW, col, Rgb.of(127, 60, 0))
+            lit(GATE_ROW, col, Rgb.of(110, 110, 0))
+        }
+        for (i in 0..2) for (half in 0..1) {
+            lit(MOMENT_ROW, i * 2 + half, Rgb.of(90, 0, 127))
+            lit(KILL_ROW, i * 2 + half, Rgb.RED)
+        }
+        for (row in 0..3) for (col in 0..7) lit(row, col, Rgb.of(0, 40, 127))
+    }
+
+    /** What pressing a perform pad sends. */
+    private fun performOn(row: Int, col: Int): List<LpAction> = when (row) {
+        REPEAT_ROW -> if (col < LENGTHS) listOf(LpAction.PerformParam("repeat", (col + 1) / LENGTHS.toFloat())) else emptyList()
+        GATE_ROW -> if (col < LENGTHS) listOf(LpAction.PerformParam("gate", (col + 1) / LENGTHS.toFloat())) else emptyList()
+        MOMENT_ROW -> MOMENTS.getOrNull(col / 2)?.let { listOf(LpAction.PerformParam(it, 1f)) } ?: emptyList()
+        KILL_ROW -> KILL_NAMES.getOrNull(col / 2)?.let { listOf(LpAction.PerformParam(it, 1f)) } ?: emptyList()
+        else -> listOf(LpAction.PerformParam("x", col / 7f), LpAction.PerformParam("y", row / 3f))
+    }
+
+    /** Letting go of one: what is still held in its row takes over, or it goes off. */
+    private fun performOff(state: LpState, row: Int, col: Int): List<LpAction> {
+        val still = state.performing.map { LaunchpadPro.padOf(it)!! }
+        fun lastIn(rows: IntRange) = still.lastOrNull { it.row in rows }
+        return when (row) {
+            REPEAT_ROW, GATE_ROW -> lastIn(row..row)?.let { performOn(it.row, it.col) }
+                ?: listOf(LpAction.PerformParam(if (row == REPEAT_ROW) "repeat" else "gate", 0f))
+            MOMENT_ROW, KILL_ROW -> {
+                val names = if (row == MOMENT_ROW) MOMENTS else KILL_NAMES
+                val name = names.getOrNull(col / 2) ?: return emptyList()
+                if (still.any { it.row == row && it.col / 2 == col / 2 }) emptyList() else listOf(LpAction.PerformParam(name, 0f))
+            }
+            else -> lastIn(0..3)?.let { performOn(it.row, it.col) }
+                ?: listOf(LpAction.PerformParam("x", 0.5f), LpAction.PerformParam("y", 0f))
+        }
+    }
+
+    // The chord page: a column for each degree of the scale and its octave,
+    // a row for each kind of chord, bottom to top.
+    private val CHORD_DEGREES: List<List<Int>> = listOf(
+        listOf(0, 2, 4),        // triad
+        listOf(0, 2, 4, 6),     // seventh
+        listOf(0, 1, 4),        // sus2
+        listOf(0, 3, 4),        // sus4
+        listOf(0, 2, 4, 6, 8),  // ninth
+        listOf(0, 2, 4, 5),     // sixth
+        listOf(0, 4, 7),        // power: root, fifth, octave
+        listOf(2, 4, 7),        // first inversion: the root on top
+    )
+
+    /** The notes a chord pad plays: stacked scale degrees from the column's. */
+    fun chordAt(view: LpView, state: LpState, row: Int, col: Int): List<Int> {
+        val s = if (view.intervals.isNullOrEmpty() || view.root == null) listOf(0, 2, 4, 5, 7, 9, 11) else steps(view)
+        val base = 12 * (state.octave + 1) + (view.root ?: 0)
+        return CHORD_DEGREES[row].map { d ->
+            val idx = col + d + state.degree
+            base + 12 * Math.floorDiv(idx, s.size) + s[Math.floorMod(idx, s.size)]
+        }.filter { it in 0..127 }
+    }
+
+    private fun chordPage(view: LpView, state: LpState, colour: Int, leds: IntArray) {
+        val held = state.sounding.keys
+        for (row in 0..7) for (col in 0..7) {
+            val led = LaunchpadPro.ledOf(Control.Pad(row, col))
+            leds[led] = when {
+                led in held -> Rgb.WHITE
+                // The tonic's column, and its octave, in the track's colour.
+                (col + state.degree) % 7 == 0 -> Rgb.scale(colour, 0.6f)
+                else -> Rgb.scale(colour, 0.15f + 0.04f * row)
+            }
+        }
+    }
+
     // --- Pressing ----------------------------------------------------------------
 
     fun press(view: LpView, state: LpState, control: Control, velocity: Int): Pair<LpState, List<LpAction>> {
         when (control) {
             is Control.Pad -> {
                 if (state.page == LpPage.Session) return state to sessionPress(view, state, control)
+                val led = LaunchpadPro.ledOf(control)
+                when (state.page) {
+                    LpPage.Mixer -> {
+                        val v = faderValue(control.row)
+                        return state to if (state.fader == LpFader.Device) {
+                            if (control.col < view.device.size) listOf(LpAction.SetDevice(control.col, v)) else emptyList()
+                        } else {
+                            val t = state.trackBank * 8 + control.col
+                            if (t < view.tracks.size) listOf(LpAction.SetMix(t, state.fader, v)) else emptyList()
+                        }
+                    }
+                    LpPage.Perform -> {
+                        val on = performOn(control.row, control.col)
+                        return (if (on.isEmpty()) state else state.copy(performing = state.performing - led + led)) to on
+                    }
+                    LpPage.Chord -> {
+                        val notes = chordAt(view, state, control.row, control.col)
+                        return state.copy(sounding = state.sounding + (led to notes)) to
+                            notes.map { LpAction.NoteOn(it, velocity.coerceIn(1, 127)) }
+                    }
+                    else -> {}
+                }
                 if (state.page == LpPage.Sequencer) {
                     val seq = view.seq ?: return state to emptyList()
                     val tick = seqTick(view, state, control.col) ?: return state to emptyList()
@@ -356,8 +530,7 @@ object Surface {
                 }
                 if (state.page != LpPage.Note) return state to emptyList()
                 val note = noteAt(view, state, control.row, control.col) ?: return state to emptyList()
-                val led = LaunchpadPro.ledOf(control)
-                return state.copy(sounding = state.sounding + (led to note)) to
+                return state.copy(sounding = state.sounding + (led to listOf(note))) to
                     listOf(LpAction.NoteOn(note, velocity.coerceIn(1, 127)))
             }
             is Control.Track -> {
@@ -394,6 +567,15 @@ object Surface {
         return when (b) {
             Button.Shift -> state.copy(shift = true) to emptyList()
             Button.RecordArm -> state to listOf(LpAction.Record)
+            // The faders' kind, and the mixer page to see them on. Sends
+            // goes to the first send, then the second.
+            Button.Volume -> state.copy(page = LpPage.Mixer, fader = LpFader.Level) to emptyList()
+            Button.Pan -> state.copy(page = LpPage.Mixer, fader = LpFader.Pan) to emptyList()
+            Button.Device -> state.copy(page = LpPage.Mixer, fader = LpFader.Device) to emptyList()
+            Button.Sends -> state.copy(
+                page = LpPage.Mixer,
+                fader = if (state.page == LpPage.Mixer && state.fader == LpFader.SendA) LpFader.SendB else LpFader.SendA,
+            ) to emptyList()
             Button.StopClip -> state to listOf(LpAction.StopClips)
             Button.Quantise -> state to (view.seq?.let { listOf(LpAction.QuantiseClip(view.played, it.scene)) } ?: emptyList())
             // On the session page the arrows move the view of the grid.
@@ -416,10 +598,15 @@ object Surface {
     fun release(state: LpState, control: Control): Pair<LpState, List<LpAction>> = when (control) {
         is Control.Pad -> {
             val led = LaunchpadPro.ledOf(control)
-            val note = state.sounding[led]
-            // The note the pad started, whatever the grid says now: an octave
-            // moved while it was held must not leave it sounding.
-            (state.copy(sounding = state.sounding - led)) to (if (note != null) listOf(LpAction.NoteOff(note)) else emptyList())
+            if (led in state.performing) {
+                val next = state.copy(performing = state.performing - led)
+                next to performOff(next, control.row, control.col)
+            } else {
+                val notes = state.sounding[led].orEmpty()
+                // The notes the pad started, whatever the grid says now: an
+                // octave moved while it was held must not leave them sounding.
+                state.copy(sounding = state.sounding - led) to notes.map { LpAction.NoteOff(it) }
+            }
         }
         is Control.Key -> state.copy(
             shift = if (control.button == Button.Shift) false else state.shift,
@@ -430,7 +617,7 @@ object Surface {
 
     /** A held pad pressed harder: that note's pressure. */
     fun pressure(state: LpState, pad: Control.Pad, value: Int): List<LpAction> =
-        state.sounding[LaunchpadPro.ledOf(pad)]?.let { listOf(LpAction.Pressure(it, value)) } ?: emptyList()
+        state.sounding[LaunchpadPro.ledOf(pad)].orEmpty().map { LpAction.Pressure(it, value) }
 
     private fun maxBank(tracks: Int): Int = maxOf(0, (tracks - 1) / 8)
 

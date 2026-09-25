@@ -127,7 +127,7 @@ class SurfaceTest {
         val held = Surface.press(cMajor, LpState(), Control.Pad(0, 1), 100).first
         assertEquals(Rgb.WHITE, Surface.render(cMajor, held)[LaunchpadPro.ledOf(Control.Pad(0, 1))])
         assertEquals(Rgb.WHITE, leds[Button.Note.cc])
-        assertEquals(Rgb.OFF, leds[Button.Chord.cc]) // not built yet
+        assertEquals(Rgb.DIM, leds[Button.Chord.cc]) // another page, not this one
     }
 
     // --- The session page -------------------------------------------------------
@@ -246,5 +246,62 @@ class SurfaceTest {
         val elsewhere = leds[LaunchpadPro.ledOf(Control.Pad(1, 3))]
         assertTrue(head != elsewhere)
         assertEquals(Rgb.WHITE, leds[Button.Sequencer.cc])
+    }
+
+    // --- Mixer, perform, chords ---------------------------------------------------
+
+    @Test
+    fun `the fader buttons choose the mixer and what its faders are`() {
+        var st = Surface.press(session, LpState(), Control.Key(Button.Pan), 127).first
+        assertEquals(LpPage.Mixer, st.page)
+        assertEquals(LpFader.Pan, st.fader)
+        st = Surface.press(session, st, Control.Key(Button.Sends), 127).first
+        assertEquals(LpFader.SendA, st.fader)
+        st = Surface.press(session, st, Control.Key(Button.Sends), 127).first
+        assertEquals(LpFader.SendB, st.fader)
+        assertEquals(LpFader.Device, Surface.press(session, st, Control.Key(Button.Device), 127).first.fader)
+    }
+
+    @Test
+    fun `a fader pad sets its row's value, on a track or a knob`() {
+        val mixer = LpState(page = LpPage.Mixer, fader = LpFader.Level)
+        assertEquals(listOf(LpAction.SetMix(1, LpFader.Level, 1f)), Surface.press(session, mixer, Control.Pad(7, 1), 100).second)
+        assertEquals(listOf(LpAction.SetMix(0, LpFader.Level, 0f)), Surface.press(session, mixer, Control.Pad(0, 0), 100).second)
+        assertTrue(Surface.press(session, mixer, Control.Pad(3, 5), 100).second.isEmpty()) // no sixth track
+        val device = session.copy(device = listOf(0.2f, 0.9f))
+        assertEquals(
+            listOf(LpAction.SetDevice(1, Surface.faderValue(3))),
+            Surface.press(device, mixer.copy(fader = LpFader.Device), Control.Pad(3, 1), 100).second,
+        )
+    }
+
+    @Test
+    fun `perform pads are held, on when pressed and off when let go`() {
+        val perform = LpState(page = LpPage.Perform)
+        val (a, on) = Surface.press(session, perform, Control.Pad(7, 2), 100)
+        assertEquals(listOf(LpAction.PerformParam("repeat", 3 / 5f)), on)
+        // A second repeat held takes over; letting it go hands back to the first.
+        val (b, _) = Surface.press(session, a, Control.Pad(7, 4), 100)
+        assertEquals(listOf(LpAction.PerformParam("repeat", 3 / 5f)), Surface.release(b, Control.Pad(7, 4)).second)
+        assertEquals(listOf(LpAction.PerformParam("repeat", 0f)), Surface.release(a, Control.Pad(7, 2)).second)
+        val (k, killOn) = Surface.press(session, perform, Control.Pad(4, 1), 100)
+        assertEquals(listOf(LpAction.PerformParam("killlow", 1f)), killOn)
+        assertEquals(listOf(LpAction.PerformParam("killlow", 0f)), Surface.release(k, Control.Pad(4, 1)).second)
+        val (x, xy) = Surface.press(session, perform, Control.Pad(3, 7), 100)
+        assertEquals(listOf(LpAction.PerformParam("x", 1f), LpAction.PerformParam("y", 1f)), xy)
+        assertEquals(listOf(LpAction.PerformParam("x", 0.5f), LpAction.PerformParam("y", 0f)), Surface.release(x, Control.Pad(3, 7)).second)
+    }
+
+    @Test
+    fun `chords are stacked degrees of the scale, and a pad plays all of it`() {
+        val chords = LpState(page = LpPage.Chord)
+        assertEquals(listOf(48, 52, 55), Surface.chordAt(cMajor, chords, 0, 0))          // C
+        assertEquals(listOf(50, 53, 57), Surface.chordAt(cMajor, chords, 0, 1))          // Dm
+        assertEquals(listOf(55, 59, 62, 65), Surface.chordAt(cMajor, chords, 1, 4))      // G7
+        assertEquals(listOf(48, 55, 60), Surface.chordAt(cMajor, chords, 6, 0))          // C5
+        val (held, on) = Surface.press(cMajor, chords, Control.Pad(0, 0), 90)
+        assertEquals(listOf(48, 52, 55).map { LpAction.NoteOn(it, 90) }, on)
+        assertEquals(listOf(48, 52, 55).map { LpAction.NoteOff(it) }, Surface.release(held, Control.Pad(0, 0)).second)
+        assertEquals(listOf(48, 52, 55).map { LpAction.Pressure(it, 70) }, Surface.pressure(held, Control.Pad(0, 0), 70))
     }
 }

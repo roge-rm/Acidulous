@@ -50,7 +50,7 @@ class LaunchpadController(private val act: (LpAction) -> Unit) {
             }
             // Pressure, per pad or for the whole surface: the device can be set to either.
             0xa0 -> LaunchpadPro.padOf(d1)?.let { pad -> Surface.pressure(state, pad, d2).forEach(act) }
-            0xd0 -> state.sounding.values.forEach { act(LpAction.Pressure(it, d1)) }
+            0xd0 -> state.sounding.values.flatten().forEach { act(LpAction.Pressure(it, d1)) }
         }
     }
 

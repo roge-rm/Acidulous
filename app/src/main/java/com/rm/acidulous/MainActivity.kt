@@ -78,6 +78,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import com.rm.acidulous.model.duplicateScene
 import com.rm.acidulous.model.cleared
+import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.emptyClipFor
 import androidx.compose.ui.graphics.toArgb
@@ -1392,6 +1393,12 @@ private fun App(modifier: Modifier = Modifier) {
     // says - it is part of the app, not a keyboard on a channel - and each
     // note-off goes where its note-on went.
     val lpNoteRack = remember { IntArray(128) { -1 } }
+    // The device faders: a machine's first eight continuous knobs, looked
+    // up once a type rather than thirty times a second.
+    val lpKnobs = remember { HashMap<String, List<com.rm.acidulous.engine.ParamInfo>>() }
+    fun lpDeviceKnobs(type: String) = lpKnobs.getOrPut(type) {
+        NativeEngine.machineParamInfo(type).filter { it.curve != 2 }.take(8)
+    }
     val lpAct by rememberUpdatedState<(com.rm.acidulous.midi.launchpad.LpAction) -> Unit> { a ->
         val none = NativeEngine.NO_CHANNEL
         when (a) {
@@ -1463,6 +1470,25 @@ private fun App(modifier: Modifier = Modifier) {
                 }
             }
             // Every note's start onto the clip's grid; where it was played is kept.
+            // As the mixer's strips, the panels' knobs and the perform page send them.
+            is com.rm.acidulous.midi.launchpad.LpAction.SetMix -> {
+                val (name, update) = when (a.fader) {
+                    com.rm.acidulous.midi.launchpad.LpFader.Level -> "gain" to { m: com.rm.acidulous.model.Mixer -> m.copy(volume = com.rm.acidulous.model.EngineParams.volumeFrom01(a.value)) }
+                    com.rm.acidulous.midi.launchpad.LpFader.Pan -> "pan" to { m: com.rm.acidulous.model.Mixer -> m.copy(pan = com.rm.acidulous.model.EngineParams.panFrom01(a.value)) }
+                    com.rm.acidulous.midi.launchpad.LpFader.SendA -> "sendreverb" to { m: com.rm.acidulous.model.Mixer -> m.copy(sendReverb = a.value) }
+                    else -> "senddelay" to { m: com.rm.acidulous.model.Mixer -> m.copy(sendDelay = a.value) }
+                }
+                NativeEngine.setParam(a.track, "channel", name, a.value)
+                editor.edit(a.track) { t -> t.copy(mixer = update(t.mixer)) }
+            }
+            is com.rm.acidulous.midi.launchpad.LpAction.SetDevice -> song.tracks.getOrNull(midiTrack)?.let { t ->
+                lpDeviceKnobs(t.machine.type).getOrNull(a.index)?.let { p ->
+                    NativeEngine.setParam(midiTrack, "machine", p.name, a.value, record = true)
+                    editor.edit(midiTrack) { it.withParam(p.name, a.value) }
+                }
+            }
+            is com.rm.acidulous.midi.launchpad.LpAction.PerformParam ->
+                NativeEngine.setParam(midiTrack, "perform", a.name, a.value, record = true)
             is com.rm.acidulous.midi.launchpad.LpAction.QuantiseClip -> song.scenes.getOrNull(a.scene)?.let { scene ->
                 editor.editClip(a.track, scene.id) { clip ->
                     val g = clip.grid.coerceAtLeast(1)
@@ -1488,6 +1514,10 @@ private fun App(modifier: Modifier = Modifier) {
                     solo = t.mixer.solo,
                     playingScene = launchStates.getOrNull(i)?.takeIf { it.playing }?.scene ?: -1,
                     queuedScene = launchStates.getOrNull(i)?.takeIf { it.queued }?.pending ?: -1,
+                    level = com.rm.acidulous.model.EngineParams.volume01(t.mixer.volume),
+                    pan = com.rm.acidulous.model.EngineParams.pan01(t.mixer.pan),
+                    sendA = t.mixer.sendReverb,
+                    sendB = t.mixer.sendDelay,
                 )
             },
             played = midiTrack,
@@ -1518,6 +1548,9 @@ private fun App(modifier: Modifier = Modifier) {
                 }
                 com.rm.acidulous.midi.launchpad.LpSeq(sceneIdx, clip.grid.coerceAtLeast(1), len, clip.notes.map { it.tick to it.pitch }, head)
             },
+            device = song.tracks.getOrNull(midiTrack)?.let { t ->
+                lpDeviceKnobs(t.machine.type).map { p -> t.machine.params[p.name] ?: p.defaultNormalized }
+            } ?: emptyList(),
         )
     }
     val launchpad = remember { com.rm.acidulous.ui.launchpad.LaunchpadController { lpAct(it) } }
