@@ -60,6 +60,73 @@ def unlink(text):
     return LINK.sub(r"\1", text)
 
 
+# --- The same manual for a mouse -------------------------------------------
+#
+# The manual is written for the phone, which is the app's home, and says "tap".
+# The desktop build shows the same words with a mouse's in their place: a
+# second text for a block, written here only where it differs and chosen by
+# the Help window where the pointer is a mouse. The Markdown stays one text.
+#
+# Three pieces, all small enough to read at a glance:
+#
+# - MOUSE_WORDS, applied to every block: tap becomes click. Nothing else a
+#   finger does changes its name - "hold" is a mouse button held down just
+#   the same, and "touching the file" was never about a finger.
+# - TOUCH_ONLY, headings whose blocks are left as they are: the taps there are
+#   on a controller's own pads, or on the phone's own screen reader.
+# - MOUSE_SENTENCES, whole sentences a word could not fix: two fingers and a
+#   pinch, which a mouse does with its wheel. Each must still be found in the
+#   manual, or --check says so, so rewriting one cannot quietly drop it.
+MOUSE_WORDS = [
+    (re.compile(r"\b([Dd])ouble tap\b"), lambda m: m.group(1) + "ouble-click"),
+    (re.compile(r"\b([Tt])ap(s|ped|ping)?\b"),
+     lambda m: ("C" if m.group(1) == "T" else "c") + "lick" + {None: "", "s": "s", "ped": "ed", "ping": "ing"}[m.group(2)]),
+]
+
+TOUCH_ONLY = {
+    "Playing from a keyboard",  # an Exquis's and a Launchpad's pads, and MPE fingers
+    "MPE",
+    "TalkBack",
+}
+
+# The one tap that is a name: tap tempo is tapped with whatever you have.
+KEEP = ["**tap** sets it from four taps."]
+
+MOUSE_SENTENCES = {
+    "Drag with two fingers to move around the grid, and pinch to make the cells bigger or smaller. One finger still opens and launches clips.":
+        "The mouse wheel moves around the grid, and sideways with Shift held. Ctrl and the wheel make the cells bigger or smaller.",
+    "On a tablet the cells grow to fill the screen, up to twice their size, until you pinch.":
+        "In a big window the cells grow to fill it, up to twice their size, until you zoom.",
+    "Drag with **two fingers** to scroll and pinch to zoom. One finger always draws.":
+        "The mouse wheel scrolls up and down, and sideways with Shift held. Ctrl and the wheel zoom in on time, and Ctrl, Shift and the wheel on the rows. Dragging always draws.",
+    "The arrows, or swipes on a touchpad, move between controls.":
+        "The arrows move between controls.",
+    "Long-press redo to enter mapping mode.":
+        "Hold the mouse button down on redo to enter mapping mode.",
+}
+
+
+def for_mouse(text, heading, used):
+    """[text] as the desktop says it, or None where it says the same."""
+    if heading in TOUCH_ONLY:
+        return None
+    out = text
+    for touch, mouse in MOUSE_SENTENCES.items():
+        if touch in out:
+            out = out.replace(touch, mouse)
+            used.add(touch)
+    kept = {}
+    for i, phrase in enumerate(KEEP):
+        if phrase in out:
+            kept[f"\x00{i}\x00"] = phrase
+            out = out.replace(phrase, f"\x00{i}\x00")
+    for pattern, swap in MOUSE_WORDS:
+        out = pattern.sub(swap, out)
+    for mark, phrase in kept.items():
+        out = out.replace(mark, phrase)
+    return None if out == text else out
+
+
 def parse(path):
     """One file into (title, summary, blocks)."""
     title, summary, blocks = None, "", []
@@ -116,7 +183,7 @@ def children_of(path):
     return [(p, parse(p)) for p in sorted(folder.glob("*.md"))]
 
 
-def kotlin(sections):
+def kotlin(sections, used):
     q = lambda s: '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$") + '"'
     out = [
         "package com.rm.acidulous.model",
@@ -128,7 +195,10 @@ def kotlin(sections):
         "/** What a line of the manual is. Inline `code` and **bold** stay in the text. */",
         "enum class ManualKind { Heading, Para, Bullet, Step }",
         "",
-        "class ManualBlock(val kind: ManualKind, val text: String)",
+        "/** [mouse] is the same words where the pointer is a mouse: \"click\" for \"tap\". Null where they are the same. */",
+        "class ManualBlock(val kind: ManualKind, val text: String, val mouse: String? = null) {",
+        "    fun text(mouse: Boolean): String = if (mouse) this.mouse ?: text else text",
+        "}",
         "",
         "class ManualSection(",
         "    val title: String,",
@@ -145,8 +215,13 @@ def kotlin(sections):
 
     def emit(title, summary, blocks, kids, pad):
         out.append(f"{pad}ManualSection({q(unlink(title))}, {q(unlink(summary))}, listOf(")
+        heading = title
         for kind, text in blocks:
-            out.append(f"{pad}    ManualBlock(ManualKind.{kinds[kind]}, {q(unlink(text))}),")
+            if kind == HEADING:
+                heading = text
+            mouse = None if kind == HEADING else for_mouse(unlink(text), heading, used)
+            extra = f", {q(mouse)}" if mouse else ""
+            out.append(f"{pad}    ManualBlock(ManualKind.{kinds[kind]}, {q(unlink(text))}{extra}),")
         if not kids:
             out.append(f"{pad})),")
             return
@@ -186,7 +261,15 @@ def main():
     if not files:
         sys.exit("gen_manual: manual/ has no sections")
     sections = [(parse(p), children_of(p)) for p in files]
-    text = kotlin(sections)
+    used = set()
+    text = kotlin(sections, used)
+    lost = [touch for touch in MOUSE_SENTENCES if touch not in used]
+    if lost:
+        print("  FAIL manual: a sentence the mouse wording replaces is no longer in manual/:")
+        for touch in lost:
+            print(f"       {touch}")
+        print("       update MOUSE_SENTENCES in tools/gen_manual.py to match")
+        sys.exit(1)
     index = indexed(files, sections)
     words = sum(len(t.split()) for (_, _, bs), _ in sections for _, t in bs)
     pages = len(sections)

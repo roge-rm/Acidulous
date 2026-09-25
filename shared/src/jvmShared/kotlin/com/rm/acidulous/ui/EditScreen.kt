@@ -458,7 +458,7 @@ fun EditScreen(
             if (hasStrength) BarButton(
                 if (fullStrength) "\u25A0" else "\u25E2", view,
                 description = stringResource(Res.string.a11y_velocity),
-                state = stringResource(if (fullStrength) Res.string.a11y_velocity_full else Res.string.a11y_velocity_touch),
+                state = if (fullStrength) stringResource(Res.string.a11y_velocity_full) else stringResource(Res.string.a11y_velocity_touch, Res.string.a11y_velocity_touch_mouse),
                 colour = if (fullStrength) Acid.colors.accent else Color.Unspecified,
             ) {
                 if (padToggle) UiPrefs.choosePadsFullStrength(!fullStrength)

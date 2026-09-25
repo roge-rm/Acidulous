@@ -82,6 +82,8 @@
     <!-- The library -->
     <string name="sound_library_none">Nothing here yet. Record one, or import a WAV.</string>
     <string name="sound_delete_armed">delete this? tap the cross again</string>
+    <!-- Its twin where the pointer is a mouse: the desktop build. -->
+    <string name="sound_delete_armed_mouse">delete this? click the cross again</string>
     <!-- When the file was made, and its size. -->
     <string name="sound_file_info">%1$s · %2$.0f kB</string>
     <string name="sound_file_info_used">%1$s · %2$.0f kB · a track is playing this</string>

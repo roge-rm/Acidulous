@@ -45,6 +45,8 @@
     <string name="a11y_page">page %1$d of %2$d</string>
     <string name="a11y_velocity">Velocity</string>
     <string name="a11y_velocity_touch">from where you touch</string>
+    <!-- Its twin where the pointer is a mouse: the desktop build. -->
+    <string name="a11y_velocity_touch_mouse">from where you click</string>
     <string name="a11y_velocity_full">full</string>
     <string name="a11y_step_view">Step view</string>
     <string name="a11y_edit_mode">Edit mode</string>

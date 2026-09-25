@@ -598,7 +598,7 @@ private fun LibraryPage(
             },
             name = file.name,
             under = when {
-                isArmed -> stringResource(Res.string.sound_delete_armed)
+                isArmed -> stringResource(Res.string.sound_delete_armed, Res.string.sound_delete_armed_mouse)
                 used -> stringResource(Res.string.sound_file_info_used, stamp, file.length() / 1024f)
                 else -> stringResource(Res.string.sound_file_info, stamp, file.length() / 1024f)
             },

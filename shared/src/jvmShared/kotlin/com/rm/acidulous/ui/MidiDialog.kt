@@ -103,7 +103,7 @@ private fun DevicesTab() {
                     mark = if (port.bluetooth) "ᛒ" else "⎓",
                     name = port.name,
                     under = port.maker,
-                    trailing = stringResource(if (port.open) Res.string.midi_listening else Res.string.midi_tap_to_open),
+                    trailing = if (port.open) stringResource(Res.string.midi_listening) else stringResource(Res.string.midi_tap_to_open, Res.string.midi_tap_to_open_mouse),
                     on = port.open,
                 ) { MidiHub.toggle(port.id) }
             }
@@ -164,7 +164,7 @@ private fun DevicesTab() {
                 DialogRow(
                     mark = "→",
                     name = dest.name,
-                    trailing = stringResource(if (dest.open) Res.string.midi_sending else Res.string.midi_tap_to_open),
+                    trailing = if (dest.open) stringResource(Res.string.midi_sending) else stringResource(Res.string.midi_tap_to_open, Res.string.midi_tap_to_open_mouse),
                     on = dest.open,
                 ) { MidiHub.toggleDestination(dest.id) }
             }

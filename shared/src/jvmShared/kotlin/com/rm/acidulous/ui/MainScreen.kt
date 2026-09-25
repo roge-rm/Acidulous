@@ -609,6 +609,21 @@ fun MainScreen(
         Row(
             Modifier.fillMaxWidth().weight(1f)
                 .onSizeChanged { gridW = it.width; gridH = it.height }
+                // The wheel, on a desktop - see onWheel. Up and down is the
+                // column's own scroll; sideways moves a scene a notch, and Ctrl
+                // makes the cells bigger or smaller, as a pinch does - from
+                // whatever size a tablet's fit left them at.
+                .onWheel { w ->
+                    when {
+                        w.zoom -> {
+                            val was = if (gridZoom > 0f) gridZoom else z
+                            gridZoom = (was / w.zoomFactor).coerceIn(CellMinW / CELL_W, CellMaxW / CELL_W)
+                            true
+                        }
+                        w.across != 0f -> { hScroll.dispatchRawDelta(w.across * cellW.toPx()); true }
+                        else -> false
+                    }
+                }
                 // **Two fingers move the grid; one still launches a clip.**
                 //
                 // Watched on the Initial pass, which travels parent to child,
@@ -1453,7 +1468,7 @@ internal fun quantiseShort(bars: Int): String =
 @Composable
 private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
     PlainDialog(title = stringResource(Res.string.quantise_title), onDismiss = onDismiss, dismissLabel = stringResource(Res.string.close)) {
-        Section(stringResource(Res.string.quantise_clips_start), stringResource(Res.string.quantise_clips_start_note)) {
+        Section(stringResource(Res.string.quantise_clips_start), stringResource(Res.string.quantise_clips_start_note, Res.string.quantise_clips_start_note_mouse)) {
             for (bars in listOf(0, 1, 2, 4, 8)) {
                 Choice(quantiseLabel(bars), bars == current) { onPick(bars); onDismiss() }
             }
@@ -1461,7 +1476,7 @@ private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () ->
         // An empty cell tapped here records into itself: this is how long.
         Section(stringResource(Res.string.quantise_loops_record)) {
             for (bars in listOf(0, 1, 2, 4, 8)) {
-                Choice(if (bars == 0) stringResource(Res.string.quantise_until_tapped) else pluralStringResource(Res.plurals.bars, bars, bars), bars == UiPrefs.loopBars) {
+                Choice(if (bars == 0) stringResource(Res.string.quantise_until_tapped, Res.string.quantise_until_tapped_mouse) else pluralStringResource(Res.plurals.bars, bars, bars), bars == UiPrefs.loopBars) {
                     UiPrefs.chooseLoopBars(bars)
                     onDismiss()
                 }

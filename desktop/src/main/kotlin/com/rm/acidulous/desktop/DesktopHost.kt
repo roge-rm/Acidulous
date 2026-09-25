@@ -55,6 +55,7 @@ class DesktopHost(private val configDir: File) : AppHost {
     override fun transportChanged(playing: Boolean, stop: () -> Unit) {}
 
     override val platformName: String = "Linux"
+    override val usesMouse: Boolean = true
     override val canEncodeAac: Boolean = false
     override val usesOboe: Boolean = false
 

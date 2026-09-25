@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.pointer.pointerInput
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Note
@@ -254,8 +255,31 @@ fun PianoRoll(
                 else -> false
             }
         }
+    // The wheel does what two fingers do, on a desktop: see onWheel. Rows move
+    // three a notch and time a tenth of the window, with the remainder carried
+    // so a touchpad's small steps add up rather than each jumping a row.
+    val wheelCarry = remember { floatArrayOf(0f) }
+    val wheel = Modifier.onWheel { w ->
+        when {
+            w.zoom && w.shift -> cb.onZoom(w.zoomFactor, 1f)
+            w.zoom -> cb.onZoom(1f, w.zoomFactor)
+            else -> {
+                if (w.across != 0f) cb.onScrollTime(w.across * visibleTicks / 10f)
+                wheelCarry[0] -= w.down * 3f
+                val rows = wheelCarry[0].toInt()
+                if (rows != 0) {
+                    cb.onScrollPitch(rows)
+                    wheelCarry[0] -= rows.toFloat()
+                }
+            }
+        }
+        true
+    }
     Canvas(
-        modifier = modifier.semantics { contentDescription = summary }.then(keyMod).pointerInput(Unit) {
+        // Clipped: a note a row above the window is drawn at a y above the
+        // canvas, and without the clip it lay over the header - the ruler
+        // covers what is inside, and nothing covered what was outside.
+        modifier = modifier.clipToBounds().semantics { contentDescription = summary }.then(keyMod).then(wheel).pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
                 val geo = Geometry(

@@ -114,6 +114,21 @@ fun DrumGrid(
         // be directly under the centre of their notes".
         modifier.background(Acid.colors.bg).padding(vertical = 4.dp)
             .onSizeChanged { slotPx = it.height }
+            // The wheel, on a desktop - see onWheel. Up and down is left to the
+            // column, which scrolls its rows itself; sideways moves time a
+            // tenth of the window a notch, Ctrl zooms it, and Ctrl with Shift
+            // makes the rows taller or shorter, as a pinch across them does.
+            .onWheel { w ->
+                when {
+                    w.zoom && w.shift -> {
+                        pinched = (rowHeight / w.zoomFactor).coerceIn(MinRow, maxOf(MaxRow, fitted))
+                        true
+                    }
+                    w.zoom -> { onZoomTime(w.zoomFactor); true }
+                    w.across != 0f -> { onScrollTime(w.across * visibleTicks / 10f); true }
+                    else -> false
+                }
+            }
             // Two fingers move the view; one still edits. Watched on the
             // Initial pass, which travels parent to child, because the cells
             // below have a clickable each and the column scrolls - both would

@@ -24,6 +24,16 @@ fun stringResource(res: StringResource): String = org.jetbrains.compose.resource
 fun stringResource(res: StringResource, vararg args: Any?): String =
     String.format(Locale.getDefault(), org.jetbrains.compose.resources.stringResource(res), *args)
 
+/**
+ * The phone's words, [touch], or [mouse]'s where the pointer is a mouse
+ * (AppHost.usesMouse): "click" where the phone says "tap". Android is the
+ * app's home and its strings stay as they are; the desktop's are their twins,
+ * named with `_mouse`.
+ */
+@Composable
+fun stringResource(touch: StringResource, mouse: StringResource): String =
+    stringResource(if (com.rm.acidulous.AppHost.current.usesMouse) mouse else touch)
+
 @Composable
 fun pluralStringResource(res: PluralStringResource, count: Int): String =
     org.jetbrains.compose.resources.pluralStringResource(res, count)

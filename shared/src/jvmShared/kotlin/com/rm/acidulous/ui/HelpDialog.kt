@@ -98,7 +98,8 @@ fun HelpDialog(onDismiss: () -> Unit) {
 @Composable
 private fun ManualLine(block: ManualBlock) {
     val c = Acid.colors
-    val text = inline(block.text)
+    // The phone's words, or a mouse's where the pointer is one: see gen_manual.py.
+    val text = inline(block.text(com.rm.acidulous.AppHost.current.usesMouse))
     when (block.kind) {
         ManualKind.Heading -> Text(
             block.text,

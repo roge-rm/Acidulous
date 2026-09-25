@@ -13,6 +13,8 @@
     <string name="midi_inputs_cable">inputs · ⎓ cable</string>
     <string name="midi_listening">listening</string>
     <string name="midi_tap_to_open">tap to open</string>
+    <!-- Its twin where the pointer is a mouse: the desktop build. -->
+    <string name="midi_tap_to_open_mouse">click to open</string>
     <string name="midi_no_inputs">nothing connected - plug in over USB, or search</string>
     <!-- The same, with no search to point at. -->
     <string name="midi_no_inputs_cable">nothing connected - plug in over USB</string>

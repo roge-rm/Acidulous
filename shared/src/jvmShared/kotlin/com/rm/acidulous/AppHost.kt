@@ -63,6 +63,13 @@ interface AppHost {
      * nothing needs adding.
      */
     val platformName: String? get() = null
+
+    /**
+     * The pointer is a mouse rather than a finger: the wheel moves and zooms
+     * the grids, and the few words that say "tap" say "click". False on the
+     * phone, whose words and gestures these are.
+     */
+    val usesMouse: Boolean get() = false
     /** Whether the audio stream is Oboe's (the phone) rather than miniaudio's (the desktop), for the About window's credits. */
     val usesOboe: Boolean get() = true
 
