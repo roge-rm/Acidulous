@@ -4,6 +4,7 @@
 #include <engine/core/Constants.h>
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 // The desktop's output stream, through miniaudio: PulseAudio first on Linux
@@ -36,13 +37,22 @@ class AudioDriver {
     bool start();
     void stop();
 
-    /** Open the ear: nought is the system's default input, the only one offered yet. */
+    /** One of the sound server's inputs, as the input chooser lists it. */
+    struct InputInfo {
+        int32_t id;       // stable while the device's name is: a hash of it, never nought
+        std::string name; // what the sound server calls it: "Built-in Audio Analog Stereo"
+        std::string key;  // the server's own name for it - PulseAudio's "alsa_input.usb-..." - or empty
+    };
+    /** The inputs there are now; the ids are what startInput takes. */
+    static std::vector<InputInfo> listInputs();
+
+    /** Open the ear: nought is the system's default input, anything else an id from listInputs. */
     bool startInput(int32_t deviceId = 0);
     void stopInput();
     bool isInputRunning() const { return capturer != nullptr; }
     int32_t inputChannels() const { return actualInputChannels; }
     int32_t inputRate() const { return actualInputRate; }
-    int32_t inputDevice() const { return 0; }
+    int32_t inputDevice() const { return actualInputDevice; }
     /** Decayed rather than cleared, so several meters can read it: see the Oboe driver. */
     float readInputPeak() {
         const float now = inputPeak.load(std::memory_order_relaxed);
@@ -115,6 +125,7 @@ class AudioDriver {
     std::vector<float> inputBlock;
     int32_t actualInputChannels = 0;
     int32_t actualInputRate = 0;
+    int32_t actualInputDevice = 0;
     static constexpr float kMeterDecay = 0.7f;
     std::atomic<float> inputPeak{0.0f};
 

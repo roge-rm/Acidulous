@@ -5,7 +5,8 @@ project(acidulous_desktop LANGUAGES C CXX)
 # (app/src/main/cpp), with the desktop's own audio driver and log in place of
 # Oboe's and Android's. platform/desktop comes first on the include path, so
 # EngineHost's <drivers/AudioDriver.h> and <android/log.h> are the desktop's.
-# The JNI bridge is the phone's, unchanged: JNI is JNI on any JVM.
+# The JNI bridge is the phone's, unchanged: JNI is JNI on any JVM. What only
+# the desktop asks - the list of inputs - is in desktop_jni.cpp.
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -38,6 +39,7 @@ add_library(acidulous SHARED
     ${CPP}/platform/android/jni_bridge.cpp
     ${CPP}/platform/link/LinkTimebase.cpp
     ${CPP}/platform/desktop/drivers/AudioDriver.cpp
+    ${CPP}/platform/desktop/desktop_jni.cpp
 )
 
 target_include_directories(acidulous PRIVATE

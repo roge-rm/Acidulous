@@ -40,7 +40,63 @@ void onInput(ma_device *device, void * /*out*/, const void *in, ma_uint32 frames
     static_cast<AudioDriver *>(device->pUserData)->capture(static_cast<const float *>(in), static_cast<int32_t>(frames));
 }
 
+/**
+ * The context inputs are listed and opened through, made once: an id from one
+ * context is only good for opening a device in the same one. The output opens
+ * its own, as it always has.
+ */
+ma_context *inputContext() {
+    static ma_context context;
+    static bool ok = [] {
+        const bool opened = ma_context_init(nullptr, 0, nullptr, &context) == MA_SUCCESS;
+        if (!opened) LOGE("could not open a context to list inputs in");
+        return opened;
+    }();
+    return ok ? &context : nullptr;
+}
+
+/** The server's own name for a device, where the backend has one worth keeping. */
+std::string keyOf(const ma_context *context, const ma_device_id &id) {
+    switch (context->backend) {
+        case ma_backend_pulseaudio: return std::string(id.pulse);
+        case ma_backend_alsa: return std::string(id.alsa);
+        default: return {};
+    }
+}
+
+/**
+ * An input's id: FNV-1a of the server's name for it, or of what it is called
+ * when there is none, so the one chosen is still the one chosen after it has
+ * been unplugged and plugged back in. Nought is the default and never an id.
+ */
+int32_t idOf(const std::string &text) {
+    uint32_t hash = 2166136261u;
+    for (unsigned char ch : text) {
+        hash ^= ch;
+        hash *= 16777619u;
+    }
+    const auto id = static_cast<int32_t>(hash & 0x7fffffffu);
+    return id == 0 ? 1 : id;
+}
+
 } // namespace
+
+std::vector<AudioDriver::InputInfo> AudioDriver::listInputs() {
+    std::vector<InputInfo> inputs;
+    ma_context *context = inputContext();
+    if (context == nullptr) return inputs;
+    ma_device_info *captures = nullptr;
+    ma_uint32 count = 0;
+    if (ma_context_get_devices(context, nullptr, nullptr, &captures, &count) != MA_SUCCESS) return inputs;
+    for (ma_uint32 i = 0; i < count; i++) {
+        InputInfo info;
+        info.name = captures[i].name;
+        info.key = keyOf(context, captures[i].id);
+        info.id = idOf(info.key.empty() ? info.name : info.key);
+        inputs.push_back(std::move(info));
+    }
+    return inputs;
+}
 
 struct AudioDriver::InputQueue {
     ma_pcm_rb rb;
@@ -108,8 +164,11 @@ void AudioDriver::stop() {
     LOGI("stream stopped");
 }
 
-bool AudioDriver::startInput(int32_t /*deviceId*/) {
-    if (capturer != nullptr) return true;
+bool AudioDriver::startInput(int32_t deviceId) {
+    // Already open on the one asked for - including nought, which means
+    // "whatever the system picks" and cannot be compared: see the Oboe driver.
+    if (capturer != nullptr && (deviceId == 0 || deviceId == actualInputDevice)) return true;
+    if (capturer != nullptr) stopInput();
     const size_t ringFrames = static_cast<size_t>(acidulous::kSampleRate) / 4; // a quarter second
     inputQueue = std::make_unique<InputQueue>();
     if (ma_pcm_rb_init(ma_format_f32, 2, static_cast<ma_uint32>(ringFrames), nullptr, nullptr, &inputQueue->rb) != MA_SUCCESS) {
@@ -130,8 +189,29 @@ bool AudioDriver::startInput(int32_t /*deviceId*/) {
     config.performanceProfile = ma_performance_profile_low_latency;
     config.dataCallback = onInput;
     config.pUserData = this;
+    // The one chosen, found by its id among what is there now. Gone - an
+    // interface unplugged since - is the default, as it is on the phone.
+    ma_context *context = inputContext();
+    ma_device_id chosen{};
+    int32_t found = 0;
+    if (deviceId != 0 && context != nullptr) {
+        ma_device_info *captures = nullptr;
+        ma_uint32 count = 0;
+        if (ma_context_get_devices(context, nullptr, nullptr, &captures, &count) == MA_SUCCESS) {
+            for (ma_uint32 i = 0; i < count; i++) {
+                const std::string key = keyOf(context, captures[i].id);
+                if (idOf(key.empty() ? std::string(captures[i].name) : key) == deviceId) {
+                    chosen = captures[i].id;
+                    found = deviceId;
+                    break;
+                }
+            }
+        }
+        if (found == 0) LOGI("input %d is not there now; the default instead", deviceId);
+    }
+    if (found != 0) config.capture.pDeviceID = &chosen;
     auto opened = std::make_unique<ma_device>();
-    if (ma_device_init(nullptr, &config, opened.get()) != MA_SUCCESS) {
+    if (ma_device_init(context, &config, opened.get()) != MA_SUCCESS) {
         LOGE("failed to open the input");
         ma_pcm_rb_uninit(&inputQueue->rb);
         inputQueue.reset();
@@ -139,13 +219,14 @@ bool AudioDriver::startInput(int32_t /*deviceId*/) {
     }
     actualInputChannels = 2;
     actualInputRate = static_cast<int32_t>(opened->sampleRate);
+    actualInputDevice = found;
     capturer = std::move(opened);
     if (ma_device_start(capturer.get()) != MA_SUCCESS) {
         LOGE("failed to start the input");
         stopInput();
         return false;
     }
-    LOGI("input open: %d Hz, %d ch", actualInputRate, actualInputChannels);
+    LOGI("input open: %s, %d Hz, %d ch", capturer->capture.name, actualInputRate, actualInputChannels);
     return true;
 }
 
@@ -159,6 +240,7 @@ void AudioDriver::stopInput() {
     inputRingRead = 0;
     actualInputChannels = 0;
     actualInputRate = 0;
+    actualInputDevice = 0;
 }
 
 // On the capture thread: into the queue, and never waiting. A full queue is
@@ -285,8 +367,9 @@ void AudioDriver::setBufferBursts(int32_t bursts) {
     // A period count is fixed when the device opens, so a change reopens it.
     if (device != nullptr) {
         const bool listening = capturer != nullptr;
+        const int32_t listeningTo = actualInputDevice;
         stop();
         start();
-        if (listening) startInput();
+        if (listening) startInput(listeningTo);
     }
 }

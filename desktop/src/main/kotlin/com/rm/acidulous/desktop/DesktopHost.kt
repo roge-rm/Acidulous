@@ -29,8 +29,7 @@ class DesktopHost(private val configDir: File) : AppHost {
     override fun unreadCrashReport(): File? = null
     override fun markCrashReportRead() {}
 
-    /** Only the system default for now; see AudioDriver's startInput. */
-    override fun audioInputs(): List<AudioInput> = emptyList()
+    override fun audioInputs(): List<AudioInput> = DesktopAudio.inputs()
 
     override fun docName(doc: Doc, fallback: String): String = doc.file.name.ifEmpty { fallback }
     override fun placeName(doc: Doc): String = doc.file.name
