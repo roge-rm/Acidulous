@@ -1,43 +1,65 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.nativeKeyCode
 import androidx.compose.ui.input.key.type
 import java.awt.event.KeyEvent as Awt
 
 actual val androidx.compose.ui.input.key.KeyEvent.press: KeyPress get() {
-    val awt = nativeKeyEvent as Awt
-    val code = androidCode(awt)
-    val down = type == KeyEventType.KeyDown
+    val code = androidCode(key)
     // AWT repeats a held key as more presses and says nothing of it; Android
-    // counts them. A key already down is a repeat.
-    val repeat = if (down) (if (!held.add(code)) 1 else 0) else { held.remove(code); 0 }
+    // counts them. A key already down is a repeat. Its "typed" events - a
+    // character, after the press - are neither down nor up, and the hub
+    // leaves anything else alone.
+    val (action, repeat) = when (type) {
+        KeyEventType.KeyDown -> KeyCodes.ACTION_DOWN to (if (!held.add(code)) 1 else 0)
+        KeyEventType.KeyUp -> { held.remove(code); KeyCodes.ACTION_UP to 0 }
+        else -> KeyCodes.ACTION_MULTIPLE to 0
+    }
     return KeyPress(
-        action = if (down) KeyCodes.ACTION_DOWN else KeyCodes.ACTION_UP,
+        action = action,
         keyCode = code,
         repeatCount = repeat,
-        isCtrlPressed = awt.isControlDown,
-        isAltPressed = awt.isAltDown,
-        isShiftPressed = awt.isShiftDown,
-        isMetaPressed = awt.isMetaDown,
+        isCtrlPressed = isCtrlPressed,
+        isAltPressed = isAltPressed,
+        isShiftPressed = isShiftPressed,
+        isMetaPressed = isMetaPressed,
     )
 }
 
 private val held = HashSet<Int>()
 
-/** AWT's key code as Android's, the form bindings are saved in; unknown keys keep AWT's number, offset clear of Android's. */
-private fun androidCode(e: Awt): Int {
-    val k = e.keyCode
+/**
+ * The key as Android's code, the form bindings are saved in. Compose names
+ * the sided and numpad keys itself; everything else goes by AWT's code, and a
+ * key with no Android equivalent keeps AWT's number, offset clear of Android's.
+ */
+private fun androidCode(key: Key): Int {
+    when (key) {
+        Key.NumPadEnter -> return KeyCodes.KEYCODE_NUMPAD_ENTER
+        Key.ShiftRight -> return KeyCodes.KEYCODE_SHIFT_RIGHT
+        Key.CtrlRight -> return KeyCodes.KEYCODE_CTRL_RIGHT
+        Key.MetaRight -> return KeyCodes.KEYCODE_META_RIGHT
+        Key.AltRight -> return KeyCodes.KEYCODE_ALT_RIGHT
+    }
+    val k = key.nativeKeyCode
     return when {
         k in Awt.VK_A..Awt.VK_Z -> KeyCodes.KEYCODE_A + (k - Awt.VK_A)
         k in Awt.VK_0..Awt.VK_9 -> KeyCodes.KEYCODE_0 + (k - Awt.VK_0)
         k in Awt.VK_F1..Awt.VK_F12 -> KeyCodes.KEYCODE_F1 + (k - Awt.VK_F1)
         k in Awt.VK_NUMPAD0..Awt.VK_NUMPAD9 -> KeyCodes.KEYCODE_NUMPAD_0 + (k - Awt.VK_NUMPAD0)
-        k == Awt.VK_ENTER -> if (e.keyLocation == Awt.KEY_LOCATION_NUMPAD) KeyCodes.KEYCODE_NUMPAD_ENTER else KeyCodes.KEYCODE_ENTER
-        k == Awt.VK_SHIFT -> if (e.keyLocation == Awt.KEY_LOCATION_RIGHT) KeyCodes.KEYCODE_SHIFT_RIGHT else KeyCodes.KEYCODE_SHIFT_LEFT
-        k == Awt.VK_CONTROL -> if (e.keyLocation == Awt.KEY_LOCATION_RIGHT) KeyCodes.KEYCODE_CTRL_RIGHT else KeyCodes.KEYCODE_CTRL_LEFT
+        k == Awt.VK_ENTER -> KeyCodes.KEYCODE_ENTER
+        k == Awt.VK_SHIFT -> KeyCodes.KEYCODE_SHIFT_LEFT
+        k == Awt.VK_CONTROL -> KeyCodes.KEYCODE_CTRL_LEFT
         k == Awt.VK_ALT -> KeyCodes.KEYCODE_ALT_LEFT
         k == Awt.VK_ALT_GRAPH -> KeyCodes.KEYCODE_ALT_RIGHT
-        k == Awt.VK_META || k == Awt.VK_WINDOWS -> if (e.keyLocation == Awt.KEY_LOCATION_RIGHT) KeyCodes.KEYCODE_META_RIGHT else KeyCodes.KEYCODE_META_LEFT
+        k == Awt.VK_META || k == Awt.VK_WINDOWS -> KeyCodes.KEYCODE_META_LEFT
         else -> AWT_TO_ANDROID[k] ?: (AWT_OFFSET + k)
     }
 }

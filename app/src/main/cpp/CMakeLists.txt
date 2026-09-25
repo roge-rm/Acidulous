@@ -32,6 +32,9 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O3 -ffast-math -fno-finite-math-only -g")
 # Nothing under engine/ may include anything under platform/.
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp")
 file(GLOB_RECURSE PLATFORM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/platform/*.cpp")
+# platform/desktop is the desktop build's (desktop/native/CMakeLists.txt): its
+# own audio driver, which would be a second AudioDriver here.
+list(FILTER PLATFORM_SOURCES EXCLUDE REGEX ".*/platform/desktop/.*")
 
 add_library(acidulous SHARED
     ${ENGINE_SOURCES}

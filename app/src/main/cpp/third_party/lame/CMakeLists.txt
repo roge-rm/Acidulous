@@ -53,5 +53,8 @@ target_compile_definitions(mp3lame PRIVATE HAVE_CONFIG_H)
 # vendored unmodified and the warnings are not ours to fix.
 target_compile_options(mp3lame PRIVATE -O3 -w)
 
-find_library(log-lib log)
-target_link_libraries(mp3lame ${log-lib})
+# Android's log library, where there is one; the desktop build has none.
+if(ANDROID)
+    find_library(log-lib log)
+    target_link_libraries(mp3lame ${log-lib})
+endif()

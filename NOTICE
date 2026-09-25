@@ -39,6 +39,13 @@ asio 1.36.0 — Boost Software License 1.0
   header-only. Vendored under app/src/main/cpp/third_party/asio.
   Licence text: app/src/main/cpp/third_party/asio/LICENSE_1_0.txt
 
+miniaudio 0.11.22 — public domain (the Unlicense), or MIT No Attribution
+  https://miniaud.io/
+  The desktop build's audio driver, in place of Oboe: PulseAudio, ALSA or
+  JACK. Header-only, compiled into the desktop's libacidulous.so and not
+  into the phone's. Either licence is the licensee's choice; neither asks for
+  a notice. See app/src/main/cpp/third_party/miniaudio/PROVENANCE.md.
+
 Everything else in this repository is original work. The C++ engine, every
 machine and effect, the sequencer, the WAV, AIFF and FLAC writers and the
 MIDI file writer were all written for this project; no DSP, presets or
