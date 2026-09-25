@@ -25,7 +25,11 @@ kotlin {
         minSdk = 27
         androidResources { enable = true }
     }
-    jvm("desktop")
+    // Java 21: what Debian Trixie and Raspberry Pi OS ship, and so what the
+    // desktop packages run on. Left alone it would be whatever JDK Gradle runs on.
+    jvm("desktop") {
+        compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21) }
+    }
 
     sourceSets {
         val jvmShared by creating {

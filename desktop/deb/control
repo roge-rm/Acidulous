@@ -1,0 +1,17 @@
+Package: acidulous
+Version: @VERSION@
+Architecture: @ARCH@
+Maintainer: Dan Hunke <dan@hunke.ws>
+Installed-Size: @SIZE@
+Depends: openjdk-21-jre | java21-runtime, libasound2t64
+Recommends: libpulse0
+Section: sound
+Priority: optional
+Homepage: https://github.com/roge-rm/Acidulous
+Description: music studio of synths, drum machines and effects
+ Combine up to 16 synthesizers, drum machines, noise generators and
+ processors into scenes of music, and play them in order or pick and choose
+ to make something new every time.
+ .
+ The desktop build of the Android app, with the same engine: it plays
+ through PulseAudio (or PipeWire's) where there is one, and ALSA where not.

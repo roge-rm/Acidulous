@@ -18,7 +18,17 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CPP "${CMAKE_CURRENT_SOURCE_DIR}/../../app/src/main/cpp")
 
-find_package(JNI REQUIRED)
+# The JNI headers. A cross build names them itself (JNI_INCLUDE_DIRS): they
+# are the same on every Linux, and FindJNI would go looking for a target JVM.
+if(NOT JNI_INCLUDE_DIRS)
+    find_package(JNI REQUIRED)
+endif()
+
+# The Pi build is tuned for a Pi 4's core and still runs on a Pi 5's; the
+# desktop's is for any x86-64.
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    add_compile_options(-mcpu=cortex-a72)
+endif()
 
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "${CPP}/engine/*.cpp")
 
@@ -51,4 +61,6 @@ find_package(Threads REQUIRED)
 # LAME stays its own shared library, as on the phone, for the LGPL's sake (see
 # its PROVENANCE.md); it is found beside this one.
 target_link_libraries(acidulous mp3lame ableton_link Threads::Threads ${CMAKE_DL_LIBS} m)
-set_target_properties(acidulous PROPERTIES BUILD_RPATH "$ORIGIN" INSTALL_RPATH "$ORIGIN")
+# Only $ORIGIN, even in the build tree: the packages copy the two libraries
+# side by side, and a path into this machine's build folder means nothing on a Pi.
+set_target_properties(acidulous PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "$ORIGIN")

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Acidulous
+GenericName=Music studio
+Comment=Synths, drum machines and effects, played in scenes
+Exec=acidulous
+Icon=acidulous
+Terminal=false
+Categories=AudioVideo;Audio;Music;Midi;
+Keywords=synthesizer;drum machine;sequencer;music;
+StartupWMClass=com-rm-acidulous-desktop-MainKt

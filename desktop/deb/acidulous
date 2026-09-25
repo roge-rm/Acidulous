@@ -1,0 +1,8 @@
+#!/bin/sh
+# Acidulous, from its Debian package: the app's jars on the system's Java,
+# with the engine's native libraries beside them.
+exec java \
+    -Djava.library.path=/usr/lib/acidulous/native \
+    --enable-native-access=ALL-UNNAMED \
+    -cp '/usr/lib/acidulous/lib/*' \
+    com.rm.acidulous.desktop.MainKt "$@"
