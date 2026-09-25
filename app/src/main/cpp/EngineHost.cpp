@@ -1178,7 +1178,13 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     }
     renderSeconds.store(static_cast<float>(blocks) * kBlockFrames / kSampleRate, std::memory_order_relaxed);
     renderPeak.store(peak, std::memory_order_relaxed);
+    // Stopped, and then silenced: a stop is only note-offs, and the stream
+    // reopens onto whatever the song's last notes and effects left ringing -
+    // the same blip a freeze made, and for the same reason. A render panics
+    // on the way in; it panics on the way out as well.
     sEngine.transport.requestStop();
+    sEngine.renderBlock(nullptr, silent);
+    sEngine.panicFlag.store(true, std::memory_order_release);
     sEngine.renderBlock(nullptr, silent);
     bool closed = true;
     for (auto &sink : sinks) {
@@ -2026,23 +2032,23 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     }
     const int64_t tailOutFrames = static_cast<int64_t>(left.size()) - clipFrames;
     r.tapDry = false;
-    sEngine.renderBlock(nullptr, scratch); // the transport was stopped for the tail
 
     // And a clean finish, for the same reason as the clean start above.
     //
-    // Stopping only sends note-offs, so at this point the machine's voices are
-    // in their release stages and both inserts are full of the render - two
-    // seconds of tail, since that is what a freeze deliberately renders. The
-    // stream is down while all of that happens, so none of it is heard until
-    // the line below reopens it, and then it is: a short blurt of the clip's
-    // own ending, once per clip, which is what freezing a whole track sounded
-    // like. The master too, because the racks fed the sends the entire time.
-    r.allNotesOff();
-    if (r.currentMachine() != nullptr) r.currentMachine()->reset();
-    for (int32_t sl = 0; sl < kEffectSlots; ++sl) {
-        if (r.currentEffect(sl) != nullptr) r.currentEffect(sl)->reset();
-    }
-    sEngine.master.panic();
+    // Stopping only sends note-offs, so at this point voices are in their
+    // release stages and inserts are full of the render. The stream is down
+    // while all of that happens, so none of it is heard until the line below
+    // reopens it - and then it is, as a blip, once per clip.
+    //
+    // **Every rack, not just this one.** The render plays the whole scene -
+    // it has to, since a sidechain can hang this track's sound on another's -
+    // so every track in it was left ringing, not only the one being frozen.
+    // Resetting this rack and the master was the first fix, and it left the
+    // rest: freezing the demo's arp in Break still reopened the stream onto
+    // 0.42 of the pad's release and the others' tails. The engine's own panic
+    // is the thing that names everything, so it is what runs here.
+    sEngine.panicFlag.store(true, std::memory_order_release);
+    sEngine.renderBlock(nullptr, scratch);
 
     sEngine.transport.setLoopSong(loopSongBefore);
     sEngine.transport.setLoopScene(loopSceneBefore);
