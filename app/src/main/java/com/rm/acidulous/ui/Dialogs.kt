@@ -539,14 +539,13 @@ fun TempoDialog(
  */
 @Composable
 private fun LinkPage() {
-    val context = androidx.compose.ui.platform.LocalContext.current
     val hub = com.rm.acidulous.engine.LinkHub
     WindowCards {
         WindowCard(stringResource(Res.string.link_card)) {
             SwitchGrid(stringResource(Res.string.link_tempo_sync), stringArrayResource(Res.array.off_on).toList(), if (hub.enabled) 1 else 0) { i ->
                 val on = i == 1
                 UiPrefs.chooseLink(on)
-                hub.setEnabled(context, on)
+                hub.chooseEnabled(on)
                 // One master at a time; the engine enforces it and the screen
                 // should not go on claiming otherwise.
                 if (on && com.rm.acidulous.midi.MidiHub.follow != com.rm.acidulous.midi.MidiHub.Follow.Off) {

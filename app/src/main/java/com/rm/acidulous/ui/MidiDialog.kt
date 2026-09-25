@@ -96,7 +96,7 @@ private fun DevicesTab(context: android.content.Context) {
     val ports = MidiHub.ports
     val found = MidiHub.discovered
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
-        if (grants.values.all { it }) MidiHub.scanBluetooth(context)
+        if (grants.values.all { it }) MidiHub.scanBluetooth()
     }
 
     WindowCards {
@@ -133,7 +133,7 @@ private fun DevicesTab(context: android.content.Context) {
             // A cable appears by itself; a Bluetooth instrument has to be
             // looked for, which is the one thing on this tab you *do*.
             SwitchGrid(
-                stringResource(if (MidiHub.bluetoothReady(context)) Res.string.midi_bluetooth else Res.string.midi_bluetooth_off),
+                stringResource(if (MidiHub.bluetoothReady()) Res.string.midi_bluetooth else Res.string.midi_bluetooth_off),
                 listOf(stringResource(if (MidiHub.scanning) Res.string.midi_stop else Res.string.midi_search)), if (MidiHub.scanning) 0 else -1,
             ) {
                 if (MidiHub.scanning) {
@@ -142,7 +142,7 @@ private fun DevicesTab(context: android.content.Context) {
                     val missing = MidiHub.bluetoothPermissions().filter {
                         context.checkSelfPermission(it) != android.content.pm.PackageManager.PERMISSION_GRANTED
                     }
-                    if (missing.isEmpty()) MidiHub.scanBluetooth(context) else permission.launch(missing.toTypedArray())
+                    if (missing.isEmpty()) MidiHub.scanBluetooth() else permission.launch(missing.toTypedArray())
                 }
             }
             // Why the list looks the way it does. A scan that finds nothing
@@ -158,7 +158,7 @@ private fun DevicesTab(context: android.content.Context) {
                     under = if (device.midi) device.address else stringResource(Res.string.midi_no_service, device.address),
                     trailing = stringResource(Res.string.midi_connect),
                     monoUnder = true,
-                ) { MidiHub.connectBluetooth(context, device.address) }
+                ) { MidiHub.connectBluetooth(device.address) }
             }
         }
         // Each track chooses whether it sends, in the mixer; this is where to,
@@ -245,7 +245,7 @@ private fun ControlTab(context: android.content.Context, song: Song) {
         // One master at a time, on screen as well as in the engine.
         if (mode != MidiHub.Follow.Off && link) {
             UiPrefs.chooseLink(false)
-            com.rm.acidulous.engine.LinkHub.setEnabled(context, false)
+            com.rm.acidulous.engine.LinkHub.chooseEnabled(false)
         }
         UiPrefs.chooseFollow(mode)
     }

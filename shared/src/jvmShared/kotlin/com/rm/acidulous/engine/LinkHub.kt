@@ -1,8 +1,6 @@
 package com.rm.acidulous.engine
 
-import android.content.Context
-import android.net.wifi.WifiManager
-import android.util.Log
+import com.rm.acidulous.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -42,13 +40,25 @@ object LinkHub {
     var phaseMs by mutableStateOf(0f)
         private set
 
-    private var lock: WifiManager.MulticastLock? = null
+    /**
+     * What lets multicast through while Link is on: Android's Wi-Fi
+     * MulticastLock, set by the platform at startup. Null where nothing
+     * filters it (a desktop), which counts as always let through.
+     */
+    var multicastLock: MulticastLock? = null
+
+    /** A lock on the Wi-Fi chip's multicast filter: see [multicastLock]. */
+    interface MulticastLock {
+        val isHeld: Boolean
+        fun acquire()
+        fun release()
+    }
 
     private const val TAG = "LinkHub"
 
-    fun setEnabled(context: Context, on: Boolean) {
+    fun chooseEnabled(on: Boolean) {
         enabled = on
-        if (on) acquire(context) else release()
+        if (on) acquire() else release()
         NativeEngine.setLink(on)
         if (!on) {
             peers = 0
@@ -67,34 +77,24 @@ object LinkHub {
         val packed = NativeEngine.linkStatus()
         peers = (packed shr 32).toInt()
         sessionTempo = (packed and 0xffffffffL).toInt() / 100f
-        multicast = lock?.isHeld == true
+        multicast = multicastLock?.isHeld ?: true
         // The engine publishes the phase error in the same packing the MIDI
         // follower uses, because it is the same question asked of a
         // different master.
         phaseMs = (NativeEngine.syncState() and 0xffffffffL).toInt() / 1000f
     }
 
-    private fun acquire(context: Context) {
-        if (lock?.isHeld == true) return
-        val held = runCatching {
-            val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            // Not reference counted: this is one lock held while a switch is
-            // on, not a nesting of borrowers.
-            wifi.createMulticastLock("acidulous-link").apply {
-                setReferenceCounted(false)
-                acquire()
-            }
-        }.getOrElse {
+    private fun acquire() {
+        val lock = multicastLock ?: run { multicast = true; return }
+        if (lock.isHeld) return
+        runCatching { lock.acquire() }.onFailure {
             Log.w(TAG, "no multicast lock: peers may never appear", it)
-            null
         }
-        lock = held
-        multicast = held?.isHeld == true
+        multicast = lock.isHeld
     }
 
     private fun release() {
-        runCatching { lock?.takeIf { it.isHeld }?.release() }
-        lock = null
+        runCatching { multicastLock?.takeIf { it.isHeld }?.release() }
         multicast = false
     }
 }

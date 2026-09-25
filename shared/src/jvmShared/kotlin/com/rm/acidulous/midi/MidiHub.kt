@@ -1,25 +1,8 @@
 package com.rm.acidulous.midi
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
-import android.content.Context
-import android.content.pm.PackageManager
-import android.media.midi.MidiDevice
 import com.rm.acidulous.midi.launchpad.LaunchpadPro
-import android.media.midi.MidiDeviceInfo
-import android.media.midi.MidiManager
-import android.media.midi.MidiInputPort
-import android.media.midi.MidiReceiver
-import android.os.Build
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.ParcelUuid
-import android.util.Log
+import com.rm.acidulous.util.Log
+import com.rm.acidulous.util.postToMain
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -44,16 +27,6 @@ import org.jetbrains.compose.resources.StringResource
  * the machine's own handling all behave identically whichever you play.
  */
 object MidiHub {
-    /**
-     * MIDI over Bluetooth Low Energy: the GATT service every such device
-     * advertises, from the BLE-MIDI specification.
-     *
-     * This is the scan filter, so one wrong digit in it is not a bug that
-     * degrades anything - it is a scan that can never match, on any device,
-     * for ever, and reports "nothing found" perfectly calmly. It had an 8
-     * where the spec has a 4, and cost an evening to find.
-     */
-    private val BLE_MIDI_SERVICE = ParcelUuid.fromString("03B80E5A-EDE8-4B33-A751-6CE34EC4C700")
     private const val TAG = "Acidulous.MIDI"
     private const val AUTO_GONE_NS = 1_000_000_000L
 
@@ -71,14 +44,13 @@ object MidiHub {
      */
     enum class Routing { SelectedTrack, FixedTrack, ChannelToRack }
 
-    private var manager: MidiManager? = null
-    private var appContext: Context? = null
+    /** The platform's MIDI: MidiManager on Android. Null until [start]. */
+    private var system: MidiSystem? = null
 
     /** One of the hub's own messages, in the phone's language. */
-    private fun say(id: StringResource, vararg args: Any): String = AppStrings.getString(id, *args)
-    private var worker: HandlerThread? = null
-    private var handler: Handler? = null
-    private val opened = HashMap<Int, MidiDevice>()
+    internal fun say(id: StringResource, vararg args: Any): String = AppStrings.getString(id, *args)
+    private val handler: MidiWorker? get() = system?.worker
+    private val opened = HashMap<Int, MidiOpenDevice>()
     /** A parser for each output port of each open device: see [attach]. */
     private val parsers = HashMap<Int, List<MidiParser>>()
 
@@ -86,11 +58,11 @@ object MidiHub {
     val destinations = mutableStateListOf<Destination>()
     val discovered = mutableStateListOf<Found>()
     var scanning by mutableStateOf(false)
-        private set
+        internal set
 
     /** Why the list looks the way it does. Empty when there is nothing to say. */
     var scanStatus by mutableStateOf("")
-        private set
+        internal set
     var routing by mutableStateOf(Routing.SelectedTrack)
     var lastMessage by mutableStateOf("")
         private set
@@ -98,7 +70,7 @@ object MidiHub {
         private set
 
     // --- out -----------------------------------------------------------------
-    private val outPorts = HashMap<Int, MidiInputPort>()
+    private val outPorts = HashMap<Int, MidiSendPort>()
     private val outBuffer = LongArray(256 * 2)
     private val anchor = LongArray(3)
     private val outBytes = ByteArray(3)
@@ -176,17 +148,14 @@ object MidiHub {
     var fixedRack by mutableStateOf(0)
 
     val supported: Boolean
-        get() = appContext?.packageManager?.hasSystemFeature(PackageManager.FEATURE_MIDI) == true
+        get() = system?.supported == true
 
-    fun start(context: Context) {
-        if (manager != null) return
-        appContext = context.applicationContext
-        manager = context.getSystemService(Context.MIDI_SERVICE) as? MidiManager ?: return
-        worker = HandlerThread("midi-in").apply { start() }
-        handler = Handler(worker!!.looper)
+    fun start(midi: MidiSystem) {
+        if (system != null) return
+        system = midi
         refresh()
-        manager?.registerDeviceCallback(object : MidiManager.DeviceCallback() {
-            override fun onDeviceAdded(device: MidiDeviceInfo) {
+        midi.watch(
+            added = { device ->
                 // Plugged in while the app is running: open it. A controller
                 // you have just connected is a controller you want to play,
                 // and making somebody find a dialog to say so is a step that
@@ -202,8 +171,8 @@ object MidiHub {
                 syncPads()
                 syncLaunchpad()
                 refresh()
-            }
-            override fun onDeviceRemoved(device: MidiDeviceInfo) {
+            },
+            removed = { device ->
                 // Unplugged mid-note: nothing else will ever send the off.
                 releasePort(device.id)
                 opened.remove(device.id)?.close()
@@ -212,8 +181,8 @@ object MidiHub {
                 syncPads()
                 syncLaunchpad()
                 refresh()
-            }
-        }, handler)
+            },
+        )
         // Already plugged in when the app started: light its pads, take the Launchpad.
         handler?.post { syncPads(); syncLaunchpad() }
         // Preferences are restored one line before this runs, so a clock-out
@@ -223,28 +192,23 @@ object MidiHub {
     }
 
     fun refresh() {
-        val mgr = manager ?: return
-        val list = @Suppress("DEPRECATION") mgr.devices.filter { it.outputPortCount > 0 }
+        val sys = system ?: return
+        val all = sys.devices
         ports.clear()
-        list.forEach { info ->
-            val props = info.properties
+        all.filter { it.outputPortCount > 0 }.forEach { info ->
             ports += Port(
                 id = info.id,
-                name = props.getString(MidiDeviceInfo.PROPERTY_NAME)
-                    ?: props.getString(MidiDeviceInfo.PROPERTY_PRODUCT) ?: say(Res.string.midi_device),
-                maker = props.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER).orEmpty(),
-                bluetooth = info.type == MidiDeviceInfo.TYPE_BLUETOOTH,
+                name = info.name ?: info.product ?: say(Res.string.midi_device),
+                maker = info.maker.orEmpty(),
+                bluetooth = info.bluetooth,
                 open = opened.containsKey(info.id),
             )
         }
         destinations.clear()
-        @Suppress("DEPRECATION")
-        mgr.devices.filter { it.inputPortCount > 0 }.forEach { info ->
-            val props = info.properties
+        all.filter { it.inputPortCount > 0 }.forEach { info ->
             destinations += Destination(
                 id = info.id,
-                name = props.getString(MidiDeviceInfo.PROPERTY_NAME)
-                    ?: props.getString(MidiDeviceInfo.PROPERTY_PRODUCT) ?: say(Res.string.midi_device),
+                name = info.name ?: info.product ?: say(Res.string.midi_device),
                 open = outPorts.containsKey(info.id),
             )
         }
@@ -267,7 +231,6 @@ object MidiHub {
         private set
     /** A press of one of those buttons, by id (PadLights.BUTTON_*), on the main thread. */
     var exquisButtonPressed: ((Int) -> Unit)? = null
-    private val mainThread = android.os.Handler(android.os.Looper.getMainLooper())
     /** The app holds the buttons zone in developer mode on this Exquis now. */
     @Volatile private var buttonsHeld = false
     private var wantedLeds: Map<Int, Triple<Int, Int, Int>> = emptyMap()
@@ -289,9 +252,9 @@ object MidiHub {
     /** An Exquis is plugged in, so its switch is worth showing. */
     var exquisHere by mutableStateOf(false)
         private set
-    private var padInfo: MidiDeviceInfo? = null
-    private var padDevice: MidiDevice? = null
-    private var padPort: MidiInputPort? = null
+    private var padInfo: MidiDeviceDesc? = null
+    private var padDevice: MidiOpenDevice? = null
+    private var padPort: MidiSendPort? = null
     private val lit = HashSet<Int>()
     private var wantedLit: Set<Int> = emptySet()
     private var wantedRoot: Int? = null
@@ -330,27 +293,22 @@ object MidiHub {
         }
     }
 
-    private fun padPortNow(): MidiInputPort? = padInfo?.let { outPorts[it.id] } ?: padPort
+    private fun padPortNow(): MidiSendPort? = padInfo?.let { outPorts[it.id] } ?: padPort
 
-    private fun sendBytes(port: MidiInputPort, bytes: ByteArray) {
+    private fun sendBytes(port: MidiSendPort, bytes: ByteArray) {
         runCatching { port.send(bytes, 0, bytes.size) }
     }
 
-    private fun sendPad(port: MidiInputPort, status: Int, note: Int, vel: Int) {
+    private fun sendPad(port: MidiSendPort, status: Int, note: Int, vel: Int) {
         padBytes[0] = status.toByte(); padBytes[1] = note.toByte(); padBytes[2] = vel.toByte()
         runCatching { port.send(padBytes, 0, 3) }
     }
 
     private fun syncPads() {
-        val mgr = manager ?: return
-        @Suppress("DEPRECATION")
-        val info = mgr.devices.firstOrNull {
+        val sys = system ?: return
+        val info = sys.devices.firstOrNull {
             // Over USB: its manual says that is where it listens for this.
-            it.inputPortCount > 0 && it.type == MidiDeviceInfo.TYPE_USB && PadLights.isExquis(
-                it.properties.getString(MidiDeviceInfo.PROPERTY_NAME),
-                it.properties.getString(MidiDeviceInfo.PROPERTY_PRODUCT),
-                it.properties.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER),
-            )
+            it.inputPortCount > 0 && it.usb && PadLights.isExquis(it.name, it.product, it.maker)
         }
         exquisHere = info != null
         if (info == null || info.id != padInfo?.id) {
@@ -369,12 +327,12 @@ object MidiHub {
         val port = padPortNow()
         if (port == null) {
             if ((padMode == PadMode.Off && !exquisButtons) || padDevice != null) return
-            mgr.openDevice(info, { device ->
+            sys.openDevice(info) { device ->
                 padDevice = device
                 padPort = device?.openInputPort(0)
                 if (padPort == null) Log.w(TAG, "could not open the Exquis for its pads")
                 syncPads()
-            }, handler)
+            }
             return
         }
         // Once a connection: offs for every note on channel 1, so nothing a
@@ -433,9 +391,9 @@ object MidiHub {
     var launchpadInput: ((Int, Int, Int) -> Unit)? = null
     /** Told when the surface is freshly the app's and has to be drawn whole. */
     var onLaunchpadReady: (() -> Unit)? = null
-    private var lpInfo: MidiDeviceInfo? = null
-    private var lpDevice: MidiDevice? = null
-    private var lpPort: MidiInputPort? = null
+    private var lpInfo: MidiDeviceDesc? = null
+    private var lpDevice: MidiOpenDevice? = null
+    private var lpPort: MidiSendPort? = null
     private var lpProgrammer = false
 
     fun chooseLaunchpad(on: Boolean) {
@@ -460,13 +418,9 @@ object MidiHub {
     }
 
     private fun syncLaunchpad() {
-        val mgr = manager ?: return
-        @Suppress("DEPRECATION")
-        val info = mgr.devices.firstOrNull {
-            it.inputPortCount > 0 && it.type == MidiDeviceInfo.TYPE_USB && LaunchpadPro.isOne(
-                it.properties.getString(MidiDeviceInfo.PROPERTY_NAME),
-                it.properties.getString(MidiDeviceInfo.PROPERTY_PRODUCT),
-            )
+        val sys = system ?: return
+        val info = sys.devices.firstOrNull {
+            it.inputPortCount > 0 && it.usb && LaunchpadPro.isOne(it.name, it.product)
         }
         launchpadHere = info != null
         if (info == null || info.id != lpInfo?.id) {
@@ -479,12 +433,12 @@ object MidiHub {
         val port = lpPort
         if (port == null) {
             if (!launchpadOn || lpDevice != null) return
-            mgr.openDevice(info, { device ->
+            sys.openDevice(info) { device ->
                 lpDevice = device
                 lpPort = device?.openInputPort(0)
                 if (lpPort == null) Log.w(TAG, "could not open the Launchpad")
                 syncLaunchpad()
-            }, handler)
+            }
             return
         }
         if (launchpadOn && !lpProgrammer) {
@@ -510,7 +464,7 @@ object MidiHub {
     // would still be at the mercy of the scheduler.
 
     fun toggleDestination(id: Int) {
-        val mgr = manager ?: return
+        val sys = system ?: return
         val existing = outPorts.remove(id)
         if (existing != null) {
             // The Exquis's pads were sharing it: they keep it.
@@ -526,9 +480,8 @@ object MidiHub {
             refresh()
             return
         }
-        @Suppress("DEPRECATION")
-        val info = mgr.devices.firstOrNull { it.id == id } ?: return
-        mgr.openDevice(info, { device ->
+        val info = sys.devices.firstOrNull { it.id == id } ?: return
+        sys.openDevice(info) { device ->
             val port = device?.openInputPort(0)
             if (port == null) {
                 Log.w(TAG, "could not open an input port on $id")
@@ -537,7 +490,7 @@ object MidiHub {
                 startSender()
             }
             refresh()
-        }, handler)
+        }
     }
 
     private var sending = false
@@ -775,10 +728,10 @@ object MidiHub {
     /** Open a port for input, if it is there and not already open. */
     private fun open(portId: Int) {
         if (opened.containsKey(portId)) return
-        val mgr = manager ?: return
-        val info = @Suppress("DEPRECATION") mgr.devices.firstOrNull { it.id == portId } ?: return
+        val sys = system ?: return
+        val info = sys.devices.firstOrNull { it.id == portId } ?: return
         if (info.outputPortCount <= 0) return
-        mgr.openDevice(info, { device -> attach(portId, device) }, handler)
+        sys.openDevice(info) { device -> attach(portId, device) }
     }
 
     /**
@@ -790,7 +743,7 @@ object MidiHub {
      */
     private val declined = HashSet<Int>()
 
-    private fun attach(portId: Int, device: MidiDevice?) {
+    private fun attach(portId: Int, device: MidiOpenDevice?) {
         if (device == null) {
             Log.w(TAG, "could not open device $portId")
             return
@@ -802,17 +755,10 @@ object MidiHub {
         // from one port onto the running status of another. And it is how
         // the Launchpad's own port can go to its controller while its DIN
         // socket still plays like any other input.
-        val launchpad = LaunchpadPro.isOne(
-            device.info.properties.getString(MidiDeviceInfo.PROPERTY_NAME),
-            device.info.properties.getString(MidiDeviceInfo.PROPERTY_PRODUCT),
-        )
-        val exquis = PadLights.isExquis(
-            device.info.properties.getString(MidiDeviceInfo.PROPERTY_NAME),
-            device.info.properties.getString(MidiDeviceInfo.PROPERTY_PRODUCT),
-            device.info.properties.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER),
-        )
+        val launchpad = LaunchpadPro.isOne(device.desc.name, device.desc.product)
+        val exquis = PadLights.isExquis(device.desc.name, device.desc.product, device.desc.maker)
         val list = ArrayList<MidiParser>()
-        for (p in 0 until device.info.outputPortCount) {
+        for (p in 0 until device.desc.outputPortCount) {
             val surface = launchpad && p == 0
             val parser = MidiParser(
                 onMessage = { status, d1, d2 ->
@@ -824,7 +770,7 @@ object MidiHub {
                         // One of the Exquis's buttons the app holds: an action, not a controller.
                         lastMessage = "exquis · button $d1 ${if (d2 > 0) "on" else "off"}"
                         PadLights.exquisButton(status, d1, d2)?.let { id ->
-                            exquisButtonPressed?.let { f -> mainThread.post { f(id) } }
+                            exquisButtonPressed?.let { f -> postToMain { f(id) } }
                         }
                     } else {
                         currentPort = portId; dispatch(status, d1, d2); currentPort = -1
@@ -842,15 +788,12 @@ object MidiHub {
                 },
             )
             list += parser
-            val receiver = object : MidiReceiver() {
-                // The timestamp is the whole point of following a clock: a
-                // handler thread's wake-up is jittery by milliseconds, and
-                // this is not.
-                override fun onSend(msg: ByteArray, offset: Int, count: Int, timestamp: Long) {
-                    parser.parse(msg, offset, count, timestamp)
-                }
+            // The timestamp is the whole point of following a clock: a
+            // handler thread's wake-up is jittery by milliseconds, and this
+            // is not.
+            device.connectOutputPort(p) { msg, offset, count, timestamp ->
+                parser.parse(msg, offset, count, timestamp)
             }
-            device.openOutputPort(p)?.connect(receiver)
         }
         parsers[portId] = list
         refresh()
@@ -1045,157 +988,24 @@ object MidiHub {
     // --- Bluetooth ------------------------------------------------------------
     //
     // A BLE MIDI device is not a MIDI device until it has been found and
-    // opened. Scan for the MIDI service, hand the result to MidiManager, and
-    // from there it is the same as anything plugged in.
+    // opened. The platform does the finding (AndroidMidi.kt on a phone); what
+    // it opens comes back through [attachFound] and from there it is the
+    // same as anything plugged in.
 
-    fun bluetoothReady(context: Context): Boolean {
-        if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) return false
-        val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
-        return adapter?.isEnabled == true
-    }
+    /** Whether the platform can scan for Bluetooth MIDI and Bluetooth is on. */
+    fun bluetoothReady(): Boolean = system?.bluetooth?.ready() == true
 
-    /** The permissions a scan needs, which differ either side of Android 12. */
-    fun bluetoothPermissions(): Array<String> =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            arrayOf(android.Manifest.permission.BLUETOOTH_SCAN, android.Manifest.permission.BLUETOOTH_CONNECT)
-        } else {
-            arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION)
-        }
+    /** The permissions a scan needs. */
+    fun bluetoothPermissions(): Array<String> = system?.bluetooth?.permissions() ?: emptyArray()
 
-    private var scanner: android.bluetooth.le.BluetoothLeScanner? = null
-    private var wide = false
-    private var widenTask: Runnable? = null
-    private var endTask: Runnable? = null
+    fun scanBluetooth() { system?.bluetooth?.scan() }
 
-    private val scanCallback = object : ScanCallback() {
-        override fun onScanResult(callbackType: Int, result: ScanResult) {
-            // Reading a device's name needs BLUETOOTH_CONNECT on Android 12
-            // and up, and throws rather than returning null without it - in
-            // a system callback, where it takes the scan down with it.
-            val name = try {
-                result.device.name ?: result.scanRecord?.deviceName
-            } catch (e: SecurityException) {
-                null
-            }
-            val isMidi = result.scanRecord?.serviceUuids?.contains(BLE_MIDI_SERVICE) == true
-            if (wide && !isMidi && name == null) return // nothing to show and nothing to pick
-            val at = discovered.indexOfFirst { it.address == result.device.address }
-            val found = Found(result.device.address, name ?: say(Res.string.midi_unnamed), isMidi)
-            if (at < 0) {
-                discovered += found
-            } else if (isMidi && !discovered[at].midi) {
-                discovered[at] = found // the service turned up in the scan response
-            }
-        }
+    fun stopScan() { system?.bluetooth?.stop() }
 
-        override fun onScanFailed(errorCode: Int) {
-            Log.w(TAG, "BLE scan failed: $errorCode")
-            scanStatus = when (errorCode) {
-                SCAN_FAILED_ALREADY_STARTED -> say(Res.string.midi_scan_running)
-                SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> say(Res.string.midi_scan_refused_restart)
-                SCAN_FAILED_FEATURE_UNSUPPORTED -> say(Res.string.midi_scan_unsupported)
-                else -> say(Res.string.midi_scan_failed, errorCode)
-            }
-            scanning = false
-        }
-    }
+    fun connectBluetooth(address: String) { system?.bluetooth?.connect(address) }
 
-    private fun beginScan(filtered: Boolean) {
-        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-        val filters = if (filtered) listOf(ScanFilter.Builder().setServiceUuid(BLE_MIDI_SERVICE).build()) else null
-        try {
-            scanner?.startScan(filters, settings, scanCallback)
-            scanning = true
-        } catch (e: SecurityException) {
-            Log.w(TAG, "scan refused: ${e.message}")
-            scanStatus = say(Res.string.midi_scan_refused)
-            scanning = false
-        }
-    }
-
-    /**
-     * Look for the MIDI service first, and if nothing has answered after a
-     * few seconds, widen to everything with a name.
-     *
-     * Not every peripheral puts its 128-bit service UUID in the advertising
-     * packet - there is only room for one, and some put it in the scan
-     * response instead, where Android's offloaded filter can miss it. A
-     * filtered scan that finds nothing is therefore not proof of absence,
-     * and a list you can pick from beats a list that is empty and sure of
-     * itself.
-     */
-    fun scanBluetooth(context: Context) {
-        if (scanning) return
-        val adapter: BluetoothAdapter =
-            (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter ?: return
-        discovered.clear()
-        scanStatus = ""
-        wide = false
-        scanner = adapter.bluetoothLeScanner ?: return
-        beginScan(filtered = true)
-        if (!scanning) return
-
-        widenTask = Runnable {
-            if (!scanning || discovered.isNotEmpty()) return@Runnable
-            try {
-                scanner?.stopScan(scanCallback)
-            } catch (e: SecurityException) {
-                Log.w(TAG, "stop refused: ${e.message}")
-            }
-            wide = true
-            scanStatus = say(Res.string.midi_scan_widened)
-            beginScan(filtered = false)
-        }.also { handler?.postDelayed(it, 6_000) }
-        endTask = Runnable {
-            val none = discovered.isEmpty()
-            stopScan()
-            if (none) {
-                scanStatus = say(Res.string.midi_scan_nothing)
-            }
-        }.also { handler?.postDelayed(it, 16_000) }
-    }
-
-    fun stopScan() {
-        widenTask?.let { handler?.removeCallbacks(it) }
-        endTask?.let { handler?.removeCallbacks(it) }
-        widenTask = null
-        endTask = null
-        if (!scanning) return
-        try {
-            scanner?.stopScan(scanCallback)
-        } catch (e: SecurityException) {
-            Log.w(TAG, "stop refused: ${e.message}")
-        }
-        scanning = false
-    }
-
-    fun connectBluetooth(context: Context, address: String) {
-        val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter ?: return
-        val device: BluetoothDevice = try {
-            adapter.getRemoteDevice(address)
-        } catch (e: IllegalArgumentException) {
-            Log.w(TAG, "bad address $address"); return
-        }
-        stopScan()
-        scanStatus = say(Res.string.midi_opening)
-        try {
-            manager?.openBluetoothDevice(device, { opened ->
-                if (opened == null) {
-                    // Android hands back nothing and says nothing. Usually it
-                    // is not a MIDI device at all, or it is already paired in
-                    // the system's Bluetooth settings and so is not listening.
-                    Log.w(TAG, "openBluetoothDevice gave nothing for $address")
-                    scanStatus = say(Res.string.midi_open_failed)
-                } else {
-                    scanStatus = ""
-                    attach(opened.info.id, opened)
-                }
-            }, handler)
-        } catch (e: SecurityException) {
-            Log.w(TAG, "connect refused: ${e.message}")
-            scanStatus = say(Res.string.midi_connect_refused)
-        }
-    }
+    /** A device the Bluetooth side found and opened: play it like one plugged in. */
+    internal fun attachFound(device: MidiOpenDevice) = attach(device.desc.id, device)
 
     /**
      * Prove the routing without hardware: middle C, held long enough to be

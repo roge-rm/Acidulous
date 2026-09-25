@@ -166,7 +166,8 @@ class MainActivity : ComponentActivity() {
         com.rm.acidulous.ui.UiPrefs.init(com.rm.acidulous.util.androidPrefs(getSharedPreferences("ui", MODE_PRIVATE)))
         com.rm.acidulous.model.Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
         com.rm.acidulous.model.Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
-        com.rm.acidulous.midi.MidiHub.start(this)
+        com.rm.acidulous.midi.androidMidi(this)?.let { com.rm.acidulous.midi.MidiHub.start(it) }
+        com.rm.acidulous.engine.LinkHub.multicastLock = com.rm.acidulous.engine.wifiMulticastLock(this)
         EngineAssets.install(filesDir, cacheDir)
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
@@ -973,11 +974,11 @@ private fun App(modifier: Modifier = Modifier) {
             // quality and record format have to be pushed once the stream is
             // up, and again whenever one of them changes.
             com.rm.acidulous.ui.UiPrefs.applyToEngine()
-            // Link needs a Context for the multicast lock, so it cannot go
-            // in applyToEngine with the rest; it is switched on here if it
-            // was on when the app was last closed.
+            // Link is switched on here, apart from applyToEngine, because it
+            // takes the multicast lock; on if it was on when the app was
+            // last closed.
             if (com.rm.acidulous.ui.UiPrefs.linkWanted) {
-                com.rm.acidulous.engine.LinkHub.setEnabled(context, true)
+                com.rm.acidulous.engine.LinkHub.chooseEnabled(true)
             }
             // Come back to whatever was open. The demo comes up once, on the
             // first run after installing, and is saved with the songs so it can
