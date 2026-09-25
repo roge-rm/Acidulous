@@ -323,9 +323,10 @@ object KeyHub {
             }
         }
         // Chords with a modifier, and the keys that are never a control's own.
+        // Not Esc: a grabbed knob or the roll's cursor lets go on it first,
+        // and only an Esc nothing wanted comes back as back - see [fallback].
         val always = !chord.plain || code == KeyEvent.KEYCODE_SPACE || code == KeyEvent.KEYCODE_SYM ||
-            code == KeyEvent.KEYCODE_GRAVE || code == KeyEvent.KEYCODE_ESCAPE ||
-            code in KeyEvent.KEYCODE_F1..KeyEvent.KEYCODE_F12
+            code == KeyEvent.KEYCODE_GRAVE || code in KeyEvent.KEYCODE_F1..KeyEvent.KEYCODE_F12
         if (!always) return false
         return dispatch(e, chord)
     }
@@ -334,7 +335,7 @@ object KeyHub {
     fun fallback(e: KeyEvent): Boolean {
         if (typing || e.action != KeyEvent.ACTION_DOWN) return false
         val chord = KeyChord.of(e)
-        if (playMode && chord.plain) return false
+        if (playMode && chord.plain && e.keyCode != KeyEvent.KEYCODE_ESCAPE) return false
         return dispatch(e, chord)
     }
 

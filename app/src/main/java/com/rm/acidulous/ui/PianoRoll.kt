@@ -28,6 +28,11 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerId
@@ -169,8 +174,89 @@ fun PianoRoll(
             spokenNote(low, noteSpelling, resources), spokenNote(high, noteSpelling, resources),
         )
     }
+    // **The keyboard's cursor.** Focused, the roll wears a ring; Enter starts
+    // editing and a cell-sized cursor appears, one grid step wide on one
+    // pitch. Arrows move it, and the page and the pitch window follow it.
+    // Enter adds a note there or takes the one there away - the same two
+    // callbacks a tap uses - Shift and the arrows lengthen or shorten it, Alt
+    // and the arrows move it, Delete removes it, and Esc stops editing so the
+    // arrows move between controls again. Editing is a mode for the same
+    // reason a knob is grabbed: a phone whose only arrows are a touchpad has
+    // no other way out of a control that keeps them.
+    var keyFocused by remember { mutableStateOf(false) }
+    var keyEditing by remember { mutableStateOf(false) }
+    var curTick by remember { mutableIntStateOf(firstTick) }
+    var curPitch by remember { mutableIntStateOf(lowestPitch + rows / 2) }
+    val firstState by rememberUpdatedState(firstTick)
+    val visibleState by rememberUpdatedState(visibleTicks)
+    val keyMod = Modifier
+        .onFocusChanged { keyFocused = it.isFocused; if (!it.isFocused) keyEditing = false }
+        .focusable()
+        .onKeyEvent { ev ->
+            if (ev.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onKeyEvent false
+            val e = ev.nativeKeyEvent
+            val code = e.keyCode
+            val enter = code == android.view.KeyEvent.KEYCODE_ENTER || code == android.view.KeyEvent.KEYCODE_NUMPAD_ENTER ||
+                code == android.view.KeyEvent.KEYCODE_DPAD_CENTER
+            if (!keyEditing) {
+                if (!enter) return@onKeyEvent false
+                keyEditing = true
+                // Start where the player is looking.
+                val lo = lowestState
+                if (curTick !in firstState until firstState + visibleState) curTick = firstState
+                if (curPitch !in lo until lo + rowsState) curPitch = lo + rowsState / 2
+                return@onKeyEvent true
+            }
+            val c = clipState
+            val grid = c.grid.coerceAtLeast(1)
+            val total = (c.bars * ticksPerBar).coerceAtLeast(grid)
+            val under = c.notes.indexOfFirst { it.pitch == curPitch && curTick >= it.tick && curTick < it.tick + max(1, it.length) }
+            fun keepInView() {
+                val first = firstState
+                val visible = visibleState
+                if (curTick < first) cb.onScrollTime((curTick - first).toFloat())
+                else if (curTick + grid > first + visible) cb.onScrollTime((curTick + grid - first - visible).toFloat())
+                val lo = lowestState
+                if (curPitch < lo) cb.onScrollPitch(curPitch - lo)
+                else if (curPitch > lo + rowsState - 1) cb.onScrollPitch(curPitch - (lo + rowsState - 1))
+            }
+            fun step(dTick: Int, dPitch: Int) {
+                if (e.isAltPressed && under >= 0) {
+                    // Move the note, and the cursor with it.
+                    cb.onGestureBegin(); cb.onMove(setOf(under), dTick, dPitch); cb.onGestureEnd()
+                }
+                curTick = (curTick + dTick).coerceIn(0, total - grid)
+                curPitch = (curPitch + dPitch).coerceIn(0, 127)
+                keepInView()
+            }
+            when (code) {
+                android.view.KeyEvent.KEYCODE_ESCAPE -> { keyEditing = false; true }
+                android.view.KeyEvent.KEYCODE_ENTER, android.view.KeyEvent.KEYCODE_NUMPAD_ENTER,
+                android.view.KeyEvent.KEYCODE_DPAD_CENTER -> {
+                    if (under >= 0) cb.onTapNote(under) else cb.onTapEmpty(curTick, curPitch)
+                    true
+                }
+                android.view.KeyEvent.KEYCODE_DEL, android.view.KeyEvent.KEYCODE_FORWARD_DEL -> {
+                    if (under >= 0) cb.onTapNote(under)
+                    true
+                }
+                android.view.KeyEvent.KEYCODE_DPAD_LEFT, android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    val dir = if (code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT) 1 else -1
+                    if (e.isShiftPressed && under >= 0) {
+                        val n = c.notes[under]
+                        cb.onGestureBegin(); cb.onResize(under, (n.length + dir * grid).coerceAtLeast(grid)); cb.onGestureEnd()
+                    } else step(dir * grid, 0)
+                    true
+                }
+                android.view.KeyEvent.KEYCODE_DPAD_UP -> { step(0, 1); true }
+                android.view.KeyEvent.KEYCODE_DPAD_DOWN -> { step(0, -1); true }
+                android.view.KeyEvent.KEYCODE_PAGE_UP -> { step(0, 12); true }
+                android.view.KeyEvent.KEYCODE_PAGE_DOWN -> { step(0, -12); true }
+                else -> false
+            }
+        }
     Canvas(
-        modifier = modifier.semantics { contentDescription = summary }.pointerInput(Unit) {
+        modifier = modifier.semantics { contentDescription = summary }.then(keyMod).pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
                 val geo = Geometry(
@@ -410,6 +496,20 @@ fun PianoRoll(
             if (t >= geo.firstTick && t < geo.lastTick) {
                 val x = geo.xOf(t)
                 drawLine(c.accent, Offset(x, geo.originY), Offset(x, size.height), 3f)
+            }
+        }
+
+        // The keyboard's focus and cursor.
+        if (keyFocused) {
+            drawRect(c.accent, Offset.Zero, size, style = Stroke(2.dp.toPx()))
+            if (keyEditing) {
+                val grid = clip.grid.coerceAtLeast(1)
+                val left = geo.xOf(curTick)
+                val right = geo.xOf(curTick + grid)
+                val top = geo.yOf(curPitch)
+                if (right > geo.originX && left < size.width && top >= geo.originY - 1f && top < size.height) {
+                    drawRect(c.pink, Offset(left, top), Size(max(right - left, 4f), geo.rowH), style = Stroke(2.5f))
+                }
             }
         }
 
