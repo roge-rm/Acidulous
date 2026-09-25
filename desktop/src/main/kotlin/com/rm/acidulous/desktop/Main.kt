@@ -1,7 +1,5 @@
 package com.rm.acidulous.desktop
 
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -17,9 +15,10 @@ import com.rm.acidulous.res.AppStrings
 import com.rm.acidulous.res.Res
 import com.rm.acidulous.res.name_copy
 import com.rm.acidulous.res.name_scene
-import com.rm.acidulous.ui.KeyHub
 import com.rm.acidulous.ui.UiPrefs
-import com.rm.acidulous.ui.press
+import com.rm.acidulous.ui.fallbackKey
+import com.rm.acidulous.ui.previewKey
+import com.rm.acidulous.ui.watchPointer
 import com.rm.acidulous.util.FilePrefs
 import java.io.File
 
@@ -42,6 +41,7 @@ fun main() {
     // Nothing on a desktop filters multicast, so Link needs no lock.
     LinkHub.multicastLock = null
     EngineAssets.install(data, cache)
+    watchPointer()
 
     application {
         Window(
@@ -54,9 +54,9 @@ fun main() {
             state = rememberWindowState(size = DpSize(1280.dp, 800.dp)),
             // Every key through the hub first, as dispatchKeyEvent does on the
             // phone; whatever the focused control leaves comes back for the
-            // plain-letter shortcuts.
-            onPreviewKeyEvent = { KeyHub.preview(it.press) },
-            onKeyEvent = { KeyHub.fallback(it.press) },
+            // plain-letter shortcuts. The windows' keys too: see WindowKeys.
+            onPreviewKeyEvent = { previewKey(it) },
+            onKeyEvent = { fallbackKey(it) },
         ) {
             AppRoot()
         }

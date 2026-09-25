@@ -12,6 +12,18 @@ import androidx.compose.ui.input.key.type
 import java.awt.event.KeyEvent as Awt
 
 actual val androidx.compose.ui.input.key.KeyEvent.press: KeyPress get() {
+    // One event is asked twice - the hub's preview, then its fallback - and
+    // the second asking must not find its own key already down and call it a
+    // repeat, which the hub takes without running.
+    last?.let { (event, press) -> if (event === nativeKeyEvent) return press }
+    return pressOf(this).also { last = nativeKeyEvent to it }
+}
+
+private var last: Pair<Any, KeyPress>? = null
+
+private fun pressOf(e: androidx.compose.ui.input.key.KeyEvent): KeyPress {
+    val key = e.key
+    val type = e.type
     val code = androidCode(key)
     // AWT repeats a held key as more presses and says nothing of it; Android
     // counts them. A key already down is a repeat. Its "typed" events - a
@@ -26,10 +38,10 @@ actual val androidx.compose.ui.input.key.KeyEvent.press: KeyPress get() {
         action = action,
         keyCode = code,
         repeatCount = repeat,
-        isCtrlPressed = isCtrlPressed,
-        isAltPressed = isAltPressed,
-        isShiftPressed = isShiftPressed,
-        isMetaPressed = isMetaPressed,
+        isCtrlPressed = e.isCtrlPressed,
+        isAltPressed = e.isAltPressed,
+        isShiftPressed = e.isShiftPressed,
+        isMetaPressed = e.isMetaPressed,
     )
 }
 
