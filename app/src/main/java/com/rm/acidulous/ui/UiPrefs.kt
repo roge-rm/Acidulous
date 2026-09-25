@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.midi.MidiHub
+import com.rm.acidulous.midi.VelocityCurve
 import com.rm.acidulous.model.Scales
 import com.rm.acidulous.model.Signature
 import com.rm.acidulous.model.Song
@@ -417,6 +418,7 @@ object UiPrefs {
             .getOrDefault(MidiHub.Routing.SelectedTrack)
         MidiHub.fixedRack = p.getInt(KEY_MIDI_RACK, 0)
         MidiHub.outOffsetMs = p.getInt(KEY_MIDI_AHEAD, 0)
+        MidiHub.velocityCurve = p.getInt(KEY_VELOCITY_CURVE, 0).coerceIn(-VelocityCurve.STEPS, VelocityCurve.STEPS)
         MidiHub.chooseClockOut(p.getBoolean(KEY_MIDI_CLOCK_OUT, false))
         // The switch was on or off before auto; an old "on" is still on.
         val follow = p.getString(KEY_MIDI_FOLLOW_MODE, null)
@@ -764,6 +766,13 @@ object UiPrefs {
         store?.edit()?.putInt(KEY_MIDI_AHEAD, v)?.apply()
     }
 
+    /** How note-ons from controllers are bent: below 0 softer, above harder. */
+    fun chooseVelocityCurve(step: Int) {
+        val v = step.coerceIn(-VelocityCurve.STEPS, VelocityCurve.STEPS)
+        MidiHub.velocityCurve = v
+        store?.edit()?.putInt(KEY_VELOCITY_CURVE, v)?.apply()
+    }
+
     /**
      * The MPE zone, and what a finger's bend is worth.
      *
@@ -841,6 +850,7 @@ object UiPrefs {
     private const val KEY_MIDI_FOLLOW = "midi_follow"
     private const val KEY_MIDI_FOLLOW_MODE = "midi_follow_mode"
     private const val KEY_MIDI_AHEAD = "midi_ahead_ms"
+    private const val KEY_VELOCITY_CURVE = "midi_velocity_curve"
     private const val KEY_LINK = "link_on"
     private const val KEY_LINK_STARTSTOP = "link_startstop"
 

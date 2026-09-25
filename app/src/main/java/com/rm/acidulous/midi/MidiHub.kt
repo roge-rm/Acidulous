@@ -114,6 +114,8 @@ object MidiHub {
      * few milliseconds of a phone's audio path that nothing can measure.
      */
     var outOffsetMs by mutableStateOf(0)
+    /** How note-ons from controllers are bent before anything hears them: see [VelocityCurve]. */
+    var velocityCurve by mutableStateOf(0)
 
     /** What the engine has handed over, whether or not anything was listening.
      *  Separate from [sent] because "the clock is running but nothing is
@@ -849,8 +851,11 @@ object MidiHub {
     /** Is this channel one of the zone's fingers? Channels are 0-based here. */
     fun mpeMember(channel: Int): Boolean = MpeZone.member(mpeZone, mpeMembers, channel)
 
-    private fun dispatch(status: Int, d1: Int, d2: Int) {
+    private fun dispatch(status: Int, d1: Int, d2In: Int) {
         val kind = status and 0xf0
+        // Before mappings, recording and the readout, so all of them see
+        // the note as it will sound. The test generators are left alone.
+        val d2 = if (kind == 0x90 && currentPort >= 0) VelocityCurve.apply(d2In, velocityCurve) else d2In
         if (kind == 0xc0) return // program change: nothing to address it to yet
         val channel = status and 0x0f
         // The controller describing itself - its zone, its bend range - is

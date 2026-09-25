@@ -30,6 +30,10 @@
     </string-array>
     <string name="midi_nothing_received">nothing received yet</string>
     <string name="midi_test_launchpad">launchpad</string>
+    <string name="midi_velocity">velocity</string>
+    <string name="midi_velocity_as_sent">as sent</string>
+    <string name="midi_velocity_softer">softer %1$d</string>
+    <string name="midi_velocity_harder">harder %1$d</string>
     <!-- How many messages, and the last one. -->
     <plurals name="midi_received">
         <item quantity="one">%1$d message · %2$s</item>

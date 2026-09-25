@@ -9,6 +9,11 @@ USB and Bluetooth MIDI keyboards work directly. Notes go either to whichever
 track is open, or to a track you pin so it stays the same whatever you're
 looking at.
 
+If a controller plays everything too loud or too soft, turn **velocity** on the
+**notes** tab. **softer** brings the middle of the range down and **harder**
+brings it up; the softest and hardest notes stay where they are. The readout
+next to it shows each note's velocity as the app gets it.
+
 **MPE** works on the machines that support it: bending one finger bends only
 that note. You set the zone and bend range here. Per-note bend, pressure and
 slide are recorded too.

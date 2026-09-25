@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.midi.MidiHub
+import com.rm.acidulous.midi.VelocityCurve
 import com.rm.acidulous.model.Mapping
 import com.rm.acidulous.model.Mappings
 import com.rm.acidulous.model.Song
@@ -205,6 +206,19 @@ private fun InTab(trackNames: List<String>, mpeHeld: Int) {
                     when (it) { 0 -> MidiHub.testNote(); 1 -> MidiHub.testWheel(); else -> MidiHub.testLaunchpad() }
                 }
             }
+            // Next to the readout, which shows each note's velocity as bent.
+            val curveNames = (-VelocityCurve.STEPS..VelocityCurve.STEPS).map {
+                when {
+                    it < 0 -> stringResource(R.string.midi_velocity_softer, -it)
+                    it > 0 -> stringResource(R.string.midi_velocity_harder, it)
+                    else -> stringResource(R.string.midi_velocity_as_sent)
+                }
+            }
+            CountKnob(
+                stringResource(R.string.midi_velocity), MidiHub.velocityCurve, -VelocityCurve.STEPS..VelocityCurve.STEPS,
+                curveNames[MidiHub.velocityCurve + VelocityCurve.STEPS], PanelAmber, width = 84.dp,
+                choices = curveNames,
+            ) { UiPrefs.chooseVelocityCurve(it) }
             Line {
                 Readout(
                     if (MidiHub.received == 0) stringResource(R.string.midi_nothing_received)
