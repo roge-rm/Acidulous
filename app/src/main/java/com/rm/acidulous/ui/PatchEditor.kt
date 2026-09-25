@@ -63,13 +63,18 @@ import com.rm.acidulous.model.Track
 import com.rm.acidulous.model.nexusCableA
 import com.rm.acidulous.model.nexusCableB
 import com.rm.acidulous.model.nexusKnob
+import com.rm.acidulous.model.arranged
+import com.rm.acidulous.model.NEXUS_NODE_H
+import com.rm.acidulous.model.NEXUS_NODE_W
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.log10
+import kotlin.math.min
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.pluralStringResource
 import com.rm.acidulous.R
 
@@ -85,10 +90,12 @@ import com.rm.acidulous.R
 // moves it, down on nothing moves the view, and a second finger anywhere
 // takes over as a pinch.
 
-private const val NODE_W = 150f
-private const val NODE_H = 92f
+private const val NODE_W = NEXUS_NODE_W
+private const val NODE_H = NEXUS_NODE_H
 private const val JACK_R = 7f
 private const val GRID = 10f
+/** Room left round a fitted patch, in its own units. */
+private const val FIT_MARGIN = 20f
 
 private sealed class Selection {
     object None : Selection()
@@ -132,6 +139,8 @@ fun PatchScreen(
     var adding by remember { mutableStateOf(false) }
     var scope by remember { mutableStateOf(FloatArray(0)) }
     var activity by remember { mutableStateOf(FloatArray(NEXUS_SLOTS + NEXUS_CABLES)) }
+    // The canvas's size in pixels, which is what fit fits the patch to.
+    var canvasPx by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
 
     val info = remember(track.machine.settings["nexus"]) { NativeEngine.nexusPalette() }
     val measurer = rememberTextMeasurer()
@@ -159,6 +168,13 @@ fun PatchScreen(
         }
     }
 
+    // The keyboard: undo is the track's, as the editor's is, and back goes
+    // to the editor, as the arrow does. See ui/Keys.kt.
+    KeyScope(
+        KeyAction.Undo to { if (editor.canUndo(trackIndex)) { selection = Selection.None; editor.undo(trackIndex) } },
+        KeyAction.Redo to { if (editor.canRedo(trackIndex)) { selection = Selection.None; editor.redo(trackIndex) } },
+        KeyAction.Back to { onBack() },
+    )
     Column(modifier.fillMaxSize().background(c.bgDeep)) {
         // --- header -----------------------------------------------------------
         CutoutRow(
@@ -179,10 +195,25 @@ fun PatchScreen(
                 modifier = Modifier.flexible().padding(horizontal = 4.dp), maxLines = 1,
             )
             HeaderTextButton(stringResource(R.string.patch_add)) { adding = true }
+            // **Fit rearranges**, to the canvas's own shape, and then shows
+            // all of it: panning to the first module left a patch laid out in
+            // one long row just as far off the edge of an upright phone. The
+            // new places are one step of undo. See NexusPatch.arranged.
             HeaderTextButton(stringResource(R.string.patch_fit)) {
-                if (patch.modules.isNotEmpty()) {
-                    pan = Offset(patch.modules.minOf { it.x } - 30f, patch.modules.minOf { it.y } - 30f)
-                    zoom = 0.9f
+                if (patch.modules.isNotEmpty() && canvasPx.width > 0 && canvasPx.height > 0) {
+                    val next = patch.arranged(canvasPx.width / canvasPx.height.toFloat(), NODE_W, NODE_H)
+                    if (next != patch) write(next)
+                    // The boxes and the cables: one wrapping to the next band
+                    // bows out past the modules at either end.
+                    val box = patchBounds(next)
+                    val left = box.left - FIT_MARGIN
+                    val top = box.top - FIT_MARGIN
+                    val w = box.width + 2 * FIT_MARGIN
+                    val h = box.height + 2 * FIT_MARGIN
+                    zoom = (min(canvasPx.width / w, canvasPx.height / h) / density).coerceIn(0.35f, 2.6f)
+                    // Centred, in whichever direction there is room to spare.
+                    val s = zoom * density
+                    pan = Offset(left - (canvasPx.width / s - w) / 2f, top - (canvasPx.height / s - h) / 2f)
                 }
             }
             LoadMeter()
@@ -204,6 +235,7 @@ fun PatchScreen(
         Box(if (landscape) Modifier.fillMaxHeight().weight(1f) else Modifier.fillMaxWidth().weight(1f)) {
             Canvas(
                 Modifier.fillMaxSize()
+                    .onSizeChanged { canvasPx = it }
                     // One picture to TalkBack, with a way into each module:
                     // selecting one puts its knobs in the inspector below.
                     .button(
@@ -395,6 +427,42 @@ fun PatchScreen(
     }
 }
 
+/** Where a cable runs, from an output at [a] to an input at [b]: the curve drawPatch draws. */
+private fun cablePath(a: Offset, b: Offset, bend: Float): Path = Path().apply {
+    moveTo(a.x, a.y)
+    cubicTo(a.x + bend, a.y, b.x - bend, b.y, b.x, b.y)
+}
+
+/** How far a cable's ends bend out, in whatever units [a] and [b] are in; [unit] is one patch unit in them. */
+private fun cableBend(a: Offset, b: Offset, unit: Float) = abs(b.x - a.x) * 0.4f + 24f * unit
+
+/** Everything the patch draws, in its own units: the modules and the cables' curves. */
+private fun patchBounds(patch: NexusPatch): androidx.compose.ui.geometry.Rect {
+    var left = patch.modules.minOf { it.x }
+    var top = patch.modules.minOf { it.y }
+    var right = patch.modules.maxOf { it.x } + NODE_W
+    var bottom = patch.modules.maxOf { it.y } + NODE_H
+    for (c in patch.cables) {
+        val from = patch.moduleAt(c.fromSlot) ?: continue
+        val to = patch.moduleAt(c.toSlot) ?: continue
+        val a = jackPosition(from, c.fromPort, true, NexusPalette.of(from.type)?.outputs?.size ?: 1)
+        val b = jackPosition(to, c.toPort, false, NexusPalette.of(to.type)?.inputs?.size ?: 1)
+        // Walked along rather than asked of a Path, whose bounds are its
+        // control points' - a whole bend's width past the curve itself.
+        val bend = cableBend(a, b, 1f)
+        val p1 = Offset(a.x + bend, a.y)
+        val p2 = Offset(b.x - bend, b.y)
+        for (i in 1 until 16) {
+            val t = i / 16f
+            val u = 1f - t
+            val at = a * (u * u * u) + p1 * (3 * u * u * t) + p2 * (3 * u * t * t) + b * (t * t * t)
+            left = minOf(left, at.x); right = maxOf(right, at.x)
+            top = minOf(top, at.y); bottom = maxOf(bottom, at.y)
+        }
+    }
+    return androidx.compose.ui.geometry.Rect(left, top, right, bottom)
+}
+
 private fun nearestCable(patch: NexusPatch, at: Offset): Int? {
     var best: Int? = null
     var bestD = 18f
@@ -461,11 +529,7 @@ private fun DrawScope.drawPatch(
         val a = screen(jackPosition(from, c.fromPort, true, NexusPalette.of(from.type)?.outputs?.size ?: 1))
         val b = screen(jackPosition(to, c.toPort, false, NexusPalette.of(to.type)?.inputs?.size ?: 1))
         val selected = (selection as? Selection.Cable)?.index == index
-        val path = Path().apply {
-            moveTo(a.x, a.y)
-            val bend = (abs(b.x - a.x) * 0.4f + 24f * zoom)
-            cubicTo(a.x + bend, a.y, b.x - bend, b.y, b.x, b.y)
-        }
+        val path = cablePath(a, b, cableBend(a, b, zoom))
         // The dark cable is always there, so an idle patch still reads as a
         // patch; what is carrying something is drawn over the top of it. Two
         // passes rather than one interpolated colour, because a glow wants to

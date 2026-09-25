@@ -452,6 +452,7 @@ object Manual {
                 ManualBlock(ManualKind.Heading, "The patch is text"),
                 ManualBlock(ManualKind.Para, "A Nexus patch is a list of modules and connections written out as text, so you can read it, copy it and send it to someone. It has its own screen, because a patch needs room."),
                 ManualBlock(ManualKind.Para, "Its knobs are normal parameters, so anything in a patch can be automated, mapped to a controller and recorded."),
+                ManualBlock(ManualKind.Para, "**fit** tidies the patch to the screen: it lays the modules out in the order the sound flows through them, from left to right, in as many rows as the screen's shape suits, then zooms to show all of it. Turn the phone and press it again for a layout that suits that way round. It's one step of undo, so the modules can go back where they were."),
                 ManualBlock(ManualKind.Heading, "Macros"),
                 ManualBlock(ManualKind.Para, "Eight macros, **macro1** to **macro8**, plus **morph**. The patch decides what they control, so a big patch can be played with a few knobs."),
                 ManualBlock(ManualKind.Heading, "Audio input"),

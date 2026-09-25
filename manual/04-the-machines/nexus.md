@@ -15,6 +15,12 @@ patch needs room.
 Its knobs are normal parameters, so anything in a patch can be automated, mapped
 to a controller and recorded.
 
+**fit** tidies the patch to the screen: it lays the modules out in the order
+the sound flows through them, from left to right, in as many rows as the
+screen's shape suits, then zooms to show all of it. Turn the phone and press it
+again for a layout that suits that way round. It's one step of undo, so the
+modules can go back where they were.
+
 ## Macros
 
 Eight macros, **macro1** to **macro8**, plus **morph**. The patch decides what

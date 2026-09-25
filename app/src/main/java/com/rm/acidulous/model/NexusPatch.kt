@@ -91,6 +91,12 @@ data class NexusPatch(
             // where the boxes sit; without this every module stacked on the
             // same point, so the canvas showed one box and no cables at all
             // while the header cheerfully counted six modules and five cables.
+            //
+            // With no places at all - every factory patch - it is laid out as
+            // the fit button would, along the signal, for a square window
+            // since the phone's is not known here; four to a row in slot
+            // order put a patch's output wherever its slot number fell.
+            if (positions.isEmpty()) return NexusPatch(modules, cables).arranged(1f, NEXUS_NODE_W, NEXUS_NODE_H)
             var placed = 0
             return NexusPatch(
                 modules.map { m ->
@@ -106,6 +112,9 @@ data class NexusPatch(
 }
 
 const val NEXUS_SLOTS = 16
+/** A module's size on the patch canvas, in the patch's own units. */
+const val NEXUS_NODE_W = 150f
+const val NEXUS_NODE_H = 92f
 const val NEXUS_CABLES = 24
 const val NEXUS_KNOBS = 8
 
