@@ -100,7 +100,7 @@ const ParamDef *Pollen::paramDefs(int32_t &count) const {
         {"bendrange", 0.0f, 24.0f, 2.0f, Curve::Stepped, 25, ""},
         {"octave", -3.0f, 3.0f, 0.0f, Curve::Stepped, 7, ""},
         {"transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, ""},
-        {"velocity", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
+        {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"dry", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
@@ -410,7 +410,7 @@ void Pollen::spawn(Voice &v, int32_t voiceIndex, const View &view, float env) {
     // bank_test runaway check caught Boulders doing exactly that: 14 dB up,
     // a second and a half after the last note ended. A release that a grain
     // can outlive is not a release.
-    const float level = 1.0f - paramOf(VelocityAmount) + paramOf(VelocityAmount) * v.velocity;
+    const float level = velocityGain(v.velocity, paramOf(VelocityAmount));
     g.gainL = std::cos(angle) * level;
     g.gainR = std::sin(angle) * level;
     ++v.living;

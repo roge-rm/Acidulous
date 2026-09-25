@@ -1,4 +1,5 @@
 #include "Reflux.h"
+#include <engine/machine/Voices.h>
 #include <engine/core/Constants.h>
 
 namespace acidulous::machine {
@@ -45,6 +46,7 @@ const ParamDef kDefs[Reflux::Count] = {
     {"pw", 0.05f, 0.95f, 0.5f, Curve::Linear, 0, ""},          // pulse width, pulse wave only
     {"sub", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},           // square an octave down
     {"mode", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},         // 0 lowpass, 1 bandpass
+    {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
 };
 } // namespace
 
@@ -74,6 +76,7 @@ void Reflux::reset() {
     stackSize = 0;
     gliding = false;
     accented = false;
+    velLevel = 1.0f;
     filterEnv.kill();
     accentEnv.kill();
     ampEnv.kill();
@@ -95,7 +98,7 @@ void Reflux::reset() {
     coeffCountdown = 0;
 }
 
-void Reflux::startNote(uint8_t note, bool legato, bool accent) {
+void Reflux::startNote(uint8_t note, bool legato, bool accent, float level) {
     targetPitch = static_cast<float>(note);
     if (legato) {
         // Slide: glide there, keep the envelopes running.
@@ -105,6 +108,7 @@ void Reflux::startNote(uint8_t note, bool legato, bool accent) {
         pitch = targetPitch;
         gliding = false;
         accented = accent;
+        velLevel = level;
         // An accented note snaps: shorter decay, so the sweep bites and gets out of the way.
         filterEnv.setTimes(0.003f, params_.get(Decay) * 0.001f * (accent ? 0.6f : 1.0f));
         filterEnv.trigger();
@@ -129,7 +133,7 @@ void Reflux::noteOn(uint8_t note, uint8_t velocity) {
         --stackSize;
     }
     stack[stackSize++] = note;
-    startNote(note, legato, velocity >= kAccentVelocity);
+    startNote(note, legato, velocity >= kAccentVelocity, velocityGain(static_cast<float>(velocity) / 127.0f, params_.get(Velocity)));
 }
 
 void Reflux::noteOff(uint8_t note) {
@@ -211,7 +215,7 @@ bool Reflux::render(float *L, float * /*R*/, int32_t frames) {
         s = svf2.lowpass(s);
         s = dsp::fastTanh(s * driveGain) * driveComp;
 
-        const float amp = ampEnv.next() * volume * kHouse *
+        const float amp = ampEnv.next() * volume * kHouse * velLevel *
                           (1.0f + (accented ? accentAmt * aenv * 0.6f : 0.0f));
         L[i] = s * amp;
     }

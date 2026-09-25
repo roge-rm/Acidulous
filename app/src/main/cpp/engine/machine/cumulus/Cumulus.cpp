@@ -85,7 +85,7 @@ const ParamDef *Cumulus::paramDefs(int32_t &count) const {
         {"octave", -3.0f, 3.0f, 0.0f, Curve::Stepped, 7, ""},
         {"transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, ""},
         {"fine", -50.0f, 50.0f, 0.0f, Curve::Linear, 0, "cents"},
-        {"velocity", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
+        {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"mpetimbre", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         {"mpepressure", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
     };
@@ -359,7 +359,7 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
         v.filterL.set(cutoffHz, reso, ftype, dsp::MultiFilter::Valve, fdrive);
         v.filterR.set(cutoffHz, reso, ftype, dsp::MultiFilter::Valve, fdrive);
 
-        const float vel = (1.0f - velAmount + velAmount * v.velocity) * (1.0f + prs * 0.5f);
+        const float vel = velocityGain(v.velocity, velAmount) * (1.0f + prs * 0.5f);
         const float voicePan = lfoValue[1] * paramOf(Lfo2Pan);
 
         for (int32_t i = 0; i < frames; ++i) {

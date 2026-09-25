@@ -25,8 +25,9 @@ notes for the slides.
   where most of the sound is.
 - **env** - one decay envelope and how much of it goes to the filter. Short
   decays are plucky, long ones are rubbery.
-- **accent** - how much an accented note adds to level and filter. At zero,
-  velocity does nothing.
+- **accent** - how much an accented note adds to level and filter.
+- **vel** - how much velocity sets the level, as on every machine. A note
+  that slides keeps the level of the note it slid from.
 - **glide** - how long a slide takes.
 - **drive** - the output stage, where the scream comes from.
 

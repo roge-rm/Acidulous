@@ -44,4 +44,19 @@ inline float glidePressure(float &state, float own, float channel) {
     return state;
 }
 
+/**
+ * Velocity as loudness, the same law on every machine.
+ *
+ * At [amount] 1 the gain is the square of the velocity - 40 log10(v/127) dB,
+ * the usual law for this: 127 is full, 64 is 12 dB down, 32 is 24 down and
+ * 1 is all but silent - so a player has everything from a whisper to full.
+ * Less [amount] narrows that range in decibels, in proportion, and 0 turns
+ * velocity off. A controller that gives too much or too little is fixed by
+ * the MIDI velocity curve, not here.
+ */
+inline float velocityGain(float v01, float amount) {
+    if (amount <= 0.0f) return 1.0f;
+    return std::pow(std::fmin(std::fmax(v01, 1.0f / 127.0f), 1.0f), 2.0f * amount);
+}
+
 } // namespace acidulous

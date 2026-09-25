@@ -33,6 +33,8 @@ class Nexus final : public Machine {
         MacroBase = CableBase + nexus::kCables * 2,     // 8 macros
         Morph = MacroBase + nexus::kMacros,
         VoiceMode, Glide, BendRange, Octave, Transpose, Fine, Volume, Pan, Drive,
+        // How much velocity sets each voice's level, on the law every machine shares.
+        Velocity,
         Count
     };
     static_assert(Count <= kMaxParams, "Nexus declares more parameters than a unit can hold");
@@ -81,6 +83,7 @@ class Nexus final : public Machine {
 
     Voice voices[kVoices];
     float pitchOf[kVoices] = {}, gateOf[kVoices] = {}, velocityOf[kVoices] = {};
+    float levelOf[kVoices] = {}; // velocityGain of each voice, read by the graph
     float randomOf[kVoices] = {}, triggerOf[kVoices] = {};
     // A finger's pressure and slide, -1 until it sends any: the touch module.
     float pressureOf[kVoices] = {}, timbreOf[kVoices] = {};

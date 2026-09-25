@@ -73,6 +73,7 @@ class Timber final : public Machine {
         bool used = false, gate = false;
         uint8_t note = 60;
         float velocity = 1.0f;
+        float outGain = 1.0f; // velocity as level, ramped; see velocityGain
         float freq = 261.63f, glideFrom = 261.63f, glidePos = 1.0f;
         timber::Pipe pipe;
         dsp::Adsr amp;

@@ -72,7 +72,7 @@ const ParamDef *Brazen::paramDefs(int32_t &count) const {
         {"octave", -3.0f, 3.0f, 0.0f, Curve::Stepped, 7, ""},
         {"transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, ""},
         {"fine", -50.0f, 50.0f, 0.0f, Curve::Linear, 0, "cents"},
-        {"velocity", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
+        {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
@@ -137,6 +137,7 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     const bool gliding = glide > 0.001f && v.used;
     v.glideFrom = gliding ? v.freq : noteHz(static_cast<float>(note));
     v.glidePos = gliding ? 0.0f : 1.0f;
+    if (!v.used) v.outGain = velocityGain(static_cast<float>(velocity) / 127.0f, targetOf(VelocityAmount));
     v.freq = v.glideFrom;
     v.used = true;
     v.gate = true;
@@ -319,7 +320,14 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
         while (v.vibratoPhase >= 1.0f) v.vibratoPhase -= 1.0f;
         const float vib = std::sin(v.vibratoPhase * kTwoPi) * vibratoDepth;
 
-        const float vel = 1.0f - velAmount + velAmount * v.velocity;
+        // Velocity does two things on a wind model: it blows - harder is brighter,
+        // at the depth this knob always had at its old default - and it sets the
+        // level, on the law every machine shares. Blowing alone could not make
+        // a note quiet: under a point the lips do not speak at all.
+        const float vel = 1.0f - 0.6f * velAmount * (1.0f - v.velocity);
+        // Ramped across the block: a slurred note changes it mid-sound.
+        const float gainTo = velocityGain(v.velocity, velAmount);
+        const float gainStep = (gainTo - v.outGain) / static_cast<float>(frames);
         const float growlNow = growl * (0.5f + 0.5f * std::sin(growlPhase * kTwoPi));
         const float env0 = v.amp.value();
 
@@ -432,9 +440,11 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
                 l = v.muteHpL * muteGain;
                 r = v.muteHpR * muteGain;
             }
-            L[i] += v.filterL.process(l);
-            R[i] += v.filterR.process(r);
+            v.outGain += gainStep;
+            L[i] += v.filterL.process(l) * v.outGain;
+            R[i] += v.filterR.process(r) * v.outGain;
         }
+        v.outGain = gainTo;
     }
 
     for (int32_t i = 0; i < frames; ++i) {

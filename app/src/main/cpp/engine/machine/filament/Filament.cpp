@@ -129,7 +129,7 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
         lin(Octave, "octave", -3.0f, 3.0f, 0.0f);
         lin(Transpose, "transpose", -12.0f, 12.0f, 0.0f);
         lin(Fine, "fine", -50.0f, 50.0f, 0.0f, "c");
-        lin(VelocityAmount, "velocity", 0.0f, 1.0f, 0.8f);
+        lin(VelocityAmount, "velocity", 0.0f, 1.0f, 1.0f);
         step(Release, "on release", 2, 1.0f); // ring on, or damp
         built = true;
     }
@@ -249,7 +249,7 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     rngState = rngState * 1664525u + 1013904223u;
     v->pan = ((static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f);
     const float velAmt = targetOf(VelocityAmount);
-    v->exciteGain = (1.0f - velAmt + velAmt * v->velocity);
+    v->exciteGain = velocityGain(v->velocity, velAmt);
     const int32_t mode = steppedTargetOf(ExciterMode);
     const float lengthSeconds = mode == Bow || mode == Breath || mode == External
                                     ? 0.0f

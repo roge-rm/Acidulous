@@ -156,7 +156,7 @@ const ParamDef *Trinity::paramDefs(int32_t &count) const {
         putN(Transpose, "transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, "st");
         putN(Volume, "volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, "");
         putN(Pan, "pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
-        putN(VelocityAmount, "velamt", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, "");
+        putN(VelocityAmount, "velamt", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, "");
         // How far a finger's slide opens the filters. Zero by default,
         // so every patch written before MPE sounds exactly as it did.
         putN(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
@@ -508,7 +508,7 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
                                                   slide * paramOf(MpeTimbre) * 4.0f);
     }
 
-    const float velAmp = 1.0f - paramOf(VelocityAmount) * (1.0f - static_cast<float>(v.velocity) / 127.0f);
+    const float velAmp = velocityGain(static_cast<float>(v.velocity) / 127.0f, paramOf(VelocityAmount));
     // The app's house level, so this machine's default lands where every
     // other machine's does. See Reflux's kHouse for why: the factory had
     // come to span twenty-five decibels because every bank was levelled

@@ -53,6 +53,12 @@ struct Cable {
 
 class Graph {
   public:
+    /**
+     * Each voice's level from its velocity, or null for all at full. Applied
+     * where voices meet - a poly signal summed into a mono module, or into
+     * the output - so it works whatever the patch, without a cable for it.
+     */
+    const float *voiceLevel = nullptr;
     /** Worker thread. Returns null and fills `error` if the text is unusable. */
     static Graph *parse(const std::string &text, float sampleRate, std::string &error);
 
@@ -110,6 +116,8 @@ class Graph {
     const std::string &warning() const { return warn; }
 
   private:
+    float levelOf(int32_t voice) const { return voiceLevel != nullptr ? voiceLevel[voice] : 1.0f; }
+
     void meter(const int32_t *active, int32_t activeCount);
     float readPort(int32_t node, int32_t port, int32_t voice) const;
     void gather(const Node &n, int32_t nodeIndex, int32_t voice, const int32_t *active, int32_t activeCount,

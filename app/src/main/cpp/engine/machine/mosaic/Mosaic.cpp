@@ -93,7 +93,7 @@ const ParamDef *Mosaic::paramDefs(int32_t &count) const {
         // until Dan confirmed there was nothing saved to rescale.
         putN(Volume, "volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, "");
         putN(Pan, "pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
-        putN(VelocityAmount, "velamt", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, "");
+        putN(VelocityAmount, "velamt", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, "");
         putN(VelToFilter, "veltofilter", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         for (int l = 0; l < kLfos; ++l) {
             const int32_t b = LfoBase + l * LfoParams;
@@ -513,9 +513,7 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
     // has to cover the range a sampled instrument needs.
     // When the file drives level from velocity, the panel's own curve would
     // double up on it, so it stands aside.
-    const float velAmp = (v.fileDrivesLevel || paramOf(VelocityAmount) <= 0.001f)
-                             ? 1.0f
-                             : std::pow(clampf(vel, 0.001f, 1.0f), paramOf(VelocityAmount) * 2.5f);
+    const float velAmp = v.fileDrivesLevel ? 1.0f : velocityGain(vel, paramOf(VelocityAmount));
     const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * velAmp * kHouse;
     const float panBase = clampf(paramOf(Pan) + v.mod[DstPan], -1.0f, 1.0f);
     const int loopMode = stepOf(LoopModeIndex);

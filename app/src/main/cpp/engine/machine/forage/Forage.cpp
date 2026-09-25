@@ -1,4 +1,5 @@
 #include "Forage.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
@@ -54,6 +55,8 @@ struct Table {
             // The machine had no level of its own at all, so a bank of kits
             // could not be levelled against anything - see kDrive below.
             {"volume", 0.0f, 1.5f, 0.9f, Curve::Linear, 0, ""},
+            // How much velocity sets the level, on the law every machine shares.
+            {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         };
         // Every name is placed before any def points at one: a ParamDef holds
         // a bare char*, and a vector that reallocates would leave every one of
@@ -173,7 +176,7 @@ void Forage::trigger(int32_t i, float vel, bool accent) {
     const double end = params_.get(index(i, End)) * frames;
     p.pos = reverse ? std::max(start, end) - 1.0 : std::min(start, end);
     p.playing = true;
-    p.gain = (0.3f + 0.7f * vel) * (1.0f + (accent ? accentAmt * 0.8f : 0.0f));
+    p.gain = velocityGain(vel, params_.get(globalIndex(Velocity))) * (1.0f + (accent ? accentAmt * 0.8f : 0.0f));
     const float decay = params_.get(index(i, Decay));
     // decay 1.0 plays through; below it an exponential release, 20 ms .. 4 s
     p.amp = 1.0f;

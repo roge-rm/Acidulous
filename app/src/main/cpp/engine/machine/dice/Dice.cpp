@@ -1,4 +1,5 @@
 #include "Dice.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -77,7 +78,7 @@ const ParamDef *Dice::paramDefs(int32_t &count) const {
         defs[Drive] = {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""};
         defs[Volume] = {"volume", 0.0f, 1.5f, 0.9f, Curve::Linear, 0, ""};
         defs[MasterPan] = {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""};
-        defs[Accent] = {"accent", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""};
+        defs[Accent] = {"accent", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""};
         defs[Follow] = {"follow", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""};
         defs[Bars] = {"bars", 0.0f, 6.0f, 0.0f, Curve::Stepped, 7, ""}; // auto, 1/2, 1, 2, 4, 8, 16
         built = true;
@@ -303,7 +304,7 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     }
 
     const float accent = targetOf(Accent);
-    const float vel = 1.0f - accent + accent * static_cast<float>(velocity) / 127.0f;
+    const float vel = velocityGain(static_cast<float>(velocity) / 127.0f, accent);
     const float pan = std::clamp(sliceParam(slice, Pan), -1.0f, 1.0f);
     const float angle = (pan + 1.0f) * 0.25f * 3.14159265f;
     const float level = sliceParam(slice, Level) * vel;

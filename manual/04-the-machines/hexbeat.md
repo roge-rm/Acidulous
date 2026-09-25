@@ -24,7 +24,8 @@ their own:
 - **cymbals** - decay and tone for crash and ride.
 - **bell** and **clave** - tune and level.
 
-**accent** is how much a hard hit adds across the whole kit.
+**accent** is how much a hard hit adds across the whole kit. **vel** is how much
+velocity sets each hit's level.
 
 ## Tips
 

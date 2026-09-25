@@ -1,4 +1,5 @@
 #include "Manual.h"
+#include <engine/machine/Voices.h>
 #include <cstdio>
 #include <cstring>
 
@@ -255,7 +256,7 @@ const ParamDef *Manual::paramDefs(int32_t &count) const {
         lin(Octave, "octave", -3.0f, 3.0f, 0.0f);
         lin(Transpose, "transpose", -12.0f, 12.0f, 0.0f);
         lin(Fine, "fine", -50.0f, 50.0f, 0.0f, "c");
-        lin(VelocityAmount, "vel", 0.0f, 1.0f, 0.0f);
+        lin(VelocityAmount, "vel", 0.0f, 1.0f, 1.0f);
         step(Expression, "express", 3, 1.0f); // off, mod wheel, pressure
         built = true;
     }
@@ -433,6 +434,7 @@ void Manual::noteOn(uint8_t note, uint8_t velocity) {
     v->note = note;
     v->manual = static_cast<uint8_t>(manual);
     v->velocity = static_cast<float>(velocity) / 127.0f;
+    v->velGain = velocityGain(v->velocity, targetOf(VelocityAmount));
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     rngState = rngState * 1664525u + 1013904223u;
     v->rnd = static_cast<float>((rngState >> 9) & 0xffff) / 65536.0f;
@@ -727,7 +729,6 @@ bool Manual::render(float *L, float *R, int32_t frames) {
     const int32_t expr = steppedOf(Expression);
     const float exprGain = expr == 0 ? 1.0f : (expr == 1 ? 0.25f + 0.75f * modWheel : 0.25f + 0.75f * pressure);
     const float upperGain = paramOf(UpperLevel), lowerGain = paramOf(LowerLevel), pedalGain = paramOf(PedalLevel);
-    const float velAmt = paramOf(VelocityAmount);
     const float pitchScale = std::pow(2.0f, (bendSemis + paramOf(Octave) * 12.0f + paramOf(Transpose) +
                                              paramOf(Fine) * 0.01f + blockMod[DstPitch] * 12.0f) /
                                                 12.0f);
@@ -893,7 +894,7 @@ bool Manual::render(float *L, float *R, int32_t frames) {
             if (!v.gate && env < 0.0002f && v.clickEnv < 1e-4f) { v.used = false; continue; }
             const int bars = v.manual == MPedal ? kPedalBars : kBars;
             const float manualGain = v.manual == MUpper ? upperGain : (v.manual == MLower ? lowerGain : pedalGain);
-            const float velGain = 1.0f - velAmt + velAmt * v.velocity;
+            const float velGain = v.velGain;
             const float voiceGain = env * manualGain * velGain * (1.0f + v.mod[DstVolume] * 0.5f);
             for (int b = 0; b < bars; ++b) {
                 float level = v.barLevel[b];

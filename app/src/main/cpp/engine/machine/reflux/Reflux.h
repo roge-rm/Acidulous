@@ -19,7 +19,9 @@ class Reflux final : public Machine {
   public:
     enum P : int32_t { Wave, Tune, Cutoff, Resonance, EnvMod, Decay, Accent, Slide, Drive, Volume,
                        // the open layer
-                       PulseWidth, Sub, Mode, Count };
+                       PulseWidth, Sub, Mode,
+                       // appended: how much velocity sets the level
+                       Velocity, Count };
 
     Reflux();
 
@@ -37,7 +39,7 @@ class Reflux final : public Machine {
     static constexpr int kStack = 16;
     static constexpr uint8_t kAccentVelocity = 100;
 
-    void startNote(uint8_t note, bool legato, bool accent);
+    void startNote(uint8_t note, bool legato, bool accent, float level = 1.0f);
 
     float sampleRate = 48000.0f;
     dsp::Osc osc;
@@ -54,6 +56,7 @@ class Reflux final : public Machine {
     float glideCoeff = 1.0f;  // per-sample
     bool gliding = false;
     bool accented = false;
+    float velLevel = 1.0f; // velocity as level, set as a note starts; a slide keeps it
     int32_t coeffCountdown = 0;
 };
 

@@ -147,7 +147,7 @@ const ParamDef *Cipher::paramDefs(int32_t &count) const {
         lin(Octave, "octave", -3.0f, 3.0f, 0.0f);
         lin(Transpose, "transpose", -12.0f, 12.0f, 0.0f);
         lin(Fine, "fine", -50.0f, 50.0f, 0.0f, "c");
-        lin(VelocityAmount, "vel", 0.0f, 1.0f, 0.3f);
+        lin(VelocityAmount, "vel", 0.0f, 1.0f, 1.0f);
         built = true;
     }
     count = Count;
@@ -255,6 +255,7 @@ void Cipher::noteOn(uint8_t note, uint8_t velocity) {
     v->note = note;
     v->bend = 0.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
+    v->velGain = velocityGain(v->velocity, targetOf(VelocityAmount));
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     v->target = noteHz(static_cast<float>(note));
     if (wasIdle) v->freq = v->target;
@@ -475,7 +476,6 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     // changed.
     const float panAngle = (pan + 1.0f) * 0.25f * kPiF;
     const float panL = std::cos(panAngle) * 1.4142f, panR = std::sin(panAngle) * 1.4142f;
-    const float velAmt = paramOf(VelocityAmount);
     const bool track = steppedOf(PitchTrack) != 0;
     const float trackAmount = paramOf(TrackAmount);
     const float pitchScale = std::pow(2.0f, (bendSemis + paramOf(Octave) * 12.0f + paramOf(Transpose) +
@@ -575,9 +575,8 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             } else {
                 v.target = noteHz(static_cast<float>(v.note));
             }
-            const float velGain = 1.0f - velAmt + velAmt * v.velocity;
             carrier += carrierSample(v, glideK, detuneMul, pitchScale, waveA, waveB, mix, pw, sub) *
-                       env * velGain;
+                       env * v.velGain;
             ampSum += env;
         }
         if (noiseLevel > 0.0f) {

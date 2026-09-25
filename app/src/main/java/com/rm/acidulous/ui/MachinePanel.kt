@@ -1347,7 +1347,7 @@ private fun RefluxPanel(b: ParamBinding) {
     GroupRow {
         Group("osc") { PanelSwitch(b, "wave", listOf("saw", "pulse")); PanelKnob(b, "pw"); PanelKnob(b, "sub"); PanelKnob(b, "tune") }
         Group("filter") { PanelKnob(b, "cutoff", accent = PanelAmber); PanelKnob(b, "resonance", "reso", PanelAmber); PanelKnob(b, "envmod", accent = PanelAmber); PanelKnob(b, "decay", accent = PanelAmber); PanelSwitch(b, "mode", listOf("lp", "bp")) }
-        Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "slide") }
+        Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "slide"); PanelKnob(b, "velocity", "vel") }
         Group("out") { PanelKnob(b, "drive", accent = PanelPink); PanelKnob(b, "volume") }
     }
 }
@@ -1364,7 +1364,7 @@ private fun HexbeatPanel(b: ParamBinding) {
         Group("cymbals") { PanelKnob(b, "cym_decay", "crash"); PanelKnob(b, "cym_tone", "tone"); PanelKnob(b, "cym_level", "level"); PanelKnob(b, "ride_decay", "ride"); PanelKnob(b, "ride_level", "level") }
         Group("perc") { PanelKnob(b, "clap_decay", "clap"); PanelKnob(b, "clap_tone", "tone"); PanelKnob(b, "clap_level", "level"); PanelKnob(b, "rim_tune", "rim", hot); PanelKnob(b, "rim_level", "level") }
         Group("bell / clave") { PanelKnob(b, "bell_tune", "bell", hot); PanelKnob(b, "bell_decay", "decay"); PanelKnob(b, "bell_level", "level"); PanelKnob(b, "clave_tune", "clave", hot); PanelKnob(b, "clave_level", "level") }
-        Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "volume") }
+        Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "velocity", "vel"); PanelKnob(b, "volume") }
     }
 }
 
@@ -1567,7 +1567,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             Group("amp") { PanelKnob(b, n("decay"), "decay"); PanelKnob(b, n("level"), "level"); PanelKnob(b, n("pan"), "pan"); PanelSwitch(b, n("choke"), listOf("-", "1", "2", "3", "4"), "choke") }
             Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp"), "mode"); PanelKnob(b, n("crush"), "crush", Acid.colors.pink) }
             Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
-            Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "volume", "volume", hot) }
+            Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "velocity", "vel"); PanelKnob(b, "volume", "volume", hot) }
             // The whole kit at once, where there is room for them to be read.
             Group("kit") {
                 PanelActions(
@@ -3807,6 +3807,7 @@ private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
                 }
                 else -> Group("out") {
                     PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "velocity", "vel")
                     PanelKnob(b, "pan", "pan")
                     PanelKnob(b, "drive", "drive", PanelPink)
                 }

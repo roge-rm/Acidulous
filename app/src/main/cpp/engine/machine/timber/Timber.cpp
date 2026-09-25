@@ -81,7 +81,7 @@ const ParamDef *Timber::paramDefs(int32_t &count) const {
         {"octave", -3.0f, 3.0f, 0.0f, Curve::Stepped, 7, ""},
         {"transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, ""},
         {"fine", -50.0f, 50.0f, 0.0f, Curve::Linear, 0, "cents"},
-        {"velocity", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
@@ -174,6 +174,7 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
 void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) {
     v.glideFrom = slurred ? v.freq : noteHz(static_cast<float>(note));
     v.glidePos = slurred ? 0.0f : 1.0f;
+    if (!v.used) v.outGain = velocityGain(static_cast<float>(velocity) / 127.0f, targetOf(VelocityAmount));
     v.freq = v.glideFrom;
     v.used = true;
     v.gate = true;
@@ -326,7 +327,14 @@ bool Timber::render(float *L, float *R, int32_t frames) {
         // attack and the big reeds took a quarter of a second to speak. The
         // envelope shapes what comes out of the instrument, which is where
         // it belongs; the breath has its own short ramp below.
-        const float vel = 1.0f - velAmount + velAmount * v.velocity;
+        // Velocity does two things on a wind model: it blows - harder is brighter,
+        // at the depth this knob always had at its old default - and it sets the
+        // level, on the law every machine shares. Blowing alone could not make
+        // a note quiet: under a point the reed does not speak at all.
+        const float vel = 1.0f - 0.5f * velAmount * (1.0f - v.velocity);
+        // Ramped across the block: a slurred note changes it mid-sound.
+        const float gainTo = velocityGain(v.velocity, velAmount);
+        const float gainStep = (gainTo - v.outGain) / static_cast<float>(frames);
         const float at = v.pressure >= 0.0f ? v.pressure : aftertouch;
         const float push = mouth * vel * (1.0f + at * 0.3f);
 
@@ -406,9 +414,12 @@ bool Timber::render(float *L, float *R, int32_t frames) {
                 out *= v.fadeLeft > 0 ? static_cast<float>(v.fadeLeft) / static_cast<float>(kFadeFrames) : 0.0f;
                 if (v.fadeLeft > 0) --v.fadeLeft;
             }
+            v.outGain += gainStep;
+            out *= v.outGain;
             L[i] += out;
             R[i] += out;
         }
+        v.outGain = gainTo;
     }
 
     for (int32_t i = 0; i < frames; ++i) {

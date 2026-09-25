@@ -56,7 +56,7 @@ const ParamDef *Formulate::paramDefs(int32_t &count) const {
         {"octave", -3.0f, 3.0f, 0.0f, Curve::Stepped, 7, ""},
         {"transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, ""},
         {"fine", -50.0f, 50.0f, 0.0f, Curve::Linear, 0, "cents"},
-        {"velocity", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
+        {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
@@ -270,7 +270,7 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
         if (!v.used) continue;
         v.amp.set(0.0f, ampA, ampD, ampS, ampR, false);
         v.filter.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
-        const float vel = 1.0f - velAmount + velAmount * v.velocity;
+        const float vel = velocityGain(v.velocity, velAmount);
 
         for (int32_t i = 0; i < frames; ++i) {
             const float env = v.amp.next();

@@ -1,4 +1,5 @@
 #include "Molt.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
@@ -76,7 +77,7 @@ const ParamDef *Molt::paramDefs(int32_t &count) const {
         {"bendrange", 0.0f, 24.0f, 2.0f, Curve::Stepped, 25, ""},
         {"octave", -3.0f, 3.0f, 0.0f, Curve::Stepped, 7, ""},
         {"transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, ""},
-        {"velocity", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
+        {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
@@ -135,7 +136,7 @@ void Molt::noteOn(uint8_t note, uint8_t velocity) {
     v->used = true;
     v->gate = true;
     v->note = note;
-    v->velocity = 1.0f - targetOf(VelocityAmount) * (1.0f - static_cast<float>(velocity) / 127.0f);
+    v->velocity = velocityGain(static_cast<float>(velocity) / 127.0f, targetOf(VelocityAmount));
     v->bend = channelBend;
     v->primed = false;
     v->untilGrain = 0.0f;

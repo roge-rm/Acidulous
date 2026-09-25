@@ -49,6 +49,17 @@ These model how the real instrument works, so they respond like one.
 
 - [**Bias**](04-the-machines/bias.md) - a four-track for recordings. Four lanes per cell, and a recording made over the song is cut at the scene lines. Its patches are tape types (cassette, reel, telephone and so on) that colour the sound on the way out.
 
+## Velocity
+
+Every machine plays quieter the softer you play. At full velocity a note is at
+full volume; at half it's 12 dB down, at a quarter 24 dB down, and the softest
+notes are close to silent. **vel** on each panel sets how much velocity
+matters. At zero, every note plays at full volume, which is how a real organ
+behaves. On Genesis, Resonance and Dice, **accent** does the same job.
+
+If a controller gives you too much or too little, fix it with **velocity** in
+the MIDI window rather than on every machine.
+
 ## Patches
 
 Every machine comes with patches, sorted by family. **patch** at the top of the

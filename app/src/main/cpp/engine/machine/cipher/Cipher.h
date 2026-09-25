@@ -96,6 +96,7 @@ class Cipher final : public Machine {
         bool used = false, gate = false;
         uint8_t note = 0;
         float velocity = 1.0f, key01 = 0.5f;
+        float velGain = 1.0f; // see velocityGain, fixed at the note-on
         float phaseA = 0.0f, phaseB = 0.0f, phaseSub = 0.0f;
         float freq = 220.0f, target = 220.0f;
         dsp::Adsr amp;

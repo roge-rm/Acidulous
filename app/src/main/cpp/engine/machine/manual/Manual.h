@@ -113,6 +113,7 @@ class Manual final : public Machine {
         uint8_t note = 0;
         uint8_t manual = MUpper;
         float velocity = 1.0f;
+        float velGain = 1.0f; // see velocityGain, fixed at the note-on
         float key01 = 0.5f;
         dsp::Adsr amp;
         float perc = 0.0f;       // harmonic percussion, one-shot decay

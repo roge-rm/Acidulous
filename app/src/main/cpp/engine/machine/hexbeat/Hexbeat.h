@@ -29,6 +29,8 @@ class Hexbeat final : public Machine {
         // Appended, and it stays appended: a parameter's position in this
         // enum is its index in every song already saved.
         Volume,
+        // How much velocity sets the level, on the law every machine shares.
+        Velocity,
         Count
     };
     enum Voice : int32_t { Kick, Rim, Snare, Clap, TomLo, TomMid, TomHi, HatClosed, HatOpen, Cymbal, Ride, Cowbell, Clave, VoiceCount };
@@ -83,7 +85,7 @@ class Hexbeat final : public Machine {
     float square(Osc &o, float hz) { return o.step(hz, sr) < 0.5f ? 1.0f : -1.0f; }
     float sine(Osc &o, float hz) { return std::sin(o.step(hz, sr) * 6.2831853f); }
 
-    void trigger(int32_t voice, float accent);
+    void trigger(int32_t voice, float accent, float level);
     void renderVoice(int32_t voice, float *out, int32_t frames);
 
     float sr = 48000.0f;

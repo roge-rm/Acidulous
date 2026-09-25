@@ -37,7 +37,7 @@ class Forage final : public Machine {
     // every parameter after it. Patches and automation lanes are keyed by
     // name so they would survive, but nothing is gained by churning them.
     enum PadParam : int32_t { Start, End, Pitch, Decay, Level, Pan, Reverse, Choke, Cutoff, Reso, Mode, Crush, PitchEnv, PitchDecay, Play, PadParamCount };
-    enum Global : int32_t { Accent, Volume, GlobalCount };
+    enum Global : int32_t { Accent, Volume, Velocity, GlobalCount };
     static int32_t index(int32_t pad, PadParam p) { return pad * PadParamCount + p; }
     static int32_t globalIndex(Global g) { return kPads * PadParamCount + g; }
 

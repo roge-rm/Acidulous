@@ -1,4 +1,5 @@
 #include "Resonance.h"
+#include <engine/machine/Voices.h>
 
 #include <engine/core/Settings.h>
 #include <algorithm>
@@ -98,7 +99,7 @@ const ParamDef *Resonance::paramDefs(int32_t &count) const {
         defs[Modes] = {"modes", 4.0f, 24.0f, 12.0f, Curve::Stepped, 6, ""};
         defs[Coupling] = {"coupling", 0.0f, 1.0f, 0.25f, Curve::Linear, 0, ""};
         defs[Humanise] = {"humanise", 0.0f, 1.0f, 0.15f, Curve::Linear, 0, ""};
-        defs[Accent] = {"accent", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""};
+        defs[Accent] = {"accent", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""};
         defs[Volume] = {"volume", 0.0f, 1.5f, 0.5f, Curve::Linear, 0, ""}; // Init on the house line
         defs[MasterPan] = {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""};
         built = true;
@@ -243,7 +244,7 @@ void Resonance::noteOn(uint8_t note, uint8_t velocity) {
 
     const float accent = params_.get(Accent);
     const float vel = static_cast<float>(velocity) / 127.0f;
-    p.velocity = 1.0f - accent + accent * vel;
+    p.velocity = velocityGain(vel, accent);
 
     // Humanise: a hand never hits the same place twice, so the strike moves
     // a little and the object answers differently. It is the reason two hits

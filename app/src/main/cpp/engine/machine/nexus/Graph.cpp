@@ -338,14 +338,14 @@ void Graph::gather(const Node &n, int32_t nodeIndex, int32_t voice, const int32_
             if (row < 0) {
                 for (int32_t a = 0; a < activeCount; ++a) {
                     x += prev[static_cast<size_t>(active[a]) * (delayedPorts.size() + 1) +
-                              static_cast<size_t>(k.prevSlot)];
+                              static_cast<size_t>(k.prevSlot)] * levelOf(active[a]);
                 }
             } else {
                 x = prev[static_cast<size_t>(row) * (delayedPorts.size() + 1) + static_cast<size_t>(k.prevSlot)];
             }
         } else if (src.poly && monoDest) {
             // A poly source feeding a mono module sums across the voices.
-            for (int32_t a = 0; a < activeCount; ++a) x += readPort(k.srcNode, k.srcPort, active[a]);
+            for (int32_t a = 0; a < activeCount; ++a) x += readPort(k.srcNode, k.srcPort, active[a]) * levelOf(active[a]);
         } else {
             x = readPort(k.srcNode, k.srcPort, voice);
         }
@@ -394,8 +394,8 @@ void Graph::step(Context &ctx, const int32_t *active, int32_t activeCount, float
         const Node &o = nodes[static_cast<size_t>(outNode)];
         if (o.poly) {
             for (int32_t a = 0; a < activeCount; ++a) {
-                outL += readPort(outNode, 0, active[a]);
-                outR += readPort(outNode, 1, active[a]);
+                outL += readPort(outNode, 0, active[a]) * levelOf(active[a]);
+                outR += readPort(outNode, 1, active[a]) * levelOf(active[a]);
             }
         } else {
             outL = readPort(outNode, 0, kVoices);

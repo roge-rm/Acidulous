@@ -1,4 +1,5 @@
 #include "Hexbeat.h"
+#include <engine/machine/Voices.h>
 #include <engine/core/Constants.h>
 #include <engine/dsp/Math.h>
 
@@ -42,6 +43,7 @@ const ParamDef kDefs[Hexbeat::Count] = {
     {"clave_level", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
     {"accent", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
     {"volume", 0.0f, 1.5f, 0.9f, Curve::Linear, 0, ""},
+    {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
 };
 // The classic six, as ratios of the lowest.
 const float kMetalRatios[6] = {1.0f, 1.483f, 1.800f, 2.546f, 2.634f, 3.902f};
@@ -148,7 +150,7 @@ void Hexbeat::noteOn(uint8_t note, uint8_t velocity) {
     const int32_t v = static_cast<int32_t>(note) - kBaseNote;
     if (v < 0 || v >= VoiceCount) return;
     const float acc = velocity >= 100 ? params_.get(Accent) : 0.0f;
-    trigger(v, acc);
+    trigger(v, acc, velocityGain(static_cast<float>(velocity) / 127.0f, params_.get(Velocity)));
 }
 
 float Hexbeat::metallic(float tune) {
@@ -157,9 +159,9 @@ float Hexbeat::metallic(float tune) {
     return s * (1.0f / 6.0f);
 }
 
-void Hexbeat::trigger(int32_t v, float acc) {
+void Hexbeat::trigger(int32_t v, float acc, float level) {
     const float ms = 0.001f;
-    gain[v] = 1.0f + acc * 0.8f;
+    gain[v] = (1.0f + acc * 0.8f) * level;
     switch (v) {
     case Kick:
         amp[v].fire(sr, params_.get(KickDecay) * ms);

@@ -1,4 +1,5 @@
 #include "Genesis.h"
+#include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
@@ -102,7 +103,7 @@ const ParamDef *Genesis::paramDefs(int32_t &count) const {
         {"belldecay", 0.05f, 1.0f, 0.35f, Curve::Exponential, 0, "s"},
         {"belllevel", 0.0f, 1.5f, 0.6f, Curve::Linear, 0, ""},
         {"drift", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
-        {"accent", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"accent", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"comp", 0.0f, 1.0f, 0.35f, Curve::Linear, 0, ""},
         {"compattack", 0.0005f, 0.1f, 0.008f, Curve::Exponential, 0, "s"},
         {"comprelease", 0.02f, 1.0f, 0.18f, Curve::Exponential, 0, "s"},
@@ -155,7 +156,7 @@ float Genesis::metallic(float tune) {
 void Genesis::trigger(int32_t voice, float velocity) {
     const float accent = params_.get(Accent);
     const float drift = params_.get(Drift) * 0.06f; // a few per cent, like a circuit
-    const float level = (1.0f - accent + accent * velocity) * wobble(drift * 1.5f);
+    const float level = velocityGain(velocity, accent) * wobble(drift * 1.5f);
     gain[voice] = level;
 
     switch (voice) {

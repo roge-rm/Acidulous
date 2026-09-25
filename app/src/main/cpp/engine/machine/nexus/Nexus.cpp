@@ -56,6 +56,7 @@ const ParamDef *Nexus::paramDefs(int32_t &count) const {
         put(Volume, "volume", 0.0f, 1.0f, 0.8f, Curve::Linear, 0, "");
         put(Pan, "pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         put(Drive, "drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
+        put(Velocity, "velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, "");
         built = true;
     }
     count = Count;
@@ -104,6 +105,7 @@ void Nexus::noteOn(uint8_t note, uint8_t velocity) {
     v->trigger = 1.0f;
     pitchOf[index] = static_cast<float>(note);
     velocityOf[index] = v->velocity;
+    levelOf[index] = velocityGain(v->velocity, targetOf(Velocity));
     randomOf[index] = v->random;
     pressureOf[index] = timbreOf[index] = -1.0f;
     gateOf[index] = 1.0f;
@@ -169,6 +171,7 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
         for (int32_t i = 0; i < frames; ++i) { L[i] = 0.0f; R[i] = 0.0f; }
         return true;
     }
+    g->voiceLevel = levelOf;
 
     for (int32_t i = 0; i < kSlots * kKnobs; ++i) knobBuffer[i] = paramOf(SlotBase + i);
     for (int32_t i = 0; i < kCables * 2; ++i) cableBuffer[i] = paramOf(CableBase + i);

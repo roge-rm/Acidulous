@@ -151,7 +151,7 @@ const ParamDef *Ratio::paramDefs(int32_t &count) const {
         putN(Transpose, "transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, "st");
         putN(Volume, "volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, "");
         putN(Pan, "pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
-        putN(VelocityAmount, "velamt", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
+        putN(VelocityAmount, "velamt", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, "");
         built = true;
     }
     count = Count;
@@ -441,7 +441,7 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
     // other machine's does. See Reflux's kHouse for why.
     constexpr float kHouse = 0.55f;
     const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * kHouse;
-    const float velAmp = 1.0f - paramOf(VelocityAmount) * (1.0f - vel);
+    const float velAmp = velocityGain(vel, paramOf(VelocityAmount));
     // Slide opens the filter, by however much the patch says it should.
     const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
     const float filterBase = paramOf(FilterFreq) *
