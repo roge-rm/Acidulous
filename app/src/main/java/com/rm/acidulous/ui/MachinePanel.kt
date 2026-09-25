@@ -820,6 +820,13 @@ internal val StackedKnobW = 58.dp
 /** How many controls a stacked card puts on a line. Dan picked two. */
 internal const val StackedPerLine = 2
 
+/**
+ * How many a stacked card puts on a line where it is being drawn: two in a
+ * phone's side column, which is two knobs wide, and four in a tablet's, which
+ * is twice that. See the editor's two panes.
+ */
+internal val LocalStackedPerLine = androidx.compose.runtime.compositionLocalOf { StackedPerLine }
+
 /** A stated width stacked; upright a knob is still whatever it needs. */
 @Composable
 internal fun panelKnobWidth(): Modifier =
@@ -1255,7 +1262,7 @@ internal fun Group(
      * two knobs. A dialog is the width of the screen and fits four, and a card
      * that used two there would be tall and half empty.
      */
-    perLine: Int = StackedPerLine,
+    perLine: Int = LocalStackedPerLine.current,
     /** Centre the controls in the card rather than packing them to the left. */
     centred: Boolean = false,
     /**

@@ -56,3 +56,22 @@ fun screenShape(): ScreenShape {
 /** The Clicks is 1.19; the squarest ordinary phone is past 1.9. */
 private const val SquareRatio = 1.4f
 private val SquareShortMax = 600.dp
+
+/**
+ * A tablet, near enough: the short side is at least [LargeShortMin], the line
+ * Android's own resources draw (`sw600dp`).
+ *
+ * Not a fourth [ScreenShape], because a tablet is still tall or wide and most
+ * screens want only that. The two that care are the editor, which on a wide
+ * tablet has the height for the stacked layout rather than the turned phone's
+ * two panes, and the song grid, whose cells grow into the room.
+ */
+@Composable
+fun largeScreen(): Boolean {
+    val size = LocalWindowInfo.current.containerSize
+    if (size.width <= 0 || size.height <= 0) return false
+    val shortDp = with(androidx.compose.ui.platform.LocalDensity.current) { minOf(size.width, size.height).toDp() }
+    return shortDp >= LargeShortMin
+}
+
+private val LargeShortMin = 600.dp

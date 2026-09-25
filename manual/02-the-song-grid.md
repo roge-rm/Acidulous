@@ -93,6 +93,9 @@ What you end up with is an ordinary clip. Double tap it to edit it.
 Drag with two fingers to move around the grid, and pinch to make the cells
 bigger or smaller. One finger still opens and launches clips.
 
+On a tablet the cells grow to fill the screen, up to twice their size, until
+you pinch.
+
 ## Clip settings
 
 Hold a clip for its settings: its length in bars, mute, and the grid it snaps

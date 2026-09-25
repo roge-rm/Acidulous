@@ -514,11 +514,34 @@ fun MainScreen(
         // the roll keeps its own zoom - saved but not stored in `UiPrefs` -
         // because it is how you are working rather than anything about the song.
         var gridZoom by rememberSaveable { mutableStateOf(0f) }
-        val cellW = (CELL_W * (if (gridZoom > 0f) gridZoom else 1f)).coerceIn(CellMinW, CellMaxW)
+        // The room the grid has, measured below.
+        var gridW by remember { mutableIntStateOf(0) }
+        var gridH by remember { mutableIntStateOf(0) }
+        // **On a tablet, unpinched, the cells grow into the room.** At a
+        // phone's size the grid sat in one corner of a ten-inch screen with the
+        // rest of it empty. Each way is fitted on its own - a wide tablet has
+        // twice the width it needs and barely the height - between the stated
+        // size and double it, and neither way may outgrow the other by more
+        // than [FitAspectMax], so a clip stays a tile rather than a sliver. A
+        // pinch takes over from wherever this left the width.
+        val fit: Pair<Float, Float>? = if (!largeScreen() || gridZoom > 0f || gridW <= 0 || gridH <= 0) null else {
+            with(LocalDensity.current) {
+                val top = CellMaxW / CELL_W
+                var zx = (gridW.toDp() * FitSlack / (TRACK_W + CELL_W * (song.scenes.size + 1))).coerceIn(1f, top)
+                var zy = (gridH.toDp() * FitSlack / (SCENE_H + CELL_H * (song.tracks.size + 1))).coerceIn(1f, top)
+                zx = zx.coerceAtMost(zy * FitAspectMax)
+                zy = zy.coerceAtMost(zx * FitAspectMax)
+                zx to zy
+            }
+        }
+        val cellW = if (fit != null) CELL_W * fit.first
+                    else (CELL_W * (if (gridZoom > 0f) gridZoom else 1f)).coerceIn(CellMinW, CellMaxW)
         // The factor actually in force, which is the clamped width read back.
-        // Everything else follows it, so a cell keeps its shape.
+        // Everything else follows it, so a cell keeps its shape - unless the
+        // tablet fit above gave the height a factor of its own.
         val z = cellW / CELL_W
-        val cell = SongCell(TRACK_W * z, cellW, CELL_H * z, SCENE_H * z)
+        val zy = fit?.second ?: z
+        val cell = SongCell(TRACK_W * z, cellW, CELL_H * zy, SCENE_H * zy)
         // **With TalkBack on, the scenes come a page at a time** rather than
         // scrolling. TalkBack reads only what is on screen, and scrolls a
         // container once it has read all of it - so in a grid that scrolls
@@ -527,7 +550,6 @@ fun MainScreen(
         // nothing is off screen; and with no scroller between them, each
         // track's header is read just before its own clips.
         val talkBack = rememberTalkBack()
-        var gridW by remember { mutableIntStateOf(0) }
         var scenePage by rememberSaveable { mutableIntStateOf(0) }
         val sceneCount = song.scenes.size.coerceAtLeast(1)
         val perPage = if (!talkBack || gridW == 0) sceneCount else with(LocalDensity.current) {
@@ -565,7 +587,7 @@ fun MainScreen(
         }
         Row(
             Modifier.fillMaxWidth().weight(1f)
-                .onSizeChanged { gridW = it.width }
+                .onSizeChanged { gridW = it.width; gridH = it.height }
                 // **Two fingers move the grid; one still launches a clip.**
                 //
                 // Watched on the Initial pass, which travels parent to child,
@@ -661,7 +683,7 @@ fun MainScreen(
                 }
                 OutlinedButton(
                     onClick = { dialog = Dialog.PickMachine(null) },
-                    modifier = Modifier.width(cell.trackW).height(cell.cellH).padding(3.dp),
+                    modifier = Modifier.width(cell.trackW).height(cell.cellH.coerceAtMost(CELL_H * AddButtonMax)).padding(3.dp),
                     contentPadding = PaddingValues(4.dp),
                 ) { Text(stringResource(R.string.main_add_track), fontSize = 11.sp, maxLines = 1) }
             }
@@ -754,7 +776,7 @@ fun MainScreen(
                     }
                     if (showAddScene) OutlinedButton(
                         onClick = { editor.editSong { it.addScene() } },
-                        modifier = Modifier.width(cell.cellW).height(cell.sceneH).padding(3.dp),
+                        modifier = Modifier.width(cell.cellW).height(cell.sceneH.coerceAtMost(SCENE_H * AddButtonMax)).padding(3.dp),
                         contentPadding = PaddingValues(4.dp),
                     ) { Text(stringResource(R.string.main_add_scene), fontSize = 11.sp, maxLines = 1) }
                 }
@@ -1491,6 +1513,15 @@ private val SCENE_H = 54.dp
  * grid. Both scale with the interface setting, because both are `dp`.
  */
 private val CellMinW = 48.dp
+/** How much wider than tall, in proportion, a tablet's fitted cell may grow (and the reverse). */
+private const val FitAspectMax = 1.6f
+/**
+ * How tall + track and + scene may grow with the cells. They are pills, and a
+ * pill the height of a tablet's cell is an egg.
+ */
+private const val AddButtonMax = 1.25f
+/** The fit leaves a little over, so the last row is not cut by a rounding. */
+private const val FitSlack = 0.98f
 private val CellMaxW = 168.dp
 
 /**

@@ -84,6 +84,7 @@ object Manual {
             ManualBlock(ManualKind.Para, "What you end up with is an ordinary clip. Double tap it to edit it."),
             ManualBlock(ManualKind.Heading, "Zooming"),
             ManualBlock(ManualKind.Para, "Drag with two fingers to move around the grid, and pinch to make the cells bigger or smaller. One finger still opens and launches clips."),
+            ManualBlock(ManualKind.Para, "On a tablet the cells grow to fill the screen, up to twice their size, until you pinch."),
             ManualBlock(ManualKind.Heading, "Clip settings"),
             ManualBlock(ManualKind.Para, "Hold a clip for its settings: its length in bars, mute, and the grid it snaps to."),
             ManualBlock(ManualKind.Para, "**Copy, cut, paste and clear** are at the top. You can hold any cell to get them, including an empty one, so you can paste a copied clip into another scene or another track. Paste replaces the whole clip, so pasting over a clip asks first, and so does clear. Cut doesn't ask, because the clip is still on the clipboard."),

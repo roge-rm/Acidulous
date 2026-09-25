@@ -4,6 +4,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -202,7 +203,11 @@ fun EditScreen(
     // Folding the strip is a preference, not a property of this clip, so it
     // is held for the whole app and across launches - see UiPrefs.
     val shape = screenShape()
-    val landscape = shape == ScreenShape.Wide
+    // A tablet: the side column of the two panes is twice as wide, the keys
+    // are held to an instrument's height, and upright they are taller.
+    val large = largeScreen()
+    val wide = shape == ScreenShape.Wide
+    val landscape = wide
     // Square: the roll on top, and under it the keyboard *or* the panel -
     // there is not the height for both. See the square body below.
     val square = shape == ScreenShape.Square
@@ -321,7 +326,7 @@ fun EditScreen(
     else rowsForSlot(rollDp, windowDp, scale, base, MinRows, maxRows)
     val rows = (if (zoomRows > 0f) zoomRows else defaultRows.toFloat())
         .toInt().coerceIn(MinRows, maxRows)
-    val defaultBars = if (steps) 1 else if (landscape) PAGE_BARS_LAND else PAGE_BARS
+    val defaultBars = if (steps) 1 else if (wide) PAGE_BARS_LAND else PAGE_BARS
     val defaultTicks = (defaultBars * ticksPerBar).toFloat()
     // A pinch never shows less than a beat or more than the whole clip: below
     // a beat there is nothing left to aim at, and beyond the clip there is
@@ -1214,8 +1219,14 @@ fun EditScreen(
                 val foldedH = if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H
                 // No instrument means no share of the height for one: the
                 // lanes take what a keyboard would have had.
+                // **On a tablet the share is held to an instrument's height.**
+                // A third of a phone on its side is a keyboard; a third of a
+                // tablet on its side is two hundred and sixty dp of white keys,
+                // and the roll above them was short of rows to pay for it.
                 val keysH = if (kind == MachineKind.Audio) 0.dp
-                            else if (keysFolded) foldedH else total * frac
+                            else if (keysFolded) foldedH
+                            else if (large) (total * frac).coerceAtMost(LARGE_KEYS_LAND_MAX)
+                            else total * frac
                 // A lane open sideways gets a quarter of what is left above
                 // the keyboard rather than a stated eighty-eight, with a
                 // floor at the height a finger needs to set a value in.
@@ -1247,8 +1258,12 @@ fun EditScreen(
                         // Folded, they are gone and the roll has the width;
                         // the strip on the left still has the mark.
                         if (!panelFolded || panel != 0) Column(
-                            Modifier.width(CONTROL_W).fillMaxHeight(),
-                        ) { panelSlot(false, true) }
+                            Modifier.width(if (large) CONTROL_W_LARGE else CONTROL_W).fillMaxHeight(),
+                        ) {
+                            CompositionLocalProvider(LocalStackedPerLine provides if (large) LARGE_PER_LINE else StackedPerLine) {
+                                panelSlot(false, true)
+                            }
+                        }
                     }
                     keysSlot(
                         keysH,
@@ -1327,7 +1342,10 @@ fun EditScreen(
                 // then turns into taller rows rather than more of them.
                 //
                 // Nothing to prove at 1.0: the divisor is one.
-                val keysBase = (if (kind == MachineKind.Drums) PADS_H else KEYS_H) / scale
+                // A tablet's keys are half as tall again: at a phone's
+                // height they are a strip along the foot of a screen that has
+                // room for an instrument.
+                val keysBase = (if (kind == MachineKind.Drums) PADS_H else KEYS_H) / scale * (if (large) LARGE_KEYS else 1f)
                 val keysH = if (kind == MachineKind.Audio) 0.dp else keysBase * keysStretch
                 keysSlot(
                     if (UiPrefs.keysFolded) {
@@ -1573,6 +1591,10 @@ private const val PAGE_BARS_LAND = 4
  * which looks like the layout ignoring what it was told.
  */
 private val CONTROL_W = 180.dp
+// A tablet's side column: four knobs to a line rather than two.
+private val CONTROL_W_LARGE = 330.dp
+private const val LARGE_PER_LINE = 4
+private val LARGE_KEYS_LAND_MAX = 180.dp
 
 /**
  * The left edge column, sideways.
@@ -1591,6 +1613,7 @@ private val CONTROL_W = 180.dp
  */
 private val PATCH_W = 40.dp
 private val KEYS_H = 104.dp
+private const val LARGE_KEYS = 1.5f
 // The pads used to get 72, which after padding is two rows of 28.5dp - forty
 // per cent under the smallest thing a finger is meant to hit, and a third less
 // than the keyboard gets *before* the keyboard spends thirty of its own on a
