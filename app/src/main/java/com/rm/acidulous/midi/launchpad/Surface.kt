@@ -38,6 +38,13 @@ data class LpTrack(
     val colour: Int,
     /** A drum machine's voice notes in pad order, or null for a melodic one. */
     val drums: List<Int>? = null,
+    /** The scenes, by index, this track has a clip in. */
+    val clips: Set<Int> = emptySet(),
+    val mute: Boolean = false,
+    val solo: Boolean = false,
+    /** In clip mode: the scene it is playing, and the one it is waiting to, or -1. */
+    val playingScene: Int = -1,
+    val queuedScene: Int = -1,
 )
 
 /** The app, sampled. */
@@ -53,6 +60,11 @@ data class LpView(
     /** Where in the beat the song is, 0..1. */
     val beat: Float = 0f,
     val scenes: Int = 0,
+    /** The grid as a launcher, not an arrangement. */
+    val clipMode: Boolean = false,
+    /** The scene the song is in, and the one it will go to next (song mode), or -1. */
+    val scene: Int = 0,
+    val queuedScene: Int = -1,
 )
 
 /** The surface's own state. */
@@ -67,6 +79,8 @@ data class LpState(
     val shift: Boolean = false,
     /** Pads held down, by LED, and the note each is sounding. */
     val sounding: Map<Int, Int> = emptyMap(),
+    /** Buttons held down that change what a pad or a track button does. */
+    val held: Set<Button> = emptySet(),
 )
 
 sealed class LpAction {
@@ -80,11 +94,31 @@ sealed class LpAction {
     object Redo : LpAction()
     data class SelectTrack(val index: Int) : LpAction()
     data class PlayScene(val index: Int) : LpAction()
+    data class LaunchClip(val track: Int, val scene: Int) : LpAction()
+    data class ClearClip(val track: Int, val scene: Int) : LpAction()
+    /** A clip copied into the scene below it, where that is empty. */
+    data class CopyClipDown(val track: Int, val scene: Int) : LpAction()
+    data class DuplicateScene(val scene: Int) : LpAction()
+    data class ToggleMute(val track: Int) : LpAction()
+    data class ToggleSolo(val track: Int) : LpAction()
+    /** Every launched clip in clip mode, the song otherwise. */
+    object StopClips : LpAction()
 }
 
 object Surface {
     /** Pages there are yet; their buttons light and choose them. */
-    val built = setOf(LpPage.Note)
+    val built = setOf(LpPage.Note, LpPage.Session)
+
+    /** Buttons that change what the next press means while held. */
+    private val modifiers = setOf(Button.Clear, Button.Duplicate, Button.Mute, Button.Solo)
+
+    val MUTE = Rgb.of(127, 30, 0)
+    val SOLO = Rgb.of(0, 60, 127)
+
+    /** On the beat: bright on it, fading through it. */
+    fun pulse(c: Int, beat: Float): Int = Rgb.scale(c, 0.35f + 0.65f * (1f - beat))
+    /** Half a beat on, half off: waiting for its turn. */
+    fun flash(c: Int, beat: Float): Int = if (beat < 0.5f) c else Rgb.scale(c, 0.12f)
 
     private val pageButtons = mapOf(
         Button.Note to LpPage.Note, Button.Session to LpPage.Session, Button.Chord to LpPage.Chord,
@@ -137,6 +171,7 @@ object Surface {
         val colour = view.tracks.getOrNull(view.played)?.colour ?: Rgb.WHITE
         when (state.page) {
             LpPage.Note -> notePage(view, state, colour, leds)
+            LpPage.Session -> sessionPage(view, state, leds)
             else -> {}
         }
         // The pages, by their printed names.
@@ -151,19 +186,38 @@ object Surface {
         leds[Button.Play.cc] = if (view.playing) Rgb.GREEN else Rgb.scale(Rgb.GREEN, 0.15f)
         leds[Button.Record.cc] = if (view.armed) Rgb.RED else Rgb.scale(Rgb.RED, 0.15f)
         for (b in listOf(Button.Up, Button.Down, Button.Left, Button.Right)) leds[b.cc] = Rgb.DIM
-        // Undo and redo, while Shift says so.
-        leds[Button.Clear.cc] = if (state.shift) Rgb.DIM else Rgb.OFF
-        leds[Button.Duplicate.cc] = if (state.shift) Rgb.DIM else Rgb.OFF
+        val muting = Button.Mute in state.held
+        val soloing = Button.Solo in state.held
         for (i in 0..7) {
             val t = state.trackBank * 8 + i
             val track = view.tracks.getOrNull(t)
             leds[LaunchpadPro.ledOf(Control.Track(i))] = when {
                 track == null -> Rgb.OFF
+                // While Mute or Solo is held, the row is what they would change.
+                muting -> if (track.mute) MUTE else Rgb.scale(track.colour, 0.2f)
+                soloing -> if (track.solo) SOLO else Rgb.scale(track.colour, 0.2f)
                 t == view.played -> track.colour
                 else -> Rgb.scale(track.colour, 0.2f)
             }
             val s = state.sceneBank * 8 + i
-            leds[LaunchpadPro.ledOf(Control.Scene(i))] = if (s < view.scenes) Rgb.scale(Rgb.GREEN, 0.25f) else Rgb.OFF
+            val playingHere = if (view.clipMode) view.tracks.any { it.playingScene == s } else view.playing && view.scene == s
+            val queuedHere = if (view.clipMode) view.tracks.any { it.queuedScene == s } else view.queuedScene == s
+            leds[LaunchpadPro.ledOf(Control.Scene(i))] = when {
+                s >= view.scenes -> Rgb.OFF
+                playingHere -> pulse(Rgb.GREEN, view.beat)
+                queuedHere -> flash(Rgb.GREEN, view.beat)
+                else -> Rgb.scale(Rgb.GREEN, 0.25f)
+            }
+        }
+        // The track controls this far: record, mute and solo, and stop.
+        leds[Button.RecordArm.cc] = leds[Button.Record.cc]
+        leds[Button.Mute.cc] = if (muting || view.tracks.any { it.mute }) MUTE else Rgb.scale(MUTE, 0.15f)
+        leds[Button.Solo.cc] = if (soloing || view.tracks.any { it.solo }) SOLO else Rgb.scale(SOLO, 0.15f)
+        leds[Button.StopClip.cc] = if (view.playing) Rgb.scale(Rgb.RED, 0.6f) else Rgb.scale(Rgb.RED, 0.15f)
+        // Clear and Duplicate are live on the session page, and undo and redo under Shift.
+        if (state.page == LpPage.Session || state.shift) {
+            leds[Button.Clear.cc] = if (Button.Clear in state.held) Rgb.WHITE else Rgb.DIM
+            leds[Button.Duplicate.cc] = if (Button.Duplicate in state.held) Rgb.WHITE else Rgb.DIM
         }
         // The logo keeps the beat while the song plays.
         leds[Button.Logo.cc] = if (view.playing) Rgb.scale(colour, 1f - 0.85f * view.beat) else Rgb.scale(colour, 0.3f)
@@ -191,11 +245,46 @@ object Surface {
         }
     }
 
+    /** Where a session pad points: its track and its scene, top row first. */
+    fun sessionCell(state: LpState, row: Int, col: Int): Pair<Int, Int> =
+        (state.trackBank * 8 + col) to (state.sceneBank * 8 + (7 - row))
+
+    private fun sessionPage(view: LpView, state: LpState, leds: IntArray) {
+        for (row in 0..7) for (col in 0..7) {
+            val (t, s) = sessionCell(state, row, col)
+            val track = view.tracks.getOrNull(t)
+            val led = LaunchpadPro.ledOf(Control.Pad(row, col))
+            leds[led] = when {
+                track == null || s >= view.scenes || s !in track.clips -> Rgb.OFF
+                view.clipMode && track.playingScene == s -> pulse(track.colour, view.beat)
+                view.clipMode && track.queuedScene == s -> flash(track.colour, view.beat)
+                !view.clipMode && view.playing && view.scene == s -> pulse(track.colour, view.beat)
+                !view.clipMode && view.queuedScene == s -> flash(track.colour, view.beat)
+                else -> Rgb.scale(track.colour, 0.3f)
+            }
+        }
+    }
+
+    private fun sessionPress(view: LpView, state: LpState, pad: Control.Pad): List<LpAction> {
+        val (t, s) = sessionCell(state, pad.row, pad.col)
+        val track = view.tracks.getOrNull(t) ?: return emptyList()
+        if (s >= view.scenes) return emptyList()
+        val has = s in track.clips
+        return when {
+            Button.Clear in state.held -> if (has) listOf(LpAction.ClearClip(t, s)) else emptyList()
+            Button.Duplicate in state.held ->
+                if (has && s + 1 < view.scenes && (s + 1) !in track.clips) listOf(LpAction.CopyClipDown(t, s)) else emptyList()
+            view.clipMode -> listOf(LpAction.SelectTrack(t)) + (if (has) listOf(LpAction.LaunchClip(t, s)) else emptyList())
+            else -> listOf(LpAction.SelectTrack(t), LpAction.PlayScene(s))
+        }
+    }
+
     // --- Pressing ----------------------------------------------------------------
 
     fun press(view: LpView, state: LpState, control: Control, velocity: Int): Pair<LpState, List<LpAction>> {
         when (control) {
             is Control.Pad -> {
+                if (state.page == LpPage.Session) return state to sessionPress(view, state, control)
                 if (state.page != LpPage.Note) return state to emptyList()
                 val note = noteAt(view, state, control.row, control.col) ?: return state to emptyList()
                 val led = LaunchpadPro.ledOf(control)
@@ -204,11 +293,19 @@ object Surface {
             }
             is Control.Track -> {
                 val t = state.trackBank * 8 + control.index
-                return state to if (t < view.tracks.size) listOf(LpAction.SelectTrack(t)) else emptyList()
+                if (t >= view.tracks.size) return state to emptyList()
+                return state to listOf(
+                    when {
+                        Button.Mute in state.held -> LpAction.ToggleMute(t)
+                        Button.Solo in state.held -> LpAction.ToggleSolo(t)
+                        else -> LpAction.SelectTrack(t)
+                    },
+                )
             }
             is Control.Scene -> {
                 val s = state.sceneBank * 8 + control.index
-                return state to if (s < view.scenes) listOf(LpAction.PlayScene(s)) else emptyList()
+                if (s >= view.scenes) return state to emptyList()
+                return state to listOf(if (Button.Duplicate in state.held) LpAction.DuplicateScene(s) else LpAction.PlayScene(s))
             }
             is Control.Key -> return key(view, state, control.button)
         }
@@ -218,19 +315,29 @@ object Surface {
         pageButtons[b]?.let { page ->
             return (if (page in built) state.copy(page = page) else state) to emptyList()
         }
+        // Clear, Duplicate, Mute and Solo mean something only with the next
+        // press; undo and redo are Clear and Duplicate under Shift.
+        if (b in modifiers && !(state.shift && (b == Button.Clear || b == Button.Duplicate))) {
+            return state.copy(held = state.held + b) to emptyList()
+        }
+        val session = state.page == LpPage.Session
         return when (b) {
             Button.Shift -> state.copy(shift = true) to emptyList()
+            Button.RecordArm -> state to listOf(LpAction.Record)
+            Button.StopClip -> state to listOf(LpAction.StopClips)
+            // On the session page the arrows move the view of the grid.
+            Button.Up -> (if (session) state.copy(sceneBank = (state.sceneBank - 1).coerceAtLeast(0))
+            else state.copy(octave = (state.octave + 1).coerceAtMost(8))) to emptyList()
+            Button.Down -> (if (session) state.copy(sceneBank = (state.sceneBank + 1).coerceAtMost(maxBank(view.scenes)))
+            else state.copy(octave = (state.octave - 1).coerceAtLeast(-1))) to emptyList()
+            Button.Left -> (if (state.shift || session) state.copy(trackBank = (state.trackBank - 1).coerceAtLeast(0))
+            else state.copy(degree = state.degree - 1)) to emptyList()
+            Button.Right -> (if (state.shift || session) state.copy(trackBank = (state.trackBank + 1).coerceAtMost(maxBank(view.tracks.size)))
+            else state.copy(degree = state.degree + 1)) to emptyList()
             Button.Play -> state to listOf(if (state.shift) LpAction.Panic else LpAction.Play)
             Button.Record -> state to listOf(LpAction.Record)
             Button.Clear -> state to if (state.shift) listOf(LpAction.Undo) else emptyList()
             Button.Duplicate -> state to if (state.shift) listOf(LpAction.Redo) else emptyList()
-            Button.Up -> state.copy(octave = (state.octave + 1).coerceAtMost(8)) to emptyList()
-            Button.Down -> state.copy(octave = (state.octave - 1).coerceAtLeast(-1)) to emptyList()
-            // With Shift, the arrows page the tracks; without, they walk the scale.
-            Button.Left -> (if (state.shift) state.copy(trackBank = (state.trackBank - 1).coerceAtLeast(0))
-            else state.copy(degree = state.degree - 1)) to emptyList()
-            Button.Right -> (if (state.shift) state.copy(trackBank = (state.trackBank + 1).coerceAtMost(maxBank(view.tracks.size)))
-            else state.copy(degree = state.degree + 1)) to emptyList()
             else -> state to emptyList()
         }
     }
@@ -243,7 +350,10 @@ object Surface {
             // moved while it was held must not leave it sounding.
             (state.copy(sounding = state.sounding - led)) to (if (note != null) listOf(LpAction.NoteOff(note)) else emptyList())
         }
-        is Control.Key -> (if (control.button == Button.Shift) state.copy(shift = false) else state) to emptyList()
+        is Control.Key -> state.copy(
+            shift = if (control.button == Button.Shift) false else state.shift,
+            held = state.held - control.button,
+        ) to emptyList()
         else -> state to emptyList()
     }
 

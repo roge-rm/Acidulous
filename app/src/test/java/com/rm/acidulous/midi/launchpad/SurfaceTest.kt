@@ -129,4 +129,75 @@ class SurfaceTest {
         assertEquals(Rgb.WHITE, leds[Button.Note.cc])
         assertEquals(Rgb.OFF, leds[Button.Chord.cc]) // not built yet
     }
+
+    // --- The session page -------------------------------------------------------
+
+    private val blue = Rgb.of(0, 0, 127)
+    private val session = LpView(
+        tracks = listOf(
+            LpTrack(red, clips = setOf(0, 1), playingScene = 1),
+            LpTrack(blue, clips = setOf(0), queuedScene = 0),
+        ),
+        played = 0, scenes = 12, clipMode = true,
+    )
+    private val onSession = LpState(page = LpPage.Session)
+    private fun hold(b: Button, s: LpState = onSession) = Surface.press(session, s, Control.Key(b), 127).first
+
+    @Test
+    fun `the session grid is tracks across and scenes down, top row first`() {
+        assertEquals(0 to 0, Surface.sessionCell(onSession, 7, 0))
+        assertEquals(1 to 7, Surface.sessionCell(onSession, 0, 1))
+        assertEquals(8 to 8, Surface.sessionCell(onSession.copy(trackBank = 1, sceneBank = 1), 7, 0))
+    }
+
+    @Test
+    fun `in clip mode a pad launches its clip, in song mode plays its scene`() {
+        assertEquals(
+            listOf(LpAction.SelectTrack(0), LpAction.LaunchClip(0, 1)),
+            Surface.press(session, onSession, Control.Pad(6, 0), 100).second,
+        )
+        // An empty cell only chooses the track.
+        assertEquals(listOf(LpAction.SelectTrack(1)), Surface.press(session, onSession, Control.Pad(6, 1), 100).second)
+        val song = session.copy(clipMode = false)
+        assertEquals(
+            listOf(LpAction.SelectTrack(1), LpAction.PlayScene(0)),
+            Surface.press(song, onSession, Control.Pad(7, 1), 100).second,
+        )
+    }
+
+    @Test
+    fun `clear, duplicate, mute and solo are held for the next press`() {
+        assertEquals(listOf(LpAction.ClearClip(0, 0)), Surface.press(session, hold(Button.Clear), Control.Pad(7, 0), 100).second)
+        // Down into an empty scene, and not over a clip that is there.
+        assertEquals(listOf(LpAction.CopyClipDown(1, 0)), Surface.press(session, hold(Button.Duplicate), Control.Pad(7, 1), 100).second)
+        assertTrue(Surface.press(session, hold(Button.Duplicate), Control.Pad(7, 0), 100).second.isEmpty())
+        assertEquals(listOf(LpAction.DuplicateScene(3)), Surface.press(session, hold(Button.Duplicate), Control.Scene(3), 127).second)
+        assertEquals(listOf(LpAction.ToggleMute(1)), Surface.press(session, hold(Button.Mute), Control.Track(1), 127).second)
+        assertEquals(listOf(LpAction.ToggleSolo(0)), Surface.press(session, hold(Button.Solo), Control.Track(0), 127).second)
+        // Let go, and a track button chooses again.
+        val released = Surface.release(hold(Button.Mute), Control.Key(Button.Mute)).first
+        assertEquals(listOf(LpAction.SelectTrack(1)), Surface.press(session, released, Control.Track(1), 127).second)
+        assertEquals(listOf(LpAction.StopClips), Surface.press(session, onSession, Control.Key(Button.StopClip), 127).second)
+    }
+
+    @Test
+    fun `on the session page the arrows move the view`() {
+        var st = Surface.press(session, onSession, Control.Key(Button.Down), 127).first
+        assertEquals(1, st.sceneBank)
+        st = Surface.press(session, st, Control.Key(Button.Down), 127).first
+        assertEquals(1, st.sceneBank) // twelve scenes: two banks
+        assertEquals(0, Surface.press(session, onSession, Control.Key(Button.Right), 127).first.trackBank) // two tracks: one bank
+        assertEquals(3, st.octave) // and the note page's octave is untouched
+    }
+
+    @Test
+    fun `playing clips pulse, queued ones flash, empty cells are dark`() {
+        val onBeat = Surface.render(session.copy(beat = 0f), onSession)
+        assertEquals(red, onBeat[LaunchpadPro.ledOf(Control.Pad(6, 0))])
+        assertEquals(blue, onBeat[LaunchpadPro.ledOf(Control.Pad(7, 1))])
+        val offBeat = Surface.render(session.copy(beat = 0.75f), onSession)
+        assertTrue(offBeat[LaunchpadPro.ledOf(Control.Pad(7, 1))] != blue)
+        assertEquals(Rgb.OFF, onBeat[LaunchpadPro.ledOf(Control.Pad(6, 1))])
+        assertEquals(Rgb.WHITE, onBeat[Button.Session.cc])
+    }
 }

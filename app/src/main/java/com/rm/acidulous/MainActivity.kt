@@ -76,6 +76,8 @@ import com.rm.acidulous.ui.theme.AcidulousTheme
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import com.rm.acidulous.model.duplicateScene
+import com.rm.acidulous.model.cleared
 import androidx.compose.ui.graphics.toArgb
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -1428,6 +1430,27 @@ private fun App(modifier: Modifier = Modifier) {
                     else -> { onLoopScene(true); EngineSync.play(a.index, false) }
                 }
             }
+            is com.rm.acidulous.midi.launchpad.LpAction.LaunchClip -> song.scenes.getOrNull(a.scene)?.let { scene ->
+                NativeEngine.launchClip(a.track, scene.engineId)
+                if (!playing) EngineSync.play(0, true)
+            }
+            // As the clip window's clear, cut, and the scene menu's duplicate.
+            is com.rm.acidulous.midi.launchpad.LpAction.ClearClip -> song.scenes.getOrNull(a.scene)?.let { scene ->
+                editor.editClip(a.track, scene.id) { it.cleared() }
+            }
+            is com.rm.acidulous.midi.launchpad.LpAction.CopyClipDown -> {
+                val from = song.scenes.getOrNull(a.scene)
+                val to = song.scenes.getOrNull(a.scene + 1)
+                val clip = from?.let { song.tracks.getOrNull(a.track)?.clips?.get(it.id) }
+                if (to != null && clip != null) editor.edit(a.track) { t -> t.copy(clips = t.clips + (to.id to clip)) }
+            }
+            is com.rm.acidulous.midi.launchpad.LpAction.DuplicateScene -> editor.editSong { it.duplicateScene(a.scene) }
+            is com.rm.acidulous.midi.launchpad.LpAction.ToggleMute ->
+                editor.edit(a.track) { t -> t.copy(mixer = t.mixer.copy(mute = !t.mixer.mute)) }
+            is com.rm.acidulous.midi.launchpad.LpAction.ToggleSolo ->
+                editor.edit(a.track) { t -> t.copy(mixer = t.mixer.copy(solo = !t.mixer.solo)) }
+            com.rm.acidulous.midi.launchpad.LpAction.StopClips ->
+                if (com.rm.acidulous.ui.UiPrefs.clipMode && playing) NativeEngine.stopAllClips() else NativeEngine.transportStop()
         }
     }
     val lpSample by rememberUpdatedState {
@@ -1438,6 +1461,11 @@ private fun App(modifier: Modifier = Modifier) {
                     drums = if (com.rm.acidulous.model.MachineUi.kindOf(t.machine.type) == com.rm.acidulous.model.MachineKind.Drums) {
                         com.rm.acidulous.model.MachineUi.voicesOf(t.machine.type, t.machine.settings).map { it.note }
                     } else null,
+                    clips = song.scenes.indices.filter { song.scenes[it].id in t.clips }.toSet(),
+                    mute = t.mixer.mute,
+                    solo = t.mixer.solo,
+                    playingScene = launchStates.getOrNull(i)?.takeIf { it.playing }?.scene ?: -1,
+                    queuedScene = launchStates.getOrNull(i)?.takeIf { it.queued }?.pending ?: -1,
                 )
             },
             played = midiTrack,
@@ -1447,6 +1475,9 @@ private fun App(modifier: Modifier = Modifier) {
             armed = armed,
             beat = (position.tickInIteration % com.rm.acidulous.model.PPQN).toFloat() / com.rm.acidulous.model.PPQN,
             scenes = song.scenes.size,
+            clipMode = com.rm.acidulous.ui.UiPrefs.clipMode,
+            scene = position.scene,
+            queuedScene = NativeEngine.queuedScene,
         )
     }
     val launchpad = remember { com.rm.acidulous.ui.launchpad.LaunchpadController { lpAct(it) } }
