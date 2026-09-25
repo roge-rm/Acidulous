@@ -1469,7 +1469,6 @@ private fun App(modifier: Modifier = Modifier) {
                     else clip.copy(notes = (clip.notes + com.rm.acidulous.model.Note(a.tick, a.length, a.pitch, 100)).sortedBy { it.tick })
                 }
             }
-            // Every note's start onto the clip's grid; where it was played is kept.
             // As the mixer's strips, the panels' knobs and the perform page send them.
             is com.rm.acidulous.midi.launchpad.LpAction.SetMix -> {
                 val (name, update) = when (a.fader) {
@@ -1489,14 +1488,11 @@ private fun App(modifier: Modifier = Modifier) {
             }
             is com.rm.acidulous.midi.launchpad.LpAction.PerformParam ->
                 NativeEngine.setParam(midiTrack, "perform", a.name, a.value, record = true)
+            // As the Quantise window was last set: the two mean the same thing.
             is com.rm.acidulous.midi.launchpad.LpAction.QuantiseClip -> song.scenes.getOrNull(a.scene)?.let { scene ->
                 editor.editClip(a.track, scene.id) { clip ->
-                    val g = clip.grid.coerceAtLeast(1)
                     val len = song.clipLengthTicks(scene.id, clip)
-                    clip.copy(notes = clip.notes.map { n ->
-                        val q = (Math.round(n.tick.toDouble() / g) * g).toInt().coerceIn(0, maxOf(0, len - g))
-                        if (q == n.tick) n else n.copy(tick = q, rawTick = n.rawTick ?: n.tick)
-                    }.sortedBy { it.tick })
+                    clip.copy(notes = com.rm.acidulous.ui.QuantiseMemory.applyTo(song, clip, len).sortedBy { it.tick })
                 }
             }
         }

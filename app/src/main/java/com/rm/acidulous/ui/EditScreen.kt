@@ -806,6 +806,9 @@ fun EditScreen(
                         if (i in indices) n.copy(
                             tick = (n.tick + dTick).coerceIn(0, clipLen - 1),
                             pitch = (n.pitch + dPitch).coerceIn(0, 127),
+                            // Where it was played moves with it, so "as
+                            // played" keeps the feel wherever it is put.
+                            rawTick = n.rawTick?.let { (it + dTick).coerceIn(0, clipLen - 1) },
                         ) else n
                     })
                 }
