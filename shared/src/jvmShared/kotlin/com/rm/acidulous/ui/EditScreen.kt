@@ -334,7 +334,16 @@ fun EditScreen(
         .coerceIn(PPQN.toFloat(), clipLen.toFloat().coerceAtLeast(PPQN.toFloat()))
     val maxScroll = (clipLen - pageTicks).coerceAtLeast(0f)
     scrollTick = scrollTick.coerceIn(0f, maxScroll)
-    val firstTick = scrollTick.toInt()
+    // **The drum grid's window is whole steps**, starting on one. Its cells
+    // are the window's first tick plus a step at a time, so a pinch or a
+    // sideways drag that left the window at an odd tick put every cell
+    // between the hits and the grid showed none. The lane and the automation
+    // strip get the same window, so their bars stay under the cells.
+    val stepTicks = clip.grid.coerceAtLeast(1)
+    val drumSteps = steps && kind == MachineKind.Drums
+    val firstTick = if (drumSteps) scrollTick.toInt() / stepTicks * stepTicks else scrollTick.toInt()
+    val visibleTicks = if (drumSteps) (pageTicks / stepTicks).roundToInt().coerceAtLeast(1) * stepTicks
+    else pageTicks.toInt()
     val pages = kotlin.math.ceil(clipLen / pageTicks).toInt().coerceAtLeast(1)
     val page = (scrollTick / pageTicks).toInt().coerceIn(0, pages - 1)
     // While playing, follow the playhead onto its own page rather than
@@ -693,7 +702,7 @@ fun EditScreen(
             voices = voices,
             playheadTick = playhead,
             firstTick = firstTick,
-            visibleTicks = pageTicks.toInt(),
+            visibleTicks = visibleTicks,
             onScrollTime = { ticks -> scrollTick = (scrollTick + ticks).coerceIn(0f, maxScroll) },
             onZoomTime = { scale ->
                 val was = if (zoomTicks > 0f) zoomTicks else defaultTicks
@@ -748,7 +757,7 @@ fun EditScreen(
             noteSpelling = Scales.spellingFor(song, track),
             scaleView = scaleView,
             firstTick = firstTick,
-            visibleTicks = pageTicks.toInt(),
+            visibleTicks = visibleTicks,
             onCycleScaleView = {
                 // Dim and fit need a scale to dim or fit to, so before one is
                 // set the corner does the only useful thing: asks for one.
@@ -835,7 +844,7 @@ fun EditScreen(
             ticksPerBar = ticksPerBar,
             playheadTick = playhead,
             firstTick = firstTick,
-            visibleTicks = pageTicks.toInt(),
+            visibleTicks = visibleTicks,
             prop = noteProp,
             onProp = { noteProp = it },
             // The drum grid gives every hit a whole cell; the roll draws the
@@ -907,7 +916,7 @@ fun EditScreen(
             ticksPerBar = ticksPerBar,
             playheadTick = playhead,
             firstTick = firstTick,
-            visibleTicks = pageTicks.toInt(),
+            visibleTicks = visibleTicks,
             laneKeys = laneKeys,
             nameOf = { com.rm.acidulous.model.laneLabel(track, it, laneWord) },
             shortOf = { com.rm.acidulous.model.laneShortLabel(track, it, laneWord) },

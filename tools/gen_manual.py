@@ -15,6 +15,7 @@ manual is written in is the subset a manual needs -
     # Title              the section, one per file (and one per sub-page)
     > summary            the line under it in the contents
     ## Heading           a heading inside the section
+    ### Subheading       a heading inside that
     paragraph            run of lines, joined
     - bullet             a list item
     1. step              a numbered item
@@ -38,7 +39,7 @@ OUT = pathlib.Path("shared/src/jvmShared/kotlin/com/rm/acidulous/model/Manual.kt
 INDEX = SRC / "README.md"
 OPEN, CLOSE = "<!-- contents -->", "<!-- /contents -->"
 
-HEADING, PARA, BULLET, STEP = 0, 1, 2, 3
+HEADING, PARA, BULLET, STEP, SUBHEADING = 0, 1, 2, 3, 4
 
 # A Markdown link, which the manual is written with and the app's reader has
 # no way to draw.
@@ -106,9 +107,13 @@ MOUSE_SENTENCES = {
 }
 
 
-def for_mouse(text, heading, used):
-    """[text] as the desktop says it, or None where it says the same."""
-    if heading in TOUCH_ONLY:
+def for_mouse(text, headings, used):
+    """[text] as the desktop says it, or None where it says the same.
+
+    [headings] are the ones it is under, the section's and a subheading's:
+    MPE, the Exquis and the Launchpad are all under "Playing from a keyboard".
+    """
+    if any(h in TOUCH_ONLY for h in headings):
         return None
     out = text
     for touch, mouse in MOUSE_SENTENCES.items():
@@ -151,6 +156,11 @@ def parse(path):
         elif line.startswith("## "):
             flush()
             blocks.append((HEADING, line[3:].strip()))
+        elif line.startswith("### "):
+            # Printed as a paragraph, hashes and all, until this line: ten of
+            # them across four pages read "### MPE".
+            flush()
+            blocks.append((SUBHEADING, line[4:].strip()))
         elif line.startswith("- "):
             flush()
             blocks.append((BULLET, line[2:].strip()))
@@ -193,7 +203,7 @@ def kotlin(sections, used):
         "// the form the app can draw. Re-run the script after editing it.",
         "",
         "/** What a line of the manual is. Inline `code` and **bold** stay in the text. */",
-        "enum class ManualKind { Heading, Para, Bullet, Step }",
+        "enum class ManualKind { Heading, Para, Bullet, Step, Subheading }",
         "",
         "/** [mouse] is the same words where the pointer is a mouse: \"click\" for \"tap\". Null where they are the same. */",
         "class ManualBlock(val kind: ManualKind, val text: String, val mouse: String? = null) {",
@@ -211,15 +221,17 @@ def kotlin(sections, used):
         "object Manual {",
         "    val sections: List<ManualSection> = listOf(",
     ]
-    kinds = {HEADING: "Heading", PARA: "Para", BULLET: "Bullet", STEP: "Step"}
+    kinds = {HEADING: "Heading", PARA: "Para", BULLET: "Bullet", STEP: "Step", SUBHEADING: "Subheading"}
 
     def emit(title, summary, blocks, kids, pad):
         out.append(f"{pad}ManualSection({q(unlink(title))}, {q(unlink(summary))}, listOf(")
-        heading = title
+        heading, sub = title, None
         for kind, text in blocks:
             if kind == HEADING:
-                heading = text
-            mouse = None if kind == HEADING else for_mouse(unlink(text), heading, used)
+                heading, sub = text, None
+            elif kind == SUBHEADING:
+                sub = text
+            mouse = None if kind in (HEADING, SUBHEADING) else for_mouse(unlink(text), (heading, sub), used)
             extra = f", {q(mouse)}" if mouse else ""
             out.append(f"{pad}    ManualBlock(ManualKind.{kinds[kind]}, {q(unlink(text))}{extra}),")
         if not kids:

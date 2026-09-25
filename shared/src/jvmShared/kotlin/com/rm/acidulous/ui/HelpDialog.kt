@@ -108,6 +108,15 @@ private fun ManualLine(block: ManualBlock) {
             fontFamily = FontFamily.Monospace,
             modifier = Modifier.padding(top = 6.dp),
         )
+        // A heading inside a heading's part: the body's own face, brighter and
+        // heavier, so it reads as belonging to the teal one above it.
+        ManualKind.Subheading -> Text(
+            block.text,
+            color = c.text,
+            fontSize = 12.sp,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            modifier = Modifier.padding(top = 4.dp),
+        )
         ManualKind.Para -> Text(text, color = c.textMid, fontSize = 12.sp, lineHeight = 17.sp)
         // The mark sits in a column of its own so a wrapped line lines up under
         // the words rather than under the bullet.
