@@ -80,7 +80,7 @@ patch Felt family=keys
   f_env          0
   f_decay        1.2 s
   f_sustain      0.3
-  velamt         0.8
+  velamt         1
   veltofilter    0.2
   keyfade        6 st
   velfade        24
@@ -96,7 +96,7 @@ patch Mallets family=keys
   f_type         #1
   f_freq         6000 Hz
   f_key          0.6
-  velamt         0.9
+  velamt         1
   veltofilter    0.5
   loop           #1
   keyfade        3 st
@@ -120,7 +120,7 @@ patch Electric family=keys
   m01_src        #11
   m01_dest       #12
   m01_depth      0.22
-  velamt         0.85
+  velamt         1
   veltofilter    0.45
   volume         1.03
 
@@ -290,7 +290,7 @@ patch "Choir Fade" family=pad
   a_release      3.4 s
   f_type         #1
   f_freq         4200 Hz
-  velamt         0.4
+  velamt         0.5
   veltofilter    0.2
   loop           #2
   volume         0.46
@@ -589,7 +589,7 @@ patch "Mono Lead" family=lead
   f_attack       0.002 s
   f_decay        0.5 s
   f_sustain      0.35
-  velamt         0.9
+  velamt         1
   veltofilter    0.6
   loop           #2
   volume         1.02
@@ -631,7 +631,7 @@ patch "Bright Lead" family=lead
   f_env          0.4
   f_decay        0.6 s
   loop           #2
-  velamt         0.85
+  velamt         1
   volume         0.92
 
 patch Reed family=lead
@@ -730,7 +730,7 @@ patch "Broken Loop" family=texture
   a_sustain      1
   a_release      0.4 s
   f_freq         9000 Hz
-  velamt         0.8
+  velamt         1
   volume         1.43
 
 patch "Metal Sheet" family=texture

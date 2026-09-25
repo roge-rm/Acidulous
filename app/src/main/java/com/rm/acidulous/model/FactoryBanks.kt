@@ -2412,15 +2412,15 @@ internal object FactoryBanks {
         family = "keys")
 
     private fun mosaic1() = Patch("Mosaic", "Felt",
-        mapOf("keyfade" to 0.25f, "velfade" to 0.375f, "start" to 0.004f, "a_decay" to 0.7848632f, "a_sustain" to 0.45f, "a_release" to 0.618813455f, "f_freq" to 0.5801209f, "f_key" to 0.3f, "f_decay" to 0.716931f, "f_sustain" to 0.3f, "volume" to 0.6666667f, "velamt" to 0.8f, "veltofilter" to 0.2f),
+        mapOf("keyfade" to 0.25f, "velfade" to 0.375f, "start" to 0.004f, "a_decay" to 0.7848632f, "a_sustain" to 0.45f, "a_release" to 0.618813455f, "f_freq" to 0.5801209f, "f_key" to 0.3f, "f_decay" to 0.716931f, "f_sustain" to 0.3f, "volume" to 0.6666667f, "veltofilter" to 0.2f),
         family = "keys")
 
     private fun mosaic2() = Patch("Mosaic", "Mallets",
-        mapOf("keyfade" to 0.125f, "loop" to 0.5f, "a_decay" to 0.656523347f, "a_sustain" to 0f, "a_release" to 0.5411295f, "f_type" to 0.09090909f, "f_freq" to 0.8257071f, "f_key" to 0.6f, "volume" to 0.366666675f, "velamt" to 0.9f, "veltofilter" to 0.5f),
+        mapOf("keyfade" to 0.125f, "loop" to 0.5f, "a_decay" to 0.656523347f, "a_sustain" to 0f, "a_release" to 0.5411295f, "f_type" to 0.09090909f, "f_freq" to 0.8257071f, "f_key" to 0.6f, "volume" to 0.366666675f, "veltofilter" to 0.5f),
         family = "keys")
 
     private fun mosaic3() = Patch("Mosaic", "Electric",
-        mapOf("a_decay" to 0.762373149f, "a_sustain" to 0.3f, "a_release" to 0.593804836f, "f_type" to 0.181818187f, "f_freq" to 0.774073064f, "f_env" to 0.65f, "f_decay" to 0.6846892f, "f_sustain" to 0.25f, "volume" to 0.686666667f, "velamt" to 0.85f, "veltofilter" to 0.45f, "l1_rate" to 0.754013956f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.8f, "m01_depth" to 0.61f),
+        mapOf("a_decay" to 0.762373149f, "a_sustain" to 0.3f, "a_release" to 0.593804836f, "f_type" to 0.181818187f, "f_freq" to 0.774073064f, "f_env" to 0.65f, "f_decay" to 0.6846892f, "f_sustain" to 0.25f, "volume" to 0.686666667f, "veltofilter" to 0.45f, "l1_rate" to 0.754013956f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.8f, "m01_depth" to 0.61f),
         family = "keys")
 
     private fun mosaic4() = Patch("Mosaic", "Clav",
@@ -2456,7 +2456,7 @@ internal object FactoryBanks {
         family = "pad")
 
     private fun mosaic12() = Patch("Mosaic", "Choir Fade",
-        mapOf("keyfade" to 0.5833333f, "velfade" to 0.4375f, "start" to 0.09f, "loop" to 1f, "a_attack" to 0.80103f, "a_decay" to 0.9145838f, "a_sustain" to 0.9f, "a_release" to 0.833651066f, "f_type" to 0.09090909f, "f_freq" to 0.774073064f, "volume" to 0.306666672f, "velamt" to 0.4f, "veltofilter" to 0.2f),
+        mapOf("keyfade" to 0.5833333f, "velfade" to 0.4375f, "start" to 0.09f, "loop" to 1f, "a_attack" to 0.80103f, "a_decay" to 0.9145838f, "a_sustain" to 0.9f, "a_release" to 0.833651066f, "f_type" to 0.09090909f, "f_freq" to 0.774073064f, "volume" to 0.306666672f, "velamt" to 0.5f, "veltofilter" to 0.2f),
         family = "pad")
 
     private fun mosaic13() = Patch("Mosaic", "Cloud",
@@ -2512,7 +2512,7 @@ internal object FactoryBanks {
         family = "motion")
 
     private fun mosaic26() = Patch("Mosaic", "Mono Lead",
-        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.7f, "a_release" to 0.5161209f, "f_freq" to 0.651414156f, "f_res" to 0.4f, "f_env" to 0.8f, "f_decay" to 0.618813455f, "f_sustain" to 0.35f, "voicemode" to 0.5f, "volume" to 0.68f, "velamt" to 0.9f, "veltofilter" to 0.6f),
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.7f, "a_release" to 0.5161209f, "f_freq" to 0.651414156f, "f_res" to 0.4f, "f_env" to 0.8f, "f_decay" to 0.618813455f, "f_sustain" to 0.35f, "voicemode" to 0.5f, "volume" to 0.68f, "veltofilter" to 0.6f),
         family = "lead")
 
     private fun mosaic27() = Patch("Mosaic", "Glide Lead",
@@ -2520,7 +2520,7 @@ internal object FactoryBanks {
         family = "lead")
 
     private fun mosaic28() = Patch("Mosaic", "Bright Lead",
-        mapOf("start" to 0.02f, "loop" to 1f, "a_attack" to 0.2257725f, "a_decay" to 0.7419396f, "a_sustain" to 0.75f, "a_release" to 0.5411295f, "f_type" to 1f, "f_freq" to 0.743482947f, "f_res" to 0.6f, "f_env" to 0.7f, "f_decay" to 0.639247f, "octave" to 0.6666667f, "voicemode" to 0.5f, "volume" to 0.613333344f, "velamt" to 0.85f),
+        mapOf("start" to 0.02f, "loop" to 1f, "a_attack" to 0.2257725f, "a_decay" to 0.7419396f, "a_sustain" to 0.75f, "a_release" to 0.5411295f, "f_type" to 1f, "f_freq" to 0.743482947f, "f_res" to 0.6f, "f_env" to 0.7f, "f_decay" to 0.639247f, "octave" to 0.6666667f, "voicemode" to 0.5f, "volume" to 0.613333344f),
         family = "lead")
 
     private fun mosaic29() = Patch("Mosaic", "Reed",
@@ -2544,7 +2544,7 @@ internal object FactoryBanks {
         family = "texture")
 
     private fun mosaic34() = Patch("Mosaic", "Broken Loop",
-        mapOf("start" to 0.55f, "loop" to 0.5f, "a_attack" to 0.194537818f, "a_release" to 0.593804836f, "f_freq" to 0.8844042f, "volume" to 0.9533333f, "velamt" to 0.8f),
+        mapOf("start" to 0.55f, "loop" to 0.5f, "a_attack" to 0.194537818f, "a_release" to 0.593804836f, "f_freq" to 0.8844042f, "volume" to 0.9533333f),
         family = "texture")
 
     private fun mosaic35() = Patch("Mosaic", "Metal Sheet",
