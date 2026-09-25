@@ -1746,6 +1746,8 @@ private fun TrinityPanel(b: ParamBinding) {
                         PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
                         PanelKnob(b, "bend", "bend")
                         PanelKnob(b, "mpetimbre", "slide")
+                        PanelKnob(b, "mpepressure", "press")
+                        PanelKnob(b, "wheel", "wheel")
                     }
                     Group("unison") {
                         PanelKnob(b, "unison", "voices", PanelAmber)
@@ -1882,6 +1884,7 @@ private fun RatioPanel(b: ParamBinding) {
                         PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
                         PanelKnob(b, "bend", "bend")
                         PanelKnob(b, "mpetimbre", "slide")
+                        PanelKnob(b, "mpepressure", "press")
                     }
                     Group("tuning") { PanelKnob(b, "octave", "octave"); PanelKnob(b, "transpose", "transpose") }
                     Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
@@ -2453,6 +2456,7 @@ private fun CumulusPanel(b: ParamBinding) {
                         PanelKnob(b, "glide", "glide")
                         PanelKnob(b, "velocity", "velocity")
                         PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                        PanelKnob(b, "mpetimbre", "slide"); PanelKnob(b, "mpepressure", "press")
                     }
                     Group("tune") {
                         PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
@@ -3512,6 +3516,7 @@ private fun FilamentPanel(b: ParamBinding) {
                         PanelKnob(b, "glide", "glide")
                         PanelKnob(b, "bend", "bend")
                         PanelKnob(b, "mpetimbre", "slide")
+                        PanelKnob(b, "mpepressure", "press")
                         PanelKnob(b, "octave", "octave")
                         PanelKnob(b, "transpose", "transpose")
                         PanelKnob(b, "fine", "fine")
@@ -4003,6 +4008,7 @@ private fun MosaicPanel(
                         PanelKnob(b, "glide", "glide")
                         PanelSwitch(b, "glidemode", listOf("always", "legato"), "glide on")
                         PanelKnob(b, "bend", "bend")
+                        PanelKnob(b, "mpetimbre", "slide"); PanelKnob(b, "mpepressure", "press")
                     }
                     Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
                 }

@@ -51,6 +51,7 @@ const ModuleInfo kInfo[TypeCount] = {
     {"rand",    {"bipolar", "steps", kNone, kNone, kNone, kNone, kNone, kNone},          {0, 0, 0, 0, 0, 0, 0, 0},                      {"trig"}, {"out"}, CapBoth},
     {"quant",   {"scale", "root", kNone, kNone, kNone, kNone, kNone, kNone},             {0, 0, 0, 0, 0, 0, 0, 0},                      {"in"}, {"out", "trig"}, CapBoth},
     {"logic",   {"mode", kNone, kNone, kNone, kNone, kNone, kNone, kNone},               {0, 0, 0, 0, 0, 0, 0, 0},                      {"a", "b"}, {"out", "not"}, CapBoth},
+    {"touch",   {kNone, kNone, kNone, kNone, kNone, kNone, kNone, kNone},                {0, 0, 0, 0, 0, 0, 0, 0},                      {kNone}, {"prs", "slide"}, CapPoly},
 };
 } // namespace
 
@@ -99,6 +100,7 @@ Module *makeModule(int32_t type) {
     case TRand: return new RandMod();
     case TQuant: return new QuantMod();
     case TLogic: return new LogicMod();
+    case TTouch: return new TouchMod();
     default: return new BlankMod();
     }
 }

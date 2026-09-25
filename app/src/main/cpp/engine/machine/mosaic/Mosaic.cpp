@@ -122,6 +122,8 @@ const ParamDef *Mosaic::paramDefs(int32_t &count) const {
             put(b + XDest, "m%02d_dest", n, 0.0f, DestCount - 1.0f, 0.0f, Curve::Stepped, DestCount, "");
             put(b + XDepth, "m%02d_depth", n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         }
+        putN(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
+        putN(MpePressure, "mpepressure", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
         built = true;
     }
     count = Count;
@@ -144,6 +146,7 @@ void Mosaic::reset() {
         v.used = v.gate = false;
         // Back to "never told", so a reset voice follows the channel again.
         v.pressure = v.timbre = -1.0f;
+        v.prsGlide = 0.0f;
         v.layerCount = 0;
         v.amp.kill();
         v.filterEg.kill();
@@ -208,6 +211,7 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
     // A new note has not been told a pressure of its own yet, whatever the
     // voice it is reusing was told.
     v.pressure = v.timbre = -1.0f;
+    v.prsGlide = 0.0f;
     v.gate = true;
     v.note = note;
     v.bend = 0.0f;
@@ -454,6 +458,10 @@ void Mosaic::evalMatrix(Voice &v) {
         const float bm = src2 == SrcOff ? 1.0f : sourceValue(v, src2);
         v.mod[dest] += a * bm * paramOf(b + XDepth);
     }
+    // A finger pressing, whatever the matrix says: brighter and louder.
+    const float prs = glidePressure(v.prsGlide, v.pressure, pressure) * paramOf(MpePressure);
+    v.mod[DstFilterFreq] += prs * 0.4f;
+    v.mod[DstAmp] += prs * 0.4f;
 }
 
 float Mosaic::readSample(const SampleData &s, double pos) {
@@ -517,6 +525,9 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
     const float filterBase = paramOf(FilterFreq) *
         std::exp2(paramOf(FilterKey) * (static_cast<float>(v.note) - 60.0f) / 12.0f +
                   v.mod[DstFilterFreq] * 6.0f + paramOf(VelToFilter) * vel * 4.0f +
+                  // Slide opens the filter, as it does in Trinity. It was
+                  // stored and never read.
+                  (v.timbre >= 0.0f ? v.timbre : 0.0f) * paramOf(MpeTimbre) * 4.0f +
                   v.modCutoffCents / 1200.0f);
     const float filterEnvAmt = paramOf(FilterEnv);
     const float filterRes = clampf(paramOf(FilterRes) + v.mod[DstFilterRes], 0.0f, 1.0f);

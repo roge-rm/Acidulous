@@ -85,7 +85,7 @@ const ParamDef *Timber::paramDefs(int32_t &count) const {
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"mpetimbre", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"mpetimbre", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;

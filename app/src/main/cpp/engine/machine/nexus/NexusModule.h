@@ -50,12 +50,23 @@ struct Context {
     const float *velocityOf = nullptr;
     const float *randomOf = nullptr;
     const float *triggerOf = nullptr;
+    // A finger's own pressure and slide, -1 where it has sent none.
+    const float *pressureOf = nullptr;
+    const float *timbreOf = nullptr;
 
     float voicePitch() const { return voice >= 0 && pitchOf != nullptr ? pitchOf[voice] : 60.0f; }
     float voiceGate() const { return voice >= 0 && gateOf != nullptr ? gateOf[voice] : 0.0f; }
     float voiceVelocity() const { return voice >= 0 && velocityOf != nullptr ? velocityOf[voice] : 1.0f; }
     float voiceRandom() const { return voice >= 0 && randomOf != nullptr ? randomOf[voice] : 0.5f; }
     float voiceTrigger() const { return voice >= 0 && triggerOf != nullptr ? triggerOf[voice] : 0.0f; }
+    float voicePressure() const {
+        const float own = voice >= 0 && pressureOf != nullptr ? pressureOf[voice] : -1.0f;
+        return own >= 0.0f ? own : pressure;
+    }
+    float voiceTimbre() const {
+        const float own = voice >= 0 && timbreOf != nullptr ? timbreOf[voice] : -1.0f;
+        return own >= 0.0f ? own : 0.0f;
+    }
 };
 
 /**

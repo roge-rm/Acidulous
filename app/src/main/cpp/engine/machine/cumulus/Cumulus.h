@@ -58,6 +58,10 @@ class Cumulus final : public Machine {
         Lfo2Wave, Lfo2Rate, Lfo2Sync, Lfo2Cutoff, Lfo2Pan,
         Drive, Volume, Pan,
         Glide, BendRange, Octave, Transpose, Fine, VelocityAmount,
+        // A finger's own: slide walks the morph, pressure opens the filter
+        // and lifts the level. Appended, so a patch without them takes the
+        // defaults.
+        MpeTimbre, MpePressure,
         Count
     };
 
@@ -78,6 +82,8 @@ class Cumulus final : public Machine {
     void channelPressure(uint8_t value) override;
     void pitchBend(int16_t value14) override;
     void noteBend(uint8_t note, float semitones) override;
+    void notePressure(uint8_t note, uint8_t value) override;
+    void noteTimbre(uint8_t note, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
 
@@ -115,8 +121,10 @@ class Cumulus final : public Machine {
         dsp::MultiFilter filterL, filterR;
         int64_t age = 0;
         // Per-note expression (MPE). `bend` is in semitones and adds to
-        // whatever the channel is bending.
-        float bend = 0.0f;
+        // whatever the channel is bending; `pressure` and `timbre` are -1
+        // until this finger sends any.
+        float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
+        float prsGlide = 0.0f; // see glidePressure
     };
 
     float paramOf(int32_t p) const { return params_.get(p); }

@@ -159,7 +159,11 @@ const ParamDef *Trinity::paramDefs(int32_t &count) const {
         putN(VelocityAmount, "velamt", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, "");
         // How far a finger's slide opens the filters. Zero by default,
         // so every patch written before MPE sounds exactly as it did.
-        putN(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
+        putN(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
+        putN(MpePressure, "mpepressure", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
+        // How far the mod wheel - a controller's tilt, often - opens the
+        // filters, whatever the matrix says.
+        putN(WheelFilter, "wheel", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
         built = true;
     }
     count = Count;
@@ -189,6 +193,7 @@ void Trinity::reset() {
         v.rng = Voice::kSeed;
         v.bend = 0.0f;
         v.pressure = v.timbre = -1.0f;
+        v.prsGlide = 0.0f;
     }
     modWheel = aftertouch = bend = 0.0f;
     noiseZ = 0.0f;
@@ -223,6 +228,7 @@ void Trinity::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigge
     v.random = rnd(v.rng) * 2.0f - 1.0f;
     v.bend = 0.0f;
     v.pressure = v.timbre = -1.0f;
+    v.prsGlide = 0.0f;
     v.freq = v.glideFrom;
     if (retrigger) {
         for (int e = 0; e < kEnvs; ++e) {
@@ -387,6 +393,15 @@ void Trinity::updateVoiceMod(Voice &v, float blockSeconds) {
         const float bmul = src2 == SrcOff ? 1.0f : sourceValue(v, src2);
         v.mod[dest] += a * bmul * paramOf(b + XDepth);
     }
+    // A finger pressing, whatever the matrix says: brighter and louder.
+    const float prs = glidePressure(v.prsGlide, v.pressure, aftertouch) * paramOf(MpePressure);
+    v.mod[DstF1Freq] += prs * 0.4f;
+    v.mod[DstF2Freq] += prs * 0.4f;
+    v.mod[DstAmp] += prs * 0.4f;
+    // The wheel, likewise: opens both filters, up to about five octaves.
+    const float wheel = modWheel * paramOf(WheelFilter) * 0.8f;
+    v.mod[DstF1Freq] += wheel;
+    v.mod[DstF2Freq] += wheel;
 }
 
 // --- Render ----------------------------------------------------------------------

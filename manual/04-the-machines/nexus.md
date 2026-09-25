@@ -26,6 +26,12 @@ modules can go back where they were.
 Eight macros, **macro1** to **macro8**, plus **morph**. The patch decides what
 they control, so a big patch can be played with a few knobs.
 
+## MPE
+
+The **touch** module gives each voice the pressure and slide of the finger
+playing it, from an MPE controller or a keyboard with poly aftertouch. Patch
+its **prs** and **slide** into anything, like a filter's cutoff or a VCA.
+
 ## Audio input
 
 There's an audio input module, so anything coming into the phone can be run

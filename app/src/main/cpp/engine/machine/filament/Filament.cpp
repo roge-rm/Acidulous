@@ -50,7 +50,8 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
 
         step(ExciterMode, "exciter", ExciterCount, 0.0f);
         lin(Position, "position", 0.02f, 0.5f, 0.22f);
-        lin(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.0f);
+        lin(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.5f);
+        lin(MpePressure, "mpepressure", 0.0f, 1.0f, 0.5f);
         lin(Hardness, "hardness", 0.0f, 1.0f, 0.4f);
         lin(Pressure, "pressure", 0.0f, 1.0f, 0.5f);
         lin(Speed, "speed", 0.0f, 1.0f, 0.4f);
@@ -171,6 +172,7 @@ void Filament::reset() {
         v.damp = 0.0f;
         v.bend = 0.0f;
         v.pressure = v.timbre = -1.0f;
+        v.prsGlide = 0.0f;
     }
     for (auto &s : sympathetic) s.clear();
     dampersUp = false;
@@ -238,6 +240,7 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     v->note = note;
     v->bend = 0.0f;
     v->pressure = v->timbre = -1.0f;
+    v->prsGlide = 0.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     v->target = noteHz(static_cast<float>(note));
@@ -517,6 +520,13 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // not a source - and the filters have always been set this way.
             if ((n & 15) == 0) {
             applyMatrix(v, v.mod);
+            {
+                // A finger pressing, whatever the matrix says.
+                const float prs = glidePressure(v.prsGlide, v.pressure, pressure) * paramOf(MpePressure);
+                v.mod[DstPressure] += prs * 0.6f;
+                v.mod[DstBrightness] += prs * 0.5f;
+                v.mod[DstVolume] += prs * 0.4f;
+            }
 
             // Damping, brightness and tuning, note by note: a short string
             // rings for less time and darker, as a real one does.

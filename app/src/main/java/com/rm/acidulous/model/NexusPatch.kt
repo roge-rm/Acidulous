@@ -183,7 +183,7 @@ fun nexusFamilyOf(type: String): NexusFamily = when (type) {
     // string, a tonewheel generator, a grain cloud, a Leslie, a vocoder.
     "string", "wheels", "grain", "rotary", "bands" -> NexusFamily.Voice
     "filter", "vca", "mix", "math", "delay", "slew" -> NexusFamily.Shape
-    "env", "lfo", "snh", "rand", "macro", "perf" -> NexusFamily.Mod
+    "env", "lfo", "snh", "rand", "macro", "perf", "touch" -> NexusFamily.Mod
     "clock", "euclid", "prob", "quant", "logic" -> NexusFamily.Time
     else -> NexusFamily.Io // voice, out, scope, blank
 }

@@ -107,7 +107,8 @@ const ParamDef *Ratio::paramDefs(int32_t &count) const {
         putN(FilterType, "f_type", 0.0f, dsp::MultiFilter::TypeCount - 1.0f, 3.0f, Curve::Stepped,
              dsp::MultiFilter::TypeCount, "");
         putN(FilterFreq, "f_freq", 20.0f, 20000.0f, 18000.0f, Curve::Exponential, 0, "Hz");
-        putN(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
+        putN(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
+        putN(MpePressure, "mpepressure", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
         putN(FilterRes, "f_res", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         putN(FilterEnv, "f_env", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         putN(FilterKey, "f_key", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
@@ -255,6 +256,7 @@ void Ratio::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger)
     v.note = note;
     v.bend = 0.0f;
     v.pressure = v.timbre = -1.0f;
+    v.prsGlide = 0.0f;
     v.velocity = velocity;
     v.age = ageCounter++;
     v.random = rnd(v.rng) * 2.0f - 1.0f;
@@ -395,6 +397,10 @@ void Ratio::updateVoiceMod(Voice &v, float blockSeconds) {
         const float bm = src2 == SrcOff ? 1.0f : sourceValue(v, src2);
         v.mod[dest] += a * bm * paramOf(b + XDepth);
     }
+    // A finger pressing, whatever the matrix says: brighter and louder.
+    const float prs = glidePressure(v.prsGlide, v.pressure, pressure) * paramOf(MpePressure);
+    v.mod[DstFilterFreq] += prs * 0.4f;
+    v.mod[DstAmp] += prs * 0.4f;
 }
 
 // --- Render ----------------------------------------------------------------------

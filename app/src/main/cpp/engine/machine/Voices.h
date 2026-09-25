@@ -26,4 +26,22 @@ Voice *voiceForNote(Voice (&voices)[N], uint8_t note) {
     return nullptr;
 }
 
+
+/**
+ * A finger's pressure as a voice should use it: its own if it sent any, the
+ * channel's otherwise, glided a block at a time.
+ *
+ * Pressure arrives in a hundred and twenty-eight steps and is applied once a
+ * block, and a level stepped per block is the onset-click fault all over
+ * again - so it is glided, about five milliseconds at a 64-frame block. No
+ * pressure is exactly zero out, so a patch played without it renders
+ * bit-identical to before.
+ */
+inline float glidePressure(float &state, float own, float channel) {
+    const float target = own >= 0.0f ? own : channel;
+    state += (target - state) * 0.3f;
+    if (state < 1e-5f && target == 0.0f) state = 0.0f;
+    return state;
+}
+
 } // namespace acidulous

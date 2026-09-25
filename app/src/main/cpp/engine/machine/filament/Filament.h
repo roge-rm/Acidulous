@@ -74,6 +74,9 @@ class Filament final : public Machine {
         // Appended: parameters are addressed by name, so a patch that has
         // never heard of this one simply takes its default.
         MpeTimbre,
+        // What a finger's pressure does when the matrix says nothing about
+        // it: leans on the bow or the breath, brightens, and lifts the level.
+        MpePressure,
         Count
     };
     enum MatP { XSrc = 0, XDest, XDepth };
@@ -136,6 +139,7 @@ class Filament final : public Machine {
         // a voice with none of its own falls back to the channel and a
         // keyboard plays exactly as it did.
         float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
+        float prsGlide = 0.0f; // see glidePressure
     };
 
     float paramOf(int32_t p) const { return params_.get(p); }

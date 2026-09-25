@@ -69,6 +69,12 @@ class Trinity final : public Machine {
         // the stored value is normalised against it - which is why slide is
         // a depth knob here and not another modulation source.
         MpeTimbre,
+        // What a finger's pressure does when the matrix says nothing about
+        // it: opens the filters and leans on the level.
+        MpePressure,
+        // What the mod wheel does when the matrix says nothing about it:
+        // opens the filters.
+        WheelFilter,
         Count
     };
     // Offsets inside a block.
@@ -130,6 +136,7 @@ class Trinity final : public Machine {
         // sends them, so a voice with no expression of its own falls back to
         // whatever the channel is doing and nothing changes for a keyboard.
         float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
+        float prsGlide = 0.0f; // see glidePressure
         OscState osc[kOscs];
         dsp::Adsr env[kEnvs];
         dsp::LfoGen lfo[kLfos];

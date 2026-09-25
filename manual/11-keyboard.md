@@ -62,6 +62,7 @@ In the editor:
 - step view - **T**, or **Alt+T**
 - lock steps - **K**, or **Alt+K**
 - generate notes - **G**, or **Alt+G**
+- quantise - **Q**, or **Alt+U**
 - fold the panel - **P**, or **Alt+V**
 - fold the keyboard - **B**, or **Alt+J**
 

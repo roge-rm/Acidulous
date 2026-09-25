@@ -70,12 +70,17 @@ void Nexus::prepare(int32_t sr) {
     ctx.velocityOf = velocityOf;
     ctx.randomOf = randomOf;
     ctx.triggerOf = triggerOf;
+    ctx.pressureOf = pressureOf;
+    ctx.timbreOf = timbreOf;
     reset();
 }
 
 void Nexus::reset() {
     for (auto &v : voices) { v.used = false; v.gate = false; v.quiet = 0.0f; }
-    for (int i = 0; i < kVoices; ++i) { gateOf[i] = 0.0f; triggerOf[i] = 0.0f; }
+    for (int i = 0; i < kVoices; ++i) {
+        gateOf[i] = 0.0f; triggerOf[i] = 0.0f;
+        pressureOf[i] = timbreOf[i] = -1.0f;
+    }
     if (graph != nullptr) graph->reset();
 }
 
@@ -100,6 +105,7 @@ void Nexus::noteOn(uint8_t note, uint8_t velocity) {
     pitchOf[index] = static_cast<float>(note);
     velocityOf[index] = v->velocity;
     randomOf[index] = v->random;
+    pressureOf[index] = timbreOf[index] = -1.0f;
     gateOf[index] = 1.0f;
 }
 
@@ -129,6 +135,14 @@ void Nexus::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
 
 void Nexus::noteBend(uint8_t note, float semitones) {
     if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
+}
+
+void Nexus::notePressure(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) pressureOf[v - voices] = static_cast<float>(value) / 127.0f;
+}
+
+void Nexus::noteTimbre(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) timbreOf[v - voices] = static_cast<float>(value) / 127.0f;
 }
 
 void *Nexus::swapObject(int32_t slot, void *object) {

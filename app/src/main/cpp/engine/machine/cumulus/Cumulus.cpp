@@ -86,6 +86,8 @@ const ParamDef *Cumulus::paramDefs(int32_t &count) const {
         {"transpose", -12.0f, 12.0f, 0.0f, Curve::Stepped, 25, ""},
         {"fine", -50.0f, 50.0f, 0.0f, Curve::Linear, 0, "cents"},
         {"velocity", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
+        {"mpetimbre", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"mpepressure", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -189,6 +191,8 @@ void Cumulus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     v.gate = true;
     v.note = note;
     v.bend = 0.0f;
+    v.pressure = v.timbre = -1.0f;
+    v.prsGlide = 0.0f;
     v.velocity = static_cast<float>(velocity) / 127.0f;
     v.key01 = std::clamp((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     v.zone = CloudSet::zoneFor(note);
@@ -263,6 +267,14 @@ void Cumulus::noteBend(uint8_t note, float semitones) {
     if (Voice *v = voiceForNote(voices, note)) v->bend = semitones;
 }
 
+void Cumulus::notePressure(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->pressure = static_cast<float>(value) / 127.0f;
+}
+
+void Cumulus::noteTimbre(uint8_t note, uint8_t value) {
+    if (Voice *v = voiceForNote(voices, note)) v->timbre = static_cast<float>(value) / 127.0f;
+}
+
 bool Cumulus::render(float *L, float *R, int32_t frames) {
     params_.tick();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
@@ -310,12 +322,17 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
         v.amp.set(0.0f, ampA, ampD, ampS, ampR, false);
         v.fenv.set(0.0f, fA, fD, fS, fR, false);
 
+        // A finger's own, if it sent any: slide walks the morph, pressure
+        // opens the filter and lifts the level.
+        const float slide = (v.timbre >= 0.0f ? v.timbre : 0.0f) * paramOf(MpeTimbre);
+        const float prs = glidePressure(v.prsGlide, v.pressure, pressure) * paramOf(MpePressure);
+
         const CloudTable *frames4 = cloud->tables[v.zone];
         const int32_t size = frames4[0].size;
         // Where this voice sits in the morph: the knob, the LFO, and a
         // keyboard tilt so the top of the keyboard can be a different cloud
         // from the bottom.
-        const float m = std::clamp(morphBase + morphKey * (v.key01 - 0.5f) * 2.0f, 0.0f, 1.0f) *
+        const float m = std::clamp(morphBase + morphKey * (v.key01 - 0.5f) * 2.0f + slide, 0.0f, 1.0f) *
                         static_cast<float>(CloudSet::kFrames - 1);
         const int f0 = std::min(static_cast<int>(m), CloudSet::kFrames - 1);
         const int f1 = std::min(f0 + 1, CloudSet::kFrames - 1);
@@ -337,12 +354,12 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
         const float widthOffset = width * static_cast<float>(size) * 0.25f;
         const float cutoffHz = std::clamp(
             cutoff * std::pow(2.0f, fenvAmt * 6.0f * v.fenv.value() + fkey * (v.key01 - 0.5f) * 6.0f +
-                                        lfoValue[1] * paramOf(Lfo2Cutoff) * 4.0f),
+                                        lfoValue[1] * paramOf(Lfo2Cutoff) * 4.0f + prs * 2.4f),
             30.0f, sampleRate * 0.45f);
         v.filterL.set(cutoffHz, reso, ftype, dsp::MultiFilter::Valve, fdrive);
         v.filterR.set(cutoffHz, reso, ftype, dsp::MultiFilter::Valve, fdrive);
 
-        const float vel = 1.0f - velAmount + velAmount * v.velocity;
+        const float vel = (1.0f - velAmount + velAmount * v.velocity) * (1.0f + prs * 0.5f);
         const float voicePan = lfoValue[1] * paramOf(Lfo2Pan);
 
         for (int32_t i = 0; i < frames; ++i) {

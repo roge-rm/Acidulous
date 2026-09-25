@@ -581,6 +581,7 @@
     <string name="pw_prepare">prepare</string>
     <string name="pw_prepared">prepared</string>
     <string name="pw_presence">presence</string>
+    <string name="pw_press">press</string>
     <string name="pw_pressure">pressure</string>
     <string name="pw_principal">principal</string>
     <string name="pw_printed_in">printed in</string>

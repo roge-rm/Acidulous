@@ -51,6 +51,8 @@ class Nexus final : public Machine {
     void channelPressure(uint8_t value) override;
     void pitchBend(int16_t value14) override;
     void noteBend(uint8_t note, float semitones) override;
+    void notePressure(uint8_t note, uint8_t value) override;
+    void noteTimbre(uint8_t note, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
 
@@ -80,6 +82,8 @@ class Nexus final : public Machine {
     Voice voices[kVoices];
     float pitchOf[kVoices] = {}, gateOf[kVoices] = {}, velocityOf[kVoices] = {};
     float randomOf[kVoices] = {}, triggerOf[kVoices] = {};
+    // A finger's pressure and slide, -1 until it sends any: the touch module.
+    float pressureOf[kVoices] = {}, timbreOf[kVoices] = {};
     int32_t active[kVoices] = {};
     int64_t counter = 0;
 

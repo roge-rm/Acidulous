@@ -64,7 +64,12 @@ class Mosaic final : public Machine {
         EgParams = 4,
         MatrixBase = EgBase + kModEgs * EgParams,
         MatrixParams = 4,
-        Count = MatrixBase + kMatrixSlots * MatrixParams
+        // Appended: parameters are addressed by name, so a patch that has
+        // never heard of these takes their defaults. A finger's slide opens
+        // the filter; its pressure opens it too and leans on the level.
+        MpeTimbre = MatrixBase + kMatrixSlots * MatrixParams,
+        MpePressure,
+        Count
     };
     enum LfoP { LWave = 0, LRate, LSync, LDelay, LPhase, LKeySync };
     enum EgP { EAttack = 0, EDecay, ESustain, ERelease };
@@ -200,6 +205,7 @@ class Mosaic final : public Machine {
          * this way since M38; this is the same sentinel, not a new idea.
          */
         float pressure = -1.0f, timbre = -1.0f;
+        float prsGlide = 0.0f; // see glidePressure
         Layer layer[kZonesPerVoice];
         int32_t layerCount = 0;
         Grain grain[kGrains];

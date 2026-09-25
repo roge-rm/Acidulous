@@ -36,6 +36,8 @@ enum Type : int32_t {
     TFilter, TVca, TMix, TMath, TDelay, TRotary, TBands,
     TEnv, TLfo, TSnh, TSlew,
     TClock, TEuclid, TProb, TRand, TQuant, TLogic,
+    // Appended: a patch names its modules, so new ones go on the end.
+    TTouch,
     TypeCount
 };
 
@@ -76,6 +78,23 @@ class VoiceMod final : public Module {
     bool monoCapable() const override { return false; }
   private:
     float pitch = 60.0f, bendRange = 2.0f, glide = 0.001f;
+};
+
+/**
+ * A finger, for an MPE controller: this voice's own pressure - the track's,
+ * if the finger sends none - and its slide. The voice module was the place,
+ * but seven jacks down one box would sit on top of each other.
+ */
+class TouchMod final : public Module {
+  public:
+    void prepare(float, int32_t) override {}
+    void reset() override {}
+    void setKnobs(const float *) override {}
+    void step(const float *, float *out, const Context &c) override {
+        out[0] = c.voicePressure();
+        out[1] = c.voiceTimbre();
+    }
+    bool monoCapable() const override { return false; }
 };
 
 /** Mod wheel, pressure and bend. */

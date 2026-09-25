@@ -585,6 +585,7 @@ internal val PANEL_WORDS: Map<String, Int> = mapOf(
     "prepare" to R.string.pw_prepare,
     "prepared" to R.string.pw_prepared,
     "presence" to R.string.pw_presence,
+    "press" to R.string.pw_press,
     "pressure" to R.string.pw_pressure,
     "principal" to R.string.pw_principal,
     "printed in" to R.string.pw_printed_in,

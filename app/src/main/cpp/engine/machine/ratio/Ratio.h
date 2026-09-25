@@ -62,6 +62,9 @@ class Ratio final : public Machine {
         VoiceMode = VoiceBase, Glide, GlideMode, BendRange, Octave, Transpose, Volume, Pan, VelocityAmount,
         // Appended, and safe: parameters are addressed by name.
         MpeTimbre,
+        // What a finger's pressure does when the matrix says nothing about
+        // it: opens the filter and leans on the level.
+        MpePressure,
         Count
     };
     enum OpP { OWave = 0, OMode, ORatio, OFine, OFixed, OLevel, OFeedback, OAttack, ODecay, OSustain, ORelease, OVel, OKey, OPan };
@@ -121,6 +124,7 @@ class Ratio final : public Machine {
         // a voice with none of its own falls back to the channel and a
         // keyboard plays exactly as it did.
         float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
+        float prsGlide = 0.0f; // see glidePressure
     };
 
     /** The blended routing, rebuilt once per block rather than per voice. */

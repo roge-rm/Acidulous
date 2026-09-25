@@ -164,9 +164,12 @@ void bendUnheld(Machine *m) { m->noteBend(72, 2.0f); }
 void pressSixty(Machine *m) { m->notePressure(60, 127); }
 void slideSixty(Machine *m) { m->noteTimbre(60, 127); }
 void pressUnheld(Machine *m) { m->notePressure(72, 127); }
+// Poly aftertouch, as a controller outside MPE mode sends it: the message
+// names its note, and must land exactly where a finger's pressure would.
+void polySixty(Machine *m) { m->handleMidi(0xa0, 60, 127); }
 void slideUnheld(Machine *m) { m->noteTimbre(72, 127); }
 
-void check(const char *type, bool pressureIsAudible, void (*mount)(Machine *) = nullptr) {
+void check(const char *type, bool pressureIsAudible, bool slideIsAudible, void (*mount)(Machine *) = nullptr) {
     const std::vector<uint8_t> one{60};
     const std::vector<uint8_t> two{60, 64};
 
@@ -196,19 +199,35 @@ void check(const char *type, bool pressureIsAudible, void (*mount)(Machine *) = 
     ok(play(type, one, nullptr, true, mount) != alone,
        (std::string(type) + ": the channel-wide bend still bends").c_str(), "");
 
-    // Pressure and slide: ownership everywhere, audibility only where the
-    // machine routes them without being asked. On Trinity, Ratio and
-    // Filament pressure arrives at the voice but goes through the
-    // modulation matrix, so a patch with no row for it is silent on purpose
-    // - that is the matrix working, not the expression failing.
+    // Pressure and slide: ownership everywhere, and heard wherever the
+    // machine gives them a job without being asked. Since the defaults
+    // changed that is nearly everywhere: a patch with no matrix row for
+    // pressure still opens up and leans on the level when pressed, and slide
+    // is at half depth rather than off.
     ok(play(type, one, pressUnheld, false, mount) == alone,
        (std::string(type) + ": pressure for a note not held does nothing").c_str(), "");
     ok(play(type, one, slideUnheld, false, mount) == alone,
        (std::string(type) + ": slide for a note not held does nothing").c_str(), "");
     if (pressureIsAudible) {
-        ok(play(type, one, pressSixty, false, mount) != alone,
-           (std::string(type) + ": a finger's pressure is heard").c_str(), "");
+        const auto pressed = play(type, one, pressSixty, false, mount);
+        ok(pressed != alone, (std::string(type) + ": a finger's pressure is heard").c_str(), "");
+        ok(play(type, one, polySixty, false, mount) == pressed,
+           (std::string(type) + ": poly aftertouch is that finger's pressure").c_str(), "");
     }
+    if (slideIsAudible) {
+        ok(play(type, one, slideSixty, false, mount) != alone,
+           (std::string(type) + ": a finger's slide is heard").c_str(), "");
+    }
+}
+
+// The organ bends as one, so a finger's bend falls back to the channel's -
+// and a forty-eight semitone slide used to wrap the sixteen bits round.
+void bendFortyEight(Machine *m) { m->noteBend(60, 48.0f); }
+void bendTop(Machine *m) { m->pitchBend(8191); }
+void organ() {
+    const std::vector<uint8_t> one{60};
+    ok(play("Manual", one, bendFortyEight) == play("Manual", one, bendTop),
+       "Manual: a finger's 48-semitone bend is the channel's full bend", "not wrapped round");
 }
 
 /** The zone arithmetic, which decides what counts as a finger at all. */
@@ -238,20 +257,23 @@ int main() {
     std::printf("\nper-note expression, per machine\n");
     // Pressure is audible without a patch routing it only where the machine
     // uses it directly: Brazen and Timber blow that finger's breath.
-    check("Trinity", false);
-    check("Ratio", false);
-    check("Filament", false);
-    check("Brazen", true);
-    check("Timber", true);
+    check("Trinity", true, true);
+    check("Ratio", true, true);
+    check("Filament", true, true);
+    check("Brazen", true, true);
+    check("Timber", true, true);
     // Mosaic's matrix was already per-voice and its pressure source was not:
     // it read the channel's value inside a function handed the voice. Now it
     // reads the voice's own, with -1 meaning "never told" so an ordinary
     // keyboard's single aftertouch still moves every note.
-    check("Mosaic", true, mountToneAndRoute);
+    check("Mosaic", true, true, mountToneAndRoute);
     // Two that were given per-note pitch and nothing else, to be sure the
     // mechanical half reaches them too.
-    check("Cumulus", false);
-    check("Formulate", false);
+    // Cumulus: pressure opens the filter; slide walks a morph that the
+    // default patch leaves the same at both ends, so it is not asked for.
+    check("Cumulus", true, false);
+    check("Formulate", false, false);
+    organ();
     std::printf("\nReflux is monophonic and implements no pitch bend at all, so there is\n"
                 "nothing here for it to answer. Dice is a slicer and Manual is 91 wheels on\n"
                 "one shaft - neither can bend a note on its own.\n");

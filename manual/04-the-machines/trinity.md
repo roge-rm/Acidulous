@@ -36,6 +36,10 @@ A matrix row has a source, a second source, a destination and a depth. The
 second source scales the first. For example, src = an envelope and src2 = mod
 wheel gives you an envelope you can fade in with the wheel.
 
+The mod wheel also opens both filters, whatever the matrix says. **wheel** in
+the voice section sets how much. At zero, the wheel only does what the matrix
+tells it to.
+
 ## Tips
 
 - Start with the oscillators (table position and density) rather than the
