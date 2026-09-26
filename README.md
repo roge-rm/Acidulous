@@ -4,15 +4,16 @@ Acidulous is a music studio for Android 8.1 and up.
 
 Combine up to 16 synthesizers, drum machines, noise generators and processors together into scenes of music and play them in order or pick and choose to generate something new every time.
 
-This is an homage to Caustic and a collection of all the good ideas I've seen and had when making music with a variety of tools over the years. Some things I liked a certain way, some things I wished were another, and this is the combination of all of those ideas into something I hope is cohesive and fun to use.
+This is an homage to Caustic and a collection of all the good ideas I've seen and had when making music with a variety of tools over the years. Some things I liked a certain way, some things I wished were another; this is the combination of all of those ideas into something I hope is cohesive and fun to use.
 
 Read below for more details on the machines, sequencer, and app capabilities. 
 
 Acidulous is very near a 1.0 release which means I think it is feature ready for use and proper testing by people other than myself.
-You can very much make music with this now, sequencing and recording, playing and performing. You can export via a number of formats, in full form or split into stems.
-Please do and then let me know what works, what doesn't work, what could work in the future so I can grow it into something even more interesting.
+You can very much make music with this now, sequencing and recording, playing and performing. You can record and alter your voice, other instruments, other synths and drum machines. You can export via a number of formats, in full form or split into stems.
 
-Please join me in the #acidulous channel **[on my discord](https://discord.gg/9Wun47jGC6)**  to share comments, ask questions, report bugs or issues with different devices, or to request new features. Or feel free to open an issue here.
+Please do all of these things and then let me know what works, what doesn't work, what could work in the future so I can grow it into something even more interesting.
+
+And please join me in the #acidulous channel **[on my discord](https://discord.gg/9Wun47jGC6)**  to share comments, ask questions, report bugs or issues with different devices, or to request new features. Or feel free to open an issue here.
 
 The manual is in [manual/](manual/) and in the app in the **Help…** window.
 
