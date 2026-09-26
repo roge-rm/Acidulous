@@ -65,7 +65,7 @@ import com.rm.acidulous.ui.MainScreen
 import com.rm.acidulous.ui.TakePeaks
 import com.rm.acidulous.ui.theme.AcidulousTheme
 import com.rm.acidulous.util.Log
-import java.io.File
+import com.rm.acidulous.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -299,7 +299,7 @@ fun App(modifier: Modifier = Modifier) {
     var presetChoice by remember { mutableStateOf<Pair<Int, List<String>>?>(null) }
     var mapBusy by remember { mutableStateOf(false) }
 
-    fun copyIn(uri: Doc, folder: String, fallback: String): java.io.File {
+    fun copyIn(uri: Doc, folder: String, fallback: String): com.rm.acidulous.io.File {
         val display = AppHost.current.docName(uri, fallback)
         val safe = display.replace(Regex("[^A-Za-z0-9 _.-]"), "_").ifEmpty { fallback }
         val dir = File(EngineAssets.userRoot(), folder).apply { mkdirs() }
@@ -313,7 +313,7 @@ fun App(modifier: Modifier = Modifier) {
     // touches Compose state.
     var problem by remember { mutableStateOf<String?>(null) }
     /** The file the microphone is writing to while a Bias lane is armed. */
-    var biasTakeFile by remember { mutableStateOf<java.io.File?>(null) }
+    var biasTakeFile by remember { mutableStateOf<com.rm.acidulous.io.File?>(null) }
     DisposableEffect(Unit) {
         EngineSync.onProblem = { message, args ->
             com.rm.acidulous.util.postToMain { problem = AppStrings.getString(message, *args) }
@@ -1100,8 +1100,8 @@ fun App(modifier: Modifier = Modifier) {
         // nobody asked. Opened here and left open; stopping the capture is
         // what ends the recording, not closing the stream.
         NativeEngine.startInput(com.rm.acidulous.ui.UiPrefs.inputDevice)
-        val root = java.io.File(EngineAssets.userRoot(), "samples").apply { mkdirs() }
-        val target = java.io.File(root, uniqueIn(root, "take.wav"))
+        val root = com.rm.acidulous.io.File(EngineAssets.userRoot(), "samples").apply { mkdirs() }
+        val target = com.rm.acidulous.io.File(root, uniqueIn(root, "take.wav"))
         val error = NativeEngine.startCapture(target.absolutePath, 0)
         if (error.isNotEmpty()) {
             problem = AppStrings.getString(Res.string.app_record_failed, error)

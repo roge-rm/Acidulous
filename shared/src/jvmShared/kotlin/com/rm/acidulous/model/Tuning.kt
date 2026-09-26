@@ -93,10 +93,10 @@ object Tunings {
 
 /** The `.scl` files brought in with Import, kept under the user folder. */
 object TuningStore {
-    fun directory(userRoot: java.io.File) = java.io.File(userRoot, "tunings").apply { mkdirs() }
+    fun directory(userRoot: com.rm.acidulous.io.File) = com.rm.acidulous.io.File(userRoot, "tunings").apply { mkdirs() }
 
     /** The built-in tunings, then every imported one that reads. */
-    fun all(userRoot: java.io.File): List<Tuning> =
+    fun all(userRoot: com.rm.acidulous.io.File): List<Tuning> =
         Tunings.builtIn + (directory(userRoot).listFiles { f -> f.extension.equals("scl", true) } ?: emptyArray())
             .sortedBy { it.name.lowercase() }
             .mapNotNull { f -> runCatching { Tunings.parseScl(f.readText(), f.nameWithoutExtension) }.getOrNull() }

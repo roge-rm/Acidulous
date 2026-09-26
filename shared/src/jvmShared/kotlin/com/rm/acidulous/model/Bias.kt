@@ -1,6 +1,6 @@
 package com.rm.acidulous.model
 
-import java.io.File
+import com.rm.acidulous.io.File
 
 /**
  * The document side of an audio track.

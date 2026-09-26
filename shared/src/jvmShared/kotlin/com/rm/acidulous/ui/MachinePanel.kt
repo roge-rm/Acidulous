@@ -1587,7 +1587,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             val rel = sliceRel ?: return@SliceDialog
             sliceBusy = true
             scope.launch {
-                val abs = java.io.File(
+                val abs = com.rm.acidulous.io.File(
                     com.rm.acidulous.engine.EngineAssets.userRoot(), rel,
                 ).absolutePath
                 val points = withContext(Dispatchers.IO) { NativeEngine.slicePoints(abs, mode, count) }
@@ -3087,7 +3087,7 @@ private fun DicePanel(
     // bars knob can overrule, and its length - and so its tempo.
     val shape by produceState<Pair<Float, Float>?>(null, sample) {
         value = if (sample.isEmpty()) null else withContext(Dispatchers.IO) {
-            NativeEngine.loopShape(java.io.File(com.rm.acidulous.engine.EngineAssets.userRoot(), sample).absolutePath)
+            NativeEngine.loopShape(com.rm.acidulous.io.File(com.rm.acidulous.engine.EngineAssets.userRoot(), sample).absolutePath)
         }
     }
     val barsAt = b.infoOf("bars")?.map(b.value("bars"))?.toInt() ?: 0

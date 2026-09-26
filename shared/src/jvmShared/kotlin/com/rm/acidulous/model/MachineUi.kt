@@ -258,8 +258,8 @@ data class Zone(
     val tuneCents: Float = 0f, val gain: Float = 1f, val pan: Float = 0f,
     val loop: Boolean = false,
 ) {
-    fun encode(root: java.io.File?): String {
-        val abs = if (root != null && !path.startsWith("/")) java.io.File(root, path).absolutePath else path
+    fun encode(root: com.rm.acidulous.io.File?): String {
+        val abs = if (root != null && !path.startsWith("/")) com.rm.acidulous.io.File(root, path).absolutePath else path
         return listOf(abs, lowKey, highKey, rootKey, lowVel, highVel, tuneCents, gain, pan, if (loop) 1 else 0)
             .joinToString("|")
     }
@@ -281,5 +281,5 @@ object Zones {
     }
 
     /** What the engine is asked to build: absolute paths, one zone per line. */
-    fun spec(zones: List<Zone>, root: java.io.File?): String = zones.joinToString("\n") { it.encode(root) }
+    fun spec(zones: List<Zone>, root: com.rm.acidulous.io.File?): String = zones.joinToString("\n") { it.encode(root) }
 }

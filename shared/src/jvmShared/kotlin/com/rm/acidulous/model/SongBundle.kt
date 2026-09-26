@@ -1,6 +1,6 @@
 package com.rm.acidulous.model
 
-import java.io.File
+import com.rm.acidulous.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream

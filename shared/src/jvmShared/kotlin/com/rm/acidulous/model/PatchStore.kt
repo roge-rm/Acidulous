@@ -3,7 +3,7 @@ package com.rm.acidulous.model
 import com.rm.acidulous.engine.EngineAssets
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.io.File
+import com.rm.acidulous.io.File
 
 /**
  * A machine's parameters, normalised 0..1, by name - and, where a machine

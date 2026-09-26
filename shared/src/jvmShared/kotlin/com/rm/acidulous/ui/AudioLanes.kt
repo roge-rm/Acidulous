@@ -354,10 +354,10 @@ fun CompButton(
             val bpm = song.bpmOf(sceneId)
             val ticks = song.cycleTicks(sceneId, theClip)
             val frames = (ticks.toDouble() / PPQN * 60.0 / bpm * ENGINE_RATE).toInt()
-            val root = java.io.File(
+            val root = com.rm.acidulous.io.File(
                 com.rm.acidulous.engine.EngineAssets.userRoot(), "samples",
             ).apply { mkdirs() }
-            val file = java.io.File(root, com.rm.acidulous.engine.uniqueIn(root, "comp.wav"))
+            val file = com.rm.acidulous.io.File(root, com.rm.acidulous.engine.uniqueIn(root, "comp.wav"))
             scope.launch {
                 val peak = FloatArray(1)
                 val error = withContext(Dispatchers.Default) {
@@ -560,7 +560,7 @@ fun TakePicker(
                 // tempo to find and is stamped with the scene's, as before.
                 val loopBpm: Float? = withContext(Dispatchers.Default) {
                     val root = EngineSync.sampleRoot ?: return@withContext null
-                    loopTempo(NativeEngine.loopShape(java.io.File(root, rel).absolutePath))
+                    loopTempo(NativeEngine.loopShape(com.rm.acidulous.io.File(root, rel).absolutePath))
                 }
                 editor.edit(trackIndex) { track ->
                     val clip = track.clips[sceneId] ?: song.emptyClipFor(sceneId)

@@ -10,7 +10,7 @@ import com.rm.acidulous.engine.NativeEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.rm.acidulous.model.TAKE_PEAK_COLUMNS
-import java.io.File
+import com.rm.acidulous.io.File
 
 /**
  * The shape of a take, drawn from the document rather than from the disk.

@@ -5,7 +5,7 @@ import com.rm.acidulous.util.format
 import com.rm.acidulous.util.Log
 import com.rm.acidulous.engine.EngineAssets
 import com.rm.acidulous.engine.NativeEngine
-import java.io.File
+import com.rm.acidulous.io.File
 
 /**
  * Freezing: a clip rendered to audio, so its rack plays a file instead of

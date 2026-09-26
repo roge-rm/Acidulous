@@ -84,10 +84,10 @@ object EngineSync {
         private set
 
     /** Where relative sample paths in the document resolve. Set once at startup. */
-    var sampleRoot: java.io.File? = null
+    var sampleRoot: com.rm.acidulous.io.File? = null
 
     /** Where frozen clips are written and read. Set once, at startup. */
-    var freezeRoot: java.io.File? = null
+    var freezeRoot: com.rm.acidulous.io.File? = null
     private val loadedPatches = arrayOfNulls<String>(RACKS)
     var patchStatus: String = ""
         private set
@@ -157,7 +157,7 @@ object EngineSync {
                 if (loadedSamples[key] == rel) continue
                 if (mounted[rack] != track.machine.type) continue // machine not mounted yet
                 if (rel.isEmpty() && loadedSamples[key] == null) { loadedSamples[key] = ""; continue } // never loaded: nothing to clear
-                val err = NativeEngine.loadSample(rack, pad, if (rel.isEmpty()) "" else java.io.File(root, rel).absolutePath)
+                val err = NativeEngine.loadSample(rack, pad, if (rel.isEmpty()) "" else com.rm.acidulous.io.File(root, rel).absolutePath)
                 // The key is set either way, so a file that will not read is
                 // reported once rather than on every sync for the rest of the
                 // session. Changing the setting is what asks again.
@@ -173,7 +173,7 @@ object EngineSync {
             if (loadedSamples[sliceKey] != sliceRel && mounted[rack] == track.machine.type &&
                 !(sliceRel.isEmpty() && loadedSamples[sliceKey] == null)) {
                 val err = NativeEngine.loadSample(
-                    rack, 13, if (sliceRel.isEmpty()) "" else java.io.File(root, sliceRel).absolutePath,
+                    rack, 13, if (sliceRel.isEmpty()) "" else com.rm.acidulous.io.File(root, sliceRel).absolutePath,
                     // The long ceiling: one file for the whole machine, so it
                     // is allowed to be a whole track rather than a break.
                     maxSeconds = NativeEngine.SLICE_SECONDS,
@@ -305,7 +305,7 @@ object EngineSync {
                 mapStatus = "loading…"
                 val error = if (wanted.startsWith("sf2:")) {
                     val preset = settings["sf2preset"]?.toIntOrNull() ?: 0
-                    NativeEngine.loadSoundFont(rack, java.io.File(root, settings["sf2"]!!).absolutePath, preset)
+                    NativeEngine.loadSoundFont(rack, com.rm.acidulous.io.File(root, settings["sf2"]!!).absolutePath, preset)
                 } else {
                     val zones = com.rm.acidulous.model.Zones.decode(settings["zones"])
                     NativeEngine.loadZoneMap(rack, com.rm.acidulous.model.Zones.spec(zones, root), track.name)
@@ -345,7 +345,7 @@ object EngineSync {
             val track = song.tracks.getOrNull(rack)
             val frozen = song.scenes.mapNotNull { scene ->
                 val f = track?.clips?.get(scene.id)?.frozen ?: return@mapNotNull null
-                Triple(scene.engineId, f, java.io.File(root, f.file))
+                Triple(scene.engineId, f, com.rm.acidulous.io.File(root, f.file))
             }.filter { it.third.isFile }
             val identity = frozen.joinToString(";") {
                 "${it.first}:${it.second.file}:${it.second.bpm}:${it.second.ticks}:${it.second.tail}"
@@ -490,7 +490,7 @@ object EngineSync {
             // gets its own decode. Both are a worker's job either way.
             val sung = track?.machine?.type == "Molt"
             mapLoader.execute {
-                val path = if (wanted.isEmpty()) "" else java.io.File(root, wanted).absolutePath
+                val path = if (wanted.isEmpty()) "" else com.rm.acidulous.io.File(root, wanted).absolutePath
                 val error = if (sung) NativeEngine.loadUtterance(rack, path)
                             else NativeEngine.loadTake(rack, path)
                 // Reported and not retried: a file that will not decode will

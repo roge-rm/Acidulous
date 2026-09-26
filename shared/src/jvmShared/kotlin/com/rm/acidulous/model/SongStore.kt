@@ -2,7 +2,7 @@ package com.rm.acidulous.model
 
 import com.rm.acidulous.engine.EngineAssets
 import kotlinx.serialization.json.Json
-import java.io.File
+import com.rm.acidulous.io.File
 
 /** One JSON document per song under the engine's writable user root. */
 object SongStore {

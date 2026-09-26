@@ -1,7 +1,7 @@
 package com.rm.acidulous.model
 
 import java.io.ByteArrayOutputStream
-import java.io.File
+import com.rm.acidulous.io.File
 
 /**
  * The song as a standard MIDI file - the notes, not the sound.

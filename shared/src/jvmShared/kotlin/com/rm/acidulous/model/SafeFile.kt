@@ -1,6 +1,6 @@
 package com.rm.acidulous.model
 
-import java.io.File
+import com.rm.acidulous.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 

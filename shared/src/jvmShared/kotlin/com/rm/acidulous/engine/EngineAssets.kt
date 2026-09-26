@@ -1,6 +1,6 @@
 package com.rm.acidulous.engine
 
-import java.io.File
+import com.rm.acidulous.io.File
 
 /** Where the app's own files live. Bundled content (kits, patches) returns with M8. */
 object EngineAssets {
