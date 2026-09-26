@@ -85,6 +85,49 @@ class Launcher {
     }
 
     /**
+     * A scene's header was pressed: its clips on the tracks that have one,
+     * and every other track stopped - all on one tick, as a scene change is
+     * in song mode. Dan: a track with nothing in the new scene went on
+     * playing an old scene's clip, which is not what moving to a scene means.
+     *
+     * The tick is the next grid line where there is a grid; otherwise the end
+     * of the longest clip now playing - its own cycle end, the latest of them,
+     * so nobody is cut short - and with nothing playing, now. A track already
+     * playing this scene's clip carries on untouched, where a tap on the cell
+     * would have stopped it.
+     *
+     * [cycles] is each rack's clip length in this scene, 0 where it has none.
+     */
+    void requestScene(int64_t sceneId, const int64_t *cycles, int32_t count, int64_t now) {
+        if (sceneId == kNone) {
+            return;
+        }
+        int64_t at = now;
+        if (quantise > 0) {
+            at = nextMultiple(now, quantise);
+        } else if (anyPlaying()) {
+            for (const auto &s : slots) {
+                if (s.sceneId != kNone) at = std::max(at, boundary(s, 0, now));
+            }
+        }
+        for (int32_t r = 0; r < kRackCount; ++r) {
+            Slot &s = slots[r];
+            const int64_t cycle = r < count ? cycles[r] : 0;
+            if (cycle > 0 && s.sceneId == sceneId) {
+                s.pendingId = kNone;
+                s.pendingCycle = 0;
+            } else if (cycle > 0) {
+                queueAt(s, sceneId, cycle, at);
+            } else if (s.sceneId != kNone) {
+                queueAt(s, kStopId, 0, at);
+            } else {
+                s.pendingId = kNone;
+                s.pendingCycle = 0;
+            }
+        }
+    }
+
+    /**
      * Take up a clip that is already sounding, in phase, without queueing.
      *
      * For the moment the grid becomes a launcher while the song is playing.

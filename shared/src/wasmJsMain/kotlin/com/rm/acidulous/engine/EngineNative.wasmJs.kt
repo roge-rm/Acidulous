@@ -397,6 +397,9 @@ private fun raw_nativeSetLaunchQuantise(env: Int, ticks: Int): Unit =
 private fun raw_nativeLaunchClip(env: Int, rack: Int, sceneId: Long): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLaunchClip(env, 0, rack, sceneId)")
 
+private fun raw_nativeLaunchScene(env: Int, sceneId: Long): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLaunchScene(env, 0, sceneId)")
+
 private fun raw_nativeStopAllClips(env: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeStopAllClips(env, 0)")
 
@@ -1464,6 +1467,11 @@ internal actual object EngineNative {
 
     actual fun nativeLaunchClip(rack: Int, sceneId: Long) {
         raw_nativeLaunchClip(Jni.env, rack, sceneId)
+        Jni.release()
+    }
+
+    actual fun nativeLaunchScene(sceneId: Long) {
+        raw_nativeLaunchScene(Jni.env, sceneId)
         Jni.release()
     }
 

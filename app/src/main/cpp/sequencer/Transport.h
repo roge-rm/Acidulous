@@ -158,6 +158,9 @@ class Transport {
     int64_t takeQueuedClip(int32_t rack) {
         return (rack >= 0 && rack < kRackCount) ? queuedClip[rack].exchange(0, std::memory_order_relaxed) : 0;
     }
+    /** A scene's header in clip mode: its clips in, everything else out, together. See Launcher::requestScene. */
+    void launchScene(int64_t sceneId) { launchedScene.store(sceneId, std::memory_order_relaxed); }
+    int64_t takeLaunchedScene() { return launchedScene.exchange(0, std::memory_order_relaxed); }
     void requestStopAll() { stopAllFlag.store(true, std::memory_order_relaxed); }
     bool takeStopAll() { return stopAllFlag.exchange(false, std::memory_order_relaxed); }
 
@@ -200,6 +203,7 @@ class Transport {
             q.store(0, std::memory_order_relaxed);
         }
         stopAllFlag.store(false, std::memory_order_relaxed);
+        launchedScene.store(0, std::memory_order_relaxed);
     }
 
     // --- Audio thread ---------------------------------------------------------
@@ -296,6 +300,7 @@ class Transport {
     std::atomic<int32_t> launchQ{0};
     std::atomic<bool> stopAllFlag{false};
     std::atomic<int64_t> queuedClip[kRackCount]{};
+    std::atomic<int64_t> launchedScene{0};
     std::atomic<int64_t> launchForUi[kRackCount]{};
     bool playing = false; // audio-thread truth
     std::atomic<bool> playingForUi{false};

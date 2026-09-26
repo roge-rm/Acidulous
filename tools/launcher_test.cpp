@@ -284,6 +284,59 @@ int main() {
         eq("joining something already playing still waits", t.l.playing(1) ? 1 : 0, 0);
     }
 
+    printf("--- a scene's header: its clips in, every other track out, together ---\n");
+    {
+        // Rack 0 plays A (4 bars), rack 1 A (2 bars), rack 2 B (1 bar); rack 3 is silent.
+        Timeline t;
+        t.l.request(0, 100, 4 * kBar, 0);
+        t.l.request(1, 100, 2 * kBar, 0);
+        t.l.request(2, 200, kBar, 0);
+        t.run(kBar + kBar / 2);
+        // Scene C has clips on racks 0 and 3 only.
+        int64_t cycles[acidulous::kRackCount] = {};
+        cycles[0] = 2 * kBar;
+        cycles[3] = kBar;
+        t.l.requestScene(300, cycles, acidulous::kRackCount, t.now);
+        t.run(5 * kBar);
+        // End of clip: the latest of the playing racks' cycle ends - rack 0's, bar four.
+        eq("rack 0 swaps to the scene's clip at the longest clip's end", t.nthChangeOn(0, 1), 4 * kBar);
+        eq("rack 0 is on the scene", t.l.sceneId(0), 300);
+        eq("rack 1, nothing in the scene, stops on the same tick", t.nthChangeOn(1, 1), 4 * kBar);
+        eq("rack 1 is silent", t.l.playing(1) ? 1 : 0, 0);
+        eq("rack 2 stops on the same tick too", t.nthChangeOn(2, 1), 4 * kBar);
+        eq("rack 3, silent before, starts on the same tick", t.firstChangeOn(3), 4 * kBar);
+
+        // Pressed again: a rack already playing the scene's clip carries on.
+        t.l.requestScene(300, cycles, acidulous::kRackCount, t.now);
+        t.run(8 * kBar);
+        eq("a rack already on the scene is not restarted", t.nthChangeOn(0, 2), -1);
+        eq("nor stopped", t.l.sceneId(0), 300);
+    }
+    {
+        // A grid: every change on the next line.
+        Timeline t;
+        t.l.setQuantise(kBar);
+        t.l.request(0, 100, 4 * kBar, 0);
+        t.l.request(1, 200, 2 * kBar, 0);
+        t.run(kBar / 2);
+        int64_t cycles[acidulous::kRackCount] = {};
+        cycles[1] = kBar;
+        t.l.requestScene(300, cycles, acidulous::kRackCount, t.now);
+        t.run(3 * kBar);
+        eq("with a grid, the stop lands on the next line", t.nthChangeOn(0, 1), kBar);
+        eq("and the start on the same line", t.nthChangeOn(1, 1), kBar);
+    }
+    {
+        // Nothing playing: at once.
+        Timeline t;
+        t.run(kBar / 3);
+        int64_t cycles[acidulous::kRackCount] = {};
+        cycles[2] = kBar;
+        t.l.requestScene(300, cycles, acidulous::kRackCount, t.now);
+        t.run(kBar);
+        eq("into silence, the scene starts at once", t.firstChangeOn(2), kBar / 3);
+    }
+
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

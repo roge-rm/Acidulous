@@ -609,6 +609,17 @@ class SceneScheduler {
         if (transport->takeStopAll()) {
             launcher.requestStopAll(blockStart);
         }
+        // A scene before any single taps, so a tap made after it still wins.
+        if (const int64_t scene = transport->takeLaunchedScene(); scene != 0) {
+            const int32_t idx = snap->indexOfScene(scene);
+            if (idx >= 0) {
+                int64_t cycles[kRackCount] = {};
+                for (int32_t r = 0; r < rackCount && r < kRackCount; ++r) {
+                    if (snap->clipFor(r, idx) != nullptr) cycles[r] = cycleTicks(r, idx);
+                }
+                launcher.requestScene(scene, cycles, kRackCount, blockStart);
+            }
+        }
         for (int32_t r = 0; r < rackCount; ++r) {
             const int64_t id = transport->takeQueuedClip(r);
             if (id == 0) {

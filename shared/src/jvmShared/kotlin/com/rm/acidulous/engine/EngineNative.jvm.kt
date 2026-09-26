@@ -181,6 +181,7 @@ internal actual object EngineNative {
     actual external fun nativeSetFill(on: Boolean)
     actual external fun nativeSetLaunchQuantise(ticks: Int)
     actual external fun nativeLaunchClip(rack: Int, sceneId: Long)
+    actual external fun nativeLaunchScene(sceneId: Long)
     actual external fun nativeStopAllClips()
     actual external fun nativeCancelLaunch(rack: Int)
     actual external fun nativeSetClockOut(on: Boolean)

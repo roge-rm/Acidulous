@@ -1248,6 +1248,7 @@ void EngineHost::setLauncher(bool on) { sEngine.transport.setLauncher(on); }
 void EngineHost::setFill(bool on) { sEngine.transport.setFill(on); }
 void EngineHost::setLaunchQuantise(int32_t ticks) { sEngine.transport.setLaunchQuantise(ticks); }
 void EngineHost::launchClip(int32_t rack, int64_t sceneId) { sEngine.transport.launchClip(rack, sceneId); }
+void EngineHost::launchScene(int64_t sceneId) { sEngine.transport.launchScene(sceneId); }
 void EngineHost::stopAllClips() { sEngine.transport.requestStopAll(); }
 void EngineHost::setClockOut(bool on) { sEngine.transport.setClockOut(on); }
 

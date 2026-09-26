@@ -780,13 +780,11 @@ fun MainScreen(
                             onAudition = {
                                 when {
                                     // Clip mode: a scene chip is a column
-                                    // launch. Every track holding a clip in
-                                    // this scene is queued at once, which is
-                                    // how you move a whole arrangement.
+                                    // launch - its clips in, every other
+                                    // track out, on one tick, which is how
+                                    // you move a whole arrangement.
                                     clipMode -> {
-                                        song.tracks.forEachIndexed { t, tr ->
-                                            if (tr.clips[scene.id] != null) NativeEngine.launchClip(t, scene.engineId)
-                                        }
+                                        NativeEngine.launchScene(scene.engineId)
                                         if (!playing) com.rm.acidulous.engine.EngineSync.play(0, clipMode)
                                     }
                                     // Already running: a tap says "finish the

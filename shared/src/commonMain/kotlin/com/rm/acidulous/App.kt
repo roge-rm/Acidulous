@@ -1259,7 +1259,7 @@ fun App(modifier: Modifier = Modifier) {
             is com.rm.acidulous.midi.launchpad.LpAction.PlayScene -> song.scenes.getOrNull(a.index)?.let { scene ->
                 when {
                     com.rm.acidulous.ui.UiPrefs.clipMode -> {
-                        song.tracks.forEachIndexed { t, tr -> if (tr.clips[scene.id] != null) NativeEngine.launchClip(t, scene.engineId) }
+                        NativeEngine.launchScene(scene.engineId)
                         if (!playing) EngineSync.play(0, true)
                     }
                     playing && position.scene == a.index -> NativeEngine.stopAtEnd = !NativeEngine.stopAtEnd

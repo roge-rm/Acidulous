@@ -145,6 +145,7 @@ internal expect object EngineNative {
     fun nativeSetFill(on: Boolean)
     fun nativeSetLaunchQuantise(ticks: Int)
     fun nativeLaunchClip(rack: Int, sceneId: Long)
+    fun nativeLaunchScene(sceneId: Long)
     fun nativeStopAllClips()
     fun nativeCancelLaunch(rack: Int)
     fun nativeSetClockOut(on: Boolean)

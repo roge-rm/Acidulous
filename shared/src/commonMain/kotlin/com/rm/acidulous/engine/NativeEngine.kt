@@ -314,6 +314,13 @@ object NativeEngine {
      * read against a state that is already eighty milliseconds old.
      */
     fun launchClip(rack: Int, sceneId: Long) = EngineNative.nativeLaunchClip(rack, sceneId)
+
+    /**
+     * A scene's header in clip mode: its clips start, every track without one
+     * in it stops, all on one tick - the next grid line, or the end of the
+     * longest clip playing - and a track already playing it carries on.
+     */
+    fun launchScene(sceneId: Long) = EngineNative.nativeLaunchScene(sceneId)
     fun stopAllClips() = EngineNative.nativeStopAllClips()
 
     /** Forget what this track had queued, whatever has happened since. */

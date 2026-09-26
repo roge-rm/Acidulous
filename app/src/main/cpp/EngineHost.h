@@ -258,6 +258,8 @@ class EngineHost {
     void setFill(bool on);
     void setLaunchQuantise(int32_t ticks);
     void launchClip(int32_t rack, int64_t sceneId);
+    /** Clip mode: a scene's clips in and every other track out, on one tick. */
+    void launchScene(int64_t sceneId);
     void stopAllClips();
     void cancelLaunch(int32_t rack);
     void launchStates(int64_t *out, int32_t count) const;

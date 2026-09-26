@@ -889,6 +889,11 @@ Java_com_rm_acidulous_engine_EngineNative_nativeLaunchClip(JNIEnv *, jobject, ji
 }
 
 JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeLaunchScene(JNIEnv *, jobject, jlong sceneId) {
+    host().launchScene(sceneId);
+}
+
+JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeStopAllClips(JNIEnv *, jobject) { host().stopAllClips(); }
 
 JNIEXPORT void JNICALL
