@@ -10,16 +10,92 @@
   html, body { margin: 0; height: 100%; background: #1b1c1f; overflow: hidden; }
   /* The status line is behind the app, which covers it with its first frame. */
   #root { position: relative; z-index: 1; width: 100%; height: 100%; }
-  #status { position: fixed; inset: 0; z-index: 0; display: flex; align-items: center; justify-content: center; padding: 16px;
-            color: #9aa0a6; font: 15px/1.5 system-ui, sans-serif; text-align: center; }
+  #status { position: fixed; inset: 0; z-index: 0; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 10px; padding: 16px; color: #9a9aa2; font: 15px/1.5 system-ui, sans-serif;
+            text-align: center; }
+  #bar { width: min(320px, 100%); height: 4px; border-radius: 2px; background: #33333a; overflow: hidden; visibility: hidden; }
+  #fill { width: 0; height: 100%; background: #ffb454; transition: width 0.2s; }
+  #amount { font-size: 13px; color: #66666e; font-variant-numeric: tabular-nums; min-height: 1.5em; }
 </style>
 </head>
 <body>
 <div id="root"></div>
-<div id="status">Loading Acidulous…</div>
+<div id="status">
+  <div id="status-text">Loading Acidulous…</div>
+  <div id="bar"><div id="fill"></div></div>
+  <div id="amount"></div>
+</div>
+<script>
+  // How much of the download has come: the engine, the app and its graphics,
+  // twenty megabytes or so, against the sizes the build wrote beside the page
+  // (load-sizes.json, web/app/build.gradle.kts). Both WebAssembly loaders ask
+  // through fetch, so each answer is counted as it streams in on its way to
+  // them; the two scripts count when they have loaded.
+  const loading = (() => {
+    const text = document.getElementById('status-text');
+    const bar = document.getElementById('bar');
+    const fill = document.getElementById('fill');
+    const amount = document.getElementById('amount');
+    const seen = {};
+    const finished = new Set();
+    let sizes = null;
+    let drawing = false;
+    const mb = (n) => (n / 1048576).toFixed(1);
+    const draw = () => {
+      drawing = false;
+      let have = 0, total = 0;
+      if (sizes) {
+        for (const [name, size] of Object.entries(sizes)) {
+          total += size;
+          have += finished.has(name) ? size : Math.min(seen[name] || 0, size);
+        }
+      } else {
+        for (const name in seen) have += seen[name];
+      }
+      if (have === 0) return;
+      if (total > 0) {
+        bar.style.visibility = 'visible';
+        fill.style.width = (100 * have / total).toFixed(1) + '%';
+        amount.textContent = have >= total ? mb(total) + ' MB' : mb(have) + ' of ' + mb(total) + ' MB';
+        // All here: what is left is the browser compiling it, and the app starting.
+        if (have >= total) text.textContent = 'Starting Acidulous…';
+      } else {
+        amount.textContent = mb(have) + ' MB';
+      }
+    };
+    const redraw = () => { if (!drawing) { drawing = true; requestAnimationFrame(draw); } };
+    const realFetch = window.fetch.bind(window);
+    realFetch('load-sizes.json', { cache: 'no-cache' })
+      .then((r) => (r.ok ? r.json() : null)).catch(() => null)
+      .then((s) => { sizes = s; redraw(); });
+    window.fetch = async (input, init) => {
+      const response = await realFetch(input, init);
+      const name = new URL(typeof input === 'string' ? input : (input.url || String(input)), location.href)
+        .pathname.split('/').pop();
+      if (!/\.(wasm|js)$/.test(name) || !response.ok || !response.body || finished.has(name)) return response;
+      const counted = response.body.pipeThrough(new TransformStream({
+        transform(chunk, out) {
+          seen[name] = (seen[name] || 0) + chunk.byteLength;
+          redraw();
+          out.enqueue(chunk);
+        },
+        flush() {
+          finished.add(name);
+          redraw();
+        },
+      }));
+      return new Response(counted, { status: response.status, statusText: response.statusText, headers: response.headers });
+    };
+    return {
+      done(name) { finished.add(name); redraw(); },
+      /** Nothing to wait for: say so instead. */
+      fail(message) { text.textContent = message; bar.style.display = 'none'; amount.textContent = ''; },
+    };
+  })();
+</script>
 <script src="acidulous.js"></script>
 <script>
-  const statusLine = document.getElementById('status');
+  loading.done('acidulous.js');
   // The engine first: its module, on shared memory, as globalThis.acid. Then
   // the app's folder, /data, from browser storage - written back soon after
   // the app changes it, every ten seconds for what the engine writes itself,
@@ -28,8 +104,8 @@
   // worker is about to reload the page with it, or this browser will not have it.
   if (!window.crossOriginIsolated) {
     setTimeout(() => {
-      statusLine.textContent = 'This browser is not giving the page the isolation it needs to run the engine. ' +
-        'Try reloading, or a current Chrome, Edge or Firefox outside a private window.';
+      loading.fail('This browser is not giving the page the isolation it needs to run the engine. ' +
+        'Try reloading, or a current Chrome, Edge or Firefox outside a private window.');
     }, 4000);
   } else AcidEngine().then((engine) => {
     globalThis.acid = engine;
@@ -57,6 +133,7 @@
       addEventListener('keydown', wake, true);
       const ui = document.createElement('script');
       ui.src = 'acidulous-ui.js';
+      ui.onload = () => loading.done('acidulous-ui.js');
       document.body.appendChild(ui);
     });
   });

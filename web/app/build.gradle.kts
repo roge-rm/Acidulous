@@ -69,3 +69,26 @@ val stageLicences = tasks.register<Sync>("stageLicences") {
     into(layout.buildDirectory.dir("generated/licences/licences"))
 }
 kotlin.sourceSets.named("wasmJsMain") { resources.srcDir(stageLicences.map { it.destinationDir.parentFile }) }
+
+/**
+ * What the page downloads before the app can start, and how big each is, for
+ * its progress bar (index.html): load-sizes.json beside it. Written into the
+ * distribution when it is made, since the WebAssembly files' names are the
+ * bundler's hashes, and so goes wherever the distribution is published.
+ */
+listOf(
+    "wasmJsBrowserDistribution" to "productionExecutable",
+    "wasmJsBrowserDevelopmentExecutableDistribution" to "developmentExecutable",
+).forEach { (task, dir) ->
+    val dist = layout.buildDirectory.dir("dist/wasmJs/$dir").get().asFile
+    tasks.matching { it.name == task }.configureEach {
+        doLast {
+            val files = dist.listFiles().orEmpty()
+                .filter { it.isFile && (it.name.endsWith(".wasm") || it.name.endsWith(".js")) && it.name != "coi-serviceworker.js" }
+                .sortedBy { it.name }
+            dist.resolve("load-sizes.json").writeText(
+                files.joinToString(",\n", "{\n", "\n}\n") { "  \"${it.name}\": ${it.length()}" },
+            )
+        }
+    }
+}
