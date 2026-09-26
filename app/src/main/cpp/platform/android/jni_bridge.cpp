@@ -34,43 +34,43 @@ acidulous::EngineHost &host() {
 extern "C" {
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStart(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeStart(JNIEnv *, jobject) {
     return host().start() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStop(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeStop(JNIEnv *, jobject) {
     host().stop();
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeIsRunning(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeIsRunning(JNIEnv *, jobject) {
     return host().isRunning() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMountMachine(JNIEnv *env, jobject,
+Java_com_rm_acidulous_engine_EngineNative_nativeMountMachine(JNIEnv *env, jobject,
                                                       jint rackId, jstring typeName) {
     return host().mountMachine(rackId, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeUnmountMachine(JNIEnv *, jobject, jint rackId) {
+Java_com_rm_acidulous_engine_EngineNative_nativeUnmountMachine(JNIEnv *, jobject, jint rackId) {
     host().unmountMachine(rackId);
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMountEffect(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
+Java_com_rm_acidulous_engine_EngineNative_nativeMountEffect(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
     return host().mountEffect(rackId, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMountSend(JNIEnv *env, jobject, jint slot, jstring typeName) {
+Java_com_rm_acidulous_engine_EngineNative_nativeMountSend(JNIEnv *env, jobject, jint slot, jstring typeName) {
     return host().mountSend(slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jfloatArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoudness(JNIEnv *env, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLoudness(JNIEnv *env, jobject) {
     float v[4];
     host().loudness(v);
     jfloatArray out = env->NewFloatArray(4);
@@ -79,52 +79,52 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoudness(JNIEnv *env, jobject) {
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeResetLoudness(JNIEnv *, jobject) { host().resetLoudness(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeResetLoudness(JNIEnv *, jobject) { host().resetLoudness(); }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMountGroupInsert(JNIEnv *env, jobject, jint group, jint slot,
+Java_com_rm_acidulous_engine_EngineNative_nativeMountGroupInsert(JNIEnv *env, jobject, jint group, jint slot,
                                                                 jstring typeName) {
     return host().mountGroupInsert(group, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGroupPeak(JNIEnv *, jobject, jint group) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGroupPeak(JNIEnv *, jobject, jint group) {
     return host().groupPeak(group);
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMountMasterInsert(JNIEnv *env, jobject, jint slot, jstring typeName) {
+Java_com_rm_acidulous_engine_EngineNative_nativeMountMasterInsert(JNIEnv *env, jobject, jint slot, jstring typeName) {
     return host().mountMasterInsert(slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMountInputEffect(JNIEnv *env, jobject, jint slot,
+Java_com_rm_acidulous_engine_EngineNative_nativeMountInputEffect(JNIEnv *env, jobject, jint slot,
                                                                   jstring typeName) {
     return host().mountInputEffect(slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeControlChange(JNIEnv *, jobject, jint rackId, jint cc, jint value,
+Java_com_rm_acidulous_engine_EngineNative_nativeControlChange(JNIEnv *, jobject, jint rackId, jint cc, jint value,
                                                               jboolean record) {
     host().controlChange(rackId, static_cast<uint8_t>(cc), static_cast<uint8_t>(value), record == JNI_TRUE);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeChannelPressure(JNIEnv *, jobject, jint rackId, jint value,
+Java_com_rm_acidulous_engine_EngineNative_nativeChannelPressure(JNIEnv *, jobject, jint rackId, jint value,
                                                                 jboolean record) {
     host().channelPressure(rackId, static_cast<uint8_t>(value), record == JNI_TRUE);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativePrewarm(JNIEnv *, jobject) { acidulous::EngineHost::prewarm(); }
+Java_com_rm_acidulous_engine_EngineNative_nativePrewarm(JNIEnv *, jobject) { acidulous::EngineHost::prewarm(); }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMountInputMod(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
+Java_com_rm_acidulous_engine_EngineNative_nativeMountInputMod(JNIEnv *env, jobject, jint rackId, jint slot, jstring typeName) {
     return host().mountInputMod(rackId, slot, toStdString(env, typeName)) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeInputModTypes(JNIEnv *env, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeInputModTypes(JNIEnv *env, jobject) {
     const int32_t n = acidulous::InputModRegistry::count();
     jclass stringClass = env->FindClass("java/lang/String");
     jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
@@ -137,7 +137,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeInputModTypes(JNIEnv *env, jobje
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeEffectTypes(JNIEnv *env, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeEffectTypes(JNIEnv *env, jobject) {
     const int32_t n = acidulous::EffectRegistry::count();
     jclass stringClass = env->FindClass("java/lang/String");
     jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
@@ -150,7 +150,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeEffectTypes(JNIEnv *env, jobject
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMachineTypes(JNIEnv *env, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeMachineTypes(JNIEnv *env, jobject) {
     const int32_t n = acidulous::MachineRegistry::count();
     jclass stringClass = env->FindClass("java/lang/String");
     jobjectArray out = env->NewObjectArray(n, stringClass, nullptr);
@@ -163,14 +163,14 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMachineTypes(JNIEnv *env, jobjec
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSoundFontPresets(JNIEnv *env, jobject, jstring path) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSoundFontPresets(JNIEnv *env, jobject, jstring path) {
     std::string error;
     const std::string list = acidulous::EngineHost::soundFontPresets(toStdString(env, path), error);
     return env->NewStringUTF(error.empty() ? list.c_str() : ("!" + error).c_str());
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadSoundFont(JNIEnv *env, jobject, jint rackId, jstring path,
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadSoundFont(JNIEnv *env, jobject, jint rackId, jstring path,
                                                               jint presetIndex) {
     std::string error;
     host().loadSoundFont(rackId, toStdString(env, path), presetIndex, error);
@@ -178,7 +178,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadSoundFont(JNIEnv *env, jobje
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadZoneMap(JNIEnv *env, jobject, jint rackId, jstring spec,
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadZoneMap(JNIEnv *env, jobject, jint rackId, jstring spec,
                                                             jstring name) {
     std::string error;
     host().loadZoneMap(rackId, toStdString(env, spec), toStdString(env, name), error);
@@ -186,12 +186,12 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadZoneMap(JNIEnv *env, jobject
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSampleMapInfo(JNIEnv *env, jobject, jint rackId) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSampleMapInfo(JNIEnv *env, jobject, jint rackId) {
     return env->NewStringUTF(host().sampleMapInfo(rackId).c_str());
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadSample(JNIEnv *env, jobject, jint rackId, jint slot, jstring path,
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadSample(JNIEnv *env, jobject, jint rackId, jint slot, jstring path,
                                                           jint maxSeconds) {
     std::string error;
     const bool ok = host().loadSample(rackId, slot, toStdString(env, path), error, maxSeconds);
@@ -199,12 +199,12 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadSample(JNIEnv *env, jobject,
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSampleInfo(JNIEnv *env, jobject, jint rackId, jint slot) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSampleInfo(JNIEnv *env, jobject, jint rackId, jint slot) {
     return env->NewStringUTF(host().sampleInfo(rackId, slot).c_str());
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSampleShape(JNIEnv *env, jobject, jint rack, jint pad,
+Java_com_rm_acidulous_engine_EngineNative_nativeSampleShape(JNIEnv *env, jobject, jint rack, jint pad,
                                                            jfloatArray out, jint fromFrame, jint toFrame) {
     const jsize max = env->GetArrayLength(out);
     if (max < 2) return 0;
@@ -215,7 +215,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSampleShape(JNIEnv *env, jobject
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeImportAudio(JNIEnv *env, jobject, jstring path, jint maxSeconds) {
+Java_com_rm_acidulous_engine_EngineNative_nativeImportAudio(JNIEnv *env, jobject, jstring path, jint maxSeconds) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     std::string error;
     const std::string out = host().importAudio(p != nullptr ? p : "", error, maxSeconds);
@@ -226,7 +226,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeImportAudio(JNIEnv *env, jobject
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSlicePoints(JNIEnv *env, jobject, jstring path, jint mode,
+Java_com_rm_acidulous_engine_EngineNative_nativeSlicePoints(JNIEnv *env, jobject, jstring path, jint mode,
                                                            jint count) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     std::string error;
@@ -236,7 +236,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSlicePoints(JNIEnv *env, jobject
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoopShape(JNIEnv *env, jobject, jstring path) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLoopShape(JNIEnv *env, jobject, jstring path) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     std::string error;
     const std::string out = host().loopShape(p != nullptr ? p : "", error);
@@ -245,22 +245,22 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoopShape(JNIEnv *env, jobject, 
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOn(JNIEnv *, jobject,
+Java_com_rm_acidulous_engine_EngineNative_nativeNoteOn(JNIEnv *, jobject,
                                                 jint rackId, jint note, jint velocity) {
     host().noteOn(rackId, static_cast<uint8_t>(note & 0x7f),
                   static_cast<uint8_t>(velocity & 0x7f));
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeNoteOff(JNIEnv *, jobject, jint rackId, jint note) {
+Java_com_rm_acidulous_engine_EngineNative_nativeNoteOff(JNIEnv *, jobject, jint rackId, jint note) {
     host().noteOff(rackId, static_cast<uint8_t>(note & 0x7f));
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativePanic(JNIEnv *, jobject) { host().panic(); }
+Java_com_rm_acidulous_engine_EngineNative_nativePanic(JNIEnv *, jobject) { host().panic(); }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadNexusPatch(JNIEnv *env, jobject, jint rack, jstring spec) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadNexusPatch(JNIEnv *env, jobject, jint rack, jstring spec) {
     const char *chars = env->GetStringUTFChars(spec, nullptr);
     const std::string result = host().loadNexusPatch(rack, chars ? chars : "");
     if (chars) env->ReleaseStringUTFChars(spec, chars);
@@ -268,12 +268,12 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadNexusPatch(JNIEnv *env, jobj
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeNexusPalette(JNIEnv *env, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeNexusPalette(JNIEnv *env, jobject) {
     return env->NewStringUTF(host().nexusPalette().c_str());
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeNexusScope(JNIEnv *env, jobject, jint rack, jfloatArray out) {
+Java_com_rm_acidulous_engine_EngineNative_nativeNexusScope(JNIEnv *env, jobject, jint rack, jfloatArray out) {
     const jsize max = env->GetArrayLength(out);
     if (max <= 0) return 0;
     jfloat *data = env->GetFloatArrayElements(out, nullptr);
@@ -283,7 +283,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeNexusScope(JNIEnv *env, jobject,
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeNexusActivity(JNIEnv *env, jobject, jint rack, jfloatArray out) {
+Java_com_rm_acidulous_engine_EngineNative_nativeNexusActivity(JNIEnv *env, jobject, jint rack, jfloatArray out) {
     const jsize max = env->GetArrayLength(out);
     if (max <= 0) return 0;
     jfloat *data = env->GetFloatArrayElements(out, nullptr);
@@ -293,61 +293,61 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeNexusActivity(JNIEnv *env, jobje
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStartInput(JNIEnv *, jobject, jint deviceId) {
+Java_com_rm_acidulous_engine_EngineNative_nativeStartInput(JNIEnv *, jobject, jint deviceId) {
     return host().startInput(deviceId) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStopInput(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeStopInput(JNIEnv *, jobject) {
     return host().stopInput() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeInputChannels(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeInputChannels(JNIEnv *, jobject) {
     return host().inputChannels();
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeInputRate(JNIEnv *, jobject) { return host().inputRate(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeInputRate(JNIEnv *, jobject) { return host().inputRate(); }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeInputDevice(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeInputDevice(JNIEnv *, jobject) {
     return host().inputDevice();
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeInputRunning(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeInputRunning(JNIEnv *, jobject) {
     return host().inputRunning() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeInputPeak(JNIEnv *, jobject) { return host().inputPeak(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeInputPeak(JNIEnv *, jobject) { return host().inputPeak(); }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetInputGain(JNIEnv *, jobject, jfloat g) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetInputGain(JNIEnv *, jobject, jfloat g) {
     host().setInputGain(g);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetSwingUnit(JNIEnv *, jobject, jint unit) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetSwingUnit(JNIEnv *, jobject, jint unit) {
     host().setSwingUnit(unit);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetTunerOn(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetTunerOn(JNIEnv *, jobject, jboolean on) {
     host().setTunerOn(on == JNI_TRUE);
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeTunerHz(JNIEnv *, jobject) { return host().tunerHz(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeTunerHz(JNIEnv *, jobject) { return host().tunerHz(); }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetMonitorLevel(JNIEnv *, jobject, jfloat level) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetMonitorLevel(JNIEnv *, jobject, jfloat level) {
     host().setMonitorLevel(level);
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStartCapture(JNIEnv *env, jobject, jstring path, jint source) {
+Java_com_rm_acidulous_engine_EngineNative_nativeStartCapture(JNIEnv *env, jobject, jstring path, jint source) {
     const char *chars = env->GetStringUTFChars(path, nullptr);
     const std::string result = host().startCapture(chars ? chars : "", source);
     if (chars) env->ReleaseStringUTFChars(path, chars);
@@ -355,33 +355,33 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeStartCapture(JNIEnv *env, jobjec
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStopCapture(JNIEnv *, jobject) { host().stopCapture(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeStopCapture(JNIEnv *, jobject) { host().stopCapture(); }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCapturing(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeCapturing(JNIEnv *, jobject) {
     return host().capturing() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCapturedSeconds(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeCapturedSeconds(JNIEnv *, jobject) {
     return host().capturedSeconds();
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCapturedPeak(JNIEnv *, jobject) { return host().capturedPeak(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeCapturedPeak(JNIEnv *, jobject) { return host().capturedPeak(); }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureOverflowed(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeCaptureOverflowed(JNIEnv *, jobject) {
     return host().captureOverflowed() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureDeaf(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeCaptureDeaf(JNIEnv *, jobject) {
     return host().captureDeaf() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeFileShape(JNIEnv *env, jobject, jstring path,
+Java_com_rm_acidulous_engine_EngineNative_nativeFileShape(JNIEnv *env, jobject, jstring path,
                                                           jfloatArray out, jint fromFrame,
                                                           jint toFrame) {
     const jsize max = env->GetArrayLength(out);
@@ -396,12 +396,12 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeFileShape(JNIEnv *env, jobject, 
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCapturedFrames(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeCapturedFrames(JNIEnv *, jobject) {
     return host().capturedFrames();
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCompCell(JNIEnv *env, jobject, jint rack,
+Java_com_rm_acidulous_engine_EngineNative_nativeCompCell(JNIEnv *env, jobject, jint rack,
                                                          jlong sceneId, jint frames, jfloat bpm,
                                                          jstring path, jfloatArray peakOut) {
     const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
@@ -415,12 +415,12 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeCompCell(JNIEnv *env, jobject, j
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeArmCapture(JNIEnv *, jobject, jint rack) {
+Java_com_rm_acidulous_engine_EngineNative_nativeArmCapture(JNIEnv *, jobject, jint rack) {
     host().armCapture(rack);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureMarks(JNIEnv *env, jobject, jlongArray out) {
+Java_com_rm_acidulous_engine_EngineNative_nativeCaptureMarks(JNIEnv *env, jobject, jlongArray out) {
     const jsize max = env->GetArrayLength(out) / 5;
     if (max <= 0) return 0;
     jlong *data = env->GetLongArrayElements(out, nullptr);
@@ -430,7 +430,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeCaptureMarks(JNIEnv *env, jobjec
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeFileSurvey(JNIEnv *env, jobject, jstring path,
+Java_com_rm_acidulous_engine_EngineNative_nativeFileSurvey(JNIEnv *env, jobject, jstring path,
                                                            jfloatArray out) {
     const jsize max = env->GetArrayLength(out);
     if (max < 2) return env->NewStringUTF("");
@@ -444,7 +444,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeFileSurvey(JNIEnv *env, jobject,
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeAuditionFile(JNIEnv *env, jobject, jstring path) {
+Java_com_rm_acidulous_engine_EngineNative_nativeAuditionFile(JNIEnv *env, jobject, jstring path) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     const std::string out = host().auditionFile(p != nullptr ? p : "");
     if (p != nullptr) env->ReleaseStringUTFChars(path, p);
@@ -452,12 +452,12 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeAuditionFile(JNIEnv *env, jobjec
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeAuditioning(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeAuditioning(JNIEnv *, jobject) {
     return host().auditioning() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeFileInfo(JNIEnv *env, jobject, jstring path) {
+Java_com_rm_acidulous_engine_EngineNative_nativeFileInfo(JNIEnv *env, jobject, jstring path) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     const std::string out = host().fileInfo(p != nullptr ? p : "");
     if (p != nullptr) env->ReleaseStringUTFChars(path, p);
@@ -472,7 +472,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeFileInfo(JNIEnv *env, jobject, j
  * to put two of them the wrong way round, and the compiler cannot tell.
  */
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeEditSample(JNIEnv *env, jobject, jstring src,
+Java_com_rm_acidulous_engine_EngineNative_nativeEditSample(JNIEnv *env, jobject, jstring src,
                                                            jstring dst, jfloatArray opsArray) {
     const jsize n = env->GetArrayLength(opsArray);
     if (n < 14) return env->NewStringUTF("the edit is incomplete");
@@ -503,25 +503,25 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeEditSample(JNIEnv *env, jobject,
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMidiEvent(JNIEnv *, jobject, jint rackId, jint status,
+Java_com_rm_acidulous_engine_EngineNative_nativeMidiEvent(JNIEnv *, jobject, jint rackId, jint status,
                                                    jint d1, jint d2, jint channel) {
     host().midiEvent(rackId, static_cast<uint8_t>(status), static_cast<uint8_t>(d1 & 0x7f),
                      static_cast<uint8_t>(d2 & 0x7f), static_cast<uint8_t>(channel));
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetMpeZone(JNIEnv *, jobject, jint kind,
+Java_com_rm_acidulous_engine_EngineNative_nativeSetMpeZone(JNIEnv *, jobject, jint kind,
                                                    jint members, jfloat bendSemis) {
     host().setMpeZone(kind, members, bendSemis);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMpeHeldMask(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeMpeHeldMask(JNIEnv *, jobject) {
     return host().mpeHeldMask();
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetParam(JNIEnv *env, jobject, jint rackId,
+Java_com_rm_acidulous_engine_EngineNative_nativeSetParam(JNIEnv *env, jobject, jint rackId,
                                                   jstring unit, jstring name, jfloat value, jboolean record,
                                                   jint quantise) {
     return host().setParam(rackId, toStdString(env, unit), toStdString(env, name), value, record == JNI_TRUE,
@@ -529,19 +529,19 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSetParam(JNIEnv *env, jobject, j
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetSampleRate(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGetSampleRate(JNIEnv *, jobject) {
     return host().sampleRate();
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetCacheRoot(JNIEnv *env, jobject, jstring path) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetCacheRoot(JNIEnv *env, jobject, jstring path) {
     const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
     host().setCacheRoot(p);
     if (path != nullptr) env->ReleaseStringUTFChars(path, p);
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadReel(JNIEnv *env, jobject, jint rack, jstring spec) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadReel(JNIEnv *env, jobject, jint rack, jstring spec) {
     const char *p = spec != nullptr ? env->GetStringUTFChars(spec, nullptr) : "";
     const std::string out = host().loadReel(rack, p);
     if (spec != nullptr) env->ReleaseStringUTFChars(spec, p);
@@ -549,7 +549,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadReel(JNIEnv *env, jobject, j
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadTake(JNIEnv *env, jobject, jint rack, jstring path) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadTake(JNIEnv *env, jobject, jint rack, jstring path) {
     const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
     const std::string out = host().loadTake(rack, p);
     if (path != nullptr) env->ReleaseStringUTFChars(path, p);
@@ -557,7 +557,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadTake(JNIEnv *env, jobject, j
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadUtterance(JNIEnv *env, jobject, jint rack, jstring path) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadUtterance(JNIEnv *env, jobject, jint rack, jstring path) {
     const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
     const std::string out = host().loadUtterance(rack, p);
     if (path != nullptr) env->ReleaseStringUTFChars(path, p);
@@ -567,7 +567,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadUtterance(JNIEnv *env, jobje
 
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadFormula(JNIEnv *env, jobject, jint rack, jstring formula,
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadFormula(JNIEnv *env, jobject, jint rack, jstring formula,
                                                             jstring arp, jstring duty, jstring vol) {
     auto str = [&](jstring s) {
         if (s == nullptr) return std::string();
@@ -580,7 +580,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadFormula(JNIEnv *env, jobject
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeBuildCloud(JNIEnv *env, jobject, jint rack, jfloatArray spectrum) {
+Java_com_rm_acidulous_engine_EngineNative_nativeBuildCloud(JNIEnv *env, jobject, jint rack, jfloatArray spectrum) {
     std::vector<jfloat> v;
     if (spectrum != nullptr) {
         const jsize n = env->GetArrayLength(spectrum);
@@ -592,7 +592,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeBuildCloud(JNIEnv *env, jobject,
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeFreezeClip(JNIEnv *env, jobject, jint rack, jlong sceneId,
+Java_com_rm_acidulous_engine_EngineNative_nativeFreezeClip(JNIEnv *env, jobject, jint rack, jlong sceneId,
                                                            jstring path, jfloat tailSeconds) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     int32_t frames = 0, tail = 0, ticks = 0;
@@ -611,7 +611,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeFreezeClip(JNIEnv *env, jobject,
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLoadFrozen(JNIEnv *env, jobject, jint rack, jlongArray sceneIds,
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadFrozen(JNIEnv *env, jobject, jint rack, jlongArray sceneIds,
                                                            jobjectArray paths, jfloatArray bpms, jintArray ticks,
                                                            jintArray tails) {
     const jsize n = env->GetArrayLength(sceneIds);
@@ -641,149 +641,149 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLoadFrozen(JNIEnv *env, jobject,
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetBufferBursts(JNIEnv *, jobject, jint bursts) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetBufferBursts(JNIEnv *, jobject, jint bursts) {
     host().setBufferBursts(bursts);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeBufferFrames(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeBufferFrames(JNIEnv *, jobject) {
     return host().bufferFrames();
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetVoiceLimit(JNIEnv *, jobject, jint notes) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetVoiceLimit(JNIEnv *, jobject, jint notes) {
     host().setVoiceLimit(notes);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetQuality(JNIEnv *, jobject, jint level) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetQuality(JNIEnv *, jobject, jint level) {
     host().setQuality(level);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetRecordBits(JNIEnv *, jobject, jint bits) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetRecordBits(JNIEnv *, jobject, jint bits) {
     host().setRecordBits(bits);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetFramesPerBurst(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGetFramesPerBurst(JNIEnv *, jobject) {
     return host().framesPerBurst();
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeIsLowLatency(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeIsLowLatency(JNIEnv *, jobject) {
     return host().lowLatency() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetXRunCount(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGetXRunCount(JNIEnv *, jobject) {
     return static_cast<jlong>(host().xRunCount());
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetLoadAvg(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGetLoadAvg(JNIEnv *, jobject) {
     return host().loadPercent();
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeWorstBlockUs(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeWorstBlockUs(JNIEnv *, jobject) {
     return host().worstBlockUs();
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeWorstCallbackUs(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeWorstCallbackUs(JNIEnv *, jobject) {
     return host().worstCallbackUs();
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeWorstPhaseUs(JNIEnv *, jobject, jint phase) {
+Java_com_rm_acidulous_engine_EngineNative_nativeWorstPhaseUs(JNIEnv *, jobject, jint phase) {
     return host().worstPhaseUs(phase);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeWorstRackUs(JNIEnv *, jobject, jint rack) {
+Java_com_rm_acidulous_engine_EngineNative_nativeWorstRackUs(JNIEnv *, jobject, jint rack) {
     return host().worstRackUs(rack);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeRackPercentileUs(JNIEnv *, jobject, jint rack) {
+Java_com_rm_acidulous_engine_EngineNative_nativeRackPercentileUs(JNIEnv *, jobject, jint rack) {
     return host().rackPercentileUs(rack);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeResetRackCosts(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeResetRackCosts(JNIEnv *, jobject) {
     host().resetRackCosts();
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeWorstRackWasFrozen(JNIEnv *, jobject, jint rack) {
+Java_com_rm_acidulous_engine_EngineNative_nativeWorstRackWasFrozen(JNIEnv *, jobject, jint rack) {
     return host().worstRackWasFrozen(rack) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeInterruptedPercent(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeInterruptedPercent(JNIEnv *, jobject) {
     return host().interruptedPercent();
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeHintRunning(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeHintRunning(JNIEnv *, jobject) {
     return host().hintRunning() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeHintAvailable(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeHintAvailable(JNIEnv *, jobject) {
     return host().hintAvailable() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeHintState(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeHintState(JNIEnv *, jobject) {
     return host().hintState();
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeRecentCallbackUs(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeRecentCallbackUs(JNIEnv *, jobject) {
     return host().recentCallbackUs();
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeRackCostUs(JNIEnv *, jobject, jint rack) {
+Java_com_rm_acidulous_engine_EngineNative_nativeRackCostUs(JNIEnv *, jobject, jint rack) {
     return host().rackCostUs(rack);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeWorstCallbackCpuUs(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeWorstCallbackCpuUs(JNIEnv *, jobject) {
     return host().worstCallbackCpuUs();
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLateCallbacks(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLateCallbacks(JNIEnv *, jobject) {
     return host().lateCallbacks();
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStalledCallbacks(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeStalledCallbacks(JNIEnv *, jobject) {
     return host().stalledCallbacks();
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCallbackBudgetUs(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeCallbackBudgetUs(JNIEnv *, jobject) {
     return host().callbackBudgetUs();
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeReadPeakLevel(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeReadPeakLevel(JNIEnv *, jobject) {
     return host().peakLevel();
 }
 
 // --- Transport ---------------------------------------------------------------
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeTransportPlay(JNIEnv *, jobject, jint sceneIdx) {
+Java_com_rm_acidulous_engine_EngineNative_nativeTransportPlay(JNIEnv *, jobject, jint sceneIdx) {
     host().transportPlay(sceneIdx);
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeRenderSong(JNIEnv *env, jobject, jstring path, jfloat tailSeconds,
+Java_com_rm_acidulous_engine_EngineNative_nativeRenderSong(JNIEnv *env, jobject, jstring path, jfloat tailSeconds,
                                                            jint format, jint bits, jint startScene, jfloat maxSeconds) {
     std::string error;
     const bool ok = host().renderSong(toStdString(env, path), tailSeconds, static_cast<acidulous::AudioFormat>(format),
@@ -793,7 +793,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeRenderSong(JNIEnv *env, jobject,
 
 /** Paths and the rack each belongs to, in step; a rack of -1 is the mix. */
 JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeRenderStems(JNIEnv *env, jobject, jobjectArray paths,
+Java_com_rm_acidulous_engine_EngineNative_nativeRenderStems(JNIEnv *env, jobject, jobjectArray paths,
                                                             jintArray racks, jfloat tailSeconds, jint format,
                                                             jint bits, jint startScene, jfloat maxSeconds) {
     const jsize count = env->GetArrayLength(paths);
@@ -813,11 +813,11 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeRenderStems(JNIEnv *env, jobject
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCancelRender(JNIEnv *, jobject) { host().cancelRender(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeCancelRender(JNIEnv *, jobject) { host().cancelRender(); }
 
 /** [integrated LUFS, true peak dBTP], or null with the error left in the log. */
 JNIEXPORT jfloatArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMeasureLoudness(JNIEnv *env, jobject, jfloat tailSeconds, jint startScene,
+Java_com_rm_acidulous_engine_EngineNative_nativeMeasureLoudness(JNIEnv *env, jobject, jfloat tailSeconds, jint startScene,
                                                                jfloat maxSeconds) {
     float lufs = 0.0f, tp = 0.0f;
     std::string error;
@@ -829,87 +829,87 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeMeasureLoudness(JNIEnv *env, job
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetRenderGain(JNIEnv *, jobject, jfloat db) { host().setRenderGain(db); }
+Java_com_rm_acidulous_engine_EngineNative_nativeSetRenderGain(JNIEnv *, jobject, jfloat db) { host().setRenderGain(db); }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetCountInBars(JNIEnv *, jobject, jint bars) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetCountInBars(JNIEnv *, jobject, jint bars) {
     host().setCountInBars(bars);
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCountInRemaining(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeCountInRemaining(JNIEnv *, jobject) {
     return static_cast<jlong>(host().countInRemaining());
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeIsRendering(JNIEnv *, jobject) { return host().isRendering() ? JNI_TRUE : JNI_FALSE; }
+Java_com_rm_acidulous_engine_EngineNative_nativeIsRendering(JNIEnv *, jobject) { return host().isRendering() ? JNI_TRUE : JNI_FALSE; }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeRenderedSeconds(JNIEnv *, jobject) { return host().renderedSeconds(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeRenderedSeconds(JNIEnv *, jobject) { return host().renderedSeconds(); }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeRenderedPeak(JNIEnv *, jobject) { return host().renderedPeak(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeRenderedPeak(JNIEnv *, jobject) { return host().renderedPeak(); }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetStopAtEnd(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetStopAtEnd(JNIEnv *, jobject, jboolean on) {
     host().setStopAtEnd(on == JNI_TRUE);
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeIsStopAtEndArmed(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeIsStopAtEndArmed(JNIEnv *, jobject) {
     return host().isStopAtEndArmed() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeQueueScene(JNIEnv *, jobject, jint idx) { host().queueScene(idx); }
+Java_com_rm_acidulous_engine_EngineNative_nativeQueueScene(JNIEnv *, jobject, jint idx) { host().queueScene(idx); }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeQueuedScene(JNIEnv *, jobject) { return host().queuedScene(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeQueuedScene(JNIEnv *, jobject) { return host().queuedScene(); }
 
 // --- Clip mode ---------------------------------------------------------------
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetLauncher(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetLauncher(JNIEnv *, jobject, jboolean on) {
     host().setLauncher(on == JNI_TRUE);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetFill(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetFill(JNIEnv *, jobject, jboolean on) {
     host().setFill(on == JNI_TRUE);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetLaunchQuantise(JNIEnv *, jobject, jint ticks) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetLaunchQuantise(JNIEnv *, jobject, jint ticks) {
     host().setLaunchQuantise(ticks);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLaunchClip(JNIEnv *, jobject, jint rack, jlong sceneId) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLaunchClip(JNIEnv *, jobject, jint rack, jlong sceneId) {
     host().launchClip(rack, sceneId);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeStopAllClips(JNIEnv *, jobject) { host().stopAllClips(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeStopAllClips(JNIEnv *, jobject) { host().stopAllClips(); }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeCancelLaunch(JNIEnv *, jobject, jint rack) {
+Java_com_rm_acidulous_engine_EngineNative_nativeCancelLaunch(JNIEnv *, jobject, jint rack) {
     host().cancelLaunch(rack);
 }
 
 // --- MIDI out ----------------------------------------------------------------
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetClockOut(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetClockOut(JNIEnv *, jobject, jboolean on) {
     host().setClockOut(on == JNI_TRUE);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetExternalSync(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetExternalSync(JNIEnv *, jobject, jboolean on) {
     host().setExternalSync(on == JNI_TRUE);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetTuning(JNIEnv *env, jobject, jint rack, jfloatArray ratios) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetTuning(JNIEnv *env, jobject, jint rack, jfloatArray ratios) {
     if (ratios == nullptr || env->GetArrayLength(ratios) < 128) {
         host().setTuning(rack, nullptr);
         return;
@@ -920,35 +920,35 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSetTuning(JNIEnv *env, jobject, 
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetLink(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetLink(JNIEnv *, jobject, jboolean on) {
     host().setLinkEnabled(on == JNI_TRUE);
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLinkEnabled(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLinkEnabled(JNIEnv *, jobject) {
     return host().linkEnabled() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetLinkStartStop(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetLinkStartStop(JNIEnv *, jobject, jboolean on) {
     host().setLinkStartStop(on == JNI_TRUE);
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLinkStatus(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLinkStatus(JNIEnv *, jobject) {
     return static_cast<jlong>(host().linkStatus());
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMidiClockIn(JNIEnv *, jobject, jlong frame, jint status, jint d1, jint d2) {
+Java_com_rm_acidulous_engine_EngineNative_nativeMidiClockIn(JNIEnv *, jobject, jlong frame, jint status, jint d1, jint d2) {
     host().midiClockIn(frame, static_cast<uint8_t>(status), static_cast<uint8_t>(d1), static_cast<uint8_t>(d2));
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSyncState(JNIEnv *, jobject) { return host().syncState(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeSyncState(JNIEnv *, jobject) { return host().syncState(); }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeDrainMidiOut(JNIEnv *env, jobject, jlongArray out) {
+Java_com_rm_acidulous_engine_EngineNative_nativeDrainMidiOut(JNIEnv *env, jobject, jlongArray out) {
     const jsize cap = env->GetArrayLength(out) / 2;
     if (cap <= 0) return 0;
     jlong *data = env->GetLongArrayElements(out, nullptr);
@@ -959,7 +959,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeDrainMidiOut(JNIEnv *env, jobjec
 
 /** frame, nanoseconds, sample rate - or a zero frame when the stream cannot say yet. */
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeAudioAnchor(JNIEnv *env, jobject, jlongArray out) {
+Java_com_rm_acidulous_engine_EngineNative_nativeAudioAnchor(JNIEnv *env, jobject, jlongArray out) {
     if (env->GetArrayLength(out) < 3) return;
     int64_t frame = 0, nanos = 0;
     int32_t rate = acidulous::kSampleRate;
@@ -969,7 +969,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeAudioAnchor(JNIEnv *env, jobject
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeLaunchStates(JNIEnv *env, jobject, jlongArray out) {
+Java_com_rm_acidulous_engine_EngineNative_nativeLaunchStates(JNIEnv *env, jobject, jlongArray out) {
     const jsize n = env->GetArrayLength(out);
     int64_t packed[acidulous::kRackCount] = {};
     host().launchStates(packed, static_cast<int32_t>(n));
@@ -978,38 +978,38 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeLaunchStates(JNIEnv *env, jobjec
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeTransportStop(JNIEnv *, jobject) { host().transportStop(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeTransportStop(JNIEnv *, jobject) { host().transportStop(); }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeTransportRewind(JNIEnv *, jobject) { host().transportRewind(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeTransportRewind(JNIEnv *, jobject) { host().transportRewind(); }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeIsPlaying(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeIsPlaying(JNIEnv *, jobject) {
     return host().isPlaying() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetLoopScene(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetLoopScene(JNIEnv *, jobject, jboolean on) {
     host().setLoopScene(on == JNI_TRUE);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetLoopSong(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetLoopSong(JNIEnv *, jobject, jboolean on) {
     host().setLoopSong(on == JNI_TRUE);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetRecordArmed(JNIEnv *, jobject, jboolean on) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSetRecordArmed(JNIEnv *, jobject, jboolean on) {
     host().setRecordArmed(on == JNI_TRUE);
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeIsRecordArmed(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeIsRecordArmed(JNIEnv *, jobject) {
     return host().isRecordArmed() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeDrainRecorded(JNIEnv *env, jobject, jlongArray out) {
+Java_com_rm_acidulous_engine_EngineNative_nativeDrainRecorded(JNIEnv *env, jobject, jlongArray out) {
     if (out == nullptr) {
         return 0;
     }
@@ -1028,30 +1028,30 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeDrainRecorded(JNIEnv *env, jobje
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetRecordedDropped(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGetRecordedDropped(JNIEnv *, jobject) {
     return static_cast<jint>(host().recordedDropped());
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSetTempo(JNIEnv *, jobject, jfloat bpm) { host().setTempo(bpm); }
+Java_com_rm_acidulous_engine_EngineNative_nativeSetTempo(JNIEnv *, jobject, jfloat bpm) { host().setTempo(bpm); }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetTempo(JNIEnv *, jobject) { return host().tempo(); }
+Java_com_rm_acidulous_engine_EngineNative_nativeGetTempo(JNIEnv *, jobject) { return host().tempo(); }
 
 JNIEXPORT jlong JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetPositionPacked(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGetPositionPacked(JNIEnv *, jobject) {
     return static_cast<jlong>(host().positionPacked());
 }
 
 // --- Song snapshot builder -----------------------------------------------------
 
 JNIEXPORT jlong JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotBegin(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotBegin(JNIEnv *, jobject) {
     return static_cast<jlong>(host().snapshotBegin());
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotAddScene(JNIEnv *, jobject, jlong handle, jlong sceneId,
+Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotAddScene(JNIEnv *, jobject, jlong handle, jlong sceneId,
                                                                  jint ticksPerBar, jint repeat, jfloat bpmOverride,
                                                                  jfloat rampToBpm, jint rampBars,
                                                                  jboolean smooth, jboolean fadeIn, jboolean fadeOut) {
@@ -1063,13 +1063,13 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotAddScene(JNIEnv *, jobje
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetClipCached(JNIEnv *, jobject, jlong handle, jint rack,
+Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotSetClipCached(JNIEnv *, jobject, jlong handle, jint rack,
                                                                       jint scene, jlong rev) {
     return host().snapshotSetClipCached(handle, rack, scene, rev) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetClip(JNIEnv *env, jobject, jlong handle, jint rack,
+Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotSetClip(JNIEnv *env, jobject, jlong handle, jint rack,
                                                                 jint scene, jlong rev, jint bars, jint playMode,
                                                                 jboolean mute, jint seed, jintArray notes,
                                                                 jfloatArray expr) {
@@ -1099,7 +1099,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetClip(JNIEnv *env, job
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetLane(JNIEnv *env, jobject, jlong handle, jint rack,
+Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotSetLane(JNIEnv *env, jobject, jlong handle, jint rack,
                                                                 jint scene, jstring machineType, jstring unit,
                                                                 jstring name, jboolean linear, jfloatArray points) {
     const jsize len = points != nullptr ? env->GetArrayLength(points) : 0;
@@ -1112,7 +1112,7 @@ Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotSetLane(JNIEnv *env, job
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamNames(JNIEnv *env, jobject, jstring type) {
+Java_com_rm_acidulous_engine_EngineNative_nativeMachineParamNames(JNIEnv *env, jobject, jstring type) {
     int32_t n = 0;
     const acidulous::ParamDef *defs = acidulous::MachineRegistry::paramDefs(toStdString(env, type).c_str(), n);
     jclass stringClass = env->FindClass("java/lang/String");
@@ -1141,63 +1141,63 @@ static jobjectArray paramInfoArray(JNIEnv *env, const acidulous::ParamDef *defs,
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeMachineParamInfo(JNIEnv *env, jobject, jstring type) {
+Java_com_rm_acidulous_engine_EngineNative_nativeMachineParamInfo(JNIEnv *env, jobject, jstring type) {
     int32_t n = 0;
     const acidulous::ParamDef *defs = acidulous::MachineRegistry::paramDefs(toStdString(env, type).c_str(), n);
     return paramInfoArray(env, defs, n);
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeInputModParamInfo(JNIEnv *env, jobject, jstring type) {
+Java_com_rm_acidulous_engine_EngineNative_nativeInputModParamInfo(JNIEnv *env, jobject, jstring type) {
     int32_t n = 0;
     const acidulous::ParamDef *defs = acidulous::InputModRegistry::paramDefs(toStdString(env, type).c_str(), n);
     return paramInfoArray(env, defs, n);
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeEffectParamInfo(JNIEnv *env, jobject, jstring type) {
+Java_com_rm_acidulous_engine_EngineNative_nativeEffectParamInfo(JNIEnv *env, jobject, jstring type) {
     int32_t n = 0;
     const acidulous::ParamDef *defs = acidulous::EffectRegistry::paramDefs(toStdString(env, type).c_str(), n);
     return paramInfoArray(env, defs, n);
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotCommit(JNIEnv *, jobject, jlong handle) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotCommit(JNIEnv *, jobject, jlong handle) {
     return host().snapshotCommit(handle) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeSnapshotAbandon(JNIEnv *, jobject, jlong handle) {
+Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotAbandon(JNIEnv *, jobject, jlong handle) {
     host().snapshotAbandon(handle);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetNotesOn(JNIEnv *, jobject, jint rackId) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGetNotesOn(JNIEnv *, jobject, jint rackId) {
     return static_cast<jint>(host().notesOn(rackId));
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeReadRackPeak(JNIEnv *, jobject, jint rackId) {
+Java_com_rm_acidulous_engine_EngineNative_nativeReadRackPeak(JNIEnv *, jobject, jint rackId) {
     return host().rackPeak(rackId);
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetMasterFade(JNIEnv *, jobject) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGetMasterFade(JNIEnv *, jobject) {
     return host().masterFade();
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeParamNormalized(JNIEnv *env, jobject, jint rackId, jstring unit, jstring name) {
+Java_com_rm_acidulous_engine_EngineNative_nativeParamNormalized(JNIEnv *env, jobject, jint rackId, jstring unit, jstring name) {
     return host().paramNormalized(rackId, toStdString(env, unit), toStdString(env, name));
 }
 
 JNIEXPORT jfloat JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeDebugParam(JNIEnv *env, jobject, jint rackId, jstring name) {
+Java_com_rm_acidulous_engine_EngineNative_nativeDebugParam(JNIEnv *env, jobject, jint rackId, jstring name) {
     return host().debugParam(rackId, toStdString(env, name));
 }
 
 JNIEXPORT jint JNICALL
-Java_com_rm_acidulous_engine_NativeEngine_nativeGetNotesOff(JNIEnv *, jobject, jint rackId) {
+Java_com_rm_acidulous_engine_EngineNative_nativeGetNotesOff(JNIEnv *, jobject, jint rackId) {
     return static_cast<jint>(host().notesOff(rackId));
 }
 
