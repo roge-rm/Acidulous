@@ -128,9 +128,14 @@ class AlsaSeqMidi private constructor(private val ownClient: Int, private val po
 
     override val devices: List<MidiDeviceDesc> get() = scan().map { it.desc }
 
+    private fun describe(d: SeqDevice) =
+        "${d.desc.name} (client ${d.client}, in ${d.sources}, out ${d.destinations}${if (d.desc.usb) ", usb" else ""})"
+
     /** Who hears each port: client and port, as one number. */
     private val listeners = ConcurrentHashMap<Long, (ByteArray, Int, Int, Long) -> Unit>()
     private fun keyOf(client: Int, port: Int) = (client.toLong() shl 32) or port.toLong()
+
+    private var said = 0
 
     init {
         Thread({
@@ -142,7 +147,18 @@ class AlsaSeqMidi private constructor(private val ownClient: Int, private val po
                 if (n == 0) continue
                 // Stamped on arrival: the hub wants System.nanoTime's base.
                 val at = System.nanoTime()
-                listeners[keyOf(from[0], from[1])]?.invoke(buffer.copyOf(n), 0, n, at)
+                val heard = listeners[keyOf(from[0], from[1])]
+                // The first few, heard or not, so a log says whether anything
+                // arrives at all and from where.
+                if (said < 8) {
+                    said++
+                    Log.i(TAG, "in from ${from[0]}:${from[1]}: ${buffer.take(n.coerceAtMost(6)).joinToString(" ") { "%02X".format(it) }}" +
+                        if (heard == null) " (nothing connected to it)" else "")
+                }
+                // Whatever the hub does with it, the reading goes on: an
+                // exception here would end this thread, and every input with it.
+                if (heard != null) runCatching { heard(buffer.copyOf(n), 0, n, at) }
+                    .onFailure { Log.w(TAG, "a message from ${from[0]}:${from[1]} could not be handled", it) }
             }
         }, "midi-in").apply { isDaemon = true }.start()
     }
@@ -158,10 +174,11 @@ class AlsaSeqMidi private constructor(private val ownClient: Int, private val po
         // By id and client both: plugged back in, a device keeps its id and
         // gets a new client, and the hub's hold on the old one is dead.
         var before = known.associateBy { it.desc.id }
+        before.values.forEach { Log.i(TAG, "device ${describe(it)}") }
         thread.every(pollMs) {
             val now = scan().associateBy { it.desc.id }
-            for ((id, d) in before) if (now[id]?.client != d.client) removed(d.desc)
-            for ((id, d) in now) if (before[id]?.client != d.client) added(d.desc)
+            for ((id, d) in before) if (now[id]?.client != d.client) { Log.i(TAG, "gone ${describe(d)}"); removed(d.desc) }
+            for ((id, d) in now) if (before[id]?.client != d.client) { Log.i(TAG, "device ${describe(d)}"); added(d.desc) }
             before = now
         }
     }

@@ -234,6 +234,7 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeListen(JNIEnv *, jclass, jint client
     const int err = on ? alsa.snd_seq_connect_from(seq, inPort, client, port)
                        : alsa.snd_seq_disconnect_from(seq, inPort, client, port);
     if (err < 0 && on) LOGW("could not listen to %d:%d: %s", client, port, alsa.snd_strerror(err));
+    else LOGI("%s %d:%d", on ? "listening to" : "no longer listening to", client, port);
     return err >= 0 ? JNI_TRUE : JNI_FALSE;
 }
 
@@ -261,7 +262,16 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeSend(JNIEnv *env, jclass, jint clien
         snd_seq_ev_set_source(&ev, outPort);
         snd_seq_ev_set_dest(&ev, client, port);
         snd_seq_ev_set_direct(&ev);
-        if (alsa.snd_seq_event_output_direct(seq, &ev) < 0) ok = false;
+        const int err = alsa.snd_seq_event_output_direct(seq, &ev);
+        if (err < 0) {
+            // Said once per destination and reason, not on every clock tick.
+            static int lastClient = -1, lastPort = -1, lastErr = 0;
+            if (client != lastClient || port != lastPort || err != lastErr) {
+                LOGW("could not send to %d:%d: %s", client, port, alsa.snd_strerror(err));
+                lastClient = client; lastPort = port; lastErr = err;
+            }
+            ok = false;
+        }
     }
     return ok ? JNI_TRUE : JNI_FALSE;
 }
