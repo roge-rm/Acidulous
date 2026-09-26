@@ -479,5 +479,27 @@ fun KeysOverlay(onDismiss: () -> Unit) {
                 }
             }
         }
+        // What a computer adds that is not a binding: the window's own key,
+        // and what the mouse does in place of a finger.
+        if (com.rm.acidulous.AppHost.current.onDesktop) {
+            androidx.compose.material3.Text(
+                stringResource(Res.string.keys_group_desktop), color = c.teal, fontSize = 11.sp,
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            for ((what, keys) in listOf(
+                Res.string.keys_full_screen to "F11",
+                Res.string.keys_right_click to stringResource(Res.string.keys_right_click_keys),
+                Res.string.keys_wheel_sideways to "Shift+wheel",
+                Res.string.keys_wheel_zoom to "Ctrl+wheel",
+            )) {
+                androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth()) {
+                    androidx.compose.material3.Text(stringResource(what), color = c.text, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                    androidx.compose.material3.Text(
+                        keys, color = c.accent, fontSize = 13.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                    )
+                }
+            }
+        }
     }
 }

@@ -1,7 +1,14 @@
 #!/bin/sh
 # Acidulous, from its Debian package: the app's jars on the system's Java,
 # with the engine's native libraries beside them.
+#
+# If the JVM itself crashes - the engine's native code, say - its report goes
+# where the app looks for crash reports on the next start, rather than into
+# whatever folder it was started from.
+crashes="${XDG_DATA_HOME:-$HOME/.local/share}/acidulous/crashes"
+mkdir -p "$crashes"
 exec java \
+    -XX:ErrorFile="$crashes/hs_err_%p.log" \
     -Djava.library.path=/usr/lib/acidulous/native \
     --enable-native-access=ALL-UNNAMED \
     -cp '/usr/lib/acidulous/lib/*' \

@@ -61,39 +61,61 @@ def unlink(text):
     return LINK.sub(r"\1", text)
 
 
-# --- The same manual for a mouse -------------------------------------------
+# --- The same manual on a computer -----------------------------------------
 #
-# The manual is written for the phone, which is the app's home, and says "tap".
-# The desktop build shows the same words with a mouse's in their place: a
-# second text for a block, written here only where it differs and chosen by
-# the Help window where the pointer is a mouse. The Markdown stays one text.
+# The manual is written for the phone, which is the app's home: it says "tap",
+# "this phone", "the share sheet". The desktop build shows the same manual in a
+# computer's words: a second text for a block, written here only where it
+# differs, and chosen by the Help window on a desktop. The Markdown stays one
+# text - Android's, as it reads on the git.
 #
-# Three pieces, all small enough to read at a glance:
+# Five pieces, all small enough to read at a glance:
 #
-# - MOUSE_WORDS, applied to every block: tap becomes click. Nothing else a
-#   finger does changes its name - "hold" is a mouse button held down just
-#   the same, and "touching the file" was never about a finger.
+# - DESKTOP_WORDS, applied to every block: tap becomes click, a phone a
+#   computer. Nothing else a finger does changes its name - "hold" is a mouse
+#   button held down just the same (and a right-click too: see 01), and
+#   "touching the file" was never about a finger.
+# - KEEP, phrases the words leave alone: tap tempo is tapped with whatever you
+#   have, and a phone that is somebody else's, or a speaker, is still a phone.
 # - TOUCH_ONLY, headings whose blocks are left as they are: the taps there are
-#   on a controller's own pads, or on the phone's own screen reader.
-# - MOUSE_SENTENCES, whole sentences a word could not fix: two fingers and a
-#   pinch, which a mouse does with its wheel. Each must still be found in the
-#   manual, or --check says so, so rewriting one cannot quietly drop it.
-MOUSE_WORDS = [
+#   on a controller's own pads.
+# - PHONE_ONLY, headings the desktop leaves out, with everything under them:
+#   TalkBack, and the square phone's layout.
+# - DESKTOP_SENTENCES, whole sentences a word could not fix: two fingers and a
+#   pinch, which a mouse does with its wheel, and what a desktop does not do -
+#   the share sheet, AAC, keeping the screen awake. An empty one leaves the
+#   sentence out. Each must still be found in the manual, or --check says so,
+#   so rewriting one cannot quietly drop it.
+#
+# And lines only a computer needs are written in the Markdown as a comment -
+# `<!-- desktop: text -->`, or `<!-- desktop: - a bullet -->` - which the git
+# does not show and the phone's manual does not have.
+DESKTOP_WORDS = [
     (re.compile(r"\b([Dd])ouble tap\b"), lambda m: m.group(1) + "ouble-click"),
     (re.compile(r"\b([Tt])ap(s|ped|ping)?\b"),
      lambda m: ("C" if m.group(1) == "T" else "c") + "lick" + {None: "", "s": "s", "ped": "ed", "ping": "ing"}[m.group(2)]),
+    (re.compile(r"\bphone(s|'s)?\b"), lambda m: "computer" + (m.group(1) or "")),
+]
+
+KEEP = [
+    "**tap** sets it from four taps.",
+    "Handling noise from holding the phone",
+    "on a phone speaker",
+    "on a phone that has never seen the file",
 ]
 
 TOUCH_ONLY = {
     "Playing from a keyboard",  # an Exquis's and a Launchpad's pads, and MPE fingers
     "MPE",
-    "TalkBack",
 }
 
-# The one tap that is a name: tap tempo is tapped with whatever you have.
-KEEP = ["**tap** sets it from four taps."]
+PHONE_ONLY = {
+    "TalkBack",
+    "On a square screen",
+}
 
-MOUSE_SENTENCES = {
+DESKTOP_SENTENCES = {
+    # The pointer.
     "Drag with two fingers to move around the grid, and pinch to make the cells bigger or smaller. One finger still opens and launches clips.":
         "The mouse wheel moves around the grid, and sideways with Shift held. Ctrl and the wheel make the cells bigger or smaller.",
     "On a tablet the cells grow to fill the screen, up to twice their size, until you pinch.":
@@ -103,33 +125,65 @@ MOUSE_SENTENCES = {
     "The arrows, or swipes on a touchpad, move between controls.":
         "The arrows move between controls.",
     "Long-press redo to enter mapping mode.":
-        "Hold the mouse button down on redo to enter mapping mode.",
+        "Hold the mouse button down on redo, or right-click it, to enter mapping mode.",
+    "Turn the phone and press it again for a layout that suits that way round.":
+        "Make the window wider or taller and press it again for a layout that suits that shape.",
+    # What a computer does not do, or does its own way.
+    "Playing stops by itself when a call comes in, another app starts playing, or headphones are unplugged, so it never carries on out of the speaker.":
+        "",
+    "Reports stay on the phone unless you share one; the last one is also in About.":
+        "Reports stay on this computer, in `~/.local/share/acidulous/crashes`, unless you share one; the last one is also in About.",
+    "**MP3** and **AAC** - at the bitrate you choose.":
+        "**MP3** - at the bitrate you choose. (AAC is the phone's own encoder.)",
+    "When an export finishes, **Share** sends it straight on through the phone's share sheet: email, Drive, a chat, or another app. Stems go as all their files together.":
+        "When an export finishes, **Share** opens the folder it was saved in, to send it on from there.",
+    "**Share song…** in the file menu sends the open song as a bundle, samples included, for someone else to open in Acidulous.":
+        "**Share song…** in the file menu makes the open song a bundle, samples included, and opens the folder it is in, for someone else to open in Acidulous.",
+    "The other way works too. Open a MIDI file, a bundle or a sound with Acidulous, or share one to it, and it goes wherever **Import…** would have put it.":
+        "",
+    "dark, light, high contrast, or follow the phone.":
+        "dark, light, high contrast, or follow the system.",
+    "**screen while playing** - whether the screen can turn off while playing.":
+        "",
+    "**scheduler hint** - whether the phone accepted the app's request to treat the audio as time-critical. Some phones refuse; nothing to do about it here.":
+        "**scheduler hint** - the phone's alone: on a computer it always says not available, and there is nothing to do about it.",
+    "Acidulous works with a phone's own keyboard, like the ones on square phones, and with USB or Bluetooth keyboards.":
+        "Acidulous works with the computer's keyboard.",
 }
 
 
-def for_mouse(text, headings, used):
-    """[text] as the desktop says it, or None where it says the same.
+def for_desktop(text, headings, used):
+    """[text] as the desktop says it, or None where it says the same; "" leaves it out.
 
     [headings] are the ones it is under, the section's and a subheading's:
     MPE, the Exquis and the Launchpad are all under "Playing from a keyboard".
     """
-    if any(h in TOUCH_ONLY for h in headings):
+    if any(h in PHONE_ONLY for h in headings if h):
+        return ""
+    if any(h in TOUCH_ONLY for h in headings if h):
         return None
     out = text
-    for touch, mouse in MOUSE_SENTENCES.items():
-        if touch in out:
-            out = out.replace(touch, mouse)
-            used.add(touch)
     kept = {}
+    # A replaced sentence is already the desktop's words, and the word rules
+    # must not have it: "the phone's own encoder" means the phone.
+    for n, (phone, desktop) in enumerate(DESKTOP_SENTENCES.items()):
+        if phone in out:
+            kept[f"\x01{n}\x01"] = desktop
+            out = out.replace(phone, f"\x01{n}\x01")
+            used.add(phone)
     for i, phrase in enumerate(KEEP):
         if phrase in out:
             kept[f"\x00{i}\x00"] = phrase
             out = out.replace(phrase, f"\x00{i}\x00")
-    for pattern, swap in MOUSE_WORDS:
+    for pattern, swap in DESKTOP_WORDS:
         out = pattern.sub(swap, out)
     for mark, phrase in kept.items():
         out = out.replace(mark, phrase)
+    out = out.strip()
     return None if out == text else out
+
+
+DESKTOP_LINE = re.compile(r"^<!-- desktop: (.+) -->$")
 
 
 def parse(path):
@@ -139,7 +193,7 @@ def parse(path):
 
     def flush():
         if para:
-            blocks.append((PARA, " ".join(para)))
+            blocks.append((PARA, " ".join(para), False))
             para.clear()
 
     for raw in path.read_text(encoding="utf-8").splitlines():
@@ -147,7 +201,15 @@ def parse(path):
         if not line.strip():
             flush()
             continue
-        if line.startswith("# "):
+        only = DESKTOP_LINE.match(line.strip())
+        if only:
+            flush()
+            inner = only.group(1).strip()
+            if inner.startswith("- "):
+                blocks.append((BULLET, inner[2:].strip(), True))
+            else:
+                blocks.append((PARA, inner, True))
+        elif line.startswith("# "):
             flush()
             title = line[2:].strip()
         elif line.startswith("> "):
@@ -155,22 +217,22 @@ def parse(path):
             summary = line[2:].strip()
         elif line.startswith("## "):
             flush()
-            blocks.append((HEADING, line[3:].strip()))
+            blocks.append((HEADING, line[3:].strip(), False))
         elif line.startswith("### "):
             # Printed as a paragraph, hashes and all, until this line: ten of
             # them across four pages read "### MPE".
             flush()
-            blocks.append((SUBHEADING, line[4:].strip()))
+            blocks.append((SUBHEADING, line[4:].strip(), False))
         elif line.startswith("- "):
             flush()
-            blocks.append((BULLET, line[2:].strip()))
+            blocks.append((BULLET, line[2:].strip(), False))
         elif re.match(r"^\d+\. ", line):
             flush()
-            blocks.append((STEP, line.split(". ", 1)[1].strip()))
-        elif line.startswith("  ") and blocks and blocks[-1][0] in (BULLET, STEP) and not para:
+            blocks.append((STEP, line.split(". ", 1)[1].strip(), False))
+        elif line.startswith("  ") and blocks and blocks[-1][0] in (BULLET, STEP) and not para and not blocks[-1][2]:
             # A continuation line of the item above, indented.
-            kind, text = blocks[-1]
-            blocks[-1] = (kind, text + " " + line.strip())
+            kind, text, only = blocks[-1]
+            blocks[-1] = (kind, text + " " + line.strip(), only)
         else:
             para.append(line.strip())
     flush()
@@ -205,9 +267,13 @@ def kotlin(sections, used):
         "/** What a line of the manual is. Inline `code` and **bold** stay in the text. */",
         "enum class ManualKind { Heading, Para, Bullet, Step, Subheading }",
         "",
-        "/** [mouse] is the same words where the pointer is a mouse: \"click\" for \"tap\". Null where they are the same. */",
-        "class ManualBlock(val kind: ManualKind, val text: String, val mouse: String? = null) {",
-        "    fun text(mouse: Boolean): String = if (mouse) this.mouse ?: text else text",
+        "/**",
+        " * [desktop] is the same words on a computer - \"click\" for \"tap\", no share",
+        " * sheet - or null where they are the same. Empty text is a line the one",
+        " * platform leaves out: a computer's own lines are empty on the phone.",
+        " */",
+        "class ManualBlock(val kind: ManualKind, val text: String, val desktop: String? = null) {",
+        "    fun text(desktop: Boolean): String = if (desktop) this.desktop ?: text else text",
         "}",
         "",
         "class ManualSection(",
@@ -216,7 +282,11 @@ def kotlin(sections, used):
         "    val blocks: List<ManualBlock>,",
         "    /** Pages of this one's own: a machine is more than a line. */",
         "    val children: List<ManualSection> = emptyList(),",
-        ")",
+        "    /** [summary] on a computer, where it differs. */",
+        "    val desktopSummary: String? = null,",
+        ") {",
+        "    fun summary(desktop: Boolean): String = if (desktop) desktopSummary ?: summary else summary",
+        "}",
         "",
         "object Manual {",
         "    val sections: List<ManualSection> = listOf(",
@@ -226,21 +296,29 @@ def kotlin(sections, used):
     def emit(title, summary, blocks, kids, pad):
         out.append(f"{pad}ManualSection({q(unlink(title))}, {q(unlink(summary))}, listOf(")
         heading, sub = title, None
-        for kind, text in blocks:
+        for kind, text, only in blocks:
             if kind == HEADING:
                 heading, sub = text, None
             elif kind == SUBHEADING:
                 sub = text
-            mouse = None if kind in (HEADING, SUBHEADING) else for_mouse(unlink(text), (heading, sub), used)
-            extra = f", {q(mouse)}" if mouse else ""
-            out.append(f"{pad}    ManualBlock(ManualKind.{kinds[kind]}, {q(unlink(text))}{extra}),")
+            if only:
+                shown, desktop = "", unlink(text)
+            else:
+                shown = unlink(text)
+                # A heading is judged by itself: PHONE_ONLY names the heading.
+                under = (heading, None) if kind == HEADING else (heading, sub)
+                desktop = for_desktop(shown, under, used)
+            extra = f", {q(desktop)}" if desktop is not None else ""
+            out.append(f"{pad}    ManualBlock(ManualKind.{kinds[kind]}, {q(shown)}{extra}),")
+        desk = for_desktop(unlink(summary), (title,), used)
+        tail = f", desktopSummary = {q(desk)}" if desk is not None else ""
         if not kids:
-            out.append(f"{pad})),")
+            out.append(f"{pad}){tail}),")
             return
         out.append(f"{pad}), listOf(")
         for _, (t, s2, b2) in kids:
             emit(t, s2, b2, [], pad + "    ")
-        out.append(f"{pad})),")
+        out.append(f"{pad}){tail}),")
 
     for (title, summary, blocks), kids in sections:
         emit(title, summary, blocks, kids, "        ")
@@ -275,19 +353,19 @@ def main():
     sections = [(parse(p), children_of(p)) for p in files]
     used = set()
     text = kotlin(sections, used)
-    lost = [touch for touch in MOUSE_SENTENCES if touch not in used]
+    lost = [phone for phone in DESKTOP_SENTENCES if phone not in used]
     if lost:
-        print("  FAIL manual: a sentence the mouse wording replaces is no longer in manual/:")
-        for touch in lost:
-            print(f"       {touch}")
-        print("       update MOUSE_SENTENCES in tools/gen_manual.py to match")
+        print("  FAIL manual: a sentence the desktop wording replaces is no longer in manual/:")
+        for phone in lost:
+            print(f"       {phone}")
+        print("       update DESKTOP_SENTENCES in tools/gen_manual.py to match")
         sys.exit(1)
     index = indexed(files, sections)
-    words = sum(len(t.split()) for (_, _, bs), _ in sections for _, t in bs)
+    words = sum(len(t.split()) for (_, _, bs), _ in sections for _, t, only in bs if not only)
     pages = len(sections)
     for _, kids in sections:
         pages += len(kids)
-        words += sum(len(t.split()) for _, (_, _, bs) in kids for _, t in bs)
+        words += sum(len(t.split()) for _, (_, _, bs) in kids for _, t, only in bs if not only)
     if "--check" in sys.argv:
         for path, want in ((OUT, text), (INDEX, index)):
             have = path.read_text(encoding="utf-8") if path.exists() else ""

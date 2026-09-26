@@ -922,7 +922,7 @@ fun App(modifier: Modifier = Modifier) {
             },
         ) {
             Text(
-                stringResource(Res.string.app_crashed_note),
+                deviceStringResource(Res.string.app_crashed_note, Res.string.app_crashed_note_desktop),
                 fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi,
             )
         }

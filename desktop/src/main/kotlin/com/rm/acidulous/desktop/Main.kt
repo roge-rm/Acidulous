@@ -39,9 +39,12 @@ fun main() {
     val config = xdg("XDG_CONFIG_HOME", ".config").apply { mkdirs() }
     val data = xdg("XDG_DATA_HOME", ".local/share").apply { mkdirs() }
     val cache = xdg("XDG_CACHE_HOME", ".cache").apply { mkdirs() }
+    // Before anything else can throw, as on the phone; and the last runs'
+    // native crashes, which the JVM wrote where the launcher told it to.
+    val crashes = CrashReports(data).apply { install(); collect() }
 
     // What MainActivity.onCreate does on the phone, in the same order.
-    AppHost.current = DesktopHost(config)
+    AppHost.current = DesktopHost(config, crashes)
     UiPrefs.init(FilePrefs(File(config, "ui.properties")))
     Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
     Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }

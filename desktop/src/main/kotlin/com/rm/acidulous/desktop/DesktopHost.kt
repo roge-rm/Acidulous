@@ -16,18 +16,19 @@ import java.io.OutputStream
  * writing one is plain file I/O; sharing has no system sheet to hand to, so
  * it opens the folder the file is in instead.
  */
-class DesktopHost(private val configDir: File) : AppHost {
+class DesktopHost(private val configDir: File, private val crashes: CrashReports) : AppHost {
     override val versionName: String? = VERSION_NAME
     override val versionLong: String? = "$VERSION_NAME ($VERSION_CODE)"
 
     override fun licenceText(path: String): String? =
         javaClass.classLoader.getResourceAsStream(path)?.bufferedReader()?.use { it.readText() }
 
-    /** Crash reports are the phone's; a desktop run prints its trouble to the terminal. */
-    override fun latestCrashReport(): File? = null
-    override fun shareCrashReport(report: File) {}
-    override fun unreadCrashReport(): File? = null
-    override fun markCrashReportRead() {}
+    // Crash reports: see CrashReports. Sharing one opens the folder it is in,
+    // as sharing anything does here.
+    override fun latestCrashReport(): File? = crashes.latest()
+    override fun shareCrashReport(report: File) = openFolder(report.parentFile)
+    override fun unreadCrashReport(): File? = crashes.unread()
+    override fun markCrashReportRead() = crashes.markRead()
 
     override fun audioInputs(): List<AudioInput> = DesktopAudio.inputs()
 
@@ -56,6 +57,9 @@ class DesktopHost(private val configDir: File) : AppHost {
 
     override val platformName: String = "Linux"
     override val usesMouse: Boolean = true
+    override val onDesktop: Boolean = true
+    /** A desktop's screen saver is its own business: nothing here holds it off. */
+    override val canKeepScreenOn: Boolean = false
     override val canEncodeAac: Boolean = false
     override val usesOboe: Boolean = false
 

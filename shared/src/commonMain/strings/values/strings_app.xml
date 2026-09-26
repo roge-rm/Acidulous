@@ -35,6 +35,8 @@
     <string name="app_crashed_title">Acidulous stopped</string>
     <string name="app_crashed_share">Share report</string>
     <string name="app_crashed_note">It closed unexpectedly last time. A report was saved on this phone; sharing it helps get it fixed.</string>
+    <!-- Its twin in the desktop build. -->
+    <string name="app_crashed_note_desktop">It closed unexpectedly last time. A report was saved on this computer; sharing it helps get it fixed.</string>
 
     <!-- Importing -->
     <!-- A song made from a file whose name is only an extension. -->

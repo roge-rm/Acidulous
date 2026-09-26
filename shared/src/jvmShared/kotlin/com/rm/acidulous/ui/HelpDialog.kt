@@ -57,7 +57,7 @@ fun HelpDialog(onDismiss: () -> Unit) {
                     DialogRow(
                         mark = "›",
                         name = section.title,
-                        under = section.summary,
+                        under = section.summary(com.rm.acidulous.AppHost.current.onDesktop),
                     ) { reading = section }
                 }
             }
@@ -78,7 +78,7 @@ fun HelpDialog(onDismiss: () -> Unit) {
                 if (section.children.isNotEmpty()) {
                     ListSection(stringResource(Res.string.help_in_detail)) {
                         for (child in section.children) {
-                            DialogRow(mark = "›", name = child.title, under = child.summary) {
+                            DialogRow(mark = "›", name = child.title, under = child.summary(com.rm.acidulous.AppHost.current.onDesktop)) {
                                 page = child
                             }
                         }
@@ -102,11 +102,14 @@ fun HelpDialog(onDismiss: () -> Unit) {
 @Composable
 private fun ManualLine(block: ManualBlock) {
     val c = Acid.colors
-    // The phone's words, or a mouse's where the pointer is one: see gen_manual.py.
-    val text = inline(block.text(com.rm.acidulous.AppHost.current.usesMouse))
+    // The phone's words, or a computer's on one: see gen_manual.py. A line
+    // that is the other platform's alone is empty here, and not drawn.
+    val words = block.text(com.rm.acidulous.AppHost.current.onDesktop)
+    if (words.isEmpty()) return
+    val text = inline(words)
     when (block.kind) {
         ManualKind.Heading -> Text(
-            block.text,
+            words,
             color = c.teal,
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace,
@@ -115,7 +118,7 @@ private fun ManualLine(block: ManualBlock) {
         // A heading inside a heading's part: the body's own face, brighter and
         // heavier, so it reads as belonging to the teal one above it.
         ManualKind.Subheading -> Text(
-            block.text,
+            words,
             color = c.text,
             fontSize = 12.sp,
             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,

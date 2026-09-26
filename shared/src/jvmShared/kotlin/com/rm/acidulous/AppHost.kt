@@ -70,6 +70,16 @@ interface AppHost {
      * phone, whose words and gestures these are.
      */
     val usesMouse: Boolean get() = false
+
+    /**
+     * A computer rather than a phone, for the few words and pages that are
+     * about which one this is: "this phone", the share sheet, TalkBack. False
+     * on the phone, whose words these are.
+     */
+    val onDesktop: Boolean get() = false
+
+    /** Whether the screen can be kept on while playing: the phone's window flag. */
+    val canKeepScreenOn: Boolean get() = true
     /** Whether the audio stream is Oboe's (the phone) rather than miniaudio's (the desktop), for the About window's credits. */
     val usesOboe: Boolean get() = true
 

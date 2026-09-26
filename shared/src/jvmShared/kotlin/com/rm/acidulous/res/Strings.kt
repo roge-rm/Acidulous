@@ -34,6 +34,15 @@ fun stringResource(res: StringResource, vararg args: Any?): String =
 fun stringResource(touch: StringResource, mouse: StringResource): String =
     stringResource(if (com.rm.acidulous.AppHost.current.usesMouse) mouse else touch)
 
+/**
+ * The phone's words, [phone], or the desktop build's twin, [desktop], where
+ * the words are about which device this is ("saved on this phone"). Named with
+ * `_desktop`; see AppHost.onDesktop.
+ */
+@Composable
+fun deviceStringResource(phone: StringResource, desktop: StringResource): String =
+    stringResource(if (com.rm.acidulous.AppHost.current.onDesktop) desktop else phone)
+
 @Composable
 fun pluralStringResource(res: PluralStringResource, count: Int): String =
     org.jetbrains.compose.resources.pluralStringResource(res, count)

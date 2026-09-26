@@ -7,9 +7,13 @@ package com.rm.acidulous.model
 /** What a line of the manual is. Inline `code` and **bold** stay in the text. */
 enum class ManualKind { Heading, Para, Bullet, Step, Subheading }
 
-/** [mouse] is the same words where the pointer is a mouse: "click" for "tap". Null where they are the same. */
-class ManualBlock(val kind: ManualKind, val text: String, val mouse: String? = null) {
-    fun text(mouse: Boolean): String = if (mouse) this.mouse ?: text else text
+/**
+ * [desktop] is the same words on a computer - "click" for "tap", no share
+ * sheet - or null where they are the same. Empty text is a line the one
+ * platform leaves out: a computer's own lines are empty on the phone.
+ */
+class ManualBlock(val kind: ManualKind, val text: String, val desktop: String? = null) {
+    fun text(desktop: Boolean): String = if (desktop) this.desktop ?: text else text
 }
 
 class ManualSection(
@@ -18,12 +22,17 @@ class ManualSection(
     val blocks: List<ManualBlock>,
     /** Pages of this one's own: a machine is more than a line. */
     val children: List<ManualSection> = emptyList(),
-)
+    /** [summary] on a computer, where it differs. */
+    val desktopSummary: String? = null,
+) {
+    fun summary(desktop: Boolean): String = if (desktop) desktopSummary ?: summary else summary
+}
 
 object Manual {
     val sections: List<ManualSection> = listOf(
         ManualSection("A first song", "Tracks, scenes, clips, and a first sound.", listOf(
             ManualBlock(ManualKind.Para, "A song has up to sixteen tracks. Each track has one machine on it: a synth, a drum machine, a sampler and so on. The track and its instrument are the same thing, so there's no separate instrument list."),
+            ManualBlock(ManualKind.Para, "", "On a computer, a click is a tap and a right-click is a hold - so is holding the button down. The mouse wheel scrolls the grids, sideways with Shift held, and Ctrl and the wheel zoom them. **F11** switches full screen on and off."),
             ManualBlock(ManualKind.Heading, "The song grid"),
             ManualBlock(ManualKind.Para, "The first screen is the song grid. Tracks run down the left, one per row, and scenes run across the top, one per column. Where a track and a scene meet is a clip: the notes that track plays in that scene."),
             ManualBlock(ManualKind.Para, "The bar along the bottom is on every screen. Its right end always has the same five buttons in the same order: undo, redo, mixer, record and play."),
@@ -56,8 +65,8 @@ object Manual {
             ManualBlock(ManualKind.Bullet, "The loop button at the left of the bottom bar: **tap** it to choose what loops, the whole song or the current scene. **Hold** it to choose whether it loops at all: **⟳** loops forever, **⇥ end** plays through once and stops.", "The loop button at the left of the bottom bar: **click** it to choose what loops, the whole song or the current scene. **Hold** it to choose whether it loops at all: **⟳** loops forever, **⇥ end** plays through once and stops."),
             ManualBlock(ManualKind.Bullet, "Stop means stop. The next play starts from the top of the song."),
             ManualBlock(ManualKind.Bullet, "If something keeps sounding, **hold play** to silence everything: every note, echo and tail. **Panic** under About… in the file menu does the same."),
-            ManualBlock(ManualKind.Bullet, "Playing stops by itself when a call comes in, another app starts playing, or headphones are unplugged, so it never carries on out of the speaker."),
-            ManualBlock(ManualKind.Bullet, "If Acidulous ever closes unexpectedly, it says so the next time it opens and offers to share a report. Reports stay on the phone unless you share one; the last one is also in About."),
+            ManualBlock(ManualKind.Bullet, "Playing stops by itself when a call comes in, another app starts playing, or headphones are unplugged, so it never carries on out of the speaker.", ""),
+            ManualBlock(ManualKind.Bullet, "If Acidulous ever closes unexpectedly, it says so the next time it opens and offers to share a report. Reports stay on the phone unless you share one; the last one is also in About.", "If Acidulous ever closes unexpectedly, it says so the next time it opens and offers to share a report. Reports stay on this computer, in `~/.local/share/acidulous/crashes`, unless you share one; the last one is also in About."),
             ManualBlock(ManualKind.Subheading, "A scene's tempo"),
             ManualBlock(ManualKind.Para, "In a scene's settings, **tempo** can follow the song or be the scene's own. An own tempo either jumps in when the scene starts or glides in over its first bar."),
             ManualBlock(ManualKind.Para, "**Ramp at end** changes the tempo inside the scene: to the bpm set by **to**, over the last bars set by **over**. Slow down into the next scene, or speed up across a whole one. It happens on the scene's last time through, so a scene that repeats four times only slows at the very end. The next scene then starts at its own tempo. The header shows ↘ or ↗ on a scene with a ramp, and a MIDI export writes it as a tempo change on every beat."),
@@ -100,7 +109,7 @@ object Manual {
             ManualBlock(ManualKind.Para, "The tail (reverb, delay, long release) is rendered too and kept separately, so it rings over the next loop and keeps ringing when the clip stops, the same as the live machine would. The render keeps going until the sound has died away, up to eight seconds."),
             ManualBlock(ManualKind.Para, "If a scene ramps smoothly to a new tempo, frozen clips in it are time-stretched through the ramp without changing pitch."),
             ManualBlock(ManualKind.Para, "Changing the machine or either effect makes a freeze out of date, and so does changing the tempo. The clip gets a mark when that happens. Thaw it or freeze it again."),
-            ManualBlock(ManualKind.Heading, "When the phone can't keep up"),
+            ManualBlock(ManualKind.Heading, "When the phone can't keep up", "When the computer can't keep up"),
             ManualBlock(ManualKind.Para, "If the engine starts falling behind while you play, the tracks costing the most glow red, and so does the load meter in the header. Nothing stops."),
             ManualBlock(ManualKind.Para, "A track only glows when the engine is running late right then *and* that track is a big part of the load. Freezing it is usually the answer."),
             ManualBlock(ManualKind.Para, "With **diagnostics** on, **Settings · audio** has the details: the worst block, where the time went, and each track's cost."),
@@ -161,9 +170,9 @@ object Manual {
             ManualBlock(ManualKind.Para, "A lane leaves its knob where it finished. When you press play, every automated knob goes back to where it's set in the song first, so the song starts the same every time, and so does an export. In the launcher it doesn't: a clip you launch carries on from wherever the last one left things."),
             ManualBlock(ManualKind.Heading, "Folding things away"),
             ManualBlock(ManualKind.Para, "The lanes, the machine panel and the keyboard each fold away with the small arrow at their edge, which gives the grid more room."),
-            ManualBlock(ManualKind.Heading, "On a square screen"),
-            ManualBlock(ManualKind.Para, "On a phone about as wide as it is tall, the grid takes the top of the screen and the keyboard or the machine panel takes the bottom, one at a time. **keys** at the start of the bottom bar (**pads** on a drum machine) swaps between them; **fx** and the mixer bring the panel up."),
-            ManualBlock(ManualKind.Para, "Windows fit the screen there too, with no scrolling. The few that would not fit are split into pages. The arp is in three (**time · feel**, **pattern**, **chance · run**), the tempo window's key has a tab of its own, and so does the Sound window's input."),
+            ManualBlock(ManualKind.Heading, "On a square screen", ""),
+            ManualBlock(ManualKind.Para, "On a phone about as wide as it is tall, the grid takes the top of the screen and the keyboard or the machine panel takes the bottom, one at a time. **keys** at the start of the bottom bar (**pads** on a drum machine) swaps between them; **fx** and the mixer bring the panel up.", ""),
+            ManualBlock(ManualKind.Para, "Windows fit the screen there too, with no scrolling. The few that would not fit are split into pages. The arp is in three (**time · feel**, **pattern**, **chance · run**), the tempo window's key has a tab of its own, and so does the Sound window's input.", ""),
         )),
         ManualSection("The machines", "Nineteen instruments, a four-track, and what each is for.", listOf(
             ManualBlock(ManualKind.Para, "Every track has one machine. You pick it when you add the track, and you can change it any time from the name at the top of the editor. **Each machine has its own page below.** This page is for finding the right one."),
@@ -224,7 +233,7 @@ object Manual {
                 ManualBlock(ManualKind.Para, "A loop added from the library with **audio…** gets its tempo worked out the way Dice does it, from its length and where its hits fall. It loops round to fill the cell, and if the loop's tempo isn't the scene's, **tempo › takes** is switched to follow so it plays at the song's tempo."),
                 ManualBlock(ManualKind.Heading, "Playing a guitar through it"),
                 ManualBlock(ManualKind.Para, "**monitor**, under **tempo**, feeds the input into this track's output before its effects, so you can hear an amp in the first insert slot while you play. The recording itself stays dry, so you can change the amp later."),
-                ManualBlock(ManualKind.Para, "Monitor is off by default. Use headphones or an interface, because on the phone speaker it will feed back."),
+                ManualBlock(ManualKind.Para, "Monitor is off by default. Use headphones or an interface, because on the phone speaker it will feed back.", "Monitor is off by default. Use headphones or an interface, because on the computer speaker it will feed back."),
                 ManualBlock(ManualKind.Para, "**printed in**, next to it, is for effects you want recorded into the take. They run before the recorder, so they're committed. These are the same two input slots the recording window shows."),
                 ManualBlock(ManualKind.Heading, "Flattening"),
                 ManualBlock(ManualKind.Para, "**comp** mixes the four lanes (with their levels, mutes and fades) into one file in lane 1. The patch's tape colour isn't baked in. The original recordings stay in the library."),
@@ -468,13 +477,13 @@ object Manual {
                 ManualBlock(ManualKind.Heading, "The patch is text"),
                 ManualBlock(ManualKind.Para, "A Nexus patch is a list of modules and connections written out as text, so you can read it, copy it and send it to someone. It has its own screen, because a patch needs room."),
                 ManualBlock(ManualKind.Para, "Its knobs are normal parameters, so anything in a patch can be automated, mapped to a controller and recorded."),
-                ManualBlock(ManualKind.Para, "**fit** tidies the patch to the screen: it lays the modules out in the order the sound flows through them, from left to right, in as many rows as the screen's shape suits, then zooms to show all of it. Turn the phone and press it again for a layout that suits that way round. It's one step of undo, so the modules can go back where they were."),
+                ManualBlock(ManualKind.Para, "**fit** tidies the patch to the screen: it lays the modules out in the order the sound flows through them, from left to right, in as many rows as the screen's shape suits, then zooms to show all of it. Turn the phone and press it again for a layout that suits that way round. It's one step of undo, so the modules can go back where they were.", "**fit** tidies the patch to the screen: it lays the modules out in the order the sound flows through them, from left to right, in as many rows as the screen's shape suits, then zooms to show all of it. Make the window wider or taller and press it again for a layout that suits that shape. It's one step of undo, so the modules can go back where they were."),
                 ManualBlock(ManualKind.Heading, "Macros"),
                 ManualBlock(ManualKind.Para, "Eight macros, **macro1** to **macro8**, plus **morph**. The patch decides what they control, so a big patch can be played with a few knobs."),
                 ManualBlock(ManualKind.Heading, "MPE"),
                 ManualBlock(ManualKind.Para, "The **touch** module gives each voice the pressure and slide of the finger playing it, from an MPE controller or a keyboard with poly aftertouch. Patch its **prs** and **slide** into anything, like a filter's cutoff or a VCA."),
                 ManualBlock(ManualKind.Heading, "Audio input"),
-                ManualBlock(ManualKind.Para, "There's an audio input module, so anything coming into the phone can be run through a patch."),
+                ManualBlock(ManualKind.Para, "There's an audio input module, so anything coming into the phone can be run through a patch.", "There's an audio input module, so anything coming into the computer can be run through a patch."),
                 ManualBlock(ManualKind.Heading, "Tips"),
                 ManualBlock(ManualKind.Bullet, "Keep patches small and name your macros."),
                 ManualBlock(ManualKind.Bullet, "Wire **morph** to the two or three things that change the patch the most."),
@@ -991,7 +1000,7 @@ object Manual {
             ManualBlock(ManualKind.Bullet, "**Soft** (the left one) plays notes in more quietly while it's down."),
             ManualBlock(ManualKind.Para, "Pedals are recorded as lanes in the automation strip, one each, and you can draw them there by hand too. Drum machines ignore them."),
             ManualBlock(ManualKind.Heading, "Mapping a controller"),
-            ManualBlock(ManualKind.Para, "Long-press redo to enter mapping mode. Controls that can be mapped are highlighted. Tap one, then move a knob or press a key on your controller to link them. Knobs, faders, mixer controls and transport buttons can all be mapped, to a CC or a note.", "Hold the mouse button down on redo to enter mapping mode. Controls that can be mapped are highlighted. Click one, then move a knob or press a key on your controller to link them. Knobs, faders, mixer controls and transport buttons can all be mapped, to a CC or a note."),
+            ManualBlock(ManualKind.Para, "Long-press redo to enter mapping mode. Controls that can be mapped are highlighted. Tap one, then move a knob or press a key on your controller to link them. Knobs, faders, mixer controls and transport buttons can all be mapped, to a CC or a note.", "Hold the mouse button down on redo, or right-click it, to enter mapping mode. Controls that can be mapped are highlighted. Click one, then move a knob or press a key on your controller to link them. Knobs, faders, mixer controls and transport buttons can all be mapped, to a CC or a note."),
             ManualBlock(ManualKind.Para, "A mapped knob records into automation just like moving it by hand. Mapped buttons like play, stop and fill don't record."),
             ManualBlock(ManualKind.Heading, "Clock"),
             ManualBlock(ManualKind.Para, "The app can send MIDI clock (with start, stop and song position) to hardware, and it can follow an incoming clock. When following, the tempo comes from the other device."),
@@ -1034,7 +1043,7 @@ object Manual {
             ManualBlock(ManualKind.Heading, "Formats"),
             ManualBlock(ManualKind.Bullet, "**WAV** and **AIFF** - 16 or 24 bit, or 32-bit float."),
             ManualBlock(ManualKind.Bullet, "**FLAC** - lossless and smaller."),
-            ManualBlock(ManualKind.Bullet, "**MP3** and **AAC** - at the bitrate you choose."),
+            ManualBlock(ManualKind.Bullet, "**MP3** and **AAC** - at the bitrate you choose.", "**MP3** - at the bitrate you choose. (AAC is the phone's own encoder.)"),
             ManualBlock(ManualKind.Bullet, "**MIDI** - the notes, not the sound, with each track's transpose and fixed velocity applied, and its pedal, mod wheel and pressure lanes. Drum tracks go on channel 10 as General MIDI drums, so other programs hear the right sounds."),
             ManualBlock(ManualKind.Bullet, "**Song bundle** - the song and the samples it uses, in one file you can share."),
             ManualBlock(ManualKind.Heading, "Stems"),
@@ -1045,7 +1054,7 @@ object Manual {
             ManualBlock(ManualKind.Heading, "Exports are repeatable"),
             ManualBlock(ManualKind.Para, "Exporting the same song twice gives identical files, because every machine is reset before the render starts."),
             ManualBlock(ManualKind.Heading, "Importing"),
-            ManualBlock(ManualKind.Para, "**Import…** in the file menu takes a file from anywhere on the phone. What happens depends on what it is:"),
+            ManualBlock(ManualKind.Para, "**Import…** in the file menu takes a file from anywhere on the phone. What happens depends on what it is:", "**Import…** in the file menu takes a file from anywhere on the computer. What happens depends on what it is:"),
             ManualBlock(ManualKind.Bullet, "**A MIDI file** opens a window that shows each part in the file with a machine chosen for it. Tap a machine to change it, or pick **skip** to leave the part out. Drums on channel 10 go to Hexbeat, with each drum moved to the matching sound. Parts that say what instrument they are get a fitting machine: an organ goes to Manual, brass to Brazen.", "**A MIDI file** opens a window that shows each part in the file with a machine chosen for it. Click a machine to change it, or pick **skip** to leave the part out. Drums on channel 10 go to Hexbeat, with each drum moved to the matching sound. Parts that say what instrument they are get a fitting machine: an organ goes to Manual, brass to Brazen."),
             ManualBlock(ManualKind.Bullet, "The file is cut into scenes of 4, 8 or 16 bars. A stretch that's the same as the one before becomes a repeat, so a loop comes in as one scene played several times. The tempo and time signature come from the file, and where the tempo changes, the scenes after it get a tempo of their own."),
             ManualBlock(ManualKind.Bullet, "Pedals, the mod wheel and pressure come in as lanes, and pitch bend as bends on the notes."),
@@ -1055,36 +1064,36 @@ object Manual {
             ManualBlock(ManualKind.Bullet, "**A tuning** (a Scala .scl file) joins the tuning list, under key in the tempo window and in each track's settings."),
             ManualBlock(ManualKind.Para, "An imported song never replaces one you've saved: if the name is taken, it gets a number after it."),
             ManualBlock(ManualKind.Heading, "Sharing"),
-            ManualBlock(ManualKind.Para, "When an export finishes, **Share** sends it straight on through the phone's share sheet: email, Drive, a chat, or another app. Stems go as all their files together."),
-            ManualBlock(ManualKind.Para, "**Share song…** in the file menu sends the open song as a bundle, samples included, for someone else to open in Acidulous."),
-            ManualBlock(ManualKind.Para, "The other way works too. Open a MIDI file, a bundle or a sound with Acidulous, or share one to it, and it goes wherever **Import…** would have put it."),
+            ManualBlock(ManualKind.Para, "When an export finishes, **Share** sends it straight on through the phone's share sheet: email, Drive, a chat, or another app. Stems go as all their files together.", "When an export finishes, **Share** opens the folder it was saved in, to send it on from there."),
+            ManualBlock(ManualKind.Para, "**Share song…** in the file menu sends the open song as a bundle, samples included, for someone else to open in Acidulous.", "**Share song…** in the file menu makes the open song a bundle, samples included, and opens the folder it is in, for someone else to open in Acidulous."),
+            ManualBlock(ManualKind.Para, "The other way works too. Open a MIDI file, a bundle or a sound with Acidulous, or share one to it, and it goes wherever **Import…** would have put it.", ""),
         )),
         ManualSection("Settings", "Settings for you and this phone, not the song.", listOf(
             ManualBlock(ManualKind.Para, "Nothing here is saved in a song, so opening someone else's song never changes these."),
             ManualBlock(ManualKind.Heading, "display"),
-            ManualBlock(ManualKind.Bullet, "**theme** - dark, light, high contrast, or follow the phone. High contrast is white on black, with brighter colours and outlines round every control."),
+            ManualBlock(ManualKind.Bullet, "**theme** - dark, light, high contrast, or follow the phone. High contrast is white on black, with brighter colours and outlines round every control.", "**theme** - dark, light, high contrast, or follow the system. High contrast is white on black, with brighter colours and outlines round every control."),
             ManualBlock(ManualKind.Bullet, "**interface size** - makes everything bigger, in four steps."),
-            ManualBlock(ManualKind.Bullet, "**screen while playing** - whether the screen can turn off while playing."),
+            ManualBlock(ManualKind.Bullet, "**screen while playing** - whether the screen can turn off while playing.", ""),
             ManualBlock(ManualKind.Bullet, "**diagnostics** - shows or hides the numbers for tracking down problems: the line under the transport, the readings on the audio page, the MIDI send counts, and the note count in the editor's title."),
             ManualBlock(ManualKind.Bullet, "**keyboard** - **keys…** opens the list of shortcuts, where you can change them and choose how letters play notes. See A keyboard."),
             ManualBlock(ManualKind.Heading, "audio"),
-            ManualBlock(ManualKind.Bullet, "**audio buffer** - tight, balanced or safe. Tight has the lowest latency but may crackle on a slower phone; safe gives the phone more time. With **diagnostics** on, a line under it shows the buffer size, the latency, and how many dropouts there have been."),
-            ManualBlock(ManualKind.Bullet, "**worst block** (with **diagnostics** on) - the longest any block of audio took to make, against the time it had, and where that time went. The load meter is an average and can miss short spikes, which is why a phone can show a low load and still click. **reset** clears it. Blocks where the system briefly paused the audio thread aren't counted, and **% interrupted** shows how often that happened. If it's low and the worst block is high, the song is asking too much: freeze tracks or use **lean**. If it's high, the phone is busy with other things; closing other apps will help more."),
+            ManualBlock(ManualKind.Bullet, "**audio buffer** - tight, balanced or safe. Tight has the lowest latency but may crackle on a slower phone; safe gives the phone more time. With **diagnostics** on, a line under it shows the buffer size, the latency, and how many dropouts there have been.", "**audio buffer** - tight, balanced or safe. Tight has the lowest latency but may crackle on a slower computer; safe gives the computer more time. With **diagnostics** on, a line under it shows the buffer size, the latency, and how many dropouts there have been."),
+            ManualBlock(ManualKind.Bullet, "**worst block** (with **diagnostics** on) - the longest any block of audio took to make, against the time it had, and where that time went. The load meter is an average and can miss short spikes, which is why a phone can show a low load and still click. **reset** clears it. Blocks where the system briefly paused the audio thread aren't counted, and **% interrupted** shows how often that happened. If it's low and the worst block is high, the song is asking too much: freeze tracks or use **lean**. If it's high, the phone is busy with other things; closing other apps will help more.", "**worst block** (with **diagnostics** on) - the longest any block of audio took to make, against the time it had, and where that time went. The load meter is an average and can miss short spikes, which is why a computer can show a low load and still click. **reset** clears it. Blocks where the system briefly paused the audio thread aren't counted, and **% interrupted** shows how often that happened. If it's low and the worst block is high, the song is asking too much: freeze tracks or use **lean**. If it's high, the computer is busy with other things; closing other apps will help more."),
             ManualBlock(ManualKind.Bullet, "**worst track** (with **diagnostics** on) - what each track costs, most expensive first, so you know what to freeze. A **❄** means the track was frozen when it cost that much, which should be close to nothing. This is each track's worst block in a hundred, so one unlucky moment doesn't set it. Give it a few seconds of playing before trusting it."),
             ManualBlock(ManualKind.Bullet, "**machine voice limit** - how many notes a track can hold at once. The oldest note is dropped first."),
-            ManualBlock(ManualKind.Bullet, "**quality** - what to give up when the phone can't keep up. **lean**: - runs the **amp** and **distortion** without oversampling (about half the amp's cost); - halves the **reverb**'s size (about half its cost); - halves the partials in **Resonance** patches that use more than twelve; - halves **Trinity**'s unison stacks (never below two), and lets at most **six released notes** ring at once, fading older tails out quickly. Held notes aren't affected; - halves the number of grains in **Pollen**. **auto** switches to lean by itself when the phone is struggling. Notes you're holding keep the quality they started with; only tails you've already let go of can be cut short. Exports and freezing always use full quality."),
-            ManualBlock(ManualKind.Bullet, "**scheduler hint** - whether the phone accepted the app's request to treat the audio as time-critical. Some phones refuse; nothing to do about it here."),
+            ManualBlock(ManualKind.Bullet, "**quality** - what to give up when the phone can't keep up. **lean**: - runs the **amp** and **distortion** without oversampling (about half the amp's cost); - halves the **reverb**'s size (about half its cost); - halves the partials in **Resonance** patches that use more than twelve; - halves **Trinity**'s unison stacks (never below two), and lets at most **six released notes** ring at once, fading older tails out quickly. Held notes aren't affected; - halves the number of grains in **Pollen**. **auto** switches to lean by itself when the phone is struggling. Notes you're holding keep the quality they started with; only tails you've already let go of can be cut short. Exports and freezing always use full quality.", "**quality** - what to give up when the computer can't keep up. **lean**: - runs the **amp** and **distortion** without oversampling (about half the amp's cost); - halves the **reverb**'s size (about half its cost); - halves the partials in **Resonance** patches that use more than twelve; - halves **Trinity**'s unison stacks (never below two), and lets at most **six released notes** ring at once, fading older tails out quickly. Held notes aren't affected; - halves the number of grains in **Pollen**. **auto** switches to lean by itself when the computer is struggling. Notes you're holding keep the quality they started with; only tails you've already let go of can be cut short. Exports and freezing always use full quality."),
+            ManualBlock(ManualKind.Bullet, "**scheduler hint** - whether the phone accepted the app's request to treat the audio as time-critical. Some phones refuse; nothing to do about it here.", "**scheduler hint** - the phone's alone: on a computer it always says not available, and there is nothing to do about it."),
             ManualBlock(ManualKind.Heading, "record"),
             ManualBlock(ManualKind.Para, "The bit depth for recordings and exports."),
             ManualBlock(ManualKind.Heading, "songs"),
             ManualBlock(ManualKind.Para, "What a new song starts with: tempo, time signature, the first track's machine, and whether it starts with a scale set."),
-            ManualBlock(ManualKind.Heading, "TalkBack"),
-            ManualBlock(ManualKind.Para, "TalkBack is turned on in the phone's own settings, not here. With it on, every control says what it is and what it's set to. On a knob or a fader, swipe up or down to change it. Anything you'd hold to open, like a clip's settings, is in TalkBack's actions menu."),
-            ManualBlock(ManualKind.Para, "The piano roll says how many notes a clip has and the lowest and highest, not each note. To add notes, record them from the keys."),
-            ManualBlock(ManualKind.Para, "With TalkBack on, the song grid shows as many scenes as fit and doesn't scroll sideways. **Previous scenes** and **Next scenes** above it move a page at a time. When the last page is full, add a scene from a scene's own menu."),
-        )),
+            ManualBlock(ManualKind.Heading, "TalkBack", ""),
+            ManualBlock(ManualKind.Para, "TalkBack is turned on in the phone's own settings, not here. With it on, every control says what it is and what it's set to. On a knob or a fader, swipe up or down to change it. Anything you'd hold to open, like a clip's settings, is in TalkBack's actions menu.", ""),
+            ManualBlock(ManualKind.Para, "The piano roll says how many notes a clip has and the lowest and highest, not each note. To add notes, record them from the keys.", ""),
+            ManualBlock(ManualKind.Para, "With TalkBack on, the song grid shows as many scenes as fit and doesn't scroll sideways. **Previous scenes** and **Next scenes** above it move a page at a time. When the last page is full, add a scene from a scene's own menu.", ""),
+        ), desktopSummary = "Settings for you and this computer, not the song."),
         ManualSection("A keyboard", "Playing notes on letters, and working the whole app from keys.", listOf(
-            ManualBlock(ManualKind.Para, "Acidulous works with a phone's own keyboard, like the ones on square phones, and with USB or Bluetooth keyboards. Everything you can press on screen can be reached from the keys."),
+            ManualBlock(ManualKind.Para, "Acidulous works with a phone's own keyboard, like the ones on square phones, and with USB or Bluetooth keyboards. Everything you can press on screen can be reached from the keys.", "Acidulous works with the computer's keyboard. Everything you can press on screen can be reached from the keys."),
             ManualBlock(ManualKind.Para, "Press **Shift+/** (or **Alt+Q**) at any time to see the keys that work on the screen you're on."),
             ManualBlock(ManualKind.Heading, "Play mode"),
             ManualBlock(ManualKind.Para, "Letters either run shortcuts or play notes. **`** (or **Sym**) switches between the two, and so does tapping the octave number in the editor's keyboard strip. The number is lit while letters are notes.", "Letters either run shortcuts or play notes. **`** (or **Sym**) switches between the two, and so does clicking the octave number in the editor's keyboard strip. The number is lit while letters are notes."),
@@ -1114,6 +1123,7 @@ object Manual {
             ManualBlock(ManualKind.Bullet, "manual - **F1**, or **Alt+H**"),
             ManualBlock(ManualKind.Bullet, "the list of keys - **Shift+/**, or **Alt+Q**"),
             ManualBlock(ManualKind.Bullet, "back - **Esc**"),
+            ManualBlock(ManualKind.Bullet, "", "full screen - **F11**"),
             ManualBlock(ManualKind.Para, "In the editor:"),
             ManualBlock(ManualKind.Bullet, "previous / next page - **[ and ]**, or **Alt+B and Alt+N**"),
             ManualBlock(ManualKind.Bullet, "draw or select - **D**, or **Alt+D**"),

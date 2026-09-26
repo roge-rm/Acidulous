@@ -95,8 +95,11 @@ private fun DisplayTab() {
             SwitchGrid(stringResource(Res.string.settings_size), stringArrayResource(Res.array.settings_size_choices).toList(), UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
                 UiPrefs.chooseUiScale(UiScaleSteps[it])
             }
-            SwitchGrid(stringResource(Res.string.settings_while_playing), stringArrayResource(Res.array.settings_while_playing_choices).toList(), if (UiPrefs.keepAwake) 0 else 1) {
-                UiPrefs.chooseKeepAwake(it == 0)
+            // Only where it can be kept: a desktop's screen saver is its own.
+            if (com.rm.acidulous.AppHost.current.canKeepScreenOn) {
+                SwitchGrid(stringResource(Res.string.settings_while_playing), stringArrayResource(Res.array.settings_while_playing_choices).toList(), if (UiPrefs.keepAwake) 0 else 1) {
+                    UiPrefs.chooseKeepAwake(it == 0)
+                }
             }
             // The numbers kept for finding faults, everywhere they appear.
             SwitchGrid(stringResource(Res.string.settings_diagnostics), stringArrayResource(Res.array.settings_diagnostics_choices).toList(), if (UiPrefs.showDiagnostics) 0 else 1) {

@@ -54,6 +54,7 @@ in the keys window (see **Changing the keys** below):
 - manual - **F1**, or **Alt+H**
 - the list of keys - **Shift+/**, or **Alt+Q**
 - back - **Esc**
+<!-- desktop: - full screen - **F11** -->
 
 In the editor:
 
