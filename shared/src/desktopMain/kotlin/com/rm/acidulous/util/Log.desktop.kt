@@ -7,7 +7,7 @@ actual object Log {
 
     private fun say(level: Char, tag: String, message: String, error: Throwable? = null): Int {
         val line = "$level/$tag: $message"
-        System.err.println(line)
+        java.lang.System.err.println(line)
         error?.printStackTrace()
         synchronized(recent) {
             recent.addLast(if (error == null) line else "$line\n    $error")

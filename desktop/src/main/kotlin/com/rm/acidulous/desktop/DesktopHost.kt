@@ -36,8 +36,15 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
 
     override fun docName(doc: Doc, fallback: String): String = doc.file.name.ifEmpty { fallback }
     override fun placeName(doc: Doc): String = doc.file.name
-    override fun openInput(doc: Doc): InputStream = doc.file.inputStream()
-    override fun openOutput(doc: Doc): OutputStream = doc.file.outputStream()
+    private fun openInput(doc: Doc): InputStream = doc.file.inputStream()
+    private fun openOutput(doc: Doc): OutputStream = doc.file.outputStream()
+    override fun readDoc(doc: Doc): ByteArray = openInput(doc).use { it.readBytes() }
+    override fun copyFromDoc(doc: Doc, file: File) {
+        openInput(doc).use { input -> file.outputStream().use { input.copyTo(it) } }
+    }
+    override fun copyToDoc(file: File, doc: Doc) {
+        openOutput(doc).use { out -> file.inputStream().use { it.copyTo(out) } }
+    }
     override fun createIn(folder: Doc, mime: String, name: String): Doc? =
         File(folder.file, name).takeIf { runCatching { it.createNewFile() || it.isFile }.getOrDefault(false) }?.let { Doc(it) }
 

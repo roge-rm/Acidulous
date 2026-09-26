@@ -69,8 +69,15 @@ class AndroidHost(private val context: Context) : AppHost {
         display
     }.getOrDefault(AppStrings.getString(Res.string.app_the_file))
 
-    override fun openInput(doc: Doc): InputStream = context.contentResolver.openInputStream(doc.uri)!!
-    override fun openOutput(doc: Doc): OutputStream = context.contentResolver.openOutputStream(doc.uri, "wt")!!
+    private fun openInput(doc: Doc): InputStream = context.contentResolver.openInputStream(doc.uri)!!
+    private fun openOutput(doc: Doc): OutputStream = context.contentResolver.openOutputStream(doc.uri, "wt")!!
+    override fun readDoc(doc: Doc): ByteArray = openInput(doc).use { it.readBytes() }
+    override fun copyFromDoc(doc: Doc, file: File) {
+        openInput(doc).use { input -> file.outputStream().use { input.copyTo(it) } }
+    }
+    override fun copyToDoc(file: File, doc: Doc) {
+        openOutput(doc).use { out -> file.inputStream().use { it.copyTo(out) } }
+    }
 
     override fun createIn(folder: Doc, mime: String, name: String): Doc? {
         val tree = folder.uri

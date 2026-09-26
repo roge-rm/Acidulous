@@ -35,7 +35,7 @@ import re
 import sys
 
 SRC = pathlib.Path("manual")
-OUT = pathlib.Path("shared/src/jvmShared/kotlin/com/rm/acidulous/model/Manual.kt")
+OUT = pathlib.Path("shared/src/commonMain/kotlin/com/rm/acidulous/model/Manual.kt")
 INDEX = SRC / "README.md"
 OPEN, CLOSE = "<!-- contents -->", "<!-- /contents -->"
 

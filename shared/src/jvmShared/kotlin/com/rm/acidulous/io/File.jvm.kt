@@ -6,7 +6,9 @@ import kotlin.io.copyTo as kCopyTo
 import kotlin.io.deleteRecursively as kDeleteRecursively
 import kotlin.io.extension as kExtension
 import kotlin.io.nameWithoutExtension as kNameWithoutExtension
+import kotlin.io.invariantSeparatorsPath as kInvariantSeparatorsPath
 import kotlin.io.readBytes as kReadBytes
+import kotlin.io.relativeTo as kRelativeTo
 import kotlin.io.readText as kReadText
 import kotlin.io.resolve as kResolve
 import kotlin.io.walk as kWalk
@@ -39,3 +41,52 @@ actual fun File.deleteRecursively(): Boolean = this.kDeleteRecursively()
 actual fun File.resolve(relative: String): File = this.kResolve(relative)
 actual fun File.listFiles(filter: (File) -> Boolean): Array<File>? = this.listFiles(java.io.FileFilter { filter(it) })
 actual fun File.walk(): Sequence<File> = this.kWalk()
+
+actual val File.canonicalFile: File get() = this.canonicalFile
+actual fun File.relativeTo(base: File): File = this.kRelativeTo(base)
+actual val File.invariantSeparatorsPath: String get() = this.kInvariantSeparatorsPath
+actual val FILE_SEPARATOR: String get() = java.io.File.separator
+
+/**
+ * Written to a hidden file beside it, flushed to the disk, then renamed over
+ * it: a rename within a directory is atomic, so a kill, a crash or a full
+ * disk mid-write leaves the previous version whole.
+ */
+actual fun File.writeBytesSafely(bytes: ByteArray) {
+    val tmp = File(parentFile, ".$name.tmp")
+    try {
+        java.io.FileOutputStream(tmp).use { out ->
+            out.write(bytes)
+            out.fd.sync()
+        }
+        if (!tmp.renameTo(this)) throw java.io.IOException("could not replace $name")
+    } catch (e: Exception) {
+        tmp.delete()
+        throw e
+    }
+}
+
+actual class ZipWriter actual constructor(out: File) {
+    private val zip = java.util.zip.ZipOutputStream(out.outputStream().buffered())
+    actual fun add(name: String, bytes: ByteArray) {
+        zip.putNextEntry(java.util.zip.ZipEntry(name))
+        zip.write(bytes)
+        zip.closeEntry()
+    }
+    actual fun addFile(name: String, file: File) {
+        zip.putNextEntry(java.util.zip.ZipEntry(name))
+        file.inputStream().buffered().use { it.kCopyTo(zip) }
+        zip.closeEntry()
+    }
+    actual fun close() = zip.close()
+}
+
+actual fun readZip(zip: File, each: (name: String, isDirectory: Boolean, bytes: () -> ByteArray) -> Unit) {
+    java.util.zip.ZipInputStream(zip.inputStream().buffered()).use { input ->
+        while (true) {
+            val entry = input.nextEntry ?: break
+            each(entry.name, entry.isDirectory) { input.kReadBytes() }
+            input.closeEntry()
+        }
+    }
+}

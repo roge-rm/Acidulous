@@ -7,7 +7,7 @@ panel helpers look it up (ui/PanelText.kt) to show it in the phone's
 language. This finds every such word and writes
 
     shared/src/commonMain/strings/values/strings_panel_words.xml   the words, to translate
-    shared/src/jvmShared/kotlin/com/rm/acidulous/ui/PanelWords.kt   English -> resource
+    shared/src/commonMain/kotlin/com/rm/acidulous/ui/PanelWords.kt   English -> resource
 
 Where the words come from:
   - the panels: Group titles, the labels of PanelKnob, PanelSwitch and
@@ -27,8 +27,8 @@ Check that nothing is missing: python3 tools/panel_words.py --check
 import hashlib, pathlib, re, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-UI = ROOT / "shared/src/jvmShared/kotlin/com/rm/acidulous/ui"
-MODEL = ROOT / "shared/src/jvmShared/kotlin/com/rm/acidulous/model"
+UI = ROOT / "shared/src/commonMain/kotlin/com/rm/acidulous/ui"
+MODEL = ROOT / "shared/src/commonMain/kotlin/com/rm/acidulous/model"
 XML = ROOT / "shared/src/commonMain/strings/values/strings_panel_words.xml"
 KT = UI / "PanelWords.kt"
 

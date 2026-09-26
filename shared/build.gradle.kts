@@ -13,11 +13,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-// What the Android app and the desktop build share: the song model, the UI and
-// its strings. The engine itself is C++ and reached through JNI on both, which
-// is why most of this lives in jvmShared (Android and desktop) rather than
-// commonMain - JNI, java.io.File and String.format are fine on both JVMs, and
-// only a browser build would need them replaced.
+// What the Android app, the desktop build and the browser share: the song
+// model, the UI and its strings, all in commonMain. The engine is C++ on all
+// three, reached through JNI on the two JVMs and through the same bridge
+// compiled to WebAssembly in a browser. jvmShared holds only the JVMs' side of
+// the few seams a browser answers differently - files, String.format, the
+// engine's calls, threads - each an expect in commonMain.
 kotlin {
     android {
         namespace = "com.rm.acidulous.shared"
@@ -31,8 +32,7 @@ kotlin {
         compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21) }
     }
     // The browser: Compose for Kotlin/Wasm, with the engine as WebAssembly
-    // beside it (web/). Only commonMain is shared with it so far; the rest
-    // moves over from jvmShared as each seam gets a browser's answer.
+    // beside it (web/).
     wasmJs { browser() }
 
     sourceSets {

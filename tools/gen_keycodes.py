@@ -12,7 +12,7 @@ Run: python3 tools/gen_keycodes.py   (needs javap and the SDK in ~/Android/Sdk)
 import pathlib, re, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUT = ROOT / "shared/src/jvmShared/kotlin/com/rm/acidulous/ui/KeyCodes.kt"
+OUT = ROOT / "shared/src/commonMain/kotlin/com/rm/acidulous/ui/KeyCodes.kt"
 jars = sorted((pathlib.Path.home() / "Android/Sdk/platforms").glob("*/android.jar"))
 if not jars:
     sys.exit("no android.jar under ~/Android/Sdk/platforms")

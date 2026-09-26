@@ -44,3 +44,25 @@ expect fun File.resolve(relative: String): File
 expect fun File.listFiles(filter: (File) -> Boolean): Array<File>?
 /** Every file and folder under this one, this one first. */
 expect fun File.walk(): Sequence<File>
+
+expect val File.canonicalFile: File
+expect fun File.relativeTo(base: File): File
+expect val File.invariantSeparatorsPath: String
+/** Between a folder and what is in it: java.io.File.separator. */
+expect val FILE_SEPARATOR: String
+
+/**
+ * Replace a file's contents so that it is either the old file or the new one,
+ * never half of each: written beside it, made durable, then renamed over it.
+ */
+expect fun File.writeBytesSafely(bytes: ByteArray)
+
+/** Writing a zip, an entry at a time. */
+expect class ZipWriter(out: File) {
+    fun add(name: String, bytes: ByteArray)
+    fun addFile(name: String, file: File)
+    fun close()
+}
+
+/** Every entry of a zip in order: its name, whether it is a folder, and its bytes on asking. */
+expect fun readZip(zip: File, each: (name: String, isDirectory: Boolean, bytes: () -> ByteArray) -> Unit)

@@ -1957,7 +1957,7 @@ int main(int argc, char **argv) {
                            ? positional[1]
                            : std::string(std::getenv("ACIDULOUS_ROOT") != nullptr ? std::getenv("ACIDULOUS_ROOT")
                                                                                   : ".") +
-                                 "/shared/src/jvmShared/kotlin/com/rm/acidulous/model/FactoryBanks.kt");
+                                 "/shared/src/commonMain/kotlin/com/rm/acidulous/model/FactoryBanks.kt");
     }
     if (cmd == "seed") {
         return cmdSeed(positional.size() >= 2 ? positional[1]

@@ -108,7 +108,7 @@ private fun fixed(arg: Any?, precision: Int, flags: String): String {
     while (carry && k >= 0) {
         if (chars[k] == '9') { chars[k] = '0'; k-- } else { chars[k] = chars[k] + 1; carry = false }
     }
-    var whole = String(chars)
+    var whole = chars.concatToString()
     var intLen = if (keep < 0) 1 else point
     if (carry) { whole = "1$whole"; intLen++ }
     if (keep < 0) whole = "0".repeat(1 + precision)

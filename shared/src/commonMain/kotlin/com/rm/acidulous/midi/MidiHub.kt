@@ -1,0 +1,1093 @@
+package com.rm.acidulous.midi
+
+import kotlin.concurrent.Volatile
+
+import com.rm.acidulous.util.Runnable
+
+import com.rm.acidulous.util.System
+
+import com.rm.acidulous.util.Math
+
+import com.rm.acidulous.util.format
+
+import com.rm.acidulous.midi.launchpad.LaunchpadPro
+import com.rm.acidulous.util.Log
+import com.rm.acidulous.util.postToMain
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateListOf
+import com.rm.acidulous.engine.NativeEngine
+import com.rm.acidulous.res.*
+import org.jetbrains.compose.resources.StringResource
+
+/**
+ * Playing Acidulous from real keys.
+ *
+ * Android hands USB and Bluetooth MIDI through the same interface once a
+ * device is open, so almost all of this is one path. The difference is
+ * getting there: a USB device announces itself and can be opened, while a
+ * Bluetooth one has to be found by scanning for the MIDI service and handed
+ * to [MidiManager.openBluetoothDevice] before it becomes a MIDI device at
+ * all. That scan, and the permissions in front of it, is the whole reason
+ * most Android apps make you run a separate bridge app. There is no need.
+ *
+ * Everything that arrives is re-addressed to a rack and pushed through the
+ * same engine entry the on-screen keyboard uses, so recording, modifiers and
+ * the machine's own handling all behave identically whichever you play.
+ */
+object MidiHub {
+    private const val TAG = "Acidulous.MIDI"
+    private const val AUTO_GONE_NS = 1_000_000_000L
+
+    data class Port(val id: Int, val name: String, val maker: String, val bluetooth: Boolean, val open: Boolean)
+    /** Somewhere to send to. Android calls it the device's *input* port. */
+    data class Destination(val id: Int, val name: String, val open: Boolean)
+    /** [midi] is true when the advertisement actually named the MIDI service. */
+    data class Found(val address: String, val name: String, val midi: Boolean)
+
+    /**
+     * Where incoming notes go. Following the selected track is what you want
+     * while writing; a fixed track is what you want when the phone is a
+     * sound module and nobody is looking at its screen; channel-to-rack is
+     * for a controller that addresses several at once.
+     */
+    enum class Routing { SelectedTrack, FixedTrack, ChannelToRack }
+
+    /** The platform's MIDI: MidiManager on Android. Null until [start]. */
+    private var system: MidiSystem? = null
+
+    /** One of the hub's own messages, in the phone's language. */
+    internal fun say(id: StringResource, vararg args: Any): String = AppStrings.getString(id, *args)
+    private val handler: MidiWorker? get() = system?.worker
+    private val opened = HashMap<Int, MidiOpenDevice>()
+    /** A parser for each output port of each open device: see [attach]. */
+    private val parsers = HashMap<Int, List<MidiParser>>()
+
+    val ports = mutableStateListOf<Port>()
+    val destinations = mutableStateListOf<Destination>()
+    val discovered = mutableStateListOf<Found>()
+    var scanning by mutableStateOf(false)
+        internal set
+
+    /** Why the list looks the way it does. Empty when there is nothing to say. */
+    var scanStatus by mutableStateOf("")
+        internal set
+    var routing by mutableStateOf(Routing.SelectedTrack)
+    var lastMessage by mutableStateOf("")
+        private set
+    var received by mutableStateOf(0)
+        private set
+
+    // --- out -----------------------------------------------------------------
+    private val outPorts = HashMap<Int, MidiSendPort>()
+    private val outBuffer = LongArray(256 * 2)
+    private val anchor = LongArray(3)
+    private val outBytes = ByteArray(3)
+
+    /** Twenty-four pulses a quarter note, to every destination that is open. */
+    var clockOut by mutableStateOf(false)
+        private set
+
+    /**
+     * How far ahead of the audio to send, in milliseconds. The engine's own
+     * latency is compensated automatically from the stream's anchor; this is
+     * the trim for everything after it - the cable, the synth, and the last
+     * few milliseconds of a phone's audio path that nothing can measure.
+     */
+    var outOffsetMs by mutableStateOf(0)
+    /** How note-ons from controllers are bent before anything hears them: see [VelocityCurve]. */
+    var velocityCurve by mutableStateOf(0)
+
+    /** What the engine has handed over, whether or not anything was listening.
+     *  Separate from [sent] because "the clock is running but nothing is
+     *  plugged in" and "nothing is happening" are different problems. */
+    var produced by mutableStateOf(0)
+        private set
+    var sent by mutableStateOf(0)
+        private set
+    /** How far from its intended time the last batch went out. The number to
+     *  report when something sounds loose. */
+    var outLateMs by mutableStateOf(0f)
+        private set
+    var anchored by mutableStateOf(false)
+        private set
+
+    /** Which rack plays when routing is [Routing.SelectedTrack]. */
+    var target: () -> Int = { 0 }
+
+    /**
+     * Offered every controller and note-on before it reaches the engine.
+     *
+     * Returns true when the mapping layer took it, and then it goes no
+     * further. The policy - what is mapped, what is being learned, what a
+     * mapped thing does - lives with the song and the editor rather than
+     * here; this is a hub, and it should not need to know what a lane is.
+     */
+    var onMappable: (cc: Int?, note: Int?, value: Int, rack: Int) -> Boolean = { _, _, _, _ -> false }
+
+    /** Notes a mapping swallowed, so their note-offs go the same way. */
+    private val swallowed = HashSet<Int>()
+
+    /**
+     * Where every sounding note went, so its release follows it there - and
+     * what a vanished controller was holding, so those notes can be let go.
+     * The logic lives in [HeldNotes], which has no Android in it and is tested
+     * on its own, because this is the part that was wrong.
+     */
+    private val held = HeldNotes()
+
+    /** Currently dispatching from this port, or -1 for the test generators. */
+    private var currentPort = -1
+
+    /** Nothing is held any more: forget where everything went. */
+    fun forgetSounding() = held.clear()
+
+    /** Let go of whatever a port was holding; it will never send the offs. */
+    private fun releasePort(portId: Int) {
+        val freed = held.release(portId)
+        for (h in freed) {
+            NativeEngine.midiEvent(h.rack, 0x80, h.note, 0, NativeEngine.NO_CHANNEL)
+        }
+        if (freed.isNotEmpty()) {
+            lastMessage = AppStrings.getQuantityString(Res.plurals.midi_released, freed.size, freed.size)
+        }
+    }
+
+    /** Which rack plays when routing is [Routing.FixedTrack]. */
+    var fixedRack by mutableStateOf(0)
+
+    val supported: Boolean
+        get() = system?.supported == true
+
+    fun start(midi: MidiSystem) {
+        if (system != null) return
+        system = midi
+        refresh()
+        midi.watch(
+            added = { device ->
+                // Plugged in while the app is running: open it. A controller
+                // you have just connected is a controller you want to play,
+                // and making somebody find a dialog to say so is a step that
+                // has no other possible answer. Dan: "any MIDI devices plugged
+                // in after the app is started are automatically enabled".
+                //
+                // Inputs only. Opening an *output* would start sending notes
+                // and clock to something the moment it appeared, which is a
+                // decision rather than a convenience.
+                if (device.outputPortCount > 0 && device.id !in declined) {
+                    open(device.id)
+                }
+                syncPads()
+                syncLaunchpad()
+                refresh()
+            },
+            removed = { device ->
+                // Unplugged mid-note: nothing else will ever send the off.
+                releasePort(device.id)
+                opened.remove(device.id)?.close()
+                parsers.remove(device.id)
+                if (opened.isEmpty()) forgetController()
+                syncPads()
+                syncLaunchpad()
+                refresh()
+            },
+        )
+        // Already plugged in when the app started: light its pads, take the Launchpad.
+        handler?.post { syncPads(); syncLaunchpad() }
+        // Preferences are restored one line before this runs, so a clock-out
+        // setting that survived a restart asked for a sender that had no
+        // thread to run on yet. Ask again now there is one.
+        if (clockOut) startSender()
+    }
+
+    fun refresh() {
+        val sys = system ?: return
+        val all = sys.devices
+        ports.clear()
+        all.filter { it.outputPortCount > 0 }.forEach { info ->
+            ports += Port(
+                id = info.id,
+                name = info.name ?: info.product ?: say(Res.string.midi_device),
+                maker = info.maker.orEmpty(),
+                bluetooth = info.bluetooth,
+                open = opened.containsKey(info.id),
+            )
+        }
+        destinations.clear()
+        all.filter { it.inputPortCount > 0 }.forEach { info ->
+            destinations += Destination(
+                id = info.id,
+                name = info.name ?: info.product ?: say(Res.string.midi_device),
+                open = outPorts.containsKey(info.id),
+            )
+        }
+    }
+
+    // --- An Exquis's pads -----------------------------------------------------
+    //
+    // The scale of the track it plays, on its pads: see PadLights. Its own
+    // port, opened for this and nothing else - unless the Exquis is also a
+    // destination for MIDI out, in which case that port is shared, since an
+    // input port opens once. Everything here runs on the MIDI thread.
+
+    /** How an Exquis shows the scale: its own tonic and scale, a highlight, or not at all. */
+    enum class PadMode { Own, Highlight, Off }
+
+    var padMode by mutableStateOf(PadMode.Own)
+        private set
+    /** Whether the app has the Exquis's transport and undo buttons. */
+    var exquisButtons by mutableStateOf(true)
+        private set
+    /** A press of one of those buttons, by id (PadLights.BUTTON_*), on the main thread. */
+    var exquisButtonPressed: ((Int) -> Unit)? = null
+    /** The app holds the buttons zone in developer mode on this Exquis now. */
+    @Volatile private var buttonsHeld = false
+    private var wantedLeds: Map<Int, Triple<Int, Int, Int>> = emptyMap()
+    private val shownLeds = HashMap<Int, Triple<Int, Int, Int>>()
+    fun chooseExquisButtons(on: Boolean) {
+        exquisButtons = on
+        handler?.post { syncPads() }
+    }
+
+    /** What the buttons should show, by id, as colours of 0..127 a part. */
+    fun showExquisButtons(leds: Map<Int, Triple<Int, Int, Int>>) {
+        wantedLeds = leds
+        handler?.post { syncPads() }
+    }
+
+    /** The channel the Exquis last played on, for routing by channel. */
+    var exquisChannel by mutableStateOf(0)
+        private set
+    /** An Exquis is plugged in, so its switch is worth showing. */
+    var exquisHere by mutableStateOf(false)
+        private set
+    private var padInfo: MidiDeviceDesc? = null
+    private var padDevice: MidiOpenDevice? = null
+    private var padPort: MidiSendPort? = null
+    private val lit = HashSet<Int>()
+    private var wantedLit: Set<Int> = emptySet()
+    private var wantedRoot: Int? = null
+    private var wantedClasses: Set<Int>? = null
+    /** The tonic and scale last set on the Exquis itself, or null to set them again. */
+    private var sentScale: Pair<Int, Int>? = null
+    /** Offs for every note have gone to this Exquis, clearing what a last run left lit. */
+    private var cleaned = false
+    private val padBytes = ByteArray(3)
+
+    fun choosePadMode(mode: PadMode) {
+        padMode = mode
+        handler?.post { syncPads() }
+    }
+
+    /**
+     * What the pads should show: a tonic and the pitch classes in key, or
+     * none - the scale of the track the Exquis plays, see [trackForChannel].
+     */
+    fun showScale(root: Int?, pitchClasses: Set<Int>?) {
+        val intervals = if (root == null || pitchClasses == null) null else pitchClasses.map { Math.floorMod(it - root, 12) }.sorted()
+        wantedLit = PadLights.notes(root, intervals)
+        wantedRoot = root
+        wantedClasses = pitchClasses
+        handler?.post { syncPads() }
+    }
+
+    /** Dark pads and its buttons given back, before the app goes. On the caller's thread, so it happens. */
+    fun clearPads() {
+        val port = padPortNow() ?: return
+        for ((status, note, vel) in PadLights.changes(lit, emptySet(), null)) sendPad(port, status, note, vel)
+        lit.clear()
+        if (buttonsHeld) {
+            sendBytes(port, PadLights.exquisSetup(0))
+            buttonsHeld = false
+        }
+    }
+
+    private fun padPortNow(): MidiSendPort? = padInfo?.let { outPorts[it.id] } ?: padPort
+
+    private fun sendBytes(port: MidiSendPort, bytes: ByteArray) {
+        runCatching { port.send(bytes, 0, bytes.size) }
+    }
+
+    private fun sendPad(port: MidiSendPort, status: Int, note: Int, vel: Int) {
+        padBytes[0] = status.toByte(); padBytes[1] = note.toByte(); padBytes[2] = vel.toByte()
+        runCatching { port.send(padBytes, 0, 3) }
+    }
+
+    private fun syncPads() {
+        val sys = system ?: return
+        val info = sys.devices.firstOrNull {
+            // Over USB: its manual says that is where it listens for this.
+            it.inputPortCount > 0 && it.usb && PadLights.isExquis(it.name, it.product, it.maker)
+        }
+        exquisHere = info != null
+        if (info == null || info.id != padInfo?.id) {
+            // Gone, or a different one: what we held is nobody's any more.
+            runCatching { padPort?.close() }
+            runCatching { padDevice?.close() }
+            padPort = null; padDevice = null; padInfo = null
+            lit.clear()
+            sentScale = null
+            cleaned = false
+            buttonsHeld = false
+            shownLeds.clear()
+        }
+        if (info == null) return
+        padInfo = info
+        val port = padPortNow()
+        if (port == null) {
+            if ((padMode == PadMode.Off && !exquisButtons) || padDevice != null) return
+            sys.openDevice(info) { device ->
+                padDevice = device
+                padPort = device?.openInputPort(0)
+                if (padPort == null) Log.w(TAG, "could not open the Exquis for its pads")
+                syncPads()
+            }
+            return
+        }
+        // Once a connection: offs for every note on channel 1, so nothing a
+        // run that ended without tidying up left highlighted is still lit
+        // under what this one shows.
+        if (!cleaned) {
+            for (n in 0..127) sendPad(port, 0x80, n, 0)
+            lit.clear()
+            cleaned = true
+        }
+        // Its buttons: taken or given back, and lit as the app is.
+        if (exquisButtons && !buttonsHeld) {
+            sendBytes(port, PadLights.exquisSetup(PadLights.ZONE_BUTTONS))
+            buttonsHeld = true
+            shownLeds.clear()
+        } else if (!exquisButtons && buttonsHeld) {
+            sendBytes(port, PadLights.exquisSetup(0))
+            buttonsHeld = false
+        }
+        if (buttonsHeld) {
+            for ((id, c) in wantedLeds) {
+                if (shownLeds[id] == c) continue
+                sendBytes(port, PadLights.exquisLed(id, c.first, c.second, c.third))
+                shownLeds[id] = c
+            }
+        }
+        val target = if (padMode == PadMode.Highlight) wantedLit else emptySet()
+        for ((status, note, vel) in PadLights.changes(lit, target, wantedRoot)) sendPad(port, status, note, vel)
+        lit.clear(); lit += target
+        // Its own tonic and scale, in the player's own colours.
+        val root = wantedRoot
+        val classes = wantedClasses
+        if (padMode == PadMode.Own && root != null && classes != null) {
+            val scale = PadLights.exquisScale(root, classes)
+            if (scale != sentScale) {
+                for (m in PadLights.exquisScaleMessages(scale.first, scale.second, inDeveloperMode = buttonsHeld)) sendBytes(port, m)
+                sentScale = scale
+            }
+        }
+    }
+
+    // --- A Launchpad Pro [MK3] -------------------------------------------------
+    //
+    // Played by the app in Programmer mode: see midi/launchpad and
+    // ui/launchpad. Here is only the device end - finding it, putting it in
+    // the mode and out again, and carrying bytes each way. Its own port's
+    // messages go to [launchpadInput] instead of being played.
+
+    /** Whether an attached Launchpad is Acidulous's, or its own. */
+    var launchpadOn by mutableStateOf(true)
+        private set
+    /** One is plugged in, so its switch is worth showing. */
+    var launchpadHere by mutableStateOf(false)
+        private set
+    /** Its presses, on the MIDI thread; set by the controller. */
+    var launchpadInput: ((Int, Int, Int) -> Unit)? = null
+    /** Told when the surface is freshly the app's and has to be drawn whole. */
+    var onLaunchpadReady: (() -> Unit)? = null
+    private var lpInfo: MidiDeviceDesc? = null
+    private var lpDevice: MidiOpenDevice? = null
+    private var lpPort: MidiSendPort? = null
+    private var lpProgrammer = false
+
+    fun chooseLaunchpad(on: Boolean) {
+        launchpadOn = on
+        handler?.post { syncLaunchpad() }
+    }
+
+    /** Bytes for the Launchpad, from any thread; dropped unless it is the app's. */
+    fun launchpadSend(bytes: ByteArray) {
+        handler?.post {
+            val port = lpPort ?: return@post
+            if (lpProgrammer) runCatching { port.send(bytes, 0, bytes.size) }
+        }
+    }
+
+    /** Back to its own Live mode, before the app goes. On the caller's thread, so it happens. */
+    fun releaseLaunchpad() {
+        val port = lpPort ?: return
+        val bytes = LaunchpadPro.programmer(false)
+        if (lpProgrammer) runCatching { port.send(bytes, 0, bytes.size) }
+        lpProgrammer = false
+    }
+
+    private fun syncLaunchpad() {
+        val sys = system ?: return
+        val info = sys.devices.firstOrNull {
+            it.inputPortCount > 0 && it.usb && LaunchpadPro.isOne(it.name, it.product)
+        }
+        launchpadHere = info != null
+        if (info == null || info.id != lpInfo?.id) {
+            runCatching { lpPort?.close() }
+            runCatching { lpDevice?.close() }
+            lpPort = null; lpDevice = null; lpInfo = null; lpProgrammer = false
+        }
+        if (info == null) return
+        lpInfo = info
+        val port = lpPort
+        if (port == null) {
+            if (!launchpadOn || lpDevice != null) return
+            sys.openDevice(info) { device ->
+                lpDevice = device
+                lpPort = device?.openInputPort(0)
+                if (lpPort == null) Log.w(TAG, "could not open the Launchpad")
+                syncLaunchpad()
+            }
+            return
+        }
+        if (launchpadOn && !lpProgrammer) {
+            val bytes = LaunchpadPro.programmer(true)
+            runCatching { port.send(bytes, 0, bytes.size) }
+            lpProgrammer = true
+            onLaunchpadReady?.invoke()
+        } else if (!launchpadOn && lpProgrammer) {
+            val bytes = LaunchpadPro.programmer(false)
+            runCatching { port.send(bytes, 0, bytes.size) }
+            lpProgrammer = false
+        }
+    }
+
+    // --- Sending ---------------------------------------------------------------
+    //
+    // The engine stamps every event with the frame it belongs on; the audio
+    // stream says which wall-clock nanosecond a frame will be heard at; and
+    // Android's MidiInputPort.send takes a nanosecond timestamp and schedules
+    // it. So the sender has to be *early*, not fast - it drains every few
+    // milliseconds and hands over events that are still in the future, and
+    // the platform does the fine timing. A tight loop would be worse and
+    // would still be at the mercy of the scheduler.
+
+    fun toggleDestination(id: Int) {
+        val sys = system ?: return
+        val existing = outPorts.remove(id)
+        if (existing != null) {
+            // The Exquis's pads were sharing it: they keep it.
+            if (id == padInfo?.id && padPort == null) padPort = existing else runCatching { existing.close() }
+            refresh()
+            return
+        }
+        // An input port opens once: if the pads have it, share it.
+        if (id == padInfo?.id && padPort != null) {
+            outPorts[id] = padPort!!
+            padPort = null
+            startSender()
+            refresh()
+            return
+        }
+        val info = sys.devices.firstOrNull { it.id == id } ?: return
+        sys.openDevice(info) { device ->
+            val port = device?.openInputPort(0)
+            if (port == null) {
+                Log.w(TAG, "could not open an input port on $id")
+            } else {
+                outPorts[id] = port
+                startSender()
+            }
+            refresh()
+        }
+    }
+
+    private var sending = false
+    private val pumpTask = object : Runnable {
+        override fun run() {
+            pump()
+            if (sending) handler?.postDelayed(this, 4)
+        }
+    }
+
+    private fun startSender() {
+        // Idempotent by re-posting rather than by an early return on a flag:
+        // preferences are restored before the thread exists, so the first
+        // call sets the flag and loses the post, and a flag-guarded second
+        // call would then do nothing at all and the sender would never run.
+        sending = true
+        handler?.let { h ->
+            h.removeCallbacks(pumpTask)
+            h.post(pumpTask)
+        }
+    }
+
+    private fun stopSender() {
+        sending = false
+        handler?.removeCallbacks(pumpTask)
+    }
+
+    /** How many bytes a status byte carries with it. */
+    private fun lengthOf(status: Int): Int = when {
+        status == 0xf2 -> 3                       // song position
+        status >= 0xf8 -> 1                       // clock, start, continue, stop
+        status == 0xf1 || status == 0xf3 -> 2
+        (status and 0xf0) == 0xc0 -> 2            // program change
+        (status and 0xf0) == 0xd0 -> 2            // channel pressure
+        else -> 3
+    }
+
+    private fun pump() {
+        // Drain first and unconditionally. With the clock running and nothing
+        // listening the queue would otherwise fill and stay full, and the
+        // anchor readout would never say anything at all.
+        val n = NativeEngine.drainMidiOut(outBuffer)
+        NativeEngine.audioAnchor(anchor)
+        anchored = anchor[0] >= 0
+        produced += n
+        if (n <= 0 || outPorts.isEmpty()) {
+            if (!clockOut && outPorts.isEmpty()) stopSender()
+            return
+        }
+        val anchorFrame = anchor[0]
+        val anchorNanos = anchor[1]
+        val rate = if (anchor[2] > 0) anchor[2] else 48000L
+        val trim = outOffsetMs.toLong() * 1_000_000L
+        val now = System.nanoTime()
+        var worstLate = 0L
+
+        for (i in 0 until n) {
+            val frame = outBuffer[i * 2]
+            val packed = outBuffer[i * 2 + 1]
+            val rack = ((packed shr 24) and 0xff).toInt()
+            val status = ((packed shr 16) and 0xff).toInt()
+            val d1 = ((packed shr 8) and 0xff).toInt()
+            val d2 = (packed and 0xff).toInt()
+
+            // When this frame will actually be heard, less the trim. Without
+            // an anchor the stream cannot say, so it goes out now and the
+            // readout says as much rather than pretending.
+            val at = if (anchorFrame >= 0) {
+                anchorNanos + (frame - anchorFrame) * 1_000_000_000L / rate - trim
+            } else {
+                now
+            }
+            if (at < now) worstLate = maxOf(worstLate, now - at)
+
+            val len = lengthOf(status)
+            outBytes[0] = status.toByte()
+            if (len > 1) outBytes[1] = d1.toByte()
+            if (len > 2) outBytes[2] = d2.toByte()
+
+            if (rack == 0xff) {
+                // The transport's own: clock, start, stop, position. Everyone
+                // listening gets it.
+                for (port in outPorts.values) runCatching { port.send(outBytes, 0, len, at) }
+            } else {
+                val port = outPorts.values.firstOrNull()
+                if (port != null) runCatching { port.send(outBytes, 0, len, at) }
+            }
+            sent += 1
+        }
+        // Anything already in the past by the time it was handed over is the
+        // measure of whether this is working. Smoothed, because one late
+        // batch is the scheduler and a hundred is a problem.
+        outLateMs = outLateMs * 0.9f + (worstLate / 1_000_000.0f) * 0.1f
+    }
+
+    // Not setClockOut: the property's own generated setter has that JVM
+    // signature already, the same trap as chooseTheme and chooseClipMode.
+    // --- Following someone else's clock ---------------------------------------
+    enum class Follow { Off, On, Auto }
+
+    /** The setting. */
+    var follow by mutableStateOf(Follow.Off)
+        private set
+
+    /** Whether the engine is following now: on, or auto with a clock arriving. */
+    var clockIn by mutableStateOf(false)
+        private set
+
+    /**
+     * When the last clock byte came in, for auto. Written on the MIDI thread
+     * and read by the poll.
+     */
+    @Volatile private var lastClockNs = 0L
+    @Volatile private var autoFollowing = false
+    var followBpm by mutableStateOf(0f)
+        private set
+    var followErrorMs by mutableStateOf(0f)
+        private set
+    var followLocked by mutableStateOf(false)
+        private set
+
+    /**
+     * A realtime byte arrived. Its timestamp is turned into a frame here,
+     * through the same anchor the sender uses in the other direction, so
+     * the engine is handed something already in its own time base.
+     */
+    private fun clockIn(status: Int, d1: Int, d2: Int, stamp: Long) {
+        if (follow == Follow.Off) return
+        lastClockNs = System.nanoTime()
+        // Auto takes the clock from its first byte, here rather than on the
+        // next poll: the engine reads the switch when it takes the byte off
+        // its queue, so a start that arrives first is not played on our
+        // own clock. Link, if it is on, keeps the tempo.
+        if (follow == Follow.Auto && !autoFollowing && !com.rm.acidulous.engine.LinkHub.enabled) {
+            autoFollowing = true
+            NativeEngine.setExternalSync(true)
+        }
+        NativeEngine.audioAnchor(anchor)
+        val anchorFrame = anchor[0]
+        val rate = if (anchor[2] > 0) anchor[2] else 48000L
+        val at = if (stamp > 0L) stamp else System.nanoTime()
+        val frame = if (anchorFrame >= 0) {
+            anchorFrame + (at - anchor[1]) * rate / 1_000_000_000L
+        } else {
+            0L
+        }
+        NativeEngine.midiClockIn(frame, status, d1, d2)
+    }
+
+    fun chooseFollow(mode: Follow) {
+        follow = mode
+        autoFollowing = false
+        clockIn = mode == Follow.On
+        NativeEngine.setExternalSync(clockIn)
+    }
+
+    /** Called from the poll: what the follower is making of it. */
+    /**
+     * Which member channels are holding a note, as a bit per channel.
+     *
+     * State here rather than polled inside the window, because the window
+     * measures every one of its pages to size itself to the tallest and a
+     * `remember` in a page that is measured and discarded never keeps
+     * anything. Everything else on that page reads state from this object
+     * for the same reason.
+     */
+    var mpeHeld by mutableStateOf(0)
+        private set
+
+    fun readSync() {
+        if (mpeZone != 0) mpeHeld = NativeEngine.mpeHeldMask
+        if (follow == Follow.Auto) {
+            // A master that stops sending has gone, and the song's own tempo
+            // comes back. A second is eight pulses at 20 bpm, and more than a
+            // phone stalls for.
+            if (autoFollowing && System.nanoTime() - lastClockNs > AUTO_GONE_NS) {
+                autoFollowing = false
+                NativeEngine.setExternalSync(false)
+            }
+            clockIn = autoFollowing
+        }
+        if (!clockIn) {
+            followBpm = 0f
+            followLocked = false
+            return
+        }
+        val packed = NativeEngine.syncState()
+        followLocked = ((packed ushr 56) and 0xff) != 0L
+        followBpm = (((packed ushr 32) and 0xffffff).toInt()) / 100f
+        followErrorMs = (packed and 0xffffffffL).toInt() / 1000f
+    }
+
+    /**
+     * Ten seconds of a perfectly regular master, generated here.
+     *
+     * The follower cannot be tested without something to follow, and an
+     * emulator has nothing to plug in. The pulses are stamped from a fixed
+     * start rather than from when this thread happens to wake up, so what
+     * is being tested is the loop and the whole chain behind it - parser,
+     * JNI, queue, clock - rather than the accuracy of a Handler.
+     */
+    fun testClock(bpm: Float = 120f) {
+        if (follow == Follow.Off) return
+        val periodNs = (60.0e9 / (bpm.toDouble() * 24.0)).toLong()
+        val start = System.nanoTime() + 50_000_000L
+        val pulses = (10.0 * 24.0 * bpm / 60.0).toInt()
+        clockIn(0xfa, 0, 0, start)
+        for (i in 0 until pulses) {
+            val at = start + i * periodNs
+            handler?.postDelayed({ clockIn(0xf8, 0, 0, at) }, ((at - System.nanoTime()) / 1_000_000L).coerceAtLeast(0))
+        }
+        handler?.postDelayed({ clockIn(0xfc, 0, 0, start + pulses * periodNs) },
+            ((start + pulses * periodNs - System.nanoTime()) / 1_000_000L).coerceAtLeast(0))
+    }
+
+    fun chooseClockOut(on: Boolean) {
+        clockOut = on
+        NativeEngine.setClockOut(on)
+        if (on) startSender()
+    }
+
+    fun toggle(portId: Int) {
+        if (opened.containsKey(portId)) {
+            // Switched off by hand. Remember that, or unplugging and plugging
+            // it back in would quietly turn it on again and the switch would
+            // look like it does not work.
+            declined += portId
+            close(portId)
+            return
+        }
+        declined -= portId
+        open(portId)
+    }
+
+    /** Open a port for input, if it is there and not already open. */
+    private fun open(portId: Int) {
+        if (opened.containsKey(portId)) return
+        val sys = system ?: return
+        val info = sys.devices.firstOrNull { it.id == portId } ?: return
+        if (info.outputPortCount <= 0) return
+        sys.openDevice(info) { device -> attach(portId, device) }
+    }
+
+    /**
+     * Ports the user switched off by hand, so a hot-plug does not undo it.
+     *
+     * Only for this run: a device the user turned off and then physically
+     * unplugged and reconnected is a fresh decision, and the far commoner case
+     * is that they want it on.
+     */
+    private val declined = HashSet<Int>()
+
+    private fun attach(portId: Int, device: MidiOpenDevice?) {
+        if (device == null) {
+            Log.w(TAG, "could not open device $portId")
+            return
+        }
+        opened[portId] = device
+        // **A parser for each port**, not one for the device. A device with
+        // several ports - a Launchpad has its own, a DIN socket and a DAW
+        // port - interleaves them, and one parser could stitch a message
+        // from one port onto the running status of another. And it is how
+        // the Launchpad's own port can go to its controller while its DIN
+        // socket still plays like any other input.
+        val launchpad = LaunchpadPro.isOne(device.desc.name, device.desc.product)
+        val exquis = PadLights.isExquis(device.desc.name, device.desc.product, device.desc.maker)
+        val list = ArrayList<MidiParser>()
+        for (p in 0 until device.desc.outputPortCount) {
+            val surface = launchpad && p == 0
+            val parser = MidiParser(
+                onMessage = { status, d1, d2 ->
+                    val to = launchpadInput
+                    if (surface && launchpadOn && to != null) {
+                        lastMessage = "launchpad · %02x %d %d".format(status, d1, d2)
+                        to(status, d1, d2)
+                    } else if (exquis && buttonsHeld && status == 0xBF && d1 in PadLights.BUTTONS) {
+                        // One of the Exquis's buttons the app holds: an action, not a controller.
+                        lastMessage = "exquis · button $d1 ${if (d2 > 0) "on" else "off"}"
+                        PadLights.exquisButton(status, d1, d2)?.let { id ->
+                            exquisButtonPressed?.let { f -> postToMain { f(id) } }
+                        }
+                    } else {
+                        currentPort = portId; dispatch(status, d1, d2); currentPort = -1
+                    }
+                },
+                onRealtime = { status, d1, d2, stamp -> clockIn(status, d1, d2, stamp) },
+                // The Exquis says when it has painted over its LEDs - coming
+                // in and out of its settings menu - so the buttons are drawn
+                // again then, and only then.
+                onSysex = { body ->
+                    if (exquis && PadLights.isExquisRefresh(body)) handler?.post {
+                        shownLeds.clear()
+                        syncPads()
+                    }
+                },
+            )
+            list += parser
+            // The timestamp is the whole point of following a clock: a
+            // handler thread's wake-up is jittery by milliseconds, and this
+            // is not.
+            device.connectOutputPort(p) { msg, offset, count, timestamp ->
+                parser.parse(msg, offset, count, timestamp)
+            }
+        }
+        parsers[portId] = list
+        refresh()
+    }
+
+    private fun close(portId: Int) {
+        releasePort(portId)
+        opened.remove(portId)?.close()
+        parsers.remove(portId)
+        if (opened.isEmpty()) forgetController()
+        refresh()
+    }
+
+    /**
+     * Re-address a message and push it at the engine. Channel 10 is not
+     * special here: a rack is whatever the routing says it is.
+     */
+    /**
+     * An MPE zone: 0 off, 1 lower (master channel 1, members climbing from
+     * 2), 2 upper (master 16, members descending from 15).
+     *
+     * A zone is one instrument played with many channels, so while one is
+     * on, channel-to-track routing cannot also be true - the member
+     * channels are fingers, not tracks. Follow and pinned still choose
+     * which track the zone plays.
+     */
+    // Compose state, like every other setting here: the MIDI window reads
+    // these directly and would not redraw for a plain var.
+    //
+    // **Auto is the default, and follows the controller.** A zone that had to
+    // be switched on by hand was a zone that was usually off, and off every
+    // finger's bend and pressure landed on the whole track - a forty-eight
+    // semitone slide squeezed into a two-semitone bend. So, set to auto, the
+    // zone is whatever the controller's MPE configuration message says, its
+    // bend range is whatever its pitch-bend-range message says, and a
+    // controller that says neither is recognised by what it does: two
+    // fingers held at once on two channels is not a keyboard.
+
+    /** What the person chose: off, lower, upper, or auto (MpeZone.AUTO). */
+    var mpeSetting by mutableStateOf(MpeZone.AUTO)
+        private set
+    /** The zone in force: the setting's, or in auto what the controller said. */
+    var mpeZone by mutableStateOf(0)
+        private set
+    var mpeMembers by mutableStateOf(15)
+        private set
+    var mpeBendSemis by mutableStateOf(48f)
+        private set
+    var mpeTimbre by mutableStateOf(true)
+        private set
+    /** The fingers and bend set by hand, for a lower or upper setting. */
+    var mpeManualMembers by mutableStateOf(15)
+        private set
+    var mpeManualBend by mutableStateOf(48f)
+        private set
+
+    /** How auto came by the zone it is using. */
+    enum class MpeHeard { Nothing, Config, Fingers }
+    var mpeHeard by mutableStateOf(MpeHeard.Nothing)
+        private set
+    /** What the controller has said and done: see [MpeAuto]. */
+    private val auto = MpeAuto()
+
+    fun chooseMpe(setting: Int, members: Int, bendSemis: Float, timbre: Boolean) {
+        mpeSetting = MpeZone.clampSetting(setting)
+        mpeManualMembers = MpeZone.clampMembers(members)
+        mpeManualBend = MpeZone.clampBend(bendSemis)
+        mpeTimbre = timbre
+        applyMpe()
+    }
+
+    /** Puts the zone in force - the setting's, or auto's - into the engine. */
+    private fun applyMpe() {
+        if (mpeSetting == MpeZone.AUTO) {
+            mpeZone = auto.zone
+            mpeMembers = auto.members
+            mpeBendSemis = auto.bendSemis
+        } else {
+            mpeZone = MpeZone.clampZone(mpeSetting)
+            mpeMembers = mpeManualMembers
+            mpeBendSemis = mpeManualBend
+        }
+        mpeHeard = when {
+            auto.zone == MpeZone.OFF -> MpeHeard.Nothing
+            auto.fromConfig -> MpeHeard.Config
+            else -> MpeHeard.Fingers
+        }
+        NativeEngine.setMpeZone(mpeZone, mpeMembers, mpeBendSemis)
+    }
+
+    /** Auto heard something that changes the zone in force. */
+    private fun autoChanged() { if (mpeSetting == MpeZone.AUTO) applyMpe() }
+
+    /** Nothing plugged in any more: auto forgets what it heard. */
+    private fun forgetController() {
+        auto.forget()
+        applyMpe()
+    }
+
+    /**
+     * The track a note on [channel] plays: the one followed, the one pinned,
+     * or the channel's own. An MPE finger is never routed by its channel -
+     * the fingers are one player, so they go wherever the zone is pointed.
+     * The pads show the scale of the same track, so this is the one rule.
+     */
+    fun trackForChannel(channel: Int): Int = when {
+        mpeMember(channel) -> if (routing == Routing.FixedTrack) fixedRack else target()
+        routing == Routing.FixedTrack -> fixedRack
+        routing == Routing.ChannelToRack -> channel
+        else -> target()
+    }
+
+    /** Is this channel one of the zone's fingers? Channels are 0-based here. */
+    fun mpeMember(channel: Int): Boolean = MpeZone.member(mpeZone, mpeMembers, channel)
+
+    private fun dispatch(status: Int, d1: Int, d2In: Int) {
+        val kind = status and 0xf0
+        // Before mappings, recording and the readout, so all of them see
+        // the note as it will sound. The test generators are left alone.
+        val d2 = if (kind == 0x90 && currentPort >= 0) VelocityCurve.apply(d2In, velocityCurve) else d2In
+        if (kind == 0xc0) return // program change: nothing to address it to yet
+        val channel = status and 0x0f
+        // The controller describing itself - its zone, its bend range - is
+        // read here and goes no further.
+        if (kind == 0xb0) {
+            val used = auto.controller(channel, d1, d2)
+            if (auto.changed) autoChanged()
+            if (used) {
+                received += 1
+                lastMessage = "ch ${channel + 1} · rpn cc $d1 = $d2"
+                return
+            }
+        }
+        if (kind == 0x90 && d2 > 0) {
+            auto.noteOn(channel, recognise = mpeSetting == MpeZone.AUTO)
+            if (auto.changed) autoChanged()
+        } else if (kind == 0x80 || kind == 0x90) {
+            auto.noteOff(channel)
+        }
+        val member = mpeMember(channel)
+        val rack = trackForChannel(channel)
+        if (kind == 0x90 && d2 > 0 && currentPort >= 0 && currentPort == padInfo?.id && exquisChannel != channel) {
+            exquisChannel = channel
+        }
+        // A note whose note-on a mapping took must not have its note-off
+        // delivered either, or the machine is left holding a note it was
+        // never given.
+        val isOff = kind == 0x80 || (kind == 0x90 && d2 == 0)
+        // Where this actually goes. A note that is already sounding goes back
+        // to the rack that was given its note-on, whatever is selected now;
+        // expression on a member channel follows the note it is shaping.
+        val rackNow = when {
+            isOff -> held.rackForOff(channel, d1) ?: rack
+            kind == 0x90 -> rack
+            member -> held.rackForExpression(channel) ?: rack
+            else -> rack
+        }
+        val taken = when {
+            isOff -> swallowed.remove(d1)
+            kind == 0xb0 -> onMappable(d1, null, d2, rack)
+            kind == 0x90 -> onMappable(null, d1, d2, rack).also { if (it) swallowed += d1 }
+            else -> false
+        }
+        // The channel goes with every message: the engine decides what is a
+        // finger, and keeps which note each channel holds even before a zone
+        // is on - see Engine.cpp. Slide is only slide if the setting says so;
+        // otherwise CC 74 is an ordinary controller, whatever a mapping makes it.
+        val plainSlide = kind == 0xb0 && d1 == 74 && !mpeTimbre
+        if (!taken) {
+            NativeEngine.midiEvent(
+                rackNow, kind, d1, d2,
+                if (plainSlide) NativeEngine.NO_CHANNEL else channel,
+            )
+        }
+        // Remember, and forget, where notes went.
+        if (kind == 0x90 && d2 > 0 && !taken) {
+            held.onNoteOn(currentPort, channel, d1, rackNow)
+        } else if (isOff) {
+            held.onNoteOff(channel, d1)
+        }
+        received += 1
+        lastMessage = "ch ${channel + 1} · " + when (kind) {
+            0x90 -> if (d2 == 0) "off $d1" else "on $d1 v$d2"
+            0x80 -> "off $d1"
+            0xb0 -> "cc $d1 = $d2"
+            0xd0 -> "prs $d1"
+            0xe0 -> "bend ${((d2 shl 7) or d1) - 8192}"
+            else -> "%02x".format(status)
+        } + " → rack ${rackNow + 1}"
+    }
+
+    // --- Bluetooth ------------------------------------------------------------
+    //
+    // A BLE MIDI device is not a MIDI device until it has been found and
+    // opened. The platform does the finding (AndroidMidi.kt on a phone); what
+    // it opens comes back through [attachFound] and from there it is the
+    // same as anything plugged in.
+
+    /** Whether this platform finds Bluetooth MIDI itself at all; where it does not, there is nothing to offer. */
+    val canFindBluetooth: Boolean get() = system?.bluetooth != null
+
+    /** Whether the platform can scan for Bluetooth MIDI and Bluetooth is on. */
+    fun bluetoothReady(): Boolean = system?.bluetooth?.ready() == true
+
+    /** The permissions a scan needs. */
+    fun bluetoothPermissions(): Array<String> = system?.bluetooth?.permissions() ?: emptyArray()
+
+    fun scanBluetooth() { system?.bluetooth?.scan() }
+
+    fun stopScan() { system?.bluetooth?.stop() }
+
+    fun connectBluetooth(address: String) { system?.bluetooth?.connect(address) }
+
+    /** A device the Bluetooth side found and opened: play it like one plugged in. */
+    internal fun attachFound(device: MidiOpenDevice) = attach(device.desc.id, device)
+
+    /**
+     * Prove the routing without hardware: middle C, held long enough to be
+     * heard and to show up on the meters, down the same path a port uses.
+     */
+    fun testNote() {
+        dispatch(0x90, 60, 100)
+        handler?.postDelayed({ dispatch(0x80, 60, 0) }, 1500)
+    }
+
+    /**
+     * A Launchpad's pads without one: four pads along the bottom row,
+     * pressed and let go, down the path its own port takes. The emulator has
+     * no USB MIDI, and this is the proof the surface plays - and records -
+     * the track it has selected.
+     */
+    fun testLaunchpad() {
+        val to = launchpadInput ?: return
+        for (i in 0..3) {
+            handler?.postDelayed({ lastMessage = "launchpad · pad ${11 + i}"; received += 1; to(0x90, 11 + i, 100) }, (i * 300).toLong())
+            handler?.postDelayed({ to(0x90, 11 + i, 0) }, (i * 300 + 200).toLong())
+        }
+    }
+
+    /**
+     * A knob sweep, down the path a real controller takes.
+     *
+     * There is no way to exercise an incoming CC on an emulator, and the one
+     * thing this window exists to do is say out loud what it thinks is
+     * happening. [cc] defaults to the mod wheel, which is the one controller
+     * the app already answers without any mapping.
+     */
+    fun testWheel(cc: Int = 1) {
+        for (i in 0..20) {
+            handler?.postDelayed({ dispatch(0xb0, cc, i * 127 / 20) }, (i * 60).toLong())
+        }
+    }
+
+    /**
+     * Two fingers, and only one of them moves.
+     *
+     * The whole of MPE in one gesture: two notes arrive on their own member
+     * channels, and then a bend, a press and a slide are sent on the first
+     * channel only. If the second note moves too, the expression is not
+     * reaching the voice that owns it - which is the one thing that can go
+     * wrong here and the one thing an emulator cannot otherwise show.
+     *
+     * The channels are the zone's own first two members, so this exercises
+     * the same arithmetic a controller would.
+     */
+    fun testMpe() {
+        // Under auto with nothing heard yet, it plays as a lower-zone
+        // controller would, and auto recognises it as it would a real one.
+        if (mpeZone == 0 && mpeSetting != MpeZone.AUTO) return
+        val a = if (mpeZone == 2) 14 else 1
+        val b = if (mpeZone == 2) 13 else 2
+        dispatch(0x90 or a, 60, 100)
+        dispatch(0x90 or b, 64, 100)
+        for (i in 0..20) {
+            val t = (i * 140).toLong()
+            val bend = 8192 + i * 8191 / 20
+            handler?.postDelayed({
+                dispatch(0xe0 or a, bend and 0x7f, (bend shr 7) and 0x7f)
+                dispatch(0xd0 or a, i * 127 / 20, 0)
+                dispatch(0xb0 or a, 74, i * 127 / 20)
+            }, t)
+        }
+        // Long enough to hear, and long enough to watch the readout: the
+        // sweep alone is three seconds.
+        handler?.postDelayed({ dispatch(0x80 or a, 60, 0); dispatch(0x80 or b, 64, 0) }, 3400)
+    }
+}
