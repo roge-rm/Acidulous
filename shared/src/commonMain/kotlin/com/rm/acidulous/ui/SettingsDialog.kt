@@ -225,7 +225,13 @@ private fun AudioTab(trackNames: List<String>) {
     // its core mid-block hands that whole absence to whatever it was timing.
     // The percentage is how many blocks were thrown away for that reason -
     // and it is the answer to "is this the DSP or the scheduler" by itself.
-    val lines = mutableListOf(
+    // In a browser there are no peaks to read (AppHost.timesAudioPrecisely):
+    // the buffer, and a line saying why the rest is not here.
+    val precise = com.rm.acidulous.AppHost.current.timesAudioPrecisely
+    val lines = if (!precise) mutableListOf(
+        "buffer  %d frames · %.0f ms · burst %d".format(frames, ms, burst),
+        "peak timings  not measured in a browser, whose audio thread has no clock fine enough to time a block",
+    ) else mutableListOf(
         "buffer  %d frames · %.0f ms · burst %d · %d dropout%s".format(frames, ms, burst, drops, if (drops == 1L) "" else "s") +
             if (UiPrefs.autoQuality) " · auto running %s".format(if (UiPrefs.qualityNow) "full" else "lean") else "",
         "worst block  %.2f ms of %.2f · %s%s".format(
@@ -251,7 +257,7 @@ private fun AudioTab(trackNames: List<String>) {
     val named = (0 until RACKS)
         .filter { it < trackNames.size && racks[it] > 0 }
         .sortedByDescending { racks[it] }
-    if (named.isNotEmpty()) {
+    if (precise && named.isNotEmpty()) {
         // A snowflake means that cost was paid while the track was playing
         // frozen audio - which should be next to nothing, so it is the
         // readout saying the freeze is not doing its job.
@@ -295,7 +301,7 @@ private fun AudioTab(trackNames: List<String>) {
                     Text(l, color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp, modifier = Modifier.fillMaxWidth())
                 }
             }
-            SwitchGrid("peaks", listOf("reset"), -1) {
+            if (precise) SwitchGrid("peaks", listOf("reset"), -1) {
                 worst = 0
                 phases = IntArray(NativeEngine.Phase.entries.size)
                 racks = IntArray(RACKS)

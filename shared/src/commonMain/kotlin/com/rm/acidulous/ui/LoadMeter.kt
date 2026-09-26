@@ -57,8 +57,12 @@ fun rememberEngineLoad(): EngineLoad {
             // its own budget and taken if it is higher. That number is the one
             // a dropout is actually about, and on a device with room to spare
             // it sits below the average and changes nothing.
+            //
+            // Where the audio thread cannot time itself (a browser: see
+            // AppHost.timesAudioPrecisely) the worst case is not a number, and
+            // the average is all there is.
             val budget = NativeEngine.callbackBudgetUs.coerceAtLeast(1)
-            val worst = NativeEngine.recentCallbackUs * 100f / budget
+            val worst = if (com.rm.acidulous.AppHost.current.timesAudioPrecisely) NativeEngine.recentCallbackUs * 100f / budget else 0f
             val now = maxOf(NativeEngine.loadAvg, worst)
             // A slow follower upward and a slower one down: the raw figure
             // flickers by several percent a block, and a meter that will

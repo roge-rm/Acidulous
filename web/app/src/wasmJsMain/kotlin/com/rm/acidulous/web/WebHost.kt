@@ -67,6 +67,7 @@ class WebHost : AppHost {
     override val canKeepScreenOn: Boolean = true
     override val audioStream = com.rm.acidulous.AudioStream.Browser
     override val hasLink: Boolean = false
+    override val timesAudioPrecisely: Boolean = false
 
     private val Doc.web: WebDoc get() = handle as WebDoc
 }

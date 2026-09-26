@@ -98,6 +98,15 @@ interface AppHost {
      * peers by. Where it cannot, the tempo window has no Link page.
      */
     val hasLink: Boolean get() = true
+    /**
+     * Whether the audio thread can time itself to well under a callback, so its
+     * peaks - the worst block, the late count, dropouts - mean something. Not in
+     * a browser: an AudioWorklet has no clock, the one it is lent ticks in steps
+     * as long as a callback, and it cannot see a dropout at all. There the
+     * readouts keep the average load, which the steps even out, and leave the
+     * peaks out rather than show numbers that are wrong.
+     */
+    val timesAudioPrecisely: Boolean get() = true
     /** Whose code the audio stream is, for the About window's credits. */
     val audioStream: AudioStream get() = AudioStream.Oboe
 

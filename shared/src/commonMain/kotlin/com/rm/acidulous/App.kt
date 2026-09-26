@@ -1620,7 +1620,9 @@ fun App(modifier: Modifier = Modifier) {
                 // be two readers, and the callback is the span with the
                 // deadline anyway.
                 val budgetUs = NativeEngine.callbackBudgetUs.toFloat()
-                val recent = NativeEngine.recentCallbackUs
+                // The average where the peaks are not measured: a browser.
+                val recent = if (AppHost.current.timesAudioPrecisely) NativeEngine.recentCallbackUs.toFloat()
+                             else NativeEngine.loadAvg / 100f * budgetUs
                 val interrupted = NativeEngine.interruptedPercent
                 if (budgetUs > 0f) {
                     val share = recent / budgetUs
@@ -1656,8 +1658,10 @@ fun App(modifier: Modifier = Modifier) {
             // a fault in the app rather than as a fault in the song. It takes
             // a third of a block to light and has to fall to under a quarter
             // to go out again.
+            // A track's cost is its worst blocks, which a browser cannot time
+            // (AppHost.timesAudioPrecisely): there every track lit at once.
             rackHot = BooleanArray(16) { i ->
-                if (blockBudgetUs <= 0f || i >= song.tracks.size) {
+                if (blockBudgetUs <= 0f || i >= song.tracks.size || !AppHost.current.timesAudioPrecisely) {
                     false
                 } else {
                     val share = NativeEngine.rackCostUs(i) / blockBudgetUs
@@ -1693,11 +1697,18 @@ fun App(modifier: Modifier = Modifier) {
     // it click", because a block over budget decays out of it in 27 ms and
     // this line is redrawn every 80.
     val budgetUs = NativeEngine.callbackBudgetUs.coerceAtLeast(1)
-    val diagnostics = ("%s · load %.0f%% · worst %.1f/%.1fms cpu %.1f · late %d stall %d · xruns %d · " +
-        "peak %.3f · fade %.2f · on %d off %d%s")
+    // In a browser the peaks are not measured - see AppHost.timesAudioPrecisely
+    // - and the line says the load and what is sounding.
+    val timings = if (AppHost.current.timesAudioPrecisely) {
+        " · worst %.1f/%.1fms cpu %.1f · late %d stall %d · xruns %d".format(
+            worstUs / 1000f, budgetUs / 1000f, worstCpuUs / 1000f, lateCallbacks, stalled, xruns,
+        )
+    } else {
+        ""
+    }
+    val diagnostics = ("%s · load %.0f%%%s · peak %.3f · fade %.2f · on %d off %d%s")
         .format(
-            status, load, worstUs / 1000f, budgetUs / 1000f, worstCpuUs / 1000f,
-            lateCallbacks, stalled, xruns, peak, fade, notesOn, notesOff,
+            status, load, timings, peak, fade, notesOn, notesOff,
             // Only while Link is on, and only the number that matters when
             // it is: how many machines are keeping this time.
             if (com.rm.acidulous.engine.LinkHub.enabled) {
