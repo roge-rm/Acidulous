@@ -1,5 +1,7 @@
 package com.rm.acidulous.engine
 
+import com.rm.acidulous.util.format
+
 import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.pow

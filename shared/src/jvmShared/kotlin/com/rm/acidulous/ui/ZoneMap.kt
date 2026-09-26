@@ -1,5 +1,7 @@
 package com.rm.acidulous.ui
 
+import com.rm.acidulous.util.format
+
 import kotlin.math.roundToInt
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.Canvas

@@ -1,5 +1,7 @@
 package com.rm.acidulous.ui
 
+import com.rm.acidulous.util.format
+
 import androidx.compose.foundation.layout.fillMaxWidth
 import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.PaddingValues

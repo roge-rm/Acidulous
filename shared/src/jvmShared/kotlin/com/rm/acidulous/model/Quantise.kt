@@ -104,7 +104,7 @@ object Quantise {
      */
     fun humanise(notes: List<Note>, which: Set<Int>?, amount: Float, seed: Long, clipTicks: Int): List<Note> {
         if (amount <= 0f) return notes
-        val r = java.util.Random(seed)
+        val r = com.rm.acidulous.util.JavaRandom(seed)
         // Two uniforms summed: a triangle from -1 to 1, most often near 0.
         fun wobble() = r.nextFloat() + r.nextFloat() - 1f
         return notes.mapIndexed { i, n ->

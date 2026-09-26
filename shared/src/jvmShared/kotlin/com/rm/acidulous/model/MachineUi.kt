@@ -1,5 +1,7 @@
 package com.rm.acidulous.model
 
+import com.rm.acidulous.util.format
+
 import com.rm.acidulous.res.*
 import org.jetbrains.compose.resources.StringResource
 

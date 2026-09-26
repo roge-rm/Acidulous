@@ -1,5 +1,7 @@
 package com.rm.acidulous.model
 
+import com.rm.acidulous.util.format
+
 import com.rm.acidulous.engine.NativeEngine
 
 /**

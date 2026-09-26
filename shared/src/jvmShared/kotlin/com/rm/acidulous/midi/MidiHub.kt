@@ -1,5 +1,7 @@
 package com.rm.acidulous.midi
 
+import com.rm.acidulous.util.format
+
 import com.rm.acidulous.midi.launchpad.LaunchpadPro
 import com.rm.acidulous.util.Log
 import com.rm.acidulous.util.postToMain

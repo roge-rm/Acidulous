@@ -1,6 +1,6 @@
 package com.rm.acidulous.model
 
-import java.util.Random
+import com.rm.acidulous.util.JavaRandom
 
 /**
  * Pattern generators: rhythms and lines written as ordinary notes.
@@ -91,7 +91,7 @@ object Generate {
     fun lineNotes(l: Line, pitchClasses: Set<Int>?, clipTicks: Int, ticksPerBeat: Int = PPQN): List<Note> {
         val rungs = ladder(pitchClasses, l.low, l.low + 12 * l.octaves.coerceIn(1, 4))
         if (rungs.isEmpty()) return emptyList()
-        val rng = Random(l.seed.toLong() * 7919L + 17L)
+        val rng = JavaRandom(l.seed.toLong() * 7919L + 17L)
         val step = l.stepTicks.coerceAtLeast(1)
         val count = clipTicks / step
         // Every step's dice drawn up front, whether it sounds or not, so the
@@ -142,7 +142,7 @@ object Generate {
     ): List<Note> {
         if (m.amount <= 0f || notes.isEmpty()) return notes
         val a = m.amount.coerceIn(0f, 1f)
-        val rng = Random(m.seed.toLong() * 104729L + 3L)
+        val rng = JavaRandom(m.seed.toLong() * 104729L + 3L)
         val step = grid.coerceAtLeast(1)
         val low = notes.minOf { it.pitch } - 12
         val high = notes.maxOf { it.pitch } + 12

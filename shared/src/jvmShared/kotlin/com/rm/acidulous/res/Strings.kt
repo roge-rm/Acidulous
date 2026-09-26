@@ -1,11 +1,12 @@
 package com.rm.acidulous.res
 
+import com.rm.acidulous.util.format
+
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.StringArrayResource
 import org.jetbrains.compose.resources.StringResource
-import java.util.Locale
 
 // The app's strings, looked up the way Android looked them up.
 //
@@ -22,7 +23,7 @@ fun stringResource(res: StringResource): String = org.jetbrains.compose.resource
 
 @Composable
 fun stringResource(res: StringResource, vararg args: Any?): String =
-    String.format(Locale.getDefault(), org.jetbrains.compose.resources.stringResource(res), *args)
+    org.jetbrains.compose.resources.stringResource(res).format(*args)
 
 /**
  * The phone's words, [touch], or [mouse]'s where the pointer is a mouse
@@ -49,7 +50,7 @@ fun pluralStringResource(res: PluralStringResource, count: Int): String =
 
 @Composable
 fun pluralStringResource(res: PluralStringResource, count: Int, vararg args: Any?): String =
-    String.format(Locale.getDefault(), org.jetbrains.compose.resources.pluralStringResource(res, count), *args)
+    org.jetbrains.compose.resources.pluralStringResource(res, count).format(*args)
 
 @Composable
 fun stringArrayResource(res: StringArrayResource): Array<String> =
@@ -66,11 +67,11 @@ object AppStrings {
     fun getString(res: StringResource): String = runBlocking { org.jetbrains.compose.resources.getString(res) }
 
     fun getString(res: StringResource, vararg args: Any?): String =
-        String.format(Locale.getDefault(), getString(res), *args)
+        getString(res).format(*args)
 
     fun getQuantityString(res: PluralStringResource, count: Int, vararg args: Any?): String {
         val raw = runBlocking { org.jetbrains.compose.resources.getPluralString(res, count) }
-        return if (args.isEmpty()) raw else String.format(Locale.getDefault(), raw, *args)
+        return if (args.isEmpty()) raw else raw.format(*args)
     }
 
     fun getStringArray(res: StringArrayResource): Array<String> =
