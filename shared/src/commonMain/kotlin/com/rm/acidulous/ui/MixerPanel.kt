@@ -98,6 +98,13 @@ fun MixerPanel(
     clickOn: Boolean,
     onClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * Whether the strips may wrap into rows: in the editor's column, yes. Not
+     * under the song grid, where the mixer is a bar along the bottom - that
+     * box is everything under the header, which always has height for two
+     * rows, and they filled the screen and pushed the grid off it.
+     */
+    rows: Boolean = true,
 ) {
     val c = Acid.colors
     // **The fader takes what is left, when there is a "left" to take.**
@@ -142,7 +149,7 @@ fun MixerPanel(
     // did, full height.
     val count = song.tracks.size + song.master.groups.size + (if (song.master.groups.size < MAX_GROUPS) 1 else 0) + 1
     val across = (STRIP_W + 6.dp) * count + 6.dp
-    val wrap = room != Dp.Infinity && across > maxWidth && room >= (chrome + FADER_MIN) * 2 + 6.dp
+    val wrap = rows && room != Dp.Infinity && across > maxWidth && room >= (chrome + FADER_MIN) * 2 + 6.dp
     val faderH = if (room == Dp.Infinity) {
         FADER_H
     } else if (wrap) {

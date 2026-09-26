@@ -928,6 +928,7 @@ fun MainScreen(
                     else -> MixerPanel(
                         song, editor, rackPeaks, masterPeak, clickOn, onClick,
                         Modifier.weight(1f).onSizeChanged { panelH = with(density) { it.height.toDp() } }.together(),
+                        rows = false,
                     )
                 }
             }
