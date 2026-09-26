@@ -101,14 +101,22 @@ private fun DevicesTab() {
             Text(stringResource(Res.string.midi_unsupported), color = Acid.colors.red, fontSize = 12.sp)
         }
         WindowCard(stringResource(if (MidiHub.canFindBluetooth) Res.string.midi_inputs else Res.string.midi_inputs_cable)) {
-            ports.forEach { port ->
-                DialogRow(
-                    mark = if (port.bluetooth) "ᛒ" else "⎓",
-                    name = port.name,
-                    under = port.maker,
-                    trailing = if (port.open) stringResource(Res.string.midi_listening) else stringResource(Res.string.midi_tap_to_open, Res.string.midi_tap_to_open_mouse),
-                    on = port.open,
-                ) { MidiHub.toggle(port.id) }
+            // **A list, in one column.** In a wide window a card's controls
+            // stand side by side, and rows that each want the whole width
+            // left the second and every one after it none at all - a
+            // Launchpad plugged in beside another device was simply not there.
+            if (ports.isNotEmpty()) Line {
+                androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+                    ports.forEach { port ->
+                        DialogRow(
+                            mark = if (port.bluetooth) "ᛒ" else "⎓",
+                            name = port.name,
+                            under = port.maker,
+                            trailing = if (port.open) stringResource(Res.string.midi_listening) else stringResource(Res.string.midi_tap_to_open, Res.string.midi_tap_to_open_mouse),
+                            on = port.open,
+                        ) { MidiHub.toggle(port.id) }
+                    }
+                }
             }
             if (ports.isEmpty()) Line { Readout(stringResource(if (MidiHub.canFindBluetooth) Res.string.midi_no_inputs else Res.string.midi_no_inputs_cable)) }
             // Only with one plugged in: the app plays it, or it is itself.
@@ -163,13 +171,18 @@ private fun DevicesTab() {
         // Each track chooses whether it sends, in the mixer; this is where to,
         // and how early.
         WindowCard(stringResource(Res.string.midi_outputs)) {
-            MidiHub.destinations.forEach { dest ->
-                DialogRow(
-                    mark = "→",
-                    name = dest.name,
-                    trailing = if (dest.open) stringResource(Res.string.midi_sending) else stringResource(Res.string.midi_tap_to_open, Res.string.midi_tap_to_open_mouse),
-                    on = dest.open,
-                ) { MidiHub.toggleDestination(dest.id) }
+            // One column, as the inputs are.
+            if (MidiHub.destinations.isNotEmpty()) Line {
+                androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+                    MidiHub.destinations.forEach { dest ->
+                        DialogRow(
+                            mark = "→",
+                            name = dest.name,
+                            trailing = if (dest.open) stringResource(Res.string.midi_sending) else stringResource(Res.string.midi_tap_to_open, Res.string.midi_tap_to_open_mouse),
+                            on = dest.open,
+                        ) { MidiHub.toggleDestination(dest.id) }
+                    }
+                }
             }
             if (MidiHub.destinations.isEmpty()) Line { Readout(stringResource(Res.string.midi_no_outputs)) }
             // Raise it if the external part drags behind what you hear.

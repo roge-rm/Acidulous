@@ -117,7 +117,14 @@ class WebMidi : MidiSystem {
             val f = line.split('\u0001')
             if (f.size < 4) null else WebPort(f[0] == "o", f[1], f[2], f[3])
         }.filter { !it.name.startsWith("Midi Through") }
-        return ports.groupBy { it.name }.map { (name, own) ->
+        // Windows names a device's second and third ports after its first:
+        // "MIDIIN2 (LPProMK3 MIDI)", "MIDIOUT3 (LPProMK3 MIDI)". They are
+        // that device's ports, so they join it - after its own, which is port
+        // nought, the one the hub plays and sends to.
+        val windowsPort = Regex("""^MIDI(?:IN|OUT)\d+ \((.+)\)$""")
+        fun deviceOf(p: WebPort) = windowsPort.find(p.name)?.groupValues?.get(1) ?: p.name
+        return ports.groupBy { deviceOf(it) }.map { (name, all) ->
+            val own = all.sortedBy { it.name != name }
             val sources = own.filter { !it.output }.map { it.id }
             val destinations = own.filter { it.output }.map { it.id }
             val maker = own.first().maker.ifEmpty { null }
