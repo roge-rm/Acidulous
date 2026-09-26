@@ -71,6 +71,9 @@ private fun midiSend(id: String, bytes: String, atMs: Double): Unit = js(
     })()""",
 )
 
+/** Where the page's performance.now() starts, in ms from 1970. */
+private fun pageOrigin(): Double = js("performance.timeOrigin")
+
 private fun setTimer(task: () -> Unit, ms: Double): Int = js("setTimeout(task, ms)")
 private fun clearTimer(id: Int): Unit = js("clearTimeout(id)")
 
@@ -164,10 +167,10 @@ class WebMidi : MidiSystem {
             return object : MidiSendPort {
                 override fun send(bytes: ByteArray, offset: Int, count: Int) =
                     midiSend(id, latin1(bytes, offset, count), 0.0)
-                // Web MIDI waits for itself, on performance.now()'s clock -
-                // which System.nanoTime is, here, in nanoseconds.
+                // Web MIDI waits for itself, on performance.now()'s clock;
+                // System.nanoTime here counts from 1970, the engine's base.
                 override fun send(bytes: ByteArray, offset: Int, count: Int, timestamp: Long) =
-                    midiSend(id, latin1(bytes, offset, count), timestamp / 1_000_000.0)
+                    midiSend(id, latin1(bytes, offset, count), timestamp / 1_000_000.0 - pageOrigin())
                 override fun close() {}
             }
         }
@@ -177,7 +180,7 @@ class WebMidi : MidiSystem {
             heard += id
             midiListen(id) { data, atMs ->
                 val bytes = ByteArray(data.length) { data[it].code.toByte() }
-                runCatching { onSend(bytes, 0, bytes.size, (atMs * 1_000_000.0).toLong()) }
+                runCatching { onSend(bytes, 0, bytes.size, ((atMs + pageOrigin()) * 1_000_000.0).toLong()) }
                     .onFailure { Log.w(TAG, "a message from ${desc.name} could not be handled", it) }
             }
         }

@@ -48,6 +48,19 @@ EM_JS(void, acid_input_want, (int on), {
 
 namespace {
 
+/**
+ * The time, for the audio thread, which has no clock of its own worth the name:
+ * an AudioWorklet's scope has no performance.now(), and the stand-in
+ * (worklet-clock.js) had Date.now()'s whole milliseconds - so a callback of
+ * 0.7 ms read as 0, 1 or 2, and the load meter, the late count and every
+ * cost in Settings were rounded to a tick bigger than what they measured.
+ * A thread of the driver's own writes the time here every quarter
+ * millisecond, from a worker that has the real clock; the audio thread's
+ * performance.now() reads it (acid_clock_ms).
+ */
+std::atomic<double> clockMs{0.0};
+constexpr auto kClockTick = std::chrono::microseconds(250);
+
 /** The audio thread's own stack, which Emscripten needs handed to it. */
 alignas(16) uint8_t workletStack[128 * 1024];
 
@@ -135,6 +148,13 @@ bool AudioDriver::start() {
     workletOwns = false;
     standbyStop = false;
     standbyThread = std::thread([this] { standby(); });
+    clockStop = false;
+    clockThread = std::thread([this] {
+        while (!clockStop.load(std::memory_order_relaxed)) {
+            clockMs.store(emscripten_get_now(), std::memory_order_relaxed);
+            std::this_thread::sleep_for(kClockTick);
+        }
+    });
     emscripten_start_wasm_audio_worklet_thread_async(context, workletStack, sizeof workletStack, onThreadStarted, this);
     LOGI("audio context %d at %d Hz; the worklet follows", context, actualSampleRate);
     return true;
@@ -239,6 +259,8 @@ void AudioDriver::close() {
     stopInput();
     standbyStop = true;
     if (standbyThread.joinable()) standbyThread.join();
+    clockStop = true;
+    if (clockThread.joinable()) clockThread.join();
     if (context == 0) return;
     if (node != 0) emscripten_destroy_web_audio_node(node);
     emscripten_destroy_audio_context(context);
@@ -307,3 +329,6 @@ void AudioDriver::render(const float *inLeft, const float *inRight, float *left,
     if (us > callbackBudgetUs()) lateCallbacks.fetch_add(1, std::memory_order_relaxed);
     inCallback.store(false);
 }
+
+/** The time the clock thread last wrote, in ms from 1970, or 0 before it has: see worklet-clock.js. */
+extern "C" EMSCRIPTEN_KEEPALIVE double acid_clock_ms() { return clockMs.load(std::memory_order_relaxed); }

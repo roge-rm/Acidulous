@@ -18,7 +18,12 @@ private fun localDayAndTime(ms: Double): String = js(
 
 actual object System {
     actual fun currentTimeMillis(): Long = nowMs().toLong()
-    actual fun nanoTime(): Long = (monotonicMs() * 1_000_000.0).toLong()
+    // **On the engine's base, not the page's.** Emscripten counts its threads'
+    // time from 1970 (performance.timeOrigin + now), so that a page and its
+    // workers, each with its own origin, agree; the audio stream's anchors are
+    // in that base, and MIDI out is scheduled by comparing them with this. A
+    // nanosecond count from 1970 is 1.8e18, inside a Long.
+    actual fun nanoTime(): Long = (nowMs() * 1_000_000.0).toLong()
 }
 
 actual val Dispatchers.IO: CoroutineDispatcher get() = Dispatchers.Default

@@ -163,6 +163,10 @@ class AudioDriver {
     /** The stand-in is inside a block, which the worklet waits out. */
     std::atomic<bool> standbyBusy{false};
     std::atomic<bool> standbyStop{false};
+
+    /** Writes the time for the audio thread: see acid_clock_ms. */
+    std::thread clockThread;
+    std::atomic<bool> clockStop{false};
     int32_t carryFrames = 0;
     int32_t carryOffset = 0;
 
