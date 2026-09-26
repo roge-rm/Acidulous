@@ -1,8 +1,17 @@
 package com.rm.acidulous.desktop
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.rm.acidulous.AppHost
@@ -47,6 +56,9 @@ fun main() {
     RightClickHold.install()
 
     application {
+        val window = rememberWindowState(size = DpSize(1280.dp, 800.dp))
+        // What F11 goes back to: the window as it was, maximised or not.
+        var before by remember { mutableStateOf(WindowPlacement.Floating) }
         Window(
             onCloseRequest = {
                 MidiHub.clearPads()
@@ -54,11 +66,27 @@ fun main() {
                 exitApplication()
             },
             title = "Acidulous",
-            state = rememberWindowState(size = DpSize(1280.dp, 800.dp)),
+            state = window,
             // Every key through the hub first, as dispatchKeyEvent does on the
             // phone; whatever the focused control leaves comes back for the
             // plain-letter shortcuts. The windows' keys too: see WindowKeys.
-            onPreviewKeyEvent = { previewKey(it) },
+            //
+            // Except F11, which is the window's own on a desktop: full screen
+            // and back, as a browser or a video player has it. Not Alt+Enter,
+            // which already opens a focused control's hold actions.
+            onPreviewKeyEvent = {
+                if (it.key == Key.F11) {
+                    if (it.type == KeyEventType.KeyDown) {
+                        if (window.placement == WindowPlacement.Fullscreen) {
+                            window.placement = before
+                        } else {
+                            before = window.placement
+                            window.placement = WindowPlacement.Fullscreen
+                        }
+                    }
+                    true
+                } else previewKey(it)
+            },
             onKeyEvent = { fallbackKey(it) },
         ) {
             AppRoot()
