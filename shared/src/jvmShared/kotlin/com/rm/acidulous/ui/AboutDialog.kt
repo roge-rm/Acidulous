@@ -49,7 +49,8 @@ fun AboutDialog(onDismiss: () -> Unit) {
         onDismiss = onDismiss,
         dismissLabel = stringResource(Res.string.done),
         spacing = 16.dp,
-        chips = { SectionChips(stringArrayResource(Res.array.about_tabs).toList(), tab) { tab = it } },
+        pageNames = stringArrayResource(Res.array.about_tabs).toList(),
+        onSelectPage = { tab = it },
     )
 
     reading?.let { LicenceTextDialog(it) { reading = null } }

@@ -67,7 +67,8 @@ fun SettingsDialog(trackNames: List<String> = emptyList(), onDismiss: () -> Unit
         ),
         onDismiss = onDismiss,
         spacing = 6.dp,
-        chips = { SectionChips(stringArrayResource(Res.array.settings_tabs).toList(), tab) { tab = it } },
+        pageNames = stringArrayResource(Res.array.settings_tabs).toList(),
+        onSelectPage = { tab = it },
     )
 }
 

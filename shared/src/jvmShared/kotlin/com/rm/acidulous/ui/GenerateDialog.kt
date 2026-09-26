@@ -111,12 +111,11 @@ fun GenerateDialog(
             editor.endGesture()
             onDismiss()
         },
-        chips = {
-            SectionChips(tabs, tab) {
-                tab = it
-                m.tab = it
-                if (touched) apply()
-            }
+        pageNames = tabs,
+        onSelectPage = {
+            tab = it
+            m.tab = it
+            if (touched) apply()
         },
         pages = listOf(
             { RhythmPage(drums, voices, spelling) { apply() } },

@@ -1,5 +1,7 @@
 package com.rm.acidulous.ui
 
+import androidx.compose.ui.graphics.graphicsLayer
+
 import kotlin.math.roundToInt
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -643,13 +645,13 @@ internal fun WindowCards(content: @Composable () -> Unit) {
         }
         return
     }
+    // **Wide, the cards share each line too**, stretched to fill it, as the
+    // square phone's do: a line of two small cards centred in eleven hundred
+    // dp read as two islands in an empty window. And the window is only as
+    // wide as its widest line wants - see DialogFit.
     if (LocalDialogWide.current) {
         androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides false) {
-            FlowRow(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) { content() }
+            PackedCards(6.dp, content)
         }
         return
     }
@@ -674,11 +676,23 @@ internal fun WindowCards(content: @Composable () -> Unit) {
  */
 @Composable
 private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
+    val fit = LocalDialogFit.current
+    val me = androidx.compose.runtime.remember { Any() }
+    if (fit != null) androidx.compose.runtime.DisposableEffect(fit) { onDispose { fit.forget(me) } }
     androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
         val width = constraints.maxWidth
         val space = gap.roundToPx()
-        val loose = androidx.compose.ui.unit.Constraints(maxWidth = width)
-        val natural = subcompose("widths", content).map { it.measure(loose).width }
+        val loose = androidx.compose.ui.unit.Constraints(maxWidth = maxOf(width, fit?.probe ?: 0))
+        val parts = subcompose("widths", content)
+        // The narrowest each card can be laid without cutting anything - a
+        // switch, a knob, a word - asked only when a page is being tried
+        // beside another. A card Compose cannot answer for (one built on a
+        // SubcomposeLayout) is taken to fit.
+        val least = if ((fit?.probe ?: 0) > 0) parts.map { m ->
+            runCatching { m.minIntrinsicWidth(androidx.compose.ui.unit.Constraints.Infinity) }.getOrDefault(0)
+        } else null
+        val said = parts.map { it.measure(loose).width }
+        val natural = said.map { minOf(it, width) }
         // Greedy lines of indices.
         val lines = mutableListOf<MutableList<Int>>()
         var used = 0
@@ -690,6 +704,7 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
                 line += i; used += space + w
             }
         }
+        // What the widest line would take unstretched: the window's to know.
         // Each line's cards share out what is left over, in proportion.
         val widths = IntArray(natural.size)
         for (line in lines) {
@@ -705,6 +720,11 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
         val tall = subcompose("heights", content).mapIndexed { i, m ->
             m.measure(androidx.compose.ui.unit.Constraints.fixedWidth(widths[i])).height
         }
+        fit?.tell(
+            me,
+            lines.maxOfOrNull { line -> line.sumOf { natural[it] } + space * (line.size - 1) } ?: 0,
+            least?.indices?.any { i -> least[i] > widths[i] } ?: false,
+        )
         val lineH = IntArray(natural.size)
         for (line in lines) {
             val h = line.maxOf { tall[it] }
@@ -739,6 +759,39 @@ private val CardLineW = 480.dp
 
 /** Whether this window is laid out turned: see [DialogShell] and [WindowCards]. */
 internal val LocalDialogWide = androidx.compose.runtime.compositionLocalOf { false }
+
+/**
+ * How wide a window's cards would like to be, told to the window by the cards.
+ *
+ * A window laid wide was always the full 1100 dp, and a window of one small
+ * card was a small card in a wide empty frame. Compose will not ask a
+ * [PackedCards] - a SubcomposeLayout - for its intrinsic width, so each one
+ * says here what its widest line comes to, and [DialogShell] makes the window
+ * as wide as the widest of them. A window with none - text, a list - is as
+ * wide as it always was.
+ */
+internal class DialogFit(
+    /**
+     * How wide a card may say it is, beyond the width it is laid in: a page
+     * beside another measures its cards against the whole window, so one that
+     * does not wrap says how wide it really is. Nought: the width it is in.
+     */
+    val probe: Int = 0,
+) {
+    private val widths = androidx.compose.runtime.mutableStateMapOf<Any, Int>()
+    private val cramped = androidx.compose.runtime.mutableStateMapOf<Any, Boolean>()
+    /** The widest line any of the window's card blocks wants, in px; nought when none has said. */
+    val natural: Int get() = widths.values.maxOrNull() ?: 0
+    /** Some card was laid narrower than the narrowest it can be without cutting something. */
+    val squeezed: Boolean get() = cramped.values.any { it }
+    fun tell(who: Any, px: Int, cut: Boolean = false) {
+        if (widths[who] != px) widths[who] = px
+        if (cramped[who] != cut) cramped[who] = cut
+    }
+    fun forget(who: Any) { widths.remove(who); cramped.remove(who) }
+}
+
+internal val LocalDialogFit = androidx.compose.runtime.compositionLocalOf<DialogFit?> { null }
 
 /** Whether the window is on a square phone's screen, short and narrow: see [DialogShell]. */
 internal val LocalDialogCompact = androidx.compose.runtime.compositionLocalOf { false }
@@ -966,15 +1019,125 @@ fun TabbedDialog(
     onConfirm: (() -> Unit)? = null,
     /** The body's own row, for the header where there is room: see [PlainDialog]. */
     wideHeader: (@Composable () -> Unit)? = null,
-    chips: @Composable () -> Unit,
+    /**
+     * The tabs' names, with [onSelectPage]: the window draws its own tabs, and
+     * where it is wide it shows as many pages side by side as fit - see
+     * [SideBySide]. Without them, [chips] are the tabs and one page shows.
+     */
+    pageNames: List<String>? = null,
+    onSelectPage: ((Int) -> Unit)? = null,
+    chips: (@Composable () -> Unit)? = null,
 ) {
+    val own = pageNames != null && onSelectPage != null && pageNames.size == pages.size
+    // Which pages are showing, as the body's layout last found: the tabs light
+    // them, and go altogether when every page is up.
+    var run by remember(pages.size) { mutableStateOf(selected..selected) }
+    val all = own && run.first == 0 && run.last == pages.lastIndex && pages.size > 1
+    val tabs: (@Composable () -> Unit)? = when {
+        !own -> chips
+        all -> null
+        else -> ({ SectionChips(pageNames!!, selected, lit = run) { i -> if (i !in run) onSelectPage!!(i) } })
+    }
     DialogShell(
         title, onDismiss, dismissLabel, maxBodyHeight,
-        confirmLabel = confirmLabel, onConfirm = onConfirm, chips = chips, wideHeader = wideHeader,
+        confirmLabel = confirmLabel, onConfirm = onConfirm, chips = tabs, wideHeader = wideHeader,
     ) {
-        TallestOf(selected, pages, spacing)
+        if (own && LocalDialogWide.current) {
+            // The height a page may take and still leave the window its
+            // title and its edge: pages side by side must not scroll, or the
+            // window would be tabs again with more steps.
+            val limit = with(androidx.compose.ui.platform.LocalDensity.current) {
+                minOf(maxBodyHeight, androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp() - PageChromeH)
+            }
+            SideBySide(selected, pages, pageNames!!, spacing, limit) { if (it != run) run = it }
+        } else {
+            if (run != selected..selected) run = selected..selected
+            TallestOf(selected, pages, spacing)
+        }
     }
 }
+
+/**
+ * A wide window's pages side by side, as many as fit - Dan, 2026-09-25: a
+ * window as wide as a desktop's showed one tab's two cards and a great deal of
+ * nothing.
+ *
+ * Tried widest first: as many columns as are [MinPageW] wide, each page under
+ * its name, kept if every one of them is no taller than [limit]; fewer if not;
+ * one, as a phone has it, if no two will. The run always holds the chosen page.
+ * Laid side by side the window keeps its full width - see DialogFit.
+ */
+@Composable
+private fun SideBySide(
+    selected: Int,
+    pages: List<@Composable () -> Unit>,
+    names: List<String>,
+    spacing: Dp,
+    limit: Dp,
+    onRun: (IntRange) -> Unit,
+) {
+    val fit = LocalDialogFit.current
+    val me = remember { Any() }
+    if (fit != null) androidx.compose.runtime.DisposableEffect(fit) { onDispose { fit.forget(me) } }
+    val c = com.rm.acidulous.ui.theme.Acid.colors
+    androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
+        val w = constraints.maxWidth
+        val n = pages.size
+        val gap = PageGap.roundToPx()
+        val most = ((w + gap) / (MinPageW.roundToPx() + gap)).coerceIn(1, n)
+        val cap = limit.roundToPx()
+        for (k in most downTo 2) {
+            val start = selected.coerceAtMost(n - k).coerceAtLeast(0)
+            val colW = (w - gap * (k - 1)) / k
+            // Each page says through a fit of its own what its widest card
+            // is, and a page narrower than that is a squeezed card.
+            val own = (start until start + k).map { DialogFit(probe = w) }
+            val cols = (start until start + k).mapIndexed { j, i ->
+                subcompose("$k/$i") {
+                    androidx.compose.runtime.CompositionLocalProvider(LocalDialogFit provides own[j]) {
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(spacing)) {
+                        Text(
+                            names[i], color = c.text, fontSize = 12.sp,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                        )
+                        pages[i]()
+                    }
+                    }
+                }.map { it.measure(androidx.compose.ui.unit.Constraints(colW, colW, 0, androidx.compose.ui.unit.Constraints.Infinity)) }
+            }
+            val tallest = cols.maxOf { col -> col.maxOfOrNull { it.height } ?: 0 }
+            if (tallest > cap || own.any { it.squeezed }) continue
+            fit?.tell(me, w)
+            onRun(start until start + k)
+            return@SubcomposeLayout layout(w, tallest) {
+                cols.forEachIndexed { j, col -> col.forEach { it.place(j * (colW + gap), 0) } }
+            }
+        }
+        // One at a time, as TallestOf lays it: the chosen page, as tall as the tallest.
+        fit?.forget(me)
+        onRun(selected..selected)
+        val one = pages.indices.map { i ->
+            subcompose("1/$i") {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(spacing)) { pages[i]() }
+            }.map { it.measure(androidx.compose.ui.unit.Constraints(maxWidth = w)) }
+        }
+        val height = one.maxOfOrNull { page -> page.maxOfOrNull { it.height } ?: 0 } ?: 0
+        layout(w, height) { one.getOrNull(selected).orEmpty().forEach { it.place(0, 0) } }
+    }
+}
+
+/**
+ * The narrowest a page may stand beside another. A settings card of four
+ * switches to a line wants about this much; at three to a window (340 dp) the
+ * display card wrapped some of its switches and cut the rest.
+ */
+private val MinPageW = 420.dp
+
+/** Between pages side by side. */
+private val PageGap = 16.dp
+
+/** What a window's title, tabs, footer and edge take of its height, for [SideBySide]'s limit. */
+private val PageChromeH = 140.dp
 
 /**
  * The same window without tabs, for the ones that are a single page.
@@ -1113,9 +1276,29 @@ private fun DialogShell(
             // Roomy, the tabs have the header's middle; compact, they have a
             // row of their own and the header's middle is free.
             val headerRow = wideHeader != null && wide && (chips == null || !roomy)
+            // **As wide as the cards want, laid wide** - see DialogFit - and
+            // never narrower than the header needs for its title, its tabs and
+            // its buttons. The first frame is laid out before any card has
+            // said, so the window is not shown until the second has been.
+            val fit = androidx.compose.runtime.remember { DialogFit() }
+            var settled by androidx.compose.runtime.remember { mutableStateOf(false) }
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                androidx.compose.runtime.withFrameNanos { }
+                androidx.compose.runtime.withFrameNanos { }
+                settled = true
+            }
+            val maxW = if (!wide) 720.dp else if (!roomy || fit.natural <= 0) 1100.dp else with(
+                androidx.compose.ui.platform.LocalDensity.current,
+            ) {
+                (fit.natural.toDp() + FitChromeW).coerceIn(if (chips != null) FitMinTabsW else FitMinW, 1100.dp)
+            }
             androidx.compose.material3.Surface(
-                Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = if (wide) 1100.dp else 720.dp)
-                    .heightIn(max = cardMax),
+                // The cap before the fill: after it, as this was, the fill had
+                // already fixed the width and the cap could not lower it, so no
+                // window was ever narrower than the screen.
+                Modifier.padding(horizontal = 10.dp).widthIn(max = maxW).fillMaxWidth()
+                    .heightIn(max = cardMax)
+                    .graphicsLayer { alpha = if (settled || !wide || !roomy) 1f else 0f },
                 shape = RoundedCornerShape(16.dp),
                 color = c.card,
             ) {
@@ -1182,6 +1365,7 @@ private fun DialogShell(
                             LocalDialogWide provides (wide && roomy),
                             LocalDialogHeaderRow provides headerRow,
                             LocalDialogCompact provides compact,
+                            LocalDialogFit provides (if (wide && roomy) fit else null),
                         ) { body() }
                     }
                     // An empty dismiss label and no action means no footer at
@@ -1222,6 +1406,15 @@ internal fun compactWindow(): Boolean =
     screenShape() == ScreenShape.Square && with(androidx.compose.ui.platform.LocalDensity.current) {
         androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
     } < WideCardsMinW
+
+/** What a wide window adds around its cards: the body's padding either side and the position bar's gutter. */
+private val FitChromeW = 42.dp
+
+/** The narrowest a fitted window may be: a title and two buttons. */
+private val FitMinW = 480.dp
+
+/** The same with tabs beside the title. */
+private val FitMinTabsW = 640.dp
 
 /** The narrowest window that lays a window's cards side by side; see [DialogShell]. */
 private val WideCardsMinW = 600.dp

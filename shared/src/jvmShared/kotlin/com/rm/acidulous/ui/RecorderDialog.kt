@@ -152,12 +152,10 @@ fun RecorderDialog(
         onDismiss = { if (!recording) onDismiss() },
         dismissLabel = stringResource(if (recording) Res.string.sound_recording_button else Res.string.close),
         spacing = 6.dp,
-        chips = {
-            val names = stringArrayResource(Res.array.sound_tabs).toList().let {
-                if (inputPage) listOf(it[0], stringResource(Res.string.sound_tab_input)) + it.drop(1) else it
-            }
-            SectionChips(names, tab) { tab = it }
+        pageNames = stringArrayResource(Res.array.sound_tabs).toList().let {
+            if (inputPage) listOf(it[0], stringResource(Res.string.sound_tab_input)) + it.drop(1) else it
         },
+        onSelectPage = { tab = it },
         pages = listOfNotNull(
             {
                 RecordPage(

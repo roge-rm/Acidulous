@@ -62,7 +62,8 @@ fun MidiDialog(song: Song, onDismiss: () -> Unit) {
         selected = tab,
         onDismiss = { MidiHub.stopScan(); onDismiss() },
         spacing = 6.dp,
-        chips = { SectionChips(stringArrayResource(Res.array.midi_tabs).toList(), tab) { tab = it } },
+        pageNames = stringArrayResource(Res.array.midi_tabs).toList(),
+        onSelectPage = { tab = it },
         pages = listOf(
             { DevicesTab() },
             { InTab(trackNames, mpeHeld) },

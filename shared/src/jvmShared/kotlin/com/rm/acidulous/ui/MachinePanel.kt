@@ -2726,7 +2726,7 @@ private fun FormulaDialog(
         WindowKeys()
         ScaledWindow {
             androidx.compose.material3.Surface(
-                Modifier.fillMaxWidth().padding(horizontal = 10.dp).widthIn(max = 720.dp),
+                Modifier.padding(horizontal = 10.dp).widthIn(max = 720.dp).fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 color = c.card,
             ) {
