@@ -36,6 +36,9 @@ import androidx.compose.ui.unit.dp
  */
 val UiScaleSteps = listOf(1.0f, 1.1f, 1.2f, 1.3f)
 
+/** The desktop's screen scales, nought first for the system's own: see UiPrefs.screenScale. */
+val ScreenScaleSteps = listOf(0f, 1f, 1.5f, 2f, 2.5f, 3f)
+
 /**
  * The narrowest and shortest the app may be asked to lay itself out in.
  *

@@ -95,6 +95,13 @@ private fun DisplayTab() {
             SwitchGrid(stringResource(Res.string.settings_size), stringArrayResource(Res.array.settings_size_choices).toList(), UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
                 UiPrefs.chooseUiScale(UiScaleSteps[it])
             }
+            // A computer's screen: how many pixels a dp is. The phone knows.
+            if (com.rm.acidulous.AppHost.current.onDesktop) {
+                SwitchGrid(
+                    stringResource(Res.string.settings_screen_scale), stringArrayResource(Res.array.settings_screen_scale_choices).toList(),
+                    ScreenScaleSteps.indexOf(UiPrefs.screenScale).coerceAtLeast(0), columns = 2,
+                ) { UiPrefs.chooseScreenScale(ScreenScaleSteps[it]) }
+            }
             // Only where it can be kept: a desktop's screen saver is its own.
             if (com.rm.acidulous.AppHost.current.canKeepScreenOn) {
                 SwitchGrid(stringResource(Res.string.settings_while_playing), stringArrayResource(Res.array.settings_while_playing_choices).toList(), if (UiPrefs.keepAwake) 0 else 1) {

@@ -216,6 +216,16 @@ object UiPrefs {
      * ui/UiScale.kt for the arithmetic and for why it only ever goes up.
      */
     var uiScale by mutableStateOf(1f)
+
+    /**
+     * The desktop's screen scale: how many pixels a dp is, or nought for
+     * whatever the system says. A desktop takes every screen as 96 dpi, and
+     * Dan's Pi has a three-inch 720-pixel square - drawn tiny, and 660 dp
+     * across, so it got the big-screen layout rather than the square phone's.
+     * At 2x it is 330 dp: the square layout, at a size a finger can use.
+     * The phone's density is its own, and it never shows this.
+     */
+    var screenScale by mutableStateOf(0f)
         private set
 
     // --- Audio -----------------------------------------------------------
@@ -378,6 +388,7 @@ object UiPrefs {
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
             .getOrDefault(ThemeMode.Dark)
         uiScale = p.getFloat(KEY_UI_SCALE, 1f)
+        screenScale = p.getFloat(KEY_SCREEN_SCALE, 0f)
             .coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
         buffer = runCatching { Buffer.valueOf(p.getString(KEY_BUFFER, null) ?: "Balanced") }
             .getOrDefault(Buffer.Balanced)
@@ -599,6 +610,11 @@ object UiPrefs {
     fun chooseUiScale(scale: Float) {
         uiScale = scale.coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
         store?.edit()?.putFloat(KEY_UI_SCALE, uiScale)?.apply()
+    }
+
+    fun chooseScreenScale(scale: Float) {
+        screenScale = scale
+        store?.edit()?.putFloat(KEY_SCREEN_SCALE, scale)?.apply()
     }
 
     fun chooseBuffer(b: Buffer) {
@@ -855,6 +871,7 @@ object UiPrefs {
     private const val KEY_KEYS = "key_bindings"
     private const val KEY_NOTE_LAYOUT = "note_layout"
     private const val KEY_UI_SCALE = "ui_scale"
+    private const val KEY_SCREEN_SCALE = "screen_scale"
     private const val KEY_BUFFER = "buffer"
     private const val KEY_VOICES = "voice_limit"
     private const val KEY_QUALITY = "quality_full"

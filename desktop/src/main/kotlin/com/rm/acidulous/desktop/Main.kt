@@ -8,6 +8,9 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -30,6 +33,12 @@ import com.rm.acidulous.ui.previewKey
 import com.rm.acidulous.ui.watchPointer
 import com.rm.acidulous.util.FilePrefs
 import java.io.File
+
+/** Whether the screen is smaller than the window's 1280 x 800 would need. */
+private fun smallScreen(): Boolean = runCatching {
+    val bounds = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().maximumWindowBounds
+    bounds.width < 1300 || bounds.height < 840
+}.getOrDefault(false)
 
 /** Where the XDG spec says, or its default under the home folder. */
 private fun xdg(variable: String, fallback: String): File =
@@ -59,7 +68,12 @@ fun main() {
     RightClickHold.install()
 
     application {
-        val window = rememberWindowState(size = DpSize(1280.dp, 800.dp))
+        // Maximised where the screen is smaller than the window would be - a
+        // Pi's 720-pixel square - rather than opening past its edges.
+        val window = rememberWindowState(
+            size = DpSize(1280.dp, 800.dp),
+            placement = if (smallScreen()) WindowPlacement.Maximized else WindowPlacement.Floating,
+        )
         // What F11 goes back to: the window as it was, maximised or not.
         var before by remember { mutableStateOf(WindowPlacement.Floating) }
         Window(
@@ -92,7 +106,14 @@ fun main() {
             },
             onKeyEvent = { fallbackKey(it) },
         ) {
-            AppRoot()
+            // The screen scale, where one is chosen (Settings > display): the
+            // density everything below is laid out in, the app's own size
+            // setting on top of it. See UiPrefs.screenScale.
+            val system = LocalDensity.current
+            val chosen = UiPrefs.screenScale
+            CompositionLocalProvider(LocalDensity provides if (chosen > 0f) Density(chosen, system.fontScale) else system) {
+                AppRoot()
+            }
         }
     }
 }

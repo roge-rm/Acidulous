@@ -16,6 +16,16 @@
         <item>high contrast</item>
     </string-array>
     <string name="settings_size">size</string>
+    <!-- The desktop build only: how big a dp is on this screen. "system" is what the computer says. -->
+    <string name="settings_screen_scale">screen scale</string>
+    <string-array name="settings_screen_scale_choices">
+        <item>system</item>
+        <item>1×</item>
+        <item>1.5×</item>
+        <item>2×</item>
+        <item>2.5×</item>
+        <item>3×</item>
+    </string-array>
     <string-array name="settings_size_choices">
         <item>normal</item>
         <item>large</item>
