@@ -387,6 +387,7 @@ object UiPrefs {
         qualityNow = fullQuality
         recordBits = p.getInt(KEY_BITS, 24)
         inputDevice = p.getInt(KEY_INPUT_DEVICE, 0)
+        readZooms(p.getString(KEY_ZOOMS, null))
         keepAwake = p.getBoolean(KEY_AWAKE, true)
         showDiagnostics = p.getBoolean(KEY_DIAGNOSTICS, DIAGNOSTICS_BY_DEFAULT)
         linkWanted = p.getBoolean(KEY_LINK, false)
@@ -641,6 +642,38 @@ object UiPrefs {
     }
 
     /** Remembered rather than asked for every time the window opens. */
+    /**
+     * The editor's zoom for each track, by the track's id: how many ticks
+     * across and how many rows down, nought for the editor's own default.
+     * Dan (2026-09-25): a clip reopened at the default every time, and four
+     * bars on a desktop is busy - so a track keeps the zoom it was left at,
+     * across leaving the editor and across launches. The last [ZOOMS_KEPT]
+     * tracks zoomed are kept, most recent last.
+     */
+    private val zooms = LinkedHashMap<String, Pair<Float, Float>>()
+
+    fun zoomOf(trackId: String): Pair<Float, Float> = zooms[trackId] ?: (0f to 0f)
+
+    fun chooseZoom(trackId: String, ticks: Float, rows: Float) {
+        if (zooms[trackId] == ticks to rows) return
+        zooms.remove(trackId)
+        if (ticks > 0f || rows > 0f) zooms[trackId] = ticks to rows
+        while (zooms.size > ZOOMS_KEPT) zooms.remove(zooms.keys.first())
+        store?.edit()?.putString(
+            KEY_ZOOMS,
+            zooms.entries.joinToString(";") { (id, z) -> "$id=${z.first},${z.second}" }.ifEmpty { null },
+        )?.apply()
+    }
+
+    private fun readZooms(text: String?) {
+        zooms.clear()
+        for (entry in text.orEmpty().split(';')) {
+            val (id, rest) = entry.split('=', limit = 2).takeIf { it.size == 2 } ?: continue
+            val (ticks, rows) = rest.split(',').mapNotNull { it.toFloatOrNull() }.takeIf { it.size == 2 } ?: continue
+            zooms[id] = ticks to rows
+        }
+    }
+
     fun chooseInputDevice(id: Int) {
         if (id == inputDevice) return
         inputDevice = id
@@ -828,6 +861,8 @@ object UiPrefs {
     private const val KEY_AUTO_QUALITY = "quality_auto"
     private const val KEY_BITS = "record_bits"
     private const val KEY_INPUT_DEVICE = "input_device"
+    private const val KEY_ZOOMS = "editor_zooms"
+    private const val ZOOMS_KEPT = 64
     private const val KEY_AWAKE = "keep_awake"
     private const val KEY_DIAGNOSTICS = "diagnostics"
     private const val KEY_MAPPINGS = "cc_mappings"

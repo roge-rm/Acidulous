@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -245,8 +246,19 @@ fun EditScreen(
     // it lifts, exactly as the turned editor's divider is.
     var keysStretch by remember { androidx.compose.runtime.mutableFloatStateOf(UiPrefs.keysStretch) }
     val scale = LocalUiScale.current
-    var zoomRows by rememberSaveable(trackIndex) { mutableStateOf(0f) }
-    var zoomTicks by rememberSaveable(trackIndex) { mutableStateOf(0f) }
+    // Each track's zoom is its own and outlasts the editor: see UiPrefs.zoomOf.
+    var zoomRows by rememberSaveable(track.id) { mutableStateOf(UiPrefs.zoomOf(track.id).second) }
+    var zoomTicks by rememberSaveable(track.id) { mutableStateOf(UiPrefs.zoomOf(track.id).first) }
+    // Kept once it has settled rather than on every step of a pinch, which
+    // sends dozens a second; and on the way out, for a change still settling.
+    LaunchedEffect(track.id) {
+        androidx.compose.runtime.snapshotFlow { zoomTicks to zoomRows }.collectLatest { (ticks, rows) ->
+            kotlinx.coroutines.delay(400)
+            UiPrefs.chooseZoom(track.id, ticks, rows)
+        }
+    }
+    val zoomNow by androidx.compose.runtime.rememberUpdatedState(zoomTicks to zoomRows)
+    androidx.compose.runtime.DisposableEffect(track.id) { onDispose { UiPrefs.chooseZoom(track.id, zoomNow.first, zoomNow.second) } }
     var scrollTick by rememberSaveable(trackIndex, sceneId) { mutableStateOf(0f) }
 
     // The scale lives in a Scale modifier; the chip and its dialog are only a
