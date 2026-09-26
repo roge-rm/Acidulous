@@ -26,11 +26,17 @@ class Audition {
   public:
     /** UI thread. Interleaved stereo at the engine rate. Starts it playing. */
     void play(const float *interleaved, int64_t frames) {
-        const int spare = 1 - which.load(std::memory_order_acquire);
-        auto &buffer = pcm[static_cast<size_t>(spare < 0 ? 0 : spare)];
+        // Nothing has played yet (-1): either is free, so the first. It read
+        // `1 - which`, which is 2 before anything has played - a third buffer
+        // that does not exist - and the first audition after a start wrote a
+        // vector over the members behind the array. On a phone that went
+        // unnoticed; in a browser it was a crash in free() on the next play.
+        const int now = which.load(std::memory_order_acquire);
+        const int spare = now < 0 ? 0 : 1 - now;
+        auto &buffer = pcm[static_cast<size_t>(spare)];
         buffer.assign(interleaved, interleaved + static_cast<size_t>(frames) * 2);
         position.store(0, std::memory_order_relaxed);
-        which.store(spare < 0 ? 0 : spare, std::memory_order_release);
+        which.store(spare, std::memory_order_release);
         playing.store(true, std::memory_order_release);
     }
 
