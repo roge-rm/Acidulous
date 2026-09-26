@@ -82,6 +82,9 @@ bool AudioDriver::start() {
     }
     actualSampleRate = emscripten_audio_context_sample_rate(context);
     sLive = this;
+    workletOwns = false;
+    standbyStop = false;
+    standbyThread = std::thread([this] { standby(); });
     emscripten_start_wasm_audio_worklet_thread_async(context, workletStack, sizeof workletStack, onThreadStarted, this);
     LOGI("audio context %d at %d Hz; the worklet follows", context, actualSampleRate);
     return true;
@@ -106,7 +109,28 @@ void AudioDriver::resume() {
 double AudioDriver::liveFrames() { return sLive != nullptr ? static_cast<double>(sLive->framesWritten) : -1.0; }
 int AudioDriver::liveState() { return sLive != nullptr && sLive->context != 0 ? emscripten_audio_context_state(sLive->context) : -1; }
 
+void AudioDriver::standby() {
+    std::vector<float> in(static_cast<size_t>(acidulous::kBlockFrames) * 2, 0.0f);
+    std::vector<float> out(in.size(), 0.0f);
+    int blocks = 0;
+    // Dekker's hand-over, sequentially consistent: busy is raised before the
+    // worklet's flag is read, and the worklet raises its flag before it reads
+    // busy - so a block is never rendered on both threads at once.
+    while (!standbyStop.load()) {
+        standbyBusy.store(true);
+        const bool mine = !workletOwns.load();
+        if (mine) callback(in.data(), out.data(), static_cast<unsigned long>(acidulous::kBlockFrames));
+        standbyBusy.store(false);
+        if (!mine) break;
+        ++blocks;
+        std::this_thread::sleep_for(std::chrono::milliseconds(4));
+    }
+    LOGI("stand-in rendered %d blocks before the worklet", blocks);
+}
+
 void AudioDriver::stop() {
+    standbyStop = true;
+    if (standbyThread.joinable()) standbyThread.join();
     if (context == 0) return;
     if (node != 0) emscripten_destroy_web_audio_node(node);
     emscripten_destroy_audio_context(context);
@@ -119,6 +143,11 @@ void AudioDriver::stop() {
 // On the audio worklet's thread. The engine renders interleaved blocks; the
 // worklet wants the channels apart.
 void AudioDriver::render(float *left, float *right, int32_t numFrames) {
+    if (!workletOwns.load(std::memory_order_relaxed)) {
+        workletOwns.store(true);
+        while (standbyBusy.load()) {
+        }
+    }
     const double t0 = emscripten_get_now();
     {
         const int32_t rate = actualSampleRate > 0 ? actualSampleRate : acidulous::kSampleRate;

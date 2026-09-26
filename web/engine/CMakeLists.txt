@@ -62,7 +62,11 @@ target_link_options(acidulous PRIVATE
     -sPTHREAD_POOL_SIZE=4
     -sSTACK_SIZE=1MB
     "--pre-js=${CMAKE_CURRENT_SOURCE_DIR}/worklet-clock.js"
-    "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','UTF8ToString','stringToUTF8','lengthBytesUTF8']"
+    # The file system, which the app's Kotlin shares with the engine (FS), and
+    # the browser storage the page keeps the app's folder in (IDBFS).
+    -sFORCE_FILESYSTEM=1
+    -lidbfs.js
+    "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','UTF8ToString','stringToUTF8','lengthBytesUTF8','FS','IDBFS']"
     "-sEXPORTED_FUNCTIONS=['_malloc','_free']"
 )
 # Relinked when the worklet's clock changes, which CMake cannot see for itself.

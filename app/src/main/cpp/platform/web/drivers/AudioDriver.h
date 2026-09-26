@@ -2,6 +2,7 @@
 #include <atomic>
 #include <engine/core/Constants.h>
 #include <functional>
+#include <thread>
 #include <vector>
 
 // The browser's output stream: a Web Audio AudioWorklet, run by Emscripten's
@@ -18,6 +19,14 @@
 // blocks of kBlockFrames (64), served out through a carry buffer as the other
 // drivers do. An AudioContext starts suspended until the page is touched:
 // resume() is for the first gesture.
+//
+// **Until then, a stand-in renders.** The engine takes a new machine, effect
+// or sample on its audio thread, at the top of a block, and the app waits for
+// that before sending the machine's patch - a few milliseconds on the phone.
+// Here there is no audio thread until somebody clicks, so the song the app
+// opens at start-up would send every patch to an empty rack. A thread of the
+// driver's own renders blocks into nothing, a few hundred a second, until the
+// worklet's first quantum takes over; the hand-over is the two atomics below.
 
 class AudioDriver {
   public:
@@ -104,6 +113,15 @@ class AudioDriver {
 
     std::vector<float> carry;
     std::vector<float> silence;
+
+    /** The stand-in before the worklet: see the top of this file. */
+    void standby();
+    std::thread standbyThread;
+    /** Set by the worklet's first quantum; the stand-in stops when it sees it. */
+    std::atomic<bool> workletOwns{false};
+    /** The stand-in is inside a block, which the worklet waits out. */
+    std::atomic<bool> standbyBusy{false};
+    std::atomic<bool> standbyStop{false};
     int32_t carryFrames = 0;
     int32_t carryOffset = 0;
 

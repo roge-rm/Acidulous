@@ -4,19 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Acidulous</title>
-<style>html, body { margin: 0; height: 100%; background: #1b1c1f; } #root { width: 100%; height: 100%; }</style>
+<style>html, body { margin: 0; height: 100%; background: #1b1c1f; overflow: hidden; } #root { width: 100%; height: 100%; }</style>
 </head>
 <body>
 <div id="root"></div>
-<!-- The engine first: its module, on shared memory, as globalThis.acid; then the app, which calls it. -->
 <script src="acidulous.js"></script>
 <script>
+  // The engine first: its module, on shared memory, as globalThis.acid. Then
+  // the app's folder, /data, from browser storage - written back soon after
+  // the app changes it, every ten seconds for what the engine writes itself,
+  // and when the tab is put away. Then the app, which calls the engine.
   AcidEngine().then((engine) => {
     globalThis.acid = engine;
-    engine._acid_start();
-    const ui = document.createElement('script');
-    ui.src = 'acidulous-ui.js';
-    document.body.appendChild(ui);
+    const FS = engine.FS;
+    FS.mkdirTree('/data');
+    FS.mount(engine.IDBFS, {}, '/data');
+    FS.syncfs(true, (err) => {
+      if (err) console.warn('Acidulous: the saved files could not be read', err);
+      let busy = false, again = false, timer = 0;
+      const save = () => {
+        if (busy) { again = true; return; }
+        busy = true;
+        FS.syncfs(false, (e) => {
+          busy = false;
+          if (e) console.warn('Acidulous: the files could not be saved', e);
+          if (again) { again = false; save(); }
+        });
+      };
+      globalThis.acidFsChanged = () => { clearTimeout(timer); timer = setTimeout(save, 500); };
+      setInterval(save, 10000);
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); });
+      // Sound may only start from a gesture: the first touch or key starts it.
+      const wake = () => engine._acid_resume();
+      addEventListener('pointerdown', wake, true);
+      addEventListener('keydown', wake, true);
+      const ui = document.createElement('script');
+      ui.src = 'acidulous-ui.js';
+      document.body.appendChild(ui);
+    });
   });
 </script>
 </body>

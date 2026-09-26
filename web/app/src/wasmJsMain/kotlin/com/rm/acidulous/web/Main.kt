@@ -1,94 +1,65 @@
 package com.rm.acidulous.web
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.window.ComposeViewport
-import kotlinx.coroutines.delay
+import com.rm.acidulous.AppHost
+import com.rm.acidulous.AppRoot
+import com.rm.acidulous.engine.EngineAssets
+import com.rm.acidulous.engine.LinkHub
+import com.rm.acidulous.io.File
+import com.rm.acidulous.model.Names
+import com.rm.acidulous.res.AppStrings
+import com.rm.acidulous.res.Res
+import com.rm.acidulous.res.name_copy
+import com.rm.acidulous.res.name_scene
+import com.rm.acidulous.res.preloadStrings
+import com.rm.acidulous.ui.UiPrefs
+import com.rm.acidulous.ui.fallbackKey
+import com.rm.acidulous.ui.previewKey
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
-// The engine, as the page's script put it: globalThis.acid, the Emscripten
-// module whose memory the audio worklet shares.
-private fun enginePeak(): Double = js("globalThis.acid._acid_peak()")
-private fun engineResume(): Unit = js("globalThis.acid._acid_resume()")
-private fun engineNoteOn(rack: Int, note: Int, velocity: Int): Unit = js("globalThis.acid._acid_note_on(rack, note, velocity)")
-private fun engineNoteOff(rack: Int, note: Int): Unit = js("globalThis.acid._acid_note_off(rack, note)")
-private fun engineMount(rack: Int, type: String): Int = js(
-    "(() => { const m = globalThis.acid; const n = m.lengthBytesUTF8(type) + 1; const p = m._malloc(n); " +
-        "m.stringToUTF8(type, p, n); const r = m._acid_mount_machine(rack, p); m._free(p); return r; })()",
-)
-private fun autoRun(): Boolean = js("location.search.includes('auto')")
-private fun report(line: String): Unit = js("fetch('/log', { method: 'POST', body: line }).catch(() => {})")
+// Acidulous in a browser. The page has loaded the engine (globalThis.acid)
+// and put the app's folder, kept in browser storage, at /data; this is what
+// MainActivity.onCreate does on the phone, in the same order, and then the
+// app.
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    ComposeViewport("root") { Spike() }
-}
+    MainScope().launch {
+        // Every string first: nothing on the page's one thread may wait for one later.
+        preloadStrings()
+        AppHost.current = WebHost()
+        UiPrefs.init(LocalPrefs("ui"))
+        Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
+        Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
+        LinkHub.multicastLock = null
+        EngineAssets.install(File("/data"), File("/tmp/cache").apply { mkdirs() })
 
-@Composable
-private fun Spike() {
-    var peak by remember { mutableStateOf(0.0) }
-    var mounted by remember { mutableStateOf(false) }
-    var playing by remember { mutableStateOf(false) }
-    fun toggle() {
-        engineResume()
-        if (!mounted) mounted = engineMount(0, "Reflux") == 1
-        if (playing) engineNoteOff(0, 45) else engineNoteOn(0, 45, 110)
-        playing = !playing
-    }
-    LaunchedEffect(Unit) {
-        if (autoRun()) {
-            delay(1000)
-            toggle()
-            report("compose: note on, mounted=$mounted")
-            repeat(6) { delay(250); report("compose: peak=" + (enginePeak() * 10000).toInt() / 10000.0) }
-            toggle()
-            report("compose: done")
-            // The generated bridge, each kind of value across.
-            val probe = com.rm.acidulous.engine.EngineProbe
-            report("bridge: machines=" + probe.machines().joinToString(","))
-            report("bridge: Reflux params=" + probe.params("Reflux").take(6).joinToString(","))
-            report("bridge: mount Trinity on 1=" + probe.mount(1, "Trinity"))
-            delay(300)
-            probe.noteOn(1, 60)
-            delay(600)
-            report("bridge: peak through the bridge=" + (probe.peak() * 1000).toInt() / 1000.0)
-            probe.noteOff(1, 60)
-            report("bridge: palette=" + probe.palette().take(60))
-            report("bridge: loudness=" + probe.loudness().joinToString(",") { ((it * 10).toInt() / 10.0).toString() })
-        }
-        while (true) {
-            peak = enginePeak()
-            delay(50)
-        }
-    }
-    Column(
-        Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text("Acidulous · the engine in a browser", color = Color.White)
-        Button(onClick = { toggle() }) { Text(if (playing) "Stop the note" else "Play a note") }
-        Box(Modifier.width(300.dp).height(16.dp).background(Color(0xFF2A2B30))) {
-            Box(Modifier.fillMaxWidth(peak.toFloat().coerceIn(0f, 1f)).height(16.dp).background(Color(0xFF4FB39A)))
+        ComposeViewport("root") {
+            // Every key through the hub first, as the desktop's window does;
+            // what the focused control leaves comes back for the shortcuts.
+            // Focused itself at the start, so a key goes somewhere before
+            // anything has been clicked.
+            val focus = remember { FocusRequester() }
+            Box(
+                Modifier.fillMaxSize()
+                    .onPreviewKeyEvent { previewKey(it) }
+                    .onKeyEvent { fallbackKey(it) }
+                    .focusRequester(focus)
+                    .focusable(),
+            ) { AppRoot() }
+            LaunchedEffect(Unit) { focus.requestFocus() }
         }
     }
 }
