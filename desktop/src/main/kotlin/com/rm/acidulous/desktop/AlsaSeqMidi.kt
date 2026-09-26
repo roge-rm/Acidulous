@@ -21,6 +21,7 @@ internal object AlsaSeq {
     @JvmStatic external fun nativeOpen(): Int
     @JvmStatic external fun nativePorts(): Array<String>
     @JvmStatic external fun nativeListen(client: Int, port: Int, on: Boolean): Boolean
+    @JvmStatic external fun nativeSpeak(client: Int, port: Int, on: Boolean): Boolean
     @JvmStatic external fun nativeSend(client: Int, port: Int, bytes: ByteArray, offset: Int, count: Int): Boolean
     @JvmStatic external fun nativeRead(out: ByteArray, from: IntArray, timeoutMs: Int): Int
 
@@ -186,16 +187,23 @@ class AlsaSeqMidi private constructor(private val ownClient: Int, private val po
     private inner class Opened(private val device: SeqDevice) : MidiOpenDevice {
         override val desc = device.desc
         private val heard = mutableListOf<Int>()
+        private val spoken = mutableListOf<Int>()
 
         override fun openInputPort(index: Int): MidiSendPort? {
             val port = device.destinations.getOrNull(index) ?: return null
+            // Connected first: a hardware port does not open its device's
+            // output for a message sent to it unasked. See nativeSpeak.
+            if (!AlsaSeq.nativeSpeak(device.client, port, true)) return null
+            synchronized(spoken) { spoken += port }
             return object : MidiSendPort {
                 override fun send(bytes: ByteArray, offset: Int, count: Int) {
                     AlsaSeq.nativeSend(device.client, port, bytes, offset, count)
                 }
                 override fun send(bytes: ByteArray, offset: Int, count: Int, timestamp: Long) =
                     thread.sendAt(bytes, offset, count, timestamp, ::send)
-                override fun close() {}
+                override fun close() {
+                    if (synchronized(spoken) { spoken.remove(port) }) AlsaSeq.nativeSpeak(device.client, port, false)
+                }
             }
         }
 
@@ -215,6 +223,8 @@ class AlsaSeqMidi private constructor(private val ownClient: Int, private val po
                 listeners.remove(keyOf(device.client, port))
                 AlsaSeq.nativeListen(device.client, port, false)
             }
+            val sent = synchronized(spoken) { spoken.toList().also { spoken.clear() } }
+            for (port in sent) AlsaSeq.nativeSpeak(device.client, port, false)
         }
     }
 }

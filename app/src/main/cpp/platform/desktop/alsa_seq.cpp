@@ -37,6 +37,8 @@ struct Alsa {
     ALSA_FN(snd_seq_create_simple_port);
     ALSA_FN(snd_seq_connect_from);
     ALSA_FN(snd_seq_disconnect_from);
+    ALSA_FN(snd_seq_connect_to);
+    ALSA_FN(snd_seq_disconnect_to);
     ALSA_FN(snd_seq_event_output_direct);
     ALSA_FN(snd_seq_event_input);
     ALSA_FN(snd_seq_event_input_pending);
@@ -102,6 +104,8 @@ bool loadAlsa() {
         ALSA_LOAD(snd_seq_create_simple_port)
         ALSA_LOAD(snd_seq_connect_from)
         ALSA_LOAD(snd_seq_disconnect_from)
+        ALSA_LOAD(snd_seq_connect_to)
+        ALSA_LOAD(snd_seq_disconnect_to)
         ALSA_LOAD(snd_seq_event_output_direct)
         ALSA_LOAD(snd_seq_event_input)
         ALSA_LOAD(snd_seq_event_input_pending)
@@ -170,7 +174,7 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeOpen(JNIEnv *, jclass) {
     inPort = alsa.snd_seq_create_simple_port(seq, "in",
         SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE | SND_SEQ_PORT_CAP_NO_EXPORT, type);
     outPort = alsa.snd_seq_create_simple_port(seq, "out",
-        SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_NO_EXPORT, type);
+        SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_SUBS_READ | SND_SEQ_PORT_CAP_NO_EXPORT, type);
     if (inPort < 0 || outPort < 0 ||
         alsa.snd_midi_event_new(kMaxMessage, &encoder) < 0 || alsa.snd_midi_event_new(kMaxMessage, &decoder) < 0) {
         LOGW("could not set up the sequencer's ports");
@@ -235,6 +239,25 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeListen(JNIEnv *, jclass, jint client
                        : alsa.snd_seq_disconnect_from(seq, inPort, client, port);
     if (err < 0 && on) LOGW("could not listen to %d:%d: %s", client, port, alsa.snd_strerror(err));
     else LOGI("%s %d:%d", on ? "listening to" : "no longer listening to", client, port);
+    return err >= 0 ? JNI_TRUE : JNI_FALSE;
+}
+
+/**
+ * Be connected to client:port for sending, or no longer. Sending needs it
+ * even though every message names its destination: a hardware port opens
+ * its device's output only when something is subscribed to it, and a
+ * message to one nobody is subscribed to fails with "No such device" - which
+ * is what Dan's Launchpad Pro answered, so it never heard it was to switch to
+ * programmer mode.
+ */
+JNIEXPORT jboolean JNICALL
+Java_com_rm_acidulous_desktop_AlsaSeq_nativeSpeak(JNIEnv *, jclass, jint client, jint port, jboolean on) {
+    std::lock_guard<std::mutex> guard(lock);
+    if (seq == nullptr) return JNI_FALSE;
+    const int err = on ? alsa.snd_seq_connect_to(seq, outPort, client, port)
+                       : alsa.snd_seq_disconnect_to(seq, outPort, client, port);
+    if (err < 0 && on) LOGW("could not connect to %d:%d: %s", client, port, alsa.snd_strerror(err));
+    else LOGI("%s %d:%d", on ? "sending to" : "no longer sending to", client, port);
     return err >= 0 ? JNI_TRUE : JNI_FALSE;
 }
 
