@@ -281,6 +281,12 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
             onClick = {
                 if (recording) {
                     NativeEngine.stopCapture()
+                    // Said here, not left to the loop above: onRecorded turns
+                    // to the edit page, which ends this one - loop and all -
+                    // before it could see the take stop, and the window went
+                    // on saying "Recording…" and would not close.
+                    recording = false
+                    onRecording(false)
                     val file = lastFile
                     message = if (file != null) resources.getString(Res.string.sound_saved_take, file.name, seconds) else resources.getString(Res.string.sound_saved)
                     name = nextTakeName(samples)

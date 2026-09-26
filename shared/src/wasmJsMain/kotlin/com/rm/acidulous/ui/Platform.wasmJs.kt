@@ -19,14 +19,57 @@ actual fun rememberTopCutout(): TopCutout? = null
 @Composable
 actual fun rememberTalkBack(): Boolean = false
 
-/** The microphone is the browser's to ask for, when the recorder opens it; nothing to ask here. */
+/** Whether the page may use the microphone: it was granted before, or a stream is open now. */
+private fun micGranted(): Boolean = js("!!(globalThis.acidMicGranted || (globalThis.acidInput && globalThis.acidInput.stream && globalThis.acidInput.stream.active))")
+
+/**
+ * The browser's microphone prompt, answered into the stream the audio driver
+ * connects (globalThis.acidInput, platform/web/drivers/AudioDriver.cpp) - so
+ * the input the app opens next is the one just granted, with nothing asked twice.
+ */
+private fun askMic(done: (Boolean) -> Unit): Unit = js(
+    """(() => {
+        const s = (globalThis.acidInput ??= {});
+        if (!navigator.mediaDevices) { done(false); return; }
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+            .then((stream) => {
+                if (s.stream) s.stream.getTracks().forEach((t) => t.stop());
+                s.stream = stream;
+                globalThis.acidMicGranted = true;
+                s.connect && s.connect();
+                done(true);
+            })
+            .catch(() => done(false));
+    })()""",
+)
+
+private fun watchMicPermission(): Unit = js(
+    """(() => {
+        if (!navigator.permissions) return;
+        navigator.permissions.query({ name: 'microphone' }).then((p) => {
+            globalThis.acidMicGranted = p.state === 'granted';
+            p.onchange = () => { globalThis.acidMicGranted = p.state === 'granted'; };
+        }).catch(() => {});
+    })()""",
+)
+
+/**
+ * Whether the microphone was granted on an earlier visit, so the recorder
+ * opens on its meter rather than on a button asking. The browser answers
+ * later, so this is asked at start-up, before any window wants it.
+ */
+fun watchMicrophonePermission() = watchMicPermission()
+
+/** The microphone is the browser's to grant; everything else a phone asks for, a page already has. */
 @Composable
 actual fun rememberPermissions(onResult: (Boolean) -> Unit): Permissions {
     val result = rememberUpdatedState(onResult)
     return remember {
         object : Permissions {
-            override fun has(name: String) = true
-            override fun ask(vararg names: String) = result.value(true)
+            override fun has(name: String) = name != Permissions.RECORD_AUDIO || micGranted()
+            override fun ask(vararg names: String) {
+                if (Permissions.RECORD_AUDIO in names) askMic { result.value(it) } else result.value(true)
+            }
         }
     }
 }

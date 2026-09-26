@@ -12,6 +12,40 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
+// The microphone, on the page's side: globalThis.acidInput holds the stream
+// (which the app's permission request may already have got - see
+// Platform.wasmJs.kt), whether it is wanted, and the context and node to
+// connect it to. Whichever of the three arrives last connects it.
+EM_JS_DEPS(acid_input, "$emscriptenGetAudioObject");
+
+EM_JS(void, acid_input_attach, (int context, int node), {
+    const s = (globalThis.acidInput ??= {});
+    s.context = emscriptenGetAudioObject(context);
+    s.node = emscriptenGetAudioObject(node);
+    s.connect && s.connect();
+});
+
+EM_JS(void, acid_input_want, (int on), {
+    const s = (globalThis.acidInput ??= {});
+    s.connect = () => {
+        if (!s.wanted || !s.stream || !s.context || !s.node || s.source) return;
+        s.source = s.context.createMediaStreamSource(s.stream);
+        s.source.connect(s.node);
+        console.info('I/Acidulous.Audio: input connected: ' + (s.stream.getAudioTracks()[0]?.label || 'the microphone'));
+    };
+    s.wanted = !!on;
+    if (on) {
+        if (s.stream && s.stream.active) { s.connect(); return; }
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+            .then((stream) => { s.stream = stream; s.connect(); })
+            .catch((e) => console.warn('W/Acidulous.Audio: no microphone', e));
+    } else {
+        // Off is off: the tracks stopped, so the browser's recording light goes out.
+        if (s.source) { s.source.disconnect(); s.source = null; }
+        if (s.stream) { s.stream.getTracks().forEach((t) => t.stop()); s.stream = null; }
+    }
+});
+
 namespace {
 
 /** The audio thread's own stack, which Emscripten needs handed to it. */
@@ -19,14 +53,21 @@ alignas(16) uint8_t workletStack[128 * 1024];
 
 int64_t nowNanos() { return static_cast<int64_t>(emscripten_get_now() * 1e6); }
 
-bool onProcess(int, const AudioSampleFrame *, int numOutputs, AudioSampleFrame *outputs, int, const AudioParamFrame *,
-               void *user) {
+bool onProcess(int numInputs, const AudioSampleFrame *inputs, int numOutputs, AudioSampleFrame *outputs, int,
+               const AudioParamFrame *, void *user) {
     if (numOutputs < 1) return true;
     AudioSampleFrame &out = outputs[0];
     const int n = out.samplesPerChannel;
     float *left = out.data;
     float *right = out.numberOfChannels > 1 ? out.data + n : nullptr;
-    static_cast<AudioDriver *>(user)->render(left, right, n);
+    // Nothing connected is no channels; a microphone is often one.
+    const float *inLeft = nullptr;
+    const float *inRight = nullptr;
+    if (numInputs > 0 && inputs[0].numberOfChannels > 0 && inputs[0].samplesPerChannel == n) {
+        inLeft = inputs[0].data;
+        inRight = inputs[0].numberOfChannels > 1 ? inputs[0].data + n : inLeft;
+    }
+    static_cast<AudioDriver *>(user)->render(inLeft, inRight, left, right, n);
     return true; // keep the node alive
 }
 
@@ -66,6 +107,10 @@ bool AudioDriver::start() {
     }
     carry.assign(static_cast<size_t>(acidulous::kBlockFrames) * 2, 0.0f);
     silence.assign(static_cast<size_t>(acidulous::kBlockFrames) * 2, 0.0f);
+    inputRing.assign(static_cast<size_t>(kInputRingFrames) * 2, 0.0f);
+    inputBlock.assign(static_cast<size_t>(acidulous::kBlockFrames) * 2, 0.0f);
+    inputRingFrames = 0;
+    inputRingRead = 0;
     carryFrames = 0;
     carryOffset = 0;
     framesWritten = 0;
@@ -93,11 +138,12 @@ bool AudioDriver::start() {
 void AudioDriver::connect(int ctx) {
     int outputChannels[1] = {2};
     EmscriptenAudioWorkletNodeCreateOptions opts{};
-    opts.numberOfInputs = 0;
+    opts.numberOfInputs = 1;
     opts.numberOfOutputs = 1;
     opts.outputChannelCounts = outputChannels;
     node = emscripten_create_wasm_audio_worklet_node(ctx, "acidulous", &opts, onProcess, this);
     emscripten_audio_node_connect(node, ctx, 0, 0);
+    acid_input_attach(ctx, node);
     LOGI("stream open: Web Audio worklet, %d Hz, quantum %d frames, engine block %d frames",
          actualSampleRate, kQuantum, acidulous::kBlockFrames);
 }
@@ -128,7 +174,55 @@ void AudioDriver::standby() {
     LOGI("stand-in rendered %d blocks before the worklet", blocks);
 }
 
+bool AudioDriver::startInput(int32_t) {
+    inputOn = true;
+    acid_input_want(1);
+    LOGI("input wanted: the browser's microphone");
+    return true;
+}
+
+void AudioDriver::stopInput() {
+    if (!inputOn.exchange(false)) return;
+    acid_input_want(0);
+    LOGI("input stopped");
+}
+
+void AudioDriver::pushInput(const float *left, const float *right, int32_t frames) {
+    const int32_t capacity = kInputRingFrames;
+    float peak = 0.0f;
+    for (int32_t i = 0; i < frames; ++i) {
+        if (inputRingFrames == capacity) { // behind: the oldest goes
+            inputRingRead = (inputRingRead + 1) % capacity;
+            --inputRingFrames;
+        }
+        const int32_t slot = (inputRingRead + inputRingFrames) % capacity;
+        const float l = left[i];
+        const float r = right[i];
+        inputRing[static_cast<size_t>(slot) * 2] = l;
+        inputRing[static_cast<size_t>(slot) * 2 + 1] = r;
+        ++inputRingFrames;
+        peak = std::fmax(peak, std::fmax(std::fabs(l), std::fabs(r)));
+    }
+    if (peak > inputPeak.load(std::memory_order_relaxed)) inputPeak.store(peak, std::memory_order_relaxed);
+}
+
+const float *AudioDriver::nextInputBlock() {
+    if (!inputOn.load(std::memory_order_relaxed)) return silence.data();
+    for (int32_t i = 0; i < acidulous::kBlockFrames; ++i) {
+        const bool have = inputRingFrames > 0;
+        const int32_t slot = inputRingRead;
+        inputBlock[static_cast<size_t>(i) * 2] = have ? inputRing[static_cast<size_t>(slot) * 2] : 0.0f;
+        inputBlock[static_cast<size_t>(i) * 2 + 1] = have ? inputRing[static_cast<size_t>(slot) * 2 + 1] : 0.0f;
+        if (have) {
+            inputRingRead = (inputRingRead + 1) % kInputRingFrames;
+            --inputRingFrames;
+        }
+    }
+    return inputBlock.data();
+}
+
 void AudioDriver::stop() {
+    stopInput();
     standbyStop = true;
     if (standbyThread.joinable()) standbyThread.join();
     if (context == 0) return;
@@ -142,7 +236,7 @@ void AudioDriver::stop() {
 
 // On the audio worklet's thread. The engine renders interleaved blocks; the
 // worklet wants the channels apart.
-void AudioDriver::render(float *left, float *right, int32_t numFrames) {
+void AudioDriver::render(const float *inLeft, const float *inRight, float *left, float *right, int32_t numFrames) {
     if (!workletOwns.load(std::memory_order_relaxed)) {
         workletOwns.store(true);
         while (standbyBusy.load()) {
@@ -156,11 +250,12 @@ void AudioDriver::render(float *left, float *right, int32_t numFrames) {
         anchors[next].nanos = nowNanos() + static_cast<int64_t>(getBufferFrames()) * 1000000000LL / rate;
         anchorSlot.store(next, std::memory_order_release);
     }
+    if (inLeft != nullptr && inputOn.load(std::memory_order_relaxed)) pushInput(inLeft, inRight, numFrames);
     float peak = 0.0f;
     int32_t written = 0;
     while (written < numFrames) {
         if (carryFrames == 0) {
-            callback(silence.data(), carry.data(), static_cast<unsigned long>(acidulous::kBlockFrames));
+            callback(const_cast<float *>(nextInputBlock()), carry.data(), static_cast<unsigned long>(acidulous::kBlockFrames));
             carryFrames = acidulous::kBlockFrames;
             carryOffset = 0;
         }

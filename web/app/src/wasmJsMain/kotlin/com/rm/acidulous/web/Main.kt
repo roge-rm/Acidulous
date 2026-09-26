@@ -27,6 +27,7 @@ import com.rm.acidulous.res.preloadStrings
 import com.rm.acidulous.ui.UiPrefs
 import com.rm.acidulous.ui.fallbackKey
 import com.rm.acidulous.ui.previewKey
+import com.rm.acidulous.ui.watchMicrophonePermission
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
@@ -43,6 +44,7 @@ fun main() {
         // Every string first: nothing on the page's one thread may wait for one later.
         preloadStrings()
         AppHost.current = WebHost()
+        watchMicrophonePermission()
         UiPrefs.init(LocalPrefs("ui"))
         Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
         Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }

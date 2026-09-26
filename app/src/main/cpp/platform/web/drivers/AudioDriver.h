@@ -12,8 +12,12 @@
 // The same class and public surface as the Oboe driver (platform/drivers) and
 // the desktop's (platform/desktop/drivers): EngineHost builds against any of
 // them without knowing which. What a browser does not give: a choice of
-// device, an input (yet), a scheduler hint, or a presentation timestamp - the
-// anchor is the frames written and the context's own latency.
+// device, a scheduler hint, or a presentation timestamp - the anchor is the
+// frames written and the context's own latency.
+//
+// The input is the browser's microphone: a MediaStream, asked for by the page
+// (the app's permission is the browser's prompt), connected to the worklet's
+// one input and read in the same quantum the output is written in.
 //
 // Web Audio runs the worklet in quanta of 128 frames; the engine renders
 // blocks of kBlockFrames (64), served out through a carry buffer as the other
@@ -50,13 +54,23 @@ class AudioDriver {
     static double liveFrames();
     static int liveState();
 
-    bool startInput(int32_t = 0) { return false; }
-    void stopInput() {}
-    bool isInputRunning() const { return false; }
-    int32_t inputChannels() const { return 0; }
-    int32_t inputRate() const { return 0; }
+    /**
+     * Open the ear: the stream the page holds, or a new one asked of the
+     * browser, connected as soon as there is both a stream and a worklet. On
+     * from now; the first few blocks may be silence while the browser opens
+     * the microphone. The browser chooses which microphone.
+     */
+    bool startInput(int32_t = 0);
+    void stopInput();
+    bool isInputRunning() const { return inputOn.load(std::memory_order_relaxed); }
+    int32_t inputChannels() const { return isInputRunning() ? 2 : 0; }
+    int32_t inputRate() const { return isInputRunning() ? getSampleRate() : 0; }
     int32_t inputDevice() const { return 0; }
-    float readInputPeak() { return 0.0f; }
+    float readInputPeak() {
+        const float now = inputPeak.load(std::memory_order_relaxed);
+        inputPeak.store(now * kMeterDecay, std::memory_order_relaxed);
+        return now;
+    }
 
     bool isRunning() const { return context != 0; }
 
@@ -99,11 +113,12 @@ class AudioDriver {
     }
 
     // The worklet's callbacks; public only so the C trampolines can reach them.
-    void render(float *left, float *right, int32_t numFrames);
+    void render(const float *inLeft, const float *inRight, float *left, float *right, int32_t numFrames);
     void connect(int context);
 
   private:
     static constexpr int32_t kQuantum = 128;
+    static constexpr int32_t kInputRingFrames = 2048;
     static constexpr float kMeterDecay = 0.7f;
     static AudioDriver *sLive;
 
@@ -113,6 +128,17 @@ class AudioDriver {
 
     std::vector<float> carry;
     std::vector<float> silence;
+
+    // The input, as the desktop's: a quantum's frames in, a block's out.
+    // Only the worklet's thread touches the ring.
+    std::atomic<bool> inputOn{false};
+    std::atomic<float> inputPeak{0.0f};
+    std::vector<float> inputRing;
+    std::vector<float> inputBlock;
+    int32_t inputRingFrames = 0;
+    int32_t inputRingRead = 0;
+    void pushInput(const float *left, const float *right, int32_t frames);
+    const float *nextInputBlock();
 
     /** The stand-in before the worklet: see the top of this file. */
     void standby();
