@@ -2,17 +2,14 @@
 
 Acidulous is a music studio for Android 8.1 and up. 
 
-Combine up to 16 synthesizers, drum machines, noise generators and processors together
-into scenes of music and play them in order or pick and choose to generate something new every time.
+Combine up to 16 synthesizers, drum machines, noise generators and processors together into scenes of music and play them in order or pick and choose to generate something new every time.
 
-In many ways this is an homage to the wonderful musical creation tool Caustic, many of the machines
-here are heavily inspired by Caustic and I have had it in mind through this whole process. I have also
-been inspired by many other synths, drum machines, and sequencers but I have tried to put my own stamp
-on every inspiration and to bring some of my own.
+This is an homage to Caustic and a collection of all the good ideas I've seen and had when making music with a variety of tools over the years. Some things I liked a certain way, some things I wished were another, and this is the combination of all of those ideas into something I hope is cohesive and fun to use.
 
 Read below for more details on the machines, sequencer, and app capabilities. 
 
-You can very much make music with this now, exporting via a number of formats in full form or split into stems.
+Acidulous is very near a 1.0 release which means I think it is feature ready for use and proper testing by people other than myself.
+You can very much make music with this now, sequencing and recording, playing and performing. You can export via a number of formats, in full form or split into stems.
 Please do and then let me know what works, what doesn't work, what could work in the future so I can grow it into something even more interesting.
 
 Please join me in the #acidulous channel **[on my discord](https://discord.gg/9Wun47jGC6)**  to share comments, ask questions, report bugs or issues with different devices, or to request new features. Or feel free to open an issue here.
