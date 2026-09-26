@@ -24,6 +24,14 @@ interface AppHost {
     /** The audio inputs plugged in now, for the recorder's choice of ear; empty when the platform will not say. */
     fun audioInputs(): List<AudioInput>
 
+    /**
+     * The outputs there are to choose from, by id and name, or none where the
+     * platform does the choosing - the phone routes its own sound. The
+     * desktop's, with [chooseAudioOutput]: see Settings > audio.
+     */
+    fun audioOutputs(): List<Pair<Int, String>> = emptyList()
+    fun chooseAudioOutput(id: Int) {}
+
     // --- Files the platform's pickers handed over: see [Doc] ------------------
 
     /** What the platform calls a file, or [fallback] when it will not say. */

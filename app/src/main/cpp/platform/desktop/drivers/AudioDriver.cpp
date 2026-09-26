@@ -81,21 +81,67 @@ int32_t idOf(const std::string &text) {
 
 } // namespace
 
-std::vector<AudioDriver::InputInfo> AudioDriver::listInputs() {
-    std::vector<InputInfo> inputs;
+namespace {
+
+/** The devices one way or the other, with the ids this driver knows them by. */
+std::vector<AudioDriver::InputInfo> listDevices(bool capture) {
+    std::vector<AudioDriver::InputInfo> out;
     ma_context *context = inputContext();
-    if (context == nullptr) return inputs;
-    ma_device_info *captures = nullptr;
-    ma_uint32 count = 0;
-    if (ma_context_get_devices(context, nullptr, nullptr, &captures, &count) != MA_SUCCESS) return inputs;
+    if (context == nullptr) return out;
+    ma_device_info *playbacks = nullptr, *captures = nullptr;
+    ma_uint32 playCount = 0, captureCount = 0;
+    if (ma_context_get_devices(context, &playbacks, &playCount, &captures, &captureCount) != MA_SUCCESS) return out;
+    ma_device_info *list = capture ? captures : playbacks;
+    const ma_uint32 count = capture ? captureCount : playCount;
     for (ma_uint32 i = 0; i < count; i++) {
-        InputInfo info;
-        info.name = captures[i].name;
-        info.key = keyOf(context, captures[i].id);
+        AudioDriver::InputInfo info;
+        info.name = list[i].name;
+        info.key = keyOf(context, list[i].id);
         info.id = idOf(info.key.empty() ? info.name : info.key);
-        inputs.push_back(std::move(info));
+        out.push_back(std::move(info));
     }
-    return inputs;
+    return out;
+}
+
+/** The id [want] among the devices there are now, into [into]; false when it is not there. */
+bool findDevice(bool capture, int32_t want, ma_device_id &into) {
+    ma_context *context = inputContext();
+    if (want == 0 || context == nullptr) return false;
+    ma_device_info *playbacks = nullptr, *captures = nullptr;
+    ma_uint32 playCount = 0, captureCount = 0;
+    if (ma_context_get_devices(context, &playbacks, &playCount, &captures, &captureCount) != MA_SUCCESS) return false;
+    ma_device_info *list = capture ? captures : playbacks;
+    const ma_uint32 count = capture ? captureCount : playCount;
+    for (ma_uint32 i = 0; i < count; i++) {
+        const std::string key = keyOf(context, list[i].id);
+        if (idOf(key.empty() ? std::string(list[i].name) : key) == want) {
+            into = list[i].id;
+            return true;
+        }
+    }
+    return false;
+}
+
+} // namespace
+
+int32_t AudioDriver::sChosenOutput = 0;
+AudioDriver *AudioDriver::sLive = nullptr;
+
+std::vector<AudioDriver::InputInfo> AudioDriver::listInputs() { return listDevices(true); }
+std::vector<AudioDriver::InputInfo> AudioDriver::listOutputs() { return listDevices(false); }
+
+void AudioDriver::chooseOutput(int32_t id) {
+    if (id == sChosenOutput) return;
+    sChosenOutput = id;
+    if (sLive != nullptr && sLive->device != nullptr) sLive->reopen();
+}
+
+void AudioDriver::reopen() {
+    const bool listening = capturer != nullptr;
+    const int32_t listeningTo = actualInputDevice;
+    stop();
+    start();
+    if (listening) startInput(listeningTo);
 }
 
 struct AudioDriver::InputQueue {
@@ -106,6 +152,7 @@ AudioDriver::AudioDriver() = default;
 
 AudioDriver::~AudioDriver() {
     stop();
+    if (sLive == this) sLive = nullptr;
 }
 
 bool AudioDriver::start() {
@@ -130,9 +177,15 @@ bool AudioDriver::start() {
     config.noPreSilencedOutputBuffer = MA_TRUE;
     config.dataCallback = onOutput;
     config.pUserData = this;
+    // The output chosen in Settings, found among what is there now; gone,
+    // it is the default, as a vanished input is.
+    ma_device_id chosen{};
+    const bool found = findDevice(false, sChosenOutput, chosen);
+    if (sChosenOutput != 0 && !found) LOGI("output %d is not there now; the default instead", sChosenOutput);
+    if (found) config.playback.pDeviceID = &chosen;
 
     auto opened = std::make_unique<ma_device>();
-    if (ma_device_init(nullptr, &config, opened.get()) != MA_SUCCESS) {
+    if (ma_device_init(inputContext(), &config, opened.get()) != MA_SUCCESS) {
         LOGE("failed to open the output");
         return false;
     }
@@ -148,8 +201,9 @@ bool AudioDriver::start() {
         device.reset();
         return false;
     }
-    LOGI("stream open: %s, %d Hz, period %d frames x %d, engine block %d frames",
-         ma_get_backend_name(device->pContext->backend), actualSampleRate, actualFramesPerBurst,
+    sLive = this;
+    LOGI("stream open: %s, %s, %d Hz, period %d frames x %d, engine block %d frames",
+         ma_get_backend_name(device->pContext->backend), device->playback.name, actualSampleRate, actualFramesPerBurst,
          actualPeriods, engineBlockFrames);
     return true;
 }
@@ -193,22 +247,8 @@ bool AudioDriver::startInput(int32_t deviceId) {
     // interface unplugged since - is the default, as it is on the phone.
     ma_context *context = inputContext();
     ma_device_id chosen{};
-    int32_t found = 0;
-    if (deviceId != 0 && context != nullptr) {
-        ma_device_info *captures = nullptr;
-        ma_uint32 count = 0;
-        if (ma_context_get_devices(context, nullptr, nullptr, &captures, &count) == MA_SUCCESS) {
-            for (ma_uint32 i = 0; i < count; i++) {
-                const std::string key = keyOf(context, captures[i].id);
-                if (idOf(key.empty() ? std::string(captures[i].name) : key) == deviceId) {
-                    chosen = captures[i].id;
-                    found = deviceId;
-                    break;
-                }
-            }
-        }
-        if (found == 0) LOGI("input %d is not there now; the default instead", deviceId);
-    }
+    const int32_t found = findDevice(true, deviceId, chosen) ? deviceId : 0;
+    if (deviceId != 0 && found == 0) LOGI("input %d is not there now; the default instead", deviceId);
     if (found != 0) config.capture.pDeviceID = &chosen;
     auto opened = std::make_unique<ma_device>();
     if (ma_device_init(context, &config, opened.get()) != MA_SUCCESS) {
@@ -365,11 +405,5 @@ void AudioDriver::setBufferBursts(int32_t bursts) {
     if (bursts == bufferBursts) return;
     bufferBursts = bursts;
     // A period count is fixed when the device opens, so a change reopens it.
-    if (device != nullptr) {
-        const bool listening = capturer != nullptr;
-        const int32_t listeningTo = actualInputDevice;
-        stop();
-        start();
-        if (listening) startInput(listeningTo);
-    }
+    if (device != nullptr) reopen();
 }

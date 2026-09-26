@@ -139,6 +139,18 @@ private fun AudioTab(trackNames: List<String>) {
     val drops = NativeEngine.xRunCount
     // The three things to set, in a card; everything under it is a reading.
     WindowCards {
+        // Where the sound goes, where there is a choice: the desktop. The
+        // phone routes its own, and says nothing here.
+        val outputs = androidx.compose.runtime.remember { com.rm.acidulous.AppHost.current.audioOutputs() }
+        if (outputs.isNotEmpty()) {
+            WindowCard(stringResource(Res.string.settings_output)) {
+                val choices = listOf(0 to stringResource(Res.string.settings_output_default)) + outputs
+                SwitchGrid(
+                    stringResource(Res.string.settings_output_device), choices.map { it.second },
+                    choices.indexOfFirst { it.first == UiPrefs.outputDevice }.coerceAtLeast(0), columns = 1,
+                ) { UiPrefs.chooseOutputDevice(choices[it].first) }
+            }
+        }
         WindowCard(stringResource(Res.string.settings_engine)) {
             SwitchGrid(stringResource(Res.string.settings_buffer), UiPrefs.Buffer.entries.map { stringResource(it.label) }, UiPrefs.buffer.ordinal, columns = 1) {
                 UiPrefs.chooseBuffer(UiPrefs.Buffer.entries[it])

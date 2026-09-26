@@ -16,6 +16,22 @@ internal object DesktopAudio {
     @JvmStatic
     private external fun nativeInputs(): Array<String>
 
+    @JvmStatic
+    private external fun nativeOutputs(): Array<String>
+
+    @JvmStatic
+    private external fun nativeChooseOutput(id: Int)
+
+    /** The sound server's outputs, by id and name: what Settings offers to play through. */
+    fun outputs(): List<Pair<Int, String>> =
+        runCatching { nativeOutputs() }.getOrDefault(emptyArray()).toList().chunked(3)
+            .mapNotNull { (id, name, _) -> id.toIntOrNull()?.let { it to name } }
+
+    /** Play through [id] from now on, reopening the stream if it is running; nought is the default. */
+    fun chooseOutput(id: Int) {
+        runCatching { nativeChooseOutput(id) }
+    }
+
     /**
      * Read again at most every two seconds: the recorder asks on every
      * redraw, which is nothing on the phone and a round trip to the sound

@@ -226,6 +226,9 @@ object UiPrefs {
      * The phone's density is its own, and it never shows this.
      */
     var screenScale by mutableStateOf(0f)
+
+    /** The output the desktop plays through, by the driver's id; nought is the system's default. */
+    var outputDevice by mutableStateOf(0)
         private set
 
     // --- Audio -----------------------------------------------------------
@@ -388,8 +391,9 @@ object UiPrefs {
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
             .getOrDefault(ThemeMode.Dark)
         uiScale = p.getFloat(KEY_UI_SCALE, 1f)
-        screenScale = p.getFloat(KEY_SCREEN_SCALE, 0f)
             .coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
+        screenScale = p.getFloat(KEY_SCREEN_SCALE, 0f).takeIf { it in ScreenScaleSteps } ?: 0f
+        outputDevice = p.getInt(KEY_OUTPUT_DEVICE, 0)
         buffer = runCatching { Buffer.valueOf(p.getString(KEY_BUFFER, null) ?: "Balanced") }
             .getOrDefault(Buffer.Balanced)
         voiceLimit = p.getInt(KEY_VOICES, 0)
@@ -610,6 +614,12 @@ object UiPrefs {
     fun chooseUiScale(scale: Float) {
         uiScale = scale.coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
         store?.edit()?.putFloat(KEY_UI_SCALE, uiScale)?.apply()
+    }
+
+    fun chooseOutputDevice(id: Int) {
+        outputDevice = id
+        store?.edit()?.putInt(KEY_OUTPUT_DEVICE, id)?.apply()
+        com.rm.acidulous.AppHost.current.chooseAudioOutput(id)
     }
 
     fun chooseScreenScale(scale: Float) {
@@ -872,6 +882,7 @@ object UiPrefs {
     private const val KEY_NOTE_LAYOUT = "note_layout"
     private const val KEY_UI_SCALE = "ui_scale"
     private const val KEY_SCREEN_SCALE = "screen_scale"
+    private const val KEY_OUTPUT_DEVICE = "output_device"
     private const val KEY_BUFFER = "buffer"
     private const val KEY_VOICES = "voice_limit"
     private const val KEY_QUALITY = "quality_full"

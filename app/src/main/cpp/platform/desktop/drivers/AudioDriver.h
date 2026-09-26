@@ -45,6 +45,14 @@ class AudioDriver {
     };
     /** The inputs there are now; the ids are what startInput takes. */
     static std::vector<InputInfo> listInputs();
+    /** The outputs there are now, the same way; the ids are what chooseOutput takes. */
+    static std::vector<InputInfo> listOutputs();
+    /**
+     * Play through the output with this id from listOutputs, nought for the
+     * system's default: kept for the next start, and a running stream is
+     * reopened on it straight away. One that is not there is the default.
+     */
+    static void chooseOutput(int32_t id);
 
     /** Open the ear: nought is the system's default input, anything else an id from listInputs. */
     bool startInput(int32_t deviceId = 0);
@@ -155,6 +163,11 @@ class AudioDriver {
         const int32_t rate = actualSampleRate > 0 ? actualSampleRate : acidulous::kSampleRate;
         return static_cast<int32_t>(static_cast<int64_t>(frames) * 1000000 / rate);
     }
+
+    /** Stop and start again, on whatever output is chosen now, keeping the input open if it was. */
+    void reopen();
+    static int32_t sChosenOutput;
+    static AudioDriver *sLive;
 
     int32_t engineBlockFrames = 0;
     int32_t bufferBursts = 2;

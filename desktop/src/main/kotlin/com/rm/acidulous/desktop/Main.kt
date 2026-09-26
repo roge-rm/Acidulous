@@ -55,6 +55,8 @@ fun main() {
     // What MainActivity.onCreate does on the phone, in the same order.
     AppHost.current = DesktopHost(config, crashes)
     UiPrefs.init(FilePrefs(File(config, "ui.properties")))
+    // The output chosen last time, before the engine opens a stream.
+    DesktopAudio.chooseOutput(UiPrefs.outputDevice)
     Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
     Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
     // ALSA's sequencer, which sees every device and program; Java Sound's raw

@@ -16,6 +16,10 @@
         <item>high contrast</item>
     </string-array>
     <string name="settings_size">size</string>
+    <!-- The desktop build's output choice; the phone has none. -->
+    <string name="settings_output">output</string>
+    <string name="settings_output_device">play through</string>
+    <string name="settings_output_default">system default</string>
     <!-- The desktop build only: how big a dp is on this screen. "system" is what the computer says. -->
     <string name="settings_screen_scale">screen scale</string>
     <string-array name="settings_screen_scale_choices">

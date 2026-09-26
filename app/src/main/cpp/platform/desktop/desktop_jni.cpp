@@ -25,4 +25,26 @@ Java_com_rm_acidulous_desktop_DesktopAudio_nativeInputs(JNIEnv *env, jclass) {
     return out;
 }
 
+/** Every output, the same three strings in a row as nativeInputs. */
+JNIEXPORT jobjectArray JNICALL
+Java_com_rm_acidulous_desktop_DesktopAudio_nativeOutputs(JNIEnv *env, jclass) {
+    const auto outputs = AudioDriver::listOutputs();
+    jobjectArray out = env->NewObjectArray(static_cast<jsize>(outputs.size() * 3), env->FindClass("java/lang/String"), nullptr);
+    jsize at = 0;
+    for (const auto &output : outputs) {
+        for (const std::string &text : {std::to_string(output.id), output.name, output.key}) {
+            jstring s = env->NewStringUTF(text.c_str());
+            env->SetObjectArrayElement(out, at++, s);
+            env->DeleteLocalRef(s);
+        }
+    }
+    return out;
+}
+
+/** Play through this output from now on: nought for the system's default. */
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_desktop_DesktopAudio_nativeChooseOutput(JNIEnv *, jclass, jint id) {
+    AudioDriver::chooseOutput(id);
+}
+
 } // extern "C"

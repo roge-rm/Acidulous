@@ -31,6 +31,8 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     override fun markCrashReportRead() = crashes.markRead()
 
     override fun audioInputs(): List<AudioInput> = DesktopAudio.inputs()
+    override fun audioOutputs(): List<Pair<Int, String>> = DesktopAudio.outputs()
+    override fun chooseAudioOutput(id: Int) = DesktopAudio.chooseOutput(id)
 
     override fun docName(doc: Doc, fallback: String): String = doc.file.name.ifEmpty { fallback }
     override fun placeName(doc: Doc): String = doc.file.name
