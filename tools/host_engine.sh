@@ -12,7 +12,9 @@
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"
-OUT="$ROOT/build/host-engine"
+# HOST_ENGINE_FLAGS builds a variant - denormal_probe.sh's, with the web
+# build's guards - into a folder of its own, HOST_ENGINE_OUT.
+OUT="${HOST_ENGINE_OUT:-$ROOT/build/host-engine}"
 LIB="$OUT/libacidulous-engine.a"
 mkdir -p "$OUT"
 
@@ -50,7 +52,7 @@ for src in $SRC; do
     obj="$OUT/$(echo "${src#$CPP/}" | tr '/' '_' | sed 's/\.cpp$/.o/')"
     objs="$objs $obj"
     if [ ! -f "$obj" ] || [ "$src" -nt "$obj" ]; then
-        g++ -O2 -std=c++17 -I "$CPP" -c "$src" -o "$obj" >&2 || exit 1
+        g++ -O2 -std=c++17 ${HOST_ENGINE_FLAGS:-} -I "$CPP" -c "$src" -o "$obj" >&2 || exit 1
         built=$((built + 1))
     fi
 done

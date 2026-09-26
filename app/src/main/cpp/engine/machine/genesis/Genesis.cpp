@@ -339,11 +339,11 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
 
         // --- the bus: compression, and the kick pushing everything down
         const float rectified = std::fabs(mix);
-        compEnv += (rectified - compEnv) * (rectified > compEnv ? compAttack : compRelease);
+        compEnv = dsp::guardDenormal(compEnv + (rectified - compEnv) * (rectified > compEnv ? compAttack : compRelease));
         const float over = std::max(0.0f, compEnv - 0.25f);
         const float compGain = 1.0f / (1.0f + over * comp * 4.0f);
         const float kickLevel = std::fabs(kickOut);
-        duckEnv += (kickLevel - duckEnv) * (kickLevel > duckEnv ? 0.02f : 0.0006f);
+        duckEnv = dsp::guardDenormal(duckEnv + (kickLevel - duckEnv) * (kickLevel > duckEnv ? 0.02f : 0.0006f));
         const float duckGain = 1.0f / (1.0f + duckEnv * duck * 6.0f);
         // The kick is what does the ducking, so it does not duck itself.
         float out = (mix - kickOut) * compGain * duckGain + kickOut * compGain;

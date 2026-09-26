@@ -50,6 +50,9 @@ target_link_libraries(acidulous mp3lame)
 
 set(THREADS -pthread)
 target_compile_options(acidulous PRIVATE ${THREADS} -Wno-unused-parameter)
+# WebAssembly cannot set the CPU's flush-to-zero, so the filters and feedback
+# paths that decay flush their own tiny values instead: dsp::guardDenormal.
+target_compile_definitions(acidulous PRIVATE ACID_SOFT_DENORMALS)
 target_compile_options(mp3lame PRIVATE ${THREADS})
 target_link_options(acidulous PRIVATE
     ${THREADS}

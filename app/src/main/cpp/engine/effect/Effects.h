@@ -256,7 +256,7 @@ class Shifter final : public Effect {
         float a = 0.0f, x1 = 0.0f, x2 = 0.0f, y1 = 0.0f, y2 = 0.0f;
         float process(float x) {
             const float y = a * a * (x + y2) - x2;
-            x2 = x1; x1 = x; y2 = y1; y1 = y;
+            x2 = x1; x1 = x; y2 = y1; y1 = dsp::guardDenormal(y);
             return y;
         }
         void clear() { x1 = x2 = y1 = y2 = 0.0f; }

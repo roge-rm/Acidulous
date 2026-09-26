@@ -533,7 +533,7 @@ bool Distortion::process(float *L, float *R, int32_t frames, bool stereoIn) {
             // Block the DC that bias introduces (one-pole highpass at ~10 Hz).
             const float hp = y - dcIn[c] + 0.9987f * dcOut[c];
             dcIn[c] = y;
-            dcOut[c] = hp;
+            dcOut[c] = dsp::guardDenormal(hp);
             const float wet = tone[c].process(hp);
             buf[i] = in + (wet - in) * mix;
         }
@@ -1093,7 +1093,7 @@ bool Shifter::process(float *L, float *R, int32_t frames, bool stereoIn) {
             // is the thing no acoustic process does.
             const float sign = (ch == 1) ? (1.0f - 2.0f * spread) : 1.0f;
             const float wet = qi * c - q * s * sign;
-            fb[ch] = wet;
+            fb[ch] = dsp::guardDenormal(wet);
             (ch == 0 ? L : R)[i] = in[ch] + (wet - in[ch]) * mix;
         }
     }

@@ -88,7 +88,7 @@ class MultiFilter {
     float lastFc = -1.0f, lastRes = -1.0f;
     int lastType = -1;
 
-    float lp1(float x) { z += (x - z) * onePole; return z; }
+    float lp1(float x) { z = guardDenormal(z + (x - z) * onePole); return z; }
     float shape(float x) {
         if (drive == Clean || driveAmount <= 0.0f) return x;
         const float g = 1.0f + driveAmount * 24.0f;

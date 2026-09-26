@@ -55,6 +55,23 @@ inline float undenormal(float v) {
     return v + kTiny - kTiny;
 }
 
+/**
+ * [undenormal] where no thread can be told to flush denormals, and nothing at
+ * all where one can (Denormals.h). That is WebAssembly: its floats are IEEE to
+ * the letter and a page cannot set the CPU's flush-to-zero, so in a browser
+ * every filter state and feedback path that decays spends its last few dB on
+ * the slow path - Reflux through a Distortion cost five times as much in its
+ * tail as with the flag. The web build defines ACID_SOFT_DENORMALS; everywhere
+ * else this is the value itself and costs nothing.
+ */
+inline float guardDenormal(float v) {
+#if defined(ACID_SOFT_DENORMALS)
+    return undenormal(v);
+#else
+    return v;
+#endif
+}
+
 inline float clampf(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
 /**

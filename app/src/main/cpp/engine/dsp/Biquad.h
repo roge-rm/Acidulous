@@ -10,7 +10,7 @@ class Biquad {
     void reset() { x1 = x2 = y1 = y2 = 0.0f; }
     float process(float x) {
         const float y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
-        x2 = x1; x1 = x; y2 = y1; y1 = y;
+        x2 = x1; x1 = x; y2 = y1; y1 = guardDenormal(y);
         return y;
     }
     void lowShelf(float hz, float dB, float sr) { shelf(hz, dB, sr, true); }

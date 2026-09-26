@@ -343,7 +343,7 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
                 sample = v.held;
             }
             if (smooth > 0.0001f) {
-                v.smoothed += (sample - v.smoothed) * (1.0f - smoothCoeff);
+                v.smoothed = dsp::guardDenormal(v.smoothed + (sample - v.smoothed) * (1.0f - smoothCoeff));
                 sample = v.smoothed;
             }
             sample *= env * vel * (static_cast<float>(volTable) / 255.0f);
@@ -366,7 +366,7 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
         //
         // Ten hertz, which is below anything this machine is asked to play
         // and above the offsets it makes.
-        dcPrev = L[i] - dcX1 + kDcPole * dcPrev;
+        dcPrev = dsp::guardDenormal(L[i] - dcX1 + kDcPole * dcPrev);
         dcX1 = L[i];
         // The house level. A chip is a loud machine - square waves at full
         // scale, no filter in the way by default - and at the 0.5 this used
