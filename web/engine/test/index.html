@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Engine test</title></head>
+<body>
+<button id="go">Play</button>
+<pre id="out"></pre>
+<script src="../out/acidulous.js"></script>
+<script>
+// The engine alone in a page: start it, resume the audio (a gesture in a real
+// browser; headless is started with the autoplay policy off), mount Reflux,
+// play a note, and read the peak level the worklet reports.
+const out = document.getElementById('out');
+function say(line) {
+  out.textContent += line + '\n';
+  fetch('/log', {method: 'POST', body: line}).catch(() => {});
+}
+say('isolated=' + self.crossOriginIsolated + ' sab=' + (typeof SharedArrayBuffer));
+AcidEngine({print: say, printErr: say}).then(async (m) => {
+  say('module ready');
+  say('start=' + m._acid_start());
+  const go = async () => {
+    m._acid_resume();
+    const type = 'Reflux';
+    const buf = m._malloc(m.lengthBytesUTF8(type) + 1);
+    m.stringToUTF8(type, buf, m.lengthBytesUTF8(type) + 1);
+    say('mount=' + m._acid_mount_machine(0, buf));
+    await new Promise(r => setTimeout(r, 1500));
+    say('peak before=' + m._acid_peak().toFixed(4));
+    m._acid_note_on(0, 45, 110);
+    for (let i = 0; i < 6; i++) {
+      await new Promise(r => setTimeout(r, 250));
+      say('peak playing=' + m._acid_peak().toFixed(4) + ' frames=' + m._acid_frames() + ' state=' + m._acid_state());
+    }
+    m._acid_note_off(0, 45);
+    say('done');
+  };
+  document.getElementById('go').onclick = go;
+  if (location.search.includes('auto')) go().catch(e => say('error: ' + e));
+  window.onerror = (m) => say('error: ' + m);
+});
+</script>
+</body></html>

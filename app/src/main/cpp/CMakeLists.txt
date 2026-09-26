@@ -35,6 +35,8 @@ file(GLOB_RECURSE PLATFORM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR
 # platform/desktop is the desktop build's (desktop/native/CMakeLists.txt): its
 # own audio driver, which would be a second AudioDriver here.
 list(FILTER PLATFORM_SOURCES EXCLUDE REGEX ".*/platform/desktop/.*")
+# And the browser build's: web/engine/CMakeLists.txt.
+list(FILTER PLATFORM_SOURCES EXCLUDE REGEX ".*/platform/web/.*")
 
 add_library(acidulous SHARED
     ${ENGINE_SOURCES}

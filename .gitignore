@@ -34,3 +34,5 @@ local.properties
 
 # Kotlin compiler caches.
 /.kotlin/
+/web/engine/build/
+/web/engine/out/
