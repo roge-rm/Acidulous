@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -129,8 +130,21 @@ fun MixerPanel(
     // The output row is there only in a song that has a group to route to.
     val groups = song.master.groups.map { it.name }
     val chrome = STRIP_CHROME + if (groups.isEmpty()) 0.dp else OUTPUT_ROW
+    // **Rows of strips where there is height for them.** The editor's column
+    // on a tablet or a desktop is several strips tall and one wide: a single
+    // row there showed four channels across the top and scrolled sideways
+    // for the rest, over a column of nothing (Dan, 2026-09-25). Where two
+    // rows fit even at the shortest fader, the strips wrap, right-aligned as
+    // the row is, the height is shared between two rows, and the column
+    // scrolls down for the rest. Strips that fit in one line lay out as they
+    // did, full height.
+    val count = song.tracks.size + song.master.groups.size + (if (song.master.groups.size < MAX_GROUPS) 1 else 0) + 1
+    val across = (STRIP_W + 6.dp) * count + 6.dp
+    val wrap = room != Dp.Infinity && across > maxWidth && room >= (chrome + FADER_MIN) * 2 + 6.dp
     val faderH = if (room == Dp.Infinity) {
         FADER_H
+    } else if (wrap) {
+        ((room - 6.dp) / 2 - chrome).coerceIn(FADER_MIN, FADER_H)
     } else {
         (room - chrome).coerceIn(FADER_MIN, FADER_H)
     }
@@ -146,11 +160,7 @@ fun MixerPanel(
     // least as wide as what it is in, so `Alignment.End` has somewhere to push
     // from. Once the strips are wider than that the minimum stops binding and
     // it scrolls exactly as before.
-    Row(
-        Modifier.background(c.panelAlt).horizontalScrollWithBar(rememberScrollState()).padding(6.dp)
-            .then(if (room == Dp.Infinity) Modifier else Modifier.widthIn(min = maxWidth - 12.dp)),
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
-    ) {
+    val strips: @Composable () -> Unit = {
         // What the two send sliders are called on every channel: whatever is
         // on the send. They said "rev" and "dly" when that was all they could
         // ever be, and went on saying it after the sends became slots, which
@@ -184,6 +194,19 @@ fun MixerPanel(
         song.master.groups.forEachIndexed { g, group -> GroupStrip(g, group, song, editor, faderH, room, tight, fullH) }
         if (song.master.groups.size < MAX_GROUPS) AddGroupStrip(editor, room, fullH)
         MasterStrip(song, editor, masterPeak, clickOn, onClick, faderH, room, tight, fullH)
+    }
+    if (wrap) {
+        FlowRow(
+            Modifier.fillMaxWidth().background(c.panelAlt).verticalScrollWithBar(rememberScrollState()).padding(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) { strips() }
+    } else {
+        Row(
+            Modifier.background(c.panelAlt).horizontalScrollWithBar(rememberScrollState()).padding(6.dp)
+                .then(if (room == Dp.Infinity) Modifier else Modifier.widthIn(min = maxWidth - 12.dp)),
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
+        ) { strips() }
     }
     }
 }
