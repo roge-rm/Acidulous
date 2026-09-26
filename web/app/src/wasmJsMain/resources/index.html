@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acidulous</title>
+<style>html, body { margin: 0; height: 100%; background: #1b1c1f; } #root { width: 100%; height: 100%; }</style>
+</head>
+<body>
+<div id="root"></div>
+<!-- The engine first: its module, on shared memory, as globalThis.acid; then the app, which calls it. -->
+<script src="acidulous.js"></script>
+<script>
+  AcidEngine().then((engine) => {
+    globalThis.acid = engine;
+    engine._acid_start();
+    const ui = document.createElement('script');
+    ui.src = 'acidulous-ui.js';
+    document.body.appendChild(ui);
+  });
+</script>
+</body>
+</html>
