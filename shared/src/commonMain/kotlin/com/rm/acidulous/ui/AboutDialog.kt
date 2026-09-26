@@ -129,8 +129,11 @@ private fun ComponentsTab(onRead: (Licence) -> Unit) {
             com.rm.acidulous.AudioStream.Browser -> {}
         }
         LicenceRow(Licence.Lgpl2, stringResource(Res.string.about_lame), onRead)
-        LicenceRow(Licence.Gpl2, stringResource(Res.string.about_link), onRead)
-        LicenceRow(Licence.Bsl1, stringResource(Res.string.about_asio), onRead)
+        // Link, and the networking it is built on, where it is built in.
+        if (com.rm.acidulous.AppHost.current.hasLink) {
+            LicenceRow(Licence.Gpl2, stringResource(Res.string.about_link), onRead)
+            LicenceRow(Licence.Bsl1, stringResource(Res.string.about_asio), onRead)
+        }
     }
 }
 

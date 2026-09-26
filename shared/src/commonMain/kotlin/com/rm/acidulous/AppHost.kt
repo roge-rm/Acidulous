@@ -92,6 +92,12 @@ interface AppHost {
 
     /** Whether the screen can be kept on while playing: the phone's window flag. */
     val canKeepScreenOn: Boolean get() = true
+    /**
+     * Whether Ableton Link can be had: not in a browser, where a page can
+     * neither send nor hear the local network's multicast that Link finds its
+     * peers by. Where it cannot, the tempo window has no Link page.
+     */
+    val hasLink: Boolean get() = true
     /** Whose code the audio stream is, for the About window's credits. */
     val audioStream: AudioStream get() = AudioStream.Oboe
 

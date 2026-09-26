@@ -59,16 +59,13 @@ kotlin.sourceSets.named("wasmJsMain") { kotlin.srcDir(buildInfo) }
 
 /**
  * The licence texts the About window shows, served beside the page under the
- * names the app gives them: :app's and the desktop's, less the audio
- * libraries a browser does not use.
+ * names the app gives them: :app's and the desktop's, less what the browser
+ * build leaves out - the audio libraries and Link.
  */
 val stageLicences = tasks.register<Sync>("stageLicences") {
     val app = rootProject.file("app/src/main/cpp/third_party")
     from(file("$app/lame/COPYING")) { rename { "lgpl-2.0.txt" } }
-    from(file("$app/asio/LICENSE_1_0.txt")) { rename { "bsl-1.0.txt" } }
     from(rootProject.file("LICENSE")) { rename { "gpl-3.0.txt" } }
-    from(rootProject.file("licences/Apache-2.0.txt")) { rename { "apache-2.0.txt" } }
-    from(rootProject.file("licences/GPL-2.0.txt")) { rename { "gpl-2.0.txt" } }
     into(layout.buildDirectory.dir("generated/licences/licences"))
 }
 kotlin.sourceSets.named("wasmJsMain") { resources.srcDir(stageLicences.map { it.destinationDir.parentFile }) }

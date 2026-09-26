@@ -495,12 +495,15 @@ fun TempoDialog(
     // On a square phone the key is a page of its own: tempo, bar and key are
     // half a card more than its window. See [compactWindow].
     val keyPage = compactWindow()
+    // Link last, and only where there is one: see AppHost.hasLink.
+    val hasLink = com.rm.acidulous.AppHost.current.hasLink
     val tabNames = stringArrayResource(Res.array.tempo_tabs).toList().let {
         if (keyPage) listOf(it[0], stringResource(Res.string.tempo_tab_key)) + it.drop(1) else it
-    }
+    }.let { if (hasLink) it else it.dropLast(1) }
     val keyCard: @Composable () -> Unit = {
         WindowCards { KeySection(key, { key = it }, tuning, tunings, { tuning = it }) }
     }
+    val linkPage: (@Composable () -> Unit)? = if (hasLink) { { LinkPage() } } else null
     TabbedDialog(
         title = stringResource(Res.string.tempo_title),
         selected = tab,
@@ -532,7 +535,7 @@ fun TempoDialog(
             },
             keyCard.takeIf { keyPage },
             { ClickPage() },
-            { LinkPage() },
+            linkPage,
         ),
     )
 }
