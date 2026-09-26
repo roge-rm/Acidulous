@@ -7,8 +7,8 @@ package com.rm.acidulous.engine
 private fun raw_nativePanic(env: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativePanic(env, 0)")
 
-private fun raw_nativeLoadNexusPatch(env: Int, rack: Int, spec: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoadNexusPatch(env, 0, rack, spec)")
+private fun async_nativeLoadNexusPatch(arena: Int, rack: Int, spec: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadNexusPatch(arena, rack, spec)")
 
 private fun raw_nativeNexusPalette(env: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeNexusPalette(env, 0)")
@@ -79,8 +79,8 @@ private fun raw_nativeCaptureDeaf(env: Int): Int =
 private fun raw_nativeCapturedFrames(env: Int): Long =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCapturedFrames(env, 0)")
 
-private fun raw_nativeCompCell(env: Int, rack: Int, sceneId: Long, frames: Int, bpm: Float, path: Int, peakOut: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCompCell(env, 0, rack, sceneId, frames, bpm, path, peakOut)")
+private fun async_nativeCompCell(arena: Int, rack: Int, sceneId: Long, frames: Int, bpm: Float, path: Int, peakOut: Int): Int =
+    js("globalThis.acid._acid_async_nativeCompCell(arena, rack, sceneId, frames, bpm, path, peakOut)")
 
 private fun raw_nativeArmCapture(env: Int, rack: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeArmCapture(env, 0, rack)")
@@ -88,14 +88,14 @@ private fun raw_nativeArmCapture(env: Int, rack: Int): Unit =
 private fun raw_nativeCaptureMarks(env: Int, out: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCaptureMarks(env, 0, out)")
 
-private fun raw_nativeFileShape(env: Int, path: Int, out: Int, fromFrame: Int, toFrame: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeFileShape(env, 0, path, out, fromFrame, toFrame)")
+private fun async_nativeFileShape(arena: Int, path: Int, out: Int, fromFrame: Int, toFrame: Int): Int =
+    js("globalThis.acid._acid_async_nativeFileShape(arena, path, out, fromFrame, toFrame)")
 
-private fun raw_nativeFileInfo(env: Int, path: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeFileInfo(env, 0, path)")
+private fun async_nativeFileInfo(arena: Int, path: Int): Int =
+    js("globalThis.acid._acid_async_nativeFileInfo(arena, path)")
 
-private fun raw_nativeFileSurvey(env: Int, path: Int, out: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeFileSurvey(env, 0, path, out)")
+private fun async_nativeFileSurvey(arena: Int, path: Int, out: Int): Int =
+    js("globalThis.acid._acid_async_nativeFileSurvey(arena, path, out)")
 
 private fun raw_nativeAuditionFile(env: Int, path: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeAuditionFile(env, 0, path)")
@@ -124,8 +124,8 @@ private fun raw_nativeStop(env: Int): Unit =
 private fun raw_nativeIsRunning(env: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeIsRunning(env, 0)")
 
-private fun raw_nativeLoadUtterance(env: Int, rack: Int, path: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoadUtterance(env, 0, rack, path)")
+private fun async_nativeLoadUtterance(arena: Int, rack: Int, path: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadUtterance(arena, rack, path)")
 
 private fun raw_nativeMountMachine(env: Int, rackId: Int, typeName: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeMountMachine(env, 0, rackId, typeName)")
@@ -133,11 +133,11 @@ private fun raw_nativeMountMachine(env: Int, rackId: Int, typeName: Int): Int =
 private fun raw_nativeUnmountMachine(env: Int, rackId: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeUnmountMachine(env, 0, rackId)")
 
-private fun raw_nativeRenderSong(env: Int, path: Int, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRenderSong(env, 0, path, tailSeconds, format, bits, startScene, maxSeconds)")
+private fun async_nativeRenderSong(arena: Int, path: Int, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): Int =
+    js("globalThis.acid._acid_async_nativeRenderSong(arena, path, tailSeconds, format, bits, startScene, maxSeconds)")
 
-private fun raw_nativeRenderStems(env: Int, paths: Int, racks: Int, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRenderStems(env, 0, paths, racks, tailSeconds, format, bits, startScene, maxSeconds)")
+private fun async_nativeRenderStems(arena: Int, paths: Int, racks: Int, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): Int =
+    js("globalThis.acid._acid_async_nativeRenderStems(arena, paths, racks, tailSeconds, format, bits, startScene, maxSeconds)")
 
 private fun raw_nativeSetCountInBars(env: Int, bars: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetCountInBars(env, 0, bars)")
@@ -175,8 +175,8 @@ private fun raw_nativeMountEffect(env: Int, rackId: Int, slot: Int, typeName: In
 private fun raw_nativeMountSend(env: Int, slot: Int, typeName: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeMountSend(env, 0, slot, typeName)")
 
-private fun raw_nativeMeasureLoudness(env: Int, tailSeconds: Float, startScene: Int, maxSeconds: Float): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeMeasureLoudness(env, 0, tailSeconds, startScene, maxSeconds)")
+private fun async_nativeMeasureLoudness(arena: Int, tailSeconds: Float, startScene: Int, maxSeconds: Float): Int =
+    js("globalThis.acid._acid_async_nativeMeasureLoudness(arena, tailSeconds, startScene, maxSeconds)")
 
 private fun raw_nativeSetRenderGain(env: Int, db: Float): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetRenderGain(env, 0, db)")
@@ -208,14 +208,14 @@ private fun raw_nativeEffectParamInfo(env: Int, type: Int): Int =
 private fun raw_nativeLoadSample(env: Int, rackId: Int, slot: Int, path: Int, maxSeconds: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoadSample(env, 0, rackId, slot, path, maxSeconds)")
 
-private fun raw_nativeSoundFontPresets(env: Int, path: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSoundFontPresets(env, 0, path)")
+private fun async_nativeSoundFontPresets(arena: Int, path: Int): Int =
+    js("globalThis.acid._acid_async_nativeSoundFontPresets(arena, path)")
 
-private fun raw_nativeLoadSoundFont(env: Int, rackId: Int, path: Int, presetIndex: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoadSoundFont(env, 0, rackId, path, presetIndex)")
+private fun async_nativeLoadSoundFont(arena: Int, rackId: Int, path: Int, presetIndex: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadSoundFont(arena, rackId, path, presetIndex)")
 
-private fun raw_nativeLoadZoneMap(env: Int, rackId: Int, spec: Int, name: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoadZoneMap(env, 0, rackId, spec, name)")
+private fun async_nativeLoadZoneMap(arena: Int, rackId: Int, spec: Int, name: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadZoneMap(arena, rackId, spec, name)")
 
 private fun raw_nativeSampleMapInfo(env: Int, rackId: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSampleMapInfo(env, 0, rackId)")
@@ -223,14 +223,14 @@ private fun raw_nativeSampleMapInfo(env: Int, rackId: Int): Int =
 private fun raw_nativeSampleInfo(env: Int, rackId: Int, slot: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSampleInfo(env, 0, rackId, slot)")
 
-private fun raw_nativeSlicePoints(env: Int, path: Int, mode: Int, count: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSlicePoints(env, 0, path, mode, count)")
+private fun async_nativeSlicePoints(arena: Int, path: Int, mode: Int, count: Int): Int =
+    js("globalThis.acid._acid_async_nativeSlicePoints(arena, path, mode, count)")
 
-private fun raw_nativeLoopShape(env: Int, path: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoopShape(env, 0, path)")
+private fun async_nativeLoopShape(arena: Int, path: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoopShape(arena, path)")
 
-private fun raw_nativeImportAudio(env: Int, path: Int, maxSeconds: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeImportAudio(env, 0, path, maxSeconds)")
+private fun async_nativeImportAudio(arena: Int, path: Int, maxSeconds: Int): Int =
+    js("globalThis.acid._acid_async_nativeImportAudio(arena, path, maxSeconds)")
 
 private fun raw_nativeSampleShape(env: Int, rack: Int, pad: Int, out: Int, fromFrame: Int, toFrame: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSampleShape(env, 0, rack, pad, out, fromFrame, toFrame)")
@@ -253,26 +253,26 @@ private fun raw_nativeChannelPressure(env: Int, rackId: Int, value: Int, record:
 private fun raw_nativeSetParam(env: Int, rackId: Int, unit: Int, name: Int, value: Float, record: Int, quantise: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetParam(env, 0, rackId, unit, name, value, record, quantise)")
 
-private fun raw_nativeLoadTake(env: Int, rack: Int, path: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoadTake(env, 0, rack, path)")
+private fun async_nativeLoadTake(arena: Int, rack: Int, path: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadTake(arena, rack, path)")
 
-private fun raw_nativeLoadReel(env: Int, rack: Int, spec: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoadReel(env, 0, rack, spec)")
+private fun async_nativeLoadReel(arena: Int, rack: Int, spec: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadReel(arena, rack, spec)")
 
 private fun raw_nativeSetCacheRoot(env: Int, path: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetCacheRoot(env, 0, path)")
 
-private fun raw_nativeLoadFormula(env: Int, rack: Int, formula: Int, arp: Int, duty: Int, vol: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoadFormula(env, 0, rack, formula, arp, duty, vol)")
+private fun async_nativeLoadFormula(arena: Int, rack: Int, formula: Int, arp: Int, duty: Int, vol: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadFormula(arena, rack, formula, arp, duty, vol)")
 
-private fun raw_nativeBuildCloud(env: Int, rack: Int, spectrum01: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeBuildCloud(env, 0, rack, spectrum01)")
+private fun async_nativeBuildCloud(arena: Int, rack: Int, spectrum01: Int): Int =
+    js("globalThis.acid._acid_async_nativeBuildCloud(arena, rack, spectrum01)")
 
-private fun raw_nativeFreezeClip(env: Int, rack: Int, sceneId: Long, path: Int, tailSeconds: Float): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeFreezeClip(env, 0, rack, sceneId, path, tailSeconds)")
+private fun async_nativeFreezeClip(arena: Int, rack: Int, sceneId: Long, path: Int, tailSeconds: Float): Int =
+    js("globalThis.acid._acid_async_nativeFreezeClip(arena, rack, sceneId, path, tailSeconds)")
 
-private fun raw_nativeLoadFrozen(env: Int, rack: Int, sceneIds: Int, paths: Int, bpms: Int, ticks: Int, tails: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeLoadFrozen(env, 0, rack, sceneIds, paths, bpms, ticks, tails)")
+private fun async_nativeLoadFrozen(arena: Int, rack: Int, sceneIds: Int, paths: Int, bpms: Int, ticks: Int, tails: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadFrozen(arena, rack, sceneIds, paths, bpms, ticks, tails)")
 
 private fun raw_nativeSetBufferBursts(env: Int, bursts: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetBufferBursts(env, 0, bursts)")
@@ -515,11 +515,13 @@ internal actual object EngineNative {
         Jni.release()
     }
 
-    actual fun nativeLoadNexusPatch(rack: Int, spec: String): String {
+    actual suspend fun nativeLoadNexusPatch(rack: Int, spec: String): String {
+        val arena_ = Jni.openArena()
         val jspec = Jni.string(spec)
-        val raw_ = raw_nativeLoadNexusPatch(Jni.env, rack, jspec)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeLoadNexusPatch(arena_, rack, jspec)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -679,13 +681,15 @@ internal actual object EngineNative {
         return result_
     }
 
-    actual fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String {
+    actual suspend fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
         val jpeakOut = Jni.floats(peakOut)
-        val raw_ = raw_nativeCompCell(Jni.env, rack, sceneId, frames, bpm, jpath, jpeakOut)
+        val ticket_ = async_nativeCompCell(arena_, rack, sceneId, frames, bpm, jpath, jpeakOut)
+        Jni.await(ticket_)
         Jni.copyBack(jpeakOut, peakOut)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -703,31 +707,37 @@ internal actual object EngineNative {
         return result_
     }
 
-    actual fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int {
+    actual suspend fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
         val jout = Jni.floats(out)
-        val raw_ = raw_nativeFileShape(Jni.env, jpath, jout, fromFrame, toFrame)
+        val ticket_ = async_nativeFileShape(arena_, jpath, jout, fromFrame, toFrame)
+        Jni.await(ticket_)
         Jni.copyBack(jout, out)
-        val result_ = raw_
-        Jni.release()
+        val result_ = Jni.resultInt(ticket_)
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeFileInfo(path: String): String {
+    actual suspend fun nativeFileInfo(path: String): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeFileInfo(Jni.env, jpath)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeFileInfo(arena_, jpath)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeFileSurvey(path: String, out: FloatArray): String {
+    actual suspend fun nativeFileSurvey(path: String, out: FloatArray): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
         val jout = Jni.floats(out)
-        val raw_ = raw_nativeFileSurvey(Jni.env, jpath, jout)
+        val ticket_ = async_nativeFileSurvey(arena_, jpath, jout)
+        Jni.await(ticket_)
         Jni.copyBack(jout, out)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -793,11 +803,13 @@ internal actual object EngineNative {
         return result_
     }
 
-    actual fun nativeLoadUtterance(rack: Int, path: String): String {
+    actual suspend fun nativeLoadUtterance(rack: Int, path: String): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeLoadUtterance(Jni.env, rack, jpath)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeLoadUtterance(arena_, rack, jpath)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -814,21 +826,25 @@ internal actual object EngineNative {
         Jni.release()
     }
 
-    actual fun nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String {
+    actual suspend fun nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeRenderSong(Jni.env, jpath, tailSeconds, format, bits, startScene, maxSeconds)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeRenderSong(arena_, jpath, tailSeconds, format, bits, startScene, maxSeconds)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String {
+    actual suspend fun nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String {
+        val arena_ = Jni.openArena()
         val jpaths = Jni.strings(paths)
         val jracks = Jni.ints(racks)
-        val raw_ = raw_nativeRenderStems(Jni.env, jpaths, jracks, tailSeconds, format, bits, startScene, maxSeconds)
+        val ticket_ = async_nativeRenderStems(arena_, jpaths, jracks, tailSeconds, format, bits, startScene, maxSeconds)
+        Jni.await(ticket_)
         Jni.copyBack(jracks, racks)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -914,10 +930,12 @@ internal actual object EngineNative {
         return result_
     }
 
-    actual fun nativeMeasureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray? {
-        val raw_ = raw_nativeMeasureLoudness(Jni.env, tailSeconds, startScene, maxSeconds)
-        val result_ = Jni.readFloats(raw_)
-        Jni.release()
+    actual suspend fun nativeMeasureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray? {
+        val arena_ = Jni.openArena()
+        val ticket_ = async_nativeMeasureLoudness(arena_, tailSeconds, startScene, maxSeconds)
+        Jni.await(ticket_)
+        val result_ = Jni.readFloats(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -992,28 +1010,34 @@ internal actual object EngineNative {
         return result_
     }
 
-    actual fun nativeSoundFontPresets(path: String): String {
+    actual suspend fun nativeSoundFontPresets(path: String): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeSoundFontPresets(Jni.env, jpath)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeSoundFontPresets(arena_, jpath)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String {
+    actual suspend fun nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeLoadSoundFont(Jni.env, rackId, jpath, presetIndex)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeLoadSoundFont(arena_, rackId, jpath, presetIndex)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String {
+    actual suspend fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String {
+        val arena_ = Jni.openArena()
         val jspec = Jni.string(spec)
         val jname = Jni.string(name)
-        val raw_ = raw_nativeLoadZoneMap(Jni.env, rackId, jspec, jname)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeLoadZoneMap(arena_, rackId, jspec, jname)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -1031,27 +1055,33 @@ internal actual object EngineNative {
         return result_
     }
 
-    actual fun nativeSlicePoints(path: String, mode: Int, count: Int): String {
+    actual suspend fun nativeSlicePoints(path: String, mode: Int, count: Int): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeSlicePoints(Jni.env, jpath, mode, count)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeSlicePoints(arena_, jpath, mode, count)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeLoopShape(path: String): String {
+    actual suspend fun nativeLoopShape(path: String): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeLoopShape(Jni.env, jpath)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeLoopShape(arena_, jpath)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeImportAudio(path: String, maxSeconds: Int): String {
+    actual suspend fun nativeImportAudio(path: String, maxSeconds: Int): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeImportAudio(Jni.env, jpath, maxSeconds)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeImportAudio(arena_, jpath, maxSeconds)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -1100,19 +1130,23 @@ internal actual object EngineNative {
         return result_
     }
 
-    actual fun nativeLoadTake(rack: Int, path: String): String {
+    actual suspend fun nativeLoadTake(rack: Int, path: String): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeLoadTake(Jni.env, rack, jpath)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeLoadTake(arena_, rack, jpath)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeLoadReel(rack: Int, spec: String): String {
+    actual suspend fun nativeLoadReel(rack: Int, spec: String): String {
+        val arena_ = Jni.openArena()
         val jspec = Jni.string(spec)
-        val raw_ = raw_nativeLoadReel(Jni.env, rack, jspec)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeLoadReel(arena_, rack, jspec)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -1122,47 +1156,55 @@ internal actual object EngineNative {
         Jni.release()
     }
 
-    actual fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String {
+    actual suspend fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String {
+        val arena_ = Jni.openArena()
         val jformula = Jni.string(formula)
         val jarp = Jni.string(arp)
         val jduty = Jni.string(duty)
         val jvol = Jni.string(vol)
-        val raw_ = raw_nativeLoadFormula(Jni.env, rack, jformula, jarp, jduty, jvol)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeLoadFormula(arena_, rack, jformula, jarp, jduty, jvol)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String {
+    actual suspend fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String {
+        val arena_ = Jni.openArena()
         val jspectrum01 = Jni.floats(spectrum01)
-        val raw_ = raw_nativeBuildCloud(Jni.env, rack, jspectrum01)
+        val ticket_ = async_nativeBuildCloud(arena_, rack, jspectrum01)
+        Jni.await(ticket_)
         Jni.copyBack(jspectrum01, spectrum01)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String {
+    actual suspend fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String {
+        val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
-        val raw_ = raw_nativeFreezeClip(Jni.env, rack, sceneId, jpath, tailSeconds)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val ticket_ = async_nativeFreezeClip(arena_, rack, sceneId, jpath, tailSeconds)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
-    actual fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String {
+    actual suspend fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String {
+        val arena_ = Jni.openArena()
         val jsceneIds = Jni.longs(sceneIds)
         val jpaths = Jni.strings(paths)
         val jbpms = Jni.floats(bpms)
         val jticks = Jni.ints(ticks)
         val jtails = Jni.ints(tails)
-        val raw_ = raw_nativeLoadFrozen(Jni.env, rack, jsceneIds, jpaths, jbpms, jticks, jtails)
+        val ticket_ = async_nativeLoadFrozen(arena_, rack, jsceneIds, jpaths, jbpms, jticks, jtails)
+        Jni.await(ticket_)
         Jni.copyBack(jsceneIds, sceneIds)
         Jni.copyBack(jbpms, bpms)
         Jni.copyBack(jticks, ticks)
         Jni.copyBack(jtails, tails)
-        val result_ = Jni.readString(raw_)
-        Jni.release()
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 

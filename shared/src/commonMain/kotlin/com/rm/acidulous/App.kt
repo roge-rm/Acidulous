@@ -543,7 +543,9 @@ fun App(modifier: Modifier = Modifier) {
         val track = mapTarget ?: return@rememberOpenDocuments
         mapTarget = null
         if (uris.isEmpty()) return@rememberOpenDocuments
-        runCatching {
+        // Undispatched: on the phone this runs through to the end here and
+        // now, as it always has; in a browser it waits on the imports.
+        scope.launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) { runCatching {
             val existing = com.rm.acidulous.model.Zones.decode(song.tracks[track].machine.settings["zones"])
             val added = uris.mapNotNull { uri ->
                 val dest = copyIn(uri, "samples", "sample.wav")
@@ -555,7 +557,7 @@ fun App(modifier: Modifier = Modifier) {
                 t.withSetting("sf2", null).withSetting("sf2preset", null)
                     .withSetting("zones", com.rm.acidulous.model.Zones.encode(existing + added))
             }
-        }.onFailure { Log.w(TAG, "zone import failed", it) }
+        }.onFailure { Log.w(TAG, "zone import failed", it) } }
     }
 
     // Where the playhead is, which is also what "this scene" means.

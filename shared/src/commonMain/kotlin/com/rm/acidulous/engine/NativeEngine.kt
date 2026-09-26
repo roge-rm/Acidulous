@@ -74,15 +74,15 @@ object NativeEngine {
      * Multisample maps for Mosaic. All three block while the instrument is
      * built and decoded, so call them from a worker.
      */
-    fun soundFontPresets(path: String): List<String> {
+    suspend fun soundFontPresets(path: String): List<String> {
         val raw = EngineNative.nativeSoundFontPresets(path)
         if (raw.startsWith("!")) return emptyList()
         return raw.trim().lines().filter { it.isNotBlank() }
     }
-    fun soundFontError(path: String): String = EngineNative.nativeSoundFontPresets(path).let { if (it.startsWith("!")) it.drop(1) else "" }
-    fun loadSoundFont(rackId: Int, path: String, presetIndex: Int): String = EngineNative.nativeLoadSoundFont(rackId, path, presetIndex)
+    suspend fun soundFontError(path: String): String = EngineNative.nativeSoundFontPresets(path).let { if (it.startsWith("!")) it.drop(1) else "" }
+    suspend fun loadSoundFont(rackId: Int, path: String, presetIndex: Int): String = EngineNative.nativeLoadSoundFont(rackId, path, presetIndex)
     /** One zone per line: path|lowKey|highKey|rootKey|lowVel|highVel|cents|gain|pan|loop */
-    fun loadZoneMap(rackId: Int, spec: String, name: String): String = EngineNative.nativeLoadZoneMap(rackId, spec, name)
+    suspend fun loadZoneMap(rackId: Int, spec: String, name: String): String = EngineNative.nativeLoadZoneMap(rackId, spec, name)
     /** "name|zones|samples|seconds" for the mounted map, or "". */
     fun sampleMapInfo(rackId: Int): String = EngineNative.nativeSampleMapInfo(rackId)
 
@@ -122,7 +122,7 @@ object NativeEngine {
      * only that much of it arrived - which the player has to be told, because
      * everything else about it looks like it worked.
      */
-    fun importAudio(absolutePath: String, maxSeconds: Int = PAD_SECONDS): Result<Imported> {
+    suspend fun importAudio(absolutePath: String, maxSeconds: Int = PAD_SECONDS): Result<Imported> {
         val out = EngineNative.nativeImportAudio(absolutePath, maxSeconds)
         val word = out.substringBefore('\n')
         val rest = out.substringAfter('\n', "")
@@ -139,7 +139,7 @@ object NativeEngine {
      * is in seconds. Null if the file will not read. Decodes the file, so call
      * it off the main thread.
      */
-    fun loopShape(absolutePath: String): Pair<Float, Float>? =
+    suspend fun loopShape(absolutePath: String): Pair<Float, Float>? =
         EngineNative.nativeLoopShape(absolutePath).split('|').takeIf { it.size == 2 }?.let { (b, s) ->
             val bars = b.toFloatOrNull() ?: return@let null
             val seconds = s.toFloatOrNull() ?: return@let null
@@ -153,7 +153,7 @@ object NativeEngine {
      * so slice n is points[n]..points[n+1]; empty if the file will not read.
      * Decodes the file, so call it off the main thread.
      */
-    fun slicePoints(absolutePath: String, mode: Int, count: Int): List<Float> =
+    suspend fun slicePoints(absolutePath: String, mode: Int, count: Int): List<Float> =
         EngineNative.nativeSlicePoints(absolutePath, mode, count)
             .split(',').mapNotNull { it.trim().toFloatOrNull() }
 
@@ -162,19 +162,19 @@ object NativeEngine {
      * thread (use a worker). Returns "" on success or an error; "cancelled" after [cancelRender].
      */
     /** [format] indexes AudioFormat in the engine: 0 wav, 1 aiff, 2 flac. */
-    fun renderSong(
+    suspend fun renderSong(
         path: String, tailSeconds: Float = 2f, format: Int = 0, bits: Int = 24,
         startScene: Int = 0, maxSeconds: Float = 0f,
     ): String = EngineNative.nativeRenderSong(path, tailSeconds, format, bits, startScene, maxSeconds)
 
     /** One pass, one file per entry; a rack of -1 is the master mix. */
-    fun renderStems(
+    suspend fun renderStems(
         paths: Array<String>, racks: IntArray, tailSeconds: Float = 2f, format: Int = 0, bits: Int = 24,
         startScene: Int = 0, maxSeconds: Float = 0f,
     ): String = EngineNative.nativeRenderStems(paths, racks, tailSeconds, format, bits, startScene, maxSeconds)
     fun cancelRender() = EngineNative.nativeCancelRender()
     /** [integrated LUFS, true peak dBTP] of the song as an export would render it, or null. */
-    fun measureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray? =
+    suspend fun measureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray? =
         EngineNative.nativeMeasureLoudness(tailSeconds, startScene, maxSeconds)
     fun setRenderGain(db: Float) = EngineNative.nativeSetRenderGain(db)
     /** Momentary, short-term, integrated LUFS and true peak dBTP of the master; reading keeps it measuring. */
@@ -389,7 +389,7 @@ object NativeEngine {
     fun snapshotAbandon(handle: Long) = EngineNative.nativeSnapshotAbandon(handle)
 
     /** Decode a WAV and mount it with its transients. Worker only. */
-    fun loadTake(rack: Int, path: String): String = EngineNative.nativeLoadTake(rack, path)
+    suspend fun loadTake(rack: Int, path: String): String = EngineNative.nativeLoadTake(rack, path)
 
     /**
      * What an audio track is holding, a line per region:
@@ -400,7 +400,7 @@ object NativeEngine {
      * lines naming one file - and the engine decodes each distinct file once
      * however many lines mention it. An empty spec clears the reel.
      */
-    fun loadReel(rack: Int, spec: String): String = EngineNative.nativeLoadReel(rack, spec)
+    suspend fun loadReel(rack: Int, spec: String): String = EngineNative.nativeLoadReel(rack, spec)
 
     /**
      * Where a take too long to hold is converted to, set once at startup.
@@ -419,14 +419,14 @@ object NativeEngine {
      * thread - a worker - so this must never be called from the main one; an
      * empty path clears what is mounted.
      */
-    fun loadUtterance(rack: Int, path: String): String = EngineNative.nativeLoadUtterance(rack, path)
+    suspend fun loadUtterance(rack: Int, path: String): String = EngineNative.nativeLoadUtterance(rack, path)
 
     /** Turn what a Molt just recorded into a take. Also a worker's job. */
 
     /** Changes when a Molt finishes recording, so the UI can notice. */
 
     /** Compile and mount Formulate's expression and tables. "" or the reason. */
-    fun loadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String =
+    suspend fun loadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String =
         EngineNative.nativeLoadFormula(rack, formula, arp, duty, vol)
 
     /**
@@ -435,7 +435,7 @@ object NativeEngine {
      * the song has never set - passed rather than read from the engine,
      * which may not have been given them yet.
      */
-    fun buildCloud(rack: Int, spectrum01: FloatArray): String = EngineNative.nativeBuildCloud(rack, spectrum01)
+    suspend fun buildCloud(rack: Int, spectrum01: FloatArray): String = EngineNative.nativeBuildCloud(rack, spectrum01)
 
     // --- Freeze --------------------------------------------------------------
     /** What a freeze produced, or why it did not happen. */
@@ -449,7 +449,7 @@ object NativeEngine {
      * Render one clip to [path]. Stops the audio stream for the duration, so
      * this belongs on a worker and not while the transport is running.
      */
-    fun freezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float = 8f): FreezeResult {
+    suspend fun freezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float = 8f): FreezeResult {
         val out = EngineNative.nativeFreezeClip(rack, sceneId, path, tailSeconds)
         val parts = out.split("|")
         return if (parts.size == 6 && parts[0] == "ok") {
@@ -462,7 +462,7 @@ object NativeEngine {
     }
 
     /** Give a rack its frozen clips, or none. Returns "" or the reason. */
-    fun loadFrozen(
+    suspend fun loadFrozen(
         rack: Int,
         sceneIds: LongArray,
         paths: Array<String>,
@@ -574,7 +574,7 @@ object NativeEngine {
     // --- Nexus -----------------------------------------------------------
 
     /** Build a patch on this thread and hand it to the rack. "" or an error. */
-    fun loadNexusPatch(rack: Int, spec: String): String = EngineNative.nativeLoadNexusPatch(rack, spec)
+    suspend fun loadNexusPatch(rack: Int, spec: String): String = EngineNative.nativeLoadNexusPatch(rack, spec)
 
     /** The module palette, straight from the engine: one line per type. */
     fun nexusPalette(): String = EngineNative.nativeNexusPalette()
@@ -665,7 +665,7 @@ object NativeEngine {
      * the patch applying it a second time on top. Offline and faster than real
      * time, with the transport stopped. Returns "" or the reason.
      */
-    fun compCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String,
+    suspend fun compCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String,
                  peakOut: FloatArray): String =
         EngineNative.nativeCompCell(rack, sceneId, frames, bpm, path, peakOut)
 
@@ -694,11 +694,11 @@ object NativeEngine {
      * mounted anywhere yet. Walks and decodes the file: a worker, never a
      * frame loop.
      */
-    fun fileShape(path: String, out: FloatArray, fromFrame: Int = 0, toFrame: Int = 0): Int =
+    suspend fun fileShape(path: String, out: FloatArray, fromFrame: Int = 0, toFrame: Int = 0): Int =
         EngineNative.nativeFileShape(path, out, fromFrame, toFrame)
 
     /** "name|frames|channels|rate|peak", or "" if it cannot be read. */
-    fun fileInfo(path: String): String = EngineNative.nativeFileInfo(path)
+    suspend fun fileInfo(path: String): String = EngineNative.nativeFileInfo(path)
 
     /**
      * [fileInfo] and [fileShape] in one decode: fills [out] with min/max pairs
@@ -709,7 +709,7 @@ object NativeEngine {
      * two peaks of well over a hundred megabytes. A worker, never the audio
      * thread and never the main one.
      */
-    fun fileSurvey(path: String, out: FloatArray): String = EngineNative.nativeFileSurvey(path, out)
+    suspend fun fileSurvey(path: String, out: FloatArray): String = EngineNative.nativeFileSurvey(path, out)
 
     /**
      * Play a file once, to hear what it is. An empty path stops it.

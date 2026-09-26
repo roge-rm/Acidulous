@@ -106,7 +106,7 @@ object Freeze {
      * runs, so it belongs on a worker with the transport stopped. Returns the
      * record to store on the clip, or null with the reason logged.
      */
-    fun render(song: Song, target: Target): Frozen? {
+    suspend fun render(song: Song, target: Target): Frozen? {
         val track = song.tracks.getOrNull(target.track) ?: return null
         val scene = song.scenes.firstOrNull { it.id == target.sceneId } ?: return null
         val file = fileFor(track.id, scene.id)

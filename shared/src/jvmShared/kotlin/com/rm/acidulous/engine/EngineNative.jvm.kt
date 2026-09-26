@@ -9,7 +9,9 @@ internal actual object EngineNative {
     }
 
     actual external fun nativePanic()
-    actual external fun nativeLoadNexusPatch(rack: Int, spec: String): String
+    @JvmName("nativeLoadNexusPatch")
+    private external fun blocking_nativeLoadNexusPatch(rack: Int, spec: String): String
+    actual suspend fun nativeLoadNexusPatch(rack: Int, spec: String): String = blocking_nativeLoadNexusPatch(rack, spec)
     actual external fun nativeNexusPalette(): String
     actual external fun nativeNexusScope(rack: Int, out: FloatArray): Int
     actual external fun nativeNexusActivity(rack: Int, out: FloatArray): Int
@@ -33,12 +35,20 @@ internal actual object EngineNative {
     actual external fun nativeCaptureOverflowed(): Boolean
     actual external fun nativeCaptureDeaf(): Boolean
     actual external fun nativeCapturedFrames(): Long
-    actual external fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String
+    @JvmName("nativeCompCell")
+    private external fun blocking_nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String
+    actual suspend fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String = blocking_nativeCompCell(rack, sceneId, frames, bpm, path, peakOut)
     actual external fun nativeArmCapture(rack: Int)
     actual external fun nativeCaptureMarks(out: LongArray): Int
-    actual external fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int
-    actual external fun nativeFileInfo(path: String): String
-    actual external fun nativeFileSurvey(path: String, out: FloatArray): String
+    @JvmName("nativeFileShape")
+    private external fun blocking_nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int
+    actual suspend fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int = blocking_nativeFileShape(path, out, fromFrame, toFrame)
+    @JvmName("nativeFileInfo")
+    private external fun blocking_nativeFileInfo(path: String): String
+    actual suspend fun nativeFileInfo(path: String): String = blocking_nativeFileInfo(path)
+    @JvmName("nativeFileSurvey")
+    private external fun blocking_nativeFileSurvey(path: String, out: FloatArray): String
+    actual suspend fun nativeFileSurvey(path: String, out: FloatArray): String = blocking_nativeFileSurvey(path, out)
     actual external fun nativeAuditionFile(path: String): String
     actual external fun nativeAuditioning(): Boolean
     actual external fun nativeEditSample(src: String, dst: String, ops: FloatArray): String
@@ -48,11 +58,17 @@ internal actual object EngineNative {
     actual external fun nativeStart(): Boolean
     actual external fun nativeStop()
     actual external fun nativeIsRunning(): Boolean
-    actual external fun nativeLoadUtterance(rack: Int, path: String): String
+    @JvmName("nativeLoadUtterance")
+    private external fun blocking_nativeLoadUtterance(rack: Int, path: String): String
+    actual suspend fun nativeLoadUtterance(rack: Int, path: String): String = blocking_nativeLoadUtterance(rack, path)
     actual external fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     actual external fun nativeUnmountMachine(rackId: Int)
-    actual external fun nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
-    actual external fun nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
+    @JvmName("nativeRenderSong")
+    private external fun blocking_nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
+    actual suspend fun nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String = blocking_nativeRenderSong(path, tailSeconds, format, bits, startScene, maxSeconds)
+    @JvmName("nativeRenderStems")
+    private external fun blocking_nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
+    actual suspend fun nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String = blocking_nativeRenderStems(paths, racks, tailSeconds, format, bits, startScene, maxSeconds)
     actual external fun nativeSetCountInBars(bars: Int)
     actual external fun nativeCountInRemaining(): Long
     actual external fun nativeCancelRender()
@@ -65,7 +81,9 @@ internal actual object EngineNative {
     actual external fun nativeInputModParamInfo(type: String): Array<String>
     actual external fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     actual external fun nativeMountSend(slot: Int, typeName: String): Boolean
-    actual external fun nativeMeasureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray?
+    @JvmName("nativeMeasureLoudness")
+    private external fun blocking_nativeMeasureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray?
+    actual suspend fun nativeMeasureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray? = blocking_nativeMeasureLoudness(tailSeconds, startScene, maxSeconds)
     actual external fun nativeSetRenderGain(db: Float)
     actual external fun nativeLoudness(): FloatArray
     actual external fun nativeResetLoudness()
@@ -76,14 +94,26 @@ internal actual object EngineNative {
     actual external fun nativeEffectTypes(): Array<String>
     actual external fun nativeEffectParamInfo(type: String): Array<String>
     actual external fun nativeLoadSample(rackId: Int, slot: Int, path: String, maxSeconds: Int): String
-    actual external fun nativeSoundFontPresets(path: String): String
-    actual external fun nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String
-    actual external fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String
+    @JvmName("nativeSoundFontPresets")
+    private external fun blocking_nativeSoundFontPresets(path: String): String
+    actual suspend fun nativeSoundFontPresets(path: String): String = blocking_nativeSoundFontPresets(path)
+    @JvmName("nativeLoadSoundFont")
+    private external fun blocking_nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String
+    actual suspend fun nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String = blocking_nativeLoadSoundFont(rackId, path, presetIndex)
+    @JvmName("nativeLoadZoneMap")
+    private external fun blocking_nativeLoadZoneMap(rackId: Int, spec: String, name: String): String
+    actual suspend fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String = blocking_nativeLoadZoneMap(rackId, spec, name)
     actual external fun nativeSampleMapInfo(rackId: Int): String
     actual external fun nativeSampleInfo(rackId: Int, slot: Int): String
-    actual external fun nativeSlicePoints(path: String, mode: Int, count: Int): String
-    actual external fun nativeLoopShape(path: String): String
-    actual external fun nativeImportAudio(path: String, maxSeconds: Int): String
+    @JvmName("nativeSlicePoints")
+    private external fun blocking_nativeSlicePoints(path: String, mode: Int, count: Int): String
+    actual suspend fun nativeSlicePoints(path: String, mode: Int, count: Int): String = blocking_nativeSlicePoints(path, mode, count)
+    @JvmName("nativeLoopShape")
+    private external fun blocking_nativeLoopShape(path: String): String
+    actual suspend fun nativeLoopShape(path: String): String = blocking_nativeLoopShape(path)
+    @JvmName("nativeImportAudio")
+    private external fun blocking_nativeImportAudio(path: String, maxSeconds: Int): String
+    actual suspend fun nativeImportAudio(path: String, maxSeconds: Int): String = blocking_nativeImportAudio(path, maxSeconds)
     actual external fun nativeSampleShape(rack: Int, pad: Int, out: FloatArray, fromFrame: Int, toFrame: Int): Int
     actual external fun nativeMachineTypes(): Array<String>
     actual external fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
@@ -91,13 +121,25 @@ internal actual object EngineNative {
     actual external fun nativeControlChange(rackId: Int, cc: Int, value: Int, record: Boolean)
     actual external fun nativeChannelPressure(rackId: Int, value: Int, record: Boolean)
     actual external fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean, quantise: Int): Boolean
-    actual external fun nativeLoadTake(rack: Int, path: String): String
-    actual external fun nativeLoadReel(rack: Int, spec: String): String
+    @JvmName("nativeLoadTake")
+    private external fun blocking_nativeLoadTake(rack: Int, path: String): String
+    actual suspend fun nativeLoadTake(rack: Int, path: String): String = blocking_nativeLoadTake(rack, path)
+    @JvmName("nativeLoadReel")
+    private external fun blocking_nativeLoadReel(rack: Int, spec: String): String
+    actual suspend fun nativeLoadReel(rack: Int, spec: String): String = blocking_nativeLoadReel(rack, spec)
     actual external fun nativeSetCacheRoot(path: String)
-    actual external fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
-    actual external fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
-    actual external fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
-    actual external fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String
+    @JvmName("nativeLoadFormula")
+    private external fun blocking_nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
+    actual suspend fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String = blocking_nativeLoadFormula(rack, formula, arp, duty, vol)
+    @JvmName("nativeBuildCloud")
+    private external fun blocking_nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
+    actual suspend fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String = blocking_nativeBuildCloud(rack, spectrum01)
+    @JvmName("nativeFreezeClip")
+    private external fun blocking_nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
+    actual suspend fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String = blocking_nativeFreezeClip(rack, sceneId, path, tailSeconds)
+    @JvmName("nativeLoadFrozen")
+    private external fun blocking_nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String
+    actual suspend fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String = blocking_nativeLoadFrozen(rack, sceneIds, paths, bpms, ticks, tails)
     actual external fun nativeSetBufferBursts(bursts: Int)
     actual external fun nativeBufferFrames(): Int
     actual external fun nativeSetVoiceLimit(notes: Int)

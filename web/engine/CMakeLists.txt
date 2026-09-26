@@ -27,6 +27,8 @@ add_executable(acidulous
     ${CPP}/platform/web/drivers/AudioDriver.cpp
     ${CPP}/platform/web/LinkOff.cpp
     ${CPP}/platform/web/web_bridge.cpp
+    # The long calls, handed to threads of their own (tools/gen_engine_bridge.py).
+    ${CPP}/platform/web/web_async.cpp
     # The phone's own bridge, against platform/web/jni.h: every engine call
     # the app makes, compiled here unchanged.
     ${CPP}/platform/android/jni_bridge.cpp
@@ -57,7 +59,10 @@ target_link_options(acidulous PRIVATE
     -sENVIRONMENT=web,worker
     -sINITIAL_MEMORY=256MB
     -sALLOW_MEMORY_GROWTH=1
-    -sPTHREAD_POOL_SIZE=4
+    # The audio's stand-in and the engine's own workers, and the long calls
+    # the page hands over, each on a thread (web_async.cpp); more are made as
+    # needed, which a page only waits for the first time.
+    -sPTHREAD_POOL_SIZE=8
     -sSTACK_SIZE=1MB
     "--pre-js=${CMAKE_CURRENT_SOURCE_DIR}/worklet-clock.js"
     # The file system, which the app's Kotlin shares with the engine (FS), and

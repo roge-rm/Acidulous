@@ -35,7 +35,7 @@ object TakePeaks {
      * a worker, and for a five-minute file this is a second of work and a peak
      * of over a hundred megabytes - see the note in `assemble`.
      */
-    fun survey(root: File?, relative: String): Survey? {
+    suspend fun survey(root: File?, relative: String): Survey? {
         val out = FloatArray(TAKE_PEAK_COLUMNS * 2)
         val info = NativeEngine.fileSurvey(File(root, relative).absolutePath, out)
         val frames = info.split('|').getOrNull(1)?.toIntOrNull() ?: return null
@@ -104,7 +104,7 @@ object TakePeaks {
     fun cached(relative: String): Survey? = com.rm.acidulous.util.locked(this) { cache[relative] }
 
     /** Reads and caches. **Blocking**: a worker, never the main thread. */
-    fun load(root: File?, relative: String): Survey? {
+    suspend fun load(root: File?, relative: String): Survey? {
         cached(relative)?.let { return it }
         val out = FloatArray(EDIT_COLUMNS * 2)
         val info = NativeEngine.fileSurvey(File(root, relative).absolutePath, out)

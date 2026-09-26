@@ -5,14 +5,20 @@
 //
 // A jstring is a std::string, a jfloatArray a std::vector<float> and so on,
 // on the WebAssembly heap. Everything the bridge makes during a call - the
-// strings it returns, the arrays it fills - goes into one arena, and so does
+// strings it returns, the arrays it fills - goes into an arena, and so does
 // everything the page makes to pass in; the page reads what it wants and
 // then frees the arena (acid_jni_release, web_bridge.cpp). So DeleteLocalRef
 // frees nothing, which is what the bridge assumes of it anyway: a local
 // reference outlives nothing it still needs.
+//
+// **An arena a thread.** A call the page hands to one of the engine's threads
+// (web_async.cpp) takes its arena with it - its arguments were made in it, and
+// its results are made there - while the page goes on making and freeing its
+// own. Each thread has one of its own until it is given another.
 
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -67,15 +73,38 @@ typedef _jbyteArray *jbyteArray;
 typedef _jobjectArray *jobjectArray;
 
 namespace jniweb {
-/** What this call has made, freed together when the page has read it. */
-inline std::vector<std::unique_ptr<_jobject>> &arena() {
-    static std::vector<std::unique_ptr<_jobject>> made;
-    return made;
+/** What a call has made, freed together when the page has read it. */
+using Arena = std::vector<std::unique_ptr<_jobject>>;
+
+/** This thread's arena: its own, or the one a call it is running brought. */
+inline Arena *&current() {
+    static thread_local Arena own;
+    static thread_local Arena *in = nullptr;
+    if (in == nullptr) in = &own;
+    return in;
 }
+inline Arena &arena() { return *current(); }
+/** Back to this thread's own. */
+inline void useOwn() { current() = nullptr; }
 template <class T> T *keep(T *made) {
     arena().emplace_back(made);
     return made;
 }
+
+/** A call handed to an engine thread: its arena, and its result once it has one. */
+struct Ticket {
+    Arena *arena;
+    int32_t i = 0; // an int, a boolean, or a JNI object
+    float f = 0.0f;
+    int64_t j = 0;
+    double d = 0.0;
+};
+/**
+ * [work] on a thread of its own, in [arena] - which the page made the call's
+ * arguments in - and the page told when it is done (web_bridge.cpp). The
+ * page's own arena is its own again from here. The ticket is the handle.
+ */
+int runAsync(Arena *arena, std::function<void(Ticket &)> work);
 } // namespace jniweb
 
 struct JNIEnv_ {

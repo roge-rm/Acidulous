@@ -24,9 +24,13 @@ expect fun interface Runnable {
  */
 expect fun sleepMs(ms: Long)
 
-/** Work taken in turn, off the caller's thread where there are threads to be had. */
+/**
+ * Work taken in turn, off the caller's thread where there are threads to be
+ * had. A task may suspend - on an engine call handed to a thread of its own,
+ * in a browser - and the next waits until it is done.
+ */
 expect class SerialWorker(name: String) {
-    fun execute(task: () -> Unit)
+    fun execute(task: suspend () -> Unit)
 }
 
 /** [task] on a thread of its own - or, in a browser, soon on the only one. */

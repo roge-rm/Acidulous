@@ -1,5 +1,8 @@
 package com.rm.acidulous.engine
 
+import kotlin.coroutines.resume
+import kotlinx.coroutines.suspendCancellableCoroutine
+
 // The engine module, as the page's script put it: globalThis.acid - the
 // Emscripten build of app/src/main/cpp on the memory the audio worklet shares.
 // These carry the JNI objects its bridge takes and returns (platform/web/jni.h)
@@ -25,6 +28,13 @@ private fun jniSetInt(p: Int, i: Int, v: Int): Unit = js("globalThis.acid._acid_
 private fun jniLongs(n: Int): Int = js("globalThis.acid._acid_jni_longs(n)")
 private fun jniLongAt(p: Int, i: Int): Long = js("globalThis.acid._acid_jni_long_at(p, i)")
 private fun jniSetLong(p: Int, i: Int, v: Long): Unit = js("globalThis.acid._acid_jni_set_long(p, i, v)")
+private fun jniArenaOpen(): Int = js("globalThis.acid._acid_jni_arena_open()")
+private fun asyncInt(t: Int): Int = js("globalThis.acid._acid_async_i(t)")
+private fun asyncFloat(t: Int): Float = js("globalThis.acid._acid_async_f(t)")
+private fun asyncLong(t: Int): Long = js("globalThis.acid._acid_async_j(t)")
+private fun asyncDouble(t: Int): Double = js("globalThis.acid._acid_async_d(t)")
+private fun asyncRelease(t: Int): Unit = js("globalThis.acid._acid_async_release(t)")
+private fun onAsyncDone(done: (Int) -> Unit): Unit = js("globalThis.acidAsyncDone = done")
 
 /**
  * JNI's objects on the engine's heap, from Kotlin: made to pass in, read when
@@ -35,6 +45,32 @@ private fun jniSetLong(p: Int, i: Int, v: Long): Unit = js("globalThis.acid._aci
 internal object Jni {
     val env: Int by lazy { jniEnv() }
     fun release() = jniRelease()
+
+    // --- Calls handed to an engine thread: see web_async.cpp -----------------
+
+    /** What each handed-over call does when its thread is done, by ticket. */
+    private val waiting = HashMap<Int, () -> Unit>()
+    private val hooked by lazy { onAsyncDone { ticket -> waiting.remove(ticket)?.invoke() } }
+
+    /** A fresh arena, for the arguments of a call about to be handed over. */
+    fun openArena(): Int {
+        hooked
+        return jniArenaOpen()
+    }
+
+    /**
+     * Until the call's thread is done. Given up on, the call still finishes -
+     * a thread cannot be stopped halfway through a file - and is freed then.
+     */
+    suspend fun await(ticket: Int) = suspendCancellableCoroutine { c ->
+        waiting[ticket] = { c.resume(Unit) }
+        c.invokeOnCancellation { waiting[ticket] = { asyncRelease(ticket) } }
+    }
+    fun resultInt(ticket: Int): Int = asyncInt(ticket)
+    fun resultFloat(ticket: Int): Float = asyncFloat(ticket)
+    fun resultLong(ticket: Int): Long = asyncLong(ticket)
+    fun resultDouble(ticket: Int): Double = asyncDouble(ticket)
+    fun releaseAsync(ticket: Int) = asyncRelease(ticket)
 
     fun string(s: String?): Int = if (s == null) 0 else jniString(s)
     fun readString(p: Int): String = if (p == 0) "" else jniChars(p)

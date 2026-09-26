@@ -1,7 +1,9 @@
 package com.rm.acidulous.util
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 // A browser's page has one thread for all of this - the engine's own threads
 // are C++'s. What the JVM does elsewhere happens here soon, in order; what it
@@ -30,8 +32,22 @@ actual fun sleepMs(ms: Long) {
     while (monotonicMs() < until) { /* the page's one thread, waiting */ }
 }
 
-actual class SerialWorker actual constructor(name: String) {
-    actual fun execute(task: () -> Unit) = later(task)
+actual class SerialWorker actual constructor(private val name: String) {
+    private val queue = ArrayDeque<suspend () -> Unit>()
+    private var running = false
+
+    actual fun execute(task: suspend () -> Unit) {
+        queue.addLast(task)
+        if (running) return
+        running = true
+        CoroutineScope(Dispatchers.Default).launch {
+            while (queue.isNotEmpty()) {
+                // One failing is logged, as a thread's would be, and the rest still run.
+                runCatching { queue.removeFirst()() }.onFailure { Log.w(name, "a task failed", it) }
+            }
+            running = false
+        }
+    }
 }
 
 actual fun runInBackground(name: String, task: () -> Unit) = later(task)

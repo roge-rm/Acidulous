@@ -21,7 +21,9 @@ actual class SerialWorker actual constructor(name: String) {
     private val executor = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
         Thread(r, name).apply { isDaemon = true }
     }
-    actual fun execute(task: () -> Unit) = executor.execute(task)
+    // Nothing here suspends for long - the engine's calls are made on this
+    // thread - so a task still runs to its end before the next begins.
+    actual fun execute(task: suspend () -> Unit) = executor.execute { kotlinx.coroutines.runBlocking { task() } }
 }
 
 actual fun runInBackground(name: String, task: () -> Unit) {

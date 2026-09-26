@@ -45,8 +45,17 @@ class AudioDriver {
         callback = std::move(cb);
     }
 
-    /** Creates the context and asks for the worklet; sound follows once the page has been touched (resume). */
+    /**
+     * Creates the context and asks for the worklet; sound follows once the
+     * page has been touched (resume). After a stop(), attaches the engine again.
+     */
     bool start();
+    /**
+     * Takes the engine off the stream, for a render or a freeze to pull its
+     * blocks by hand: the stream goes on, silent. Not closed - a browser's
+     * audio can only be made on the page's thread, and those run on an engine
+     * thread here, and sound would need another click to start again.
+     */
     void stop();
     /** The first user gesture: an AudioContext may only start from one. */
     static void resume();
@@ -72,7 +81,7 @@ class AudioDriver {
         return now;
     }
 
-    bool isRunning() const { return context != 0; }
+    bool isRunning() const { return context != 0 && !detached.load(); }
 
     void setBufferBursts(int32_t bursts) { bufferBursts = bursts; }
     int32_t getBufferBursts() const { return bufferBursts; }
@@ -139,6 +148,12 @@ class AudioDriver {
     int32_t inputRingRead = 0;
     void pushInput(const float *left, const float *right, int32_t frames);
     const float *nextInputBlock();
+
+    /** The real end, on the page's thread: the context and the worklet gone. */
+    void close();
+    std::atomic<bool> detached{false};
+    /** The worklet is inside a quantum, which stop() waits out. */
+    std::atomic<bool> inCallback{false};
 
     /** The stand-in before the worklet: see the top of this file. */
     void standby();

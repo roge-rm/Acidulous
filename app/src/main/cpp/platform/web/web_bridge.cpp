@@ -8,11 +8,33 @@
 #include <drivers/AudioDriver.h>
 #include <jni.h>
 #include <emscripten/emscripten.h>
+#include <emscripten/proxying.h>
+#include <emscripten/threading.h>
 #include <string>
+#include <thread>
 
 namespace {
 acidulous::EngineHost &host() { return acidulous::EngineHost::instance(); }
+
+/** On the page's thread: a handed-over call is done (Jni.kt hears it). */
+void doneOnPage(void *ticket) {
+    EM_ASM({ globalThis.acidAsyncDone && globalThis.acidAsyncDone($0); }, ticket);
+}
 } // namespace
+
+// A thread a call, as the phone's IO pool gives each its own: they are file
+// decodes and renders, a handful at a time, and never on the audio thread.
+int jniweb::runAsync(Arena *arena, std::function<void(Ticket &)> work) {
+    auto *ticket = new Ticket{arena};
+    useOwn();
+    std::thread([ticket, work = std::move(work)] {
+        current() = ticket->arena;
+        work(*ticket);
+        useOwn();
+        emscripten_proxy_async(emscripten_proxy_get_system_queue(), emscripten_main_runtime_thread_id(), doneOnPage, ticket);
+    }).detach();
+    return static_cast<int>(reinterpret_cast<intptr_t>(ticket));
+}
 
 extern "C" {
 
@@ -39,6 +61,22 @@ EMSCRIPTEN_KEEPALIVE JNIEnv *acid_jni_env() {
 }
 /** Free everything made for and by the last call: see platform/web/jni.h. */
 EMSCRIPTEN_KEEPALIVE void acid_jni_release() { jniweb::arena().clear(); }
+
+/** A fresh arena for a call about to be handed over; the page makes its arguments in it. */
+EMSCRIPTEN_KEEPALIVE int acid_jni_arena_open() {
+    auto *arena = new jniweb::Arena();
+    jniweb::current() = arena;
+    return static_cast<int>(reinterpret_cast<intptr_t>(arena));
+}
+// A handed-over call's result, by type, and its end: the arena and the ticket freed.
+EMSCRIPTEN_KEEPALIVE int acid_async_i(jniweb::Ticket *t) { return t->i; }
+EMSCRIPTEN_KEEPALIVE float acid_async_f(jniweb::Ticket *t) { return t->f; }
+EMSCRIPTEN_KEEPALIVE int64_t acid_async_j(jniweb::Ticket *t) { return t->j; }
+EMSCRIPTEN_KEEPALIVE double acid_async_d(jniweb::Ticket *t) { return t->d; }
+EMSCRIPTEN_KEEPALIVE void acid_async_release(jniweb::Ticket *t) {
+    delete t->arena;
+    delete t;
+}
 
 EMSCRIPTEN_KEEPALIVE jstring acid_jni_string(const char *utf8) { return acid_jni_env()->NewStringUTF(utf8); }
 EMSCRIPTEN_KEEPALIVE const char *acid_jni_chars(jstring s) { return s != nullptr ? s->text.c_str() : nullptr; }

@@ -96,11 +96,15 @@ AudioDriver *AudioDriver::sLive = nullptr;
 AudioDriver::AudioDriver() = default;
 
 AudioDriver::~AudioDriver() {
-    stop();
+    close();
 }
 
 bool AudioDriver::start() {
-    if (context != 0) return true;
+    if (context != 0) {
+        detached.store(false);
+        LOGI("stream attached again");
+        return true;
+    }
     if (!callback) {
         LOGE("start() called before registerCallback()");
         return false;
@@ -127,6 +131,7 @@ bool AudioDriver::start() {
     }
     actualSampleRate = emscripten_audio_context_sample_rate(context);
     sLive = this;
+    detached = false;
     workletOwns = false;
     standbyStop = false;
     standbyThread = std::thread([this] { standby(); });
@@ -165,7 +170,7 @@ void AudioDriver::standby() {
     while (!standbyStop.load()) {
         standbyBusy.store(true);
         const bool mine = !workletOwns.load();
-        if (mine) callback(in.data(), out.data(), static_cast<unsigned long>(acidulous::kBlockFrames));
+        if (mine && !detached.load()) callback(in.data(), out.data(), static_cast<unsigned long>(acidulous::kBlockFrames));
         standbyBusy.store(false);
         if (!mine) break;
         ++blocks;
@@ -222,6 +227,15 @@ const float *AudioDriver::nextInputBlock() {
 }
 
 void AudioDriver::stop() {
+    // Every block the engine renders is the caller's from here: the stream
+    // goes on, silent, and neither the worklet nor the stand-in is inside one.
+    detached.store(true);
+    while (inCallback.load() || standbyBusy.load()) {
+    }
+    LOGI("stream detached");
+}
+
+void AudioDriver::close() {
     stopInput();
     standbyStop = true;
     if (standbyThread.joinable()) standbyThread.join();
@@ -241,6 +255,16 @@ void AudioDriver::render(const float *inLeft, const float *inRight, float *left,
         workletOwns.store(true);
         while (standbyBusy.load()) {
         }
+    }
+    // Detached for a render or a freeze: silence, and the engine left alone.
+    // Raised before the flag is read, as the stand-in's busy is: see stop().
+    inCallback.store(true);
+    if (detached.load()) {
+        std::fill(left, left + numFrames, 0.0f);
+        if (right != nullptr) std::fill(right, right + numFrames, 0.0f);
+        carryFrames = 0;
+        inCallback.store(false);
+        return;
     }
     const double t0 = emscripten_get_now();
     {
@@ -281,4 +305,5 @@ void AudioDriver::render(const float *inLeft, const float *inRight, float *left,
     const int32_t faded = static_cast<int32_t>(static_cast<int64_t>(callbackRecentUs.load(std::memory_order_relaxed)) * 49 / 50);
     callbackRecentUs.store(us > faded ? us : faded, std::memory_order_relaxed);
     if (us > callbackBudgetUs()) lateCallbacks.fetch_add(1, std::memory_order_relaxed);
+    inCallback.store(false);
 }

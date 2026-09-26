@@ -3,6 +3,10 @@ package com.rm.acidulous.engine
 // The list the platforms' halves are written from (tools/gen_engine_bridge.py):
 // a new engine call is a line here, its C++ in platform/android/jni_bridge.cpp,
 // and a run of the script. One line per call, as the script reads it.
+//
+// `suspend` marks a call that takes long - a file decoded, a song rendered -
+// and is only ever made off the main thread: the same JNI call on the phone,
+// and one handed to an engine thread in a browser, whose page has no other.
 
 /**
  * The engine's native calls, one for one with platform/android/jni_bridge.cpp:
@@ -11,7 +15,7 @@ package com.rm.acidulous.engine
  */
 internal expect object EngineNative {
     fun nativePanic()
-    fun nativeLoadNexusPatch(rack: Int, spec: String): String
+    suspend fun nativeLoadNexusPatch(rack: Int, spec: String): String
     fun nativeNexusPalette(): String
     fun nativeNexusScope(rack: Int, out: FloatArray): Int
     fun nativeNexusActivity(rack: Int, out: FloatArray): Int
@@ -35,12 +39,12 @@ internal expect object EngineNative {
     fun nativeCaptureOverflowed(): Boolean
     fun nativeCaptureDeaf(): Boolean
     fun nativeCapturedFrames(): Long
-    fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String
+    suspend fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String
     fun nativeArmCapture(rack: Int)
     fun nativeCaptureMarks(out: LongArray): Int
-    fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int
-    fun nativeFileInfo(path: String): String
-    fun nativeFileSurvey(path: String, out: FloatArray): String
+    suspend fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int
+    suspend fun nativeFileInfo(path: String): String
+    suspend fun nativeFileSurvey(path: String, out: FloatArray): String
     fun nativeAuditionFile(path: String): String
     fun nativeAuditioning(): Boolean
     fun nativeEditSample(src: String, dst: String, ops: FloatArray): String
@@ -50,11 +54,11 @@ internal expect object EngineNative {
     fun nativeStart(): Boolean
     fun nativeStop()
     fun nativeIsRunning(): Boolean
-    fun nativeLoadUtterance(rack: Int, path: String): String
+    suspend fun nativeLoadUtterance(rack: Int, path: String): String
     fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     fun nativeUnmountMachine(rackId: Int)
-    fun nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
-    fun nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
+    suspend fun nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
+    suspend fun nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
     fun nativeSetCountInBars(bars: Int)
     fun nativeCountInRemaining(): Long
     fun nativeCancelRender()
@@ -67,7 +71,7 @@ internal expect object EngineNative {
     fun nativeInputModParamInfo(type: String): Array<String>
     fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     fun nativeMountSend(slot: Int, typeName: String): Boolean
-    fun nativeMeasureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray?
+    suspend fun nativeMeasureLoudness(tailSeconds: Float, startScene: Int, maxSeconds: Float): FloatArray?
     fun nativeSetRenderGain(db: Float)
     fun nativeLoudness(): FloatArray
     fun nativeResetLoudness()
@@ -78,14 +82,14 @@ internal expect object EngineNative {
     fun nativeEffectTypes(): Array<String>
     fun nativeEffectParamInfo(type: String): Array<String>
     fun nativeLoadSample(rackId: Int, slot: Int, path: String, maxSeconds: Int): String
-    fun nativeSoundFontPresets(path: String): String
-    fun nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String
-    fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String
+    suspend fun nativeSoundFontPresets(path: String): String
+    suspend fun nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String
+    suspend fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String
     fun nativeSampleMapInfo(rackId: Int): String
     fun nativeSampleInfo(rackId: Int, slot: Int): String
-    fun nativeSlicePoints(path: String, mode: Int, count: Int): String
-    fun nativeLoopShape(path: String): String
-    fun nativeImportAudio(path: String, maxSeconds: Int): String
+    suspend fun nativeSlicePoints(path: String, mode: Int, count: Int): String
+    suspend fun nativeLoopShape(path: String): String
+    suspend fun nativeImportAudio(path: String, maxSeconds: Int): String
     fun nativeSampleShape(rack: Int, pad: Int, out: FloatArray, fromFrame: Int, toFrame: Int): Int
     fun nativeMachineTypes(): Array<String>
     fun nativeNoteOn(rackId: Int, note: Int, velocity: Int)
@@ -93,13 +97,13 @@ internal expect object EngineNative {
     fun nativeControlChange(rackId: Int, cc: Int, value: Int, record: Boolean)
     fun nativeChannelPressure(rackId: Int, value: Int, record: Boolean)
     fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean, quantise: Int): Boolean
-    fun nativeLoadTake(rack: Int, path: String): String
-    fun nativeLoadReel(rack: Int, spec: String): String
+    suspend fun nativeLoadTake(rack: Int, path: String): String
+    suspend fun nativeLoadReel(rack: Int, spec: String): String
     fun nativeSetCacheRoot(path: String)
-    fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
-    fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
-    fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
-    fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String
+    suspend fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
+    suspend fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
+    suspend fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
+    suspend fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String
     fun nativeSetBufferBursts(bursts: Int)
     fun nativeBufferFrames(): Int
     fun nativeSetVoiceLimit(notes: Int)
