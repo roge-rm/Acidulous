@@ -70,7 +70,7 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     /** A desktop's screen saver is its own business: nothing here holds it off. */
     override val canKeepScreenOn: Boolean = false
     override val canEncodeAac: Boolean = false
-    override val usesOboe: Boolean = false
+    override val audioStream = com.rm.acidulous.AudioStream.Miniaudio
 
     override fun encodeAac(pcm: File, out: File, bitrate: Int): String =
         "AAC export is the phone's own encoder, which the desktop does not have. Choose MP3 or FLAC."

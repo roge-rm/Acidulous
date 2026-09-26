@@ -2,10 +2,9 @@ cmake_minimum_required(VERSION 3.22.1)
 project(acidulous_web LANGUAGES C CXX)
 
 # The engine for the browser: the phone's sources (app/src/main/cpp) as
-# WebAssembly, with the browser's own audio driver and a Link that is never
-# on. platform/web comes first on the include path, so EngineHost's
-# <drivers/AudioDriver.h> is the web's; platform/desktop is after it for the
-# log shim, <android/log.h>, which the two share.
+# WebAssembly, with the browser's own audio driver, log and a Link that is
+# never on. platform/web comes first on the include path, so EngineHost's
+# <drivers/AudioDriver.h> and <android/log.h> are the web's.
 #
 # Threads and shared memory: the UI calls into the very engine the audio
 # worklet renders from, as it does on the phone, which is why the page must
@@ -33,8 +32,7 @@ add_executable(acidulous
     ${CPP}/platform/android/jni_bridge.cpp
 )
 target_include_directories(acidulous PRIVATE
-    ${CPP}/platform/web       # <drivers/AudioDriver.h>, <jni.h>
-    ${CPP}/platform/desktop   # <android/log.h>
+    ${CPP}/platform/web       # <drivers/AudioDriver.h>, <jni.h>, <android/log.h>
     ${CPP}                    # <engine/...>, <sequencer/...>
     ${CPP}/platform           # <link/LinkTimebase.h>
 )

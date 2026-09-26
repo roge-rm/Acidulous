@@ -119,12 +119,14 @@ private fun ComponentsTab(onRead: (Licence) -> Unit) {
         stringResource(Res.string.about_not_ours_note),
     ) {
         // The audio stream is Oboe on the phone and miniaudio on the desktop,
-        // whose MIDI is ALSA's.
-        if (com.rm.acidulous.AppHost.current.usesOboe) {
-            LicenceRow(Licence.Apache2, stringResource(Res.string.about_oboe), onRead)
-        } else {
-            LicenceRow(Licence.PublicDomain, stringResource(Res.string.about_miniaudio), onRead)
-            LicenceRow(Licence.Lgpl21, stringResource(Res.string.about_alsa), onRead)
+        // whose MIDI is ALSA's; a browser's is its own.
+        when (com.rm.acidulous.AppHost.current.audioStream) {
+            com.rm.acidulous.AudioStream.Oboe -> LicenceRow(Licence.Apache2, stringResource(Res.string.about_oboe), onRead)
+            com.rm.acidulous.AudioStream.Miniaudio -> {
+                LicenceRow(Licence.PublicDomain, stringResource(Res.string.about_miniaudio), onRead)
+                LicenceRow(Licence.Lgpl21, stringResource(Res.string.about_alsa), onRead)
+            }
+            com.rm.acidulous.AudioStream.Browser -> {}
         }
         LicenceRow(Licence.Lgpl2, stringResource(Res.string.about_lame), onRead)
         LicenceRow(Licence.Gpl2, stringResource(Res.string.about_link), onRead)

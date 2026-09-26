@@ -65,7 +65,7 @@ class WebHost : AppHost {
     override val usesMouse: Boolean = !coarsePointer()
     override val onDesktop: Boolean = !coarsePointer()
     override val canKeepScreenOn: Boolean = true
-    override val usesOboe: Boolean = false
+    override val audioStream = com.rm.acidulous.AudioStream.Browser
 
     private val Doc.web: WebDoc get() = handle as WebDoc
 }

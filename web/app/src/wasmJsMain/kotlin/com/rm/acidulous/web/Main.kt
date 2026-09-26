@@ -17,6 +17,7 @@ import com.rm.acidulous.AppRoot
 import com.rm.acidulous.engine.EngineAssets
 import com.rm.acidulous.engine.LinkHub
 import com.rm.acidulous.io.File
+import com.rm.acidulous.midi.MidiHub
 import com.rm.acidulous.model.Names
 import com.rm.acidulous.res.AppStrings
 import com.rm.acidulous.res.Res
@@ -34,6 +35,8 @@ import kotlinx.coroutines.launch
 // MainActivity.onCreate does on the phone, in the same order, and then the
 // app.
 
+private fun onPageHide(action: () -> Unit): Unit = js("addEventListener('pagehide', () => action())")
+
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     MainScope().launch {
@@ -43,6 +46,13 @@ fun main() {
         UiPrefs.init(LocalPrefs("ui"))
         Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
         Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
+        MidiHub.start(WebMidi())
+        // A Launchpad goes back to its own mode when the page goes, as it
+        // does when the desktop's window closes.
+        onPageHide {
+            MidiHub.clearPads()
+            MidiHub.releaseLaunchpad()
+        }
         LinkHub.multicastLock = null
         EngineAssets.install(File("/data"), File("/tmp/cache").apply { mkdirs() })
 

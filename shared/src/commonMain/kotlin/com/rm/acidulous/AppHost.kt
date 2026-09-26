@@ -92,13 +92,16 @@ interface AppHost {
 
     /** Whether the screen can be kept on while playing: the phone's window flag. */
     val canKeepScreenOn: Boolean get() = true
-    /** Whether the audio stream is Oboe's (the phone) rather than miniaudio's (the desktop), for the About window's credits. */
-    val usesOboe: Boolean get() = true
+    /** Whose code the audio stream is, for the About window's credits. */
+    val audioStream: AudioStream get() = AudioStream.Oboe
 
     companion object {
         lateinit var current: AppHost
     }
 }
+
+/** The phone's Oboe; the desktop's miniaudio, with ALSA's MIDI; or a browser's own Web Audio, which is nobody's to credit. */
+enum class AudioStream { Oboe, Miniaudio, Browser }
 
 /** An audio input as the recorder names it: what kind of thing, and the device's own name for an unusual one. */
 data class AudioInput(val id: Int, val kind: Kind, val name: String?) {
