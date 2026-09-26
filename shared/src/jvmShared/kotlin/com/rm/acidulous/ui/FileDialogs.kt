@@ -37,6 +37,7 @@ fun SongBrowserDialog(
 ) {
     var confirm by remember { mutableStateOf<String?>(null) }
     PlainDialog(title = stringResource(Res.string.songs_title), onDismiss = onDismiss, dismissLabel = stringResource(Res.string.close), spacing = 6.dp) {
+        WindowWidth(600.dp)
         if (names.isEmpty()) Text(stringResource(Res.string.songs_none), color = Acid.colors.textDim, fontSize = 12.sp)
         for (n in names) {
             DialogRow(

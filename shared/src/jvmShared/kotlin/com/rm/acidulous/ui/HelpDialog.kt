@@ -50,6 +50,7 @@ fun HelpDialog(onDismiss: () -> Unit) {
     var page by remember { mutableStateOf<ManualSection?>(null) }
 
     PlainDialog(title = stringResource(Res.string.help_title), onDismiss = onDismiss, dismissLabel = stringResource(Res.string.done)) {
+        WindowWidth(600.dp)
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             ListSection(stringResource(Res.string.help_manual)) {
                 for (section in Manual.sections) {
@@ -65,6 +66,8 @@ fun HelpDialog(onDismiss: () -> Unit) {
 
     reading?.let { section ->
         PlainDialog(section.title, onDismiss = { reading = null }, dismissLabel = stringResource(Res.string.help_back), spacing = 0.dp) {
+            // A reading line: about a hundred characters, not eleven hundred dp.
+            WindowWidth(720.dp)
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 for (block in section.blocks) ManualLine(block)
                 // **A page of its own for each of them, under the summary.**
@@ -87,6 +90,7 @@ fun HelpDialog(onDismiss: () -> Unit) {
 
     page?.let { child ->
         PlainDialog(child.title, onDismiss = { page = null }, dismissLabel = stringResource(Res.string.help_back), spacing = 0.dp) {
+            WindowWidth(720.dp)
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 for (block in child.blocks) ManualLine(block)
             }

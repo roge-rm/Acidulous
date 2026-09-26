@@ -351,6 +351,8 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
         dismissLabel = stringResource(Res.string.cancel),
         onDismiss = onDismiss,
         chips = { SectionChipsStyled(groups.map { chipLabel(stringResource(it.label)) }, tab) { tab = it } },
+        pageNames = groups.map { stringResource(it.label) },
+        onSelectPage = { tab = it },
         pages = contents.map { types ->
             {
                 run {
@@ -512,6 +514,8 @@ fun TempoDialog(
         },
         spacing = 6.dp,
         chips = { SectionChips(tabNames, tab.coerceAtMost(tabNames.lastIndex)) { tab = it } },
+        pageNames = tabNames,
+        onSelectPage = { tab = it },
         pages = listOfNotNull(
             {
                 TempoPage(
@@ -793,6 +797,22 @@ internal class DialogFit(
 
 internal val LocalDialogFit = androidx.compose.runtime.compositionLocalOf<DialogFit?> { null }
 
+/**
+ * How wide a window of text or a list reads best, told to the window as its
+ * cards tell theirs: a manual page ran eleven hundred dp to a line on a
+ * desktop, which is a line nobody finds the start of the next one after.
+ */
+@Composable
+internal fun WindowWidth(width: Dp) {
+    val fit = LocalDialogFit.current ?: return
+    val me = remember { Any() }
+    val px = with(androidx.compose.ui.platform.LocalDensity.current) { width.roundToPx() }
+    androidx.compose.runtime.DisposableEffect(fit, px) {
+        fit.tell(me, px)
+        onDispose { fit.forget(me) }
+    }
+}
+
 /** Whether the window is on a square phone's screen, short and narrow: see [DialogShell]. */
 internal val LocalDialogCompact = androidx.compose.runtime.compositionLocalOf { false }
 
@@ -1033,9 +1053,13 @@ fun TabbedDialog(
     // them, and go altogether when every page is up.
     var run by remember(pages.size) { mutableStateOf(selected..selected) }
     val all = own && run.first == 0 && run.last == pages.lastIndex && pages.size > 1
+    // One page showing: the window's own tabs if it brought any (the machine
+    // picker's set a word in italic), exactly as before. Several: every one
+    // shown lit. All of them: none.
     val tabs: (@Composable () -> Unit)? = when {
         !own -> chips
         all -> null
+        run.first == run.last && chips != null -> chips
         else -> ({ SectionChips(pageNames!!, selected, lit = run) { i -> if (i !in run) onSelectPage!!(i) } })
     }
     DialogShell(
