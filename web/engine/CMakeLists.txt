@@ -28,9 +28,12 @@ add_executable(acidulous
     ${CPP}/platform/web/drivers/AudioDriver.cpp
     ${CPP}/platform/web/LinkOff.cpp
     ${CPP}/platform/web/web_bridge.cpp
+    # The phone's own bridge, against platform/web/jni.h: every engine call
+    # the app makes, compiled here unchanged.
+    ${CPP}/platform/android/jni_bridge.cpp
 )
 target_include_directories(acidulous PRIVATE
-    ${CPP}/platform/web       # <drivers/AudioDriver.h>
+    ${CPP}/platform/web       # <drivers/AudioDriver.h>, <jni.h>
     ${CPP}/platform/desktop   # <android/log.h>
     ${CPP}                    # <engine/...>, <sequencer/...>
     ${CPP}/platform           # <link/LinkTimebase.h>

@@ -36,3 +36,4 @@ local.properties
 /.kotlin/
 /web/engine/build/
 /web/engine/out/
+/web/app/build/

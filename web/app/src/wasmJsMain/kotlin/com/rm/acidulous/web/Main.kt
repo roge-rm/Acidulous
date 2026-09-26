@@ -62,6 +62,18 @@ private fun Spike() {
             repeat(6) { delay(250); report("compose: peak=" + (enginePeak() * 10000).toInt() / 10000.0) }
             toggle()
             report("compose: done")
+            // The generated bridge, each kind of value across.
+            val probe = com.rm.acidulous.engine.EngineProbe
+            report("bridge: machines=" + probe.machines().joinToString(","))
+            report("bridge: Reflux params=" + probe.params("Reflux").take(6).joinToString(","))
+            report("bridge: mount Trinity on 1=" + probe.mount(1, "Trinity"))
+            delay(300)
+            probe.noteOn(1, 60)
+            delay(600)
+            report("bridge: peak through the bridge=" + (probe.peak() * 1000).toInt() / 1000.0)
+            probe.noteOff(1, 60)
+            report("bridge: palette=" + probe.palette().take(60))
+            report("bridge: loudness=" + probe.loudness().joinToString(",") { ((it * 10).toInt() / 10.0).toString() })
         }
         while (true) {
             peak = enginePeak()

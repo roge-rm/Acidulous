@@ -30,6 +30,10 @@ kotlin {
     jvm("desktop") {
         compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21) }
     }
+    // The browser: Compose for Kotlin/Wasm, with the engine as WebAssembly
+    // beside it (web/). Only commonMain is shared with it so far; the rest
+    // moves over from jvmShared as each seam gets a browser's answer.
+    wasmJs { browser() }
 
     sourceSets {
         val jvmShared by creating {

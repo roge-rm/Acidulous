@@ -21,6 +21,7 @@ kotlin {
     }
     sourceSets {
         wasmJsMain.dependencies {
+            implementation(project(":shared"))
             implementation(libs.jb.compose.runtime)
             implementation(libs.jb.compose.foundation)
             implementation(libs.jb.compose.ui)
