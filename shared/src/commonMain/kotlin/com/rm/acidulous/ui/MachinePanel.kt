@@ -976,8 +976,7 @@ internal fun GroupRow(content: @Composable () -> Unit) {
 }
 
 /**
- * A machine's body: its section tabs, then its cards - the chosen section's,
- * and its neighbours' too wherever there is room for them.
+ * A machine's body: its section tabs, then the chosen section's cards.
  *
  * Upright the tabs are a row over a row of cards. Sideways the cards are a
  * column, so the tabs stand **down the left edge of them** - Dan's call,
@@ -985,19 +984,11 @@ internal fun GroupRow(content: @Composable () -> Unit) {
  * faithful port of portrait's row, and they would also be twenty-eight dp of
  * a three-hundred-and-ninety-three dp screen spent on tabs.
  *
- * **One section at a time is what a phone has room for, not a rule.** On a
- * tablet or a desktop the column beside the roll is several times as tall as
- * a section, and Genesis's kick - seven knobs - sat in the top quarter of it
- * with the rest empty (Dan, 2026-09-25: "a poor use of space"). So the chosen
- * section is laid out first, and then the ones after it, then the ones before
- * it, while each whole one fits in what is left without scrolling. Every tab
- * shown is lit; a lit tab asks for nothing, and an unlit one brings its
- * section into the run.
- *
- * **Measured, and only when there is room.** The chosen section is measured
- * as it always was, in the same scrolling line; only if that leaves [Room] is
- * anything else composed. A phone, where one section fills the space, lays
- * out and composes exactly what it did before.
+ * **One section at a time, everywhere.** For a day the chosen section brought
+ * its neighbours with it wherever there was room, every one of their tabs lit;
+ * Dan: confusing - "we don't want that happening anywhere in the UI at any
+ * time". A big screen's column is a phone's too - two knobs wide, the section
+ * scrolling down it - and the roll has the rest (EditScreen).
  *
  * [above] is a line of a section's own over its cards - Dice's slice number,
  * Mosaic's zone map. [section] is a section's cards.
@@ -1010,125 +1001,32 @@ internal fun PanelSections(
     above: (@Composable (Int) -> Unit)? = null,
     section: @Composable (Int) -> Unit,
 ) {
-    val stacked = LocalPanelStacked.current
-    @Composable
-    fun Lines(i: Int) {
-        if (stacked) {
-            // GroupRow's column, with the section's own line at its head.
-            Column(
-                Modifier.fillMaxWidth().verticalScrollWithBar(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) { above?.invoke(i); section(i) }
-        } else {
-            // GroupRow's row, as wide as its cards rather than the line, so
-            // what is left beside it can be measured.
-            Column {
-                above?.invoke(i)
-                Row(
-                    Modifier.horizontalScrollWithBar(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) { section(i) }
-            }
+    val chosen = selected.coerceIn(0, (names.size - 1).coerceAtLeast(0))
+    if (!LocalPanelStacked.current) {
+        Column {
+            SectionChips(names, chosen, onSelect)
+            above?.invoke(chosen)
+            GroupRow { section(chosen) }
         }
+        return
     }
-    androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
-        val n = names.size
-        val chosen = selected.coerceIn(0, (n - 1).coerceAtLeast(0))
-        val gap = 6.dp.roundToPx()
-        val room = Room.roundToPx()
-        val w = constraints.maxWidth
-        val bounded = constraints.hasBoundedHeight
-        val sideW = if (stacked) SideChipW.roundToPx() + 4.dp.roundToPx() else 0
-        val areaW = (w - sideW).coerceAtLeast(0)
-        // One section, measured within [limit] along the way the cards run.
-        // Down the column it is measured at the limit itself: shorter than
-        // that, it fitted whole; as tall as that, it is scrolling in it. Across
-        // the row, one pixel over, so a clipped one can be told from one that
-        // fits exactly - and it is only kept whole.
-        fun measureIn(i: Int, limit: Int): androidx.compose.ui.layout.Placeable? {
-            val c = if (stacked) androidx.compose.ui.unit.Constraints(areaW, areaW, 0, limit)
-                    else androidx.compose.ui.unit.Constraints(0, limit + 1, 0, constraints.maxHeight)
-            return subcompose("s$i") { Lines(i) }.map { it.measure(c) }.maxByOrNull { it.height }
-        }
-        val first = subcompose("s$chosen") { Lines(chosen) }.map {
-            it.measure(
-                if (stacked) androidx.compose.ui.unit.Constraints(areaW, areaW, 0, constraints.maxHeight)
-                else androidx.compose.ui.unit.Constraints(0, w, 0, constraints.maxHeight),
-            )
-        }.maxByOrNull { it.height }
-        val shown = mutableMapOf<Int, androidx.compose.ui.layout.Placeable>()
-        if (first != null) shown[chosen] = first
-        val along = if (stacked) (if (bounded) constraints.maxHeight else 0) else w
-        var used = first?.let { if (stacked) it.height else it.width } ?: 0
-        if (first != null && along - used >= room) {
-            var ended = false
-            for (dir in listOf(1, -1)) {
-                var i = chosen + dir
-                while (!ended && i in 0 until n) {
-                    val left = along - used - gap
-                    if (left < room) { ended = true; break }
-                    val p = measureIn(i, left) ?: break
-                    if (stacked) {
-                        // Whole, or the rest of the column scrolling - rather
-                        // than leave it empty for want of a few dp - and then
-                        // the run is done.
-                        shown[i] = p
-                        used += gap + p.height
-                        if (p.height >= left) ended = true
-                    } else {
-                        if (p.width > left) break
-                        shown[i] = p
-                        used += gap + p.width
-                    }
-                    i += dir
-                }
-            }
-        }
-        val run = (shown.keys.minOrNull() ?: chosen)..(shown.keys.maxOrNull() ?: chosen)
-        val placed = shown.keys.sorted().map { shown.getValue(it) }
-        val chips = subcompose("tabs") {
-            SectionChips(names, chosen, lit = run) { i -> if (i !in run) onSelect(i) }
-        }
-        if (stacked) {
-            val h = if (bounded) constraints.maxHeight else shown.values.sumOf { it.height } + gap * (shown.size - 1).coerceAtLeast(0)
-            val tabs = chips.map { it.measure(androidx.compose.ui.unit.Constraints.fixed(SideChipW.roundToPx(), h)) }
-            layout(w, h) {
-                tabs.forEach { it.placeRelative(0, 0) }
-                var y = 0
-                placed.forEach { it.placeRelative(sideW, y); y += it.height + gap }
-            }
-        } else {
-            val tabs = chips.map { it.measure(androidx.compose.ui.unit.Constraints(0, w, 0, constraints.maxHeight)) }
-            val top = tabs.maxOfOrNull { it.height } ?: 0
-            val body = shown.values.maxOfOrNull { it.height } ?: 0
-            layout(w, (top + body).coerceIn(constraints.minHeight, constraints.maxHeight)) {
-                tabs.forEach { it.placeRelative(0, 0) }
-                var x = 0
-                placed.forEach { it.placeRelative(x, top); x += it.width + gap }
-            }
-        }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        SectionChips(names, chosen, onSelect)
+        GroupRow { above?.invoke(chosen); section(chosen) }
     }
 }
-
-/**
- * The least room left beside or under the chosen section that is worth
- * measuring the next one for: under a knob's height, no section fits.
- */
-private val Room = 90.dp
 
 /** Which group of groups is showing. Only machines too big for one row need it. */
 @Composable
 internal fun SectionChips(
     english: List<String>,
     selected: Int,
-    /** Every tab whose section is showing: see [PanelSections]. */
-    lit: IntRange = selected..selected,
     onSelect: (Int) -> Unit,
 ) {
     // A panel's own sections are English words; a window's arrive translated and pass through.
     val labels = panelWords(english)
     if (LocalPanelStacked.current) {
-        SectionChipsSide(labels, selected, onSelect, lit)
+        SectionChipsSide(labels, selected, onSelect)
         return
     }
     // **Equal shares until there is not room for them.**
@@ -1146,9 +1044,9 @@ internal fun SectionChips(
     val styled = labels.map { androidx.compose.ui.text.AnnotatedString(it) }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         if (maxWidth / labels.size.coerceAtLeast(1) < kChipFloor) {
-            SectionChipsScrolling(labels, selected, lit, onSelect)
+            SectionChipsScrolling(labels, selected, onSelect)
         } else {
-            SectionChipsStyled(styled, selected, lit, onSelect)
+            SectionChipsStyled(styled, selected, onSelect)
         }
     }
 }
@@ -1168,7 +1066,7 @@ internal fun SectionChips(
  * `SideText` is for.
  */
 @Composable
-private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, lit: IntRange = selected..selected) {
+private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     BoxWithConstraints(Modifier.width(SideChipW).fillMaxHeight()) {
         val share = maxHeight / labels.size.coerceAtLeast(1)
         val scrolls = share < kChipFloor
@@ -1178,7 +1076,7 @@ private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             labels.forEachIndexed { i, l ->
-                val on = i == selected || i in lit
+                val on = i == selected
                 Box(
                     Modifier.fillMaxWidth()
                         .then(if (scrolls) Modifier.height(kChipFloor) else Modifier.weight(1f))
@@ -1220,11 +1118,10 @@ private val kChipFloor = 56.dp
 internal fun SectionChipsStyled(
     labels: List<androidx.compose.ui.text.AnnotatedString>,
     selected: Int,
-    lit: IntRange = selected..selected,
     onSelect: (Int) -> Unit,
 ) {
     if (LocalPanelStacked.current) {
-        SectionChipsSide(labels.map { it.text }, selected, onSelect, lit)
+        SectionChipsSide(labels.map { it.text }, selected, onSelect)
         return
     }
     Row(
@@ -1232,7 +1129,7 @@ internal fun SectionChipsStyled(
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         labels.forEachIndexed { i, l ->
-            val on = i == selected || i in lit
+            val on = i == selected
             Box(
                 // Equal shares of the full width: these are the machine's
                 // tabs, and a row of tabs that stops half way reads as broken.
@@ -1266,7 +1163,6 @@ internal fun SectionChipsStyled(
 internal fun SectionChipsScrolling(
     english: List<String>,
     selected: Int,
-    lit: IntRange = selected..selected,
     onSelect: (Int) -> Unit,
 ) {
     val labels = panelWords(english)
@@ -1275,7 +1171,7 @@ internal fun SectionChipsScrolling(
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         labels.forEachIndexed { i, l ->
-            val on = i == selected || i in lit
+            val on = i == selected
             Box(
                 Modifier.clip(RoundedCornerShape(4.dp))
                     .background(if (on) Acid.colors.green else Acid.colors.control)

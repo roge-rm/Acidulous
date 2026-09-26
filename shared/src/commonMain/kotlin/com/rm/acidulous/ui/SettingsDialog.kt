@@ -275,7 +275,20 @@ private fun AudioTab(trackNames: List<String>) {
             // Lines of prose in a card of controls: a column of a set width
             // when the cards are side by side, where filling the row would
             // squeeze each line to a letter wide.
-            androidx.compose.foundation.layout.Column(
+            //
+            // **One size, whatever they say.** A wide window is as wide as its
+            // cards, and these were as wide as their longest line and as tall
+            // as their lines wrapped - so the window changed size as the
+            // figures changed (Dan). Wide, they are the line's full width and a
+            // fixed seven lines; upright the window is the screen's width anyway.
+            if (LocalDialogWide.current) {
+                Text(
+                    lines.joinToString("\n"), color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
+                    minLines = ReadingLines, maxLines = ReadingLines,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.cardLineFull(),
+                )
+            } else androidx.compose.foundation.layout.Column(
                 Modifier.cardLine(),
             ) {
                 for (l in lines) {
@@ -371,3 +384,6 @@ internal fun MidiRoutingSection(trackNames: List<String>, more: @Composable () -
 
 // Section and Choice live in ui/Dialogs.kt: they are the shared vocabulary
 // of every window here, not a settings idea.
+
+/** The readings' height in a wide window: the most their lines wrap to at a card line's width. */
+private const val ReadingLines = 7

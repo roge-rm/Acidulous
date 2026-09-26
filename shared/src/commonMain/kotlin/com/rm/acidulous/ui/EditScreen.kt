@@ -1315,13 +1315,15 @@ fun EditScreen(
                         // GroupRow - so there is no second scroller here.
                         // Folded, they are gone and the roll has the width;
                         // the strip on the left still has the mark.
+                        //
+                        // **Two knobs wide on every screen.** A tablet's or a
+                        // desktop's column was four, and the roll beside it
+                        // gave up the width for a section that scrolled down
+                        // the column just the same; Dan: narrow them all to two
+                        // knobs and scroll, one width for every tab.
                         if (!panelFolded || panel != 0) Column(
-                            Modifier.width(if (large) CONTROL_W_LARGE else CONTROL_W).fillMaxHeight(),
-                        ) {
-                            CompositionLocalProvider(LocalStackedPerLine provides if (large) LARGE_PER_LINE else StackedPerLine) {
-                                panelSlot(false, true)
-                            }
-                        }
+                            Modifier.width(CONTROL_W).fillMaxHeight(),
+                        ) { panelSlot(false, true) }
                     }
                     keysSlot(
                         keysH,
@@ -1661,9 +1663,6 @@ private const val PAGE_BARS_LAND = 4
  * which looks like the layout ignoring what it was told.
  */
 private val CONTROL_W = 180.dp
-// A tablet's side column: four knobs to a line rather than two.
-private val CONTROL_W_LARGE = 330.dp
-private const val LARGE_PER_LINE = 4
 private val LARGE_KEYS_LAND_MAX = 180.dp
 
 /**
