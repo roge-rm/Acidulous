@@ -1,6 +1,4 @@
 # Importing and exporting
-> Getting songs and sounds in, and the song out.
-
 **Export…** in the file menu renders the song faster than real time, through the
 same engine that plays it, tails included.
 
