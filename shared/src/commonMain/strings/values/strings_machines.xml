@@ -43,10 +43,10 @@
         <item>transients</item>
         <item>even</item>
     </string-array>
-    <string name="slice_transients_note">Cuts at the hits. If there are too many, the loudest are used; too few and it cuts evenly.</string>
+    <string name="slice_transients_note">Cuts at the hits. If there are too many it uses the loudest, and if there are too few it cuts evenly.</string>
     <string name="slice_even_note">Equal pieces.</string>
     <string name="slice_count">slices</string>
-    <string name="slice_count_note" tools:ignore="PluralsCandidate">Pads 1 to %d get a slice each. Pads that already have their own sample keep it; clear them to use the slice.</string>
+    <string name="slice_count_note" tools:ignore="PluralsCandidate">Pads 1 to %d get a slice each. Pads with their own sample keep it, so clear them to use the slice.</string>
 
     <!-- The organ\'s input, and other listening -->
     <string name="machine_input">input</string>

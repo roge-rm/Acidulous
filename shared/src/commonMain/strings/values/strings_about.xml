@@ -14,7 +14,7 @@
     <string name="about_version">version %s</string>
     <string name="about_version_unknown">unknown</string>
     <!-- %1$s is empty on Android; in a build for another platform it is about_for_platform, with a space before it. -->
-    <string name="about_what">A music studio for Android%1$s: up to sixteen tracks of synths, drum machines and samplers, arranged in scenes.</string>
+    <string name="about_what">A music studio for Android%1$s. Combine up to 16 synthesizers, drum machines, noise generators and processors into scenes of music.</string>
     <!-- Its name, "Linux": set straight after "for Android" in the line above. -->
     <string name="about_for_platform">(for %s)</string>
     <string name="about_panic">Panic · stop all sound</string>

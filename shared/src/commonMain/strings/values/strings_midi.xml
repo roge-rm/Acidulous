@@ -54,7 +54,7 @@
         <item>on</item>
     </string-array>
     <string name="midi_test_clock">clock</string>
-    <string name="midi_follow_link">Link has the tempo; following turns Link off</string>
+    <string name="midi_follow_link">Link has the tempo, and following turns Link off</string>
     <string name="midi_follow_off">not following</string>
     <string name="midi_follow_nothing">nothing coming in · own clock</string>
     <string name="midi_follow_waiting">following · nothing coming in</string>
@@ -125,13 +125,13 @@
         <item quantity="other">released %d held notes</item>
     </plurals>
     <string name="midi_scan_running">a scan is already running</string>
-    <string name="midi_scan_refused_restart">Android refused the scan; turn Bluetooth off and on</string>
-    <string name="midi_scan_unsupported">this phone cannot scan for Bluetooth LE</string>
+    <string name="midi_scan_refused_restart">Android refused the scan, so turn Bluetooth off and on again</string>
+    <string name="midi_scan_unsupported">this phone can\'t scan for Bluetooth LE</string>
     <string name="midi_scan_failed">the scan failed (code %d)</string>
     <string name="midi_scan_refused">Android refused the scan: allow Nearby devices</string>
-    <string name="midi_scan_widened">Nothing is advertising MIDI. Showing everything nearby - a device that keeps its service in the scan response will still open.</string>
-    <string name="midi_scan_nothing">Nothing found. Check the device is switched on and not already paired in Android\'s own Bluetooth settings - a paired BLE MIDI device stops advertising.</string>
+    <string name="midi_scan_widened">Nothing is advertising MIDI, so here\'s everything nearby. A device that only lists MIDI in its scan response will still open.</string>
+    <string name="midi_scan_nothing">Nothing found. Check the device is on and isn\'t already paired in Android\'s Bluetooth settings, since a paired BLE MIDI device stops advertising.</string>
     <string name="midi_opening">opening…</string>
-    <string name="midi_open_failed">Could not open that device. If it is paired in Android\'s Bluetooth settings, forget it there and scan again.</string>
+    <string name="midi_open_failed">Couldn\'t open that device. If it\'s paired in Android\'s Bluetooth settings, forget it there and scan again.</string>
     <string name="midi_connect_refused">Android refused the connection: allow Nearby devices</string>
 </resources>

@@ -25,12 +25,12 @@ bool Mp3Writer::open(const std::string &path, int32_t sampleRate, int32_t bits, 
     // with no duration in it.
     file = std::fopen(path.c_str(), "w+b");
     if (file == nullptr) {
-        error = "could not open " + path;
+        error = "couldn't open " + path;
         return false;
     }
     lame_t g = lame_init();
     if (g == nullptr) {
-        error = "the MP3 encoder would not start";
+        error = "the MP3 encoder didn't start";
         std::fclose(file);
         file = nullptr;
         return false;

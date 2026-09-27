@@ -16,7 +16,7 @@ constexpr int32_t kChannels = 2;
 bool WavWriter::open(const std::string &path, int32_t sampleRate, int32_t bits, std::string &error) {
     close();
     file = std::fopen(path.c_str(), "wb");
-    if (file == nullptr) { error = "cannot create " + path; return false; }
+    if (file == nullptr) { error = "can't create " + path; return false; }
     rate = sampleRate;
     floatFormat = bits == 32;
     bytesPerSample = floatFormat ? 4 : (bits == 16 ? 2 : 3);

@@ -96,7 +96,7 @@ class WebHost : AppHost {
 
     override val canEncodeAac: Boolean = false
     override fun encodeAac(pcm: File, out: File, bitrate: Int): String =
-        "AAC export is the phone's own encoder, which a browser does not have. Choose MP3 or FLAC."
+        "AAC export is only on the phone. Choose MP3 or FLAC."
 
     override val platformName: String = "the web"
     /** A finger on a phone's or a tablet's browser; a mouse anywhere else. */

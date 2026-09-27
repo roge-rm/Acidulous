@@ -57,7 +57,7 @@
     <string name="sound_rev">rev</string>
     <!-- Zoom back out to show the whole sample. -->
     <string name="sound_fit">fit</string>
-    <string name="sound_unreadable">That file could not be read.</string>
+    <string name="sound_unreadable">That file couldn\'t be read.</string>
     <!-- The file, its length, stereo or mono, and how much of it the trim keeps. -->
     <string name="sound_file_readout">%1$s · %2$.2f s · %3$s · keeping %4$.2f s</string>
     <string name="sound_level">level</string>

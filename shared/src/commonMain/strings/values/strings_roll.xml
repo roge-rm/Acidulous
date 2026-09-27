@@ -63,7 +63,7 @@
     <!-- ui/AudioLanes.kt: a tape\'s lanes. -->
     <!-- A muted lane, one letter. -->
     <string name="tape_muted_short">M</string>
-    <string name="tape_comp_failed">That cell would not flatten - %s.</string>
+    <string name="tape_comp_failed">That cell couldn\'t be flattened (%s).</string>
     <!-- Flatten the lanes into one take. -->
     <string name="tape_comp">comp</string>
 

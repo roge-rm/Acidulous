@@ -423,7 +423,7 @@ std::string EngineHost::auditionFile(const std::string &path) {
     }
     std::string error;
     const std::unique_ptr<SampleData> s = WavReader::read(path, kSampleRate, error, kMaxSliceSeconds);
-    if (s == nullptr || s->frames <= 0) return error.empty() ? "that file could not be read" : error;
+    if (s == nullptr || s->frames <= 0) return error.empty() ? "that file couldn't be read" : error;
     // Interleaved here, on this thread, so the audio thread has nothing to do
     // but add two numbers per frame.
     std::vector<float> pcm(static_cast<size_t>(s->frames) * 2, 0.0f);
@@ -443,7 +443,7 @@ std::string EngineHost::editSample(const std::string &src, const std::string &ds
                                    const audio::SampleOps &ops) const {
     std::string error;
     std::unique_ptr<SampleData> s = WavReader::read(src, kSampleRate, error, kMaxSliceSeconds);
-    if (s == nullptr) return error.empty() ? "that file could not be read" : error;
+    if (s == nullptr) return error.empty() ? "that file couldn't be read" : error;
     if (!audio::applyEdit(*s, ops, error)) return error;
 
     // **Through a temporary, always.** The common case is overwriting the file
@@ -453,7 +453,7 @@ std::string EngineHost::editSample(const std::string &src, const std::string &ds
     {
         WavWriter writer;
         if (!writer.open(tmp, kSampleRate, EngineSettings::get().recordBits, error)) {
-            return error.empty() ? "that file could not be written" : error;
+            return error.empty() ? "that file couldn't be written" : error;
         }
         std::vector<float> block(static_cast<size_t>(kBlockFrames) * 2, 0.0f);
         for (int32_t at = 0; at < s->frames; at += kBlockFrames) {
@@ -466,12 +466,12 @@ std::string EngineHost::editSample(const std::string &src, const std::string &ds
             }
             writer.write(block.data(), n);
         }
-        if (!writer.close()) return "that file could not be finished";
+        if (!writer.close()) return "that file couldn't be finished";
     }
     std::remove(dst.c_str());
     if (std::rename(tmp.c_str(), dst.c_str()) != 0) {
         std::remove(tmp.c_str());
-        return "that file could not be replaced";
+        return "that file couldn't be replaced";
     }
     return "";
 }
@@ -496,7 +496,7 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error,
     }
     if (format == AudioFormat::Unknown) {
         const char *kind = foreignKind(path);
-        error = kind != nullptr ? std::string(kind) + ", which this cannot read"
+        error = kind != nullptr ? std::string(kind) + ", which this can't read"
                                 : "not an audio file this can read";
         return "";
     }
@@ -535,7 +535,7 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error,
         interleaved[static_cast<size_t>(i) * 2 + 1] = r;
     }
     writer.write(interleaved.data(), decoded->frames);
-    if (!writer.close()) { error = "could not write the converted file"; return ""; }
+    if (!writer.close()) { error = "couldn't write the converted file"; return ""; }
     std::remove(path.c_str()); // the original was a copy of the player's own file
     // Everything a report of a bad conversion needs, in one line: the format
     // it decided on, what came out of the decoder, and how loud it was.
@@ -672,7 +672,7 @@ std::string EngineHost::loadNexusPatch(int rack, const std::string &spec) {
     // Parsed and allocated here, on whatever worker called us, and handed
     // over as one object - the audio thread never builds a graph.
     machine::nexus::Graph *graph = machine::nexus::Graph::parse(spec, static_cast<float>(kSampleRate), error);
-    if (graph == nullptr) return error.empty() ? "the patch could not be read" : error;
+    if (graph == nullptr) return error.empty() ? "the patch couldn't be read" : error;
     const std::string warn = graph->warning();
     Mount mount;
     mount.kind = Mount::Kind::Object;
@@ -1212,7 +1212,7 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
         for (const RenderTarget &t : targets) std::remove(t.path.c_str());
         return false;
     }
-    if (!closed) { error = "could not finish the file"; return false; }
+    if (!closed) { error = "couldn't finish the file"; return false; }
     return true;
 }
 
@@ -1742,7 +1742,7 @@ std::string EngineHost::loadTake(int rack, const std::string &path) {
     }
     std::string error;
     auto data = WavReader::read(path, kSampleRate, error);
-    if (!data) return error.empty() ? "that file could not be read" : error;
+    if (!data) return error.empty() ? "that file couldn't be read" : error;
     auto take = std::make_unique<audio::Take>();
     take->name = data->name;
     take->frames = data->frames;
@@ -1799,7 +1799,7 @@ std::string EngineHost::loadUtterance(int rack, const std::string &path) {
     }
     std::string error;
     auto data = WavReader::read(path, kSampleRate, error);
-    if (!data) return error.empty() ? "that file could not be read" : error;
+    if (!data) return error.empty() ? "that file couldn't be read" : error;
     auto utterance = std::make_unique<audio::Utterance>();
     utterance->name = data->name;
     utterance->mono.resize(static_cast<size_t>(data->frames));
@@ -1823,7 +1823,7 @@ std::string EngineHost::loadFormula(int rack, const std::string &formula, const 
     if (awaitMachine(sEngine, rack, "Formulate") == nullptr) return "that rack is not a Formulate";
     std::string error;
     auto program = machine::formulate::compile(formula, arp, duty, vol, error);
-    if (!program) return error.empty() ? "the formula could not be read" : error;
+    if (!program) return error.empty() ? "the formula couldn't be read" : error;
     Mount mount;
     mount.kind = Mount::Kind::Object;
     mount.rack = rack;
@@ -2090,7 +2090,7 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     // does not have. Measured on the demo: Hexbeat's bar peaks at 1.84.
     if (!wav.open(path, kSampleRate, 32, error)) return error;
     wav.write(inter.data(), static_cast<int32_t>(storedFrames));
-    if (!wav.close()) return "could not finish the file";
+    if (!wav.close()) return "couldn't finish the file";
 
     framesOut = static_cast<int32_t>(clipFrames);
     tailOut = static_cast<int32_t>(tailOutFrames);

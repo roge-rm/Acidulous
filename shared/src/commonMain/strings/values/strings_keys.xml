@@ -58,7 +58,7 @@
     <string name="keys_chip_said">%1$s: %2$s</string>
     <!-- After a key moves from one action to another. -->
     <string name="keys_moved">taken from %1$s</string>
-    <string name="keys_notes_line_tracker">In play mode, tracker layout: Z to / is one octave, the S D G H J L ; row its black keys; Q to P the next, with the number row. - = move the octave, [ ] the velocity.</string>
+    <string name="keys_notes_line_tracker">In play mode with the tracker layout, Z to / is one octave with the S D G H J L ; row as its black keys, and Q to P is the next with the number row. - and = move the octave, and [ and ] the velocity.</string>
     <!-- The button in Settings that opens the keys window. -->
     <string name="settings_keyboard">keyboard</string>
     <string name="settings_keys_button">keys…</string>

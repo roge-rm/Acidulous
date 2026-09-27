@@ -129,7 +129,7 @@ object NativeEngine {
         return when (word) {
             "ok" -> Result.success(Imported(rest, truncated = false))
             "cut" -> Result.success(Imported(rest, truncated = true))
-            else -> Result.failure(IllegalArgumentException(rest.ifEmpty { "it would not load" }))
+            else -> Result.failure(IllegalArgumentException(rest.ifEmpty { "it didn't load" }))
         }
     }
 

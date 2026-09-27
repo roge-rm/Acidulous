@@ -24,7 +24,7 @@ bool parseTable(const std::string &text, const char *what, Table &out, std::stri
         if (ch == '-' || ch == '+') ++i;
         bool digits = false;
         while (i < text.size() && std::isdigit(static_cast<unsigned char>(text[i]))) { ++i; digits = true; }
-        if (!digits) { error = std::string(what) + ": cannot read '" + text.substr(from, 8) + "'"; return false; }
+        if (!digits) { error = std::string(what) + ": can't read '" + text.substr(from, 8) + "'"; return false; }
         out.steps.push_back(std::atoi(text.substr(from, i - from).c_str()));
         if (out.steps.size() > 64) { error = std::string(what) + ": more than 64 steps"; return false; }
     }

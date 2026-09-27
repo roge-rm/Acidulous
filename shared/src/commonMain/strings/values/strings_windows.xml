@@ -70,7 +70,7 @@
         <item>free</item>
     </string-array>
     <string name="clip_seed">seed</string>
-    <string name="clip_stale_note">Frozen at %1$.0f bpm; the song is at %2$.0f, so the machine is playing. Freeze it again.</string>
+    <string name="clip_stale_note">Frozen at %1$.0f bpm, but the song is at %2$.0f, so the machine is playing instead. Freeze it again.</string>
     <string name="clip_paste_title">Paste over this clip?</string>
     <string name="clip_paste">Paste</string>
     <string name="clip_paste_note">Pasting replaces everything in this clip (notes, automation and length) with %s.</string>
@@ -148,8 +148,8 @@
         <item>ours</item>
     </string-array>
     <string name="link_session">the session</string>
-    <string name="link_session_note">Scene tempos and smooth ramps are ignored; play waits for the session\'s downbeat.</string>
-    <string name="link_session_note_no_multicast">Scene tempos and smooth ramps are ignored; play waits for the session\'s downbeat. Couldn\'t get a multicast lock, so other Link apps won\'t be found on this Wi-Fi.</string>
+    <string name="link_session_note">Scene tempos and smooth ramps are ignored, and play waits for the session\'s downbeat.</string>
+    <string name="link_session_note_no_multicast">Scene tempos and smooth ramps are ignored, and play waits for the session\'s downbeat. Couldn\'t get a multicast lock, so other Link apps won\'t be found on this Wi-Fi.</string>
     <plurals name="link_peers">
         <item quantity="one">%d peer</item>
         <item quantity="other">%d peers</item>

@@ -43,7 +43,7 @@ int64_t ReelCache::convert(const std::string &path, const std::string &dest, boo
 
     std::FILE *out = std::fopen(dest.c_str(), "wb");
     if (out == nullptr) {
-        error = "cannot write the cache";
+        error = "can't write the cache";
         return 0;
     }
 
@@ -79,7 +79,7 @@ int64_t ReelCache::convert(const std::string &path, const std::string &dest, boo
             if (std::fwrite(dst.data(), sizeof(int16_t), static_cast<size_t>(n), out) !=
                 static_cast<size_t>(n)) {
                 ok = false;
-                error = "the cache could not be written";
+                error = "the cache couldn't be written";
             }
             written += n;
         }

@@ -377,7 +377,7 @@ bool FlacWriter::open(const std::string &path, int32_t sampleRate, int32_t bits,
     close();
     file = std::fopen(path.c_str(), "wb");
     if (file == nullptr) {
-        error = "cannot create " + path;
+        error = "can't create " + path;
         return false;
     }
     rate = sampleRate;

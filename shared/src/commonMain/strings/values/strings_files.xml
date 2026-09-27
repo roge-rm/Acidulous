@@ -69,7 +69,7 @@
     <string name="patches_factory">factory</string>
     <string name="patches_user">user</string>
     <string name="patches_other">other</string>
-    <string name="patches_user_none">Nothing saved yet - \"save as…\" on the panel.</string>
+    <string name="patches_user_none">Nothing saved yet. Use \"save as…\" on the panel.</string>
     <!-- Where a browser saves what is exported: the only folder a web page can write to. -->
     <string name="files_downloads_web">Downloads</string>
 </resources>

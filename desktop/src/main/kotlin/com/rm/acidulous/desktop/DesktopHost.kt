@@ -75,7 +75,7 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     override val audioStream = com.rm.acidulous.AudioStream.Miniaudio
 
     override fun encodeAac(pcm: File, out: File, bitrate: Int): String =
-        "AAC export is the phone's own encoder, which the desktop does not have. Choose MP3 or FLAC."
+        "AAC export is only on the phone. Choose MP3 or FLAC."
 
     private fun openFolder(dir: File) {
         runCatching { Desktop.getDesktop().open(dir) }
