@@ -67,12 +67,16 @@ object Tunings {
      * ratio like 3/2 or a whole number like 2. Anything after the pitch is
      * ignored.
      */
+    /** Far more steps than 128 keys can reach, and still a small song. */
+    private const val MAX_SCL_NOTES = 4096
+
     fun parseScl(text: String, fallbackName: String): Tuning {
         val lines = text.lineSequence().map { it.trim() }.filter { !it.startsWith("!") }.toList()
         require(lines.size >= 2) { "not a Scala file" }
         val description = lines[0]
         val count = lines[1].split(Regex("\\s+")).first().toIntOrNull()
-        require(count != null && count in 1..128) { "not a Scala file: no note count" }
+        require(count != null) { "not a Scala file: no note count" }
+        require(count in 1..MAX_SCL_NOTES) { "$count notes; up to $MAX_SCL_NOTES can be read" }
         val pitches = lines.drop(2).filter { it.isNotEmpty() }.take(count).map { line ->
             val token = line.split(Regex("\\s+")).first()
             when {
@@ -90,6 +94,7 @@ object Tunings {
             }
         }
         require(pitches.size == count) { "the file says $count notes and has ${pitches.size}" }
+        require(pitches.all { it.isFinite() }) { "a pitch that is not a number" }
         require(pitches.last() > 0f) { "a scale that does not rise" }
         return Tuning(description.ifBlank { fallbackName }.take(40), pitches)
     }

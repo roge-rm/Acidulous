@@ -71,6 +71,15 @@ class TuningTest {
     }
 
     @Test
+    fun aScaleOfMoreThan128NotesReads() {
+        val steps = (1..200).joinToString("\n") { "%.1f".format(it * 6.0) }
+        val t = Tunings.parseScl("200 steps of 6 cents\n200\n$steps\n", "x")
+        assertEquals(200, t.cents.size)
+        assertEquals(1200f, t.cents.last(), 0.01f)
+        assertEquals(128, Tunings.ratios(t, 0).size)
+    }
+
+    @Test
     fun aTuningSurvivesBeingSavedAndOpened() {
         val just = Tunings.builtIn.first { it.name == "just" }
         val song = Song(
