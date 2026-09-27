@@ -641,6 +641,75 @@ void aShortCellsCycleAgreesInBothModes() {
 
 } // namespace
 
+
+/** Runs [blocks] and says whether the song was still going after all of them. */
+bool runOn(Fixture &f, int blocks) {
+    for (int i = 0; i < blocks; ++i) {
+        f.clock.advance(kBlockFrames);
+        if (!f.scheduler.process(f.clock.blockStart(), f.clock.blockEnd())) return false;
+    }
+    return true;
+}
+
+void deletingThePlayingLastScene() {
+    printf("- the scene playing is the last, and is deleted\n");
+    auto f = twoScenes();
+    f->scene(33, 1);
+    f->clip(0, 2, 1);
+    f->commit();
+    f->play(2);
+    f->run(f->blocksFor(0.5));
+    ok("playing the third scene", f->scheduler.currentScene() == 2);
+    // The edit arrives as a new snapshot without it.
+    auto next = std::make_shared<SongSnapshot>(*f->snap);
+    next->scenes.pop_back();
+    next->clips.clear();
+    next->setClip(0, 0, f->keep[0]);
+    f->scheduler.swapSnapshot(next.get());
+    ok("the scene index is one that exists", f->scheduler.currentScene() >= 0 && f->scheduler.currentScene() < 2,
+       "scene " + std::to_string(f->scheduler.currentScene()));
+    f->run(f->blocksFor(3.0)); // and it keeps running without reading past the list
+    ok("and it keeps running on a scene that exists", f->scheduler.currentScene() >= 0 && f->scheduler.currentScene() < 2);
+    f->scheduler.swapSnapshot(f->snap.get()); // before `next` goes
+}
+
+void aQueuedSceneJumpsTheOrder() {
+    printf("- a scene queued from the first skips the second\n");
+    auto f = twoScenes();
+    f->scene(33, 1);
+    f->commit();
+    f->play(0);
+    f->transport.queueScene(2);
+    f->run(f->blocksFor(2.5)); // the one-bar first scene ends at 2 s
+    ok("the queued scene came next", f->scheduler.currentScene() == 2,
+       "scene " + std::to_string(f->scheduler.currentScene()));
+}
+
+void stopAtTheEndOfALoopedScene() {
+    printf("- the scene loops, and stop-at-end is asked for\n");
+    auto f = twoScenes();
+    f->transport.setLoopScene(true);
+    f->play(0);
+    ok("a looped scene goes round", runOn(*f, f->blocksFor(5.0)) && f->scheduler.currentScene() == 0);
+    f->transport.setStopAtEnd(true);
+    ok("and stops at the end of the pass it's in", !runOn(*f, f->blocksFor(2.5)));
+}
+
+void aSongEmptiedWhilePlaying() {
+    printf("- every scene deleted while it plays, then one added\n");
+    auto f = twoScenes();
+    f->play(1);
+    f->run(f->blocksFor(1.0));
+    auto none = std::make_shared<SongSnapshot>();
+    none->rackCount = kRacks;
+    f->scheduler.swapSnapshot(none.get());
+    ok("a song with no scenes stops rather than reading past its list", !runOn(*f, f->blocksFor(1.0)) || f->scheduler.currentScene() == 0);
+    f->commit(); // the two scenes back
+    f->run(f->blocksFor(1.0));
+    ok("and it plays a scene that exists afterwards", f->scheduler.currentScene() >= 0 && f->scheduler.currentScene() < 2,
+       "scene " + std::to_string(f->scheduler.currentScene()));
+}
+
 int main() {
     theGridIsToldNothingBeforeAnythingRuns();
     songModePlaysTheSong();
@@ -657,6 +726,10 @@ int main() {
     aFrozenClipFollowsARamp();
     aCellsCycleCountsItsRepeats();
     aShortCellsCycleAgreesInBothModes();
+    deletingThePlayingLastScene();
+    aQueuedSceneJumpsTheOrder();
+    stopAtTheEndOfALoopedScene();
+    aSongEmptiedWhilePlaying();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
