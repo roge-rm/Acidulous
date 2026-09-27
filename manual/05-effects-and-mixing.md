@@ -6,7 +6,7 @@ them in place of the machine panel.
 
 There are sixteen effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level
-trim, because turning up the wet/dry mix can change the level.
+trim, since turning up the wet/dry mix can change the level.
 
 Each effect has its own page below.
 
@@ -21,7 +21,7 @@ Each effect has its own page below.
 
 - [**Eq**](05-effects-and-mixing/eq.md) - three bands and a tilt.
 - [**Filter**](05-effects-and-mixing/filter.md) - low, band or high pass, moved
-  by an LFO, the signal's level, or another track.
+  by an LFO, the signal's level or another track.
 - [**Width**](05-effects-and-mixing/width.md) - wider, narrower, mono below a
   frequency or rotated.
 
@@ -38,8 +38,8 @@ Each effect has its own page below.
 
 - [**Compressor**](05-effects-and-mixing/compressor.md) - the usual controls, a
   sidechain from any track and a tempo-synced pump.
-- [**Gate**](05-effects-and-mixing/gate.md) - a noise gate that can be opened by
-  another track.
+- [**Gate**](05-effects-and-mixing/gate.md) - a noise gate that another track
+  can open.
 
 ## Movement
 
@@ -56,7 +56,7 @@ Each effect has its own page below.
 - [**Shifter**](05-effects-and-mixing/shifter.md) - frequency shifting, for
   metallic and detuned sounds.
 - [**Harmonizer**](05-effects-and-mixing/harmonizer.md) - adds two voices at
-  scale steps so the harmony stays in key.
+  scale steps, so they stay in key.
 
 ## Input effects
 
@@ -66,82 +66,78 @@ on Bias's panel under **printed in**.
 
 - An effect **on the input** runs before anything else hears the audio, so it's
   **recorded into the take**.
-- An effect **on a track** runs on playback, so you can change it later and the
-  recording stays untouched.
+- An effect **on a track** runs on playback, so you can change it later.
 
-So put an amp on the input if you've decided on the sound, or on the track if
-you want to keep your options open. Input effects keep their **mix** control,
-unlike sends.
+So put an amp on the input if you've decided on the sound, or on the track to
+keep your options open. Input effects keep their **mix** control.
 
 ## The mixer
 
 The mixer button opens a strip for each track, plus the master. The tabs down
-its left edge switch between the mixer and the three perform pages (see
-**Perform** below).
+its left edge switch between the mixer and the three perform pages.
 
 - **Fader and meter** for each track, with mute and solo.
 - **Two send amounts** per track, going to two effects shared by the whole song.
 - **Pan**, and a MIDI row for what the track sends out.
-- A **∿ next to a track's name** means something on that channel is automated,
-  which is why the control won't stay where you put it. Tap it to see which
-  lanes, and to clear them from every clip on the track. Notes aren't touched.
+- A **∿ next to a track's name** means something on that channel is automated.
+  Tap it to see which lanes, and to clear them from every clip on the track.
+  Notes aren't touched.
 
 After the tracks come the **groups**, if the song has any, and a **+ group**
 button. Last is the master strip, with the master fader, the limiter's
-**limit drive** and the loudness readout. Under that is a grid of buttons: the two sends on top, the two
-master inserts (**fx1**, **fx2**) in the middle, and the limiter (**lim**) and
-the click (**♩**) at the bottom. Tap one to turn it on or off, and hold a send
-or insert to choose its effect and set it up.
+**limit drive** and the loudness readout. Under that is a grid of buttons: the
+two sends on top, the two master inserts (**fx1**, **fx2**) in the middle, and
+the limiter (**lim**) and the click (**♩**) at the bottom. Tap one to turn it on
+or off, and hold a send or insert to choose its effect and set it up.
 
 ## Perform
 
 The tabs down the mixer's left edge are **mix**, **hold**, **pad** and
-**live**. The last three are for playing the song rather than mixing it.
+**live**. The last three are for playing the song live.
 
 The effects on **hold** and **pad** work on the whole mix, after the master
-inserts. They're only on while you hold them, unless **latch** is on. With
+inserts, and they're only on while you hold them unless **latch** is on. With
 latch on, a tap turns something on and another tap turns it off, and the pad
 stays where you leave it. Turning latch off lets go of everything on that page.
 
 If the song has groups, **on all** picks what the effects work on: the whole
-mix, or just one group, e.g. repeat only the drums. Tap it to go through the
+mix or just one group, like repeating only the drums. Tap it to go through the
 groups.
 
 If you're recording, everything you do on **hold** and **pad** is recorded into
-the clip of the last track you opened, as automation, and the song plays it
-back the same way. Stopping the song lets go of anything held.
+the clip of the last track you opened, as automation. Stopping the song lets go
+of anything held.
 
 ### Hold
 
 - **repeat** loops the last slice of the song. The five buttons are the slice
-  length, from a beat down to a sixteenth. Slide along them without letting go
-  to change the length. While the song is playing the slice starts on the beat,
-  so it stays in time.
+  length, from a beat down to a sixteenth, and you can slide along them without
+  letting go. While the song plays the slice starts on the beat, so it stays in
+  time.
 - **gate** chops the sound on and off in time. The five buttons are how fast:
-  eighths, sixteenths, thirty-seconds or eighth and sixteenth triplets. Slide
-  along them the same way as repeat.
+  eighths, sixteenths, thirty-seconds or eighth and sixteenth triplets.
 - **reverse** plays the last beat backwards, over and over, in time with the
   song. Hold it with a repeat and the repeat plays backwards.
-- **stop** slows the song down to a stop like a tape machine losing power. Let
-  go and it spins back up. **stop** under it sets how long it takes.
+- **stop** slows the song to a stop like a tape machine losing power, and spins
+  back up when you let go. **stop** under it sets how long it takes.
 - **riser** builds up to a drop. A high pass climbs and noise rises under it
   over 1, 2 or 4 bars (**riser** under it), then snaps back when you let go.
 
 ### Pad
 
-Left and right is a filter: low pass to the left of the middle, high pass to
+Left and right is a filter, low pass to the left of the middle and high pass to
 the right. Up is how much of the mix goes into an echo. Let go and the echo
 keeps repeating and dies away. **echo** sets its time and **feedback** how long
 it lasts.
 
 **x** and **y** change what the pad does:
 
-- **x crush** makes left and right a bit crusher instead of a filter: fewer
-  samples to the left of the middle, fewer bits to the right. It crushes a
+- **x crush** makes left and right a bit crusher instead of a filter, with fewer
+  samples to the left of the middle and fewer bits to the right. It crushes a
   quiet mix as much as a loud one.
-- **y wash** throws into a short smeared echo that sounds more like a big
-  reverb than repeats. It has no time setting; **feedback** still sets how long
-  it lasts.
+- **y wash** throws into a short smeared echo that sounds more like a big reverb
+  than repeats. It has no time setting, and **feedback** still sets how long it
+  lasts.
 
 Under the pad, **kill low**, **kill mid** and **kill high** take that part of
 the sound out while you hold them: below 250 Hz, 250 Hz to 2.5 kHz, and above
@@ -152,8 +148,8 @@ the sound out while you hold them: below 250 Hz, 250 Hz to 2.5 kHz, and above
 A mute button for every track (the same mute as the mixer's), and **fill**.
 
 While the song plays, a mute waits for the next bar and lands on it, so tracks
-drop in and out in time. The button is outlined until it does. **mute on**
-sets what it waits for: a bar, a beat or nothing (**now**). When the song is
+drop in and out in time. The button is outlined until it does. **mute on** sets
+what it waits for: a bar, a beat or nothing (**now**). When the song is
 stopped, mutes happen straight away. If you're recording, the mutes are
 recorded into each track's own clip.
 
@@ -163,31 +159,30 @@ recorded.
 ## Master inserts
 
 **fx1** and **fx2** process the whole mix, including the sends, before the
-master fader and the limiter. Use them for things that apply to the whole song:
-a gentle EQ, a bit of glue compression, some tape-style drive or narrowing the
+master fader and the limiter. Use them for things that apply to the whole song,
+like a gentle EQ, a bit of glue compression, some tape drive or narrowing the
 low end.
 
-The difference from a send: a send is added alongside the mix, and each track
-chooses how much to send. A master insert processes everything equally. So
-reverb and delay usually go on sends, and EQ and compression for the whole song
-go on the master inserts.
+A send is added alongside the mix, and each track chooses how much to send. A
+master insert processes everything equally. So reverb and delay usually go on
+sends, and EQ and compression for the whole song go on the master inserts.
 
 ## Groups
 
-A group is a strip in the mixer that tracks can be routed through. It isn't a
-track: it has no machine and no clips, and it doesn't appear in the song grid.
+A group is a strip in the mixer that tracks can be routed through. It has no
+machine and no clips, and it isn't in the song grid.
 
 Tap **+ group** in the mixer to add one (up to four). Tap a group's name to
-rename it. The **✕** beside it deletes the group, and so does holding the name.
-Once the song has a group, each track strip gets an extra row at the bottom: tap
-it to send that track to the master or to one of the groups.
+rename it, and the **✕** beside it or holding the name deletes it. Once the
+song has a group, each track strip gets an extra row at the bottom. Tap it to
+send that track to the master or to one of the groups.
 
 A group strip has a fader, pan, mute and solo, and lists the tracks going into
 it.
 
 Everything routed into a group goes through the group's two effects (**fx1**,
-**fx2**) and its fader before the master. For example, put one compressor on
-all the drums, or turn a whole section down with one fader.
+**fx2**) and its fader before the master, so you can put one compressor on all
+the drums or turn a whole section down with one fader.
 
 - A track's **sends** still go straight to the send effects, not through the
   group.
@@ -199,12 +194,13 @@ all the drums, or turn a whole section down with one fader.
 
 ## Sidechain
 
-The compressor, gate and filter can react to another track instead of their own
-input. Set **sidechain** in the effect to the track you want. The classic use is
-a compressor on the bass keyed to the kick, so the bass ducks on every kick.
+The compressor, gate and filter can follow another track instead of their own
+input. Set **sidechain** in the effect to the track you want. The classic use
+is a compressor on the bass keyed to the kick, so the bass ducks on every kick.
 
 The sidechain hears the other track before its fader and mute, so turning the
-kick down doesn't weaken the ducking, and a muted kick still works as a trigger.
+kick down doesn't weaken the ducking, and a muted kick still works as a
+trigger.
 
 ## The two sends
 
@@ -213,10 +209,10 @@ buttons on the master strip show what's on them. Tap to turn one on or off, and
 hold to choose and set up the effect. The send sliders on each track are named
 after what's on the sends.
 
-A send is always fully wet: only the effect comes back, because the dry sound is
-already in the mix. That's why a send's editor has no mix control.
+A send is always fully wet, since the dry sound is already in the mix, so a
+send's editor has no mix control.
 
-Some effects are fun on a send: a pitch shifter fed a little from several
+Some effects are fun on a send, like a pitch shifter fed a little from several
 tracks, or a bitcrusher for a trashed copy of the mix sitting behind it.
 
 ## Tempo and song settings
@@ -229,48 +225,48 @@ Tap the tempo in the song header to open the song's settings.
 - **swing** - how late the offbeats are. **triplet** is the classic shuffle.
   **swing on** chooses whether it swings sixteenths or eighths.
 - **key** - the song's key and scale. The piano roll shades notes outside it,
-  and a new track gets a matching scale. It doesn't change any notes, and
-  doesn't override a track with its own scale set.
+  and a new track gets a matching scale. It doesn't change any notes, or a track
+  with its own scale.
 - **tuning** - how the notes are tuned. Hold it for the list.
 
 The **click** and **link** pages are in the same window.
 
 ## Tunings
 
-Equal temperament is the usual tuning: every semitone the same size. The others
-make some intervals purer and others rougher.
+Equal temperament is the usual tuning, with every semitone the same size. The
+others make some intervals purer and others rougher.
 
-- **just** - fifths and thirds as pure as they get. Great in the key it's
-  tuned to, rough in keys far from it.
+- **just** - fifths and thirds as pure as they get. Great in the key it's tuned
+  to, and rough in keys far from it.
 - **pythagorean** - pure fifths, bright thirds.
 - **meantone** - pure thirds, slightly narrow fifths.
-- **werckmeister** - a well temperament: every key usable, each one a
+- **werckmeister** - a well temperament, where every key works and each is a
   little different.
-- **19 equal** and **24 equal** - more than twelve notes an octave. The octave
-  is 19 or 24 keys up, so the keyboard plays small steps. 24 is quarter tones.
+- **19 equal** and **24 equal** - more than twelve notes an octave. The octave is
+  19 or 24 keys up, so the keyboard plays small steps. 24 is quarter tones.
 
 A tuning is counted from the song's **root**. The root's own note in the middle
 of the keyboard keeps its usual pitch, so an A tuning leaves A at 440 and the
 rest move around it. Change the root and the tuning follows.
 
-A track can have its own: hold the track's name for its settings, where
-**song** means it uses the song's. Drum machines always play in equal temperament.
+A track can have its own tuning in its settings (hold the track's name), where
+**song** means it uses the song's. Drum machines always play in equal
+temperament.
 
-Your own tunings come in as Scala files (.scl): use **Import…** in the file
-menu and it joins the list. The tuning is saved inside the song, so it plays
-the same on a phone that has never seen the file.
+Bring in your own tunings as Scala files (.scl) with **Import…** in the file
+menu and they join the list. The tuning is saved in the song, so it plays the
+same on a phone that has never seen the file.
 
 ## How swing works
 
 Swing moves the offbeats later without changing the order of notes, so a
 loosely played part swings along with everything else.
 
-A track can have its own swing, e.g. swung drums over a straight bass. Set
-it in the track's settings: hold the track's name.
+A track can have its own swing, like swung drums over a straight bass. Set it in
+the track's settings by holding the track's name.
 
 What you record is stored straight. When you play against a swung song, the
-swing is taken back out before the notes are written. The roll shows where you
-meant the notes, playback puts them where you played them, and if you turn the
-swing down later the part is straight rather than lopsided.
+swing is taken back out before the notes are written, so the roll shows where
+you meant the notes and turning the swing down later leaves the part straight.
 
 The click is never swung.

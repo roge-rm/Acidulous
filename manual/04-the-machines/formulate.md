@@ -1,6 +1,6 @@
 # Formulate
 
-> An 8-bit chip synth, and a waveform you can type in as an equation.
+> An 8-bit chip synth, and a waveform you can type in as a formula.
 
 Formulate is a chip synth with pulse, triangle and noise, like the old game
 consoles. It can also play a waveform you write as a formula.
@@ -23,7 +23,7 @@ makes a chord from one voice.
 ## The formula
 
 **formula** is an expression where **x** goes from 0 to 1 over one cycle of the
-wave. `sin(x*2*pi)` is a sine, `x*2-1` is a saw, and `(x<0.3)?1:-1` is a pulse
+wave. `sin(x*2*pi)` is a sine, `x*2-1` is a saw and `(x<0.3)?1:-1` is a pulse
 with 30% duty.
 
 **formulamode** chooses whether the formula is worked out once per cycle or

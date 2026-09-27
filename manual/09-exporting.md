@@ -9,9 +9,9 @@ You can export the whole song, the current scene or stems.
 - **WAV** and **AIFF** - 16 or 24 bit, or 32-bit float.
 - **FLAC** - lossless and smaller.
 - **MP3** and **AAC** - at the bitrate you choose.
-- **MIDI** - the notes, not the sound, with each track's transpose and fixed
-  velocity applied, and its pedal, mod wheel and pressure lanes. Drum tracks go on channel 10 as General MIDI drums, so
-  other programs hear the right sounds.
+- **MIDI** - the notes without the sound, with each track's transpose and fixed
+  velocity applied, and its pedal, mod wheel and pressure lanes. Drum tracks go
+  on channel 10 as General MIDI drums, so other programs hear the right sounds.
 - **Song bundle** - the song and the samples it uses, in one file you can share.
 
 ## Stems
@@ -22,8 +22,8 @@ group's stem instead of having its own, so the stems add up to the mix.
 
 ## Loudness
 
-**loudness** is either **as mixed** or **-14 LUFS**. With -14, the song is
-rendered twice: once to measure it, then again with the gain that brings it to
+**loudness** is either **as mixed** or **-14 LUFS**. With -14 the song is
+rendered twice, once to measure it and again with the gain that brings it to
 -14 LUFS, which is about where streaming services play things. The gain is held
 back if it would push the true peak over -1 dBTP, so a very dynamic song may end
 up a little under -14. Stems get the same gain, so they still add up to the mix.
@@ -35,23 +35,23 @@ when you tap it.
 
 ## Exports are repeatable
 
-Exporting the same song twice gives identical files, because every machine is
+Exporting the same song twice gives identical files, since every machine is
 reset before the render starts.
 
 ## Importing
 
-**Import…** in the file menu takes a file from anywhere on the phone. What
+**Import…** in the file menu takes a file from anywhere on the phone, and what
 happens depends on what it is:
 
-- **A MIDI file** opens a window that shows each part in the file with a
-  machine chosen for it. Tap a machine to change it, or pick **skip** to leave
-  the part out. Drums on channel 10 go to Hexbeat, with each drum moved to the
-  matching sound. Parts that say what instrument they are get a fitting
-  machine: an organ goes to Manual, brass to Brazen.
+- **A MIDI file** opens a window showing each part in the file with a machine
+  picked for it. Tap a machine to change it, or pick **skip** to leave the part
+  out. Drums on channel 10 go to Hexbeat, with each drum moved to the matching
+  sound. Parts that say what instrument they are get a fitting machine, like an
+  organ going to Manual and brass to Brazen.
 - The file is cut into scenes of 4, 8 or 16 bars. A stretch that's the same as
   the one before becomes a repeat, so a loop comes in as one scene played
-  several times. The tempo and time signature come from the file, and where
-  the tempo changes, the scenes after it get a tempo of their own.
+  several times. The tempo and time signature come from the file, and where the
+  tempo changes, the scenes after it get a tempo of their own.
 - Pedals, the mod wheel and pressure come in as lanes, and pitch bend as bends
   on the notes.
 - It opens as a new song and is saved straight away.
@@ -60,10 +60,10 @@ happens depends on what it is:
   bundle's comes in under a new name.
 - **A sound** (WAV, AIFF, FLAC or MP3) goes into the sound library, up to ten
   minutes of it.
-- **A tuning** (a Scala .scl file) joins the tuning list, under key in the
-  tempo window and in each track's settings.
+- **A tuning** (a Scala .scl file) joins the tuning list, under key in the tempo
+  window and in each track's settings.
 
-An imported song never replaces one you've saved: if the name is taken, it gets
+An imported song never replaces one you've saved. If the name is taken, it gets
 a number after it.
 
 ## Sharing

@@ -2,12 +2,12 @@
 > Fewer bits and a lower sample rate, with an unsteady clock if you want it.
 
 **bits** lowers the resolution and **rate** lowers the sample rate. They sound
-quite different, so they have separate controls.
+quite different, so they have their own controls.
 
 ## The controls
 
 - **bits** - 16 down to 1. Adds noise that follows the signal.
-- **rate** - 48 kHz down to 500 Hz. This gives the metallic, lo-fi sound.
+- **rate** - 48 kHz down to 500 Hz, for the metallic lo-fi sound.
 - **jitter** *(extra)* - makes the sample clock unsteady, like old samplers.
 - **tone** *(extra)* - a low-pass after the crushing to take off some of the
   fizz.

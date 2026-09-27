@@ -10,14 +10,14 @@ Drive into clipping, with a tone control after it.
 - **mix** - wet against dry. A little distortion mixed under the clean sound
   thickens it without making it dirty.
 - **mode** *(extra)* - soft, hard, fold or diode. Soft rounds the peaks, hard
-  squares them off, fold makes the sound change character as it gets louder,
-  and diode is lopsided.
-- **bias** *(extra)* - makes the top and bottom of the wave clip differently.
-  This adds the warmer, tube-like harmonics.
+  squares them off, fold changes character as it gets louder and diode is
+  lopsided.
+- **bias** *(extra)* - makes the top and bottom of the wave clip differently,
+  for warmer, tube-like harmonics.
 
 ## Tips
 
-- A little bias is what makes distortion sound "warm".
-- Fold changes the tone as you play harder rather than just getting louder.
-- This effect isn't oversampled (unlike Amp), so it has some rough edges on
+- A little bias is what makes distortion sound warm.
+- Fold changes the tone as you play harder instead of just getting louder.
+- This one isn't oversampled like Amp is, so it has some rough edges on
   purpose.

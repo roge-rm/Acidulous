@@ -1,10 +1,9 @@
 # Shifter
 > Frequency shifting, for metallic and detuned sounds.
 
-This isn't a pitch shifter. A pitch shifter keeps the sound's harmonics in
-proportion. A frequency shifter moves every harmonic up or down by the same
-number of hertz, so the sound stops being in tune with itself. That's what
-makes it useful.
+A frequency shifter moves every harmonic of a sound up or down by the same
+number of hertz, so the sound stops being in tune with itself. A pitch shifter
+keeps them in proportion instead.
 
 ## The controls
 
@@ -18,7 +17,7 @@ makes it useful.
 
 ## Tips
 
-- Under 1 Hz it acts like a very slow, wide modulation. Lovely on pads.
-- A few hertz or more makes held notes sound inharmonic: great on drums, bells
-  and noise, usually wrong on chords.
+- Under 1 Hz it's a very slow, wide modulation. Lovely on pads.
+- A few hertz or more makes held notes sound out of tune with themselves, which
+  is great on drums, bells and noise and usually wrong on chords.
 - Feedback with a small shift turns a hit into a rising metallic ladder.

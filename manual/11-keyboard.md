@@ -13,14 +13,14 @@ The number is lit while letters are notes.
 With play mode on:
 
 - **A S D F G H J K L** are white keys, and **W E T Y U O P** the black keys
-  between them, as on a piano. A is C.
+  between them like on a piano. A is C.
 - **Z** and **X** move down and up an octave. In the editor they move the
   on-screen keyboard too.
 - **C** and **V** make notes softer and harder.
 - Shift plays a note an octave up.
 
-Notes go to the track of the last clip you opened, the same as a MIDI
-keyboard, so they record, and the track's chord, scale and arp apply. On a
+Notes go to the track of the last clip you opened, like a MIDI keyboard, so
+they record and the track's chord, scale and arp apply. On a
 drum machine the keys are its pads, in order.
 
 Space still plays and stops, and anything with Ctrl or Alt still works as a
@@ -63,25 +63,24 @@ In the editor:
 - fold the panel - **P**, or **Alt+V**
 - fold the keyboard - **B**, or **Alt+J**
 
-The first key is for a full keyboard, the second for a small one. Keys
+The first key is for a full keyboard and the second for a small one. Keys
 without Alt or Ctrl only work as shortcuts when play mode is off.
 
 ## Moving around
 
 The arrows, or swipes on a touchpad, move between controls. Tab and Shift+Tab
-do too. A ring shows where you are. **Enter** presses a button or a switch.
+do too, and a ring shows where you are. **Enter** presses a button or a switch.
 
 On a knob or fader, **Enter** grabs it and the ring turns pink. The arrows
 then turn it, Shift+arrows turn it finely, Page Up and Page Down in big steps,
 and Home and End go to either end. **Enter** or **Esc** lets go. **+** and
 **-** turn a knob without grabbing it.
 
-Anything that does something when you hold it has the same choices on
-**Alt+Enter**, or on the Menu key. This is how you reach a clip's settings, a
-scene's menu or a knob's list of values.
+Anything you'd hold has the same choices on **Alt+Enter** or the Menu key,
+like a clip's settings, a scene's menu or a knob's list of values.
 
-A window opened from the keys puts you on its first control. **Esc** closes
-it.
+A window opened from the keys puts you on its first control, and **Esc**
+closes it.
 
 ## In the editor
 
@@ -92,11 +91,11 @@ In the piano roll:
 
 - the arrows move the cursor a grid step, or a semitone. Page Up and Page Down
   move it an octave.
-- **Enter** does what a tap there would: adds a note, or takes one away.
+- **Enter** adds a note or takes one away, like a tap.
   **Delete** removes the note under the cursor.
 - **Shift+Left** and **Shift+Right** shorten and lengthen the note under the
   cursor.
-- **Alt** and an arrow moves the note, with the cursor.
+- **Alt** and an arrow moves the note along with the cursor.
 
 In a note lane, Left and Right walk from note to note, and Up and Down change
 the note's value, finely with Shift.
@@ -104,12 +103,12 @@ the note's value, finely with Shift.
 In an automation lane, Left and Right move a grid step, and Up and Down set
 the value there, adding a point if there isn't one.
 
-Every change is one step of undo, as it would be by touch.
+Every change is one step of undo, like it would be by touch.
 
 ## Changing the keys
 
-**Settings › display › keyboard › keys…** lists every shortcut with its keys.
-Each can have two. Tap a key, or move to it and press Enter, then press the
+**Settings › display › keyboard › keys…** lists every shortcut with its keys,
+and each can have two. Tap a key, or move to it and press Enter, then press the
 new key or combination. **+** adds a second key.
 
 If the new key already belonged to something else, it moves, and the window

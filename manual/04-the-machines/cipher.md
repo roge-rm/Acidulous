@@ -2,9 +2,9 @@
 
 > A vocoder, where you can rearrange which bands drive which.
 
-Cipher is a vocoder. It analyses one sound in frequency bands and puts that
-shape onto another sound. You can also change which analysis band controls
-which output band, which is where the unusual sounds come from.
+Cipher is a vocoder. It splits one sound into frequency bands and puts that
+shape onto another sound. You can also change which band controls which, and
+that's where the unusual sounds come from.
 
 ## The two sides
 
@@ -15,7 +15,7 @@ built in (an oscillator with **detune**, **pw**, **sub**, **noise** and
 
 ## The bands
 
-- **bands** - how many. Fewer sounds robotic but clear; more is smoother but
+- **bands** - how many. Fewer sounds robotic but clear, and more is smoother but
   less clear.
 - **low**, **high** and **slope** - the range the bands cover and how they're
   spread over it.
@@ -23,15 +23,15 @@ built in (an oscillator with **detune**, **pw**, **sub**, **noise** and
 
 ## The band map
 
-Normally band 1 drives band 1. **remap** lets you change that: reverse the
-order so bright sounds come out dark, spread it wider, **freeze** the current
-shape while the carrier keeps playing, or **smear** neighbouring bands together.
+Normally band 1 drives band 1. **remap** changes that: reverse the order so
+bright sounds come out dark, spread it wider, **freeze** the current shape
+while the carrier keeps playing, or **smear** neighbouring bands together.
 
 **role**, **dry** and **wet** set which side is which and how much of each you
-hear. **unvoiced** handles consonants so the words stay understandable.
+hear. **unvoiced** handles consonants so the words stay clear.
 
-**attack**, **release** and **smear** set how quickly each band follows.
-Fast is clear but can chatter; slow is smooth but can slur.
+**attack**, **release** and **smear** set how quickly each band follows. Fast
+is clear but can chatter, and slow is smooth but can slur.
 
 ## Modulation
 
@@ -39,7 +39,7 @@ Two envelopes and two LFOs that can sync to the tempo, into eight matrix rows.
 
 Three sources come from the modulator itself: its level (**loud**), its
 brightness (**bright**) and its **pitch** (pitch needs **follow** on). For
-example, loudness on **smear** makes the words tighten up as they get louder.
+example, loudness on **smear** tightens the words up as they get louder.
 
 The destinations are the map controls (**shift**, **stretch**, **remap**,
 **freeze**, **smear**, **q** and the band edges) plus the carrier's pitch and

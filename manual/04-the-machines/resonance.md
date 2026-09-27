@@ -3,7 +3,7 @@
 > Eight struck objects that ring into each other.
 
 Resonance is modal percussion. Each of its eight pads is an object (a drum, a
-bar, a bell and so on) that rings at a set of frequencies, and playing a pad
+bar, a bell, etc.) that rings at a set of frequencies, and playing a pad
 strikes it. Nothing is sampled.
 
 ## A pad
@@ -16,8 +16,8 @@ strikes it. Nothing is sampled.
 - **inharm** - stretches the spacing.
 - **decay** and **damp** - how long it rings, and whether the highs die first.
 - **hard** - how hard the beater is (how much top end).
-- **hit** - where you strike it. Striking in a different place brings some
-  partials out and hides others, so it changes the sound a lot.
+- **hit** - where you strike it. Different places bring some partials out and
+  hide others, so it changes the sound a lot.
 - **bend** and **bendtime** - a drop in pitch after the hit, like a tom.
 - **drive**, **pan**, **level** and **couple**.
 
@@ -30,5 +30,5 @@ room. **humanise** varies each hit a little.
 ## Tips
 
 - Set **hit** and **shape** before tuning.
-- Go easy on coupling. A little sounds like a room; a lot feeds back.
+- Go easy on coupling. A little sounds like a room, and a lot feeds back.
 - With long decays you can play melodies on the pads.

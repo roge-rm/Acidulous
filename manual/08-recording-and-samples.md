@@ -11,11 +11,10 @@ pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
     off you are, and turns green within four cents. It listens before the input
     effects, and shows nothing unless it's sure of the note.
   - **printed into the take** holds two effects that are recorded into the
-    file, e.g. a guitar amp. Effects on a *track* can be changed any time
+    file, like a guitar amp. Effects on a track can be changed any time
     instead.
 - **Edit** - play the take back, trim the ends, set the level and cut low
-  rumble. **norm** and
-  **rev** at the top normalise and reverse the whole file.
+  rumble. **norm** and **rev** at the top normalise and reverse the whole file.
 - **Library** - everything you've recorded or imported.
 
 The result is a file, so the same recording can be used by more than one
@@ -32,23 +31,23 @@ the way in, so songs load quickly.
 arm record on the transport and press play. The song plays while you record,
 and the other lanes keep playing.
 
-When you stop, the take is cut at the scene lines. One recording over the
-whole song becomes one cell per scene, all pointing at the same file, and cells
-are created in scenes where the track was empty. The full recording also stays
-in the sound library, so you can undo the split and place it by hand.
+When you stop, the take is cut at the scene lines. One recording over the whole
+song becomes one cell per scene, all pointing at the same file, with new cells
+in scenes where the track was empty. The full recording also stays in the sound
+library, so you can undo the split and place it by hand.
 
-Trimming, fades, crossfades, flattening lanes and tempo following are covered
-on **Bias**'s page. None of them change the file.
+Trimming, fades, crossfades, flattening lanes and tempo following are on
+**Bias**'s page. None of them change the file.
 
 Takes can be up to half an hour. Anything over two minutes is converted once in
 the background and streamed from storage, so there may be a short wait the first
 time a long take is used.
 
-Only one lane records at a time. Arming a second lane disarms the first.
+Only one lane records at a time, and arming a second lane disarms the first.
 
-If the recorder fell behind and there's a gap in the take, it isn't split, and
-the whole take is kept in the library. If the transport never played, nothing
-was recorded against a scene, and the app tells you.
+If the recorder fell behind and left a gap in the take, it isn't split, and the
+whole take is kept in the library. If the transport never played, nothing was
+recorded against a scene, and the app tells you.
 
 ## Machines that use audio
 
@@ -60,4 +59,4 @@ was recorded against a scene, and the app tells you.
 - **Molt** - a sung take, tuned by the piano roll.
 - **Cipher** and **Filament** can use the live input.
 - **Bias** - four lanes of recordings along the song. Its recordings belong to
-  its cells rather than to the machine.
+  its cells instead of the machine.

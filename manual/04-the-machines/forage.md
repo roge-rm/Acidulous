@@ -8,21 +8,21 @@ help it fit.
 ## A pad
 
 - **level**, **pan**, **pitch** and **decay**.
-- **start** and **end** - which part of the file plays. One long recording can
-  feed several pads this way.
+- **start** and **end** - which part of the file plays, so one long recording
+  can feed several pads.
 - **play** - once, loop or hold.
 - **reverse** - forwards or backwards.
 - **cutoff**, **reso** and **mode** (low or band pass), and **crush** for bit
   reduction.
 - **pitch env** and its **decay**, under punch - a pitch drop, so a sample can
   fall like a drum does.
-- **choke** - pads in the same choke group cut each other off, like an open
-  hat stopping when the closed hat plays.
+- **choke** - pads in the same choke group cut each other off, like an open hat
+  stopping when the closed hat plays.
 
 ## Slicing one file
 
 There's a fourteenth slot above the pads for one file shared by the whole
-machine. Load a drum break into it, ask for thirteen slices, and each pad plays
+machine. Load a drum break into it, ask for thirteen slices and each pad plays
 one piece of it.
 
 ## Tips
@@ -30,5 +30,4 @@ one piece of it.
 - Put your hats in a choke group.
 - Trim silence off the start of a sample, or it will play late.
 - Automate **start** across a bar to turn one hit into a stutter.
-- The sound library won't let you delete a file a track is still using without
-  telling you first.
+- The sound library warns you before deleting a file a track still uses.

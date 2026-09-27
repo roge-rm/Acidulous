@@ -13,8 +13,8 @@ whole map at once.
 
 - **keyfade** and **velfade** - crossfades between neighbouring zones so you
   don't hear the joins.
-- **scan** and **scanamt** - move smoothly through the velocity layers with a
-  knob instead of velocity. Put scan on the mod wheel to blend a soft and a loud
+- **scan** and **scanamt** - move through the velocity layers with a knob
+  instead of velocity. Put scan on the mod wheel to blend a soft and a loud
   sample.
 
 ## Playing
@@ -32,5 +32,5 @@ two envelopes, two LFOs, glide and voice modes.
 
 - Set the crossfades before judging how a map sounds.
 - Check the root notes. A wrong root puts everything out of tune.
-- Big maps use a lot of memory. The sound library tells you what a song is
-  using before you delete anything.
+- Big maps use a lot of memory. The sound library shows what a song is using
+  before you delete anything.

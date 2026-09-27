@@ -2,8 +2,8 @@
 
 > Granular clouds from a file or the live input, whose grains can spawn more grains.
 
-Pollen plays a sound as a cloud of short grains. The source is either a file you
-load or the live input, recorded into a loop as you play.
+Pollen plays a sound as a cloud of short grains. The source is a file you load
+or the live input, recorded into a loop as you play.
 
 ## The cloud
 
@@ -20,20 +20,20 @@ load or the live input, recorded into a loop as you play.
 ## Live input
 
 **source** switches to the input. **buffer** sets how much is kept, **freeze**
-holds it, and **capture** grabs what's in it. A live buffer isn't saved with
-the song and is silent in an export, and the panel reminds you of that.
+holds it and **capture** grabs what's in it. A live buffer isn't saved with the
+song and is silent in an export, and the panel reminds you of that.
 
 ## Pollination
 
-**bloom** and **generations**: grains can spawn more grains at a related
-position and pitch, up to the depth you set. A little thickens the sound; a lot
-turns one note into an evolving texture. **drift** and **mutate** set how far the
-new grains wander.
+**bloom** and **generations** let grains spawn more grains at a related
+position and pitch, up to the depth you set. A little thickens the sound, and a
+lot turns one note into a changing texture. **drift** and **mutate** set how far
+the new grains wander.
 
 ## Tips
 
-- Density and size work against each other: long grains at high density make a
-  wall, short ones make a texture.
+- Density and size work against each other. Long grains at high density make a
+  wall, and short ones make a texture.
 - Use **snap** on anything with a beat.
 - The pitch scatter can be locked to a scale so the cloud stays in key.
-- Under lean quality (Settings) the cloud uses half as many grains.
+- On lean quality (Settings) the cloud uses half as many grains.

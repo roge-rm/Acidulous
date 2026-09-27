@@ -1,17 +1,17 @@
 # Amp
 > A guitar amp with a cabinet you can resize.
 
-A guitar amp modelled as the full chain: a preamp, a tone stack, a power stage
-and a speaker cabinet. The tone stack sits between the preamp and the power
-stage, like on a real amp.
+A guitar amp with the full chain: a preamp, a tone stack, a power stage and a
+speaker cabinet. The tone stack sits between the preamp and the power stage like
+on a real amp.
 
 ## The controls
 
 - **drive** and **bias** - the preamp. Bias makes the clipping lopsided for an
   older, woollier sound.
 - **bass**, **mid**, **treble** and **stack** - these interact like a real amp's
-  tone controls: bass and treble up scoops the mids. **stack** (us, uk or modern)
-  changes the whole character of the amp, not just the tone.
+  tone controls, so bass and treble up scoops the mids. **stack** (us, uk or
+  modern) changes the whole character of the amp.
 - **presence** - pushes the power stage harder in the upper mids.
 - **master** - how hard the power stage is driven. Low drive with high master
   sounds different from the other way round at the same volume.
@@ -29,4 +29,4 @@ stage, like on a real amp.
 - Set **drive** and **master** before the tone controls.
 - If it sounds harsh, move the mic with **edge** before turning down treble.
 - Keep **mix** low on a bass or synth for some grit without losing the low end.
-- Amp is the most CPU-hungry effect in the app. One is fine; a dozen is a lot.
+- Amp uses the most CPU of any effect. One is fine, a dozen is a lot.

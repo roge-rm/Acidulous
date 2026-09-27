@@ -2,13 +2,13 @@
 
 > The big drum box, with a bus compressor the kick ducks.
 
-Genesis is the big drum machine, in the style of the boxes that house and
-techno were made on. Twelve voices, more weight than Hexbeat and two extras.
+Genesis is the big drum machine, in the style of the boxes house and techno
+were made on. It has twelve voices, more weight than Hexbeat and two extras.
 
 ## Drift
 
-Real analogue drum machines are never exactly the same twice. **drift** adds a
-bit of that variation from hit to hit.
+Real analogue drum machines are never exactly the same twice, and **drift**
+adds a bit of that variation from hit to hit.
 
 ## The bus compressor
 
@@ -28,9 +28,9 @@ the kit pumps with the kick.
 
 ## Tips
 
-- Set **duck** before the levels, because it changes how loud everything else
+- Set **duck** before the levels, since it changes how loud everything else
   sounds.
-- If the kick disappears on a phone speaker, add kick **drive** rather than
+- If the kick disappears on a phone speaker, add kick **drive** instead of
   level.
-- Keep drift low: enough that bars differ, not so much that the hats sound
+- Keep drift low, enough that bars differ but not so much that the hats sound
   broken.

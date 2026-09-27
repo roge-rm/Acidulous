@@ -2,21 +2,21 @@
 A song has up to sixteen tracks. Each track has one machine on it: a synth, a
 drum machine, a sampler, etc. You can have multiple of the same machine in a song.
 
-<!-- desktop: On a computer, a click is a tap and a right-click is a hold - so is holding the button down. The mouse wheel scrolls the grids, sideways with Shift held, and Ctrl and the wheel zoom them. **F11** switches full screen on and off. -->
+<!-- desktop: On a computer a click is a tap, and a right-click or holding the button down is a hold. The mouse wheel scrolls the grids, sideways with Shift held, and Ctrl and the wheel zoom them. **F11** switches full screen on and off. -->
 
 ## The song grid
 
-The first screen is the song grid. Tracks run down the left, one per row, and
-scenes run across the top, one per column. Where a track and a scene meet is a
-clip: the notes that track plays in that scene.
+The first screen is the song grid. Tracks run down the left and scenes run
+across the top. Where a track and a scene meet is a clip, the notes that track
+plays in that scene.
 
-The bar along the bottom is on every screen. Its right end always has the same
-five buttons in the same order: undo, redo, mixer, record and play.
+The bar along the bottom is on every screen, and its right end always has
+undo, redo, mixer, record and play.
 
 ## Making a sound
 
 1. Tap **+ track** and pick a machine. A new song already has one.
-2. Tap the empty clip where the track meets the first scene. This opens the
+2. Tap the empty clip where the track meets the first scene to open the
    editor.
 3. Play the keyboard at the bottom. Tap the patch name at the top of the panel
    to try the factory sounds.
@@ -29,22 +29,21 @@ A scene is a section of the song, like an intro or a verse. All the clips in a
 scene play together, and the scene repeats as many times as its header says
 before the song moves on.
 
-Clips in a scene don't have to be the same length. A one-bar drum clip under a
-four-bar chord clip just loops four times.
+Clips in a scene can be different lengths. A one-bar drum clip under a four-bar
+chord clip just loops four times.
 
 ## Saving
 
 The song you're working on is saved as you go and comes back next time you open
-the app. **save** in the header saves it under its name. **file** has new song,
-save as and your other songs.
+the app. **save** in the header saves it under its name, and **file** has new
+song, save as and your other songs.
 
 ## The demo song
 
-The first time the app opens it loads **Squelch**, an acid house track, to look
-around in and pull apart. It uses most of what the app can do:
+The first time you open the app it loads **Squelch**, an acid house track to
+look around in and pull apart. It uses most of what the app can do:
 
-- Two acid lines with accents, slides and filter sweeps, and step locks in the
-  drop.
+- Two acid lines with accents, slides, filter sweeps and step locks.
 - Perform effects recorded into the song, and snare rolls that only play while
   fill is held.
 - Percussion with chances, ratchets and hits that land every other pass.
@@ -53,4 +52,4 @@ around in and pull apart. It uses most of what the app can do:
 - A pad ducked under the kick, a drum group with its own compressor and
   effects on the master.
 
-It's saved with your songs, so you can open it again from **file · Songs…**.
+You can open it again any time from **file · Songs…**.

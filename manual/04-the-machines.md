@@ -3,30 +3,30 @@ Each track holds one machine and you can use multiple of the same machine.
 
 ## Bass and lead
 
-- [**Reflux**](04-the-machines/reflux.md) - acid bass. One oscillator and a filter that screams. Accent comes from velocity and slide from overlapping notes.
-- [**Trinity**](04-the-machines/trinity.md) - the all-round poly synth. Three wavetable oscillators, two filters and a mod matrix.
+- [**Reflux**](04-the-machines/reflux.md) - acid bass. One oscillator and a filter that screams. Play harder for accent and overlap notes to slide.
+- [**Trinity**](04-the-machines/trinity.md) - the all-round poly synth, with three wavetable oscillators, two filters and a mod matrix.
 - [**Ratio**](04-the-machines/ratio.md) - six-operator FM, with a knob that morphs between two algorithms.
 
 ## Keys and pads
 
-- [**Cumulus**](04-the-machines/cumulus.md) - pads built from a spectrum of partials. Smooth and huge.
+- [**Cumulus**](04-the-machines/cumulus.md) - big, smooth pads built from a spectrum of partials.
 - [**Manual**](04-the-machines/manual.md) - an organ with two manuals, pedals, four models and a rotary cabinet.
-- [**Formulate**](04-the-machines/formulate.md) - an 8-bit chip synth with tracker tables and a waveform you can type in as an equation.
+- [**Formulate**](04-the-machines/formulate.md) - an 8-bit chip synth with tracker tables, and a waveform you can type in as a formula.
 
 ## Modelled instruments
 
-These model how the real instrument works, so they respond like one.
+These copy how the real instrument works, so they play like one.
 
 - [**Filament**](04-the-machines/filament.md) - strings you pluck, bow or blow, with a body and sympathetic strings.
 - [**Brazen**](04-the-machines/brazen.md) - brass, from trumpet to tuba.
-- [**Timber**](04-the-machines/timber.md) - woodwinds: reeds and flutes.
+- [**Timber**](04-the-machines/timber.md) - woodwinds, reeds and flutes.
 - [**Resonance**](04-the-machines/resonance.md) - eight struck objects that ring into each other.
 
 ## Drums
 
 - [**Hexbeat**](04-the-machines/hexbeat.md) - synthesized drums in the style of the classic small boxes.
 - [**Genesis**](04-the-machines/genesis.md) - the big drum box, with a kick that ducks its own bus.
-- [**Forage**](04-the-machines/forage.md) - a sample drum machine. Thirteen pads for your own sounds, each with a filter and envelope.
+- [**Forage**](04-the-machines/forage.md) - a sample drum machine with thirteen pads for your own sounds, each with a filter and envelope.
 - [**Dice**](04-the-machines/dice.md) - a loop slicer with chance on every slice.
 
 ## Samples and voice
@@ -42,18 +42,18 @@ These model how the real instrument works, so they respond like one.
 
 ## Audio
 
-- [**Bias**](04-the-machines/bias.md) - a four-track for recordings. Four lanes per cell, and a recording made over the song is cut at the scene lines. Its patches are tape types (cassette, reel, telephone and so on) that colour the sound on the way out.
+- [**Bias**](04-the-machines/bias.md) - a four-track for recordings, with four lanes per cell. A recording made over the song is cut at the scene lines. Its patches are tape types (cassette, reel, telephone, etc.) that colour the sound on the way out.
 
 ## Velocity
 
-Every machine plays quieter the softer you play. At full velocity a note is at
-full volume; at half it's 12 dB down, at a quarter 24 dB down, and the softest
-notes are close to silent. **vel** on each panel sets how much velocity
-matters. At zero, every note plays at full volume, which is how a real organ
-behaves. On Genesis, Resonance and Dice, **accent** does the same job.
+Every machine plays quieter the softer you play. A note at half velocity is
+12 dB down, at a quarter it's 24 dB down, and the softest notes are close to
+silent. **vel** on each panel sets how much velocity matters, and at zero every
+note plays at full volume, like a real organ. On Genesis, Resonance and Dice,
+**accent** does the same job.
 
-If a controller gives you too much or too little, fix it with **velocity** in
-the MIDI window rather than on every machine.
+If a controller plays too loud or too soft, fix it with **velocity** in the
+MIDI window instead of on every machine.
 
 ## Patches
 

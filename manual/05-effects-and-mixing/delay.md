@@ -12,15 +12,15 @@ stays a dotted eighth when the tempo changes.
 - **tone** - a low-pass on the echoes, so each repeat is duller than the last.
 - **pingpong** - how much the echoes bounce between left and right.
 - **mix** - how much of the echo you hear.
-- **duck** *(extra)* - turns the echoes down while the dry sound is playing and
+- **duck** *(extra)* - turns the echoes down while the dry sound plays and
   brings them back in the gaps.
 - **wobble** *(extra)* - makes the delay time drift slowly like a tape machine.
-  A little warms it up; more detunes the echoes.
+  A little warms it up, and more detunes the echoes.
 
 ## Tips
 
 - Bring **tone** down to a few kHz so long feedback fades into the background
   instead of piling up.
-- Use **duck** rather than lowering the mix to stop the delay swamping a part.
+- Use **duck** instead of lowering the mix to stop the delay swamping a part.
 - On a send the delay is always fully wet, and each track's send slider sets how
   much goes to it.

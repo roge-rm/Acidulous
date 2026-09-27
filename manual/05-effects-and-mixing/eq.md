@@ -17,6 +17,6 @@ A low shelf, a sweepable mid band and a high shelf.
 ## Tips
 
 - Cutting usually helps more than boosting.
-- Use a narrow Q to find and cut a ringing frequency (boost, sweep until it's
-  worst, then cut). Use a broad Q and small moves to change the tone.
+- To get rid of a ringing frequency, boost with a narrow Q, sweep until it's
+  worst, then cut. For changing the tone, use a broad Q and small moves.
 - Try **tilt** first when something sounds too dark or too thin.

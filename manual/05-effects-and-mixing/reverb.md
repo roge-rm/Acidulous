@@ -6,8 +6,8 @@ A reverb with the usual size, damping and predelay, plus some extras.
 ## The controls
 
 - **size** - how big the space is.
-- **damp** - how absorbent the room is. Damped sounds like carpet, undamped like
-  tiles.
+- **damp** - how absorbent the room is. Damped sounds like carpet and undamped
+  like tiles.
 - **tone** - a low-pass on the reverb tail.
 - **predelay** - a gap before the reverb starts, up to 200 ms.
 - **mix** - wet against dry.
@@ -18,7 +18,7 @@ A reverb with the usual size, damping and predelay, plus some extras.
   rising.
 - **bits** and **crush** *(extra)* - bit reduction and sample-rate reduction on
   the tail only.
-- **wobble** *(extra)* - makes the tail drift slightly so it's never quite
+- **wobble** *(extra)* - makes the tail drift a little so it's never quite
   still.
 
 ## Tips
