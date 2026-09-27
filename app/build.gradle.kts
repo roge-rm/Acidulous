@@ -152,15 +152,21 @@ android {
         // same code; panels and windows show one tab at a time; a scene's
         // header in clip mode starts its clips and stops the rest together; a
         // take plays with a playhead; a crash auditioning a sound is fixed.
+        // 0.9.9: the Sound window's edits show and play before apply; the mic
+        // raw or clean; a scene's header follows the loop pill; Bias's
+        // automation lines up with the tape; crash fixes from a bug hunt:
+        // the input opening, notes lost between threads, reads of freed
+        // memory, bad audio files and songs, the organ's top wheels, and
+        // Harmonizer and Shifter feedback running away.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 23
+        val release = 24
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.9.8"
+        versionName = "0.9.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
