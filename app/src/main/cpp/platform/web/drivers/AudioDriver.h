@@ -31,6 +31,13 @@
 // opens at start-up would send every patch to an empty rack. A thread of the
 // driver's own renders blocks into nothing, a few hundred a second, until the
 // worklet's first quantum takes over; the hand-over is the two atomics below.
+//
+// **The buffer setting is the context's latency hint** - interactive,
+// balanced, playback for tight, balanced, safe - which the browser turns into
+// how much it buffers ahead of the speakers. It is fixed when a context is
+// made, so a change makes a new one (reopen), as the desktop reopens its
+// device. How late sound actually is, the browser says: the context's base
+// and output latency, which the page reads for the driver (acid_latency_watch).
 
 class AudioDriver {
   public:
@@ -83,9 +90,14 @@ class AudioDriver {
 
     bool isRunning() const { return context != 0 && !detached.load(); }
 
-    void setBufferBursts(int32_t bursts) { bufferBursts = bursts; }
+    void setBufferBursts(int32_t bursts);
     int32_t getBufferBursts() const { return bufferBursts; }
-    int32_t getBufferFrames() const { return kQuantum * 2; }
+    /** The browser's own figure once it has given one; two quanta until then. */
+    int32_t getBufferFrames() const {
+        const double s = latencySeconds.load(std::memory_order_relaxed);
+        const int32_t rate = actualSampleRate > 0 ? actualSampleRate : acidulous::kSampleRate;
+        return s > 0.0 ? static_cast<int32_t>(s * rate + 0.5) : kQuantum * 2;
+    }
 
     int32_t getSampleRate() const { return actualSampleRate; }
     int32_t getFramesPerBurst() const { return kQuantum; }
@@ -123,7 +135,11 @@ class AudioDriver {
 
     // The worklet's callbacks; public only so the C trampolines can reach them.
     void render(const float *inLeft, const float *inRight, float *left, float *right, int32_t numFrames);
-    void connect(int context);
+    void connect(int context, void *stream);
+    /** Whether a worklet's context is still this driver's, and not one a reopen left behind. */
+    bool isCurrent(int ctx) const { return ctx != 0 && ctx == context.load(std::memory_order_relaxed); }
+    /** Where the page writes the context's latency, in seconds. */
+    std::atomic<double> latencySeconds{0.0};
 
   private:
     static constexpr int32_t kQuantum = 128;
@@ -131,7 +147,7 @@ class AudioDriver {
     static constexpr float kMeterDecay = 0.7f;
     static AudioDriver *sLive;
 
-    int context = 0; // EMSCRIPTEN_WEBAUDIO_T; nought is none
+    std::atomic<int> context{0}; // EMSCRIPTEN_WEBAUDIO_T; nought is none. Read on the worklet's thread
     int node = 0;
     std::function<void(float *, float *, unsigned long)> callback;
 
@@ -151,6 +167,11 @@ class AudioDriver {
 
     /** The real end, on the page's thread: the context and the worklet gone. */
     void close();
+    /** A context with the latency hint the buffer setting asks for, its worklet, and the stand-in until then. */
+    bool openContext();
+    /** The context and worklet exchanged for new ones: see the top of this file. */
+    void reopen();
+    int32_t generation = 0;
     std::atomic<bool> detached{false};
     /** The worklet is inside a quantum, which stop() waits out. */
     std::atomic<bool> inCallback{false};

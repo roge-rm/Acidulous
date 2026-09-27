@@ -20,6 +20,8 @@ EM_JS_DEPS(acid_input, "$emscriptenGetAudioObject");
 
 EM_JS(void, acid_input_attach, (int context, int node), {
     const s = (globalThis.acidInput ??= {});
+    // A reopened stream: the microphone goes to the new context, not the old.
+    if (s.source) { s.source.disconnect(); s.source = null; }
     s.context = emscriptenGetAudioObject(context);
     s.node = emscriptenGetAudioObject(node);
     s.connect && s.connect();
@@ -46,6 +48,33 @@ EM_JS(void, acid_input_want, (int on), {
     }
 });
 
+// The context's own latency, which only the page's thread can read: written
+// to the driver every second until the context closes.
+EM_JS(void, acid_latency_watch, (int context, double *out), {
+    const c = emscriptenGetAudioObject(context);
+    const read = () => {
+        if (c.state === 'closed') { clearInterval(timer); return; }
+        _acid_latency_set(out, (c.baseLatency || 0) + (c.outputLatency || 0));
+    };
+    const timer = setInterval(read, 1000);
+    read();
+});
+
+/**
+ * Really closed. Emscripten's destroy only suspends, which keeps the device
+ * open - and called after a close it throws, suspending a closed context - so
+ * this stands in for it; the handle stays in Emscripten's table, a closed
+ * context's worth for each reopen.
+ */
+EM_JS(void, acid_context_close, (int context), {
+    const c = emscriptenGetAudioObject(context);
+    c && c.state !== 'closed' && c.close().catch(() => {});
+});
+
+extern "C" EMSCRIPTEN_KEEPALIVE void acid_latency_set(double *out, double seconds) {
+    reinterpret_cast<std::atomic<double> *>(out)->store(seconds, std::memory_order_relaxed);
+}
+
 namespace {
 
 /**
@@ -61,8 +90,22 @@ namespace {
 std::atomic<double> clockMs{0.0};
 constexpr auto kClockTick = std::chrono::microseconds(250);
 
-/** The audio thread's own stack, which Emscripten needs handed to it. */
-alignas(16) uint8_t workletStack[128 * 1024];
+/**
+ * The audio thread's own stack, which Emscripten needs handed to it - two, so
+ * a reopened stream's worklet starts on a stack the old one is not on. With
+ * each, what the worklet's callbacks are handed: the driver, and the context
+ * they belong to, so one a reopen left behind leaves the driver alone.
+ */
+constexpr int kStreams = 2;
+alignas(16) uint8_t workletStacks[kStreams][128 * 1024];
+struct Stream {
+    AudioDriver *driver = nullptr;
+    int context = 0;
+};
+Stream streams[kStreams];
+
+/** The buffer setting as a latency hint: see the top of AudioDriver.h. */
+const char *latencyHint(int32_t bursts) { return bursts <= 1 ? "interactive" : bursts <= 2 ? "balanced" : "playback"; }
 
 int64_t nowNanos() { return static_cast<int64_t>(emscripten_get_now() * 1e6); }
 
@@ -80,19 +123,27 @@ bool onProcess(int numInputs, const AudioSampleFrame *inputs, int numOutputs, Au
         inLeft = inputs[0].data;
         inRight = inputs[0].numberOfChannels > 1 ? inputs[0].data + n : inLeft;
     }
-    static_cast<AudioDriver *>(user)->render(inLeft, inRight, left, right, n);
+    auto *stream = static_cast<Stream *>(user);
+    if (!stream->driver->isCurrent(stream->context)) {
+        std::fill(out.data, out.data + static_cast<size_t>(n) * out.numberOfChannels, 0.0f);
+        return false; // left behind by a reopen: let it go
+    }
+    stream->driver->render(inLeft, inRight, left, right, n);
     return true; // keep the node alive
 }
 
 void onProcessorCreated(EMSCRIPTEN_WEBAUDIO_T context, bool success, void *user) {
+    auto *stream = static_cast<Stream *>(user);
+    if (!stream->driver->isCurrent(context)) return;
     if (!success) {
         LOGE("the worklet processor could not be created");
         return;
     }
-    static_cast<AudioDriver *>(user)->connect(context);
+    stream->driver->connect(context, stream);
 }
 
 void onThreadStarted(EMSCRIPTEN_WEBAUDIO_T context, bool success, void *user) {
+    if (!static_cast<Stream *>(user)->driver->isCurrent(context)) return;
     if (!success) {
         LOGE("the audio worklet did not start: is the page cross-origin isolated?");
         return;
@@ -132,22 +183,8 @@ bool AudioDriver::start() {
     carryOffset = 0;
     framesWritten = 0;
     anchors[0].frame = anchors[1].frame = -1;
-
-    EmscriptenWebAudioCreateAttributes attrs{};
-    attrs.latencyHint = "interactive";
-    attrs.sampleRate = static_cast<uint32_t>(acidulous::kSampleRate);
-    attrs.renderSizeHint = AUDIO_CONTEXT_RENDER_SIZE_DEFAULT;
-    context = emscripten_create_audio_context(&attrs);
-    if (context == 0) {
-        LOGE("no AudioContext");
-        return false;
-    }
-    actualSampleRate = emscripten_audio_context_sample_rate(context);
-    sLive = this;
     detached = false;
-    workletOwns = false;
-    standbyStop = false;
-    standbyThread = std::thread([this] { standby(); });
+    if (!openContext()) return false;
     clockStop = false;
     clockThread = std::thread([this] {
         while (!clockStop.load(std::memory_order_relaxed)) {
@@ -155,18 +192,69 @@ bool AudioDriver::start() {
             std::this_thread::sleep_for(kClockTick);
         }
     });
-    emscripten_start_wasm_audio_worklet_thread_async(context, workletStack, sizeof workletStack, onThreadStarted, this);
-    LOGI("audio context %d at %d Hz; the worklet follows", context, actualSampleRate);
     return true;
 }
 
-void AudioDriver::connect(int ctx) {
+bool AudioDriver::openContext() {
+    EmscriptenWebAudioCreateAttributes attrs{};
+    attrs.latencyHint = latencyHint(bufferBursts);
+    attrs.sampleRate = static_cast<uint32_t>(acidulous::kSampleRate);
+    attrs.renderSizeHint = AUDIO_CONTEXT_RENDER_SIZE_DEFAULT;
+    const int made = emscripten_create_audio_context(&attrs);
+    if (made == 0) {
+        LOGE("no AudioContext");
+        return false;
+    }
+    context = made;
+    actualSampleRate = emscripten_audio_context_sample_rate(made);
+    sLive = this;
+    latencySeconds = 0.0;
+    acid_latency_watch(made, reinterpret_cast<double *>(&latencySeconds));
+    workletOwns = false;
+    standbyStop = false;
+    standbyThread = std::thread([this] { standby(); });
+    const int slot = generation++ % kStreams;
+    streams[slot] = {this, made};
+    emscripten_start_wasm_audio_worklet_thread_async(made, workletStacks[slot], sizeof workletStacks[slot], onThreadStarted, &streams[slot]);
+    LOGI("audio context %d at %d Hz, latency hint %s; the worklet follows", made, actualSampleRate, attrs.latencyHint);
+    return true;
+}
+
+void AudioDriver::setBufferBursts(int32_t bursts) {
+    if (bursts == bufferBursts) return;
+    bufferBursts = bursts;
+    if (context != 0) reopen();
+}
+
+void AudioDriver::reopen() {
+    // The old stream let go of the engine as stop() does, then closed; the
+    // stand-in renders until the new worklet's first quantum, as at start-up.
+    const bool wasDetached = detached.exchange(true);
+    while (inCallback.load() || standbyBusy.load()) {
+    }
+    standbyStop = true;
+    if (standbyThread.joinable()) standbyThread.join();
+    const int old = context;
+    const bool playing = emscripten_audio_context_state(old) == 1;
+    context = 0;
+    if (node != 0) emscripten_destroy_web_audio_node(node);
+    node = 0;
+    acid_context_close(old);
+    carryFrames = 0;
+    carryOffset = 0;
+    detached.store(wasDetached);
+    if (!openContext()) return;
+    // Sound was already allowed: no need to wait for the next touch.
+    if (playing) emscripten_resume_audio_context_sync(context);
+}
+
+void AudioDriver::connect(int ctx, void *stream) {
     int outputChannels[1] = {2};
     EmscriptenAudioWorkletNodeCreateOptions opts{};
     opts.numberOfInputs = 1;
     opts.numberOfOutputs = 1;
     opts.outputChannelCounts = outputChannels;
-    node = emscripten_create_wasm_audio_worklet_node(ctx, "acidulous", &opts, onProcess, this);
+    node = emscripten_create_wasm_audio_worklet_node(ctx, "acidulous", &opts, onProcess, stream);
     emscripten_audio_node_connect(node, ctx, 0, 0);
     acid_input_attach(ctx, node);
     LOGI("stream open: Web Audio worklet, %d Hz, quantum %d frames, engine block %d frames",
@@ -262,10 +350,11 @@ void AudioDriver::close() {
     clockStop = true;
     if (clockThread.joinable()) clockThread.join();
     if (context == 0) return;
-    if (node != 0) emscripten_destroy_web_audio_node(node);
-    emscripten_destroy_audio_context(context);
-    node = 0;
+    const int old = context;
     context = 0;
+    if (node != 0) emscripten_destroy_web_audio_node(node);
+    acid_context_close(old);
+    node = 0;
     if (sLive == this) sLive = nullptr;
     LOGI("stream stopped");
 }
