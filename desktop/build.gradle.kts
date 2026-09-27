@@ -258,8 +258,8 @@ registerDeb("arm64", debArm64Runtime, buildEngineArm64, nativeArm64)
 // only needs glibc 2.35. Audio and MIDI load the system's libraries at run
 // time, like the package does.
 //
-//   ./gradlew :desktop:appImageAmd64   build/appimage/Acidulous-<version>-x86_64.AppImage
-//   ./gradlew :desktop:appImageArm64   build/appimage/Acidulous-<version>-aarch64.AppImage
+//   ./gradlew :desktop:appImageAmd64   build/appimage/acidulous-<version>-x86_64.AppImage
+//   ./gradlew :desktop:appImageArm64   build/appimage/acidulous-<version>-aarch64.AppImage
 //
 // Downloads are pinned and checked against their SHA-256.
 
@@ -323,10 +323,10 @@ fun registerAppImage(
         // it deletes java.base before the links into it, which fails the sync.
         preserve { include("usr/lib/acidulous/jre/**") }
     }
-    val out = layout.buildDirectory.file("appimage/Acidulous-$versionName-$appImageArch.AppImage")
+    val out = layout.buildDirectory.file("appimage/acidulous-$versionName-$appImageArch.AppImage")
     tasks.register("appImage$cap") {
         group = "distribution"
-        description = "Builds Acidulous-$versionName-$appImageArch.AppImage"
+        description = "Builds acidulous-$versionName-$appImageArch.AppImage"
         // Its action uses this script's download and exec helpers.
         notCompatibleWithConfigurationCache("uses the build script's download and exec helpers")
         dependsOn(stage)
@@ -404,8 +404,8 @@ tasks.matching { it.name == "run" }.configureEach { dependsOn(buildEngine) }
 // Skia's Windows renderer, and Eclipse Temurin's Java runtime for Windows.
 // It comes as an installer and a portable zip with the same files:
 //
-//   ./gradlew :desktop:windowsX64   build/windows/Acidulous-<version>-setup.exe
-//                                   build/windows/Acidulous-<version>-windows-x64.zip
+//   ./gradlew :desktop:windowsX64   build/windows/acidulous-<version>-setup.exe
+//                                   build/windows/acidulous-<version>-windows-x64.zip
 //
 // Link is off for now (platform/web/LinkOff.cpp), and MIDI uses Java Sound.
 
@@ -444,7 +444,7 @@ val stageWindows = tasks.register<Sync>("stageWindowsX64") {
 
 tasks.register("windowsX64") {
     group = "distribution"
-    description = "Builds Acidulous-$versionName-setup.exe and the portable zip for 64-bit Windows"
+    description = "Builds acidulous-$versionName-setup.exe and the portable zip for 64-bit Windows"
     notCompatibleWithConfigurationCache("uses the build script's download and exec helpers")
     dependsOn(stageWindows)
     val artifacts = windowsX64Runtime.incoming.artifacts.resolvedArtifacts
@@ -459,7 +459,7 @@ tasks.register("windowsX64") {
     )
     inputs.files(windowsX64Runtime)
     inputs.dir(windowsStage)
-    outputs.files(File(out, "Acidulous-$version-setup.exe"), File(out, "Acidulous-$version-windows-x64.zip"))
+    outputs.files(File(out, "acidulous-$version-setup.exe"), File(out, "acidulous-$version-windows-x64.zip"))
     doLast {
         val lib = File(stage, "app/lib")
         for (a in artifacts.get()) {
@@ -474,8 +474,8 @@ tasks.register("windowsX64") {
         runCommand("unzip", "-q", zip.path, "-d", unpacked.path)
         unpacked.listFiles()!!.single().renameTo(runtime)
         unpacked.delete()
-        val setup = "Acidulous-$version-setup.exe"
-        val portable = "Acidulous-$version-windows-x64.zip"
+        val setup = "acidulous-$version-setup.exe"
+        val portable = "acidulous-$version-windows-x64.zip"
         File(out, setup).delete()
         File(out, portable).delete()
         // Mount the output folder at the same path inside the container,

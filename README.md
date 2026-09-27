@@ -166,7 +166,7 @@ From the [Releases](https://github.com/roge-rm/Acidulous/releases) page:
 ### Windows
 
 Windows 10 or 11, 64-bit. From the [Releases](https://github.com/roge-rm/Acidulous/releases)
-page, run `Acidulous-*-setup.exe`, or unzip `Acidulous-*-windows-x64.zip`
+page, run `acidulous-*-setup.exe`, or unzip `acidulous-*-windows-x64.zip`
 anywhere and run `Acidulous.exe`. They aren't signed, so Windows will warn
 you: choose **More info** and then **Run anyway**. If your audio interface has
 its own low-latency driver, pick it in **Settings › audio › output**.
