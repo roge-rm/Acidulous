@@ -176,6 +176,8 @@ class EngineHost {
      */
     std::string auditionFile(const std::string &path);
     bool auditioning() const;
+    /** How far through the audition, 0..1, or -1 when nothing is playing. */
+    float auditionProgress() const;
 
     int32_t nexusActivity(int rack, float *dest, int32_t max) const;
     // "name|frames|stereo" for a loaded slot, "" for none. UI thread.

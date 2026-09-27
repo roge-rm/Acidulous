@@ -437,6 +437,7 @@ std::string EngineHost::auditionFile(const std::string &path) {
 }
 
 bool EngineHost::auditioning() const { return sEngine.audition.active(); }
+float EngineHost::auditionProgress() const { return sEngine.audition.progress(); }
 
 std::string EngineHost::editSample(const std::string &src, const std::string &dst,
                                    const audio::SampleOps &ops) const {

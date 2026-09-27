@@ -35,6 +35,7 @@ class Audition {
         const int spare = now < 0 ? 0 : 1 - now;
         auto &buffer = pcm[static_cast<size_t>(spare)];
         buffer.assign(interleaved, interleaved + static_cast<size_t>(frames) * 2);
+        length.store(frames, std::memory_order_relaxed);
         position.store(0, std::memory_order_relaxed);
         which.store(spare, std::memory_order_release);
         playing.store(true, std::memory_order_release);
@@ -43,6 +44,12 @@ class Audition {
     /** Either thread. */
     void stop() { playing.store(false, std::memory_order_release); }
     bool active() const { return playing.load(std::memory_order_relaxed); }
+    /** How far through, 0..1, for a playhead; -1 when nothing is playing. Any thread. */
+    float progress() const {
+        const int64_t total = length.load(std::memory_order_relaxed);
+        if (!active() || total <= 0) return -1.0f;
+        return static_cast<float>(static_cast<double>(position.load(std::memory_order_relaxed)) / static_cast<double>(total));
+    }
 
     /** Audio thread. Adds what is left into [out], and stops at the end. */
     void mix(float *out, int32_t frames) {
@@ -64,6 +71,7 @@ class Audition {
     std::vector<float> pcm[2];
     std::atomic<int> which{-1};
     std::atomic<int64_t> position{0};
+    std::atomic<int64_t> length{0};
     std::atomic<bool> playing{false};
 };
 

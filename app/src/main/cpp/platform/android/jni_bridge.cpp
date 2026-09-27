@@ -456,6 +456,11 @@ Java_com_rm_acidulous_engine_EngineNative_nativeAuditioning(JNIEnv *, jobject) {
     return host().auditioning() ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT jfloat JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeAuditionProgress(JNIEnv *, jobject) {
+    return host().auditionProgress();
+}
+
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeFileInfo(JNIEnv *env, jobject, jstring path) {
     const char *p = env->GetStringUTFChars(path, nullptr);

@@ -51,6 +51,7 @@ internal actual object EngineNative {
     actual suspend fun nativeFileSurvey(path: String, out: FloatArray): String = blocking_nativeFileSurvey(path, out)
     actual external fun nativeAuditionFile(path: String): String
     actual external fun nativeAuditioning(): Boolean
+    actual external fun nativeAuditionProgress(): Float
     actual external fun nativeEditSample(src: String, dst: String, ops: FloatArray): String
     actual external fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int)
     actual external fun nativeSetMpeZone(kind: Int, members: Int, bendSemis: Float)

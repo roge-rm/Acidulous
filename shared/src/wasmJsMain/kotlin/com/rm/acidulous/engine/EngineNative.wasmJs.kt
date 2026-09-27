@@ -103,6 +103,9 @@ private fun raw_nativeAuditionFile(env: Int, path: Int): Int =
 private fun raw_nativeAuditioning(env: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeAuditioning(env, 0)")
 
+private fun raw_nativeAuditionProgress(env: Int): Float =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeAuditionProgress(env, 0)")
+
 private fun raw_nativeEditSample(env: Int, src: Int, dst: Int, ops: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeEditSample(env, 0, src, dst, ops)")
 
@@ -755,6 +758,13 @@ internal actual object EngineNative {
     actual fun nativeAuditioning(): Boolean {
         val raw_ = raw_nativeAuditioning(Jni.env)
         val result_ = raw_ != 0
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeAuditionProgress(): Float {
+        val raw_ = raw_nativeAuditionProgress(Jni.env)
+        val result_ = raw_
         Jni.release()
         return result_
     }

@@ -95,6 +95,8 @@ fun Waveform(
     modifier: Modifier = Modifier,
     /** What to say when there is nothing to draw. */
     empty: String = "",
+    /** Where playing has got to, as a fraction of the whole; below nought when nothing plays. */
+    playhead: Float = -1f,
 ) {
     val c = Acid.colors
     var dragging by remember { mutableStateOf(0) } // -1 start, 1 end, 0 nothing
@@ -224,6 +226,12 @@ fun Waveform(
                 )
             }
             drawLine(c.textDim.copy(alpha = 0.4f), Offset(0f, mid), Offset(size.width, mid), 1f)
+            // The playhead, while the file plays: through the window, like
+            // the handles, and only where the window shows it.
+            if (playhead >= 0f) {
+                val x = xOf(playhead)
+                if (x in 0f..size.width) drawLine(c.text, Offset(x, 0f), Offset(x, size.height), 1.5.dp.toPx())
+            }
             for ((x, mark) in listOf(lo to -1, hi to 1)) {
                 if (x < -2f || x > size.width + 2f) continue // off this window
                 drawLine(

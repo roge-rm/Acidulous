@@ -47,6 +47,7 @@ internal expect object EngineNative {
     suspend fun nativeFileSurvey(path: String, out: FloatArray): String
     fun nativeAuditionFile(path: String): String
     fun nativeAuditioning(): Boolean
+    fun nativeAuditionProgress(): Float
     fun nativeEditSample(src: String, dst: String, ops: FloatArray): String
     fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int)
     fun nativeSetMpeZone(kind: Int, members: Int, bendSemis: Float)

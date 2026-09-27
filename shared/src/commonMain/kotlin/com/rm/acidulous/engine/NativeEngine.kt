@@ -726,6 +726,8 @@ object NativeEngine {
      */
     fun auditionFile(path: String): String = EngineNative.nativeAuditionFile(path)
     val auditioning: Boolean get() = EngineNative.nativeAuditioning()
+    /** How far through the file being auditioned, 0..1, or -1 when none is: a playhead. */
+    val auditionProgress: Float get() = EngineNative.nativeAuditionProgress()
 
     /** What [editSample] takes, in the order the engine unpacks it. */
     const val EDIT_OPS = 14

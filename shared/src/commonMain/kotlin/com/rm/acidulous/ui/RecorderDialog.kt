@@ -436,6 +436,16 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         meta = info
     }
 
+    // Where `play` has got to, read every frame while the page is open: the
+    // engine plays the whole file, so the fraction is of the whole, which is
+    // what the waveform's own coordinates are.
+    var playhead by remember(file) { mutableStateOf(-1f) }
+    LaunchedEffect(file) {
+        while (true) {
+            androidx.compose.runtime.withFrameNanos { }
+            playhead = NativeEngine.auditionProgress
+        }
+    }
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -444,8 +454,10 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         // The file's name is on the reading under the waveform, where it has
         // the width to be read whole.
         Spacer(Modifier.weight(1f))
-        TextButton(onClick = { NativeEngine.auditionFile(file.absolutePath) }) {
-            Text(stringResource(Res.string.sound_play), color = c.accent, fontSize = 12.sp)
+        // Stop while it plays: without it, a long take could only be waited out.
+        val playing = playhead >= 0f
+        TextButton(onClick = { NativeEngine.auditionFile(if (playing) "" else file.absolutePath) }) {
+            Text(stringResource(if (playing) Res.string.sound_stop else Res.string.sound_play), color = c.accent, fontSize = 12.sp)
         }
         TextButton(onClick = { start = 0f; end = 1f }) { Text(stringResource(Res.string.sound_all), color = c.accent, fontSize = 12.sp) }
         // Normalise and reverse are yes-or-no to the whole file, so they sit
@@ -472,6 +484,7 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         onEnd = { end = it },
         modifier = Modifier.fillMaxWidth().height(120.dp),
         empty = stringResource(Res.string.sound_unreadable),
+        playhead = playhead,
     )
 
     val seconds = if (rate > 0) frames.toFloat() / rate else 0f
