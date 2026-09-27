@@ -167,6 +167,11 @@ android {
                     // unknown setting keys), so exceptions must stay on.
                     "-DANDROID_CPP_FEATURES=exceptions rtti",
                 )
+                // Through the compiler cache where this machine has one: an
+                // unchanged file is a hit rather than a compile (see desktop/).
+                if (File("/usr/bin/ccache").canExecute()) {
+                    arguments += listOf("-DCMAKE_C_COMPILER_LAUNCHER=ccache", "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
+                }
             }
         }
 
@@ -182,6 +187,11 @@ android {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.22.1+"
+            // The native staging (.cxx) with the rest of the build output, where
+            // this machine keeps it: see the root build.gradle.kts.
+            providers.gradleProperty("acidulous.buildRoot").orNull?.let {
+                buildStagingDirectory = File(it, "${rootDir.name}/app-cxx")
+            }
         }
     }
 

@@ -4,5 +4,5 @@
 # code; it only compiles it.
 FROM debian:trixie
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        g++-aarch64-linux-gnu gcc-aarch64-linux-gnu cmake make openjdk-21-jdk-headless \
+        g++-aarch64-linux-gnu gcc-aarch64-linux-gnu cmake make ccache openjdk-21-jdk-headless \
     && rm -rf /var/lib/apt/lists/*

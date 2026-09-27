@@ -36,6 +36,11 @@ val buildEngine = tasks.register<Exec>("buildEngine") {
     inputs.dir(rootProject.file("app/src/main/cpp"))
     inputs.files(rootProject.file("web/engine/CMakeLists.txt"), rootProject.file("web/engine/worklet-clock.js"))
     outputs.dir(engineOut)
+    // Its CMake build with the rest of the output where this machine keeps it
+    // (see the root build.gradle.kts).
+    providers.gradleProperty("acidulous.buildRoot").orNull?.let {
+        environment("ACIDULOUS_ENGINE_BUILD", File(it, "${rootDir.name}/web-engine").path)
+    }
     commandLine(rootProject.file("web/engine/build.sh").absolutePath)
 }
 kotlin.sourceSets.named("wasmJsMain") { resources.srcDir(files(engineOut).builtBy(buildEngine)) }

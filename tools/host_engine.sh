@@ -14,7 +14,13 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"
 # HOST_ENGINE_FLAGS builds a variant - denormal_probe.sh's, with the web
 # build's guards - into a folder of its own, HOST_ENGINE_OUT.
-OUT="${HOST_ENGINE_OUT:-$ROOT/build/host-engine}"
+# With the rest of the build output where this machine keeps it (the
+# acidulous.buildRoot Gradle property: see the root build.gradle.kts), and
+# through the compiler cache where there is one.
+BUILD_ROOT=$(sed -n 's/^acidulous\.buildRoot=//p' "$HOME/.gradle/gradle.properties" 2>/dev/null | tail -1)
+OUT="${HOST_ENGINE_OUT:-${BUILD_ROOT:+$BUILD_ROOT/$(basename "$ROOT")/host-engine}}"
+OUT="${OUT:-$ROOT/build/host-engine}"
+[ -d /usr/lib/ccache ] && export PATH="/usr/lib/ccache:$PATH"
 LIB="$OUT/libacidulous-engine.a"
 mkdir -p "$OUT"
 

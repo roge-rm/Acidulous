@@ -72,7 +72,33 @@ for (runtime in listOf(debAmd64Runtime, debArm64Runtime, windowsX64Runtime)) {
 }
 
 val nativeDir = layout.projectDirectory.dir("native")
-val nativeBuild = layout.projectDirectory.dir("native/build")
+/**
+ * Where the engine's CMake builds go: with the rest of the build output under
+ * this machine's build root when it has one (acidulous.buildRoot - see the
+ * root build.gradle.kts), in native/ otherwise, as always.
+ */
+val nativeOut: File = providers.gradleProperty("acidulous.buildRoot").orNull
+    ?.let { File(it, "${rootDir.name}/desktop-native") } ?: file("native")
+fun nativeOutDir(name: String): Directory = layout.projectDirectory.dir(File(nativeOut, name).absolutePath)
+
+/**
+ * The compiler cache, where this machine has ccache: the engine is the same
+ * C++ built for ten targets, and an unchanged file is a cache hit rather than
+ * a compile. The build containers have their own ccache (their Dockerfiles),
+ * each with a cache folder of its own here, mounted in: their versions differ
+ * from this machine's.
+ */
+val ccache: Boolean = File("/usr/bin/ccache").canExecute()
+val launcher = if (ccache) "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" else ""
+/** The mounts and settings a build container needs: the build folder at its own path, and its compiler cache. */
+fun containerArgs(image: String): String {
+    val cache = File(System.getProperty("user.home"), ".cache/ccache-containers/$image")
+    nativeOut.mkdirs()
+    if (ccache) cache.mkdirs()
+    return "-v '$nativeOut':'$nativeOut'" + if (ccache) " -v '$cache':/ccache -e CCACHE_DIR=/ccache" else ""
+}
+
+val nativeBuild = nativeOutDir("build")
 
 /** The engine for this machine, as libacidulous.so (and LAME's libmp3lame.so beside it). */
 val buildEngine = tasks.register<Exec>("buildEngine") {
@@ -80,7 +106,8 @@ val buildEngine = tasks.register<Exec>("buildEngine") {
     inputs.file(nativeDir.file("CMakeLists.txt"))
     outputs.dir(nativeBuild)
     workingDir = nativeDir.asFile
-    commandLine("sh", "-c", "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release >/dev/null && cmake --build build -j8")
+    val out = nativeBuild.asFile.path
+    commandLine("sh", "-c", "cmake -S . -B '$out' -DCMAKE_BUILD_TYPE=Release $launcher >/dev/null && cmake --build '$out' -j8")
 }
 
 /**
@@ -88,7 +115,7 @@ val buildEngine = tasks.register<Exec>("buildEngine") {
  * (native/Dockerfile.arm64) so it is linked against the Pi's own glibc and
  * libstdc++. Needs Docker; the container only compiles, it runs no ARM code.
  */
-val nativeArm64 = layout.projectDirectory.dir("native/build-arm64")
+val nativeArm64 = nativeOutDir("build-arm64")
 val buildEngineArm64 = tasks.register<Exec>("buildEngineArm64") {
     inputs.dir(rootProject.file("app/src/main/cpp"))
     inputs.files(nativeDir.file("CMakeLists.txt"), nativeDir.file("aarch64-linux-gnu.cmake"), nativeDir.file("Dockerfile.arm64"))
@@ -98,10 +125,10 @@ val buildEngineArm64 = tasks.register<Exec>("buildEngineArm64") {
     commandLine(
         "sh", "-c",
         "docker build -q -t acidulous-arm64-cross -f Dockerfile.arm64 . >/dev/null && " +
-            "docker run --rm -u \$(id -u):\$(id -g) -v '$root':/src -w /src/desktop/native acidulous-arm64-cross sh -c '" +
+            "docker run --rm -u \$(id -u):\$(id -g) -v '$root':/src ${containerArgs("arm64-cross")} -w /src/desktop/native acidulous-arm64-cross sh -c '" +
             "J=/usr/lib/jvm/java-21-openjdk-amd64/include; " +
-            "cmake -S . -B build-arm64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=aarch64-linux-gnu.cmake \"-DJNI_INCLUDE_DIRS=\$J;\$J/linux\" >/dev/null && " +
-            "cmake --build build-arm64 -j8'",
+            "cmake -S . -B ${nativeArm64.asFile.path} -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=aarch64-linux-gnu.cmake $launcher \"-DJNI_INCLUDE_DIRS=\$J;\$J/linux\" >/dev/null && " +
+            "cmake --build ${nativeArm64.asFile.path} -j8'",
     )
 }
 
@@ -264,7 +291,7 @@ fun registerAppImage(
     jre: Download, appImageRuntime: Download, cmakeArgs: String,
 ) {
     val cap = arch.replaceFirstChar { it.uppercase() }
-    val engineDir = layout.projectDirectory.dir("native/build-appimage-$arch")
+    val engineDir = nativeOutDir("build-appimage-$arch")
     val engine = tasks.register<Exec>("buildEngineAppImage$cap") {
         inputs.dir(rootProject.file("app/src/main/cpp"))
         inputs.files(nativeDir.file("CMakeLists.txt"), nativeDir.file("aarch64-linux-gnu.cmake"), nativeDir.file("Dockerfile.appimage"))
@@ -274,13 +301,13 @@ fun registerAppImage(
         commandLine(
             "sh", "-c",
             "docker build -q -t acidulous-appimage -f Dockerfile.appimage . >/dev/null && " +
-                "docker run --rm -u \$(id -u):\$(id -g) -v '$root':/src -w /src/desktop/native acidulous-appimage sh -c '" +
-                "cmake -S . -B build-appimage-$arch -DCMAKE_BUILD_TYPE=Release " +
+                "docker run --rm -u \$(id -u):\$(id -g) -v '$root':/src ${containerArgs("appimage")} -w /src/desktop/native acidulous-appimage sh -c '" +
+                "cmake -S . -B ${engineDir.asFile.path} -DCMAKE_BUILD_TYPE=Release $launcher " +
                 "\"-DCMAKE_SHARED_LINKER_FLAGS=-static-libstdc++ -static-libgcc\" " +
                 // FindJNI on 22.04's CMake wants AWT, which a headless JDK has not.
                 "\"-DJNI_INCLUDE_DIRS=/usr/lib/jvm/java-17-openjdk-amd64/include;/usr/lib/jvm/java-17-openjdk-amd64/include/linux\" " +
                 "$cmakeArgs >/dev/null && " +
-                "cmake --build build-appimage-$arch -j8'",
+                "cmake --build ${engineDir.asFile.path} -j8'",
         )
     }
     val appDir = layout.buildDirectory.dir("appimage/$arch/Acidulous.AppDir")
@@ -381,7 +408,7 @@ tasks.matching { it.name == "run" }.configureEach { dependsOn(buildEngine) }
 //
 // Link is off for now (platform/web/LinkOff.cpp), and MIDI is Java Sound's.
 
-val nativeWindows = layout.projectDirectory.dir("native/build-windows")
+val nativeWindows = nativeOutDir("build-windows")
 val buildEngineWindows = tasks.register<Exec>("buildEngineWindows") {
     inputs.dir(rootProject.file("app/src/main/cpp"))
     inputs.files(nativeDir.file("CMakeLists.txt"), nativeDir.file("x86_64-w64-mingw32.cmake"), nativeDir.file("Dockerfile.windows"))
@@ -394,11 +421,11 @@ val buildEngineWindows = tasks.register<Exec>("buildEngineWindows") {
     commandLine(
         "sh", "-c",
         "docker build -q -t acidulous-windows -f Dockerfile.windows . >/dev/null && " +
-            "docker run --rm -u \$(id -u):\$(id -g) -v '$root':/src -w /src/desktop/native acidulous-windows sh -c '" +
+            "docker run --rm -u \$(id -u):\$(id -g) -v '$root':/src ${containerArgs("windows")} -w /src/desktop/native acidulous-windows sh -c '" +
             "J=/usr/lib/jvm/java-21-openjdk-amd64/include; " +
-            "cmake -S . -B build-windows -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=x86_64-w64-mingw32.cmake " +
+            "cmake -S . -B ${nativeWindows.asFile.path} -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=x86_64-w64-mingw32.cmake $launcher " +
             "\"-DJNI_INCLUDE_DIRS=\$J;/src/desktop/native/win32\" -DACIDULOUS_VERSION=$version >/dev/null && " +
-            "cmake --build build-windows -j8'",
+            "cmake --build ${nativeWindows.asFile.path} -j8'",
     )
 }
 

@@ -4,5 +4,5 @@
 FROM debian:trixie
 RUN apt-get update && apt-get install -y --no-install-recommends \
         g++-mingw-w64-x86-64-posix gcc-mingw-w64-x86-64-posix binutils-mingw-w64-x86-64 \
-        cmake make openjdk-21-jdk-headless nsis zip unzip \
+        cmake make ccache openjdk-21-jdk-headless nsis zip unzip \
     && rm -rf /var/lib/apt/lists/*

@@ -16,6 +16,9 @@ set -u
 # own notes: the runner was saying it was fine.
 set -o pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+# Every g++ below through the compiler cache, where this machine has one:
+# the tests rebuild the same engine files again and again.
+[ -d /usr/lib/ccache ] && export PATH="/usr/lib/ccache:$PATH"
 CPP="$ROOT/app/src/main/cpp"
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT

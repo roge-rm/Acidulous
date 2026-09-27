@@ -17,7 +17,11 @@
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 DEST="${ACIDULOUS_DEBUG_DROP:-/srv/downloads/temp/debug}"
-APK="$ROOT/app/build/outputs/apk/debug/app-debug.apk"
+# The build output is where this machine keeps it (the acidulous.buildRoot
+# Gradle property: see the root build.gradle.kts), or app/build.
+BUILD_ROOT=$(sed -n 's/^acidulous\.buildRoot=//p' "$HOME/.gradle/gradle.properties" 2>/dev/null | tail -1)
+APP_BUILD="${BUILD_ROOT:+$BUILD_ROOT/$(basename "$ROOT")/app}"
+APK="${APP_BUILD:-$ROOT/app/build}/outputs/apk/debug/app-debug.apk"
 
 [ -f "$APK" ] || { echo "drop: no debug apk at $APK - build one first" >&2; exit 1; }
 mkdir -p "$DEST" || exit 1
