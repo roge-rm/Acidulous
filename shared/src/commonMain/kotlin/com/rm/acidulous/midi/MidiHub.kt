@@ -37,6 +37,9 @@ import org.jetbrains.compose.resources.StringResource
  * the machine's own handling all behave identically whichever you play.
  */
 object MidiHub {
+    /** How long a Launchpad's start-up lights last, near enough: see lpAgain. */
+    private const val LP_AGAIN_MS = 1500L
+
     private const val TAG = "Acidulous.MIDI"
     private const val AUTO_GONE_NS = 1_000_000_000L
 
@@ -406,6 +409,23 @@ object MidiHub {
     private var lpPort: MidiSendPort? = null
     private var lpProgrammer = false
 
+    /**
+     * Programmer mode again, a moment after the first time. A Launchpad
+     * plugged in while the app runs plays its start-up lights for a second or
+     * two, and a message that lands in them can be lost - so it stayed in its
+     * own mode, sometimes (Dan, plugging one in on Windows). Asking twice costs
+     * nothing: already in Programmer mode it stays there, and the pads are
+     * drawn again either way.
+     */
+    private val lpAgain = Runnable {
+        val port = lpPort
+        if (port != null && lpProgrammer && launchpadOn) {
+            val bytes = LaunchpadPro.programmer(true)
+            runCatching { port.send(bytes, 0, bytes.size) }
+            onLaunchpadReady?.invoke()
+        }
+    }
+
     fun chooseLaunchpad(on: Boolean) {
         launchpadOn = on
         handler?.post { syncLaunchpad() }
@@ -460,6 +480,7 @@ object MidiHub {
             Log.i(TAG, "Launchpad: Programmer mode")
             lpProgrammer = true
             onLaunchpadReady?.invoke()
+            handler?.let { it.removeCallbacks(lpAgain); it.postDelayed(lpAgain, LP_AGAIN_MS) }
         } else if (!launchpadOn && lpProgrammer) {
             val bytes = LaunchpadPro.programmer(false)
             runCatching { port.send(bytes, 0, bytes.size) }
