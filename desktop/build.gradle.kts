@@ -477,9 +477,11 @@ tasks.register("windowsX64") {
         val portable = "Acidulous-$version-windows-x64.zip"
         File(out, setup).delete()
         File(out, portable).delete()
-        val inContainer = "/src/" + out.relativeTo(File(root)).invariantSeparatorsPath
+        // The output folder at its own path inside the container too, wherever
+        // this machine keeps its build output.
+        val inContainer = out.absolutePath
         runCommand(
-            "docker", "run", "--rm", "-u", "${runCommand("id", "-u")}:${runCommand("id", "-g")}", "-v", "$root:/src",
+            "docker", "run", "--rm", "-u", "${runCommand("id", "-u")}:${runCommand("id", "-g")}", "-v", "$root:/src", "-v", "$inContainer:$inContainer",
             "-w", "/src/desktop/windows", "acidulous-windows", "sh", "-c",
             "makensis -V2 -DVERSION=$version -DSTAGE=$inContainer/Acidulous -DOUT=$inContainer/$setup installer.nsi && " +
                 "cd $inContainer && zip -qr $portable Acidulous",
