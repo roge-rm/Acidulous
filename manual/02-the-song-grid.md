@@ -141,5 +141,5 @@ so does the load meter in the header. Nothing stops.
 A track only glows when the engine is running late and that track is a big
 part of the load. Freezing it usually fixes it.
 
-With **diagnostics** on, **Settings · audio** has the details: the worst block,
+With **diagnostics** on, **Settings › audio** has the details: the worst block,
 where the time went and each track's cost.

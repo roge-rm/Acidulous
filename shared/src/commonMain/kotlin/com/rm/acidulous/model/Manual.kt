@@ -112,7 +112,7 @@ object Manual {
             ManualBlock(ManualKind.Heading, "When the phone can't keep up", "When the computer can't keep up"),
             ManualBlock(ManualKind.Para, "If the engine starts falling behind, the tracks costing the most glow red, and so does the load meter in the header. Nothing stops."),
             ManualBlock(ManualKind.Para, "A track only glows when the engine is running late and that track is a big part of the load. Freezing it usually fixes it."),
-            ManualBlock(ManualKind.Para, "With **diagnostics** on, **Settings · audio** has the details: the worst block, where the time went and each track's cost."),
+            ManualBlock(ManualKind.Para, "With **diagnostics** on, **Settings › audio** has the details: the worst block, where the time went and each track's cost."),
         )),
         ManualSection("The editor", "", listOf(
             ManualBlock(ManualKind.Para, "A clip opens with the note grid at the top, the machine's controls in the middle, and the keyboard or pads at the bottom."),
