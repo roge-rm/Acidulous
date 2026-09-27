@@ -467,13 +467,22 @@ fun Song.passSeconds(scene: Scene, last: Boolean): Float {
  * The names are the engine's own ([MasterBus]'s table), matching
  * [Track.withMixerParam].
  */
-fun Song.withMasterParam(name: String, v01: Float): Song = copy(
-    master = when (name) {
+fun Song.withMasterParam(name: String, v01: Float): Song {
+    groupParam(name)?.let { (g, what) ->
+        return if (what == "gain") withGroupVolume(g, EngineParams.volumeFrom01(v01)) else withGroupPan(g, EngineParams.panFrom01(v01))
+    }
+    return copy(master = when (name) {
         "volume" -> master.copy(volume = EngineParams.volumeFrom01(v01))
         // Send effect parameters are reached under the units `send1` and
         // `send2` by the effect's own names; see [Song.withSendParam].
         "limiteron" -> master.copy(limiter = master.limiter.copy(on = v01 >= 0.5f))
         "limiterdrive" -> master.copy(limiter = master.limiter.copy(drive = v01))
         else -> master
-    },
-)
+    })
+}
+
+/** A group strip's master parameter ("g1gain" .. "g4pan") as its group index and "gain" or "pan". */
+fun groupParam(name: String): Pair<Int, String>? {
+    val m = Regex("g([1-9])(gain|pan)").matchEntire(name) ?: return null
+    return (m.groupValues[1].toInt() - 1) to m.groupValues[2]
+}

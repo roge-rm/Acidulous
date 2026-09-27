@@ -148,22 +148,12 @@ fun mappedIsSwitch(track: Track?, unit: String, name: String): Boolean = when {
     else -> false
 }
 
-/**
- * A send parameter's current value, normalised.
- *
- * A slot's map only holds parameters that have been touched, so a missing name
- * reads as 0 here, even where the effect's own default is something else.
- */
-fun currentSend(master: Master, slot: Int, name: String): Float {
-    val send = master.sendAt(slot)
-    if (name == "bypass") return if (send.bypass) 1f else 0f
-    return send.params[name] ?: 0f
-}
-
 /** A master parameter's current value, normalised. */
 fun currentMaster(master: Master, name: String): Float = when (name) {
     "volume" -> EngineParams.volume01(master.volume)
     "limiteron" -> if (master.limiter.on) 1f else 0f
     "limiterdrive" -> master.limiter.drive
-    else -> 0f
+    else -> groupParam(name)?.let { (g, what) ->
+        master.groups.getOrNull(g)?.let { if (what == "gain") EngineParams.volume01(it.volume) else EngineParams.pan01(it.pan) }
+    } ?: 0f
 }

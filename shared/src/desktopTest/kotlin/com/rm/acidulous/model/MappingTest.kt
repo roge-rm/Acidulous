@@ -136,22 +136,32 @@ class MappingTest {
     fun `a send parameter goes in and comes back out`() {
         val song = Fixtures.song()
         val next = song.withSendParam(0, "size", 0.25f)
-        assertEquals(0.25f, currentSend(next.master, 0, "size"), 1e-3f)
-        // A name the song has never set reads as the effect's default. That
-        // lets an effect gain a parameter without rewriting saved songs.
-        assertEquals(0f, currentSend(next.master, 0, "shimmer"), 0f)
+        assertEquals(0.25f, next.master.sendAt(0).params["size"]!!, 1e-3f)
+        // Only what's been set is stored, so the rest keep the effect's defaults.
+        assertEquals(null, next.master.sendAt(0).params["shimmer"])
+    }
+
+    @Test
+    fun `a group fader and pan go in and come back out`() {
+        // Group strips are mapped as master parameters, g1gain .. g4pan.
+        val song = Fixtures.song().addGroup("A").addGroup("B")
+        for (name in listOf("g1gain", "g2pan")) {
+            val next = song.withMasterParam(name, 0.25f)
+            assertEquals(name, 0.25f, currentMaster(next.master, name), 1e-3f)
+        }
+        assertEquals(song, song.withMasterParam("g4gain", 0.25f))
     }
 
     @Test
     fun `changing a send's effect does not keep the last one's settings`() {
         val song = Fixtures.song().withSendParam(0, "size", 0.9f)
-        assertEquals(0.9f, currentSend(song.master, 0, "size"), 1e-3f)
+        assertEquals(0.9f, song.master.sendAt(0).params["size"]!!, 1e-3f)
         val swapped = song.withSend(0, "Chorus")
         assertEquals("Chorus", swapped.master.sendAt(0).type)
         assertTrue(swapped.master.sendAt(0).params.isEmpty())
         // Choosing the type it already has leaves it alone.
         val same = song.withSend(0, "Reverb")
-        assertEquals(0.9f, currentSend(same.master, 0, "size"), 1e-3f)
+        assertEquals(0.9f, same.master.sendAt(0).params["size"]!!, 1e-3f)
     }
 
     @Test
