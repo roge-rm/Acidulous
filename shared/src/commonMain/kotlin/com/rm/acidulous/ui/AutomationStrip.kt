@@ -69,6 +69,13 @@ fun AutomationStrip(
     /** The same window the roll is showing, so the playheads line up. */
     firstTick: Int = 0,
     visibleTicks: Int = 0,
+    /**
+     * How many times the whole clip is drawn side by side. A tape runs
+     * through a scene's repeats, so under it the clip's automation is drawn
+     * once per pass and [playheadTick] counts through all of them. A stroke
+     * in any pass edits the one clip.
+     */
+    passes: Int = 1,
     laneKeys: List<String>,          // every parameter a lane could be added for
     /** "Mosaic · grains position" for the list. */
     nameOf: (String) -> String = { it },
@@ -231,8 +238,11 @@ fun AutomationStrip(
                     val span = (if (visibleTicks > 0) minOf(visibleTicks, total - from) else total).coerceAtLeast(1)
                     val grid = clipState.grid.coerceAtLeast(1)
                     val stroke = HashMap<Int, Float>()
+                    val laps = passes.coerceAtLeast(1)
                     fun add(p: Offset) {
-                        val tick = ((from + (p.x / size.width) * span).roundToInt() / grid * grid).coerceIn(0, total - 1)
+                        // Which pass it's in doesn't matter: they're all the one clip.
+                        val along = ((p.x / size.width) * span * laps).roundToInt() % span
+                        val tick = ((from + along) / grid * grid).coerceIn(0, total - 1)
                         stroke[tick] = (1f - p.y / size.height).coerceIn(0f, 1f)
                         cb.second(key, stroke)
                     }
@@ -247,8 +257,13 @@ fun AutomationStrip(
             val from = firstTick.coerceIn(0, total - 1)
             val span = (if (visibleTicks > 0) minOf(visibleTicks, total - from) else total).coerceAtLeast(1)
             val last = from + span
-            val pxPerTick = size.width / span
-            fun xOf(tick: Int) = (tick - from) * pxPerTick
+            val laps = passes.coerceAtLeast(1)
+            val pxPerTick = size.width / (span.toFloat() * laps)
+            // The pass being drawn; everything below is drawn once per pass.
+            var lap = 0
+            fun xOf(tick: Int) = (lap * span + tick - from) * pxPerTick
+            for (l in 0 until laps) {
+            lap = l
             var t = from
             while (t <= last) {
                 val x = xOf(t)
@@ -283,11 +298,17 @@ fun AutomationStrip(
                     drawRect(c.accentSoft, Offset(p.x - dot / 2, p.y - dot / 2), Size(dot, dot))
                 }
             }
+            }
+            lap = 0
             playheadTick?.let { pt ->
-                val t = (pt % total).toInt()
+                // Across every pass: the tick counts through them all.
+                val cycle = (pt % (total.toLong() * laps)).toInt()
+                lap = cycle / total
+                val t = cycle % total
                 if (t in from until last) {
                     drawLine(c.accent, Offset(xOf(t), 0f), Offset(xOf(t), size.height), 2f)
                 }
+                lap = 0
             }
             if (keyFocused) {
                 drawRect(c.accent, Offset.Zero, size, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))

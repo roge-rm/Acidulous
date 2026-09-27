@@ -320,8 +320,9 @@ fun EditScreen(
     val defaultBars = if (steps) 1 else if (wide) PAGE_BARS_LAND else PAGE_BARS
     val defaultTicks = (defaultBars * ticksPerBar).toFloat()
     // A pinch never shows less than a beat or more than the whole clip. A
-    // tape's lanes always show all of it, so its automation does too, or the
-    // two playheads would be in different places.
+    // tape's lanes always show all of it, so its automation does too (once
+    // per pass, see AutomationStrip), or the two playheads would be in
+    // different places.
     val pageTicks = (if (kind == MachineKind.Audio) clipLen.toFloat() else if (zoomTicks > 0f) zoomTicks else defaultTicks)
         .coerceIn(PPQN.toFloat(), clipLen.toFloat().coerceAtLeast(PPQN.toFloat()))
     val maxScroll = (clipLen - pageTicks).coerceAtLeast(0f)
@@ -836,9 +837,12 @@ fun EditScreen(
         AutomationStrip(
             clip = clip,
             ticksPerBar = ticksPerBar,
-            playheadTick = playhead,
+            // Under a tape, every pass of the scene side by side, like the
+            // lanes above, so the playheads are in the same place.
+            playheadTick = if (kind == MachineKind.Audio) cyclePlayhead?.toLong() else playhead,
             firstTick = firstTick,
             visibleTicks = visibleTicks,
+            passes = if (kind == MachineKind.Audio) scene.repeat.coerceAtLeast(1) else 1,
             laneKeys = laneKeys,
             nameOf = { com.rm.acidulous.model.laneLabel(track, it, laneWord) },
             shortOf = { com.rm.acidulous.model.laneShortLabel(track, it, laneWord) },
