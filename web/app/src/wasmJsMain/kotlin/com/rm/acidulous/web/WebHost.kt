@@ -58,6 +58,9 @@ class WebHost : AppHost {
         watchOutputs()
     }
 
+    // The browser's own noise suppression and level control: see the driver.
+    override val cleansInput: Boolean get() = true
+
     override val versionName: String? = VERSION_NAME
     override val versionLong: String? = "$VERSION_NAME ($VERSION_CODE)"
     /** Served next to the page and only read when opened. */

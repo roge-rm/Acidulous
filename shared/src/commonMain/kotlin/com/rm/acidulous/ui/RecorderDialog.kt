@@ -342,6 +342,11 @@ private fun InputCard(setup: InputSetup, editor: SongEditor) {
     WindowCard(stringResource(Res.string.sound_input_card)) {
         Knob(label = stringResource(Res.string.sound_gain), value = setup.gain / 4f, display = "%.2f".format(setup.gain), modifier = panelKnobWidth(), onChange = { setup.gain = it * 4f })
         SwitchGrid(stringResource(Res.string.sound_monitor), stringArrayResource(Res.array.off_on).toList(), if (setup.monitor) 1 else 0) { setup.monitor = it == 1 }
+        if (AppHost.current.cleansInput) {
+            SwitchGrid(stringResource(Res.string.sound_mic), stringArrayResource(Res.array.sound_mic_choices).toList(), if (UiPrefs.inputClean) 1 else 0) {
+                UiPrefs.chooseInputClean(it == 1)
+            }
+        }
         // The title explains it: these effects are recorded into the take.
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(Res.string.sound_printed), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)

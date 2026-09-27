@@ -117,7 +117,7 @@ bool AudioDriver::start() {
 bool AudioDriver::startInput(int32_t deviceId) {
     // Already open on the device asked for. 0 means "whatever the system
     // picks" and can't be compared, so it always counts.
-    if (inputStream != nullptr && (deviceId == 0 || deviceId == actualInputDevice)) return true;
+    if (inputStream != nullptr && openClean == inputClean && (deviceId == 0 || deviceId == actualInputDevice)) return true;
     if (inputStream != nullptr) stopInput();
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Input)
@@ -130,8 +130,10 @@ bool AudioDriver::startInput(int32_t deviceId) {
         ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Medium)
         // Unprocessed asks for no AGC, noise suppression or echo cancelling.
         // Those are for voice calls and ruin instruments. Not every device
-        // honours it.
-        ->setInputPreset(oboe::InputPreset::Unprocessed);
+        // honours it. Clean is the ordinary recording path instead, with a
+        // session for the platform's effects (see setInputClean).
+        ->setInputPreset(inputClean ? oboe::InputPreset::Generic : oboe::InputPreset::Unprocessed);
+    if (inputClean) builder.setSessionId(oboe::SessionId::Allocate);
 
     oboe::Result result = builder.openStream(inputStream);
     if (result != oboe::Result::OK) {
@@ -142,6 +144,8 @@ bool AudioDriver::startInput(int32_t deviceId) {
     actualInputChannels = inputStream->getChannelCount();
     actualInputRate = inputStream->getSampleRate();
     actualInputDevice = inputStream->getDeviceId();
+    openClean = inputClean;
+    actualInputSession = inputClean ? std::max(0, static_cast<int32_t>(inputStream->getSessionId())) : 0;
     inputRingFrames = 0;
     inputRingRead = 0;
 
@@ -172,6 +176,16 @@ void AudioDriver::stopInput() {
     actualInputChannels = 0;
     actualInputRate = 0;
     actualInputDevice = 0;
+    actualInputSession = 0;
+}
+
+void AudioDriver::setInputClean(bool on) {
+    if (on == inputClean) return;
+    inputClean = on;
+    if (inputStream == nullptr) return;
+    const int32_t device = actualInputDevice;
+    stopInput();
+    startInput(device);
 }
 
 // Drain whatever the input stream has ready without waiting. If the input

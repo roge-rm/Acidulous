@@ -21,6 +21,8 @@ internal expect object EngineNative {
     fun nativeNexusScope(rack: Int, out: FloatArray): Int
     fun nativeNexusActivity(rack: Int, out: FloatArray): Int
     fun nativeStartInput(deviceId: Int): Boolean
+    fun nativeSetInputClean(on: Boolean)
+    fun nativeInputSession(): Int
     fun nativeStopInput(): Boolean
     fun nativeInputChannels(): Int
     fun nativeInputRate(): Int

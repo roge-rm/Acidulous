@@ -193,6 +193,14 @@ object UiPrefs {
     var inputDevice by mutableStateOf(0)
         private set
 
+    /**
+     * The microphone raw, for instruments, or clean, with the platform's
+     * noise suppression and level control, for voices. Only offered where
+     * AppHost.cleansInput.
+     */
+    var inputClean by mutableStateOf(false)
+        private set
+
     // --- Screen ----------------------------------------------------------
     /** Keep the screen awake while the transport is running. */
     var keepAwake by mutableStateOf(true)
@@ -305,6 +313,7 @@ object UiPrefs {
         qualityNow = fullQuality
         recordBits = p.getInt(KEY_BITS, 24)
         inputDevice = p.getInt(KEY_INPUT_DEVICE, 0)
+        inputClean = p.getBoolean(KEY_INPUT_CLEAN, false)
         readZooms(p.getString(KEY_ZOOMS, null))
         keepAwake = p.getBoolean(KEY_AWAKE, true)
         showDiagnostics = p.getBoolean(KEY_DIAGNOSTICS, DIAGNOSTICS_BY_DEFAULT)
@@ -384,6 +393,7 @@ object UiPrefs {
      */
     fun applyToEngine() {
         NativeEngine.setBufferBursts(buffer.bursts)
+        NativeEngine.setInputClean(inputClean)
         NativeEngine.setVoiceLimit(voiceLimit)
         NativeEngine.setQuality(if (fullQuality) 1 else 0)
         NativeEngine.setRecordBits(recordBits)
@@ -590,6 +600,12 @@ object UiPrefs {
         }
     }
 
+    fun chooseInputClean(on: Boolean) {
+        inputClean = on
+        store?.edit()?.putBoolean(KEY_INPUT_CLEAN, on)?.apply()
+        NativeEngine.setInputClean(on)
+    }
+
     fun chooseInputDevice(id: Int) {
         if (id == inputDevice) return
         inputDevice = id
@@ -777,6 +793,7 @@ object UiPrefs {
     private const val KEY_AUTO_QUALITY = "quality_auto"
     private const val KEY_BITS = "record_bits"
     private const val KEY_INPUT_DEVICE = "input_device"
+    private const val KEY_INPUT_CLEAN = "input_clean"
     private const val KEY_ZOOMS = "editor_zooms"
     private const val ZOOMS_KEPT = 64
     private const val KEY_AWAKE = "keep_awake"

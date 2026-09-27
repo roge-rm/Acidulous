@@ -27,6 +27,8 @@ EM_JS(void, acid_input_attach, (int context, int node), {
     s.connect && s.connect();
 });
 
+// [on] is 0 for off, 1 for the raw microphone, 2 for the browser's cleaned
+// one. Asking for the other kind while it's open gets a new stream.
 EM_JS(void, acid_input_want, (int on), {
     const s = (globalThis.acidInput ??= {});
     s.connect = () => {
@@ -36,9 +38,18 @@ EM_JS(void, acid_input_want, (int on), {
         console.info('I/Acidulous.Audio: input connected: ' + (s.stream.getAudioTracks()[0]?.label || 'the microphone'));
     };
     s.wanted = !!on;
+    const clean = on === 2;
+    if (on && s.stream && s.stream.active && s.clean !== clean) {
+        if (s.source) { s.source.disconnect(); s.source = null; }
+        s.stream.getTracks().forEach((t) => t.stop());
+        s.stream = null;
+    }
     if (on) {
         if (s.stream && s.stream.active) { s.connect(); return; }
-        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+        s.clean = clean;
+        // Echo cancelling stays off either way: it would take the app's own
+        // playback out of a take.
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: clean, autoGainControl: clean } })
             .then((stream) => { s.stream = stream; s.connect(); })
             .catch((e) => console.warn('W/Acidulous.Audio: no microphone', e));
     } else {
@@ -304,7 +315,7 @@ void AudioDriver::standby() {
 
 bool AudioDriver::startInput(int32_t) {
     inputOn = true;
-    acid_input_want(1);
+    acid_input_want(inputClean ? 2 : 1);
     LOGI("input wanted: the browser's microphone");
     return true;
 }
@@ -313,6 +324,12 @@ void AudioDriver::stopInput() {
     if (!inputOn.exchange(false)) return;
     acid_input_want(0);
     LOGI("input stopped");
+}
+
+void AudioDriver::setInputClean(bool on) {
+    if (on == inputClean) return;
+    inputClean = on;
+    if (inputOn.load()) acid_input_want(inputClean ? 2 : 1);
 }
 
 void AudioDriver::pushInput(const float *left, const float *right, int32_t frames) {

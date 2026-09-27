@@ -421,6 +421,10 @@ class EngineHost {
     bool startInput(int32_t deviceId = 0);
     /** True if this cut a recording short. See the definition. */
     bool stopInput();
+    /** Raw or clean microphone. See AudioDriver::setInputClean. */
+    void setInputClean(bool on);
+    /** The input's audio session for the platform's effects, or 0. */
+    int32_t inputSession() const;
     bool inputRunning() const;
     /** The open stream's actual format, which may differ from what was asked for. */
     int32_t inputChannels() const;

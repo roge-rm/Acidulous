@@ -15,6 +15,24 @@ import java.io.OutputStream
 class AndroidHost(private val context: Context) : AppHost {
     private val info = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
 
+    override val cleansInput: Boolean get() = true
+    /** On the clean input's session while it's open. Not every phone has both. */
+    private var inputEffects: List<android.media.audiofx.AudioEffect> = emptyList()
+    private var effectSession = 0
+
+    override fun inputSession(id: Int) {
+        if (id == effectSession) return
+        inputEffects.forEach { runCatching { it.release() } }
+        inputEffects = emptyList()
+        effectSession = id
+        if (id <= 0) return
+        inputEffects = listOfNotNull(
+            if (android.media.audiofx.NoiseSuppressor.isAvailable()) runCatching { android.media.audiofx.NoiseSuppressor.create(id) }.getOrNull() else null,
+            if (android.media.audiofx.AutomaticGainControl.isAvailable()) runCatching { android.media.audiofx.AutomaticGainControl.create(id) }.getOrNull() else null,
+        )
+        inputEffects.forEach { runCatching { it.enabled = true } }
+    }
+
     override val versionName: String? get() = info?.versionName
     override val versionLong: String?
         get() = info?.let { "%s (%d)".format(it.versionName, androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it)) }

@@ -57,6 +57,9 @@ class AudioDriver {
     /** Start the input: 0 is the system default, anything else an id from listInputs. */
     bool startInput(int32_t deviceId = 0);
     void stopInput();
+    /** The sound server gives the input as it is, so there's nothing to switch (see the Oboe driver). */
+    void setInputClean(bool) {}
+    int32_t inputSession() const { return 0; }
     bool isInputRunning() const { return capturer != nullptr || driverInput.load(); }
     int32_t inputChannels() const { return actualInputChannels; }
     int32_t inputRate() const { return actualInputRate; }

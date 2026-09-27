@@ -598,9 +598,19 @@ object NativeEngine {
      * only listen don't care which input they get. Asking for a different
      * one while open reopens the stream.
      */
-    fun startInput(deviceId: Int = 0): Boolean = EngineNative.nativeStartInput(deviceId)
+    fun startInput(deviceId: Int = 0): Boolean =
+        EngineNative.nativeStartInput(deviceId).also { com.rm.acidulous.AppHost.current.inputSession(EngineNative.nativeInputSession()) }
     /** True if closing the input cut a recording short. */
-    fun stopInput(): Boolean = EngineNative.nativeStopInput()
+    fun stopInput(): Boolean = EngineNative.nativeStopInput().also { com.rm.acidulous.AppHost.current.inputSession(0) }
+    /**
+     * The microphone raw, for instruments, or clean, with the platform's
+     * noise suppression and level control, for voices. An open input
+     * reopens. See AppHost.cleansInput.
+     */
+    fun setInputClean(on: Boolean) {
+        EngineNative.nativeSetInputClean(on)
+        com.rm.acidulous.AppHost.current.inputSession(EngineNative.nativeInputSession())
+    }
     val inputRunning: Boolean get() = EngineNative.nativeInputRunning()
     /** What the open stream actually is, rather than what was asked for. */
     val inputChannels: Int get() = EngineNative.nativeInputChannels()

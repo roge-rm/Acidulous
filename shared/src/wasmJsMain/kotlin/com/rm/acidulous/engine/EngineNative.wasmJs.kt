@@ -22,6 +22,12 @@ private fun raw_nativeNexusActivity(env: Int, rack: Int, out: Int): Int =
 private fun raw_nativeStartInput(env: Int, deviceId: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeStartInput(env, 0, deviceId)")
 
+private fun raw_nativeSetInputClean(env: Int, on: Int): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetInputClean(env, 0, on)")
+
+private fun raw_nativeInputSession(env: Int): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeInputSession(env, 0)")
+
 private fun raw_nativeStopInput(env: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeStopInput(env, 0)")
 
@@ -565,6 +571,18 @@ internal actual object EngineNative {
     actual fun nativeStartInput(deviceId: Int): Boolean {
         val raw_ = raw_nativeStartInput(Jni.env, deviceId)
         val result_ = raw_ != 0
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeSetInputClean(on: Boolean) {
+        raw_nativeSetInputClean(Jni.env, if (on) 1 else 0)
+        Jni.release()
+    }
+
+    actual fun nativeInputSession(): Int {
+        val raw_ = raw_nativeInputSession(Jni.env)
+        val result_ = raw_
         Jni.release()
         return result_
     }

@@ -99,6 +99,9 @@ PHONE_ONLY = {
 }
 
 DESKTOP_SENTENCES = {
+    # Only a browser can clean the input.
+    "**mic** is **raw** for an instrument, or **clean** for a voice, with noise suppression and level control.":
+        "In a browser, **mic** is **raw** for an instrument, or **clean** for a voice, with noise suppression and level control.",
     # The pointer.
     "Drag with two fingers to move around the grid and pinch to make the cells bigger or smaller. One finger still opens and launches clips.":
         "The mouse wheel moves around the grid, sideways with Shift held, and Ctrl and the wheel make the cells bigger or smaller.",

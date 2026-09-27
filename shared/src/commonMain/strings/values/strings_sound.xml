@@ -37,6 +37,12 @@
     <string name="sound_tab_input">input</string>
     <string name="sound_gain">gain</string>
     <string name="sound_monitor">monitor</string>
+    <!-- The microphone as it is, or with the phone's noise suppression and level control. -->
+    <string name="sound_mic">mic</string>
+    <string-array name="sound_mic_choices">
+        <item>raw</item>
+        <item>clean</item>
+    </string-array>
     <string name="sound_printed">printed into the take</string>
     <!-- Kinds of input. Anything else is called by its product name. -->
     <string name="sound_input_default">default</string>

@@ -302,6 +302,16 @@ Java_com_rm_acidulous_engine_EngineNative_nativeStopInput(JNIEnv *, jobject) {
     return host().stopInput() ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeSetInputClean(JNIEnv *, jobject, jboolean on) {
+    host().setInputClean(on == JNI_TRUE);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeInputSession(JNIEnv *, jobject) {
+    return host().inputSession();
+}
+
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeInputChannels(JNIEnv *, jobject) {
     return host().inputChannels();

@@ -16,6 +16,8 @@ internal actual object EngineNative {
     actual external fun nativeNexusScope(rack: Int, out: FloatArray): Int
     actual external fun nativeNexusActivity(rack: Int, out: FloatArray): Int
     actual external fun nativeStartInput(deviceId: Int): Boolean
+    actual external fun nativeSetInputClean(on: Boolean)
+    actual external fun nativeInputSession(): Int
     actual external fun nativeStopInput(): Boolean
     actual external fun nativeInputChannels(): Int
     actual external fun nativeInputRate(): Int

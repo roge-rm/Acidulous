@@ -2131,6 +2131,8 @@ bool EngineHost::stopInput() {
     sEngine.capture.stop();
     return wasRecording;
 }
+void EngineHost::setInputClean(bool on) { sAudio.setInputClean(on); }
+int32_t EngineHost::inputSession() const { return sAudio.inputSession(); }
 bool EngineHost::inputRunning() const { return sAudio.isInputRunning(); }
 int32_t EngineHost::inputChannels() const { return sAudio.inputChannels(); }
 int32_t EngineHost::inputRate() const { return sAudio.inputRate(); }

@@ -43,6 +43,15 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
      */
     bool startInput(int32_t deviceId = 0);
     void stopInput();
+    /**
+     * Raw is the microphone as it is, for instruments. Clean is the phone's
+     * own recording path, level control and all, with a session the platform
+     * hangs its noise suppressor and gain control on. An open input reopens
+     * to match.
+     */
+    void setInputClean(bool on);
+    /** The open input's audio session when it's clean, for those effects. 0 otherwise. */
+    int32_t inputSession() const { return actualInputSession; }
     bool isInputRunning() const { return inputStream != nullptr; }
     int32_t inputChannels() const { return actualInputChannels; }
     /** The rate the stream actually opened at, which may differ from what was asked. */
@@ -166,6 +175,9 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     int32_t actualInputChannels = 0;
     int32_t actualInputRate = 0;
     int32_t actualInputDevice = 0;
+    int32_t actualInputSession = 0;
+    bool inputClean = false; // wanted
+    bool openClean = false;  // what the open stream is
     /** How much of the peak each meter read leaves (see readInputPeak). */
     static constexpr float kMeterDecay = 0.7f;
     std::atomic<float> inputPeak{0.0f};

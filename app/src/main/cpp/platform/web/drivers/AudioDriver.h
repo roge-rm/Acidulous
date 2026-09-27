@@ -78,6 +78,9 @@ class AudioDriver {
      */
     bool startInput(int32_t = 0);
     void stopInput();
+    /** The browser's noise suppression and level control, off for raw (see the Oboe driver). */
+    void setInputClean(bool on);
+    int32_t inputSession() const { return 0; }
     bool isInputRunning() const { return inputOn.load(std::memory_order_relaxed); }
     int32_t inputChannels() const { return isInputRunning() ? 2 : 0; }
     int32_t inputRate() const { return isInputRunning() ? getSampleRate() : 0; }
@@ -142,6 +145,7 @@ class AudioDriver {
     std::atomic<double> latencySeconds{0.0};
 
   private:
+    bool inputClean = false; // see setInputClean
     static constexpr int32_t kQuantum = 128;
     static constexpr int32_t kInputRingFrames = 2048;
     static constexpr float kMeterDecay = 0.7f;

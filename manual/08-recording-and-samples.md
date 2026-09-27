@@ -7,6 +7,7 @@ pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
 - **Record** - choose the input, watch the level and record.
   - **source** is **in** for the microphone or what's plugged in, or
     **resample** to record what the app is playing.
+  - **mic** is **raw** for an instrument, or **clean** for a voice, with noise suppression and level control.
   - The **tuner** in the input card shows the nearest note and how many cents
     off you are, and turns green within four cents. It listens before the input
     effects, and shows nothing unless it's sure of the note.

@@ -33,6 +33,18 @@ interface AppHost {
     fun audioOutputs(): List<Pair<Int, String>> = emptyList()
     fun chooseAudioOutput(id: Int) {}
 
+    /**
+     * Whether the platform can clean up a microphone (noise suppression and
+     * level control), so the recorder offers raw or clean. Android and the
+     * browser can. A desktop's sound server gives the input as it is.
+     */
+    val cleansInput: Boolean get() = false
+    /**
+     * The open input's audio session when it's clean, or 0 when it's raw or
+     * closed. Android hangs its effects on it.
+     */
+    fun inputSession(id: Int) {}
+
     // --- Files from the platform's pickers: see [Doc] -------------------------
 
     /** The file's name, or [fallback] if the platform won't say. */
