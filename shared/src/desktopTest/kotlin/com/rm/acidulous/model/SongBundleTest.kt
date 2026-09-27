@@ -5,6 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import java.io.File
 import java.nio.file.Files
@@ -29,7 +30,7 @@ class SongBundleTest {
         val out = File(root, "song.zip")
         assertEquals(1, SongBundle.write(song("pad0" to "samples/kick.wav"), root, out))
         withRoot { other ->
-            val back = SongBundle.read(out, other)
+            val back = runBlocking { SongBundle.read(out, other) }
             assertNotNull(back)
             assertEquals("samples/kick.wav", back!!.tracks[0].machine.settings["pad0"])
             assertArrayEquals(byteArrayOf(1, 2, 3), File(other, "samples/kick.wav").readBytes())
@@ -47,7 +48,7 @@ class SongBundleTest {
             File(theirs, "samples/take 1.wav").writeBytes(byteArrayOf(4, 5, 6))
             SongBundle.write(song("pad0" to "samples/take 1.wav", "zones" to "samples/take 1.wav|36|60"), theirs, out)
         }
-        val back = SongBundle.read(out, root)!!
+        val back = runBlocking { SongBundle.read(out, root) }!!
         assertArrayEquals("mine is untouched", byteArrayOf(9, 9, 9), mine.readBytes())
         assertEquals("samples/take 1 (2).wav", back.tracks[0].machine.settings["pad0"])
         assertEquals("samples/take 1 (2).wav|36|60", back.tracks[0].machine.settings["zones"])
@@ -60,7 +61,7 @@ class SongBundleTest {
         File(root, "samples/hat.wav").writeBytes(byteArrayOf(7, 7))
         val out = File(root, "same.zip")
         SongBundle.write(song("pad0" to "samples/hat.wav"), root, out)
-        val back = SongBundle.read(out, root)!!
+        val back = runBlocking { SongBundle.read(out, root) }!!
         assertEquals("samples/hat.wav", back.tracks[0].machine.settings["pad0"])
         assertFalse(File(root, "samples/hat (2).wav").exists())
     }

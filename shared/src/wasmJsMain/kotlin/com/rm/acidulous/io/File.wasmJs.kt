@@ -1,5 +1,8 @@
 package com.rm.acidulous.io
 
+import kotlin.wasm.unsafe.UnsafeWasmMemoryApi
+import kotlin.wasm.unsafe.withScopedMemoryAllocator
+
 // Files in the browser live in the engine's own Emscripten file system
 // (globalThis.acid.FS), so a file the app writes is the same file the engine
 // loads by that path. The page mounts browser storage under the app's folder
@@ -26,20 +29,44 @@ private fun fsList(p: String): String? = js(
 )
 private fun fsReadText(p: String): String = js("globalThis.acid.FS.readFile(p, { encoding: 'utf8' })")
 private fun fsWriteText(p: String, text: String): Unit = js("globalThis.acid.FS.writeFile(p, text)")
-/** A file's bytes as a string of chars 0-255, so it crosses to Kotlin in one call. */
-private fun fsReadLatin1(p: String): String = js(
-    "(() => { const a = globalThis.acid.FS.readFile(p); let s = ''; " +
-        "for (let i = 0; i < a.length; i += 8192) s += String.fromCharCode.apply(null, a.subarray(i, i + 8192)); return s; })()",
-)
-private fun fsWriteLatin1(p: String, s: String): Unit = js(
-    "(() => { const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); " +
-        "globalThis.acid.FS.writeFile(p, a); })()",
-)
+internal fun fsReadBytes(p: String): JsAny = js("globalThis.acid.FS.readFile(p)")
+private fun fsWriteBytes(p: String, a: JsAny): Unit = js("globalThis.acid.FS.writeFile(p, a)")
 /** Tells the page something changed so it saves browser storage soon. */
 private fun fsChanged(): Unit = js("globalThis.acidFsChanged && globalThis.acidFsChanged()")
 
-internal fun latin1(bytes: ByteArray): String = CharArray(bytes.size) { (bytes[it].toInt() and 0xff).toChar() }.concatToString()
-internal fun fromLatin1(s: String): ByteArray = ByteArray(s.length) { s[it].code.toByte() }
+// Bytes cross between Kotlin and JavaScript through Kotlin's own memory: a
+// scratch block is allocated, and JavaScript copies into or out of it as a
+// Uint8Array. Going through strings instead froze the page on big files.
+internal fun jsLength(a: JsAny): Int = js("a.length")
+private fun jsCopyIn(a: JsAny, at: Int): Unit = js("new Uint8Array(wasmExports.memory.buffer, at, a.length).set(a)")
+private fun jsCopyOut(at: Int, n: Int): JsAny = js("new Uint8Array(wasmExports.memory.buffer, at, n).slice()")
+private fun jsEmpty(): JsAny = js("new Uint8Array(0)")
+
+/** A Uint8Array's bytes. */
+@OptIn(UnsafeWasmMemoryApi::class)
+internal fun bytesOf(a: JsAny): ByteArray {
+    val n = jsLength(a)
+    val out = ByteArray(n)
+    if (n == 0) return out
+    withScopedMemoryAllocator { m ->
+        val at = m.allocate(n)
+        jsCopyIn(a, at.address.toInt())
+        for (i in 0 until n) out[i] = (at + i).loadByte()
+    }
+    return out
+}
+
+/** [bytes] as a new Uint8Array. */
+@OptIn(UnsafeWasmMemoryApi::class)
+private fun jsBytes(bytes: ByteArray): JsAny {
+    val n = bytes.size
+    if (n == 0) return jsEmpty()
+    return withScopedMemoryAllocator { m ->
+        val at = m.allocate(n)
+        for (i in 0 until n) (at + i).storeByte(bytes[i])
+        jsCopyOut(at.address.toInt(), n)
+    }
+}
 
 /** Normalises a path like Java does: no doubled separators, none at the end. */
 private fun normal(p: String): String {
@@ -63,7 +90,7 @@ actual class File actual constructor(pathname: String) {
     actual fun mkdirs(): Boolean = if (exists()) false else fsMkdirs(p).also { if (it) fsChanged() }
     actual fun createNewFile(): Boolean {
         if (exists()) return false
-        fsWriteLatin1(p, "")
+        fsWriteBytes(p, jsEmpty())
         fsChanged()
         return true
     }
@@ -113,9 +140,9 @@ actual fun File.writeText(text: String) {
     fsWriteText(p, text)
     fsChanged()
 }
-actual fun File.readBytes(): ByteArray = fromLatin1(fsReadLatin1(p))
+actual fun File.readBytes(): ByteArray = bytesOf(fsReadBytes(p))
 actual fun File.writeBytes(array: ByteArray) {
-    fsWriteLatin1(p, latin1(array))
+    fsWriteBytes(p, jsBytes(array))
     fsChanged()
 }
 actual fun File.copyTo(target: File, overwrite: Boolean): File {
@@ -127,7 +154,8 @@ actual fun File.copyTo(target: File, overwrite: Boolean): File {
     if (isDirectory) target.mkdirs()
     else {
         target.parentFile?.mkdirs()
-        target.writeBytes(readBytes())
+        fsWriteBytes(target.p, fsReadBytes(p))
+        fsChanged()
     }
     return target
 }
@@ -187,5 +215,5 @@ actual class ZipWriter actual constructor(private val out: File) {
     actual fun close() = out.writeBytes(zip.finish())
 }
 
-actual fun readZip(zip: File, each: (name: String, isDirectory: Boolean, bytes: () -> ByteArray) -> Unit) =
-    Zip.read(zip.readBytes(), each)
+actual suspend fun readZip(zip: File, each: suspend (name: String, isDirectory: Boolean, bytes: suspend () -> ByteArray) -> Unit) =
+    Zip.read(fsReadBytes(zip.p), each)

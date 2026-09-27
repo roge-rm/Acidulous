@@ -51,7 +51,7 @@ object SongBundle {
      *
      * Zip entries with paths leading outside the folder are skipped.
      */
-    fun read(bundle: File, userRoot: File): Song? {
+    suspend fun read(bundle: File, userRoot: File): Song? {
         var song: Song? = null
         val rootPath = userRoot.canonicalFile
         val renamed = LinkedHashMap<String, String>()

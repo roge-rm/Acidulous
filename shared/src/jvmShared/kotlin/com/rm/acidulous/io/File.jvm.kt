@@ -81,7 +81,7 @@ actual class ZipWriter actual constructor(out: File) {
     actual fun close() = zip.close()
 }
 
-actual fun readZip(zip: File, each: (name: String, isDirectory: Boolean, bytes: () -> ByteArray) -> Unit) {
+actual suspend fun readZip(zip: File, each: suspend (name: String, isDirectory: Boolean, bytes: suspend () -> ByteArray) -> Unit) {
     java.util.zip.ZipInputStream(zip.inputStream().buffered()).use { input ->
         while (true) {
             val entry = input.nextEntry ?: break

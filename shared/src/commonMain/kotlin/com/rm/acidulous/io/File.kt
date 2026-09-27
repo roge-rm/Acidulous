@@ -65,4 +65,4 @@ expect class ZipWriter(out: File) {
 }
 
 /** Every entry of a zip in order: its name, whether it's a folder, and its bytes on request. */
-expect fun readZip(zip: File, each: (name: String, isDirectory: Boolean, bytes: () -> ByteArray) -> Unit)
+expect suspend fun readZip(zip: File, each: suspend (name: String, isDirectory: Boolean, bytes: suspend () -> ByteArray) -> Unit)
