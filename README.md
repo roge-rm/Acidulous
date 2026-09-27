@@ -1,6 +1,7 @@
 # Acidulous
 
 Acidulous is a music studio for Android 8.1 and up. 
+It also runs on Linux, on Windows and in a web browser.
 
 Combine up to 16 synthesizers, drum machines, noise generators and processors together into scenes of music and play them in order or pick and choose to generate something new every time.
 
@@ -150,7 +151,36 @@ The easiest way to install Acidulous and keep it up to date is through my F-Droi
 Then search for Acidulous in F-Droid. When a new version comes out, F-Droid will offer it as an update.
 
 You can also download the APK from the [Releases](https://github.com/roge-rm/Acidulous/releases)
-page and sideload it.
+page and sideload it. There are two: the usual 64-bit one, and a 32-bit one
+for tablets that run 32-bit Android, like the Fire HD 8.
+
+### Linux
+
+From the [Releases](https://github.com/roge-rm/Acidulous/releases) page:
+
+- **Debian 13 (Trixie) and Raspberry Pi OS:** the `.deb` for your machine,
+  amd64 or arm64. Install it with `sudo apt install ./acidulous_*.deb`, which
+  brings in Java 21 as well.
+- **Anything else** (Ubuntu 22.04 and newer, Fedora, Arch, the Steam Deck):
+  the AppImage, x86_64 or aarch64. It carries its own Java. Make it
+  executable and run it.
+
+### Windows
+
+Windows 10 or 11, 64-bit. From the [Releases](https://github.com/roge-rm/Acidulous/releases)
+page, run `Acidulous-*-setup.exe`, or unzip the portable
+`Acidulous-*-windows-x64.zip` anywhere and run `Acidulous.exe`. Neither is
+signed, so Windows will warn you: choose **More info** and then **Run anyway**.
+If your audio interface has its own low-latency driver, pick it under
+**Settings · audio · output**.
+
+### In a browser
+
+[https://roge-rm.gitlab.io/play/acidulous](https://roge-rm.gitlab.io/play/acidulous/)
+
+A current Chrome or Edge works best, since they have MIDI too. It can be
+installed from the browser's address bar, and after the first visit it works
+offline. Your songs are kept in the browser.
 
 ## Building
 
@@ -163,13 +193,25 @@ You need the Android SDK and NDK. The NDK version is pinned in
 ./gradlew -Parm32 assembleRelease   # the 32-bit APK, for tablets like the Fire HD 8
 ```
 
+The desktop and browser builds come from the same code. The packages are
+built on Linux, with Docker doing the cross-compiling; the browser engine
+needs the Emscripten SDK.
+
+```sh
+./gradlew :desktop:run                          # run it on this computer
+./gradlew :desktop:debAmd64 :desktop:debArm64   # the Debian packages
+./gradlew :desktop:appImageAmd64                # an AppImage (appImageArm64 too)
+./gradlew :desktop:windowsX64                   # the Windows installer and zip
+./gradlew :webApp:wasmJsBrowserDistribution     # the browser version
+```
+
 | | |
 |---|---|
 | Minimum Android | 8.1 (API 27) |
 | Built against | API 37 |
 | ABIs | `arm64-v8a`, `x86_64`; with `-Parm32`, `armeabi-v7a` and `x86` |
 | UI | Kotlin, Jetpack Compose |
-| Engine | C++17 in `app/src/main/cpp`, audio through Oboe |
+| Engine | C++17 in `app/src/main/cpp`: audio through Oboe on Android, miniaudio on the desktop, Web Audio in a browser |
 
 ## Testing
 
