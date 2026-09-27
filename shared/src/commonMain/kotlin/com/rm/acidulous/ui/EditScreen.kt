@@ -319,8 +319,10 @@ fun EditScreen(
         .toInt().coerceIn(MinRows, maxRows)
     val defaultBars = if (steps) 1 else if (wide) PAGE_BARS_LAND else PAGE_BARS
     val defaultTicks = (defaultBars * ticksPerBar).toFloat()
-    // A pinch never shows less than a beat or more than the whole clip.
-    val pageTicks = (if (zoomTicks > 0f) zoomTicks else defaultTicks)
+    // A pinch never shows less than a beat or more than the whole clip. A
+    // tape's lanes always show all of it, so its automation does too, or the
+    // two playheads would be in different places.
+    val pageTicks = (if (kind == MachineKind.Audio) clipLen.toFloat() else if (zoomTicks > 0f) zoomTicks else defaultTicks)
         .coerceIn(PPQN.toFloat(), clipLen.toFloat().coerceAtLeast(PPQN.toFloat()))
     val maxScroll = (clipLen - pageTicks).coerceAtLeast(0f)
     scrollTick = scrollTick.coerceIn(0f, maxScroll)
