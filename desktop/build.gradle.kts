@@ -319,6 +319,9 @@ fun registerAppImage(
         from(file("deb/acidulous.desktop"))
         from(rootProject.file("branding/acidulous-icon-1024.svg")) { rename { "acidulous.svg" } }
         from(rootProject.file("NOTICE")) { into("usr/share/doc/acidulous") }
+        // The runtime is unpacked here later and replaced each build. Pruning
+        // it deletes java.base before the links into it, which fails the sync.
+        preserve { include("usr/lib/acidulous/jre/**") }
     }
     val out = layout.buildDirectory.file("appimage/Acidulous-$versionName-$appImageArch.AppImage")
     tasks.register("appImage$cap") {
