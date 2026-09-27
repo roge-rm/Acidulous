@@ -1237,7 +1237,7 @@ fun App(modifier: Modifier = Modifier) {
                     }
                     playing && position.scene == a.index -> NativeEngine.stopAtEnd = !NativeEngine.stopAtEnd
                     playing -> NativeEngine.queuedScene = if (NativeEngine.queuedScene == a.index) -1 else a.index
-                    else -> { onLoopScene(true); EngineSync.play(a.index, false) }
+                    else -> { onLoopScene(song.loopSong); EngineSync.play(a.index, false) }
                 }
             }
             is com.rm.acidulous.midi.launchpad.LpAction.LaunchClip -> song.scenes.getOrNull(a.scene)?.let { scene ->

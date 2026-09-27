@@ -722,10 +722,19 @@ fun MainScreen(
                                     // instead of cutting in. Tap again to
                                     // unqueue.
                                     playing -> NativeEngine.queuedScene = if (queuedScene == index) -1 else index
-                                    else -> { onLoopScene(true); com.rm.acidulous.engine.EngineSync.play(index, clipMode) }
+                                    // Stopped: start here and do what the
+                                    // loop pill says. ⟳ holds this scene, and
+                                    // ⇥ end plays on to the end of the song.
+                                    else -> { onLoopScene(song.loopSong); com.rm.acidulous.engine.EngineSync.play(index, clipMode) }
                                 }
                             },
-                            onLoopThis = { onLoopScene(true); com.rm.acidulous.engine.EngineSync.play(index, clipMode) },
+                            // Looping a scene means repeating, so it turns ⇥
+                            // end back to ⟳, as a tap on the pill does.
+                            onLoopThis = {
+                                if (!song.loopSong) editor.replace(song.copy(loopSong = true))
+                                onLoopScene(true)
+                                com.rm.acidulous.engine.EngineSync.play(index, clipMode)
+                            },
                             onPlayThrough = { onLoopScene(false); com.rm.acidulous.engine.EngineSync.play(index, clipMode) },
                             onSettings = { dialog = Dialog.SceneSettings(index) },
                             onInsertAfter = { editor.editSong { it.addScene(afterIndex = index) } },

@@ -60,7 +60,7 @@ object Manual {
             ManualBlock(ManualKind.Para, "The grid can be used as an arranger or as a clip launcher, switch between them by pressing the button in the top left corner of the song grid."),
             ManualBlock(ManualKind.Heading, "As an arranger"),
             ManualBlock(ManualKind.Para, "This is the default. The song plays scene by scene from left to right. Each scene plays all its clips, repeats as many times as its header says, and then the next scene starts."),
-            ManualBlock(ManualKind.Bullet, "Tap a scene's header to play just that scene.", "Click a scene's header to play just that scene."),
+            ManualBlock(ManualKind.Bullet, "Tap a scene's header to start there. With **⟳** that scene repeats, and with **⇥ end** the song plays on from it to the end and stops.", "Click a scene's header to start there. With **⟳** that scene repeats, and with **⇥ end** the song plays on from it to the end and stops."),
             ManualBlock(ManualKind.Bullet, "Hold a scene's header for its menu: settings, insert, duplicate, delete and move left or right."),
             ManualBlock(ManualKind.Bullet, "Tap the loop button at the left of the bottom bar to loop the whole song or just the current scene. Hold it to choose **⟳** to loop forever or **⇥ end** to play through once and stop.", "Click the loop button at the left of the bottom bar to loop the whole song or just the current scene. Hold it to choose **⟳** to loop forever or **⇥ end** to play through once and stop."),
             ManualBlock(ManualKind.Bullet, "After a stop, play starts again from the top of the song."),
