@@ -1,3 +1,4 @@
+import java.security.MessageDigest
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
@@ -75,6 +76,11 @@ kotlin.sourceSets.named("wasmJsMain") { resources.srcDir(stageLicences.map { it.
  * its progress bar (index.html): load-sizes.json beside it. Written into the
  * distribution when it is made, since the WebAssembly files' names are the
  * bundler's hashes, and so goes wherever the distribution is published.
+ *
+ * And the service worker's two lines (sw.js): every file of the build, which
+ * it keeps together, and a fingerprint of them all, which is how a browser
+ * that has the app kept notices there is a new one. Source maps are left out:
+ * only a debugger asks for them.
  */
 listOf(
     "wasmJsBrowserDistribution" to "productionExecutable",
@@ -84,10 +90,26 @@ listOf(
     tasks.matching { it.name == task }.configureEach {
         doLast {
             val files = dist.listFiles().orEmpty()
-                .filter { it.isFile && (it.name.endsWith(".wasm") || it.name.endsWith(".js")) && it.name != "coi-serviceworker.js" }
+                .filter { it.isFile && (it.name.endsWith(".wasm") || it.name.endsWith(".js")) && it.name != "sw.js" }
                 .sortedBy { it.name }
             dist.resolve("load-sizes.json").writeText(
                 files.joinToString(",\n", "{\n", "\n}\n") { "  \"${it.name}\": ${it.length()}" },
+            )
+            val worker = dist.resolve("sw.js")
+            val kept = dist.walkTopDown()
+                .filter { it.isFile && it != worker && !it.name.endsWith(".map") }
+                .map { it.relativeTo(dist).invariantSeparatorsPath }
+                .sorted().toList()
+            val digest = MessageDigest.getInstance("SHA-256")
+            for (path in kept) {
+                digest.update(path.toByteArray())
+                digest.update(dist.resolve(path).readBytes())
+            }
+            val fingerprint = digest.digest().joinToString("") { "%02x".format(it) }.take(16)
+            worker.writeText(
+                worker.readText()
+                    .replace("'__VERSION__'", "'$fingerprint'")
+                    .replace("__FILES__", kept.joinToString(", ", "[", "]") { "'$it'" }),
             )
         }
     }

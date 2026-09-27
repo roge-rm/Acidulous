@@ -4,8 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Acidulous</title>
-<!-- The isolation headers a static host cannot send: see web/app/third_party/coi-serviceworker. -->
-<script src="coi-serviceworker.js"></script>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1b1c1f">
+<script>
+  // The service worker (sw.js): the isolation headers a static host cannot
+  // send, and the app kept for next time and for installing. On a first visit
+  // it only answers once it is in charge, so the page loads again then - once,
+  // in case this browser will not isolate a page at all.
+  (() => {
+    const tried = (set) => { try { return set ? sessionStorage.setItem('acid-reloaded', '1') : sessionStorage.getItem('acid-reloaded'); } catch (e) { return '1'; } };
+    if (window.crossOriginIsolated) { try { sessionStorage.removeItem('acid-reloaded'); } catch (e) {} }
+    if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+    navigator.serviceWorker.register('sw.js').then(() => {
+      if (window.crossOriginIsolated) return;
+      const again = () => { if (!tried()) { tried(true); location.reload(); } };
+      if (navigator.serviceWorker.controller) again();
+      else navigator.serviceWorker.addEventListener('controllerchange', again);
+    }).catch((e) => console.warn('Acidulous: no service worker', e));
+  })();
+</script>
 <style>
   html, body { margin: 0; height: 100%; background: #1b1c1f; overflow: hidden; }
   /* The status line is behind the app, which covers it with its first frame. */
@@ -133,7 +152,14 @@
       addEventListener('keydown', wake, true);
       const ui = document.createElement('script');
       ui.src = 'acidulous-ui.js';
-      ui.onload = () => loading.done('acidulous-ui.js');
+      ui.onload = () => {
+        loading.done('acidulous-ui.js');
+        // Running: keep the rest of the app too (sw.js), once the start is over.
+        setTimeout(() => navigator.serviceWorker?.controller?.postMessage('fill'), 5000);
+        // Installed, the songs are worth keeping when the browser is short of
+        // room. Asked only then: some browsers ask the person.
+        if (matchMedia('(display-mode: standalone)').matches) navigator.storage?.persist?.();
+      };
       document.body.appendChild(ui);
     });
   });

@@ -214,8 +214,8 @@ or later**. See [LICENSE](LICENSE).
 
 Copyright © 2026 Dan Hunke.
 
-Third-party components (Oboe, LAME, Ableton Link, asio, miniaudio, alsa-lib,
-coi-serviceworker and subsets of the DejaVu and Noto fonts) are listed with
+Third-party components (Oboe, LAME, Ableton Link, asio, miniaudio, alsa-lib
+and subsets of the DejaVu and Noto fonts) are listed with
 their licences in [NOTICE](NOTICE), and every licence text can be read from
 the app's About window.
 

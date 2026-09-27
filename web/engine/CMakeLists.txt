@@ -8,7 +8,7 @@ project(acidulous_web LANGUAGES C CXX)
 #
 # Threads and shared memory: the UI calls into the very engine the audio
 # worklet renders from, as it does on the phone, which is why the page must
-# be cross-origin isolated (web/app/third_party/coi-serviceworker).
+# be cross-origin isolated (web/app/src/wasmJsMain/resources/sw.js).
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
