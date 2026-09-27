@@ -1,9 +1,11 @@
 #pragma once
 #include <atomic>
 #include <cstddef>
+#include <mutex>
 
 // Single-producer, single-consumer ring. Wait-free on both sides. This is the
 // only cross-thread structure the audio thread touches, in either direction.
+// SharedQueue, below, is the same ring for more than one producer.
 namespace acidulous {
 
 template <typename T, size_t N>
@@ -38,6 +40,29 @@ class RtQueue {
     T buf[N];
     std::atomic<size_t> wr{0};
     std::atomic<size_t> rd{0};
+};
+
+/**
+ * An RtQueue that many threads can push into. The engine's input queues are
+ * fed from the UI thread, each MIDI port's own thread and any worker loading
+ * a sample, and two pushes at once could write the same slot and lose one.
+ *
+ * Pushers take turns on a lock. The consumer, the audio thread, never takes
+ * it and pops as before.
+ */
+template <typename T, size_t N>
+class SharedQueue {
+  public:
+    bool push(const T &item) {
+        std::lock_guard<std::mutex> turn(pushing);
+        return ring.push(item);
+    }
+    bool pop(T &out) { return ring.pop(out); }
+    bool empty() const { return ring.empty(); }
+
+  private:
+    RtQueue<T, N> ring;
+    std::mutex pushing;
 };
 
 } // namespace acidulous

@@ -299,9 +299,9 @@ class Engine : public Rack::ModifiedNoteSink {
     };
     PendingParam pendingParams[kRackCount];
 
-    RtQueue<Mount, 64> mounts;
-    RtQueue<MidiMessage, 256> midiIn;
-    RtQueue<ParamMessage, 512> paramsIn;
+    SharedQueue<Mount, 64> mounts;
+    SharedQueue<MidiMessage, 256> midiIn;
+    SharedQueue<ParamMessage, 512> paramsIn;
 
     void emitClock(int64_t blockStartTick, int64_t blockEndTick);
     void drainClockIn();

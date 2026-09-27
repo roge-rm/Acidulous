@@ -138,15 +138,19 @@ object MidiHub {
      */
     private val held = HeldNotes()
 
-    /** Currently dispatching from this port, or -1 for the test generators. */
-    private var currentPort = -1
+    /**
+     * Held while a message is dispatched. Each port delivers on its own
+     * thread, the test generators on the handler's, and dispatch keeps what's
+     * held and swallowed in plain maps, so they take turns.
+     */
+    private val dispatching = Any()
 
     /** Nothing is held any more: forget where everything went. */
-    fun forgetSounding() = held.clear()
+    fun forgetSounding() = com.rm.acidulous.util.locked(dispatching) { held.clear() }
 
     /** Release whatever a port was holding, since it will never send the note-offs. */
     private fun releasePort(portId: Int) {
-        val freed = held.release(portId)
+        val freed = com.rm.acidulous.util.locked(dispatching) { held.release(portId) }
         for (h in freed) {
             NativeEngine.midiEvent(h.rack, 0x80, h.note, 0, NativeEngine.NO_CHANNEL)
         }
@@ -799,7 +803,7 @@ object MidiHub {
                             exquisButtonPressed?.let { f -> postToMain { f(id) } }
                         }
                     } else {
-                        currentPort = portId; dispatch(status, d1, d2); currentPort = -1
+                        dispatch(status, d1, d2, portId)
                     }
                 },
                 onRealtime = { status, d1, d2, stamp -> clockIn(status, d1, d2, stamp) },
@@ -931,9 +935,10 @@ object MidiHub {
 
     /**
      * Send a message on to the engine, addressed to a rack. Channel 10 isn't
-     * special here: the rack is whatever the routing says.
+     * special here: the rack is whatever the routing says. [currentPort] is
+     * the port it came from, or -1 for the test generators.
      */
-    private fun dispatch(status: Int, d1: Int, d2In: Int) {
+    private fun dispatch(status: Int, d1: Int, d2In: Int, currentPort: Int = -1): Unit = com.rm.acidulous.util.locked(dispatching) {
         val kind = status and 0xf0
         // Before mappings, recording and the readout, so they all see the
         // note as it will sound. The test generators are left alone.

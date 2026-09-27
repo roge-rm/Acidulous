@@ -120,6 +120,6 @@ class MidiOutQueue {
     RtQueue<MidiOutEvent, 1024> q;
     std::atomic<bool> held{false};
 };
-using MidiClockQueue = RtQueue<MidiInEvent, 256>;
+using MidiClockQueue = SharedQueue<MidiInEvent, 256>; // every port that sends clock
 
 } // namespace acidulous
