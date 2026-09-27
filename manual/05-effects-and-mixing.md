@@ -1,6 +1,4 @@
 # Effects and mixing
-> Two inserts a track, two sends, groups, and the master.
-
 ## Inserts
 
 Each track has two insert effect slots. **fx** in the editor's bottom bar shows
