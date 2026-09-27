@@ -148,9 +148,9 @@ private fun AudioTab(trackNames: List<String>) {
         if (outputs.isNotEmpty()) {
             WindowCard(stringResource(Res.string.settings_output)) {
                 val choices = listOf(0 to stringResource(Res.string.settings_output_default)) + outputs
-                SwitchGrid(
+                DeviceList(
                     stringResource(Res.string.settings_output_device), choices.map { it.second },
-                    choices.indexOfFirst { it.first == UiPrefs.outputDevice }.coerceAtLeast(0), columns = 1,
+                    choices.indexOfFirst { it.first == UiPrefs.outputDevice }.coerceAtLeast(0),
                 ) { UiPrefs.chooseOutputDevice(choices[it].first) }
             }
         }

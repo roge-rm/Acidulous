@@ -349,8 +349,12 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
             if (fromInput && havePermission && devices.size > 1) {
                 // Only where there is a choice to make. On a phone with nothing
                 // plugged in this would be one cell saying "built-in".
-                SwitchGrid(stringResource(Res.string.sound_input), devices.map { it.label }, devices.indexOfFirst { it.id == device }, columns = 1) {
-                    if (!recording) device = devices[it].id
+                // A computer's list is long and its names long too: see DeviceList.
+                val pick: (Int) -> Unit = { if (!recording) device = devices[it].id }
+                if (AppHost.current.onDesktop) {
+                    DeviceList(stringResource(Res.string.sound_input), devices.map { it.label }, devices.indexOfFirst { it.id == device }, enabled = !recording, onPick = pick)
+                } else SwitchGrid(stringResource(Res.string.sound_input), devices.map { it.label }, devices.indexOfFirst { it.id == device }, columns = 1) {
+                    pick(it)
                 }
             }
             SwitchGrid(stringResource(Res.string.sound_bits), listOf("16", "24"), if (UiPrefs.recordBits == 16) 0 else 1, columns = 1, enabled = listOf(!recording, !recording)) {
@@ -719,7 +723,8 @@ private fun inputsOf(): List<InputChoice> {
             AudioInput.Kind.Bluetooth -> AppStrings.getString(Res.string.sound_input_bluetooth)
             AudioInput.Kind.Line -> AppStrings.getString(Res.string.sound_input_line)
             AudioInput.Kind.NotAnEar -> null
-            AudioInput.Kind.Other -> d.name?.lowercase()?.take(12)
+            // A phone's switch has room for a short word; a computer's list for the name.
+            AudioInput.Kind.Other -> if (AppHost.current.onDesktop) d.name else d.name?.lowercase()?.take(12)
         } ?: return@mapNotNull null
         InputChoice(d.id, word)
     }
