@@ -50,6 +50,8 @@ internal expect object EngineNative {
     fun nativeAuditioning(): Boolean
     fun nativeAuditionProgress(): Float
     fun nativeEditSample(src: String, dst: String, ops: FloatArray): String
+    suspend fun nativeEditPreview(src: String, ops: FloatArray, out: FloatArray, fromFrame: Int, toFrame: Int): Int
+    fun nativeAuditionPreview(): String
     fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int)
     fun nativeSetMpeZone(kind: Int, members: Int, bendSemis: Float)
     fun nativeMpeHeldMask(): Int

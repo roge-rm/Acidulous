@@ -36,6 +36,7 @@
 #include <engine/machine/pollen/Pollen.h>
 #include <engine/machine/mosaic/Mosaic.h>
 #include <map>
+#include <mutex>
 #include <sstream>
 #include <engine/rack/Engine.h>
 #include <sequencer/Song.h>
@@ -365,6 +366,39 @@ int32_t shapeOf(const SampleData &s, float *dest, int32_t columns, int32_t fromF
     return columns;
 }
 
+/** Interleaved stereo, as the audition plays it. */
+std::vector<float> interleavedOf(const SampleData &s) {
+    std::vector<float> pcm(static_cast<size_t>(s.frames) * 2, 0.0f);
+    for (int32_t i = 0; i < s.frames; ++i) {
+        const float l = s.left[static_cast<size_t>(i)];
+        pcm[static_cast<size_t>(i) * 2] = l;
+        pcm[static_cast<size_t>(i) * 2 + 1] = s.stereo ? s.right[static_cast<size_t>(i)] : l;
+    }
+    return pcm;
+}
+
+/**
+ * The Sound window's edit preview. The file decoded once, and the same file
+ * with the edit applied to the part it keeps. Built on a worker, under the
+ * lock, since two knob turns can be in flight at once.
+ */
+struct EditPreview {
+    std::mutex lock;
+    std::string path;
+    std::string stamp; // the file's time and size when it was decoded
+    std::unique_ptr<SampleData> source;
+    SampleData result;
+};
+EditPreview sPreview;
+/** Whether the audition is playing the preview rather than a file. */
+std::atomic<bool> sPreviewPlaying{false};
+
+std::string stampOf(const std::string &path) {
+    struct stat st {};
+    if (stat(path.c_str(), &st) != 0) return "";
+    return std::to_string(static_cast<long long>(st.st_mtime)) + ":" + std::to_string(static_cast<long long>(st.st_size));
+}
+
 } // namespace
 
 int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns, int32_t fromFrame,
@@ -407,6 +441,7 @@ std::string EngineHost::fileSurvey(const std::string &path, float *dest, int32_t
 }
 
 std::string EngineHost::auditionFile(const std::string &path) {
+    sPreviewPlaying.store(false);
     if (path.empty()) {
         sEngine.audition.stop();
         return "";
@@ -416,13 +451,63 @@ std::string EngineHost::auditionFile(const std::string &path) {
     if (s == nullptr || s->frames <= 0) return error.empty() ? "that file couldn't be read" : error;
     // Interleave here so the audio thread only has to add two numbers per
     // frame.
-    std::vector<float> pcm(static_cast<size_t>(s->frames) * 2, 0.0f);
-    for (int32_t i = 0; i < s->frames; ++i) {
-        const float l = s->left[static_cast<size_t>(i)];
-        pcm[static_cast<size_t>(i) * 2] = l;
-        pcm[static_cast<size_t>(i) * 2 + 1] = s->stereo ? s->right[static_cast<size_t>(i)] : l;
-    }
+    const std::vector<float> pcm = interleavedOf(*s);
     sEngine.audition.play(pcm.data(), s->frames);
+    return "";
+}
+
+int32_t EngineHost::editPreview(const std::string &src, const audio::SampleOps &ops, float *dest, int32_t columns,
+                                int32_t fromFrame, int32_t toFrame) {
+    std::lock_guard<std::mutex> hold(sPreview.lock);
+    // Decoded once per file, and again only when the file changes.
+    const std::string stamp = stampOf(src);
+    if (sPreview.source == nullptr || sPreview.path != src || sPreview.stamp != stamp) {
+        std::string error;
+        sPreview.source = WavReader::read(src, kSampleRate, error, kMaxSliceSeconds);
+        sPreview.path = src;
+        sPreview.stamp = stamp;
+        if (sPreview.source == nullptr) return 0;
+    }
+    const SampleData &s = *sPreview.source;
+    if (s.frames <= 0) return 0;
+
+    // The part the edit keeps, as cropTo reads it.
+    const int32_t b = std::max(1, ops.to > ops.from ? std::min(ops.to, s.frames) : s.frames);
+    int32_t a = std::clamp(ops.from, 0, b);
+    int32_t z = b;
+    if (z - a < 1) { a = 0; z = s.frames; }
+    SampleData region;
+    region.rate = s.rate;
+    region.stereo = s.stereo;
+    region.frames = z - a;
+    region.left.assign(s.left.begin() + a, s.left.begin() + z);
+    if (s.stereo) region.right.assign(s.right.begin() + a, s.right.begin() + z);
+    audio::SampleOps rest = ops;
+    rest.from = 0;
+    rest.to = 0;
+    std::string error;
+    if (!audio::applyEdit(region, rest, error) || region.frames != z - a) return 0;
+
+    // Put it back where it came from, so the preview lines up with the
+    // markers. Outside them is the file as it is, which apply drops.
+    SampleData &r = sPreview.result;
+    r = s;
+    std::copy(region.left.begin(), region.left.end(), r.left.begin() + a);
+    if (s.stereo) std::copy(region.right.begin(), region.right.end(), r.right.begin() + a);
+
+    if (sPreviewPlaying.load() && sEngine.audition.active()) {
+        const std::vector<float> pcm = interleavedOf(r);
+        sEngine.audition.replace(pcm.data(), r.frames);
+    }
+    return shapeOf(r, dest, columns, fromFrame, toFrame);
+}
+
+std::string EngineHost::auditionPreview() {
+    std::lock_guard<std::mutex> hold(sPreview.lock);
+    if (sPreview.result.frames <= 0) return "there is nothing to play";
+    const std::vector<float> pcm = interleavedOf(sPreview.result);
+    sEngine.audition.play(pcm.data(), sPreview.result.frames);
+    sPreviewPlaying.store(true);
     return "";
 }
 
@@ -456,6 +541,12 @@ std::string EngineHost::editSample(const std::string &src, const std::string &ds
             writer.write(block.data(), n);
         }
         if (!writer.close()) return "that file couldn't be finished";
+    }
+    {
+        // The preview's copy of the file is out of date now, even if the
+        // time and size happen to match.
+        std::lock_guard<std::mutex> hold(sPreview.lock);
+        if (sPreview.path == dst) sPreview.source.reset();
     }
     std::remove(dst.c_str());
     if (std::rename(tmp.c_str(), dst.c_str()) != 0) {

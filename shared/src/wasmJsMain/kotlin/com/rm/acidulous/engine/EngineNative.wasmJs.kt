@@ -109,6 +109,12 @@ private fun raw_nativeAuditionProgress(env: Int): Float =
 private fun raw_nativeEditSample(env: Int, src: Int, dst: Int, ops: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeEditSample(env, 0, src, dst, ops)")
 
+private fun async_nativeEditPreview(arena: Int, src: Int, ops: Int, out: Int, fromFrame: Int, toFrame: Int): Int =
+    js("globalThis.acid._acid_async_nativeEditPreview(arena, src, ops, out, fromFrame, toFrame)")
+
+private fun raw_nativeAuditionPreview(env: Int): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeAuditionPreview(env, 0)")
+
 private fun raw_nativeMidiEvent(env: Int, rackId: Int, status: Int, data1: Int, data2: Int, channel: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeMidiEvent(env, 0, rackId, status, data1, data2, channel)")
 
@@ -775,6 +781,27 @@ internal actual object EngineNative {
         val jops = Jni.floats(ops)
         val raw_ = raw_nativeEditSample(Jni.env, jsrc, jdst, jops)
         Jni.copyBack(jops, ops)
+        val result_ = Jni.readString(raw_)
+        Jni.release()
+        return result_
+    }
+
+    actual suspend fun nativeEditPreview(src: String, ops: FloatArray, out: FloatArray, fromFrame: Int, toFrame: Int): Int {
+        val arena_ = Jni.openArena()
+        val jsrc = Jni.string(src)
+        val jops = Jni.floats(ops)
+        val jout = Jni.floats(out)
+        val ticket_ = async_nativeEditPreview(arena_, jsrc, jops, jout, fromFrame, toFrame)
+        Jni.await(ticket_)
+        Jni.copyBack(jops, ops)
+        Jni.copyBack(jout, out)
+        val result_ = Jni.resultInt(ticket_)
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual fun nativeAuditionPreview(): String {
+        val raw_ = raw_nativeAuditionPreview(Jni.env)
         val result_ = Jni.readString(raw_)
         Jni.release()
         return result_

@@ -53,6 +53,10 @@ internal actual object EngineNative {
     actual external fun nativeAuditioning(): Boolean
     actual external fun nativeAuditionProgress(): Float
     actual external fun nativeEditSample(src: String, dst: String, ops: FloatArray): String
+    @JvmName("nativeEditPreview")
+    private external fun blocking_nativeEditPreview(src: String, ops: FloatArray, out: FloatArray, fromFrame: Int, toFrame: Int): Int
+    actual suspend fun nativeEditPreview(src: String, ops: FloatArray, out: FloatArray, fromFrame: Int, toFrame: Int): Int = blocking_nativeEditPreview(src, ops, out, fromFrame, toFrame)
+    actual external fun nativeAuditionPreview(): String
     actual external fun nativeMidiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int)
     actual external fun nativeSetMpeZone(kind: Int, members: Int, bendSemis: Float)
     actual external fun nativeMpeHeldMask(): Int

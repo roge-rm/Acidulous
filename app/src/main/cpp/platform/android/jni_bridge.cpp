@@ -472,15 +472,12 @@ Java_com_rm_acidulous_engine_EngineNative_nativeFileInfo(JNIEnv *env, jobject, j
 /**
  * The edit as one flat array instead of a dozen float arguments, which would
  * be easy to swap by mistake. The order is fixed on both sides (see SampleOps
- * and NativeEngine.editSample).
+ * and NativeEngine.editSample). False if the array is short.
  */
-JNIEXPORT jstring JNICALL
-Java_com_rm_acidulous_engine_EngineNative_nativeEditSample(JNIEnv *env, jobject, jstring src,
-                                                           jstring dst, jfloatArray opsArray) {
+static bool editOpsOf(JNIEnv *env, jfloatArray opsArray, acidulous::audio::SampleOps &ops) {
     const jsize n = env->GetArrayLength(opsArray);
-    if (n < 14) return env->NewStringUTF("the edit is incomplete");
+    if (n < 14) return false;
     jfloat *o = env->GetFloatArrayElements(opsArray, nullptr);
-    acidulous::audio::SampleOps ops;
     ops.from = static_cast<int32_t>(o[0]);
     ops.to = static_cast<int32_t>(o[1]);
     ops.fadeInMs = o[2];
@@ -496,6 +493,14 @@ Java_com_rm_acidulous_engine_EngineNative_nativeEditSample(JNIEnv *env, jobject,
     ops.squashAttackMs = o[12];
     ops.squashReleaseMs = o[13];
     env->ReleaseFloatArrayElements(opsArray, o, JNI_ABORT);
+    return true;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeEditSample(JNIEnv *env, jobject, jstring src,
+                                                           jstring dst, jfloatArray opsArray) {
+    acidulous::audio::SampleOps ops;
+    if (!editOpsOf(env, opsArray, ops)) return env->NewStringUTF("the edit is incomplete");
 
     const char *a = env->GetStringUTFChars(src, nullptr);
     const char *b = env->GetStringUTFChars(dst, nullptr);
@@ -503,6 +508,27 @@ Java_com_rm_acidulous_engine_EngineNative_nativeEditSample(JNIEnv *env, jobject,
     if (a != nullptr) env->ReleaseStringUTFChars(src, a);
     if (b != nullptr) env->ReleaseStringUTFChars(dst, b);
     return env->NewStringUTF(out.c_str());
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeEditPreview(JNIEnv *env, jobject, jstring src,
+                                                            jfloatArray opsArray, jfloatArray out,
+                                                            jint fromFrame, jint toFrame) {
+    acidulous::audio::SampleOps ops;
+    const jsize max = env->GetArrayLength(out);
+    if (max < 2 || !editOpsOf(env, opsArray, ops)) return 0;
+    const char *p = env->GetStringUTFChars(src, nullptr);
+    jfloat *data = env->GetFloatArrayElements(out, nullptr);
+    const int32_t n = host().editPreview(p != nullptr ? p : "", ops, data, static_cast<int32_t>(max / 2),
+                                         fromFrame, toFrame);
+    env->ReleaseFloatArrayElements(out, data, 0);
+    if (p != nullptr) env->ReleaseStringUTFChars(src, p);
+    return n;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeAuditionPreview(JNIEnv *env, jobject) {
+    return env->NewStringUTF(host().auditionPreview().c_str());
 }
 
 JNIEXPORT void JNICALL

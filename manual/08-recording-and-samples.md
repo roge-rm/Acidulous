@@ -15,6 +15,8 @@ pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
     instead.
 - **Edit** - play the take back, trim the ends, set the level and cut low
   rumble. **norm** and **rev** at the top normalise and reverse the whole file.
+  Changes show and play straight away. **apply** writes them to the file, and
+  **revert** takes them all back.
 - **Library** - everything you've recorded or imported.
 
 The result is a file, so the same recording can be used by more than one

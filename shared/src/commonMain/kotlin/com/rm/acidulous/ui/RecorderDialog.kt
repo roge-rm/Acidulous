@@ -378,8 +378,9 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
     var start by remember(file) { mutableStateOf(0f) }
     var end by remember(file) { mutableStateOf(1f) }
 
-    // All edits stay local until `apply`. The file isn't touched by turning
-    // a knob, which makes `revert` free.
+    // Every edit is heard and seen as it's made, from a copy in memory (see
+    // editPreview). The file isn't touched until `apply`, which makes
+    // `revert` free.
     var fadeIn by remember(file) { mutableStateOf(0f) }
     var fadeOut by remember(file) { mutableStateOf(0f) }
     var gainDb by remember(file) { mutableStateOf(0f) }
@@ -394,17 +395,43 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
     var message by remember(file) { mutableStateOf("") }
     var saveAs by remember(file) { mutableStateOf(file.nameWithoutExtension) }
 
-    LaunchedEffect(file, file.lastModified(), view) {
+    /** The edit as the engine takes it (see NativeEngine.editSample). */
+    fun opsNow(): FloatArray {
+        val lo = minOf(start, end)
+        val hi = maxOf(start, end)
+        val ops = FloatArray(NativeEngine.EDIT_OPS)
+        ops[0] = (lo * frames)
+        ops[1] = (hi * frames)
+        ops[2] = fadeIn * 2000f
+        ops[3] = fadeOut * 2000f
+        ops[4] = gainDb
+        ops[5] = if (normalise) 0.97f else 0f
+        ops[6] = if (reverse) 1f else 0f
+        ops[7] = if (lowCut <= 0f) 0f else hzOf(lowCut)
+        ops[8] = if (cutoff <= 0f) 0f else hzOf(cutoff)
+        ops[9] = reso
+        ops[10] = filterType.toFloat()
+        ops[11] = squash
+        ops[12] = 10f
+        ops[13] = 120f
+        return ops
+    }
+
+    LaunchedEffect(file, file.lastModified()) {
+        meta = withContext(Dispatchers.Default) { NativeEngine.fileInfo(file.absolutePath) }
+    }
+    // The waveform is the edit as it stands. A knob being turned asks many
+    // times a second, and each ask cancels the one before, so it waits a
+    // moment and only the last is built.
+    LaunchedEffect(meta, view, start, end, fadeIn, fadeOut, gainDb, normalise, reverse, lowCut, cutoff, reso, filterType, squash) {
+        if (frames <= 0) return@LaunchedEffect
+        kotlinx.coroutines.delay(40)
         val out = FloatArray(columns * 2)
-        val info = withContext(Dispatchers.Default) { NativeEngine.fileInfo(file.absolutePath) }
-        val total = info.split('|').getOrNull(1)?.toIntOrNull() ?: 0
-        val a = (view.from * total).toInt().coerceIn(0, maxOf(0, total - 1))
-        val z = ((view.from + view.span) * total).toInt().coerceIn(a + 1, maxOf(1, total))
-        val got = withContext(Dispatchers.Default) {
-            NativeEngine.fileShape(file.absolutePath, out, if (total > 0) a else 0, if (total > 0) z else 0)
-        }
+        val a = (view.from * frames).toInt().coerceIn(0, maxOf(0, frames - 1))
+        val z = ((view.from + view.span) * frames).toInt().coerceIn(a + 1, maxOf(1, frames))
+        val ops = opsNow()
+        val got = withContext(Dispatchers.Default) { NativeEngine.editPreview(file.absolutePath, ops, out, a, z) }
         shape = if (got > 0) out else FloatArray(0)
-        meta = info
     }
 
     // Where `play` has got to, read every frame while the page is open. It's
@@ -425,7 +452,8 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         Spacer(Modifier.weight(1f))
         // Stop while it plays, so a long take doesn't have to be waited out.
         val playing = playhead >= 0f
-        TextButton(onClick = { NativeEngine.auditionFile(if (playing) "" else file.absolutePath) }) {
+        // What's played is the preview, edits and all.
+        TextButton(onClick = { if (playing) NativeEngine.auditionFile("") else NativeEngine.auditionPreview() }) {
             Text(stringResource(if (playing) Res.string.sound_stop else Res.string.sound_play), color = c.accent, fontSize = 12.sp)
         }
         TextButton(onClick = { start = 0f; end = 1f }) { Text(stringResource(Res.string.sound_all), color = c.accent, fontSize = 12.sp) }
@@ -508,29 +536,18 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
             onClick = {
                 busy = true
                 message = ""
-                val lo = minOf(start, end)
-                val hi = maxOf(start, end)
-                val ops = FloatArray(NativeEngine.EDIT_OPS)
-                ops[0] = (lo * frames)
-                ops[1] = (hi * frames)
-                ops[2] = fadeIn * 2000f
-                ops[3] = fadeOut * 2000f
-                ops[4] = gainDb
-                ops[5] = if (normalise) 0.97f else 0f
-                ops[6] = if (reverse) 1f else 0f
-                ops[7] = if (lowCut <= 0f) 0f else hzOf(lowCut)
-                ops[8] = if (cutoff <= 0f) 0f else hzOf(cutoff)
-                ops[9] = reso
-                ops[10] = filterType.toFloat()
-                ops[11] = squash
-                ops[12] = 10f
-                ops[13] = 120f
+                val ops = opsNow()
                 val wanted = safeFileName(saveAs, file.nameWithoutExtension) + ".wav"
                 val target = if (wanted == file.name) file else File(samples, uniqueIn(samples, wanted))
                 val error = NativeEngine.editSample(file.absolutePath, target.absolutePath, ops)
                 busy = false
                 if (error.isEmpty()) {
                     message = resources.getString(Res.string.sound_saved_file, target.name)
+                    // The file has the edit in it now, so the knobs go back
+                    // to nothing or the preview would apply it twice.
+                    start = 0f; end = 1f; fadeIn = 0f; fadeOut = 0f; gainDb = 0f
+                    normalise = false; reverse = false; lowCut = 0f; cutoff = 0f; reso = 0f
+                    squash = 0f
                     onSaved(target)
                 } else {
                     message = error

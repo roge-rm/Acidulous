@@ -141,6 +141,17 @@ class EngineHost {
      * the song, so it isn't recorded, exported or frozen. Panic stops it.
      */
     std::string auditionFile(const std::string &path);
+    /**
+     * The Sound window's edit, heard and seen before it's applied. Applies
+     * [ops] to [src] in memory, the kept part only and put back in place so
+     * it lines up with the file, and fills [dest] like fileShape. If the
+     * preview is playing, the new version takes over where it is. Nothing is
+     * written. A worker thread, never the audio or main thread.
+     */
+    int32_t editPreview(const std::string &src, const audio::SampleOps &ops, float *dest, int32_t columns,
+                        int32_t fromFrame, int32_t toFrame);
+    /** Plays the last editPreview from the start. */
+    std::string auditionPreview();
     bool auditioning() const;
     /** How far through the audition, 0..1, or -1 when nothing is playing. */
     float auditionProgress() const;

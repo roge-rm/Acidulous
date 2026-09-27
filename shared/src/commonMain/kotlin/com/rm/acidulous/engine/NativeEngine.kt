@@ -734,6 +734,19 @@ object NativeEngine {
     fun editSample(src: String, dst: String, ops: FloatArray): String =
         EngineNative.nativeEditSample(src, dst, ops)
 
+    /**
+     * The edit [editSample] would make, in memory only: fills [out] like
+     * [fileShape] with the kept part edited and the rest as it is, so it
+     * lines up with the file. If [auditionPreview] is playing, what it plays
+     * changes to match without starting over. Decodes on the first call for
+     * a file, so use a worker.
+     */
+    suspend fun editPreview(src: String, ops: FloatArray, out: FloatArray, fromFrame: Int = 0, toFrame: Int = 0): Int =
+        EngineNative.nativeEditPreview(src, ops, out, fromFrame, toFrame)
+
+    /** Plays the last [editPreview] from the start. [auditionFile] with "" stops it. */
+    fun auditionPreview(): String = EngineNative.nativeAuditionPreview()
+
     /** Bars of clicks before playback actually starts. 0 is none. */
     fun setCountInBars(bars: Int) = EngineNative.nativeSetCountInBars(bars)
 
