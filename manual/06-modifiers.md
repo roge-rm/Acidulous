@@ -1,6 +1,4 @@
 # Modifiers
-> Scale, chord and arp, applied to notes as you play them in.
-
 Every track has three modifiers, in the row just above the keyboard. **Tap one
 to turn it on or off, and hold it to open its settings.**
 
@@ -8,14 +6,6 @@ A modifier changes what you play before it's written down. Play one key with
 the chord modifier on and you hear three notes, and if you're recording, the
 clip gets three notes. Notes from a MIDI keyboard or controller go through the
 modifiers too.
-
-The clip is what you hear. Clips play straight to the machine without going
-through the modifiers, so the piano roll always shows exactly what plays, and
-you can edit the notes afterwards.
-
-They don't change what's already recorded. Turning the arp off doesn't
-un-arpeggiate a part you played with it on. If you want it different, undo and
-play it again.
 
 ## Scale
 
