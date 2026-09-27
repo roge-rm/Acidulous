@@ -1,6 +1,4 @@
 # The editor
-> Drawing notes, and what each note can do.
-
 A clip opens with the note grid at the top, the machine's controls in the
 middle, and the keyboard or pads at the bottom.
 
