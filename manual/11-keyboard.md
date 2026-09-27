@@ -1,9 +1,5 @@
 # A keyboard
-> Playing notes on letters, and working the whole app from keys.
-
-Acidulous works with a phone's own keyboard, like the ones on square phones,
-and with USB or Bluetooth keyboards. Everything you can press on screen can be
-reached from the keys.
+Acidulous works with built in, USB, or Bluetooth keyboards.
 
 Press **Shift+/** (or **Alt+Q**) at any time to see the keys that work on the
 screen you're on.
