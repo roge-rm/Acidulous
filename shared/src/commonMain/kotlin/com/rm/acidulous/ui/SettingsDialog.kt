@@ -141,8 +141,9 @@ private fun AudioTab(trackNames: List<String>) {
     val drops = NativeEngine.xRunCount
     // The three things to set, in a card; everything under it is a reading.
     WindowCards {
-        // Where the sound goes, where there is a choice: the desktop. The
-        // phone routes its own, and says nothing here.
+        // Where the sound goes, where there is a choice: the desktop, and a
+        // browser that names its outputs. The phone routes its own, and says
+        // nothing here.
         val outputs = androidx.compose.runtime.remember { com.rm.acidulous.AppHost.current.audioOutputs() }
         if (outputs.isNotEmpty()) {
             WindowCard(stringResource(Res.string.settings_output)) {

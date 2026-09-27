@@ -22,11 +22,43 @@ private fun fetchTextNow(path: String): String? = js(
 private fun coarsePointer(): Boolean = js("matchMedia('(pointer: coarse)').matches")
 
 /**
+ * The outputs, kept in globalThis.acidOutput for the engine's side
+ * (acid_output_attach in the web AudioDriver): the list, read now and again
+ * whenever a device comes or goes; the one wanted, by a number made from the
+ * browser's id for it, which is what the setting stores; and pick(), which
+ * finds it - or the default while it is unplugged - and moves the sound
+ * there. A browser names its outputs only once the microphone is allowed, and
+ * one it will not name is left out, so before that the list is empty and
+ * Settings shows no choice.
+ */
+private fun watchOutputs(): Unit = js(
+    "(() => { const o = (globalThis.acidOutput ??= {}); o.list = []; " +
+        "o.idOf = (s) => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return (h & 0x7fffffff) || 1; }; " +
+        "o.pick = () => { const d = o.list.find((d) => o.idOf(d.deviceId) === o.wanted); " +
+        "o.sinkId = d ? d.deviceId : ''; o.sinkLabel = d ? d.label : ''; o.apply && o.apply(); }; " +
+        "const md = navigator.mediaDevices; if (!md || !md.enumerateDevices) return; " +
+        "o.read = () => md.enumerateDevices().then((all) => { " +
+        "o.list = all.filter((d) => d.kind === 'audiooutput' && d.label && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications'); " +
+        "o.pick(); }).catch(() => {}); " +
+        "md.addEventListener('devicechange', o.read); o.read(); })()",
+)
+private fun outputCount(): Int = js("globalThis.acidOutput?.list?.length ?? 0")
+private fun outputId(i: Int): Int = js("globalThis.acidOutput.idOf(globalThis.acidOutput.list[i].deviceId)")
+private fun outputLabel(i: Int): String = js("globalThis.acidOutput.list[i].label")
+/** Read again for next time: a list read before the microphone was allowed has no names. */
+private fun rereadOutputs(): Unit = js("globalThis.acidOutput?.read?.()")
+private fun wantOutput(id: Int): Unit = js("(() => { const o = (globalThis.acidOutput ??= {}); o.wanted = id; o.pick && o.pick(); })()")
+
+/**
  * The browser's [AppHost]. A [Doc] is a [WebDoc]: a chosen file already
  * copied in, or a download waiting for its bytes - so writing one downloads
  * it, and sharing downloads it too, there being no share sheet to hand to.
  */
 class WebHost : AppHost {
+    init {
+        watchOutputs()
+    }
+
     override val versionName: String? = VERSION_NAME
     override val versionLong: String? = "$VERSION_NAME ($VERSION_CODE)"
     /** Served beside the page, and read only when somebody opens one. */
@@ -39,6 +71,12 @@ class WebHost : AppHost {
     override fun markCrashReportRead() {}
 
     override fun audioInputs(): List<AudioInput> = emptyList()
+
+    override fun audioOutputs(): List<Pair<Int, String>> {
+        rereadOutputs()
+        return (0 until outputCount()).map { outputId(it) to outputLabel(it) }
+    }
+    override fun chooseAudioOutput(id: Int) = wantOutput(id)
 
     override fun docName(doc: Doc, fallback: String): String = doc.web.name.ifEmpty { fallback }
     override fun placeName(doc: Doc): String = doc.web.name.ifEmpty { AppStrings.getString(Res.string.files_downloads_web) }

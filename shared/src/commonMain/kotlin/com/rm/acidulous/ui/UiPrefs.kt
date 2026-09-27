@@ -227,7 +227,7 @@ object UiPrefs {
      */
     var screenScale by mutableStateOf(0f)
 
-    /** The output the desktop plays through, by the driver's id; nought is the system's default. */
+    /** The output the desktop or the browser plays through, by the host's id; nought is the system's default. */
     var outputDevice by mutableStateOf(0)
         private set
 

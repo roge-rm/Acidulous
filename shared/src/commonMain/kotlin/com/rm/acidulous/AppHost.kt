@@ -28,7 +28,7 @@ interface AppHost {
     /**
      * The outputs there are to choose from, by id and name, or none where the
      * platform does the choosing - the phone routes its own sound. The
-     * desktop's, with [chooseAudioOutput]: see Settings > audio.
+     * desktop's and the browser's, with [chooseAudioOutput]: see Settings > audio.
      */
     fun audioOutputs(): List<Pair<Int, String>> = emptyList()
     fun chooseAudioOutput(id: Int) {}

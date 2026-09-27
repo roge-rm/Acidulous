@@ -68,6 +68,8 @@ fun main() {
         AppHost.current = WebHost()
         watchMicrophonePermission()
         UiPrefs.init(LocalPrefs("ui"))
+        // The output chosen last time, found once the browser lists it.
+        AppHost.current.chooseAudioOutput(UiPrefs.outputDevice)
         Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
         Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
         MidiHub.start(WebMidi())

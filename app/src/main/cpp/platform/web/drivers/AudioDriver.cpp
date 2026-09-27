@@ -71,6 +71,24 @@ EM_JS(void, acid_context_close, (int context), {
     c && c.state !== 'closed' && c.close().catch(() => {});
 });
 
+// The output, on the page's side: globalThis.acidOutput holds the device the
+// app chose (WebHost.kt), and apply() sends the live context there - called
+// here for each new context, and by the page when the choice changes. A
+// browser without setSinkId plays where it plays.
+EM_JS(void, acid_output_attach, (int context), {
+    const o = (globalThis.acidOutput ??= {});
+    const c = emscriptenGetAudioObject(context);
+    o.apply = () => {
+        if (!c.setSinkId || c.state === 'closed') return;
+        const id = o.sinkId || '';
+        if (c.sinkId === id) return;
+        c.setSinkId(id)
+            .then(() => console.info('I/Acidulous.Audio: output ' + (o.sinkLabel || 'the default')))
+            .catch((e) => console.warn('W/Acidulous.Audio: output not changed', e));
+    };
+    o.apply();
+});
+
 extern "C" EMSCRIPTEN_KEEPALIVE void acid_latency_set(double *out, double seconds) {
     reinterpret_cast<std::atomic<double> *>(out)->store(seconds, std::memory_order_relaxed);
 }
@@ -210,6 +228,7 @@ bool AudioDriver::openContext() {
     sLive = this;
     latencySeconds = 0.0;
     acid_latency_watch(made, reinterpret_cast<double *>(&latencySeconds));
+    acid_output_attach(made);
     workletOwns = false;
     standbyStop = false;
     standbyThread = std::thread([this] { standby(); });
