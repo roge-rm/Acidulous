@@ -146,6 +146,12 @@ android {
         // default; an Exquis shows the key and a Launchpad Pro is driven
         // whole; quantise, groove and humanise; a take is one undo; velocity
         // runs from a whisper to full on every machine, with a MIDI curve.
+        // 0.9.8: the same app on Linux (Debian packages and AppImages),
+        // Windows (an installer, with interfaces' own low-latency drivers and
+        // Link) and in a browser (installable, and it works offline), from the
+        // same code; panels and windows show one tab at a time; a scene's
+        // header in clip mode starts its clips and stops the rest together; a
+        // take plays with a playhead; a crash auditioning a sound is fixed.
         //
         // **Two APKs a release**: the 64-bit one, and with -Parm32 a 32-bit
         // one for tablets that run 32-bit Android on any processor - the Fire
@@ -153,9 +159,9 @@ android {
         // run, and nearly every 64-bit phone can run 32-bit code too, so the
         // 64-bit APK must be the higher: the release number times ten, plus
         // two for 64-bit and one for 32-bit. Bump [release], not the code.
-        val release = 22
+        val release = 23
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.9.7"
+        versionName = "0.9.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
