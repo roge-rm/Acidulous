@@ -432,6 +432,9 @@ object MidiHub {
         val info = sys.devices.firstOrNull {
             it.inputPortCount > 0 && it.usb && LaunchpadPro.isOne(it.name, it.product)
         }
+        if ((info != null) != launchpadHere) {
+            Log.i(TAG, if (info != null) "Launchpad: ${info.name} (${info.inputPortCount} to send to)" else "Launchpad: none")
+        }
         launchpadHere = info != null
         if (info == null || info.id != lpInfo?.id) {
             runCatching { lpPort?.close() }
@@ -453,7 +456,8 @@ object MidiHub {
         }
         if (launchpadOn && !lpProgrammer) {
             val bytes = LaunchpadPro.programmer(true)
-            runCatching { port.send(bytes, 0, bytes.size) }
+            runCatching { port.send(bytes, 0, bytes.size) }.onFailure { Log.w(TAG, "Launchpad: Programmer mode not sent", it) }
+            Log.i(TAG, "Launchpad: Programmer mode")
             lpProgrammer = true
             onLaunchpadReady?.invoke()
         } else if (!launchpadOn && lpProgrammer) {

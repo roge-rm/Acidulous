@@ -23,6 +23,10 @@ private fun midiStart(changed: () -> Unit): Unit = js(
         const open = () => navigator.requestMIDIAccess({ sysex: true }).then((access) => {
             globalThis.acidMidi = access;
             access.onstatechange = () => changed();
+            const said = [];
+            access.inputs.forEach((p) => said.push('in ' + p.name + ' [' + p.manufacturer + ', ' + p.state + ']'));
+            access.outputs.forEach((p) => said.push('out ' + p.name + ' [' + p.manufacturer + ', ' + p.state + ']'));
+            console.log('I/Acidulous.MIDI: the browser offers ' + (said.length ? said.join('; ') : 'nothing') + (access.sysexEnabled ? ' (SysEx allowed)' : ' (no SysEx)'));
             changed();
         }).catch((e) => console.warn('W/Acidulous.MIDI: no MIDI access', e));
         const onGesture = () => { removeEventListener('pointerdown', onGesture, true); removeEventListener('keydown', onGesture, true); open(); };
