@@ -11,6 +11,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstring>
+#include <thread>
 #include <engine/dsp/Denormals.h>
 #ifdef _WIN32
 #include "Asio.h"
@@ -296,15 +297,12 @@ bool AudioDriver::startInput(int32_t deviceId) {
             if (idOf("driver-in:" + driverName + ":" + std::to_string(i)) == deviceId) pair = static_cast<int32_t>(i);
         }
         if (driverPairs.empty()) return false;
-        const size_t ringFrames = static_cast<size_t>(acidulous::kSampleRate) / 4;
-        if (!driverInput) {
-            inputRing.assign(ringFrames * 2, 0.0f);
-            inputBlock.assign(static_cast<size_t>(acidulous::kBlockFrames) * 2, 0.0f);
+        if (!driverInput.load()) {
             inputRingFrames = 0;
             inputRingRead = 0;
         }
         acidulous::asio::setInputPair(pair);
-        driverInput = true;
+        driverInput.store(true); // the callback may fill the ring from here on
         actualInputChannels = 2;
         actualInputRate = actualSampleRate;
         actualInputDevice = idOf("driver-in:" + driverName + ":" + std::to_string(pair));
@@ -316,15 +314,11 @@ bool AudioDriver::startInput(int32_t deviceId) {
     // and can't be compared, so it always counts (see the Oboe driver).
     if (capturer != nullptr && (deviceId == 0 || deviceId == actualInputDevice)) return true;
     if (capturer != nullptr) stopInput();
-    const size_t ringFrames = static_cast<size_t>(acidulous::kSampleRate) / 4; // a quarter second
     inputQueue = std::make_unique<InputQueue>();
-    if (ma_pcm_rb_init(ma_format_f32, 2, static_cast<ma_uint32>(ringFrames), nullptr, nullptr, &inputQueue->rb) != MA_SUCCESS) {
+    if (ma_pcm_rb_init(ma_format_f32, 2, static_cast<ma_uint32>(kInputRingFrames), nullptr, nullptr, &inputQueue->rb) != MA_SUCCESS) {
         inputQueue.reset();
         return false;
     }
-    inputRing.assign(ringFrames * 2, 0.0f);
-    inputScratch.assign(ringFrames * 2, 0.0f);
-    inputBlock.assign(static_cast<size_t>(acidulous::kBlockFrames) * 2, 0.0f);
     inputRingFrames = 0;
     inputRingRead = 0;
 
@@ -360,14 +354,16 @@ bool AudioDriver::startInput(int32_t deviceId) {
         return false;
     }
     LOGI("input open: %s, %d Hz, %d ch", capturer->capture.name, actualInputRate, actualInputChannels);
+    liveQueue.store(inputQueue.get()); // the output callback may read it from here on
     return true;
 }
 
 void AudioDriver::stopInput() {
 #ifdef _WIN32
-    if (driverInput) {
+    if (driverInput.load()) {
+        driverInput.store(false);
+        while (inputBusy.load()) std::this_thread::yield(); // a callback may still be filling the ring
         acidulous::asio::setInputPair(-1);
-        driverInput = false;
         inputRingFrames = 0;
         inputRingRead = 0;
         actualInputChannels = 0;
@@ -377,6 +373,10 @@ void AudioDriver::stopInput() {
     }
 #endif
     if (capturer == nullptr) return;
+    // Take the queue back from the output callback and wait out one that's
+    // still reading it, then take the capture down.
+    liveQueue.store(nullptr);
+    while (inputBusy.load()) std::this_thread::yield();
     ma_device_uninit(capturer.get());
     capturer.reset();
     ma_pcm_rb_uninit(&inputQueue->rb);
@@ -405,9 +405,9 @@ void AudioDriver::capture(const float *in, int32_t numFrames) {
 }
 
 // Drain whatever the capture has queued, without waiting.
-void AudioDriver::pumpInput(int32_t frames) {
-    ma_pcm_rb *queue = inputQueue ? &inputQueue->rb : nullptr;
-    if (capturer == nullptr || queue == nullptr) return;
+void AudioDriver::pumpInput(InputQueue *live, int32_t frames) {
+    if (live == nullptr) return;
+    ma_pcm_rb *queue = &live->rb;
     const int32_t capacity = static_cast<int32_t>(inputRing.size() / 2);
     int32_t want = std::min(frames * 2, capacity - inputRingFrames);
     float peak = 0.0f;
@@ -432,8 +432,8 @@ void AudioDriver::pumpInput(int32_t frames) {
     if (peak > previous) inputPeak.store(peak, std::memory_order_relaxed);
 }
 
-const float *AudioDriver::nextInputBlock() {
-    if (capturer == nullptr && !driverInput) return nullptr;
+const float *AudioDriver::nextInputBlock(bool live) {
+    if (!live) return nullptr;
     const int32_t capacity = static_cast<int32_t>(inputRing.size() / 2);
     for (int32_t i = 0; i < engineBlockFrames; ++i) {
         if (inputRingFrames > 0) {
@@ -455,7 +455,11 @@ void AudioDriver::render(float *out, int32_t numFrames) {
     acidulous::dsp::flushDenormalsOnce();
     const auto tCallback = std::chrono::steady_clock::now();
     const int64_t cpu0 = threadCpuUs();
-    pumpInput(numFrames);
+    // Busy until the last engine block has read the input (see liveQueue).
+    inputBusy.store(true);
+    InputQueue *queue = liveQueue.load();
+    const bool inputLive = queue != nullptr || driverInput.load();
+    pumpInput(queue, numFrames);
 
     // The sound server gives no presentation timestamp, so estimate it: the
     // frame about to be written is heard once the frames queued ahead of it
@@ -471,7 +475,7 @@ void AudioDriver::render(float *out, int32_t numFrames) {
     int32_t written = 0;
     while (written < numFrames) {
         if (carryFrames == 0) {
-            callback(const_cast<float *>(nextInputBlock()), carry.data(), static_cast<unsigned long>(engineBlockFrames));
+            callback(const_cast<float *>(nextInputBlock(inputLive)), carry.data(), static_cast<unsigned long>(engineBlockFrames));
             carryFrames = engineBlockFrames;
             carryOffset = 0;
         }
@@ -482,6 +486,7 @@ void AudioDriver::render(float *out, int32_t numFrames) {
         carryOffset += n;
         carryFrames -= n;
     }
+    inputBusy.store(false);
     framesWritten += numFrames;
 
     float peak = 0.0f;
@@ -541,7 +546,10 @@ bool AudioDriver::startDriver(const std::string &name) {
         // On the driver's audio thread: take the input, then serve the
         // engine's blocks through the carry buffer like miniaudio does.
         [this](const float *in, float *out, int32_t frames) {
-            if (in != nullptr && driverInput) pushInput(in, frames);
+            // Busy before the flag is read, as in render, so stopInput can't
+            // reset the ring under pushInput.
+            inputBusy.store(true);
+            if (in != nullptr && driverInput.load()) pushInput(in, frames);
             render(out, frames);
         },
         // The driver's panel changed its buffer or rate, so reopen it.

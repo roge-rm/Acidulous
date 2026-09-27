@@ -57,7 +57,7 @@ class AudioDriver {
     /** Start the input: 0 is the system default, anything else an id from listInputs. */
     bool startInput(int32_t deviceId = 0);
     void stopInput();
-    bool isInputRunning() const { return capturer != nullptr || driverInput; }
+    bool isInputRunning() const { return capturer != nullptr || driverInput.load(); }
     int32_t inputChannels() const { return actualInputChannels; }
     int32_t inputRate() const { return actualInputRate; }
     int32_t inputDevice() const { return actualInputDevice; }
@@ -126,19 +126,30 @@ class AudioDriver {
     int32_t carryFrames = 0;
     int32_t carryOffset = 0;
 
-    std::vector<float> inputRing;
+    // Sized once, here, so the callback never sees a buffer being resized
+    // (see the Oboe driver).
+    static constexpr int32_t kInputRingFrames = acidulous::kSampleRate / 4; // a quarter second
+    std::vector<float> inputRing = std::vector<float>(static_cast<size_t>(kInputRingFrames) * 2);
     int32_t inputRingFrames = 0;
     int32_t inputRingRead = 0;
-    std::vector<float> inputScratch;
-    std::vector<float> inputBlock;
+    std::vector<float> inputScratch = std::vector<float>(static_cast<size_t>(kInputRingFrames) * 2);
+    std::vector<float> inputBlock = std::vector<float>(static_cast<size_t>(acidulous::kBlockFrames) * 2);
+    /**
+     * The capture queue as the output callback sees it, set once the capture
+     * is running and cleared before it's taken down. inputBusy is held while
+     * a callback might use it or driverInput, and stopInput waits for it,
+     * Dekker-style as in the Oboe driver.
+     */
+    std::atomic<InputQueue *> liveQueue{nullptr};
+    std::atomic<bool> inputBusy{false};
     int32_t actualInputChannels = 0;
     int32_t actualInputRate = 0;
     int32_t actualInputDevice = 0;
     static constexpr float kMeterDecay = 0.7f;
     std::atomic<float> inputPeak{0.0f};
 
-    void pumpInput(int32_t frames);
-    const float *nextInputBlock();
+    void pumpInput(InputQueue *queue, int32_t frames);
+    const float *nextInputBlock(bool live);
 
     struct Anchor {
         int64_t frame = -1;
@@ -172,7 +183,7 @@ class AudioDriver {
     // An ASIO driver used instead of miniaudio (Asio.h, Windows only): whether
     // it's open, its input pairs, the pair being read, and its output latency.
     bool driverOn = false;
-    bool driverInput = false;
+    std::atomic<bool> driverInput{false};
     std::string driverName;
     std::vector<std::string> driverPairs;
     int32_t driverLatency = 0;

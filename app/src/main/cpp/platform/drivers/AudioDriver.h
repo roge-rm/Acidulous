@@ -143,13 +143,26 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     int32_t carryFrames = 0;  // frames still unread in `carry`
     int32_t carryOffset = 0;  // read cursor, in frames
 
-    // Input waiting to be passed to the engine one block at a time. Only
-    // touched on the audio thread.
-    std::vector<float> inputRing;   // interleaved stereo
+    // Input waiting to be passed to the engine one block at a time. Sized
+    // once, here, so the callback never sees a buffer being resized. Touched
+    // on the audio thread while the input is live, and by startInput and
+    // stopInput only while it isn't.
+    static constexpr int32_t kInputRingFrames = acidulous::kSampleRate / 4; // a quarter second
+    std::vector<float> inputRing = std::vector<float>(static_cast<size_t>(kInputRingFrames) * 2); // interleaved stereo
     int32_t inputRingFrames = 0;
     int32_t inputRingRead = 0;
-    std::vector<float> inputScratch;
-    std::vector<float> inputBlock;
+    std::vector<float> inputScratch = std::vector<float>(static_cast<size_t>(kInputRingFrames) * 2);
+    std::vector<float> inputBlock = std::vector<float>(static_cast<size_t>(acidulous::kBlockFrames) * 2);
+    /**
+     * The input as the callback sees it. startInput sets it once the stream
+     * and buffers are ready. stopInput clears it, then waits for any callback
+     * still using it before closing the stream. Dekker-style, like the web
+     * driver's stand-in: the callback sets inputBusy before reading
+     * liveInput, stopInput clears liveInput before reading inputBusy, and
+     * both are sequentially consistent, so one of them always sees the other.
+     */
+    std::atomic<oboe::AudioStream *> liveInput{nullptr};
+    std::atomic<bool> inputBusy{false};
     int32_t actualInputChannels = 0;
     int32_t actualInputRate = 0;
     int32_t actualInputDevice = 0;
@@ -157,8 +170,8 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     static constexpr float kMeterDecay = 0.7f;
     std::atomic<float> inputPeak{0.0f};
 
-    void pumpInput(int32_t frames);
-    const float *nextInputBlock();
+    void pumpInput(oboe::AudioStream *input, int32_t frames);
+    const float *nextInputBlock(bool live);
 
     // Double-buffered so a reader never sees half of a pair. Two 64-bit values
     // can't share an atomic and a seqlock would be overkill.

@@ -142,10 +142,6 @@ bool AudioDriver::startInput(int32_t deviceId) {
     actualInputChannels = inputStream->getChannelCount();
     actualInputRate = inputStream->getSampleRate();
     actualInputDevice = inputStream->getDeviceId();
-    const size_t ringFrames = static_cast<size_t>(acidulous::kSampleRate) / 4; // a quarter second
-    inputRing.assign(ringFrames * 2, 0.0f);
-    inputScratch.assign(ringFrames * 2, 0.0f);
-    inputBlock.assign(static_cast<size_t>(acidulous::kBlockFrames) * 2, 0.0f);
     inputRingFrames = 0;
     inputRingRead = 0;
 
@@ -158,11 +154,16 @@ bool AudioDriver::startInput(int32_t deviceId) {
     }
     LOGI("input open: %d Hz, %d ch, %s", inputStream->getSampleRate(), actualInputChannels,
          inputStream->getPerformanceMode() == oboe::PerformanceMode::LowLatency ? "LowLatency" : "Normal");
+    liveInput.store(inputStream.get()); // the callback may use it from here on
     return true;
 }
 
 void AudioDriver::stopInput() {
     if (inputStream == nullptr) return;
+    // Take it back from the callback, and wait out one that's still using it.
+    // At most one callback, a few milliseconds.
+    liveInput.store(nullptr);
+    while (inputBusy.load()) std::this_thread::yield();
     inputStream->requestStop();
     inputStream->close();
     inputStream.reset();
@@ -175,13 +176,13 @@ void AudioDriver::stopInput() {
 
 // Drain whatever the input stream has ready without waiting. If the input
 // is behind we get a gap in the recording, but the callback never blocks.
-void AudioDriver::pumpInput(int32_t frames) {
-    if (inputStream == nullptr) return;
+void AudioDriver::pumpInput(oboe::AudioStream *input, int32_t frames) {
+    if (input == nullptr) return;
     const int32_t channels = actualInputChannels > 0 ? actualInputChannels : 1;
     const int32_t capacity = static_cast<int32_t>(inputRing.size() / 2);
     const int32_t want = std::min(frames * 2, capacity - inputRingFrames);
     if (want <= 0) return;
-    auto read = inputStream->read(inputScratch.data(), want, 0);
+    auto read = input->read(inputScratch.data(), want, 0);
     if (!read) return;
     const int32_t got = read.value();
     float peak = 0.0f;
@@ -198,8 +199,8 @@ void AudioDriver::pumpInput(int32_t frames) {
     if (peak > previous) inputPeak.store(peak, std::memory_order_relaxed);
 }
 
-const float *AudioDriver::nextInputBlock() {
-    if (inputStream == nullptr) return nullptr;
+const float *AudioDriver::nextInputBlock(bool live) {
+    if (!live) return nullptr;
     const int32_t capacity = static_cast<int32_t>(inputRing.size() / 2);
     for (int32_t i = 0; i < engineBlockFrames; ++i) {
         if (inputRingFrames > 0) {
@@ -257,7 +258,10 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
     }
     auto *out = static_cast<float *>(audioData);
     int32_t written = 0;
-    pumpInput(numFrames);
+    // Busy until the last engine block has read the input (see liveInput).
+    inputBusy.store(true);
+    oboe::AudioStream *input = liveInput.load();
+    pumpInput(input, numFrames);
 
     // Where the stream is in frames and in time. getTimestamp fails until the
     // stream has run a little and can fail again later, so keep the last good
@@ -275,7 +279,7 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
     while (written < numFrames) {
         if (carryFrames == 0) {
             // Pull one fixed-size block of interleaved stereo from the engine.
-            callback(const_cast<float *>(nextInputBlock()), carry.data(),
+            callback(const_cast<float *>(nextInputBlock(input != nullptr)), carry.data(),
                      static_cast<unsigned long>(engineBlockFrames));
             carryFrames = engineBlockFrames;
             carryOffset = 0;
@@ -290,6 +294,7 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
         carryOffset += n;
         carryFrames -= n;
     }
+    inputBusy.store(false);
 
     // Cheap peak meter. Relaxed and lossy on purpose so it costs the callback
     // next to nothing.
