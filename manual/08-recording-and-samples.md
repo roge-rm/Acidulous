@@ -1,6 +1,4 @@
 # Recording and samples
-> Getting audio in, and what to do with it.
-
 ## The recording window
 
 One window handles recording, and it opens wherever a machine needs audio: a
