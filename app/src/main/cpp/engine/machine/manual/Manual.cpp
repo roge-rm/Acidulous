@@ -753,7 +753,10 @@ bool Manual::render(float *L, float *R, int32_t frames) {
         if (egWanted) { eg[0].next(); eg[1].next(); }
         for (int w = 0; w < WheelBank::kWheels; ++w) {
             wheelPhase[w] += wheelStep[w] * pitchScale * (0.997f + 0.003f * windPressure);
-            if (wheelPhase[w] >= 1.0f) wheelPhase[w] -= 1.0f;
+            // A top wheel with the octave, transpose and bend all up can step
+            // more than a whole cycle a sample, and one subtraction would
+            // leave the table read past its end.
+            if (wheelPhase[w] >= 1.0f) wheelPhase[w] -= std::floor(wheelPhase[w]);
         }
         if (spray > 0.0005f) {
             for (int w = 0; w < WheelBank::kWheels; ++w) {

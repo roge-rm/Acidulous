@@ -69,6 +69,33 @@ Verdict play(Machine *m) {
     return v;
 }
 
+/**
+ * Notes at their ends: every key at once, the lowest and highest, the
+ * softest and hardest, one key hammered without letting go, note-offs for
+ * notes never played, and bend and pressure at their limits.
+ */
+Verdict playExtremes(Machine *m) {
+    Verdict v;
+    float L[kBlock], R[kBlock];
+    for (int32_t b = 0; b < kBlocks && !v.nan; ++b) {
+        if (b == 0) for (int n = 0; n < 128; ++n) m->noteOn(static_cast<uint8_t>(n), static_cast<uint8_t>(1 + n % 127));
+        if (b == 30) for (int n = 0; n < 128; ++n) m->noteOff(static_cast<uint8_t>(n));
+        if (b >= 40 && b < 120 && b % 2 == 0) m->noteOn(b % 4 == 0 ? 0 : 127, b % 8 == 0 ? 1 : 127);
+        if (b >= 60 && b < 140) m->noteOn(60, 127); // the same key, never let go
+        if (b == 140) m->noteOff(60);
+        if (b >= 150 && b < 160) m->noteOff(static_cast<uint8_t>(b)); // never played
+        if (b == 100) { m->pitchBend(8191); m->channelPressure(127); m->controlChange(1, 127); }
+        if (b == 130) { m->pitchBend(-8192); m->channelPressure(0); m->controlChange(1, 0); }
+        const int64_t tick = static_cast<int64_t>(b) * 4;
+        m->onBlock(tick, tick + 4, 120.0f);
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        const bool stereo = m->render(L, R, kBlock);
+        look(L, stereo ? R : L, kBlock, v);
+    }
+    return v;
+}
+
 Verdict play(Effect *e) {
     Verdict v;
     float L[kBlock], R[kBlock];
@@ -160,7 +187,12 @@ int main() {
             m->swapObject(0, cloud.get());
         }
         const int before = failures;
+        const std::vector<float> defaults = defaultsOf(m.get());
         sweep(name, m.get(), [&] { m->reset(); });
+        // The notes at their ends, with the knobs back at their defaults.
+        m->reset();
+        setAll(m.get(), defaults);
+        report(name, "notes at their ends", playExtremes(m.get()));
         std::printf("  %s %s\n", failures == before ? "ok  " : "    ", name);
     }
     for (int32_t i = 0; i < EffectRegistry::count(); ++i) {
