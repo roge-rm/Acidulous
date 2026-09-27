@@ -1004,7 +1004,9 @@ bool Shifter::process(float *L, float *R, int32_t frames, bool stereoIn) {
             // With `spread` up, the right channel shifts the other way.
             const float sign = (ch == 1) ? (1.0f - 2.0f * spread) : 1.0f;
             const float wet = qi * c - q * s * sign;
-            fb[ch] = dsp::guardDenormal(wet);
+            // The Hilbert pair gains a little near the band's edges, enough
+            // to run away at high feedback (see feedbackCeiling).
+            fb[ch] = dsp::guardDenormal(dsp::feedbackCeiling(wet));
             (ch == 0 ? L : R)[i] = in[ch] + (wet - in[ch]) * mix;
         }
     }
@@ -1130,7 +1132,9 @@ bool Harmonizer::process(float *L, float *R, int32_t frames, bool stereoIn) {
         }
         const float norm = second ? 0.7071f : 1.0f;
         for (int c = 0; c < 2; ++c) {
-            fb[c] = wet[c] * norm;
+            // The two taps can add to more than 1 on a low or held note, so
+            // with feedback up the loop's gain can pass 1 (see feedbackCeiling).
+            fb[c] = dsp::feedbackCeiling(wet[c] * norm);
             (c == 0 ? L : R)[i] = in[c] + (wet[c] * norm - in[c]) * mix;
         }
     }

@@ -22,6 +22,17 @@ inline float fastTanh(float x) {
     return x * (27.0f + x2) / (27.0f + 9.0f * x2);
 }
 
+/**
+ * A ceiling for a feedback loop: nothing up to full scale is touched, and
+ * above it the signal bends towards 2 and can't go further. A loop whose gain
+ * can pass 1 then saturates, like a tape delay, instead of running away.
+ */
+inline float feedbackCeiling(float x) {
+    const float a = std::fabs(x);
+    if (a <= 1.0f) return x;
+    return std::copysign(1.0f + fastTanh(a - 1.0f), x);
+}
+
 // Per-sample one-pole coefficient for a time constant in seconds.
 inline float onePoleCoeff(float seconds, float sampleRate) {
     if (seconds <= 0.0f) return 1.0f;
