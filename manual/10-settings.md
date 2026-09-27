@@ -1,8 +1,4 @@
 # Settings
-> Settings for you and this phone, not the song.
-
-Nothing here is saved in a song, so opening someone else's song never changes
-these.
 
 ## display
 
