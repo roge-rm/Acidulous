@@ -1,0 +1,16 @@
+#!/bin/sh
+# Acidulous as an AppImage: the app's jars on the Java runtime it carries, with
+# the engine's native libraries beside them - the Debian package's launcher
+# (deb/acidulous), with everything found inside the image instead of /usr.
+#
+# If the JVM itself crashes - the engine's native code, say - its report goes
+# where the app looks for crash reports on the next start.
+here="$(dirname "$(readlink -f "$0")")"
+crashes="${XDG_DATA_HOME:-$HOME/.local/share}/acidulous/crashes"
+mkdir -p "$crashes"
+exec "$here/usr/lib/acidulous/jre/bin/java" \
+    -XX:ErrorFile="$crashes/hs_err_%p.log" \
+    -Djava.library.path="$here/usr/lib/acidulous/native" \
+    --enable-native-access=ALL-UNNAMED \
+    -cp "$here/usr/lib/acidulous/lib/*" \
+    com.rm.acidulous.desktop.MainKt "$@"
