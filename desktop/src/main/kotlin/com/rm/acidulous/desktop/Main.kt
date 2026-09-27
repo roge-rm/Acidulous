@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -40,14 +42,29 @@ private fun smallScreen(): Boolean = runCatching {
     bounds.width < 1300 || bounds.height < 840
 }.getOrDefault(false)
 
+private fun windowIcon(): BitmapPainter? = runCatching {
+    val bytes = Thread.currentThread().contextClassLoader.getResourceAsStream("acidulous.png")!!.use { it.readBytes() }
+    BitmapPainter(org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap())
+}.getOrNull()
+
+/** Windows, where the folders, the MIDI and the libraries' loading differ. */
+internal val onWindows: Boolean = System.getProperty("os.name").orEmpty().startsWith("Windows")
+
 /** Where the XDG spec says, or its default under the home folder. */
 private fun xdg(variable: String, fallback: String): File =
     File(System.getenv(variable)?.takeIf { it.isNotBlank() } ?: (System.getProperty("user.home") + "/" + fallback), "acidulous")
 
+/** Windows' own: settings and songs roam with the account, the cache stays on this machine. */
+private fun windowsDir(variable: String, vararg under: String): File =
+    under.fold(File(System.getenv(variable)?.takeIf { it.isNotBlank() } ?: System.getProperty("user.home"), "Acidulous")) { dir, name -> File(dir, name) }
+
 fun main() {
-    val config = xdg("XDG_CONFIG_HOME", ".config").apply { mkdirs() }
-    val data = xdg("XDG_DATA_HOME", ".local/share").apply { mkdirs() }
-    val cache = xdg("XDG_CACHE_HOME", ".cache").apply { mkdirs() }
+    // Windows looks for a DLL's own DLLs beside java.exe, not beside it, so
+    // LAME is loaded first and the engine finds it already there.
+    if (onWindows) System.loadLibrary("mp3lame")
+    val config = (if (onWindows) windowsDir("APPDATA", "config") else xdg("XDG_CONFIG_HOME", ".config")).apply { mkdirs() }
+    val data = (if (onWindows) windowsDir("APPDATA", "data") else xdg("XDG_DATA_HOME", ".local/share")).apply { mkdirs() }
+    val cache = (if (onWindows) windowsDir("LOCALAPPDATA", "cache") else xdg("XDG_CACHE_HOME", ".cache")).apply { mkdirs() }
     // Before anything else can throw, as on the phone; and the last runs'
     // native crashes, which the JVM wrote where the launcher told it to.
     val crashes = CrashReports(data).apply { install(); collect() }
@@ -60,8 +77,8 @@ fun main() {
     Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
     Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
     // ALSA's sequencer, which sees every device and program; Java Sound's raw
-    // MIDI where there is none. See AlsaSeqMidi.
-    MidiHub.start(AlsaSeqMidi.open() ?: JavaSoundMidi())
+    // MIDI where there is none, and on Windows. See AlsaSeqMidi.
+    MidiHub.start((if (onWindows) null else AlsaSeqMidi.open()) ?: JavaSoundMidi())
     // Nothing on a desktop filters multicast, so Link needs no lock.
     LinkHub.multicastLock = null
     EngineAssets.install(data, cache)
@@ -85,6 +102,9 @@ fun main() {
                 exitApplication()
             },
             title = "Acidulous",
+            // The app's own in the title bar and the taskbar, rather than
+            // Java's cup: Linux's menu entry names it, Windows has only this.
+            icon = remember { windowIcon() },
             state = window,
             // Every key through the hub first, as dispatchKeyEvent does on the
             // phone; whatever the focused control leaves comes back for the

@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include "MasterBus.h"
 #include "Rack.h"
 #include <atomic>

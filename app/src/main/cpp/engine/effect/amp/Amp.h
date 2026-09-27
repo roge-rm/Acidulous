@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include "Cabinet.h"
 #include "Stages.h"
 #include <engine/core/Constants.h>

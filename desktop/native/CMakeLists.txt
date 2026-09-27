@@ -34,14 +34,23 @@ endif()
 
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "${CPP}/engine/*.cpp")
 
+# Windows, cross-compiled with MinGW-w64 (Dockerfile.windows): no ALSA, whose
+# JNI calls the app finds missing and passes over, and Link switched off -
+# the browser's stand-in - until Link's Windows platform headers are vendored
+# beside the Linux ones.
+if(WIN32)
+    set(PLATFORM_SOURCES ${CPP}/platform/web/LinkOff.cpp)
+else()
+    set(PLATFORM_SOURCES ${CPP}/platform/link/LinkTimebase.cpp ${CPP}/platform/desktop/alsa_seq.cpp)
+endif()
+
 add_library(acidulous SHARED
     ${ENGINE_SOURCES}
     ${CPP}/EngineHost.cpp
     ${CPP}/platform/android/jni_bridge.cpp
-    ${CPP}/platform/link/LinkTimebase.cpp
     ${CPP}/platform/desktop/drivers/AudioDriver.cpp
     ${CPP}/platform/desktop/desktop_jni.cpp
-    ${CPP}/platform/desktop/alsa_seq.cpp
+    ${PLATFORM_SOURCES}
 )
 
 target_include_directories(acidulous PRIVATE
@@ -70,7 +79,31 @@ add_subdirectory(${CPP}/third_party/link link)
 find_package(Threads REQUIRED)
 # LAME stays its own shared library, as on the phone, for the LGPL's sake (see
 # its PROVENANCE.md); it is found beside this one.
-target_link_libraries(acidulous mp3lame ableton_link Threads::Threads ${CMAKE_DL_LIBS} m)
+if(WIN32)
+    # acidulous.dll and mp3lame.dll, the names Java's loadLibrary looks for,
+    # with MinGW's C++ and threads runtimes linked in so the two are all there
+    # is to ship. Windows 10 is the oldest the app runs on (the JVM's own floor).
+    set_target_properties(acidulous mp3lame PROPERTIES PREFIX "")
+    set_target_properties(mp3lame PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    target_compile_definitions(acidulous PRIVATE _WIN32_WINNT=0x0A00 WINVER=0x0A00 NOMINMAX WIN32_LEAN_AND_MEAN)
+    target_link_libraries(acidulous mp3lame Threads::Threads)
+    target_link_options(acidulous PRIVATE -static -static-libgcc -static-libstdc++)
+    target_link_options(mp3lame PRIVATE -static -static-libgcc)
+
+    # Acidulous.exe, which starts the app on the Java runtime beside it
+    # (desktop/windows/launcher.c), with the app's icon.
+    enable_language(RC)
+    set(ACIDULOUS_VERSION "0.0" CACHE STRING "The version the launcher reports")
+    set(LAUNCHER_ICON ${CMAKE_CURRENT_SOURCE_DIR}/../windows/acidulous.ico)
+    configure_file(../windows/launcher.rc.in ${CMAKE_BINARY_DIR}/launcher.rc @ONLY)
+    add_executable(launcher WIN32 ../windows/launcher.c ${CMAKE_BINARY_DIR}/launcher.rc)
+    set_target_properties(launcher PROPERTIES OUTPUT_NAME Acidulous)
+    target_compile_definitions(launcher PRIVATE _WIN32_WINNT=0x0A00 UNICODE _UNICODE)
+    target_link_options(launcher PRIVATE -municode -static)
+    target_link_libraries(launcher shell32)
+else()
+    target_link_libraries(acidulous mp3lame ableton_link Threads::Threads ${CMAKE_DL_LIBS} m)
+endif()
 # Only $ORIGIN, even in the build tree: the packages copy the two libraries
 # side by side, and a path into this machine's build folder means nothing on a Pi.
 set_target_properties(acidulous PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "$ORIGIN")

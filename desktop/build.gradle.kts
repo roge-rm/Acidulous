@@ -43,6 +43,7 @@ kotlin.sourceSets.main { kotlin.srcDir(buildInfo) }
 /** The app's jars for one architecture: everything but Skia's native renderer is the same. */
 val debAmd64Runtime: Configuration = configurations.create("debAmd64Runtime")
 val debArm64Runtime: Configuration = configurations.create("debArm64Runtime")
+val windowsX64Runtime: Configuration = configurations.create("windowsX64Runtime")
 
 dependencies {
     implementation(project(":shared"))
@@ -53,10 +54,11 @@ dependencies {
     runtimeOnly(compose.desktop.currentOs)
     debAmd64Runtime(compose.desktop.linux_x64)
     debArm64Runtime(compose.desktop.linux_arm64)
+    windowsX64Runtime(compose.desktop.windows_x64)
     testImplementation(libs.junit)
 }
 
-for (runtime in listOf(debAmd64Runtime, debArm64Runtime)) {
+for (runtime in listOf(debAmd64Runtime, debArm64Runtime, windowsX64Runtime)) {
     runtime.extendsFrom(configurations.implementation.get())
     runtime.isCanBeConsumed = false
     // Resolved as the run classpath is, so :shared hands over its desktop jar.
@@ -332,10 +334,12 @@ fun registerAppImage(
     }
 }
 
-fun runCommand(vararg command: String, env: Map<String, String> = emptyMap()) {
+/** Runs [command], failing the build with what it said if it fails; what it printed otherwise. */
+fun runCommand(vararg command: String, env: Map<String, String> = emptyMap()): String {
     val process = ProcessBuilder(*command).redirectErrorStream(true).apply { environment().putAll(env) }.start()
     val said = process.inputStream.bufferedReader().readText()
     check(process.waitFor() == 0) { "${command.first().substringAfterLast('/')} failed: $said" }
+    return said.trim()
 }
 
 registerAppImage(
@@ -364,3 +368,95 @@ registerAppImage(
 )
 
 tasks.matching { it.name == "run" }.configureEach { dependsOn(buildEngine) }
+
+// --- Windows -------------------------------------------------------------------
+//
+// 64-bit Windows 10 and 11, cross-built here: the engine and the launcher with
+// MinGW-w64 (native/Dockerfile.windows), the app's jars as for Linux but with
+// Skia's Windows renderer, and Eclipse Temurin's Java runtime for Windows.
+// Two ways to hand it over, the same files in each:
+//
+//   ./gradlew :desktop:windowsX64   build/windows/Acidulous-<version>-setup.exe
+//                                   build/windows/Acidulous-<version>-windows-x64.zip
+//
+// Link is off for now (platform/web/LinkOff.cpp), and MIDI is Java Sound's.
+
+val nativeWindows = layout.projectDirectory.dir("native/build-windows")
+val buildEngineWindows = tasks.register<Exec>("buildEngineWindows") {
+    inputs.dir(rootProject.file("app/src/main/cpp"))
+    inputs.files(nativeDir.file("CMakeLists.txt"), nativeDir.file("x86_64-w64-mingw32.cmake"), nativeDir.file("Dockerfile.windows"))
+    inputs.dir(layout.projectDirectory.dir("windows"))
+    inputs.property("version", versionName)
+    outputs.dir(nativeWindows)
+    val root = rootProject.projectDir.absolutePath
+    val version = versionName
+    workingDir = nativeDir.asFile
+    commandLine(
+        "sh", "-c",
+        "docker build -q -t acidulous-windows -f Dockerfile.windows . >/dev/null && " +
+            "docker run --rm -u \$(id -u):\$(id -g) -v '$root':/src -w /src/desktop/native acidulous-windows sh -c '" +
+            "J=/usr/lib/jvm/java-21-openjdk-amd64/include; " +
+            "cmake -S . -B build-windows -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=x86_64-w64-mingw32.cmake " +
+            "\"-DJNI_INCLUDE_DIRS=\$J;/src/desktop/native/win32\" -DACIDULOUS_VERSION=$version >/dev/null && " +
+            "cmake --build build-windows -j8'",
+    )
+}
+
+val windowsStage = layout.buildDirectory.dir("windows/Acidulous")
+val stageWindows = tasks.register<Sync>("stageWindowsX64") {
+    dependsOn(buildEngineWindows)
+    into(windowsStage)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(nativeWindows.file("Acidulous.exe"))
+    from(listOf(nativeWindows.file("acidulous.dll"), nativeWindows.file("mp3lame.dll"))) { into("app") }
+    from(tasks.named("jar")) { into("app/lib") }
+    from(rootProject.file("NOTICE")) { rename { "NOTICE.txt" } }
+    from(rootProject.file("LICENSE")) { rename { "LICENSE.txt" } }
+}
+
+tasks.register("windowsX64") {
+    group = "distribution"
+    description = "Builds Acidulous-$versionName-setup.exe and the portable zip for 64-bit Windows"
+    notCompatibleWithConfigurationCache("uses the build script's download and exec helpers")
+    dependsOn(stageWindows)
+    val artifacts = windowsX64Runtime.incoming.artifacts.resolvedArtifacts
+    val stage = windowsStage.get().asFile
+    val out = layout.buildDirectory.dir("windows").get().asFile
+    val cache = downloads.get().asFile
+    val version = versionName
+    val root = rootProject.projectDir.absolutePath
+    val jre = Download(
+        "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jre_x64_windows_hotspot_21.0.12.1_1.zip",
+        "d35f31e712f0fcf6ac5a093edc90204fbff22f720ba3950bd09d331d5e621636",
+    )
+    inputs.files(windowsX64Runtime)
+    inputs.dir(windowsStage)
+    outputs.files(File(out, "Acidulous-$version-setup.exe"), File(out, "Acidulous-$version-windows-x64.zip"))
+    doLast {
+        val lib = File(stage, "app/lib")
+        for (a in artifacts.get()) {
+            val id = a.id.componentIdentifier
+            val name = if (id is org.gradle.api.artifacts.component.ModuleComponentIdentifier) "${id.group}-${a.file.name}" else a.file.name
+            a.file.copyTo(File(lib, name), overwrite = true)
+        }
+        val zip = fetch(jre, cache)
+        val runtime = File(stage, "runtime")
+        runtime.deleteRecursively()
+        val unpacked = File(out, "jre-unpacked").apply { deleteRecursively(); mkdirs() }
+        runCommand("unzip", "-q", zip.path, "-d", unpacked.path)
+        unpacked.listFiles()!!.single().renameTo(runtime)
+        unpacked.delete()
+        val setup = "Acidulous-$version-setup.exe"
+        val portable = "Acidulous-$version-windows-x64.zip"
+        File(out, setup).delete()
+        File(out, portable).delete()
+        val inContainer = "/src/" + out.relativeTo(File(root)).invariantSeparatorsPath
+        runCommand(
+            "docker", "run", "--rm", "-u", "${runCommand("id", "-u")}:${runCommand("id", "-g")}", "-v", "$root:/src",
+            "-w", "/src/desktop/windows", "acidulous-windows", "sh", "-c",
+            "makensis -V2 -DVERSION=$version -DSTAGE=$inContainer/Acidulous -DOUT=$inContainer/$setup installer.nsi && " +
+                "cd $inContainer && zip -qr $portable Acidulous",
+        )
+    }
+}
+

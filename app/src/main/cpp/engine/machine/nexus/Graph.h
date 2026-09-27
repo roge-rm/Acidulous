@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <engine/machine/nexus/Modules.h>
 #include <memory>
 #include <string>

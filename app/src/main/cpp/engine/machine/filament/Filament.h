@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <engine/core/InputBus.h>
 #include <engine/dsp/Adsr.h>
 #include <engine/dsp/Biquad.h>

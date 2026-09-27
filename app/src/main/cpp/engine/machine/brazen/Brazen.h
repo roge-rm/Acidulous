@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <engine/dsp/Adsr.h>
 #include <engine/dsp/LfoGen.h>
 #include <engine/dsp/MultiFilter.h>

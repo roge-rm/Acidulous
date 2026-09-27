@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <engine/core/Sample.h>
 #include <engine/format/AudioSink.h>
 #include <engine/format/Decoded.h>

@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <platform/android/PerfHint.h>
 #include <atomic>
 #include <ctime>

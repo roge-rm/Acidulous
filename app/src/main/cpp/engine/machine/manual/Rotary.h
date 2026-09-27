@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <cmath>
 #include <engine/dsp/Biquad.h>
 #include <engine/dsp/DelayLine.h>

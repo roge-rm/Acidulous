@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include "Colour.h"
 #include <engine/dsp/Wsola.h>
 #include <engine/core/Reel.h>

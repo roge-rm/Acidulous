@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include "Math.h"
 
 // Delay / attack / decay / sustain / release, with an optional repeat that

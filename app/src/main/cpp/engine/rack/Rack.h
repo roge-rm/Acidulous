@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <engine/dsp/Wsola.h>
 #include <atomic>
 #include <engine/core/Constants.h>

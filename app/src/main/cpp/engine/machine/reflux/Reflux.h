@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <engine/dsp/Envelope.h>
 #include <engine/dsp/Filter.h>
 #include <engine/dsp/Osc.h>

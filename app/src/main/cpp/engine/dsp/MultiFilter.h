@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include "Filter.h"
 #include "Math.h"
 

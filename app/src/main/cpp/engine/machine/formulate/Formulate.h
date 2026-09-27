@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <engine/dsp/Adsr.h>
 #include <engine/dsp/MultiFilter.h>
 #include <engine/machine/Machine.h>

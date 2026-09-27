@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <engine/machine/Machine.h>
 #include <engine/machine/nexus/Graph.h>
 #include <memory>

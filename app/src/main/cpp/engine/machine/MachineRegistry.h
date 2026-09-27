@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include "Machine.h"
 #include <cstring>
 

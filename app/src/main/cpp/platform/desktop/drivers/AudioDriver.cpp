@@ -60,6 +60,14 @@ std::string keyOf(const ma_context *context, const ma_device_id &id) {
     switch (context->backend) {
         case ma_backend_pulseaudio: return std::string(id.pulse);
         case ma_backend_alsa: return std::string(id.alsa);
+#ifdef _WIN32
+        case ma_backend_wasapi: {
+            // An endpoint id, all ASCII ("{0.0.0.00000000}.{guid}").
+            std::string key;
+            for (const wchar_t *c = reinterpret_cast<const wchar_t *>(id.wasapi); *c != 0; ++c) key += static_cast<char>(*c);
+            return key;
+        }
+#endif
         default: return {};
     }
 }

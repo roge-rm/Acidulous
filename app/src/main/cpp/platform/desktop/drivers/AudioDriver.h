@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <atomic>
 #include <ctime>
 #include <engine/core/Constants.h>

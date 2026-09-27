@@ -3,3 +3,4 @@
 /native/build-arm64
 /native/build-appimage-amd64
 /native/build-appimage-arm64
+/native/build-windows

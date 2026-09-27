@@ -64,7 +64,9 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     /** Nothing to hold: a desktop does not stop a playing app behind its back. */
     override fun transportChanged(playing: Boolean, stop: () -> Unit) {}
 
-    override val platformName: String = "Linux"
+    override val platformName: String = if (onWindows) "Windows" else "Linux"
+    /** Link is switched off in the Windows engine for now: see platform/web/LinkOff.cpp. */
+    override val hasLink: Boolean = !onWindows
     override val usesMouse: Boolean = true
     override val onDesktop: Boolean = true
     /** A desktop's screen saver is its own business: nothing here holds it off. */

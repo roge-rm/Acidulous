@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <engine/core/SampleMap.h>
 #include <memory>
 #include <string>

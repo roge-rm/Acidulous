@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <cmath>
 #include <cstring>
 #include <engine/core/InputBus.h>
