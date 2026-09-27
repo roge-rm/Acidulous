@@ -36,6 +36,11 @@ object SongStore {
         // Songs from before swing worked have 0 here, which now means a
         // percentage. 50 is straight.
         if (song.swing < SWING_STRAIGHT) song = song.copy(swing = SWING_STRAIGHT)
+        // The engine has MAX_TRACKS racks. The app never makes more tracks,
+        // but a bundle from somewhere else could, and the rest would show
+        // and never sound.
+        if (song.tracks.size > MAX_TRACKS) song = song.copy(tracks = song.tracks.take(MAX_TRACKS))
+        song = repaired(song)
         val home = mapOf("Chord" to 0, "Scale" to 1, "Arp" to 2)
         if (song.tracks.none { t -> (0 until MODIFIER_SLOTS).any { home[t.modifierAt(it).type]?.let { h -> h != it } == true } }) {
             return song
@@ -50,6 +55,36 @@ object SongStore {
                 }
                 track.copy(modifiers = List(MODIFIER_SLOTS) { placed[it] ?: UnitSlot() })
             },
+        )
+    }
+
+    /**
+     * Values the app never writes, brought back into range: a file from
+     * somewhere else, or a hand edit. A 0/0 signature divided by zero as the
+     * song was synced and ended the app, and a tempo, bar count or note can
+     * do the same further in. A song the app wrote comes through unchanged.
+     */
+    private fun repaired(song: Song): Song {
+        fun bpm(b: Float) = if (b.isFinite()) b.coerceIn(BPM_MIN, BPM_MAX) else 120f
+        fun note(n: Note) =
+            if (n.tick >= 0 && n.length >= 1 && n.pitch in 0..127 && n.velocity in 1..127) n
+            else n.copy(tick = n.tick.coerceAtLeast(0), length = n.length.coerceAtLeast(1),
+                        pitch = n.pitch.coerceIn(0, 127), velocity = n.velocity.coerceIn(1, 127))
+        fun clip(c: Clip) =
+            if (c.bars >= 1 && c.grid >= 1 && c.notes.all { note(it) === it }) c
+            else c.copy(bars = c.bars.coerceAtLeast(1), grid = if (c.grid >= 1) c.grid else PPQN / 4, notes = c.notes.map(::note))
+        return song.copy(
+            tempo = bpm(song.tempo),
+            signature = if (song.signature.sensible) song.signature else Signature(),
+            scenes = song.scenes.map { s ->
+                s.copy(
+                    repeat = s.repeat.coerceAtLeast(1),
+                    signature = s.signature?.takeIf { it.sensible },
+                    tempo = s.tempo?.let { t -> t.copy(bpm = bpm(t.bpm)) },
+                    ramp = s.ramp?.let { r -> r.copy(toBpm = bpm(r.toBpm), bars = r.bars.coerceAtLeast(1)) },
+                )
+            },
+            tracks = song.tracks.map { t -> t.copy(clips = t.clips.mapValues { (_, c) -> clip(c) }) },
         )
     }
 

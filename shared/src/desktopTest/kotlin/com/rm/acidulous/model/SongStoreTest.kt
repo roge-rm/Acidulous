@@ -116,6 +116,44 @@ class SongStoreTest {
     }
 
     @Test
+    fun aSongWithMoreTracksThanTheEngineHasIsTrimmed() {
+        // The app never makes more than MAX_TRACKS, but a bundle from
+        // somewhere else could. The engine has a rack for each of the first
+        // sixteen only, so the rest would show and never sound.
+        val tracks = (0 until 20).joinToString(",") { """{"id":"t$it","name":"T$it","machine":{"type":"Hexbeat"}}""" }
+        val song = SongStore.decode("""{"name":"Many","tracks":[$tracks],"scenes":[{"id":"s","name":"S"}]}""")
+        assertEquals(MAX_TRACKS, song.tracks.size)
+        assertEquals("T0", song.tracks.first().name)
+        assertEquals("T15", song.tracks.last().name)
+    }
+
+    @Test
+    fun impossibleValuesAreMadeSafeOnLoad() {
+        // A bundle from somewhere else, with values the app never writes. A
+        // 0/0 signature divided by zero as the song was synced and ended the
+        // app.
+        val was = """{"name":"Weird","tempo":0.0,"signature":{"beats":0,"unit":0},
+            "tracks":[{"id":"t","name":"T","machine":{"type":"Hexbeat"},
+              "clips":{"s":{"bars":0,"grid":0,"notes":[{"tick":-10,"length":0,"pitch":300,"velocity":-5}]}}}],
+            "scenes":[{"id":"s","name":"S","repeat":0,"signature":{"beats":-3,"unit":7},"tempo":{"bpm":-1.0}}]}"""
+        val song = SongStore.decode(was)
+        assertTrue(song.tempo in BPM_MIN..BPM_MAX)
+        assertEquals(Signature(), song.signature)
+        assertTrue(song.signature.ticksPerBar > 0)
+        val scene = song.scenes[0]
+        assertEquals(1, scene.repeat)
+        assertEquals(null, scene.signature)
+        assertTrue(scene.tempo!!.bpm in BPM_MIN..BPM_MAX)
+        val clip = song.tracks[0].clips.values.first()
+        assertEquals(1, clip.bars)
+        assertTrue(clip.grid >= 1)
+        val n = clip.notes[0]
+        assertTrue(n.tick >= 0 && n.length >= 1 && n.pitch in 0..127 && n.velocity in 1..127)
+        // And a signature can't divide by zero wherever it comes from.
+        assertTrue(Signature(0, 0).ticksPerBar > 0)
+    }
+
+    @Test
     fun engineParamMappingsAreInvertible() {
         assertEquals(1f / 1.5f, EngineParams.volume01(1f), 1e-6f)
         assertEquals(0.5f, EngineParams.pan01(0f), 1e-6f)

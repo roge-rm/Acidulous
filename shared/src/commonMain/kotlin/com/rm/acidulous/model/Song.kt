@@ -43,9 +43,18 @@ const val ENGINE_RATE = 48000
 @Serializable
 data class SongKey(val root: Int = 0, val scale: Int = 0)
 
+/** The tempos a song or scene can have. */
+const val BPM_MIN = 20f
+const val BPM_MAX = 300f
+
 @Serializable
 data class Signature(val beats: Int = 4, val unit: Int = 4) {
-    val ticksPerBar: Int get() = beats * 4 * PPQN / unit
+    // Never less than a tick, whatever a file says: this is divided by
+    // everywhere a bar is counted.
+    val ticksPerBar: Int get() = (beats * 4 * PPQN / unit.coerceAtLeast(1)).coerceAtLeast(1)
+
+    /** A signature a bar can be counted in: some beats of a whole, half, quarter... note. */
+    val sensible: Boolean get() = beats in 1..32 && unit in listOf(1, 2, 4, 8, 16, 32)
 }
 
 @Serializable

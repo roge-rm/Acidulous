@@ -53,6 +53,8 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import com.rm.acidulous.model.BPM_MAX
+import com.rm.acidulous.model.BPM_MIN
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.ClipClipboard
 import com.rm.acidulous.model.hasContent
@@ -943,8 +945,6 @@ internal fun TuningKnob(
     ) { onTuning(entries[it]) }
 }
 
-private const val BPM_MIN = 20f
-private const val BPM_MAX = 300f
 
 private fun formatBpm(bpm: Float): String =
     if (kotlin.math.abs(bpm - bpm.toInt()) < 0.05f) "%.0f".format(bpm) else "%.1f".format(bpm)
