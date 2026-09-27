@@ -404,6 +404,7 @@ std::string stampOf(const std::string &path) {
 int32_t EngineHost::sampleShape(int rack, int pad, float *dest, int32_t columns, int32_t fromFrame,
                                int32_t toFrame) const {
     if (rack < 0 || rack >= kRackCount) return 0;
+    const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
     auto *forage = dynamic_cast<machine::Forage *>(sEngine.racks[rack].currentMachine());
     if (forage == nullptr) return 0;
     const SampleData *s = forage->sampleAt(pad);
@@ -741,6 +742,7 @@ bool mountMap(EngineHost &host, Engine &, int rack, SampleMap *built, std::strin
 
 std::string EngineHost::loadNexusPatch(int rack, const std::string &spec) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
+    const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
     Machine *m = sEngine.racks[rack].currentMachine();
     if (m == nullptr || std::strcmp(m->typeName(), "Nexus") != 0) return "that rack is not a Nexus";
     std::string error;
@@ -801,6 +803,7 @@ std::string EngineHost::nexusPalette() const {
 
 int32_t EngineHost::nexusScope(int rack, float *dest, int32_t max) const {
     if (rack < 0 || rack >= kRackCount || dest == nullptr) return 0;
+    const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
     Machine *m = sEngine.racks[rack].currentMachine();
     if (m == nullptr || std::strcmp(m->typeName(), "Nexus") != 0) return 0;
     return static_cast<machine::Nexus *>(m)->readScope(dest, max);
@@ -808,6 +811,7 @@ int32_t EngineHost::nexusScope(int rack, float *dest, int32_t max) const {
 
 int32_t EngineHost::nexusActivity(int rack, float *dest, int32_t max) const {
     if (rack < 0 || rack >= kRackCount || dest == nullptr) return 0;
+    const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
     Machine *m = sEngine.racks[rack].currentMachine();
     if (m == nullptr || std::strcmp(m->typeName(), "Nexus") != 0) return 0;
     return static_cast<machine::Nexus *>(m)->readActivity(dest, max);
@@ -815,6 +819,7 @@ int32_t EngineHost::nexusActivity(int rack, float *dest, int32_t max) const {
 
 std::string EngineHost::sampleMapInfo(int rack) const {
     if (rack < 0 || rack >= kRackCount) return "";
+    const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
     auto *mosaic = dynamic_cast<machine::Mosaic *>(sEngine.racks[rack].currentMachine());
     if (mosaic == nullptr) return "";
     const SampleMap *m = mosaic->currentMap();
@@ -827,6 +832,7 @@ std::string EngineHost::sampleMapInfo(int rack) const {
 
 std::string EngineHost::sampleInfo(int rack, int slot) const {
     if (rack < 0 || rack >= kRackCount) return "";
+    const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
     auto *forage = dynamic_cast<machine::Forage *>(sEngine.racks[rack].currentMachine());
     if (forage == nullptr) return "";
     const SampleData *s = forage->sampleAt(slot);
@@ -1696,8 +1702,13 @@ std::string EngineHost::buildCloud(int rack, const float *spectrum01, int32_t co
     if (rack < 0 || rack >= kRackCount) return "no such rack";
     Machine *m = awaitMachine(sEngine, rack, "Cumulus");
     if (m == nullptr) return "that rack is not a Cumulus";
-    auto *cum = static_cast<machine::Cumulus *>(m);
-    const machine::cumulus::CloudSpec built = cum->spec(spectrum01, count);
+    machine::cumulus::CloudSpec built;
+    {
+        const auto live = sEngine.readLive(); // its knobs are read here (see Retirer::ReadGuard)
+        m = sEngine.racks[rack].currentMachine();
+        if (m == nullptr || std::strcmp(m->typeName(), "Cumulus") != 0) return "that rack is not a Cumulus";
+        built = static_cast<machine::Cumulus *>(m)->spec(spectrum01, count);
+    }
     LOGI("cumulus rack %d asked for: %d partials, tilt %.1f, bw %.0f, stretch %.3f, comb %.2f, vowel %.2f/%.2f (%d values given)",
          rack, built.partials, built.tilt, built.bandwidth, built.stretch, built.comb, built.formant,
          built.formantAmount, count);
@@ -1830,11 +1841,28 @@ std::string EngineHost::loadFormula(int rack, const std::string &formula, const 
 
 std::string EngineHost::compCell(int rack, int64_t sceneId, int32_t frames, float bpm,
                                  const std::string &path, float &peakOut) {
+    if (!running) return "engine not running";
     if (rack < 0 || rack >= kRackCount) return "no such rack";
     if (sEngine.transport.isPlaying()) return "stop the transport first";
     if (frames <= 0) return "that cell has no length";
-    Machine *m = awaitMachine(sEngine, rack, "Bias");
-    if (m == nullptr) return "that rack is not a Bias";
+    if (awaitMachine(sEngine, rack, "Bias") == nullptr) return "that rack is not a Bias";
+    if (rendering.exchange(true)) return "already rendering";
+
+    // Take the engine off the device while the tape plays here, as a freeze
+    // does. Stopped isn't enough: the audio thread still runs every rack, and
+    // would be playing this Bias at the same time. Back on at every return.
+    struct Offline {
+        std::atomic<bool> &flag;
+        ~Offline() {
+            if (!sAudio.start()) LOGE("audio failed to restart after a comp");
+            flag.store(false);
+        }
+    } offline{rendering};
+    sAudio.stop();
+    // Asked again now that nothing can swap it: it could have been replaced
+    // just before the stop.
+    Machine *m = sEngine.racks[rack].currentMachine();
+    if (m == nullptr || std::strcmp(m->typeName(), "Bias") != 0) return "that rack is not a Bias";
     auto *bias = static_cast<machine::Bias *>(m);
 
     WavWriter writer;
@@ -1892,18 +1920,25 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
         ~Guard() { flag.store(false); }
     } guard{rendering};
 
-    const seq::SongSnapshot *snap = sEngine.scheduler.snapshot();
-    if (snap == nullptr) return "no song";
-    const int32_t sceneIdx = snap->indexOfScene(sceneId);
-    if (sceneIdx < 0) return "no such scene";
-    const seq::Clip *clip = snap->clipFor(rack, sceneIdx);
-    if (clip == nullptr) return "no clip there";
-    const int64_t ticks = clip->lengthTicks();
-    if (ticks <= 0) return "that clip has no length";
-    if (sEngine.racks[rack].currentMachine() == nullptr) return "that track has no machine";
-
-    const seq::SceneInfo &scene = snap->scenes[static_cast<size_t>(sceneIdx)];
-    const float bpm = scene.bpmOverride > 0.0f ? scene.bpmOverride : sEngine.clock.songTempoRequested();
+    // Read while the audio thread is still running, so the snapshot could be
+    // replaced by an edit mid-read (see Retirer::ReadGuard).
+    int32_t sceneIdx = -1;
+    int64_t ticks = 0;
+    float bpm = 0.0f;
+    {
+        const auto live = sEngine.readLive();
+        const seq::SongSnapshot *snap = sEngine.scheduler.snapshot();
+        if (snap == nullptr) return "no song";
+        sceneIdx = snap->indexOfScene(sceneId);
+        if (sceneIdx < 0) return "no such scene";
+        const seq::Clip *clip = snap->clipFor(rack, sceneIdx);
+        if (clip == nullptr) return "no clip there";
+        ticks = clip->lengthTicks();
+        if (ticks <= 0) return "that clip has no length";
+        if (sEngine.racks[rack].currentMachine() == nullptr) return "that track has no machine";
+        const seq::SceneInfo &scene = snap->scenes[static_cast<size_t>(sceneIdx)];
+        bpm = scene.bpmOverride > 0.0f ? scene.bpmOverride : sEngine.clock.songTempoRequested();
+    }
     const double perTick = static_cast<double>(kSampleRate) * 60.0 / (static_cast<double>(bpm) * kPPQN);
     const int64_t clipFrames = static_cast<int64_t>(std::llround(static_cast<double>(ticks) * perTick));
     if (clipFrames <= 0) return "that clip is too short to render";
@@ -2196,6 +2231,7 @@ uint32_t EngineHost::notesOn(int rack) const {
 }
 float EngineHost::debugParam(int rack, const std::string &name) const {
     if (rack < 0 || rack >= kRackCount) return -1.0f;
+    const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
     Machine *m = sEngine.racks[rack].currentMachine();
     if (m == nullptr) return -2.0f;
     const int32_t idx = m->params().indexOf(name.c_str());
@@ -2204,6 +2240,7 @@ float EngineHost::debugParam(int rack, const std::string &name) const {
 
 float EngineHost::paramNormalized(int rack, const std::string &unit, const std::string &name) const {
     if (rack < 0 || rack >= kRackCount) return -1.0f;
+    const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
     const Unit u = unitFromName(unit);
     const bool isFx = u == Unit::Effect1 || u == Unit::Effect2;
     const bool isEv = u == Unit::Mod1 || u == Unit::Mod2 || u == Unit::Mod3;

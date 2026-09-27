@@ -37,6 +37,7 @@ echo "--- reset"; "$ROOT/tools/reset_test.sh" | tail -3 || fail=1
 echo "--- mpe";   "$ROOT/tools/mpe_test.sh"   | tail -2 || fail=1
 echo "--- sched"; "$ROOT/tools/scheduler_test.sh" | tail -2 || fail=1
 echo "--- queue"; "$ROOT/tools/queue_test.sh" | tail -2 || fail=1
+echo "--- retire"; "$ROOT/tools/retire_test.sh" | tail -2 || fail=1
 echo "--- render"; "$ROOT/tools/render_test.sh" | tail -2 || fail=1
 echo "--- loudness"; "$ROOT/tools/loudness_test.sh" | tail -2 || fail=1
 echo "--- perform"; "$ROOT/tools/perform_test.sh" | tail -2 || fail=1

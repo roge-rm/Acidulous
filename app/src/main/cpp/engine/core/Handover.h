@@ -1,6 +1,7 @@
 #pragma once
 #include "RtQueue.h"
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <cstdint>
 #include <mutex>
@@ -32,6 +33,23 @@ struct Retire {
 
 class Retirer {
   public:
+    /**
+     * Held by a thread other than the audio one while it reads something the
+     * audio thread can swap out: a machine's knobs, a pad's sample, Nexus's
+     * scope. Nothing retired is deleted while one is held, so the read can't
+     * land on freed memory. Keep it short: deleting waits for it.
+     */
+    class ReadGuard {
+      public:
+        explicit ReadGuard(Retirer &r) : owner(r) { owner.readers.fetch_add(1); }
+        ~ReadGuard() { owner.readers.fetch_sub(1); }
+        ReadGuard(const ReadGuard &) = delete;
+        ReadGuard &operator=(const ReadGuard &) = delete;
+
+      private:
+        Retirer &owner;
+    };
+
     ~Retirer() { stop(); }
 
     void start() {
@@ -76,6 +94,11 @@ class Retirer {
     void drain() {
         Retire r;
         while (queue.pop(r)) {
+            // A reader that began before the swap may still hold the old
+            // object. One that begins after this check sees the new one: the
+            // swap came before the retire it was popped from. Both sides are
+            // sequentially consistent (see ReadGuard).
+            while (readers.load() > 0) std::this_thread::sleep_for(std::chrono::microseconds(200));
             if (r.deleter) r.deleter(r.object);
         }
     }
@@ -83,6 +106,7 @@ class Retirer {
     RtQueue<Retire, 256> queue;
     std::atomic<bool> running{false};
     std::atomic<bool> pendingSignal{false};
+    std::atomic<int32_t> readers{0};
     std::thread worker;
     std::mutex mtx;
     std::condition_variable cv;

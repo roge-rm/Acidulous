@@ -34,14 +34,17 @@ bool Capture::start(const std::string &path, int32_t sampleRate, Source source, 
     peakLevel.store(0.0f, std::memory_order_relaxed);
     overflow.store(false, std::memory_order_relaxed);
     wasDeaf.store(false, std::memory_order_relaxed);
+    if (worker.joinable()) worker.join(); // a writer that stopped itself (see stop)
     running.store(true, std::memory_order_release);
     worker = std::thread([this] { drain(); });
     return true;
 }
 
 void Capture::stop() {
-    if (!running.load(std::memory_order_acquire)) return;
     running.store(false, std::memory_order_release);
+    // Joined even when it wasn't running: a writer that couldn't open its
+    // file stops itself, and a thread that's never joined ends the app when
+    // the next take assigns over it.
     if (worker.joinable()) worker.join();
 }
 

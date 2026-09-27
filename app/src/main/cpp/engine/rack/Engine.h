@@ -42,6 +42,11 @@ class Engine : public Rack::ModifiedNoteSink {
     bool pushMidi(const MidiMessage &m) { return midiIn.push(m); }
     bool pushClock(const MidiInEvent &e) { return clockIn.push(e); }
     bool pushParam(const ParamMessage &m) { return paramsIn.push(m); }
+    /**
+     * Hold while reading a machine, effect or mounted object from outside the
+     * audio thread, so it isn't deleted mid-read if it's being replaced.
+     */
+    [[nodiscard]] Retirer::ReadGuard readLive() { return Retirer::ReadGuard(retirer); }
 
     seq::Transport transport;
     seq::TickClock clock;
